@@ -30,6 +30,17 @@ Then see what your agents are doing:
 packages/core/dist/adhd-core overview
 ```
 
+Run the local HTTP API that the desktop app uses:
+
+```sh
+packages/core/dist/adhd-core serve
+# stdout: {"port":52341,"token":"<random hex>"}   (the only stdout line; logs go to stderr)
+```
+
+It listens on `127.0.0.1` only, needs `Authorization: Bearer <token>` on every request, and exits
+when stdin closes. `ADHD_CORE_PORT` and `ADHD_CORE_TOKEN` override the random values. See
+`docs/plans/m2-desktop-shell.md` for the endpoints and events.
+
 Data is stored in `~/Library/Application Support/adhd-todo/adhd-todo.db` on macOS
 (`$XDG_DATA_HOME/adhd-todo/` on Linux, `%APPDATA%\adhd-todo\` on Windows). Set `ADHD_TODO_DB`
 to use another file.
