@@ -51,9 +51,9 @@ describe("auth", () => {
 });
 
 describe("CORS", () => {
-  test("the allow-list is exactly the three documented origins", () => {
+  test("the allow-list is exactly the documented origins", () => {
     expect([...ALLOWED_ORIGINS].sort()).toEqual(
-      ["http://localhost:1420", "http://tauri.localhost", "tauri://localhost"].sort(),
+      ["http://localhost:1420", "http://tauri.localhost", "mygo://localhost", "tauri://localhost"].sort(),
     );
   });
 
@@ -91,6 +91,12 @@ describe("CORS", () => {
     expect(denied.headers.get("access-control-allow-origin")).toBe("tauri://localhost");
     const evil = await api.call("/overview", { headers: { origin: "http://evil.example" } });
     expect(evil.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  test("the mygo shell origin may read responses", async () => {
+    const res = await api.call("/overview", { headers: { origin: "mygo://localhost" } });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("access-control-allow-origin")).toBe("mygo://localhost");
   });
 });
 
