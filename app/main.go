@@ -1,12 +1,11 @@
 // Command adhd-todo is the menu bar app: a quick panel under the tray icon and a main window with
-// the board, drawn with mygo native UI. For now it runs against an in-memory fake store; wiring to
-// the real core is a later phase.
+// the board, drawn with mygo native UI. It reads and writes the same SQLite database as the
+// adhd-core MCP server, so what agents report shows up live.
 package main
 
 import (
 	"flag"
 	"log"
-	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/views"
@@ -15,20 +14,21 @@ import (
 
 const version = "0.2.0"
 
+// connectCommand registers the MCP server with Claude Code.
+const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp"
+
 func main() {
-	empty := flag.Bool("empty", false, "start with no data, to see the empty states")
-	_ = flag.Bool("fake", true, "use the in-memory fake store (the only store for now)")
+	fake := flag.Bool("fake", false, "use in-memory demo data instead of the database (for screenshots)")
+	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
 
-	var fake *data.Fake
-	if *empty {
-		fake = data.NewEmptyFake(time.Now)
-	} else {
-		fake = data.NewFake(time.Now)
+	be, err := openBackend(*fake, *empty)
+	if err != nil {
+		log.Fatalf("open data: %v", err)
 	}
-	app := views.NewApp(fake, nil, views.Config{
-		ConnectCommand: "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp",
-		DataFolder:     "~/Library/Application Support/adhd-todo",
+	app := views.NewApp(be.store, nil, views.Config{
+		ConnectCommand: connectCommand,
+		DataFolder:     be.dataFolder,
 		Version:        version,
 	})
 	s := &shell{app: app, main: views.NewMain(app)}
@@ -46,32 +46,23 @@ func main() {
 	mygo.App.OnNotificationClick(s.openFromNotification)
 
 	stop := make(chan struct{})
-	mygo.App.OnQuit(func() { close(stop) })
+	mygo.App.OnQuit(func() {
+		close(stop)
+		if be.close != nil {
+			_ = be.close()
+		}
+	})
 	mygo.App.WhenReady(func() {
 		s.createMain()
 		if err := s.createTray(); err != nil {
 			log.Printf("tray: %v", err)
 		}
 		s.updateTrayIcon()
-		fake.Subscribe(s.storeChanged)
-		fake.SubscribeReminders(func(r data.Reminder) { go notifyReminder(r) })
-		go tick(fake, stop)
+		be.store.Subscribe(s.storeChanged)
+		be.store.SubscribeReminders(func(r data.Reminder) { go notifyReminder(r) })
+		be.start(stop)
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
-	}
-}
-
-// tick asks the fake to send due reminders; the real store does this from its change watcher.
-func tick(f *data.Fake, stop <-chan struct{}) {
-	t := time.NewTicker(time.Second)
-	defer t.Stop()
-	for {
-		select {
-		case <-t.C:
-			f.CheckReminders()
-		case <-stop:
-			return
-		}
 	}
 }
