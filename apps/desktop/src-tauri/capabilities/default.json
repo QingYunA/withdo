@@ -1,11 +1,14 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions for the panel and main windows",
+  "description": "What the panel and main windows may do. Shortcut, tray and panel control are app commands in Rust, not plugin permissions.",
   "windows": ["main", "panel"],
   "permissions": [
     "core:default",
-    "notification:default",
-    "opener:default"
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
+    "opener:allow-open-url",
+    "opener:allow-default-urls"
   ]
 }
