@@ -4,7 +4,8 @@ A todo app for people juggling many things at once. Coding agents (Claude Code f
 which repo, branch and PR they are working on through a local MCP server, so you can see what
 every agent is doing across parallel PRs. Data lives in a local SQLite file.
 
-Status: M1 is the TypeScript core only (SQLite + stdio MCP server + `overview` CLI). No UI yet.
+Status: the TypeScript core (SQLite, stdio MCP server, `overview` CLI, local HTTP API) and the macOS
+menu bar app in `apps/desktop` (see its README).
 
 ## Build
 

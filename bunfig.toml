@@ -1,0 +1,3 @@
+[test]
+# apps/desktop is tested with Vitest; `bun test` must only pick up the core package.
+root = "packages"
