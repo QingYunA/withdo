@@ -33,13 +33,18 @@ function toRow(task: OverviewTask, now: Date): AgentRow {
   };
 }
 
-/** Panel "Agents" section: active tasks per project, in the server's order (blocked first). */
+/**
+ * Panel "Agents" section: active agent-created tasks per project, in the server's order
+ * (blocked first). Tasks the user created are shown under "Mine" instead.
+ */
 export function agentGroups(overview: Overview, now: Date): AgentGroup[] {
   return overview.projects
     .map((group) => ({
       key: group.project ? `project-${group.project.id}` : "inbox",
       name: group.project?.name ?? "Inbox",
-      rows: group.tasks.filter((t) => SHOWN.includes(t.status)).map((t) => toRow(t, now)),
+      rows: group.tasks
+        .filter((t) => t.source === "agent" && SHOWN.includes(t.status))
+        .map((t) => toRow(t, now)),
     }))
     .filter((group) => group.rows.length > 0);
 }

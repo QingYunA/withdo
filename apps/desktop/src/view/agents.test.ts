@@ -67,6 +67,21 @@ describe("agentGroups", () => {
     expect(group?.rows[0]).toMatchObject({ summary: null, age: "3d", staleLabel: "Stale 3d" });
   });
 
+  test("leaves out tasks the user created; they belong to Mine", () => {
+    const groups = agentGroups(
+      overview([
+        {
+          project: { id: 1, name: "a", repo_slug: null },
+          tasks: [makeOverviewTask({ id: 1, source: "user" }), makeOverviewTask({ id: 2 })],
+        },
+        { project: { id: 2, name: "b", repo_slug: null }, tasks: [makeOverviewTask({ id: 3, source: "user" })] },
+      ]),
+      now,
+    );
+    expect(groups.map((g) => g.name)).toEqual(["a"]);
+    expect(groups[0]?.rows.map((r) => r.id)).toEqual([2]);
+  });
+
   test("drops tasks outside doing/blocked/review and groups left empty", () => {
     const groups = agentGroups(
       overview([
