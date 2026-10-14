@@ -20,7 +20,7 @@ describe("resolveProjectFromCwd", () => {
     expect(listProjects(db)).toHaveLength(1);
   });
 
-  test("a worktree maps to the same project and updates repo_path", () => {
+  test("a worktree maps to the same project and keeps the main repo path", () => {
     const db = openMemoryDb();
     const root = tmp();
     const main = makeRepo(root, "widgets", { remote: "git@github.com:acme/widgets.git", commit: true });
@@ -29,8 +29,21 @@ describe("resolveProjectFromCwd", () => {
     const a = resolveProjectFromCwd(db, main);
     const b = resolveProjectFromCwd(db, wt);
     expect(b?.project.id).toBe(a?.project.id);
-    expect(b?.project.repo_path).toBe(b?.git.toplevel);
+    expect(b?.project.repo_path).toBe(main);
     expect(b?.git.branch).toBe("feat/a");
+  });
+
+  test("a worktree of a repo without remote maps to the main repo's project", () => {
+    const db = openMemoryDb();
+    const root = tmp();
+    const main = makeRepo(root, "localonly", { commit: true });
+    const wt = join(root, "localonly-wt");
+    git(main, "worktree", "add", "-q", "-b", "feat/a", wt);
+    const a = resolveProjectFromCwd(db, main);
+    const b = resolveProjectFromCwd(db, wt);
+    expect(b?.project.id).toBe(a?.project.id);
+    expect(b?.project).toMatchObject({ name: "localonly", repo_slug: null, repo_path: main });
+    expect(listProjects(db)).toHaveLength(1);
   });
 
   test("repo without remote is keyed by path", () => {
