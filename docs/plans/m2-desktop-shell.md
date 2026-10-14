@@ -1,5 +1,8 @@
 # M2: Desktop shell
 
+> Status: M2a shipped as written. The Tauri shell from M2b was replaced by mygo; see
+> `m2c-mygo-spike.md`. No global shortcut, Dock icon visible, tray flyout as the quick panel.
+
 Goal: a menu bar app that shows what every agent is doing and lets the user manage
 tasks by hand. A global hotkey opens a Spotlight-style panel; a main window holds the
 project kanban. Reminders fire as system notifications. The input box creates plain

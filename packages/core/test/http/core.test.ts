@@ -53,7 +53,7 @@ describe("auth", () => {
 describe("CORS", () => {
   test("the allow-list is exactly the documented origins", () => {
     expect([...ALLOWED_ORIGINS].sort()).toEqual(
-      ["http://localhost:1420", "http://tauri.localhost", "mygo://localhost", "tauri://localhost"].sort(),
+      ["http://localhost:1420", "http://mygo.localhost", "mygo://localhost"].sort(),
     );
   });
 
@@ -74,7 +74,13 @@ describe("CORS", () => {
     expect(res.headers.get("vary")).toContain("Origin");
   });
 
-  test.each(["http://evil.example", "http://localhost:3000", "http://localhost:1420.evil.example", "null"])(
+  test.each([
+    "http://evil.example",
+    "http://localhost:3000",
+    "http://localhost:1420.evil.example",
+    "null",
+    "tauri://localhost",
+  ])(
     "preflight from %s is refused without CORS headers",
     async (origin) => {
       const res = await api.call("/tasks", { auth: false, method: "OPTIONS", headers: { origin } });
@@ -86,9 +92,9 @@ describe("CORS", () => {
   test("responses (including 401) carry ACAO only for allowed origins", async () => {
     const ok = await api.call("/overview", { headers: { origin: "http://localhost:1420" } });
     expect(ok.headers.get("access-control-allow-origin")).toBe("http://localhost:1420");
-    const denied = await api.call("/overview", { auth: false, headers: { origin: "tauri://localhost" } });
+    const denied = await api.call("/overview", { auth: false, headers: { origin: "mygo://localhost" } });
     expect(denied.status).toBe(401);
-    expect(denied.headers.get("access-control-allow-origin")).toBe("tauri://localhost");
+    expect(denied.headers.get("access-control-allow-origin")).toBe("mygo://localhost");
     const evil = await api.call("/overview", { headers: { origin: "http://evil.example" } });
     expect(evil.headers.get("access-control-allow-origin")).toBeNull();
   });

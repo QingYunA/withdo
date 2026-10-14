@@ -1,8 +1,7 @@
 export const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
   "http://localhost:1420", // Vite dev server
-  "tauri://localhost", // Tauri on macOS and Linux
-  "http://tauri.localhost", // Tauri on Windows
   "mygo://localhost", // mygo on macOS and Linux
+  "http://mygo.localhost", // mygo on Windows
 ]);
 
 const ALLOW_METHODS = "GET, POST, PATCH, OPTIONS";
