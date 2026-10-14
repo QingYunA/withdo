@@ -83,12 +83,6 @@ export interface TaskDetail {
   readonly reports: readonly Report[];
 }
 
-export interface Reminder {
-  readonly task_id: number;
-  readonly title: string;
-  readonly project_name: string | null;
-}
-
 export interface TaskFilter {
   readonly project_id?: number;
   /** Only tasks without a project. */

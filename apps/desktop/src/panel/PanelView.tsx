@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCoreEvents } from "../core/use-core-events";
 import { useCreateTask, useOverview, useTasks } from "../core/queries";
-import { hidePanel, onShellEvent, openTaskInMain } from "../platform/shell";
+import { hidePanel, openTaskInMain } from "../platform/shell";
 import { useNow } from "../ui/use-now";
 import { agentGroups } from "../view/agents";
 import { mineTasks, moveSelection } from "../view/mine";
@@ -69,19 +69,15 @@ export function PanelView() {
       void queryClient.invalidateQueries();
     };
     window.addEventListener("focus", refocus);
-    const stopShown = onShellEvent("panel-shown", refocus);
-    return () => {
-      window.removeEventListener("focus", refocus);
-      stopShown();
-    };
+    return () => window.removeEventListener("focus", refocus);
   }, [queryClient]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        // No preventDefault: the shell closes the panel on an Escape the page leaves alone.
         setValue("");
         setNotice(null);
-        void hidePanel();
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         setActive((current) => moveSelection(current, event.key === "ArrowDown" ? 1 : -1, entries.length));

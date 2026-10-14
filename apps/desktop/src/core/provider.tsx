@@ -1,27 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createCoreClient, type Endpoint } from "./client";
 import { CoreContext } from "./context";
-import { discoverEndpoint, isTauri } from "./endpoint";
-
-export const CORE_ERROR_EVENT = "core-error";
+import { isMyGo } from "mygo-runtime";
+import { events } from "../mygo";
+import { discoverEndpoint } from "./endpoint";
 
 type Unsubscribe = () => void;
 
-/** The Rust shell emits `core-error` when adhd-core has died and could not be restarted. */
-function watchTauriErrors(onError: (message: string) => void): Unsubscribe {
-  if (!isTauri()) return () => {};
-  let unlisten: Unsubscribe | null = null;
-  let cancelled = false;
-  void import("@tauri-apps/api/event").then(({ listen }) =>
-    listen<string>(CORE_ERROR_EVENT, (event) => onError(String(event.payload))).then((fn) => {
-      if (cancelled) fn();
-      else unlisten = fn;
-    }),
-  );
-  return () => {
-    cancelled = true;
-    unlisten?.();
-  };
+/** The Go shell sends `core-error` when adhd-core has died and could not be restarted. */
+function watchShellErrors(onError: (message: string) => void): Unsubscribe {
+  return isMyGo() ? events.coreError.on(onError) : () => {};
 }
 
 type State =
@@ -50,7 +38,7 @@ function Notice({ title, detail, onRetry }: { title: string; detail?: string; on
 }
 
 /** Finds adhd-core, then renders children with a typed client in context. */
-export function CoreProvider({ children, discover = discoverEndpoint, watchErrors = watchTauriErrors }: CoreProviderProps) {
+export function CoreProvider({ children, discover = discoverEndpoint, watchErrors = watchShellErrors }: CoreProviderProps) {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   const connect = useCallback(() => {

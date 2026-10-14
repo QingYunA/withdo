@@ -23,10 +23,20 @@ export const Core = {
   },
 } as const;
 
+/** Shell is the page's handle on the windows. */
+export const Shell = {
+  /** OpenMain shows the main window and navigates it to hash, such as "#/main/task/5". */
+  openMain(hash: string): Promise<void> {
+    return call("Shell.OpenMain", hash);
+  },
+} as const;
+
 // ---- Events ----
 
 /** Events sent by the Go side. Subscribe with `events.name.on(listener)`. */
 export const events = {
   /** CoreError is sent to every page when adhd-core died and could not be restarted. */
   coreError: event<string>("core-error"),
+  /** MainNavigate asks the main window's page to show a hash route such as #/main/task/5. */
+  mainNavigate: event<string>("main-navigate"),
 } as const;

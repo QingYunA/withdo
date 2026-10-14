@@ -7,19 +7,18 @@ describe("parseRoute", () => {
   });
 
   test("main defaults to the board with no task", () => {
-    expect(parseRoute("#/main")).toEqual({ name: "main", view: "board", taskId: null });
-    expect(parseRoute("")).toEqual({ name: "main", view: "board", taskId: null });
-    expect(parseRoute("#/nonsense")).toEqual({ name: "main", view: "board", taskId: null });
+    expect(parseRoute("#/main")).toEqual({ name: "main", taskId: null });
+    expect(parseRoute("")).toEqual({ name: "main", taskId: null });
+    expect(parseRoute("#/nonsense")).toEqual({ name: "main", taskId: null });
   });
 
-  test("main can deep-link to a task or to settings", () => {
-    expect(parseRoute("#/main/task/42")).toEqual({ name: "main", view: "board", taskId: 42 });
-    expect(parseRoute("#/main/settings")).toEqual({ name: "main", view: "settings", taskId: null });
+  test("main can deep-link to a task", () => {
+    expect(parseRoute("#/main/task/42")).toEqual({ name: "main", taskId: 42 });
   });
 
   test("a malformed task id falls back to no task", () => {
-    expect(parseRoute("#/main/task/abc")).toEqual({ name: "main", view: "board", taskId: null });
-    expect(parseRoute("#/main/task/0")).toEqual({ name: "main", view: "board", taskId: null });
+    expect(parseRoute("#/main/task/abc")).toEqual({ name: "main", taskId: null });
+    expect(parseRoute("#/main/task/0")).toEqual({ name: "main", taskId: null });
   });
 });
 

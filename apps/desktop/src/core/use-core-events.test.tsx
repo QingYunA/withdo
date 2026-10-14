@@ -43,20 +43,6 @@ describe("useCoreEvents", () => {
     expect(invalidate).toHaveBeenCalledTimes(1);
   });
 
-  test("sends a notification for a reminder when notifications are on", () => {
-    const notify = vi.fn(async () => {});
-    const { source } = setup({ EventSourceImpl: FakeSource, notifications: true, notify });
-    source().emit("reminder", JSON.stringify({ task_id: 3, title: "Pay rent", project_name: null }));
-    expect(notify).toHaveBeenCalledWith({ task_id: 3, title: "Pay rent", project_name: null });
-  });
-
-  test("ignores reminders when notifications are off (only one window should notify)", () => {
-    const notify = vi.fn(async () => {});
-    const { source } = setup({ EventSourceImpl: FakeSource, notifications: false, notify });
-    source().emit("reminder", JSON.stringify({ task_id: 3, title: "Pay rent", project_name: null }));
-    expect(notify).not.toHaveBeenCalled();
-  });
-
   test("closes the stream on unmount", () => {
     const { source, unmount } = setup({ EventSourceImpl: FakeSource });
     unmount();

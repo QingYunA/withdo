@@ -8,7 +8,6 @@ import { makeOverviewTask, makeReport, makeTask } from "../test/fixtures";
 const shell = vi.hoisted(() => ({
   hidePanel: vi.fn(async () => {}),
   openTaskInMain: vi.fn(async () => {}),
-  onShellEvent: vi.fn(() => () => {}),
 }));
 vi.mock("../platform/shell", () => shell);
 
@@ -153,10 +152,16 @@ describe("PanelView input", () => {
     expect(input).toHaveValue("oops");
   });
 
-  test("Escape hides the panel", async () => {
+  test("Escape clears the field and leaves closing the panel to the shell", async () => {
     setup();
-    await userEvent.keyboard("{Escape}");
-    expect(shell.hidePanel).toHaveBeenCalled();
+    const input = screen.getByRole("textbox", { name: /new task/i });
+    await userEvent.type(input, "half a thought");
+    const escape = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    input.dispatchEvent(escape);
+    await waitFor(() => expect(input).toHaveValue(""));
+    // mygo closes a panel on an Escape the page did not preventDefault.
+    expect(escape.defaultPrevented).toBe(false);
+    expect(shell.hidePanel).not.toHaveBeenCalled();
   });
 });
 

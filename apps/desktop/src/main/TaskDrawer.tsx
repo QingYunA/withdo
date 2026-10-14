@@ -44,7 +44,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
           <>
             <TaskForm task={task} milestones={milestones.data ?? []} />
             {task.pr_url ? (
-              <button type="button" className="btn" onClick={() => void openExternal(task.pr_url!)}>
+              <button type="button" className="btn" onClick={() => openExternal(task.pr_url!)}>
                 Open PR {task.pr_number ? `#${task.pr_number}` : ""}
               </button>
             ) : null}

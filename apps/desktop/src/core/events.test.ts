@@ -4,7 +4,6 @@ import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { startCore, type RunningCore } from "../test/core-server";
 import { createCoreClient, type CoreClient } from "./client";
 import { connectCoreEvents, type EventSourceLike } from "./events";
-import type { Reminder } from "./types";
 
 describe("connectCoreEvents against a real adhd-core serve", () => {
   let core: RunningCore;
@@ -16,19 +15,13 @@ describe("connectCoreEvents against a real adhd-core serve", () => {
   });
   afterAll(async () => core.stop());
 
-  test("emits changed after a write and reminder once for a due task", async () => {
+  test("emits changed after a write", async () => {
     const onChanged = vi.fn();
-    const reminders: Reminder[] = [];
-    const close = connectCoreEvents(core.endpoint, { onChanged, onReminder: (r) => reminders.push(r) }, EventSource);
+    const close = connectCoreEvents(core.endpoint, { onChanged }, EventSource);
     try {
-      await vi.waitFor(() => expect(client).toBeDefined());
       await new Promise((r) => setTimeout(r, 300)); // let the subscription register
-      const task = await client.createTask({ title: "remind me", remind_at: new Date(Date.now() - 1000).toISOString() });
+      await client.createTask({ title: "something changed" });
       await vi.waitFor(() => expect(onChanged).toHaveBeenCalled(), { timeout: 5000 });
-      await vi.waitFor(() => expect(reminders).toHaveLength(1), { timeout: 5000 });
-      expect(reminders[0]).toEqual({ task_id: task.id, title: "remind me", project_name: null });
-      await new Promise((r) => setTimeout(r, 1200));
-      expect(reminders).toHaveLength(1);
     } finally {
       close();
     }
@@ -57,18 +50,15 @@ describe("connectCoreEvents with a fake EventSource", () => {
   const endpoint = { baseUrl: "http://127.0.0.1:9", token: "a b" };
 
   test("puts the encoded token in the query string", () => {
-    connectCoreEvents(endpoint, { onChanged: vi.fn(), onReminder: vi.fn() }, FakeSource);
+    connectCoreEvents(endpoint, { onChanged: vi.fn() }, FakeSource);
     expect(FakeSource.last.url).toBe("http://127.0.0.1:9/events?token=a%20b");
   });
 
-  test("ignores malformed reminder payloads and stops after close", () => {
-    const onReminder = vi.fn();
-    const close = connectCoreEvents(endpoint, { onChanged: vi.fn(), onReminder }, FakeSource);
-    FakeSource.last.emit("reminder", "not json");
-    FakeSource.last.emit("reminder", JSON.stringify({ nope: true }));
-    expect(onReminder).not.toHaveBeenCalled();
-    FakeSource.last.emit("reminder", JSON.stringify({ task_id: 1, title: "t", project_name: "p" }));
-    expect(onReminder).toHaveBeenCalledWith({ task_id: 1, title: "t", project_name: "p" });
+  test("calls onChanged for a changed event and stops after close", () => {
+    const onChanged = vi.fn();
+    const close = connectCoreEvents(endpoint, { onChanged }, FakeSource);
+    FakeSource.last.emit("changed", "{}");
+    expect(onChanged).toHaveBeenCalledOnce();
     close();
     expect(FakeSource.last.closed).toBe(true);
   });

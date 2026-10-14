@@ -7,10 +7,8 @@ import { makeReport, makeTask } from "../test/fixtures";
 import { useHashRoute } from "../ui/use-hash-route";
 
 const shell = vi.hoisted(() => ({
-  openExternal: vi.fn(async () => {}),
-  getShortcut: vi.fn(async () => null),
-  setShortcut: vi.fn(async () => ""),
-  onShellEvent: vi.fn(() => () => {}),
+  openExternal: vi.fn(),
+  onMainNavigate: vi.fn(() => () => {}),
 }));
 vi.mock("../platform/shell", () => shell);
 
@@ -175,13 +173,5 @@ describe("task drawer", () => {
       await queryClient.invalidateQueries();
     });
     expect(screen.getByLabelText("Title")).toHaveValue("Reply to feedback (draft)");
-  });
-});
-
-describe("settings", () => {
-  test("the settings route shows the shortcut section", async () => {
-    window.location.hash = "#/main/settings";
-    setup();
-    expect(await screen.findByRole("heading", { name: "Settings" })).toBeInTheDocument();
   });
 });
