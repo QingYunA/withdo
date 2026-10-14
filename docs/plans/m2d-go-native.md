@@ -28,32 +28,22 @@ docs/
 If mygo's CLI needs the app in its own module or directory layout, follow mygo and record the
 deviation; the shared packages stay importable by both binaries.
 
-## Phase A: Go core (parity port)
+## Phase A: Go core (fresh, idiomatic)
 
-Port `packages/core` behavior exactly. The TS code and its 191 tests are the spec; read them.
+User decision: no parity port. Write the core fresh in idiomatic Go, using mygo where it
+applies. The TS code is background, not a spec to mirror test by test.
 
-- **Database compatibility is mandatory.** The user's real database is at
-  `~/Library/Application Support/adhd-todo/adhd-todo.db`, `user_version = 2`. The Go store must
-  open it unchanged: same tables, columns, constraints, indexes, migration numbering. A
-  migration 3 is allowed only if needed, and must be additive.
-- SQLite driver: pure Go, no cgo (`modernc.org/sqlite`, or mygo's `plugins/sqlite` if it is a
-  better fit — decide by reading it, and record why).
-- Git: include the worktree fix merged in PR #1 (`git rev-parse --git-common-dir` maps worktrees
-  of a remote-less repo to the main repo's project).
-- MCP: official SDK `github.com/modelcontextprotocol/go-sdk`. Same server name `adhd-todo`, the
-  same 8 tools with the same names, input fields, defaults, validation messages (naming the bad
-  field), text results plus structured content, and the same `instructions` text (including
-  "Always pass cwd"). Agent name from the client's `clientInfo.name`.
-- `overview` CLI prints the same text format as today.
-- `internal/watch`: polls `PRAGMA data_version` every 500 ms on its own connection; emits
-  "changed"; claims due reminders once (`reminded_at`), inside `BEGIN IMMEDIATE`.
-- No HTTP server. `adhd-core serve` is dropped.
-- Tests: port every TS test case to Go table tests (`go test -race`), including the concurrent
-  two-connection write test and a temp git repo matrix. Coverage >= 80% per package
-  (`go test -cover`).
-- Parity check: a script runs the TS binary and the Go binary over stdio against copies of the
-  same database, calls `tools/list` and a fixed sequence of tool calls, and diffs the results
-  (ignoring timestamps and ids where they must differ).
+- Keep the SQLite schema and `user_version` numbering, so the existing database
+  (`~/Library/Application Support/adhd-todo/adhd-todo.db`, `user_version = 2`) still opens.
+- Keep the 8 MCP tool names, their input fields and the server `instructions`
+  (agents depend on them). Official SDK `github.com/modelcontextprotocol/go-sdk`.
+- Keep `cmd/adhd-core` with `mcp` and `overview`, and the worktree project resolution
+  (`git rev-parse --git-common-dir`).
+- `internal/watch`: `PRAGMA data_version` poller (500 ms) for change events, and reminders
+  claimed once inside `BEGIN IMMEDIATE`.
+- Pure Go SQLite, no cgo. No HTTP server.
+- `go test -race` passes with at least 80% coverage per package. Behavior may be simplified
+  where the TS version was awkward; list every change.
 
 ## Phase B: native UI (in parallel with Phase A)
 
