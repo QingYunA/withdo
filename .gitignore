@@ -5,3 +5,6 @@ coverage/
 *.db-wal
 *.db-shm
 .DS_Store
+target/
+gen/
+apps/desktop/src-tauri/binaries/adhd-core-*

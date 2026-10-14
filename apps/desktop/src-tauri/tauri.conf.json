@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ADHD Todo",
+  "version": "0.1.0",
+  "identifier": "dev.adhdtodo.desktop",
+  "build": {
+    "beforeDevCommand": "bun run sidecar && bun run dev",
+    "beforeBuildCommand": "bun run sidecar && bun run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "ADHD Todo",
+        "url": "index.html#/main",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 800,
+        "minHeight": 520,
+        "visible": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:* ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "category": "Productivity",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns"],
+    "externalBin": ["binaries/adhd-core"],
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    }
+  }
+}
