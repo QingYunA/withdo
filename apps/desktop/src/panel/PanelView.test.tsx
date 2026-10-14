@@ -102,6 +102,14 @@ describe("PanelView sections", () => {
     expect(await screen.findByText(/Nothing on your list/)).toBeInTheDocument();
   });
 
+  test("does not flash the empty states while the first response is on its way", async () => {
+    const never = new Promise<never>(() => {});
+    setup({ overview: () => never, tasks: () => never });
+    await screen.findByRole("textbox", { name: /new task/i });
+    expect(screen.queryByText(/No agents are reporting yet/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nothing on your list/)).not.toBeInTheDocument();
+  });
+
   test("shows an error line when the core cannot be read", async () => {
     setup({
       overview: async () => {

@@ -10,16 +10,18 @@ function SectionTitle({ children }: { children: string }) {
 interface AgentsProps {
   readonly groups: readonly AgentGroup[];
   readonly error: string | null;
+  /** True until the first response arrives; the empty state would flash otherwise. */
+  readonly loading: boolean;
   readonly activeKey: string | null;
   readonly onOpen: (id: number) => void;
 }
 
-export function AgentsSection({ groups, error, activeKey, onOpen }: AgentsProps) {
+export function AgentsSection({ groups, error, loading, activeKey, onOpen }: AgentsProps) {
   return (
     <section aria-label="Agents">
       <SectionTitle>Agents</SectionTitle>
       {error ? <p className="px-4 py-2 text-xs text-danger">{error}</p> : null}
-      {!error && groups.length === 0 ? (
+      {!error && !loading && groups.length === 0 ? (
         <EmptyState title="No agents are reporting yet">
           Connect Claude Code with <span className="code">{CONNECT_COMMAND}</span>. Tasks appear here when an agent calls report_progress.
         </EmptyState>
@@ -40,16 +42,17 @@ interface MineProps {
   readonly tasks: readonly Task[];
   readonly now: Date;
   readonly error: string | null;
+  readonly loading: boolean;
   readonly activeKey: string | null;
   readonly onOpen: (id: number) => void;
 }
 
-export function MineSection({ tasks, now, error, activeKey, onOpen }: MineProps) {
+export function MineSection({ tasks, now, error, loading, activeKey, onOpen }: MineProps) {
   return (
     <section aria-label="Mine">
       <SectionTitle>Mine</SectionTitle>
       {error ? <p className="px-4 py-2 text-xs text-danger">{error}</p> : null}
-      {!error && tasks.length === 0 ? (
+      {!error && !loading && tasks.length === 0 ? (
         <EmptyState title="Nothing on your list">Type above and press Enter to add a task to your inbox.</EmptyState>
       ) : null}
       <div className="px-2 pb-2">

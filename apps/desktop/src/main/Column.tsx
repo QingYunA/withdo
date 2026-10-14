@@ -18,7 +18,7 @@ export function Column({ status, tasks, onOpen, onOpenPr }: ColumnProps) {
     <section
       ref={setNodeRef}
       aria-label={STATUS_LABEL[status]}
-      className={`flex min-h-0 w-60 shrink-0 flex-col rounded-lg border border-border ${isOver ? "bg-hover" : "bg-surface"}`}
+      className={`flex min-h-0 min-w-[132px] flex-1 basis-0 flex-col rounded-lg border border-border ${isOver ? "bg-hover" : "bg-surface"}`}
     >
       <header className="flex items-center gap-2 px-3 py-2 text-xs font-medium">
         <StatusDot status={status} />

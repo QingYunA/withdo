@@ -108,8 +108,8 @@ export function PanelView() {
         busy={create.isPending}
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <AgentsSection groups={groups} error={errorText(overview.error)} activeKey={activeKey} onOpen={open} />
-        <MineSection tasks={mine} now={now} error={errorText(tasks.error)} activeKey={activeKey} onOpen={open} />
+        <AgentsSection groups={groups} error={errorText(overview.error)} loading={overview.isPending} activeKey={activeKey} onOpen={open} />
+        <MineSection tasks={mine} now={now} error={errorText(tasks.error)} loading={tasks.isPending} activeKey={activeKey} onOpen={open} />
       </div>
       <footer className="flex gap-4 border-t border-border px-4 py-1.5 text-[11px] text-muted">
         <span>Enter to add</span>

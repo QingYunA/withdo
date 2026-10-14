@@ -26,7 +26,7 @@ export function Board({ tasks, milestoneId, onMove, onOpen, onOpenPr }: BoardPro
 
   return (
     <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto p-4">
+      <div className="flex min-h-0 flex-1 gap-2 overflow-x-auto p-3">
         {KANBAN_STATUSES.map((status) => (
           <Column key={status} status={status} tasks={columns[status]} onOpen={onOpen} onOpenPr={onOpenPr} />
         ))}

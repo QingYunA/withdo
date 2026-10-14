@@ -15,7 +15,7 @@ const itemClass = (active: boolean): string =>
 export function Sidebar({ projects, selection, settingsActive, onSelect, onOpenSettings }: SidebarProps) {
   const current = selection ? selectionKey(selection) : null;
   return (
-    <div className="flex h-full w-52 shrink-0 flex-col border-r border-border bg-surface">
+    <div className="flex h-full w-48 shrink-0 flex-col border-r border-border bg-surface">
       <nav aria-label="Projects" className="flex-1 space-y-0.5 overflow-y-auto p-2">
         {sidebarItems(projects).map((item) => (
           <button
