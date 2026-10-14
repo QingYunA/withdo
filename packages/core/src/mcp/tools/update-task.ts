@@ -5,7 +5,7 @@ import { updateTask } from "../../domain/tasks.ts";
 import { milestoneId, prioritySchema, projectId, prUrl, statusSchema, taskId, timestamp } from "../schemas.ts";
 import { guarded, ok, type ToolContext } from "./helpers.ts";
 
-const input = z.object({
+export const updateTaskInput = z.object({
   task_id: taskId,
   title: z.string().min(1).optional(),
   notes: z.string().nullable().optional().describe("null clears the notes"),
@@ -25,7 +25,7 @@ export function registerUpdateTask(server: McpServer, ctx: ToolContext): void {
     {
       title: "Update task",
       description: "Patch fields of a task. Omitted fields are unchanged; null clears nullable fields.",
-      inputSchema: input,
+      inputSchema: updateTaskInput,
     },
     guarded(({ task_id, ...patch }) => {
       const task = updateTask(ctx.db, task_id, patch);

@@ -161,6 +161,13 @@ describe("listTasks / findOpenTask", () => {
     expect(listTasks(db, { status: [] })).toHaveLength(3);
   });
 
+  test("inbox filter returns only tasks without a project", () => {
+    const { db, project } = setup();
+    createTask(db, { title: "a", source: "user", project_id: project.id });
+    const inbox = createTask(db, { title: "b", source: "user" });
+    expect(listTasks(db, { inbox: true }).map((t) => t.id)).toEqual([inbox.id]);
+  });
+
   test("milestone filter", () => {
     const { db, project } = setup();
     const m = createMilestone(db, { project_id: project.id, title: "v1" });

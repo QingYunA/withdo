@@ -7,7 +7,7 @@ import { createTask } from "../../domain/tasks.ts";
 import { cwdSchema, milestoneId, prioritySchema, projectId, prUrl, timestamp } from "../schemas.ts";
 import { guarded, ok, type ToolContext } from "./helpers.ts";
 
-const input = z.object({
+export const createTaskInput = z.object({
   title: z.string().min(1).describe("Short task title"),
   cwd: cwdSchema.optional().describe("Working directory whose repo owns the task; defaults to the server's cwd"),
   project_id: projectId.optional().describe("Project to file the task under (instead of cwd)"),
@@ -26,7 +26,7 @@ export function registerCreateTask(server: McpServer, ctx: ToolContext): void {
     {
       title: "Create task",
       description: "Create a task under a project (resolved from cwd or project_id).",
-      inputSchema: input,
+      inputSchema: createTaskInput,
     },
     guarded(({ cwd, project_id, ...fields }) => {
       if (cwd !== undefined && project_id !== undefined) {

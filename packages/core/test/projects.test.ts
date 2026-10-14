@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { openMemoryDb } from "../src/db/open.ts";
+import { createTask } from "../src/domain/tasks.ts";
 import { DomainError } from "../src/domain/errors.ts";
 import { createMilestone, listMilestones } from "../src/domain/milestones.ts";
-import { getProject, listProjects, resolveProjectFromCwd, resolveProjectId, upsertProject } from "../src/domain/projects.ts";
+import { getProject, listActiveProjects, listProjects, resolveProjectFromCwd, resolveProjectId, upsertProject } from "../src/domain/projects.ts";
 import { git, makeRepo } from "./helpers/repo.ts";
 import { useTmpDir } from "./helpers/tmp.ts";
 
@@ -105,5 +106,24 @@ describe("milestones", () => {
 
   test("unknown project is an error naming project_id", () => {
     expect(() => createMilestone(openMemoryDb(), { project_id: 5, title: "x" })).toThrow(/project_id/);
+  });
+});
+
+describe("listActiveProjects", () => {
+  test("skips archived projects and counts tasks per status (zero-filled)", () => {
+    const db = openMemoryDb();
+    const a = upsertProject(db, { repo_slug: "acme/a" });
+    const b = upsertProject(db, { repo_slug: "acme/b" });
+    createTask(db, { title: "1", source: "user", project_id: a.id, status: "doing" });
+    createTask(db, { title: "2", source: "user", project_id: a.id, status: "doing" });
+    createTask(db, { title: "3", source: "user", project_id: a.id, status: "done" });
+    createTask(db, { title: "inbox", source: "user" });
+    db.run("UPDATE projects SET archived_at = 'x' WHERE id = ?", [b.id]);
+
+    const list = listActiveProjects(db);
+    expect(list.map((p) => p.id)).toEqual([a.id]);
+    expect(list[0]!.counts).toEqual({
+      backlog: 0, todo: 0, doing: 2, blocked: 0, review: 0, done: 1, cancelled: 0,
+    });
   });
 });

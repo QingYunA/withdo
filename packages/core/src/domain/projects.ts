@@ -1,11 +1,16 @@
 import type { Database } from "bun:sqlite";
 import { resolveGitContext, type GitContext } from "../git.ts";
 import { DomainError, NotFoundError } from "./errors.ts";
-import { nowIso, type Project } from "./types.ts";
+import { nowIso, TASK_STATUSES, type Project, type TaskStatus } from "./types.ts";
 
 export interface ResolvedProject {
   readonly project: Project;
   readonly git: GitContext;
+}
+
+export interface ProjectWithCounts extends Project {
+  /** Number of tasks per status; every status is present. */
+  readonly counts: Readonly<Record<TaskStatus, number>>;
 }
 
 export interface UpsertProjectInput {
@@ -22,6 +27,24 @@ export function getProject(db: Database, id: number): Project | null {
 
 export function listProjects(db: Database): Project[] {
   return db.query<Project, []>("SELECT * FROM projects ORDER BY id").all();
+}
+
+const emptyCounts = (): Record<TaskStatus, number> =>
+  Object.fromEntries(TASK_STATUSES.map((s) => [s, 0])) as Record<TaskStatus, number>;
+
+/** Projects that are not archived, each with its task count per status. */
+export function listActiveProjects(db: Database): ProjectWithCounts[] {
+  const projects = db.query<Project, []>("SELECT * FROM projects WHERE archived_at IS NULL ORDER BY id").all();
+  const rows = db
+    .query<{ project_id: number; status: TaskStatus; n: number }, []>(
+      "SELECT project_id, status, COUNT(*) AS n FROM tasks WHERE project_id IS NOT NULL GROUP BY project_id, status",
+    )
+    .all();
+  return projects.map((project) => {
+    const counts = emptyCounts();
+    for (const row of rows) if (row.project_id === project.id) counts[row.status] = row.n;
+    return { ...project, counts };
+  });
 }
 
 function insertProject(db: Database, name: string, repoSlug: string | null, repoPath: string | null): Project {

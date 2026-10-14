@@ -7,7 +7,7 @@ import { listTasks } from "../../domain/tasks.ts";
 import { cwdSchema, milestoneId, projectId, statusSchema } from "../schemas.ts";
 import { guarded, ok, type ToolContext } from "./helpers.ts";
 
-const input = z.object({
+export const listTasksInput = z.object({
   project_id: projectId.optional(),
   cwd: cwdSchema.optional().describe("List tasks of the project that owns this directory"),
   status: z.array(statusSchema).optional().describe("Only tasks in these statuses"),
@@ -21,7 +21,7 @@ export function registerListTasks(server: McpServer, ctx: ToolContext): void {
     {
       title: "List tasks",
       description: "List tasks, newest first, optionally filtered by project, status or milestone.",
-      inputSchema: input,
+      inputSchema: listTasksInput,
     },
     guarded(({ cwd, project_id, ...rest }) => {
       if (cwd !== undefined && project_id !== undefined) {

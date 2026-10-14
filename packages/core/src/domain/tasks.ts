@@ -22,6 +22,8 @@ export type TaskPatch = Partial<Omit<CreateTaskInput, "source">>;
 
 export interface TaskFilter {
   readonly project_id?: number;
+  /** Only tasks without a project. */
+  readonly inbox?: boolean;
   readonly status?: readonly TaskStatus[];
   readonly milestone_id?: number;
   readonly limit?: number;
@@ -144,6 +146,7 @@ export function listTasks(db: Database, filter: TaskFilter): Task[] {
     where.push("project_id = ?");
     params.push(filter.project_id);
   }
+  if (filter.inbox) where.push("project_id IS NULL");
   if (filter.milestone_id !== undefined) {
     where.push("milestone_id = ?");
     params.push(filter.milestone_id);
