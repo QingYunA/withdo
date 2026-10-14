@@ -36,6 +36,7 @@ describe("resolveGitContext", () => {
     const dir = makeRepo(tmp(), "widgets", { remote: "git@github.com:acme/widgets.git", branch: "feat/x" });
     expect(resolveGitContext(dir)).toEqual({
       toplevel: dir,
+      repoRoot: dir,
       branch: "feat/x",
       repoSlug: "acme/widgets",
       repoName: "widgets",
@@ -53,6 +54,7 @@ describe("resolveGitContext", () => {
     const dir = makeRepo(tmp(), "localonly", { commit: true });
     expect(resolveGitContext(dir)).toEqual({
       toplevel: dir,
+      repoRoot: dir,
       branch: "main",
       repoSlug: null,
       repoName: "localonly",
@@ -75,6 +77,33 @@ describe("resolveGitContext", () => {
     expect(ctx?.repoSlug).toBe("acme/widgets");
     expect(ctx?.branch).toBe("feat/wt");
     expect(ctx?.toplevel).toBe(realpathSync(wt));
+    expect(ctx?.repoRoot).toBe(main);
+  });
+
+  test("worktree of a repo without remote resolves to the main repo", () => {
+    const root = tmp();
+    const main = makeRepo(root, "localonly", { commit: true });
+    const wt = join(root, "localonly-wt");
+    git(main, "worktree", "add", "-q", "-b", "feat/wt", wt);
+    expect(resolveGitContext(wt)).toEqual({
+      toplevel: realpathSync(wt),
+      repoRoot: main,
+      branch: "feat/wt",
+      repoSlug: null,
+      repoName: "localonly",
+    });
+  });
+
+  test("worktree of a bare repo resolves to the bare repo", () => {
+    const root = tmp();
+    const src = makeRepo(root, "src", { commit: true });
+    const bare = join(root, "widgets.git");
+    git(root, "clone", "-q", "--bare", src, bare);
+    const wt = join(root, "widgets-wt");
+    git(bare, "worktree", "add", "-q", "-b", "feat/wt", wt);
+    const ctx = resolveGitContext(wt);
+    expect(ctx?.repoRoot).toBe(realpathSync(bare));
+    expect(ctx?.repoName).toBe("widgets.git");
   });
 
   test("detached HEAD yields null branch", () => {
