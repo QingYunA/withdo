@@ -50,7 +50,8 @@ half a second.
 
 ```sh
 go test -race -cover ./...                       # all packages
-cd app && go tool mygo dev                       # run the app (add -- -fake for demo data, -- -empty for none)
+cd app && go tool mygo dev                       # run the app against the real database (.dev identifier)
+go run ./app -fake                               # demo data instead of the database (-empty: none)
 SCREENS_OUT=$PWD/docs/design/screens go test ./app/...   # re-render the design screenshots
 ```
 
