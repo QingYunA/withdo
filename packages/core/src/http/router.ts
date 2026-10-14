@@ -1,10 +1,12 @@
 import type { Database } from "bun:sqlite";
+import type { EventHub } from "./events.ts";
 
 export interface RouteContext {
   readonly req: Request;
   readonly url: URL;
   readonly params: Readonly<Record<string, string>>;
   readonly db: Database;
+  readonly hub: EventHub;
 }
 
 export interface Route {

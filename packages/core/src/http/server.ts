@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { bearerToken, tokenMatches } from "./auth.ts";
+import { createEventHub, type EventHub, type EventHubOptions } from "./events.ts";
 import { preflight, withCors } from "./cors.ts";
 import { HttpError, jsonError, toErrorResponse } from "./respond.ts";
 import { matchRoute, type Match, type Route } from "./router.ts";
@@ -16,6 +17,8 @@ export interface HttpServerOptions {
   readonly log?: (message: string) => void;
   /** Replace the route table (tests). */
   readonly routes?: readonly Route[];
+  /** Poll and keep-alive intervals for /events (tests shorten them). */
+  readonly events?: EventHubOptions;
 }
 
 export interface RunningServer {
@@ -23,6 +26,7 @@ export interface RunningServer {
   readonly port: number;
   readonly url: string;
   readonly token: string;
+  readonly hub: EventHub;
   stop(): void;
 }
 
@@ -36,7 +40,17 @@ function authorize(req: Request, url: URL, match: Match, token: string): void {
   if (!tokenMatches(provided, token)) throw new HttpError(401, "unauthorized");
 }
 
-function createHandler(db: Database, token: string, routes: readonly Route[], log: (m: string) => void) {
+const READ_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD"]);
+
+interface HandlerDeps {
+  readonly db: Database;
+  readonly hub: EventHub;
+  readonly token: string;
+  readonly routes: readonly Route[];
+  readonly log: (message: string) => void;
+}
+
+function createHandler({ db, hub, token, routes, log }: HandlerDeps) {
   return async (req: Request): Promise<Response> => {
     if (req.method === "OPTIONS") return preflight(req);
     try {
@@ -49,7 +63,8 @@ function createHandler(db: Database, token: string, routes: readonly Route[], lo
         res.headers.set("allow", [...new Set(match.allowed)].join(", "));
         return withCors(req, res);
       }
-      const res = await match.route.handler({ req, url, params: match.params, db });
+      const res = await match.route.handler({ req, url, params: match.params, db, hub });
+      if (!READ_METHODS.has(req.method) && res.status < 400) hub.notifyChanged();
       return withCors(req, res);
     } catch (error) {
       return withCors(req, toErrorResponse(error, log));
@@ -60,19 +75,23 @@ function createHandler(db: Database, token: string, routes: readonly Route[], lo
 /** Start the HTTP API on 127.0.0.1. */
 export function startHttpServer(db: Database, options: HttpServerOptions): RunningServer {
   const log = options.log ?? stderrLog;
+  const hub = createEventHub(db, { log, ...options.events });
+  const routes = options.routes ?? ALL_ROUTES;
   const server = Bun.serve({
     hostname: HOST,
     port: options.port ?? 0,
     idleTimeout: 0,
     maxRequestBodySize: MAX_BODY_BYTES,
-    fetch: createHandler(db, options.token, options.routes ?? ALL_ROUTES, log),
+    fetch: createHandler({ db, hub, token: options.token, routes, log }),
   });
   return {
     hostname: HOST,
     port: server.port!,
     url: `http://${HOST}:${server.port}`,
     token: options.token,
+    hub,
     stop: () => {
+      hub.close();
       void server.stop(true);
     },
   };

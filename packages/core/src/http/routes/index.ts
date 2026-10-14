@@ -1,4 +1,5 @@
 import type { Route } from "../router.ts";
+import { eventRoutes } from "./events.ts";
 import { milestoneRoutes } from "./milestones.ts";
 import { overviewRoutes } from "./overview.ts";
 import { projectRoutes } from "./projects.ts";
@@ -9,4 +10,5 @@ export const ALL_ROUTES: readonly Route[] = [
   ...projectRoutes,
   ...taskRoutes,
   ...milestoneRoutes,
+  ...eventRoutes,
 ];
