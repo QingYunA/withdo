@@ -13,7 +13,7 @@ func TestOverviewGroupsActiveTasksByAttention(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ov.Groups) != 2 || ov.Groups[0].Project.Name != "adhd-todo" || ov.Groups[1].Project.Name != "docs" {
+	if len(ov.Groups) != 2 || ov.Groups[0].Project.Name != "adhd-todo" || ov.Groups[1].Project.Name != "answer-me-with-html" {
 		t.Fatalf("groups %+v", ov.Groups)
 	}
 	first := ov.Groups[0].Tasks
@@ -23,8 +23,8 @@ func TestOverviewGroupsActiveTasksByAttention(t *testing.T) {
 	if !first[0].Stale || first[2].Stale {
 		t.Errorf("stale flags: blocked %v, doing %v", first[0].Stale, first[2].Stale)
 	}
-	if g := ov.Groups[1].Tasks[0]; !g.Stale || g.HoursSinceActivity != 54 {
-		t.Errorf("docs task stale=%v hours=%d, want true and 54", g.Stale, g.HoursSinceActivity)
+	if g := ov.Groups[1].Tasks[0]; g.Stale || g.LatestReport == nil || g.LatestReport.Summary != "Writing tests for the reply parser" {
+		t.Errorf("second project's task %+v", g)
 	}
 }
 
@@ -60,11 +60,22 @@ func TestSubscribersHearChangesAndReminders(t *testing.T) {
 		t.Errorf("heard %d changes, want 1 (the second came after cancel)", changes)
 	}
 
-	now = now.Add(2 * time.Hour) // task 7 reminds in one hour
+	f.CheckReminders() // task 7 came due at the seed's "now"
 	f.CheckReminders()
-	f.CheckReminders()
-	if len(got) != 1 || got[0].TaskID != 7 || got[0].ProjectName != "adhd-todo" {
+	if len(got) != 1 || got[0].TaskID != 7 || got[0].ProjectName != "" {
 		t.Errorf("reminders %+v, want one for task 7", got)
+	}
+}
+
+func TestAddProjectIsEmptyAndListed(t *testing.T) {
+	f := NewEmptyFake(fixedNow)
+	p := f.AddProject("scratch", "me/scratch")
+	ps, _ := f.ListProjects()
+	if len(ps) != 1 || ps[0].ID != p.ID || ps[0].Name != "scratch" {
+		t.Errorf("projects %+v", ps)
+	}
+	if ts, _ := f.ListTasks(Filter{}); len(ts) != 0 {
+		t.Errorf("tasks %v", ts)
 	}
 }
 

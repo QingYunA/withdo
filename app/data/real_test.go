@@ -295,3 +295,56 @@ func TestParseTimeTolerance(t *testing.T) {
 		t.Error("a bad timestamp maps to the zero time")
 	}
 }
+
+// TestRealFeedsTheNowScreen writes what agents and the user write, reads it back through the
+// adapter and checks the Now sections: next_step, the latest report, the due reminder, the PR.
+func TestRealFeedsTheNowScreen(t *testing.T) {
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC)
+	r, core := realPair(t, func() time.Time { return now })
+	p, _ := core.UpsertProject(bg, domain.UpsertProjectInput{RepoSlug: "acme/rocket"})
+	blocked := domain.StatusBlocked
+	_, err := core.ReportProgress(bg, domain.ProgressInput{
+		TaskID: nil, Title: "Fix launch race", Summary: "Reproduced it", Status: &blocked,
+		NextStep: "Needs a decision on the policy", Branch: "fix/launch", Cwd: "", Agent: "claude-code",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	review := domain.StatusReview
+	if _, err := core.ReportProgress(bg, domain.ProgressInput{
+		Title: "Native UI", Summary: "Ready", Status: &review, Branch: "feat/ui",
+		PRURL: "https://github.com/acme/rocket/pull/12", Agent: "claude-code",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	mine, _ := r.CreateTask(CreateTaskInput{Title: "Reply to feedback", ProjectID: IntPtr(int(p.ID))})
+	if _, err := r.UpdateTask(mine.ID, Patch{RemindAt: TimePtr(now.Add(-time.Minute))}); err != nil {
+		t.Fatal(err)
+	}
+
+	tasks, _ := r.ListTasks(Filter{})
+	latest := func(id int) *Report {
+		d, err := r.GetTask(id)
+		if err != nil || len(d.Reports) == 0 {
+			return nil
+		}
+		return &d.Reports[0]
+	}
+	n := BuildNow(NowInput{Now: now, Tasks: tasks, Latest: latest, ProjectName: func(*int) string { return "rocket" }})
+	if len(n.Needs) != 3 || len(n.Agents) != 0 || len(n.Yours) != 0 {
+		t.Fatalf("sections %d/%d/%d: %+v", len(n.Needs), len(n.Agents), len(n.Yours), n.Needs)
+	}
+	if n.Needs[0].Kind != NeedBlocked || n.Needs[1].Kind != NeedReminder || n.Needs[2].Kind != NeedReview {
+		t.Errorf("order %v %v %v", n.Needs[0].Kind, n.Needs[1].Kind, n.Needs[2].Kind)
+	}
+	want := []string{
+		"Agent is waiting: “Needs a decision on the policy”",
+		"You asked to be reminded at 2:29 PM",
+		"PR #12 is ready for your review",
+	}
+	for i, it := range n.Needs {
+		if it.Summary != want[i] {
+			t.Errorf("need %d summary %q, want %q", i, it.Summary, want[i])
+		}
+	}
+}

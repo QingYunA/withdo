@@ -37,6 +37,17 @@ func NewEmptyFake(now func() time.Time) *Fake {
 	return &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, nextID: 1000}
 }
 
+// AddProject adds a project with no tasks, for demos and tests of the empty states.
+func (f *Fake) AddProject(name, slug string) Project {
+	f.mu.Lock()
+	now := f.Now()
+	p := Project{ID: f.newID(), Name: name, RepoSlug: slug, CreatedAt: now, UpdatedAt: now}
+	f.projects = append(f.projects, p)
+	f.mu.Unlock()
+	f.notify()
+	return p
+}
+
 func (f *Fake) ListProjects() ([]Project, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
