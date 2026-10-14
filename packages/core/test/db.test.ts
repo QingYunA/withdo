@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { openDb, openMemoryDb } from "../src/db/open.ts";
@@ -45,6 +46,26 @@ describe("openDb", () => {
     const b = openDb(path);
     expect(b.query("SELECT name FROM projects").get()).toEqual({ name: "keep" });
     b.close();
+  });
+
+  test("migration 2 adds a nullable tasks.reminded_at column", () => {
+    const db = openMemoryDb();
+    const cols = db.query<{ name: string; notnull: number }, []>("PRAGMA table_info(tasks)").all();
+    expect(cols.find((c) => c.name === "reminded_at")).toMatchObject({ notnull: 0 });
+    expect(MIGRATIONS.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("a version-1 database upgrades in place and keeps its rows", () => {
+    const path = join(tmp(), "v1.db");
+    const raw = new Database(path, { create: true });
+    raw.exec(MIGRATIONS[0]!);
+    raw.exec("PRAGMA user_version = 1");
+    raw.run("INSERT INTO tasks (title, source, created_at, updated_at) VALUES ('old','user','t','t')");
+    raw.close();
+    const db = openDb(path);
+    expect(db.query("SELECT title, reminded_at FROM tasks").get()).toEqual({ title: "old", reminded_at: null });
+    expect(db.query("PRAGMA user_version").get()).toEqual({ user_version: MIGRATIONS.length });
+    db.close();
   });
 
   test("foreign keys are enforced", () => {

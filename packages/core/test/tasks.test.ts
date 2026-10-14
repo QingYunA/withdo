@@ -119,6 +119,35 @@ describe("updateTask", () => {
   });
 });
 
+describe("reminded_at", () => {
+  const REMIND = "2026-01-01T09:00:00.000Z";
+
+  test("new tasks start with reminded_at null, even with remind_at set", () => {
+    const { db } = setup();
+    expect(createTask(db, { title: "a", source: "user", remind_at: REMIND }).reminded_at).toBeNull();
+  });
+
+  test("setting remind_at clears reminded_at, including to the same value", () => {
+    const { db } = setup();
+    const t = createTask(db, { title: "a", source: "user", remind_at: REMIND });
+    db.run("UPDATE tasks SET reminded_at = ? WHERE id = ?", ["2026-01-01T09:00:01.000Z", t.id]);
+    expect(updateTask(db, t.id, { remind_at: REMIND }).reminded_at).toBeNull();
+
+    db.run("UPDATE tasks SET reminded_at = ? WHERE id = ?", ["2026-01-01T09:00:01.000Z", t.id]);
+    expect(updateTask(db, t.id, { remind_at: "2026-02-02T09:00:00.000Z" }).reminded_at).toBeNull();
+
+    db.run("UPDATE tasks SET reminded_at = ? WHERE id = ?", ["2026-01-01T09:00:01.000Z", t.id]);
+    expect(updateTask(db, t.id, { remind_at: null }).reminded_at).toBeNull();
+  });
+
+  test("other updates leave reminded_at alone", () => {
+    const { db } = setup();
+    const t = createTask(db, { title: "a", source: "user", remind_at: REMIND });
+    db.run("UPDATE tasks SET reminded_at = ? WHERE id = ?", ["2026-01-01T09:00:01.000Z", t.id]);
+    expect(updateTask(db, t.id, { title: "b", status: "doing" }).reminded_at).toBe("2026-01-01T09:00:01.000Z");
+  });
+});
+
 describe("listTasks / findOpenTask", () => {
   test("filters, newest first, limit", () => {
     const { db, project } = setup();

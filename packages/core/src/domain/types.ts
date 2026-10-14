@@ -36,6 +36,8 @@ export interface Task {
   readonly priority: Priority;
   readonly due_at: string | null;
   readonly remind_at: string | null;
+  /** When the reminder for the current remind_at was sent; null until it fires. */
+  readonly reminded_at: string | null;
   readonly branch: string | null;
   readonly pr_url: string | null;
   readonly pr_number: number | null;

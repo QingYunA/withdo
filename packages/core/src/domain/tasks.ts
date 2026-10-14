@@ -105,9 +105,12 @@ export function updateTask(db: Database, id: number, patch: TaskPatch): Task {
   const status = merged.status;
   const completedAt = isTerminal(status) ? (isTerminal(current.status) ? current.completed_at : ts) : null;
   const prUrl = merged.pr_url;
+  // Any write to remind_at re-arms the reminder.
+  const remindedAt = "remind_at" in definedOnly(patch) ? null : current.reminded_at;
   db.run(
     `UPDATE tasks SET project_id = ?, milestone_id = ?, title = ?, notes = ?, status = ?, priority = ?,
-       due_at = ?, remind_at = ?, branch = ?, pr_url = ?, pr_number = ?, updated_at = ?, completed_at = ?
+       due_at = ?, remind_at = ?, reminded_at = ?, branch = ?, pr_url = ?, pr_number = ?, updated_at = ?,
+       completed_at = ?
      WHERE id = ?`,
     [
       refs.projectId,
@@ -118,6 +121,7 @@ export function updateTask(db: Database, id: number, patch: TaskPatch): Task {
       merged.priority,
       merged.due_at,
       merged.remind_at,
+      remindedAt,
       merged.branch,
       prUrl,
       prUrl ? parsePrNumber(prUrl) : null,

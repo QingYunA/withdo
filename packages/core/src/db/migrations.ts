@@ -55,6 +55,8 @@ CREATE TABLE reports (
 CREATE INDEX tasks_project_branch ON tasks(project_id, branch);
 CREATE INDEX reports_task_created ON reports(task_id, created_at);
 `,
+  // Migration 2: remember that a reminder has fired so it fires once per remind_at.
+  "ALTER TABLE tasks ADD COLUMN reminded_at TEXT;",
 ];
 
 /** Apply any pending migrations. Idempotent; each migration runs in its own transaction. */
