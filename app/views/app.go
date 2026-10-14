@@ -106,7 +106,12 @@ func (a *App) SetStatus(t data.Task, s data.Status) {
 
 // AddToInbox creates a task without a project.
 func (a *App) AddToInbox(title string) error {
-	if _, err := a.Store.CreateTask(data.CreateTaskInput{Title: title, Source: data.SourceUser}); err != nil {
+	return a.AddTask(data.CreateTaskInput{Title: title, Source: data.SourceUser})
+}
+
+// AddTask creates a task and refreshes. An error leaves the snapshot as it was.
+func (a *App) AddTask(in data.CreateTaskInput) error {
+	if _, err := a.Store.CreateTask(in); err != nil {
 		a.snap.err = err
 		return err
 	}

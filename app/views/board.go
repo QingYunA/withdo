@@ -1,8 +1,6 @@
 package views
 
 import (
-	"fmt"
-	"sort"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -69,7 +67,8 @@ func (m *Main) milestoneMenu(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// board is the six status columns in a horizontal scroller.
+// board is the six status columns in a horizontal scroller. Empty columns and Done are strips, and
+// when the active columns do not fit they narrow and then give way, so the board seldom scrolls.
 func (m *Main) board(c *ui.Context, t *theme.Tokens) {
 	tasks := m.selectionTasks()
 	if !m.app.snap.loaded {
@@ -80,75 +79,17 @@ func (m *Main) board(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	byStatus := map[data.Status][]data.Task{}
+	counts := map[data.Status]int{}
 	for _, task := range tasks {
 		byStatus[task.Status] = append(byStatus[task.Status], task)
+		counts[task.Status]++
 	}
+	w, _ := c.Size()
+	plans := planColumns(boardWidth(w, m.openID != 0), counts, m.forcedOpen())
 	ui.ScrollHorizontal(c).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
-		ui.Row(c).FillHeight().Padding(16, 16, 0).Gap(theme.ColumnGap).AlignItems(ui.Stretch).Children(func() {
+		ui.Row(c).FillHeight().Padding(theme.BoardPadding, theme.BoardPadding, 0).Gap(theme.ColumnGap).AlignItems(ui.Stretch).Children(func() {
 			for _, s := range data.BoardStatuses {
-				m.column(c, t, s, byStatus[s])
-			}
-		})
-	})
-}
-
-// column is one status: its header and its cards. A card dropped on it takes its status.
-func (m *Main) column(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
-	col := ui.Column(c.Key(string(s))).Width(theme.ColumnWidth).Shrink(0).Padding(0, 8).Radius(theme.RadiusPanel + 2)
-	_, over := ui.DragOver[dragCard](col)
-	if over {
-		col.Background(t.BgSubtle)
-	}
-	col.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	if d, ok := ui.Drop[dragCard](col); ok {
-		m.dropCard(d.id, s)
-	}
-	col.Children(func() {
-		m.columnHeader(c, t, s, len(tasks))
-		m.columnBody(c, t, s, tasks, over)
-	})
-}
-
-func (m *Main) dropCard(id int, to data.Status) {
-	task, ok := m.app.Task(id)
-	m.dragging = 0
-	if !ok || task.Status == to {
-		return
-	}
-	m.app.SetStatus(task, to)
-}
-
-func (m *Main) columnHeader(c *ui.Context, t *theme.Tokens, s data.Status, n int) {
-	ui.Row(c).Height(40).Shrink(0).Padding(0, 4).Gap(8).AlignItems(ui.Center).Children(func() {
-		theme.StatusGlyph(c, t, s, 0)
-		theme.Text(c, theme.BodyStrong, t.Text, s.Label())
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
-	})
-}
-
-func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task, over bool) {
-	hidden := 0
-	if s == data.Done {
-		sort.SliceStable(tasks, func(i, j int) bool { return doneAt(tasks[i]).After(doneAt(tasks[j])) })
-		if !m.showAllDone[m.nav] && len(tasks) > theme.DoneRecentLimit {
-			hidden = len(tasks) - theme.DoneRecentLimit
-			tasks = tasks[:theme.DoneRecentLimit]
-		}
-	} else {
-		byPriorityThenRecent(tasks)
-	}
-	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
-		ui.Column(c).Gap(8).Padding(0, 0, 16).Children(func() {
-			if len(tasks) == 0 && !over {
-				columnHint(c, t, s)
-			}
-			for _, task := range tasks {
-				m.card(c, t, task)
-			}
-			if hidden > 0 {
-				if link(c, t, fmt.Sprintf("Show all %d", hidden+len(tasks))).Margin(4, 0, 0, 4).Clicked() {
-					m.showAllDone[m.nav] = true
-				}
+				m.column(c, t, s, byStatus[s], plans[s])
 			}
 		})
 	})

@@ -24,9 +24,13 @@ type Main struct {
 	nav         nav
 	openID      int // task open in the inspector, 0 for none
 	settings    bool
-	milestone   map[int]int  // milestone filter per project, 0 for all
-	showAllDone map[nav]bool // "Show all" opened on the Done column
-	dragging    int          // task being dragged, for the empty slot it leaves
+	milestone   map[int]int                  // milestone filter per project, 0 for all
+	showAllDone map[nav]bool                 // "Show all" opened on the Done column
+	pinned      map[nav]map[data.Status]bool // collapsed columns the user opened
+	adding      data.Status                  // column with the inline title input, "" for none
+	addNav      nav                          // the selection the input belongs to
+	addBuf      string
+	dragging    int // task being dragged, for the empty slot it leaves
 
 	scroll    ui.ScrollState
 	inspector inspector
@@ -35,7 +39,7 @@ type Main struct {
 
 // NewMain opens on the first project, or the inbox when there is none.
 func NewMain(a *App) *Main {
-	m := &Main{app: a, milestone: map[int]int{}, showAllDone: map[nav]bool{}}
+	m := &Main{app: a, milestone: map[int]int{}, showAllDone: map[nav]bool{}, pinned: map[nav]map[data.Status]bool{}}
 	if ps := a.snap.projects; len(ps) > 0 {
 		m.nav = nav{projectID: ps[0].ID}
 	} else {
@@ -72,8 +76,13 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Task(m.openID); !ok {
 		m.openID = 0
 	}
-	if c.Shortcut(0, ui.KeyEscape) && m.openID != 0 && !m.settings {
-		m.openID = 0
+	if c.Shortcut(0, ui.KeyEscape) && !m.settings {
+		switch {
+		case m.adding != "":
+			m.cancelAdding()
+		case m.openID != 0:
+			m.openID = 0
+		}
 	}
 	row := ui.Row(c).Fill().AlignItems(ui.Stretch)
 	row.Children(func() {

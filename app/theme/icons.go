@@ -16,5 +16,6 @@ var (
 	IconCheck     = icon(`<path d="m3.5 8.4 3 3 6-6.6"/>`)
 	IconCopy      = icon(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.8"/><path d="M10.5 5.5V4.3a1.8 1.8 0 0 0-1.8-1.8H4.3a1.8 1.8 0 0 0-1.8 1.8v4.4a1.8 1.8 0 0 0 1.8 1.8h1.2"/>`)
 	IconMilestone = icon(`<path d="M4 13.5v-11M4 3h7.5l-1.8 2.8 1.8 2.8H4"/>`)
+	IconPlus      = icon(`<path d="M8 3.5v9M3.5 8h9"/>`)
 	IconClose     = icon(`<path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/>`)
 )

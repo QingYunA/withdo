@@ -189,6 +189,9 @@ const (
 	SidebarWidth    float32 = 220
 	InspectorWidth  float32 = 360
 	ColumnWidth     float32 = 248
+	MinColumnWidth  float32 = 208 // an active column narrows to this before another one collapses
+	StripWidth      float32 = 44  // a collapsed column
+	BoardPadding    float32 = 16
 	ColumnGap       float32 = 12
 	WindowMinWidth          = 800
 	WindowMinHeight         = 520

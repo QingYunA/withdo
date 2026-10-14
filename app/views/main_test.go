@@ -66,10 +66,10 @@ func TestDroppingOnTheSameColumnChangesNothing(t *testing.T) {
 
 func TestClickingACardOpensTheInspectorAndEscCloses(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	if err := tt.Click("Write the release notes"); err != nil {
+	if err := tt.Click("Port core to Go"); err != nil {
 		t.Fatal(err)
 	}
-	if m.openID != 5 || !tt.HasText("ACTIVITY") {
+	if m.openID != 1 || !tt.HasText("ACTIVITY") {
 		t.Fatalf("open %d, texts %q", m.openID, tt.Texts())
 	}
 	tt.Key(0, ui.KeyEscape)
@@ -178,6 +178,12 @@ func TestDoneColumnShowsTenAndShowAll(t *testing.T) {
 	m := NewMain(app)
 	tt := ui.NewTester(m.View, 1840, 900)
 	still(tt)
+	if tt.HasText("Show all 12") {
+		t.Fatal("Done must start collapsed")
+	}
+	if err := tt.Click("Done"); err != nil {
+		t.Fatal(err)
+	}
 	if !tt.HasText("Show all 12") {
 		t.Fatalf("no Show all link: %q", tt.Texts())
 	}

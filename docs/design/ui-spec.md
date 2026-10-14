@@ -122,10 +122,13 @@ Liquid Glass background (glass plugin) with a 12 pt radius; fall back to vibranc
 │  ○ Reply to design feedback      in 1h ⏰     │  remind/due time on the right
 │  ○ Book dentist                  tomorrow     │
 ├──────────────────────────────────────────────┤
-│  ↵ add   ↑↓ select   ⌘↵ open   esc close     │  footer hints, tertiary
+│  ↵ add   ↑↓ select   ⌘↵ open   esc close     │  footer hints, one tertiary style
 └──────────────────────────────────────────────┘
 ```
 
+- Footer hints are one style: label in `text.tertiary`, and only the key glyph a half-step
+  stronger (tertiary mixed 50% toward secondary). Hints never dim or brighten with state; a hint
+  that does not apply right now is simply left out.
 - Rows are 44 px for two-line agent rows, 32 px for one-line rows. Keyboard highlight uses
   `bg.selected` with an 8 pt radius inset 6 px from the edges.
 - Agents section lists tasks with `source = agent` in doing / blocked / review, grouped by
@@ -160,9 +163,30 @@ count of active tasks. A small blocked dot appears after a project that has a bl
 Selected item uses `bg.selected`.
 
 **Board.** Columns: Backlog, Todo, Doing, Blocked, Review, Done. Column header: glyph, name,
-count; no column backgrounds except a subtle `bg.subtle` well while dragging over it. Columns
-are 248 px with 12 px gaps; the board scrolls horizontally when narrower than six columns.
-Done shows the 10 most recent and a "Show all" link.
+count, and at the right a quiet "+" ; no column backgrounds except a subtle `bg.subtle` well
+while dragging over a column. The board is built to fit the window, so it seldom scrolls:
+
+- **Active columns** (at least one task) are 248 pt wide, 12 pt gaps, 16 pt board padding.
+- **Strips.** An empty column collapses into a 44 pt vertical strip: its glyph on top, the name
+  turned on its side (reading downward), the count (0) below, and a "+" at the bottom. The
+  strip shows a hover well and the pointer cursor, and its tooltip says what the column is for
+  (the old empty-column hint). Clicking a strip opens it and keeps it open until its name is
+  clicked.
+- **Dragging.** A strip opens to the drop well while a card is dragged over it, so a card can be
+  dropped on an empty or collapsed column. Dropping on a strip works the same as on a column.
+- **Done** is a strip by default, with its count; click to open (10 most recent and a
+  "Show all" link), click the name to collapse.
+- **Width.** When the active columns do not fit, they narrow to 208 pt first; then columns give
+  way into strips in this order: Backlog, Todo, Review, Doing, Blocked. A column the user opened,
+  the column of the task open in the inspector, and the column being added to never give way. At
+  1100 pt (no inspector) Doing, Blocked and Review show in full beside strips for Backlog, Todo
+  and Done. With the inspector open there is room for the open task's column only; the others
+  stay on screen as strips with their counts.
+- **"+" add.** The "+" at the right of a column header (on header hover; always for Todo and
+  Backlog; on a strip, for Todo and Backlog always and the rest only when the strip is open)
+  puts an inline title input at the top of that column. Enter creates a task in the current
+  project (or the Inbox) with the column's status and closes the input; Esc cancels it (a
+  second Esc closes the inspector). An empty title is ignored. There is no "+" on Done.
 
 **Card.** `bg` with `border` hairline and 8 pt radius, 12 px padding. Line 1: title
 (`body.strong`, up to 3 lines). Line 2, only if any exist: priority bars (if not P2), branch

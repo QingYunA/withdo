@@ -83,6 +83,15 @@ func TestScreensMain(t *testing.T) {
 		mainShot(t, "main-settings-"+suffix+".png", app, dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
 		empty, _ := newEmptyApp(t)
 		mainShot(t, "main-empty-"+suffix+".png", empty, dark, nil)
+		mainShot(t, "main-adding-"+suffix+".png", app, dark, func(tt *ui.Tester, m *Main) {
+			_ = tt.Click("Add task to Todo")
+			tt.Type("Buy a standing desk")
+		})
+		mainShot(t, "main-column-hover-"+suffix+".png", app, dark, func(tt *ui.Tester, m *Main) {
+			r, _ := tt.Find("Blocked")
+			x, y := center(r)
+			tt.Move(x+60, y)
+		})
 	}
 }
 
@@ -109,5 +118,32 @@ func TestScreensDragging(t *testing.T) {
 		time.Sleep(450 * time.Millisecond)
 		tt.Frame()
 		shot(t, "main-dragging-"+suffix+".png", tt.Image(), false, dark)
+	}
+}
+
+// TestScreensDraggingOverAStrip renders a card in flight over the collapsed Done column, which
+// opens to take it.
+func TestScreensDraggingOverAStrip(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		suffix := "light"
+		if dark {
+			suffix = "dark"
+		}
+		app, _, _ := newTestApp(t)
+		m := NewMain(app)
+		tt := ui.NewTester(m.View, 1100, 720)
+		tt.SetScale(2)
+		tt.SetDark(dark)
+		tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
+		from, _ := tt.Find("Port core to Go")
+		to, _ := tt.Find("Done")
+		fx, fy := center(from)
+		tx, ty := center(to)
+		tt.Press(fx, fy)
+		tt.Move(fx+8, fy+8)
+		tt.Move(tx, ty+110)
+		time.Sleep(450 * time.Millisecond)
+		tt.Frame()
+		shot(t, "main-dragging-strip-"+suffix+".png", tt.Image(), false, dark)
 	}
 }

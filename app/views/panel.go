@@ -44,7 +44,7 @@ func (p *Panel) View(c *ui.Context) {
 		p.errorStrip(c, t)
 		p.list(c, t, model, ids)
 		hairline(c, t)
-		p.footer(c, t, ids)
+		p.footer(c, t)
 	})
 }
 
@@ -226,18 +226,18 @@ func (p *Panel) mine(c *ui.Context, t *theme.Tokens, m panelModel, ids []int, of
 	}
 }
 
-func (p *Panel) footer(c *ui.Context, t *theme.Tokens, ids []int) {
+func (p *Panel) footer(c *ui.Context, t *theme.Tokens) {
 	ui.Row(c).Height(36).Shrink(0).Padding(0, 16).Gap(16).AlignItems(ui.Center).Children(func() {
-		primary, dim := "add", strings.TrimSpace(p.query) == ""
+		primary := "add"
 		if p.selected >= 0 {
-			primary, dim = "open", false
+			primary = "open"
 		}
-		hint(c, t, "↵", primary, dim)
-		hint(c, t, "↑↓", "select", len(ids) == 0)
+		hint(c, t, "↵", primary)
+		hint(c, t, "↑↓", "select")
 		if p.selected < 0 {
-			hint(c, t, "⌘↵", "open", true)
+			hint(c, t, "⌘↵", "open")
 		}
 		ui.Spacer(c)
-		hint(c, t, "esc", "close", false)
+		hint(c, t, "esc", "close")
 	})
 }

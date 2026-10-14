@@ -29,14 +29,11 @@ func pill(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 	})
 }
 
-// hint is one footer key hint: the key in secondary, its action in tertiary.
-func hint(c *ui.Context, t *theme.Tokens, key, action string, dim bool) {
-	row := ui.Row(c).Gap(5)
-	if dim {
-		row.Opacity(0.55)
-	}
-	row.Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, key)
+// hint is one footer key hint. Every hint has the same tertiary style whether or not its action
+// is available right now; the key glyph alone is a step stronger than its label.
+func hint(c *ui.Context, t *theme.Tokens, key, action string) {
+	ui.Row(c).Gap(5).Children(func() {
+		theme.Text(c, theme.Meta, t.TextTertiary.Mix(t.TextSecondary, 0.5), key)
 		theme.Text(c, theme.Meta, t.TextTertiary, action)
 	})
 }
