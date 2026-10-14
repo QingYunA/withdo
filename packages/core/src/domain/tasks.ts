@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite";
-import { DomainError } from "./errors.ts";
+import { DomainError, NotFoundError } from "./errors.ts";
 import { getMilestone } from "./milestones.ts";
 import { getProject } from "./projects.ts";
 import { nowIso, TERMINAL_STATUSES, type Priority, type Task, type TaskStatus } from "./types.ts";
@@ -44,7 +44,7 @@ export function getTask(db: Database, id: number): Task | null {
 
 function requireTask(db: Database, id: number): Task {
   const task = getTask(db, id);
-  if (!task) throw new DomainError(`task ${id} not found`, "task_id");
+  if (!task) throw new NotFoundError(`task ${id} not found`, "task_id");
   return task;
 }
 
@@ -55,11 +55,11 @@ function checkRefs(
   milestoneId: number | null,
 ): { projectId: number | null; milestoneId: number | null } {
   if (projectId !== null && !getProject(db, projectId)) {
-    throw new DomainError(`project ${projectId} not found`, "project_id");
+    throw new NotFoundError(`project ${projectId} not found`, "project_id");
   }
   if (milestoneId === null) return { projectId, milestoneId };
   const milestone = getMilestone(db, milestoneId);
-  if (!milestone) throw new DomainError(`milestone ${milestoneId} not found`, "milestone_id");
+  if (!milestone) throw new NotFoundError(`milestone ${milestoneId} not found`, "milestone_id");
   if (projectId !== null && milestone.project_id !== projectId) {
     throw new DomainError(`milestone ${milestoneId} belongs to another project`, "milestone_id");
   }

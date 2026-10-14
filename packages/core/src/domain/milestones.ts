@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import { DomainError } from "./errors.ts";
+import { NotFoundError } from "./errors.ts";
 import { getProject } from "./projects.ts";
 import { nowIso, type Milestone } from "./types.ts";
 
@@ -14,7 +14,7 @@ export function getMilestone(db: Database, id: number): Milestone | null {
 }
 
 export function createMilestone(db: Database, input: CreateMilestoneInput): Milestone {
-  if (!getProject(db, input.project_id)) throw new DomainError(`project ${input.project_id} not found`, "project_id");
+  if (!getProject(db, input.project_id)) throw new NotFoundError(`project ${input.project_id} not found`, "project_id");
   const result = db.run("INSERT INTO milestones (project_id, title, due_at, created_at) VALUES (?, ?, ?, ?)", [
     input.project_id,
     input.title,

@@ -8,3 +8,11 @@ export class DomainError extends Error {
     this.field = field;
   }
 }
+
+/** A referenced row does not exist. Still a DomainError, so callers that catch the base class are unaffected. */
+export class NotFoundError extends DomainError {
+  constructor(message: string, field?: string) {
+    super(message, field);
+    this.name = "NotFoundError";
+  }
+}

@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import { DomainError } from "./errors.ts";
+import { NotFoundError } from "./errors.ts";
 import { resolveProjectFromCwd } from "./projects.ts";
 import { createTask, findOpenTask, getTask, updateTask, type TaskPatch } from "./tasks.ts";
 import { nowIso, type Report, type Task, type TaskStatus } from "./types.ts";
@@ -78,7 +78,7 @@ function patchFrom(input: ReportProgressInput, branch?: string): TaskPatch {
 function locateOrCreate(db: Database, input: ReportProgressInput): { task: Task; created: boolean } {
   if (input.task_id !== undefined) {
     const task = getTask(db, input.task_id);
-    if (!task) throw new DomainError(`task ${input.task_id} not found`, "task_id");
+    if (!task) throw new NotFoundError(`task ${input.task_id} not found`, "task_id");
     return { task, created: false };
   }
   const resolved = input.cwd !== undefined ? resolveProjectFromCwd(db, input.cwd) : null;

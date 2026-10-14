@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { resolveGitContext, type GitContext } from "../git.ts";
-import { DomainError } from "./errors.ts";
+import { DomainError, NotFoundError } from "./errors.ts";
 import { nowIso, type Project } from "./types.ts";
 
 export interface ResolvedProject {
@@ -92,7 +92,7 @@ export function upsertProject(db: Database, input: UpsertProjectInput): Project 
 /** Resolve a project id from an explicit id or a cwd. Null means "no project" (inbox). */
 export function resolveProjectId(db: Database, input: { project_id?: number; cwd?: string }): number | null {
   if (input.project_id !== undefined) {
-    if (!getProject(db, input.project_id)) throw new DomainError(`project ${input.project_id} not found`, "project_id");
+    if (!getProject(db, input.project_id)) throw new NotFoundError(`project ${input.project_id} not found`, "project_id");
     return input.project_id;
   }
   if (input.cwd !== undefined) return resolveProjectFromCwd(db, input.cwd)?.project.id ?? null;
