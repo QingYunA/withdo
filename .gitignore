@@ -8,3 +8,5 @@ coverage/
 apps/desktop/resources/*/bin/adhd-core
 apps/desktop/build/
 apps/desktop/.mygo/
+app/build/
+app/.mygo/

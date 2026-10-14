@@ -159,3 +159,13 @@ func byPriorityThenRecent(ts []data.Task) {
 		return ts[i].UpdatedAt.After(ts[j].UpdatedAt)
 	})
 }
+
+// AgentBlocked reports whether any agent task is blocked, for the tray glyph.
+func (a *App) AgentBlocked() bool {
+	for _, t := range a.snap.tasks {
+		if t.Source == data.SourceAgent && t.Status == data.Blocked {
+			return true
+		}
+	}
+	return false
+}
