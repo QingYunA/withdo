@@ -15,15 +15,12 @@
       "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@tanstack/react-query": "^5.104.2",
-        "@tauri-apps/api": "^2.12.3",
-        "@tauri-apps/plugin-notification": "^2.6.0",
-        "@tauri-apps/plugin-opener": "^2.7.1",
+        "mygo-runtime": "0.4.8",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
       },
       "devDependencies": {
         "@tailwindcss/vite": "^4.3.3",
-        "@tauri-apps/cli": "^2.12.2",
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/react": "^16.3.3",
         "@testing-library/user-event": "^14.6.8",
@@ -34,6 +31,7 @@
         "@vitest/coverage-v8": "^5.0.4",
         "eventsource": "^5.1.2",
         "jsdom": "^30.1.2",
+        "mygo-cli": "0.4.8",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.4",
         "vitest": "^5.0.4",
@@ -95,6 +93,18 @@
     "@dnd-kit/core": ["@dnd-kit/core@6.3.1", "https://mirrors.cloud.tencent.com/npm/@dnd-kit/core/-/core-6.3.1.tgz", { "dependencies": { "@dnd-kit/accessibility": "^3.1.1", "@dnd-kit/utilities": "^3.2.2", "tslib": "^2.0.0" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-xkGBRQQab4RLwgXxoqETICr6S5JlogafbhNsidmrkVv2YRs5MLwpjoF2qpiGjQt8S9AoxtIV603s0GIUpY5eYQ=="],
 
     "@dnd-kit/utilities": ["@dnd-kit/utilities@3.2.2", "https://mirrors.cloud.tencent.com/npm/@dnd-kit/utilities/-/utilities-3.2.2.tgz", { "dependencies": { "tslib": "^2.0.0" }, "peerDependencies": { "react": ">=16.8.0" } }, "sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg=="],
+
+    "@egoist/mygo-cli-darwin-arm64": ["@egoist/mygo-cli-darwin-arm64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-darwin-arm64/-/mygo-cli-darwin-arm64-0.4.8.tgz", { "os": "darwin", "cpu": "arm64" }, "sha512-2kj8dP++KassZih2eTvIdXmzi4aIPYocCxMOsOOmmivMwL87icXiQ2/YcricJm1pBL4OY8ZPJ+OFCVkrQBKu9w=="],
+
+    "@egoist/mygo-cli-darwin-x64": ["@egoist/mygo-cli-darwin-x64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-darwin-x64/-/mygo-cli-darwin-x64-0.4.8.tgz", { "os": "darwin", "cpu": "x64" }, "sha512-RVmmHftdIPgUyQ67vBAC45KrNz/Q4qM4cvjkqhmZfMINumcQgo3WUfpMbUObnnmWpnAFUy8UNTXF8KAZ3HG/gg=="],
+
+    "@egoist/mygo-cli-linux-arm64": ["@egoist/mygo-cli-linux-arm64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-linux-arm64/-/mygo-cli-linux-arm64-0.4.8.tgz", { "os": "linux", "cpu": "arm64" }, "sha512-N20rJZPXzOl9YpqGKTHJX9kOYVq8pnKCUHgMYLJZqOyn8DT1vtSqMdPZD/UpDz6cMI1hH60jhYUI6I0T/nPLbw=="],
+
+    "@egoist/mygo-cli-linux-x64": ["@egoist/mygo-cli-linux-x64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-linux-x64/-/mygo-cli-linux-x64-0.4.8.tgz", { "os": "linux", "cpu": "x64" }, "sha512-qx7FsT0CMjUsb3diGW6c8WluvWTuOmBqUSvE5vEeZ9grSrdhy7q4GqeR7bo4zZckD2PiiTzhj1NYMdCMvdmo2g=="],
+
+    "@egoist/mygo-cli-win32-arm64": ["@egoist/mygo-cli-win32-arm64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-win32-arm64/-/mygo-cli-win32-arm64-0.4.8.tgz", { "os": "win32", "cpu": "arm64" }, "sha512-GpAHzVn3jiN8vmRZWjMSi/e6yERgVOPR5NKeJ1ZLY8oAaDW3pYlF7SXTP4JAT5lTAMdD0DMVpp/zpAuD44xNOQ=="],
+
+    "@egoist/mygo-cli-win32-x64": ["@egoist/mygo-cli-win32-x64@0.4.8", "https://mirrors.cloud.tencent.com/npm/@egoist/mygo-cli-win32-x64/-/mygo-cli-win32-x64-0.4.8.tgz", { "os": "win32", "cpu": "x64" }, "sha512-fa0LCzp4quYh314SCKyNNOPKtAwKnWo5NF1luXX0nrwVfsvbJonkp+/tw5dO4R3pXmLJmieFN0K7Q1Wu9+XL6g=="],
 
     "@exodus/bytes": ["@exodus/bytes@1.16.0", "https://mirrors.cloud.tencent.com/npm/@exodus/bytes/-/bytes-1.16.0.tgz", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA=="],
 
@@ -181,36 +191,6 @@
     "@tanstack/query-core": ["@tanstack/query-core@5.104.2", "https://mirrors.cloud.tencent.com/npm/@tanstack/query-core/-/query-core-5.104.2.tgz", {}, "sha512-/qbsxJK5c3Ve1aFIULWYNcT2jeRUAiD4HME6Eu2ZdpofHoVgAjpkQhLg5xHuOoBkTPQUJLfP7zOxy0qsBcqROA=="],
 
     "@tanstack/react-query": ["@tanstack/react-query@5.104.2", "https://mirrors.cloud.tencent.com/npm/@tanstack/react-query/-/react-query-5.104.2.tgz", { "dependencies": { "@tanstack/query-core": "5.104.2" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-xKmzWGhadbE5wGS/ZmXShRITnI9oItox5GO14KvFZco3+vhTAyXS1erYzJWdiY280zapAGJXFUL9nHgwP6SV/g=="],
-
-    "@tauri-apps/api": ["@tauri-apps/api@2.12.3", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/api/-/api-2.12.3.tgz", {}, "sha512-9s0PKw0p4r3kFq92jhpivYSp+cSht15o0gXpZxuQd0+dV9KCexEVkNaLELVoLdJWyoH4KlfQo5h3W2LIM8siJg=="],
-
-    "@tauri-apps/cli": ["@tauri-apps/cli@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli/-/cli-2.12.2.tgz", { "optionalDependencies": { "@tauri-apps/cli-darwin-arm64": "2.12.2", "@tauri-apps/cli-darwin-x64": "2.12.2", "@tauri-apps/cli-linux-arm-gnueabihf": "2.12.2", "@tauri-apps/cli-linux-arm64-gnu": "2.12.2", "@tauri-apps/cli-linux-arm64-musl": "2.12.2", "@tauri-apps/cli-linux-riscv64-gnu": "2.12.2", "@tauri-apps/cli-linux-x64-gnu": "2.12.2", "@tauri-apps/cli-linux-x64-musl": "2.12.2", "@tauri-apps/cli-win32-arm64-msvc": "2.12.2", "@tauri-apps/cli-win32-ia32-msvc": "2.12.2", "@tauri-apps/cli-win32-x64-msvc": "2.12.2" }, "bin": { "tauri": "tauri.js" } }, "sha512-PMSppzAnlT+BvZtRKuidxjRSm2r5t8kDpJ/czmmQUa0AtDNTwrjLE8vApK3phCWGg7isfnYL46Dl1jB4ArI0hA=="],
-
-    "@tauri-apps/cli-darwin-arm64": ["@tauri-apps/cli-darwin-arm64@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-2.12.2.tgz", { "os": "darwin", "cpu": "arm64" }, "sha512-Lk3zaBTfzNvA7670Al5PNgo2M/95uaDPe1yp+ILJeDOmol87XiYuK5E5+FUbK5e6U6OORx9qpZdOo2U+5tETtQ=="],
-
-    "@tauri-apps/cli-darwin-x64": ["@tauri-apps/cli-darwin-x64@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-darwin-x64/-/cli-darwin-x64-2.12.2.tgz", { "os": "darwin", "cpu": "x64" }, "sha512-2CyYjJ833JB3sKRz4B0W/Tv4oOVC16ws1bxdSCWj1XvrmanWwvZi99e5tNIoCHwHhcOm0jh+sh0PCGQyls6Z+w=="],
-
-    "@tauri-apps/cli-linux-arm-gnueabihf": ["@tauri-apps/cli-linux-arm-gnueabihf@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-arm-gnueabihf/-/cli-linux-arm-gnueabihf-2.12.2.tgz", { "os": "linux", "cpu": "arm" }, "sha512-uvt2xbone4JftKarelssi86Kqnl7JiG1Smh5+Ae+nZmtM+JUhTGmqkcqfUPXRW8Ygwog92POZvd4oGDN9j8eXQ=="],
-
-    "@tauri-apps/cli-linux-arm64-gnu": ["@tauri-apps/cli-linux-arm64-gnu@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-arm64-gnu/-/cli-linux-arm64-gnu-2.12.2.tgz", { "os": "linux", "cpu": "arm64" }, "sha512-DZlDJ24u3tlocKOYqzR+b2M+Qr+5WFcoMBZ7EfdhHN5j3ZXwBBpms4G4gyNvPCrak5vMzmdZ65ecBXPJcC+5sA=="],
-
-    "@tauri-apps/cli-linux-arm64-musl": ["@tauri-apps/cli-linux-arm64-musl@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-arm64-musl/-/cli-linux-arm64-musl-2.12.2.tgz", { "os": "linux", "cpu": "arm64" }, "sha512-pb+RTZUYH/p0gR4j4ecCCq+FNfz3W3eKuUQvVEBn7MQZx6DzfLO7FaYzt2NyDKWpdNN3lP10mdzOvw3R5P5aAQ=="],
-
-    "@tauri-apps/cli-linux-riscv64-gnu": ["@tauri-apps/cli-linux-riscv64-gnu@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-riscv64-gnu/-/cli-linux-riscv64-gnu-2.12.2.tgz", { "os": "linux", "cpu": "none" }, "sha512-nidEvDUJyHYNbIv9MUk6KiEix8IXfRh4Wj2G2SA5g8nFmgbBCwazUNWYiG/LhNeNbfZpBMLerRBUtoQ5K0GidA=="],
-
-    "@tauri-apps/cli-linux-x64-gnu": ["@tauri-apps/cli-linux-x64-gnu@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-x64-gnu/-/cli-linux-x64-gnu-2.12.2.tgz", { "os": "linux", "cpu": "x64" }, "sha512-gkXyYn3w+Xfc8nz/DleEbkm1M7bBuU2cejqUXNmI98cA2P5kp+oPmS4ALTorb1FaNWjpsKoYZBWsbS9BXxYFkQ=="],
-
-    "@tauri-apps/cli-linux-x64-musl": ["@tauri-apps/cli-linux-x64-musl@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-linux-x64-musl/-/cli-linux-x64-musl-2.12.2.tgz", { "os": "linux", "cpu": "x64" }, "sha512-MrjgoZ09s8Hsn99XvxSNvK8NQTZxi7XiyK3FxxytzfHgz2jb3qUT69CZtsokRkN/zdi9rCgrMtq+w9XNICjcfQ=="],
-
-    "@tauri-apps/cli-win32-arm64-msvc": ["@tauri-apps/cli-win32-arm64-msvc@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-win32-arm64-msvc/-/cli-win32-arm64-msvc-2.12.2.tgz", { "os": "win32", "cpu": "arm64" }, "sha512-BR+CYM7iF3lkfyTtVkwMQU/s9hwegLpj3UqDjaxKCPmixQCa1csBBPy3C75V+FhLtOjIXNna4Gt6Vm9oxbV+qA=="],
-
-    "@tauri-apps/cli-win32-ia32-msvc": ["@tauri-apps/cli-win32-ia32-msvc@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-win32-ia32-msvc/-/cli-win32-ia32-msvc-2.12.2.tgz", { "os": "win32", "cpu": "ia32" }, "sha512-zODJo9l3TbNBM+GrO/yPqGeELNMK5cjIc+QHh1WQc3l8tD+jDZGTQyYuAxViCsM6Uh5uWJ//RnCZG9LXrvsXww=="],
-
-    "@tauri-apps/cli-win32-x64-msvc": ["@tauri-apps/cli-win32-x64-msvc@2.12.2", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/cli-win32-x64-msvc/-/cli-win32-x64-msvc-2.12.2.tgz", { "os": "win32", "cpu": "x64" }, "sha512-cQXI2ZaZmwBDt0XATCqASVanYizxkEE3ceQVlVHXaQ51HzsQUWA04c9Nz7LrrY2lgAu3jFMyat+8Yz3Z2R2qBA=="],
-
-    "@tauri-apps/plugin-notification": ["@tauri-apps/plugin-notification@2.6.0", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/plugin-notification/-/plugin-notification-2.6.0.tgz", { "dependencies": { "@tauri-apps/api": "^2.12.0" } }, "sha512-QvpsQ6L6uSGT/7AmIrEUrfOiqjP1S8HtBU1ieaX6bvOFXGjnoxbNMR9V+8PVhLqRdOntqevpUJ3c52S+1afsIw=="],
-
-    "@tauri-apps/plugin-opener": ["@tauri-apps/plugin-opener@2.7.1", "https://mirrors.cloud.tencent.com/npm/@tauri-apps/plugin-opener/-/plugin-opener-2.7.1.tgz", { "dependencies": { "@tauri-apps/api": "^2.12.0" } }, "sha512-XkXdt30rontti9TII/gBBxFRXWfj8DiprFW7RgBFRBj1OhdfjBNVcFqSEWkkZ4hXafHnuEnB7F1sFsmu6uyywQ=="],
 
     "@testing-library/dom": ["@testing-library/dom@10.4.2", "https://mirrors.cloud.tencent.com/npm/@testing-library/dom/-/dom-10.4.2.tgz", { "dependencies": { "@babel/code-frame": "^7.10.4", "@babel/runtime": "^7.12.5", "@types/aria-query": "^5.0.1", "aria-query": "5.3.0", "dom-accessibility-api": "^0.5.9", "lz-string": "^1.5.0", "picocolors": "1.1.1", "pretty-format": "^27.0.2" } }, "sha512-yzr2S9HyAIdhz2/6qHgbs665Q7PKVcDF05vsOlHPxG1mo36gKVesdYVeDLnXgfjJ03CrKRk08knc6+E/9m8v2Q=="],
 
@@ -353,6 +333,10 @@
     "mdn-data": ["mdn-data@2.27.1", "https://mirrors.cloud.tencent.com/npm/mdn-data/-/mdn-data-2.27.1.tgz", {}, "sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ=="],
 
     "min-indent": ["min-indent@1.0.1", "https://mirrors.cloud.tencent.com/npm/min-indent/-/min-indent-1.0.1.tgz", {}, "sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg=="],
+
+    "mygo-cli": ["mygo-cli@0.4.8", "https://mirrors.cloud.tencent.com/npm/mygo-cli/-/mygo-cli-0.4.8.tgz", { "optionalDependencies": { "@egoist/mygo-cli-darwin-arm64": "0.4.8", "@egoist/mygo-cli-darwin-x64": "0.4.8", "@egoist/mygo-cli-linux-arm64": "0.4.8", "@egoist/mygo-cli-linux-x64": "0.4.8", "@egoist/mygo-cli-win32-arm64": "0.4.8", "@egoist/mygo-cli-win32-x64": "0.4.8" }, "bin": { "mygo": "bin/mygo.js" } }, "sha512-Tb/CoT1V1XZEgbqhjwqgfQPyOFdu47pETk4ZHqdhfrMtygXWHZshyzyf/Jpy2vsk2f8TSdr9LsVZsNrLexND4A=="],
+
+    "mygo-runtime": ["mygo-runtime@0.4.8", "https://mirrors.cloud.tencent.com/npm/mygo-runtime/-/mygo-runtime-0.4.8.tgz", {}, "sha512-CMoey/iUiZzETDdZq0iQsvyKFGAEnOBUltheV2ni2iU7SCpyZAB69U+8jGg/P4qeNhRbkQqLbj4M8M/kYJ7bKg=="],
 
     "nanoid": ["nanoid@3.3.20", "https://mirrors.cloud.tencent.com/npm/nanoid/-/nanoid-3.3.20.tgz", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ=="],
 

@@ -1,21 +1,17 @@
-// Compiles packages/core into a standalone binary that Tauri bundles as the `adhd-core` sidecar.
-// Tauri expects the file name `<name>-<rustc host triple>`.
+// Compiles packages/core into a standalone binary that mygo ships as a resource.
+// mygo copies resources/<os>-<arch>/ into Contents/Resources, so the sidecar ends up at
+// Contents/Resources/bin/adhd-core and the Go side finds it with App.Path(PathResources).
 import { spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const desktopDir = resolve(import.meta.dirname, "..");
 const entry = resolve(desktopDir, "../../packages/core/src/cli.ts");
-const outDir = join(desktopDir, "src-tauri", "binaries");
+const platform = `${process.platform}-${process.arch}`;
+const outDir = join(desktopDir, "resources", platform, "bin");
+const outfile = join(outDir, "adhd-core");
 
-function run(command: string, args: readonly string[]): string {
-  const result = spawnSync(command, args, { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
-  if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed with status ${result.status}`);
-  return result.stdout.trim();
-}
-
-const triple = run("rustc", ["--print", "host-tuple"]);
-const outfile = join(outDir, `adhd-core-${triple}`);
 mkdirSync(outDir, { recursive: true });
-run("bun", ["build", "--compile", entry, "--outfile", outfile]);
+const result = spawnSync("bun", ["build", "--compile", entry, "--outfile", outfile], { stdio: "inherit" });
+if (result.status !== 0) throw new Error(`bun build --compile failed with status ${result.status}`);
 process.stderr.write(`sidecar: ${outfile}\n`);
