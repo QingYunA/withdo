@@ -220,3 +220,12 @@ func TestErrorsDuringShutdownAreNotReported(t *testing.T) {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+func TestRunReturnsNilWhenCancelledBeforeStart(t *testing.T) {
+	db, _ := testutil.OpenDB(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := watch.Run(ctx, watch.Config{DB: db}); err != nil {
+		t.Errorf("Run = %v, want nil", err)
+	}
+}

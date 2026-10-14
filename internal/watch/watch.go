@@ -47,11 +47,17 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 	conn, err := cfg.DB.Conn(ctx)
 	if err != nil {
+		if ctx.Err() != nil {
+			return nil // cancelled before it started: nothing to watch
+		}
 		return fmt.Errorf("watch: acquire connection: %w", err)
 	}
 	defer func() { _ = conn.Close() }()
 	last, err := dataVersion(ctx, conn)
 	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
 		return err
 	}
 	w := &poller{cfg: cfg, conn: conn, last: last}

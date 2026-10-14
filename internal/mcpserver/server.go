@@ -55,7 +55,7 @@ type tools struct {
 func New(core *domain.Core, opts Options) *mcp.Server {
 	t := &tools{core: core, defaultCwd: opts.DefaultCwd, log: opts.Logger}
 	if t.log == nil {
-		t.log = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		t.log = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
 	}
 	if t.defaultCwd == "" {
 		if wd, err := os.Getwd(); err == nil {
