@@ -3,7 +3,6 @@ package views
 import (
 	"time"
 
-	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -60,7 +59,7 @@ func (m *Main) copyButton(c *ui.Context, t *theme.Tokens) {
 	}
 	btn.Children(func() {
 		if copied {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done))
+			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.TextSecondary)
 			theme.Text(c, theme.Meta, t.TextSecondary, "Copied")
 			return
 		}

@@ -26,8 +26,8 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 	ui.Row(c.Key(r.ID)).AlignItems(ui.Stretch).Gap(12).Children(func() {
 		ui.Column(c).Width(6).Shrink(0).AlignItems(ui.Center).Children(func() {
 			dot := t.TextTertiary
-			if first {
-				dot = t.Status(r.Status)
+			if first && r.Status == data.Blocked {
+				dot = t.Blocked() // the one report that needs attention
 			}
 			theme.Dot(c, dot, 6).Margin(6, 0, 0)
 			if !last {

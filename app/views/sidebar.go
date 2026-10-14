@@ -22,6 +22,9 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		for _, p := range m.app.snap.projects {
 			m.projectRow(c, t, p)
 		}
+		if len(m.app.snap.projects) == 0 {
+			theme.Paragraph(c, theme.Meta, t.TextTertiary, "Projects appear when an agent reports from a repository.", 0).Padding(0, 18)
+		}
 		ui.Spacer(c)
 		m.settingsRow(c, t)
 		ui.Box(c).Height(8).Shrink(0)

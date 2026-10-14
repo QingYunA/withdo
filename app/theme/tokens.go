@@ -52,7 +52,7 @@ var light = &Tokens{
 	Accent:        ui.Hex("#5B5BD6"),
 	AccentText:    ui.Hex("#FFFFFF"),
 	Stale:         ui.Hex("#D97706"),
-	Shadow:        ui.RGBA(0, 0, 0, 0.18),
+	Shadow:        ui.RGBA(0, 0, 0, 0.26),
 	status: map[data.Status]ui.Color{
 		data.Backlog:   ui.Hex("#AEAEB2"),
 		data.Todo:      ui.Hex("#8E8E93"),
@@ -125,7 +125,7 @@ func isDefaultSystemAccent(c ui.Color) bool {
 	if c.A == 0 {
 		return true
 	}
-	near := func(a, b uint8) bool { return a+6 >= b && b+6 >= a }
+	near := func(a, b uint8) bool { return int(a)+6 >= int(b) && int(b)+6 >= int(a) }
 	for _, d := range [][3]uint8{{0, 122, 255}, {10, 132, 255}, {0, 125, 255}} {
 		if near(c.R, d[0]) && near(c.G, d[1]) && near(c.B, d[2]) {
 			return true

@@ -19,7 +19,7 @@ var (
 	BodyStrong = Style{Size: 13, Line: 18, Weight: 500}
 	Meta       = Style{Size: 12, Line: 16, Weight: 400}
 	Section    = Style{Size: 11, Line: 14, Weight: 600, Tracking: 0.4, Upper: true}
-	Mono       = Style{Size: 11.5, Line: 16, Weight: 400, Mono: true}
+	Mono       = Style{Size: 12, Line: 16, Weight: 400, Mono: true}
 )
 
 // MonoFamily is the font of branches and pull request numbers.

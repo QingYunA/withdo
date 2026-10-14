@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -121,7 +122,7 @@ func shadow(dst *image.RGBA, r image.Rectangle, spread int, dark bool) {
 		for x := r.Min.X - spread; x < r.Max.X+spread; x++ {
 			dx := max(r.Min.X-x, 0, x-r.Max.X+1)
 			dy := max(r.Min.Y-y, 0, y-r.Max.Y+1)
-			d := float64(max(dx, dy))
+			d := math.Hypot(float64(dx), float64(dy))
 			if d >= float64(spread) || !(image.Point{x, y}).In(dst.Bounds()) {
 				continue
 			}
@@ -131,4 +132,11 @@ func shadow(dst *image.RGBA, r image.Rectangle, spread int, dark bool) {
 			dst.SetRGBA(x, y, c)
 		}
 	}
+}
+
+// settle waits out the 160 ms color transitions that a change of appearance starts, then draws
+// the frame that follows.
+func settle(tt *ui.Tester) {
+	time.Sleep(300 * time.Millisecond)
+	tt.Frame()
 }

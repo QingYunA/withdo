@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -127,7 +126,7 @@ func (p *Panel) notice(c *ui.Context, t *theme.Tokens) {
 		opacity = float32(noticeFor-age) / float32(300*time.Millisecond)
 	}
 	ui.Row(c).Gap(6).Shrink(0).Opacity(opacity).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done))
+		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.TextSecondary)
 		theme.Text(c, theme.Meta, t.TextSecondary, "Added to Inbox")
 	})
 }
@@ -235,7 +234,9 @@ func (p *Panel) footer(c *ui.Context, t *theme.Tokens, ids []int) {
 		}
 		hint(c, t, "↵", primary, dim)
 		hint(c, t, "↑↓", "select", len(ids) == 0)
-		hint(c, t, "⌘↵", "open", p.selected < 0)
+		if p.selected < 0 {
+			hint(c, t, "⌘↵", "open", true)
+		}
 		ui.Spacer(c)
 		hint(c, t, "esc", "close", false)
 	})

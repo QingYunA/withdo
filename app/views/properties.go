@@ -113,8 +113,8 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	propRow(c, t, "Branch", func() {
-		box := ui.Box(c).Grow(1).MinWidth(0).Height(28).Padding(0, 0).Center()
-		box.Margin(0).Children(func() {
+		box := ui.Box(c).Grow(1).MinWidth(0).Height(28).Justify(ui.Center)
+		box.Children(func() {
 			branch, ok := textField(c, t, m.inspector.fields, fieldSpec{
 				name: "Branch", value: task.Branch, style: theme.Mono, color: t.Text, placeholder: "None",
 			})
@@ -149,7 +149,6 @@ func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, label string, current *ti
 		}
 		btn := valueButton(c, t, "date-"+label).Label(label + ": " + text)
 		btn.Children(func() {
-			ui.Icon(c, theme.IconCalendar).Size(14, 14).TextColor(t.TextSecondary)
 			theme.Text(c, theme.Body, color, text)
 		})
 		if btn.Clicked() {

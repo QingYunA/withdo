@@ -84,3 +84,15 @@ in-memory fake with realistic seed data. Wiring to `internal/domain` happens aft
 
 The built-in agent (M3), gh polling (M4), daily briefing (M5), signing and notarization,
 Windows and Linux builds.
+
+## Phase B notes (native UI)
+
+- Layout: the app is `app/` (package main, shell, tray, notifications) with three subpackages:
+  `app/data` (the UI's `Store` interface, domain mirror types, in-memory fake), `app/theme` (tokens,
+  type scale, vector glyphs) and `app/views` (panel, main window, tests). `app/mygo.json` is the
+  mygo config; the root `go.mod` carries `mygo` as a tool, so `cd app && go tool mygo build`
+  produces `app/build/darwin-arm64/ADHD Todo.app`. No separate module was needed.
+- mygo v0.4.8 is the newest release, but the docs on the main branch are ahead of it: `Element.OnEnter`,
+  `Start`/`End` logical edges and `Timeline` are not in v0.4.8. Check `$GOMODCACHE/github.com/egoist/mygo@v0.4.8`,
+  not the docs, before using an API.
+- Design review images are regenerated with `SCREENS_OUT=$PWD/docs/design/screens go test ./app/...`.

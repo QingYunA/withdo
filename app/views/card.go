@@ -56,11 +56,13 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	}
 	card.Background(bg).Border(1, border)
 	card.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	tilt := card.AnimateTo("tilt", boolTo(dragging), ui.Snappy)
-	card.Rotate(2*tilt).Scale(1+0.025*tilt, 1+0.025*tilt)
+	if !c.Preferences().ReduceMotion { // with Reduce Motion the lift is the shadow alone
+		tilt := card.AnimateTo("tilt", boolTo(dragging), ui.Snappy)
+		card.Rotate(2*tilt).Scale(1+0.025*tilt, 1+0.025*tilt)
+	}
 	if dragging {
 		// The copy that follows the pointer ignores this opacity; the original leaves an empty slot.
-		card.Shadow(0, 14, 30, 0, t.Shadow).Opacity(0)
+		card.Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
 	} else if opacity < 1 {
 		card.Opacity(opacity)
 	}
