@@ -7,8 +7,25 @@ import (
 )
 
 func main() {
+	s := &shell{}
 	core := &Core{}
 	mygo.Bind(core)
+	mygo.Bind(Shell{s})
+
+	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
+	// The panel closing must not end the app, and neither must hiding the main window.
+	mygo.App.OnWindowAllClosed(func() {})
+	// A click on the Dock icon with no window showing brings the main window back.
+	mygo.App.OnActivate(func(hasVisibleWindows bool) {
+		if !hasVisibleWindows {
+			s.showMain("")
+		}
+	})
+	mygo.App.OnQuit(func() {
+		if core.sidecar != nil {
+			core.sidecar.Stop()
+		}
+	})
 
 	mygo.App.WhenReady(func() {
 		// The sidecar starts here, not at the top of main: `mygo generate` runs main up to Run.
@@ -23,11 +40,9 @@ func main() {
 			OnFailed: func(reason string) { _ = CoreError.Broadcast(reason) },
 		})
 		core.sidecar.Start()
-		mygo.NewWindow(mygo.WindowOptions{Title: "ADHD Todo", Width: 1100, Height: 720, URL: "/#/main"})
-	})
-	mygo.App.OnQuit(func() {
-		if core.sidecar != nil {
-			core.sidecar.Stop()
+		s.createMain()
+		if _, err := s.createTray(); err != nil {
+			log.Printf("tray: %v", err)
 		}
 	})
 	if err := mygo.App.Run(); err != nil {
