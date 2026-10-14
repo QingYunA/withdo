@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"log"
+	"time"
 
 	"github.com/egoist/mygo"
 )
@@ -21,7 +23,10 @@ func main() {
 			s.showMain("")
 		}
 	})
+	mygo.App.OnNotificationClick(s.openTaskFromNotification)
+	stopReminders := func() {}
 	mygo.App.OnQuit(func() {
+		stopReminders()
 		if core.sidecar != nil {
 			core.sidecar.Stop()
 		}
@@ -40,6 +45,15 @@ func main() {
 			OnFailed: func(reason string) { _ = CoreError.Broadcast(reason) },
 		})
 		core.sidecar.Start()
+		ctx, cancel := context.WithCancel(context.Background())
+		stopReminders = cancel
+		watcher := &reminderWatcher{
+			endpoint: core.sidecar.Wait,
+			notify:   func(r Reminder) { go notifyReminder(r) },
+			logf:     log.Printf,
+			retry:    time.Second,
+		}
+		go watcher.run(ctx)
 		s.createMain()
 		if _, err := s.createTray(); err != nil {
 			log.Printf("tray: %v", err)
