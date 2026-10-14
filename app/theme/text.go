@@ -54,3 +54,12 @@ func upper(s string) string {
 	}
 	return string(b)
 }
+
+// Paragraph is Text that wraps, for titles that may take several lines; maxLines 0 means no limit.
+func Paragraph(c *ui.Context, s Style, color ui.Color, text string, maxLines int) ui.Element {
+	e := s.Apply(ui.Text(c, text)).TextColor(color)
+	if maxLines > 0 {
+		e = e.MaxLines(maxLines).Ellipsis("…")
+	}
+	return e
+}
