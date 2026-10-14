@@ -72,6 +72,28 @@ func TestNeedsYouOrderIsBlockedReminderReview(t *testing.T) {
 	}
 }
 
+func TestNeedsYouRowsLeaveTheBranchToTheSummary(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
+	if tt.HasText("fix/tray") || tt.HasText("feat/native-ui") {
+		t.Errorf("a Needs you row shows a branch: %q", tt.Texts())
+	}
+	if !tt.HasText("feat/go-core") {
+		t.Error("an Agents at work row lost its branch")
+	}
+}
+
+func TestTightRowsDropTheirCompanions(t *testing.T) {
+	tt, m, _ := newMainTester(t, 860)
+	m.OpenTask(2)
+	tt.Frame()
+	if tt.HasText("feat/go-core") || tt.HasText("claude/issue-218") {
+		t.Errorf("a tight row keeps its companions: %q", tt.Texts())
+	}
+	if !tt.HasText("Port core to Go") {
+		t.Error("a tight row lost its title")
+	}
+}
+
 func TestNeedsYouOpenOpensTheInspector(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	if err := tt.Click("Open Fix tray race on launch"); err != nil {
@@ -153,7 +175,7 @@ func TestAskFieldEnterAddsToInboxAndConfirms(t *testing.T) {
 	if added.ProjectID != nil || added.Source != data.SourceUser || added.Status != data.Todo {
 		t.Errorf("added %+v", added)
 	}
-	if !tt.HasText("Added to Inbox") || tt.HasText("Water the plants") && false {
+	if !tt.HasText("Added to Inbox") {
 		t.Errorf("no confirmation in %q", tt.Texts())
 	}
 	// It is mine and undated, so it also shows under Yours, and the field is empty again.

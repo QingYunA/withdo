@@ -83,7 +83,7 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 			m.app.glyphSlot(c, t, it.Task, fill)
 		}
 		body(c, func() {
-			m.titleLine(c, t, it.Task, it.Project)
+			m.titleLine(c, t, it.Task, it.Project, false)
 			summaryLine(c, t, it.Summary)
 		})
 		right(c, func() {
@@ -136,7 +136,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 		row.Children(func() {
 			m.app.glyphSlot(c, t, it.Task, fill)
 			body(c, func() {
-				m.titleLine(c, t, it.Task, it.Project)
+				m.titleLine(c, t, it.Task, it.Project, true)
 				summaryLine(c, t, it.Summary)
 			})
 			right(c, func() {
@@ -163,7 +163,7 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
 			m.app.glyphSlot(c, t, it.Task, fill)
-			body(c, func() { m.titleLine(c, t, it.Task, it.Project) })
+			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
 			if it.Label != "" {
 				theme.Text(c, theme.Meta, t.TextTertiary, it.Label).Shrink(0)
 			}

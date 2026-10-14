@@ -164,7 +164,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	row.Children(func() {
 		ui.Box(c).Width(12).Shrink(0) // the glyph's column, and the gap after it, make 24
 		body(c, func() {
-			m.titleLine(c, t, task, "")
+			m.titleLine(c, t, task, "", true)
 			summaryLine(c, t, listSummary(task, ot))
 		})
 		right(c, func() { m.listRight(c, t, task, ot) })
