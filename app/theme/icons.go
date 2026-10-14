@@ -17,5 +17,8 @@ var (
 	IconCopy      = icon(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.8"/><path d="M10.5 5.5V4.3a1.8 1.8 0 0 0-1.8-1.8H4.3a1.8 1.8 0 0 0-1.8 1.8v4.4a1.8 1.8 0 0 0 1.8 1.8h1.2"/>`)
 	IconMilestone = icon(`<path d="M4 13.5v-11M4 3h7.5l-1.8 2.8 1.8 2.8H4"/>`)
 	IconPlus      = icon(`<path d="M8 3.5v9M3.5 8h9"/>`)
+	IconSparkle   = icon(`<path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z" fill="currentColor" stroke-width="1"/>`)
+	IconBell      = icon(`<path d="M8 2.5a3.6 3.6 0 0 0-3.6 3.6v2.6L3.2 10.6h9.6l-1.2-1.9V6.1A3.6 3.6 0 0 0 8 2.5zM6.6 12.2a1.4 1.4 0 0 0 2.8 0"/>`)
+	IconNow       = icon(`<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.9" fill="currentColor" stroke="none"/>`)
 	IconClose     = icon(`<path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/>`)
 )

@@ -18,6 +18,16 @@ type inspector struct {
 	when     time.Time // the date being picked
 }
 
+// editing reports whether a text field of the inspector has the keyboard.
+func (i *inspector) editing() bool {
+	for _, f := range i.fields {
+		if f.editing {
+			return true
+		}
+	}
+	return false
+}
+
 func (i *inspector) reset() {
 	i.fields = fields{}
 	i.dueOpen, i.remOpen = false, false

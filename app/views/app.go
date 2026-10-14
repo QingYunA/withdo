@@ -163,3 +163,21 @@ func byPriorityThenRecent(ts []data.Task) {
 		return ts[i].UpdatedAt.After(ts[j].UpdatedAt)
 	})
 }
+
+// latestReport is a task's newest report in the snapshot, or nil.
+func (a *App) latestReport(id int) *data.Report {
+	if d, ok := a.snap.details[id]; ok && len(d.Reports) > 0 {
+		return &d.Reports[0]
+	}
+	return nil
+}
+
+// buildNow sorts the snapshot into the sections of the Now screen. A task that was just marked
+// done stays in its place while its completion plays.
+func (a *App) buildNow() data.Now {
+	tasks := a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
+	return data.BuildNow(data.NowInput{
+		Now: a.Now(), Tasks: tasks, StaleHours: a.snap.overview.StaleHours,
+		Latest: a.latestReport, ProjectName: a.projectName,
+	})
+}

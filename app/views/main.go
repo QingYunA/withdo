@@ -11,60 +11,83 @@ import (
 // titleBarHeight is the unified title bar: tall enough for the traffic lights and a 20 pt title.
 const titleBarHeight float32 = 52
 
-// nav says what the sidebar selected: the inbox, or a project.
+// dragStrip is the quiet band above a page that still drags the window.
+const dragStrip float32 = 24
+
+type screen int
+
+const (
+	screenNow screen = iota
+	screenInbox
+	screenProject
+)
+
+// nav says what the sidebar selected: Now, the Inbox, or a project. It is comparable, so it keys
+// the per-screen state.
 type nav struct {
-	inbox     bool
+	screen    screen
 	projectID int
 }
 
-// Main is the main window: sidebar, board, inspector, and the settings sheet.
+// Main is the window: sidebar, one screen, the inspector, and the settings sheet.
 type Main struct {
 	app *App
 
-	nav         nav
-	openID      int // task open in the inspector, 0 for none
-	settings    bool
-	milestone   map[int]int                  // milestone filter per project, 0 for all
-	showAllDone map[nav]bool                 // "Show all" opened on the Done column
-	pinned      map[nav]map[data.Status]bool // collapsed columns the user opened
-	adding      data.Status                  // column with the inline title input, "" for none
-	addNav      nav                          // the selection the input belongs to
-	addBuf      string
-	dragging    int // task being dragged, for the empty slot it leaves
+	nav       nav
+	openID    int // task open in the inspector, 0 for none
+	sel       int // task the keyboard highlights, 0 for none
+	moved     bool
+	wantAsk   bool // Cmd+K was pressed: the ask field takes the focus once it is drawn
+	askFrames int  // how many frames the ask field has been drawn since the screen changed
+	settings  bool
+
+	milestone map[int]int  // milestone filter per project, 0 for all
+	board     map[int]bool // projects shown as a board
+	expanded  map[nav]bool // Done and Backlog opened under a list
+	allDone   map[nav]bool // every Done task, not the recent ten
+	adding    bool         // the inline "Add a task" input is open
+	addNav    nav          // the screen it belongs to
+	addBuf    string
+	dragging  int // task being dragged this frame, so the hidden statuses show as drop targets
+	wasDrag   int // the one dragged in the frame before: the targets live a frame past the drop
+
+	ask     askState
+	askRef  ui.Handle // the ask field, for Cmd+K
+	listRef ui.Handle // the page, so the arrow keys and Space reach it
 
 	scroll    ui.ScrollState
 	inspector inspector
 	copied    time.Time
 }
 
-// NewMain opens on the first project, or the inbox when there is none.
+// NewMain opens on Now.
 func NewMain(a *App) *Main {
-	m := &Main{app: a, milestone: map[int]int{}, showAllDone: map[nav]bool{}, pinned: map[nav]map[data.Status]bool{}}
-	if ps := a.snap.projects; len(ps) > 0 {
-		m.nav = nav{projectID: ps[0].ID}
-	} else {
-		m.nav = nav{inbox: true}
+	return &Main{
+		app: a, milestone: map[int]int{}, board: map[int]bool{},
+		expanded: map[nav]bool{}, allDone: map[nav]bool{},
 	}
-	return m
 }
 
-// OpenTask shows a task in the inspector, selecting the project it belongs to.
+// OpenTask shows a task in the inspector, over the Now screen.
 func (m *Main) OpenTask(id int) {
-	task, ok := m.app.Task(id)
-	if !ok {
+	if _, ok := m.app.Task(id); !ok {
 		return
 	}
-	if task.ProjectID == nil {
-		m.nav = nav{inbox: true}
-	} else {
-		m.nav = nav{projectID: *task.ProjectID}
-	}
-	m.openID = id
+	m.nav = nav{}
+	m.openID, m.sel = id, id
 	m.inspector.reset()
 }
 
 // OpenSettings shows the settings sheet.
 func (m *Main) OpenSettings() { m.settings = true }
+
+func (m *Main) goTo(n nav) {
+	if m.nav != n {
+		m.nav, m.openID, m.sel, m.askFrames = n, 0, 0, 0
+		m.cancelAdding()
+		m.scroll = ui.ScrollState{}
+	}
+}
 
 // View builds the window for one frame.
 func (m *Main) View(c *ui.Context) {
@@ -76,50 +99,85 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Task(m.openID); !ok {
 		m.openID = 0
 	}
-	if c.Shortcut(0, ui.KeyEscape) && !m.settings {
-		switch {
-		case m.adding != "":
-			m.cancelAdding()
-		case m.openID != 0:
-			m.openID = 0
-		}
-	}
-	row := ui.Row(c).Fill().AlignItems(ui.Stretch)
-	row.Children(func() {
-		m.sidebar(c, t, vibrant)
+	m.wasDrag, m.dragging = m.dragging, 0
+	now := m.app.buildNow()
+	ids := m.rowIDs(now)
+	m.keys(c, ids)
+	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
+		m.sidebar(c, t, vibrant, now)
 		vline(c, t)
-		m.content(c, t)
+		m.content(c, t, now)
 		m.inspectorPane(c, t)
 	})
 	m.settingsSheet(c, t)
 }
 
-// content is the board with its header, which also serves as the title bar.
-func (m *Main) content(c *ui.Context, t *theme.Tokens) {
+// content is the screen the sidebar chose.
+func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 	ui.Column(c).Grow(1).MinWidth(0).Background(t.Bg).Children(func() {
-		m.header(c, t)
-		hairline(c, t)
-		m.board(c, t)
+		ui.Box(c).Height(dragStrip).Shrink(0).DragWindow()
+		m.errorStrip(c, t)
+		switch {
+		case m.nav.screen == screenNow:
+			m.page(c, t, func() { m.nowScreen(c, t, now) })
+		case m.boardActive():
+			m.boardScreen(c, t)
+		default:
+			m.page(c, t, func() { m.listScreen(c, t) })
+		}
 	})
 }
 
-// selection returns the tasks of the current sidebar choice, filtered by milestone.
-func (m *Main) selectionTasks() []data.Task {
-	in := func(t data.Task) bool {
-		switch {
-		case m.nav.inbox:
-			return t.ProjectID == nil
-		case t.ProjectID == nil || *t.ProjectID != m.nav.projectID:
-			return false
-		}
-		ms := m.milestone[m.nav.projectID]
-		return ms == 0 || (t.MilestoneID != nil && *t.MilestoneID == ms)
+func (m *Main) showsBoard() bool {
+	return m.nav.screen == screenProject && m.board[m.nav.projectID]
+}
+
+// contentWidth is the room the screen has: the window less the sidebar and the open inspector.
+func (m *Main) contentWidth(c *ui.Context) float32 {
+	w, _ := c.Size()
+	w -= theme.SidebarWidth + 1
+	if m.openID != 0 {
+		w -= theme.InspectorWidth + 1
 	}
-	var out []data.Task
-	for _, t := range m.app.snap.tasks {
-		if in(t) {
-			out = append(out, t)
-		}
+	return w
+}
+
+// sidePad is 56 pt when the 820 pt column fits, less as the window or the inspector squeezes it.
+func (m *Main) sidePad(c *ui.Context) float32 {
+	w := m.contentWidth(c)
+	switch {
+	case w >= theme.ContentMax:
+		return theme.ContentPad
+	case w >= 640:
+		return 40
 	}
-	return m.app.withCompleting(out, in)
+	return 24
+}
+
+// page scrolls a centered column of at most 820 pt, the way a document reads. The column is the
+// keyboard's focus, so the arrow keys and Space work as soon as the screen opens.
+func (m *Main) page(c *ui.Context, t *theme.Tokens, body func()) {
+	pad := m.sidePad(c)
+	ui.Scroll(c.Key(m.nav)).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
+		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
+			col := ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad, 48).Focusable().FocusRing(false)
+			if !m.wantAsk {
+				col.AutoFocus()
+			}
+			col.Bind(&m.listRef).Children(body)
+		})
+	})
+}
+
+func (m *Main) errorStrip(c *ui.Context, t *theme.Tokens) {
+	if m.app.Err() == nil {
+		return
+	}
+	ui.Row(c).Shrink(0).Padding(8, 24).Gap(8).Background(t.BgSubtle).Children(func() {
+		theme.Text(c, theme.Meta, t.TextSecondary, "Couldn't reach the data store. Retrying…")
+		ui.Spacer(c)
+		if link(c, t, "Retry").Clicked() {
+			m.app.Refresh()
+		}
+	})
 }

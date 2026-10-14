@@ -6,21 +6,24 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// sidebar is the source list over the window's material: Inbox, then the projects with their
-// counts, then Settings at the bottom.
-func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
+// sidebar is the source list over the window's material: Now, Inbox, then the projects, then
+// Settings at the bottom.
+func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.Now) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
 	if !vibrant {
 		side.Background(t.BgSubtle)
 	}
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
-		m.inboxRow(c, t)
+		m.navRow(c, t, "now", nav{}, theme.IconNow, "Now", now.Count())
+		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
+		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, "Inbox", inbox)
 		ui.Row(c).Padding(18, 18, 6).Shrink(0).Children(func() {
-			theme.Text(c, theme.Section, t.TextSecondary, "Projects")
+			theme.Text(c, theme.Section, t.TextTertiary, "Projects")
 		})
 		for _, p := range m.app.snap.projects {
-			m.projectRow(c, t, p)
+			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
+			m.projectRow(c, t, p, n, blocked)
 		}
 		if len(m.app.snap.projects) == 0 {
 			theme.Paragraph(c, theme.Meta, t.TextTertiary, "Projects appear when an agent reports from a repository.", 0).Padding(0, 18)
@@ -43,35 +46,36 @@ func openCount(tasks []data.Task, match func(data.Task) bool) (n int, blocked bo
 	return n, blocked
 }
 
-func (m *Main) inboxRow(c *ui.Context, t *theme.Tokens) {
-	n, _ := openCount(m.app.snap.tasks, func(t data.Task) bool { return t.ProjectID == nil })
-	row := sidebarRow(c, t, "inbox", m.nav.inbox)
+func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *ui.SVG, label string, count int) {
+	selected := m.nav == to
+	row := sidebarRow(c, t, key, selected)
 	row.Children(func() {
-		ui.Icon(c, theme.IconInbox).Size(16, 16).TextColor(t.TextSecondary)
-		sidebarLabel(c, t, "Inbox", m.nav.inbox)
-		sidebarCount(c, t, n)
+		ui.Icon(c, icon).Size(16, 16).TextColor(t.TextSecondary)
+		sidebarLabel(c, t, label, selected)
+		sidebarCount(c, t, count)
 	})
 	if row.Clicked() {
-		m.nav, m.openID = nav{inbox: true}, 0
+		m.goTo(to)
 	}
 }
 
-func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project) {
-	selected := !m.nav.inbox && m.nav.projectID == p.ID
-	n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
+func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool) {
+	to := nav{screen: screenProject, projectID: p.ID}
+	selected := m.nav == to
 	row := sidebarRow(c, t, p.ID, selected)
 	row.Children(func() {
 		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
-			theme.Dot(c, t.TextTertiary, 6)
+			theme.Text(c, theme.Body, t.TextTertiary, "#")
 		})
 		sidebarLabel(c, t, p.Name, selected)
 		if blocked {
-			theme.Dot(c, t.Blocked(), 6).Shrink(0)
+			theme.Dot(c, t.Blocked(), 6).Shrink(0).Margin(0, 2, 0, 0)
+		} else {
+			sidebarCount(c, t, n)
 		}
-		sidebarCount(c, t, n)
 	})
 	if row.Clicked() {
-		m.nav, m.openID = nav{projectID: p.ID}, 0
+		m.goTo(to)
 	}
 }
 
@@ -86,10 +90,10 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// sidebarRow is a 32 pt row inset 8 pt, highlighted by selection or hover.
+// sidebarRow is a 30 pt row inset 8 pt, highlighted by selection or hover.
 func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Element {
-	row := ui.Row(c.Key(key)).Height(theme.RowOneLine).Shrink(0).Margin(0, 8).Padding(0, 10).Gap(8).
-		Radius(theme.RadiusCard).AlignItems(ui.Center).Cursor(ui.CursorPointer)
+	row := ui.Row(c.Key(key)).Height(30).Shrink(0).Margin(0, 10).Padding(0, 10).Gap(10).
+		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case selected:
 		row.Background(t.BgSelected)

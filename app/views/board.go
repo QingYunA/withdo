@@ -1,6 +1,7 @@
 package views
 
 import (
+	"sort"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -11,88 +12,201 @@ import (
 // dragCard is the value a card carries while it is dragged between columns.
 type dragCard struct{ id int }
 
-// header is the unified title bar: the project's name and repository, and its milestone filter.
-func (m *Main) header(c *ui.Context, t *theme.Tokens) {
-	bar := c.TitleBar()
-	ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, bar.Right+24, 0, 24).Gap(12).AlignItems(ui.Center).DragWindow().Children(func() {
-		title, sub := m.headerText()
-		theme.Text(c, theme.Title, t.Text, title).Shrink(1).MinWidth(0).Ellipsis("…")
-		if sub != "" {
-			theme.Text(c, theme.Meta, t.TextSecondary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
+// boardColumn is one status on the board.
+type boardColumn struct {
+	status data.Status
+	tasks  []data.Task
+}
+
+// boardColumns returns the columns the board draws: those with tasks, and To do always, since it
+// is where a new task goes. There are no strips and no zero-count columns.
+func (m *Main) boardColumns() []boardColumn {
+	by := map[data.Status][]data.Task{}
+	for _, t := range m.selectionTasks() {
+		by[t.Status] = append(by[t.Status], t)
+	}
+	var cols []boardColumn
+	for _, s := range data.BoardStatuses {
+		if len(by[s]) == 0 && s != data.Todo {
+			continue
 		}
-		ui.Spacer(c)
-		m.milestoneMenu(c, t)
+		tasks := by[s]
+		if s == data.Done {
+			sort.SliceStable(tasks, func(i, j int) bool { return doneAt(tasks[i]).After(doneAt(tasks[j])) })
+		} else {
+			sortForList(tasks)
+		}
+		cols = append(cols, boardColumn{status: s, tasks: tasks})
+	}
+	return cols
+}
+
+// hiddenStatuses are the board statuses with no column, which show as drop targets while a card
+// is dragged.
+func hiddenStatuses(cols []boardColumn) []data.Status {
+	shown := map[data.Status]bool{}
+	for _, col := range cols {
+		shown[col.status] = true
+	}
+	var out []data.Status
+	for _, s := range data.BoardStatuses {
+		if !shown[s] {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// boardActive is true when the project is shown as a board and has something to show; an empty
+// project reads the same in both views.
+func (m *Main) boardActive() bool { return m.showsBoard() && len(m.selectionTasks()) > 0 }
+
+// boardScreen is the header in the page's column, and the columns under it in a horizontal
+// scroller.
+func (m *Main) boardScreen(c *ui.Context, t *theme.Tokens) {
+	pad := m.sidePad(c)
+	ui.Column(c).FillWidth().Shrink(0).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad).Children(func() { m.listHeader(c, t) })
+	})
+	cols := m.boardColumns()
+	hidden := hiddenStatuses(cols)
+	width := columnWidth(m.contentWidth(c), len(cols))
+	// The drop targets float over the scroller's right edge, so they are in reach however far
+	// the board is scrolled.
+	ui.Box(c).Grow(1).MinHeight(0).Children(func() {
+		ui.ScrollHorizontal(c).Fill().TrackScroll(&m.scroll).Children(func() {
+			ui.Row(c).FillHeight().Padding(16, theme.BoardPadding, 0).Gap(theme.ColumnGap).AlignItems(ui.Stretch).
+				Focusable().FocusRing(false).AutoFocus().Bind(&m.listRef).Children(func() {
+				for _, col := range cols {
+					m.column(c, t, col, width)
+				}
+			})
+		})
+		m.dropTargets(c, t, hidden)
 	})
 }
 
-func (m *Main) headerText() (title, sub string) {
-	if m.nav.inbox {
-		return "Inbox", "Tasks without a project"
+// columnWidth shares the room between n columns, between the narrowest and the widest a column
+// goes; beyond that the board scrolls.
+func columnWidth(avail float32, n int) float32 {
+	if n == 0 {
+		return theme.ColumnWidth
 	}
-	p, _ := m.app.Project(m.nav.projectID)
-	return p.Name, p.RepoSlug
+	room := avail - 2*theme.BoardPadding - float32(n-1)*theme.ColumnGap
+	return min(max(room/float32(n), theme.MinColumnWidth), theme.ColumnWidth)
 }
 
-func (m *Main) milestoneMenu(c *ui.Context, t *theme.Tokens) {
-	if m.nav.inbox {
-		return
+// column is one status. A card dropped on it takes its status.
+func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width float32) {
+	box := ui.Column(c.Key(string(col.status))).Width(width).Shrink(0).Padding(0, 8).Radius(theme.RadiusPanel).Background(t.BgSubtle)
+	_, over := ui.DragOver[dragCard](box)
+	if over {
+		box.Border(1, t.Accent.Alpha(0.6))
 	}
-	pid := m.nav.projectID
-	label := "All milestones"
-	for _, ms := range m.app.snap.milestones[pid] {
-		if ms.ID == m.milestone[pid] {
-			label = ms.Title
-		}
+	if d, ok := ui.Drop[dragCard](box); ok {
+		m.dropCard(d.id, col.status)
 	}
-	btn := ui.ButtonBase(c.Key("milestone")).Height(28).Padding(0, 8, 0, 10).Gap(4).Radius(theme.RadiusControl).
-		Label("Milestone: " + label).TextColor(t.TextSecondary)
-	if btn.Hovered() {
-		btn.Background(t.BgHover)
+	box.Children(func() {
+		ui.Row(c.Key("header")).Height(40).Shrink(0).Padding(0, 0, 0, 6).Gap(8).AlignItems(ui.Center).Children(func() {
+			theme.StatusGlyph(c, t, col.status, 0)
+			theme.Text(c, theme.BodyStrong, t.Text, boardName(col.status))
+			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(col.tasks)))
+		})
+		m.columnBody(c, t, col)
+	})
+}
+
+func boardName(s data.Status) string {
+	if s == data.Todo {
+		return "To do"
 	}
-	btn.Menu(func(mn *ui.Menu) {
-		if mn.Item("All milestones").Checked(m.milestone[pid] == 0).Chosen() {
-			m.milestone[pid] = 0
-		}
-		mn.Separator()
-		for _, ms := range m.app.snap.milestones[pid] {
-			if mn.Item(milestoneLabel(ms, m.app.Now())).Checked(m.milestone[pid] == ms.ID).Chosen() {
-				m.milestone[pid] = ms.ID
+	return s.Label()
+}
+
+func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
+	tasks, hidden := col.tasks, 0
+	if col.status == data.Done && !m.allDone[m.nav] && len(tasks) > theme.DoneRecentLimit {
+		hidden = len(tasks) - theme.DoneRecentLimit
+		tasks = tasks[:theme.DoneRecentLimit]
+	}
+	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
+		ui.Column(c).Gap(8).Padding(0, 0, 12).Children(func() {
+			if col.status == data.Todo {
+				m.boardAdd(c, t)
 			}
-		}
-	})
-	btn.Children(func() {
-		ui.Icon(c, theme.IconMilestone).Size(14, 14)
-		theme.Text(c, theme.Body, t.TextSecondary, label)
-		ui.Icon(c, theme.IconChevron).Size(14, 14)
-	})
-}
-
-// board is the six status columns in a horizontal scroller. Empty columns and Done are strips, and
-// when the active columns do not fit they narrow and then give way, so the board seldom scrolls.
-func (m *Main) board(c *ui.Context, t *theme.Tokens) {
-	tasks := m.selectionTasks()
-	if !m.app.snap.loaded {
-		return
-	}
-	if len(tasks) == 0 {
-		m.boardEmpty(c, t)
-		return
-	}
-	byStatus := map[data.Status][]data.Task{}
-	counts := map[data.Status]int{}
-	for _, task := range tasks {
-		byStatus[task.Status] = append(byStatus[task.Status], task)
-		counts[task.Status]++
-	}
-	w, _ := c.Size()
-	plans := planColumns(boardWidth(w, m.openID != 0), counts, m.forcedOpen())
-	ui.ScrollHorizontal(c).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
-		ui.Row(c).FillHeight().Padding(theme.BoardPadding, theme.BoardPadding, 0).Gap(theme.ColumnGap).AlignItems(ui.Stretch).Children(func() {
-			for _, s := range data.BoardStatuses {
-				m.column(c, t, s, byStatus[s], plans[s])
+			if len(tasks) == 0 && col.status == data.Todo && !m.adding {
+				theme.Paragraph(c, theme.Meta, t.TextTertiary, "Nothing waiting. Drag a card here to plan it.", 3).Padding(2, 6, 0)
+			}
+			for _, task := range tasks {
+				m.card(c, t, task)
+			}
+			if hidden > 0 && link(c, t, "Show all "+itoa(hidden+len(tasks))).Margin(4, 0, 0, 6).Clicked() {
+				m.allDone[m.nav] = true
 			}
 		})
 	})
+}
+
+// boardAdd is "+ Add a task" at the top of To do, and the input it opens.
+func (m *Main) boardAdd(c *ui.Context, t *theme.Tokens) {
+	if m.adding && m.addNav == m.nav {
+		ui.Row(c.Key("board-add-input")).Padding(8, 12).Radius(theme.RadiusCard).Background(t.Bg).Border(1, t.Accent.Alpha(0.6)).Children(func() {
+			box := ui.Box(c).Grow(1).MinWidth(0)
+			box.Children(func() {
+				in := theme.BodyStrong.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
+					Label("New task title").AutoFocus()
+				if in.Submitted() {
+					m.submitAdding()
+				}
+				if m.addBuf == "" {
+					theme.Text(c, theme.BodyStrong, t.TextTertiary, "Task title").Absolute().Left(0).Top(0).PassThrough()
+				}
+			})
+		})
+		return
+	}
+	row := ui.Row(c.Key("board-add")).Height(theme.RowOneLine).Padding(0, 6).Radius(theme.RadiusCard).
+		AlignItems(ui.Center).Cursor(ui.CursorPointer).Label("Add a task")
+	if row.Hovered() {
+		row.Background(t.BgHover)
+	}
+	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "+ Add a task") })
+	if row.Clicked() {
+		m.adding, m.addNav, m.addBuf = true, m.nav, ""
+	}
+}
+
+// dropTargets are thin targets for the statuses that have no column. They appear while a card is
+// dragged, at the right edge.
+func (m *Main) dropTargets(c *ui.Context, t *theme.Tokens, hidden []data.Status) {
+	if (m.dragging == 0 && m.wasDrag == 0) || len(hidden) == 0 {
+		return
+	}
+	ui.Column(c.Key("drop-targets")).Absolute().Right(16).Top(16).Width(148).Padding(8).Gap(6).
+		Radius(theme.RadiusPanel).Background(t.Bg).Border(1, t.Border).Shadow(0, 8, 24, 0, t.Shadow).Children(func() {
+		for _, s := range hidden {
+			target := ui.Row(c.Key("drop-"+string(s))).Height(40).Shrink(0).Padding(0, 12).Gap(8).AlignItems(ui.Center).
+				Radius(theme.RadiusCard).Border(1, t.Border).BorderStyle(ui.BorderDashed)
+			if _, over := ui.DragOver[dragCard](target); over {
+				target.Background(t.BgSelected).Border(1, t.Accent.Alpha(0.6))
+			}
+			if d, ok := ui.Drop[dragCard](target); ok {
+				m.dropCard(d.id, s)
+			}
+			target.Children(func() {
+				theme.StatusGlyph(c, t, s, 0)
+				theme.Text(c, theme.Body, t.TextSecondary, boardName(s))
+			})
+		}
+	})
+}
+
+func (m *Main) dropCard(id int, to data.Status) {
+	task, ok := m.app.Task(id)
+	if !ok || task.Status == to {
+		return
+	}
+	m.app.SetStatus(task, to)
 }
 
 func doneAt(t data.Task) time.Time {
@@ -100,42 +214,4 @@ func doneAt(t data.Task) time.Time {
 		return *t.CompletedAt
 	}
 	return t.UpdatedAt
-}
-
-// columnHint says what an empty column is for and how to fill it.
-func columnHint(c *ui.Context, t *theme.Tokens, s data.Status) {
-	theme.Paragraph(c, theme.Meta, t.TextTertiary, hintFor(s), 3).Padding(4, 4, 0)
-}
-
-func hintFor(s data.Status) string {
-	switch s {
-	case data.Backlog:
-		return "Someday tasks wait here. Drag a card in to park it."
-	case data.Todo:
-		return "Ready to start. Drag a card here, or type one into the panel."
-	case data.Doing:
-		return "Agents move tasks here as they report."
-	case data.Blocked:
-		return "Anything stuck shows up here, in red."
-	case data.Review:
-		return "Waiting on you. Agents move finished work here."
-	case data.Done:
-		return "Finished tasks land here."
-	}
-	return ""
-}
-
-// boardEmpty is the board of a project with no tasks at all.
-func (m *Main) boardEmpty(c *ui.Context, t *theme.Tokens) {
-	title, body := "No tasks in this project yet.", "Coding agents add tasks through the adhd-todo MCP server. You can add one from the menu bar panel."
-	if m.nav.inbox {
-		title, body = "Your inbox is clear.", "Tasks you add from the menu bar panel land here until you give them a project."
-	}
-	ui.Column(c).Grow(1).Center().Gap(6).Padding(0, 48).Children(func() {
-		theme.Text(c, theme.Title, t.Text, title).Margin(0, 0, 4)
-		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0).MaxWidth(360).TextAlign(ui.Center)
-		if link(c, t, "How to connect").Margin(8, 0, 0).Clicked() {
-			m.app.Act.OpenURL(readmeURL)
-		}
-	})
 }

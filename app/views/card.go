@@ -49,7 +49,7 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	switch {
 	case dragging:
 		border = t.TextTertiary
-	case m.openID == task.ID:
+	case m.openID == task.ID || m.sel == task.ID:
 		bg, border = t.Bg.Mix(t.Accent, 0.07), t.Accent.Alpha(0.6)
 	case card.Hovered():
 		border = t.TextTertiary
@@ -115,10 +115,11 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 		at := doneAt(task)
 		return plainMeta(data.Age(at, now))
 	case task.Source == data.SourceUser:
-		words, reminder, ok := timeWords(task, now)
-		if !ok {
+		words := data.DueLabel(task, now)
+		if words == "" {
 			return nil
 		}
+		reminder := task.RemindAt != nil && task.RemindedAt == nil
 		return func(c *ui.Context, t *theme.Tokens) {
 			ui.Row(c).Gap(4).Shrink(0).AlignItems(ui.Center).Children(func() {
 				theme.Text(c, theme.Meta, t.TextSecondary, words)

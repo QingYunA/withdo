@@ -20,17 +20,13 @@ func fixedNow() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.Lo
 
 // recorder is an Actions that remembers what the views asked for.
 type recorder struct {
-	opened      []int
-	urls        []string
-	panelClosed int
-	main        int
-	settings    int
+	opened   []int
+	urls     []string
+	settings int
 }
 
 func (r *recorder) OpenTask(id int)    { r.opened = append(r.opened, id) }
-func (r *recorder) OpenMain()          { r.main++ }
 func (r *recorder) OpenSettings()      { r.settings++ }
-func (r *recorder) ClosePanel()        { r.panelClosed++ }
 func (r *recorder) OpenURL(url string) { r.urls = append(r.urls, url) }
 
 func testConfig() Config {
@@ -139,4 +135,63 @@ func shadow(dst *image.RGBA, r image.Rectangle, spread int, dark bool) {
 func settle(tt *ui.Tester) {
 	time.Sleep(300 * time.Millisecond)
 	tt.Frame()
+}
+
+func newMainTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
+	t.Helper()
+	app, _, _ := newTestApp(t)
+	return newTesterFor(app, width)
+}
+
+func newTesterFor(app *App, width int) (*ui.Tester, *Main, *App) {
+	m := NewMain(app)
+	tt := ui.NewTester(m.View, width, 720)
+	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
+	still(tt)
+	return tt, m, app
+}
+
+func center(r ui.Rect) (float32, float32) { return r.X + r.W/2, r.Y + r.H/2 }
+
+// above reports whether the text a is drawn higher on the screen than b.
+func above(t *testing.T, tt *ui.Tester, a, b string) bool {
+	t.Helper()
+	ra, ok := tt.Find(a)
+	if !ok {
+		t.Fatalf("no %q in %q", a, tt.Texts())
+	}
+	rb, ok := tt.Find(b)
+	if !ok {
+		t.Fatalf("no %q in %q", b, tt.Texts())
+	}
+	return ra.Y < rb.Y
+}
+
+// dragTo drags the card showing text onto the column named column.
+func dragTo(t *testing.T, tt *ui.Tester, text, column string) {
+	t.Helper()
+	from, ok := tt.Find(text)
+	if !ok {
+		t.Fatalf("no card %q in %q", text, tt.Texts())
+	}
+	to, ok := tt.Find(column)
+	if !ok {
+		t.Fatalf("no column %q in %q", column, tt.Texts())
+	}
+	fx, fy := center(from)
+	tx, ty := center(to)
+	tt.Press(fx, fy)
+	tt.Move(fx+8, fy+8)
+	tt.Move(tx, ty+60)
+	tt.Release(tx, ty+60)
+}
+
+// emptyProjectApp is an empty store with one project and nothing in it.
+func emptyProjectApp(t *testing.T) (*App, data.Project) {
+	t.Helper()
+	f := data.NewEmptyFake(fixedNow)
+	p := f.AddProject("scratch", "me/scratch")
+	app := NewApp(f, &recorder{}, testConfig())
+	app.Now = fixedNow
+	return app, p
 }

@@ -268,8 +268,17 @@ func (b nowBuilder) yours(tasks []Task) (rows []NowItem, more int) {
 	return append(dated, undated...), more
 }
 
-// dueLabel is the right-hand label of one of my tasks: "Today", "Tomorrow", "Fri", "Oct 20". A
-// reminder that is still ahead today reads as its time of day.
+// DueLabel is the right-hand label of one of my tasks: "Today", "Tomorrow", "Fri", "Oct 20". A
+// reminder that is still ahead today reads as its time of day. It is empty for a task with neither
+// a due nor a reminder time.
+func DueLabel(t Task, now time.Time) string {
+	at, ok := NextMoment(t)
+	if !ok {
+		return ""
+	}
+	return dueLabel(t, at, now)
+}
+
 func dueLabel(t Task, at, now time.Time) string {
 	if t.RemindAt != nil && at.Equal(*t.RemindAt) && DayWord(at, now) == "today" {
 		return at.In(now.Location()).Format("3:04 PM")

@@ -14,12 +14,13 @@ type Style struct {
 // The type scale. A view uses at most three of these.
 var (
 	Title      = Style{Size: 20, Line: 26, Weight: 600}
-	Input      = Style{Size: 17, Line: 22, Weight: 400}
+	Input      = Style{Size: 15, Line: 20, Weight: 400}
 	Body       = Style{Size: 13, Line: 18, Weight: 400}
 	BodyStrong = Style{Size: 13, Line: 18, Weight: 500}
 	Meta       = Style{Size: 12, Line: 16, Weight: 400}
+	MetaStrong = Style{Size: 12, Line: 16, Weight: 500}
 	Section    = Style{Size: 11, Line: 14, Weight: 600, Tracking: 0.4, Upper: true}
-	Mono       = Style{Size: 12, Line: 16, Weight: 400, Mono: true}
+	Mono       = Style{Size: 11.5, Line: 16, Weight: 400, Mono: true}
 )
 
 // MonoFamily is the font of branches and pull request numbers.

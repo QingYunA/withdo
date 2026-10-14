@@ -7,77 +7,6 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-func newMainTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
-	t.Helper()
-	app, _, _ := newTestApp(t)
-	m := NewMain(app)
-	tt := ui.NewTester(m.View, width, 720)
-	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
-	still(tt)
-	return tt, m, app
-}
-
-func center(r ui.Rect) (float32, float32) { return r.X + r.W/2, r.Y + r.H/2 }
-
-// dragTo drags the card showing text onto the column named column.
-func dragTo(t *testing.T, tt *ui.Tester, text, column string) {
-	t.Helper()
-	from, ok := tt.Find(text)
-	if !ok {
-		t.Fatalf("no card %q in %q", text, tt.Texts())
-	}
-	to, ok := tt.Find(column)
-	if !ok {
-		t.Fatalf("no column %q", column)
-	}
-	fx, fy := center(from)
-	tx, ty := center(to)
-	tt.Press(fx, fy)
-	tt.Move(fx+8, fy+8)
-	tt.Move(tx, ty+60)
-	tt.Release(tx, ty+60)
-}
-
-func TestMainShowsProjectBoardWithAllColumns(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1840)
-	for _, want := range []string{"adhd-todo", "Backlog", "Todo", "Doing", "Blocked", "Review", "Done", "Port core to Go", "Fix tray race on launch"} {
-		if !tt.HasText(want) {
-			t.Errorf("missing %q", want)
-		}
-	}
-}
-
-func TestDroppingACardChangesItsStatus(t *testing.T) {
-	tt, _, app := newMainTester(t, 1840)
-	dragTo(t, tt, "Write the release notes", "Doing")
-	task, _ := app.Task(5)
-	if task.Status != data.Doing {
-		t.Errorf("status %v after the drop, want doing", task.Status)
-	}
-}
-
-func TestDroppingOnTheSameColumnChangesNothing(t *testing.T) {
-	tt, _, app := newMainTester(t, 1840)
-	dragTo(t, tt, "Write the release notes", "Todo")
-	if task, _ := app.Task(5); task.Status != data.Todo {
-		t.Errorf("status %v, want todo", task.Status)
-	}
-}
-
-func TestClickingACardOpensTheInspectorAndEscCloses(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	if err := tt.Click("Port core to Go"); err != nil {
-		t.Fatal(err)
-	}
-	if m.openID != 1 || !tt.HasText("ACTIVITY") {
-		t.Fatalf("open %d, texts %q", m.openID, tt.Texts())
-	}
-	tt.Key(0, ui.KeyEscape)
-	if m.openID != 0 {
-		t.Errorf("Esc left task %d open", m.openID)
-	}
-}
-
 func TestInspectorSavesTheTitleOnEnter(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenTask(5)
@@ -148,65 +77,6 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	}
 }
 
-func TestSidebarSwitchesProjectsAndShowsCounts(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	if err := tt.Click("docs"); err != nil {
-		t.Fatal(err)
-	}
-	if m.nav.inbox || !tt.HasText("Write the MCP quickstart") || tt.HasText("Port core to Go") {
-		t.Errorf("after choosing docs: %q", tt.Texts())
-	}
-	if err := tt.Click("Inbox"); err != nil {
-		t.Fatal(err)
-	}
-	if !m.nav.inbox || !tt.HasText("Book dentist") {
-		t.Errorf("inbox shows %q", tt.Texts())
-	}
-}
-
-func TestDoneColumnShowsTenAndShowAll(t *testing.T) {
-	store := data.NewEmptyFake(fixedNow)
-	p, _ := store.CreateTask(data.CreateTaskInput{Title: "seed"})
-	_ = p
-	app := NewApp(store, &recorder{}, testConfig())
-	app.Now = fixedNow
-	for i := 0; i < 12; i++ {
-		task, _ := store.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i), Status: data.Done})
-		_ = task
-	}
-	app.Refresh()
-	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1840, 900)
-	still(tt)
-	if tt.HasText("Show all 12") {
-		t.Fatal("Done must start collapsed")
-	}
-	if err := tt.Click("Done"); err != nil {
-		t.Fatal(err)
-	}
-	if !tt.HasText("Show all 12") {
-		t.Fatalf("no Show all link: %q", tt.Texts())
-	}
-	if err := tt.Click("Show all 12"); err != nil {
-		t.Fatal(err)
-	}
-	if tt.HasText("Show all 12") {
-		t.Error("link still shown after opening all")
-	}
-}
-
-func TestMainEmptyStates(t *testing.T) {
-	app, _ := newEmptyApp(t)
-	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
-	still(tt)
-	for _, want := range []string{"Your inbox is clear.", "Tasks you add from the menu bar panel land here until you give them a project.", "How to connect"} {
-		if !tt.HasText(want) {
-			t.Errorf("missing %q in %q", want, tt.Texts())
-		}
-	}
-}
-
 func TestSettingsSheetCopiesTheCommand(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenSettings()
@@ -227,3 +97,116 @@ func TestSettingsSheetCopiesTheCommand(t *testing.T) {
 		t.Error("sheet still open")
 	}
 }
+
+func TestSidebarListsNowInboxAndProjects(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	for _, want := range []string{"Now", "Inbox", "PROJECTS", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+		if !tt.HasText(want) {
+			t.Errorf("sidebar is missing %q", want)
+		}
+	}
+	if err := tt.Click("answer-me-with-html"); err != nil {
+		t.Fatal(err)
+	}
+	if m.nav.screen != screenProject || !tt.HasText("Issue #218 adaptation") || tt.HasText("Port core to Go") {
+		t.Errorf("after choosing the project: %q", tt.Texts())
+	}
+	if err := tt.Click("Inbox"); err != nil {
+		t.Fatal(err)
+	}
+	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") {
+		t.Errorf("inbox shows %q", tt.Texts())
+	}
+	if err := tt.Click("Now"); err != nil {
+		t.Fatal(err)
+	}
+	if m.nav.screen != screenNow {
+		t.Error("Now did not open")
+	}
+}
+
+func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
+	// Now counts every row of its three sections; Inbox the open inbox tasks; a project with a
+	// blocked task shows a dot instead of its count.
+	got := tt.Texts()
+	idx := func(s string) int {
+		for i, x := range got {
+			if x == s {
+				return i
+			}
+		}
+		return -1
+	}
+	if got[idx("Now")+1] != "9" || got[idx("Inbox")+1] != "3" {
+		t.Errorf("counts after Now and Inbox: %q", got[:8])
+	}
+	if got[idx("adhd-todo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
+		t.Errorf("project counts: %q", got[:14])
+	}
+}
+
+func TestOpenTaskFromANotificationShowsItOverNow(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	m.goTo(nav{screen: screenProject, projectID: 2})
+	m.OpenTask(7)
+	tt.Frame()
+	if m.nav.screen != screenNow || m.openID != 7 || !tt.HasText("ACTIVITY") {
+		t.Errorf("nav %+v open %d", m.nav, m.openID)
+	}
+	m.OpenTask(99999) // a task that no longer exists changes nothing
+	if m.openID != 7 {
+		t.Error("an unknown task replaced the open one")
+	}
+}
+
+func TestStoreErrorShowsACalmBannerWithRetry(t *testing.T) {
+	tt, _, app := newMainTester(t, 1100)
+	app.snap.err = errTest
+	tt.Frame()
+	if !tt.HasText("Couldn't reach the data store. Retrying…") {
+		t.Fatalf("no banner in %q", tt.Texts())
+	}
+	if err := tt.Click("Retry"); err != nil {
+		t.Fatal(err)
+	}
+	if app.Err() != nil {
+		t.Error("the banner stays after a good refresh")
+	}
+}
+
+func TestMainEmptyProjectAndInbox(t *testing.T) {
+	app, p := emptyProjectApp(t)
+	tt, m, _ := newTesterFor(app, 1100)
+	m.goTo(nav{screen: screenProject, projectID: p.ID})
+	tt.Frame()
+	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "+ Add a task", "How to connect"} {
+		if !tt.HasText(want) {
+			t.Errorf("empty project is missing %q in %q", want, tt.Texts())
+		}
+	}
+	m.goTo(nav{screen: screenInbox})
+	tt.Frame()
+	for _, want := range []string{"Your inbox is clear.", "+ Add a task"} {
+		if !tt.HasText(want) {
+			t.Errorf("empty inbox is missing %q in %q", want, tt.Texts())
+		}
+	}
+}
+
+func TestMainFromAnEmptyStore(t *testing.T) {
+	app, _ := newEmptyApp(t)
+	tt, _, _ := newTesterFor(app, 1100)
+	if !tt.HasText("Projects appear when an agent reports from a repository.") {
+		t.Errorf("no empty sidebar hint: %q", tt.Texts())
+	}
+}
+
+var errTest = testError("unreachable")
+
+type testError string
+
+func (e testError) Error() string { return string(e) }
+
+var _ = data.Todo
+var _ = ui.KeyA

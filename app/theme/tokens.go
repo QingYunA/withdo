@@ -159,7 +159,7 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 const (
 	RadiusControl float32 = 6  // pills, inputs
 	RadiusCard    float32 = 8  // cards, rows
-	RadiusPanel   float32 = 12 // panel, popovers, sheets
+	RadiusPanel   float32 = 12 // ask field, Needs you container, popovers, sheets
 )
 
 // Space on the 4 pt grid.
@@ -174,28 +174,27 @@ const (
 // Motion durations.
 const (
 	MotionFast   = 160 * time.Millisecond // hover, selection, drawer
-	MotionSpring = 220 * time.Millisecond // panel appearing, card settling, completing
+	MotionSpring = 220 * time.Millisecond // card settling, completing
 )
 
 // Layout metrics shared by several surfaces.
 const (
-	GlyphSize       float32 = 16
-	HitTarget       float32 = 24
-	RowOneLine      float32 = 32
-	RowTwoLine      float32 = 44
-	RowInset        float32 = 6 // highlight inset from the edges
-	PanelWidth              = 440
-	PanelHeight             = 560
-	SidebarWidth    float32 = 220
-	InspectorWidth  float32 = 360
-	ColumnWidth     float32 = 248
-	MinColumnWidth  float32 = 208 // an active column narrows to this before another one collapses
-	StripWidth      float32 = 44  // a collapsed column
-	BoardPadding    float32 = 16
-	ColumnGap       float32 = 12
-	WindowMinWidth          = 800
-	WindowMinHeight         = 520
-	WindowWidth             = 1100
-	WindowHeight            = 720
-	DoneRecentLimit         = 10
+	GlyphSize      float32 = 16
+	HitTarget      float32 = 24
+	RowOneLine     float32 = 32
+	SidebarWidth   float32 = 216
+	InspectorWidth float32 = 360
+	ContentMax     float32 = 820 // the centered column of lists
+	ContentPad     float32 = 56  // its side padding when there is room
+	AskHeight      float32 = 46
+	ColumnWidth    float32 = 264 // a board column at its widest
+	MinColumnWidth float32 = 208 // and at its narrowest, before the board scrolls
+	BoardPadding   float32 = 24
+	ColumnGap      float32 = 12
+
+	WindowMinWidth  = 860
+	WindowMinHeight = 540
+	WindowWidth     = 1100
+	WindowHeight    = 720
+	DoneRecentLimit = 10
 )
