@@ -16,16 +16,20 @@ func boardTester(t *testing.T, app *App, project, width int) (*ui.Tester, *Main)
 	return tt, m
 }
 
+func statusesOf(cols []boardColumn) map[data.Status]bool {
+	out := map[data.Status]bool{}
+	for _, c := range cols {
+		out[c.status] = true
+	}
+	return out
+}
+
 func TestBoardShowsOnlyNonEmptyColumnsPlusToDo(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m := boardTester(t, app, 2, 1100) // answer-me-with-html: one doing, one backlog
-	cols := m.boardColumns()
-	got := map[data.Status]bool{}
-	for _, c := range cols {
-		got[c.status] = true
-	}
-	if len(cols) != 3 || !got[data.Backlog] || !got[data.Todo] || !got[data.Doing] {
-		t.Errorf("columns %v, want backlog, todo and doing", got)
+	got := statusesOf(m.boardColumns())
+	if len(got) != 2 || !got[data.Todo] || !got[data.Doing] {
+		t.Errorf("columns %v, want to do and doing", got)
 	}
 	for _, gone := range []string{"Blocked", "Review", "Done"} {
 		if tt.HasText(gone) {
@@ -34,6 +38,23 @@ func TestBoardShowsOnlyNonEmptyColumnsPlusToDo(t *testing.T) {
 	}
 	if !tt.HasText("To do") || !tt.HasText("Nothing waiting. Drag a card here to plan it.") {
 		t.Errorf("To do is missing or has no hint: %q", tt.Texts())
+	}
+}
+
+func TestBoardKeepsBacklogAndDoneBehindTheFoldLine(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, m := boardTester(t, app, 1, 1100)
+	if got := statusesOf(m.boardColumns()); len(got) != 4 || got[data.Backlog] || got[data.Done] {
+		t.Fatalf("columns %v, want to do, doing, blocked, review", got)
+	}
+	if err := tt.Click("show Done 4 and Backlog 2"); err != nil {
+		t.Fatal(err)
+	}
+	if got := statusesOf(m.boardColumns()); len(got) != 6 {
+		t.Errorf("after show: %v", got)
+	}
+	if !tt.HasText("Backlog") || !tt.HasText("Spike the mygo shell") {
+		t.Errorf("Backlog and Done are not drawn: %q", tt.Texts())
 	}
 }
 
@@ -53,6 +74,8 @@ func TestBoardToDoIsThereOnAnEmptyColumnSet(t *testing.T) {
 func TestBoardHasNoCollapsedStrips(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m := boardTester(t, app, 1, 1840)
+	m.expanded[m.nav] = true
+	tt.Frame()
 	if len(m.boardColumns()) != 6 {
 		t.Fatalf("columns %d, want all six that hold tasks", len(m.boardColumns()))
 	}
@@ -61,8 +84,11 @@ func TestBoardHasNoCollapsedStrips(t *testing.T) {
 			t.Errorf("missing column %q", want)
 		}
 	}
-	if w := columnWidth(900, 6); w != 208 {
-		t.Errorf("six columns in 900 pt: width %v, want the 208 minimum (the board scrolls)", w)
+	if w := columnWidth(900, 6); w != 192 {
+		t.Errorf("six columns in 900 pt: width %v, want the 192 minimum (the board scrolls)", w)
+	}
+	if w := columnWidth(883, 4); w < 192 {
+		t.Errorf("four columns in the 1100 window: width %v, they must fit without scrolling", w)
 	}
 	if w := columnWidth(900, 2); w != 264 {
 		t.Errorf("two columns: width %v, want the 264 maximum", w)
@@ -144,7 +170,7 @@ func TestViewToggleSwitchesBetweenListAndBoard(t *testing.T) {
 	if err := tt.Click("Board view"); err != nil {
 		t.Fatal(err)
 	}
-	if !m.board[1] || !tt.HasText("Done") {
+	if !m.board[1] || !tt.HasText("Nothing waiting") && !tt.HasText("Blocked") {
 		t.Errorf("not a board: %q", tt.Texts())
 	}
 	if err := tt.Click("List view"); err != nil {

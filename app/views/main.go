@@ -37,8 +37,9 @@ type Main struct {
 	openID    int // task open in the inspector, 0 for none
 	sel       int // task the keyboard highlights, 0 for none
 	moved     bool
-	wantAsk   bool // Cmd+K was pressed: the ask field takes the focus once it is drawn
-	askFrames int  // how many frames the ask field has been drawn since the screen changed
+	width     float32 // the room the screen has this frame
+	wantAsk   bool    // Cmd+K was pressed: the ask field takes the focus once it is drawn
+	askFrames int     // how many frames the ask field has been drawn since the screen changed
 	settings  bool
 
 	milestone map[int]int  // milestone filter per project, 0 for all
@@ -100,6 +101,7 @@ func (m *Main) View(c *ui.Context) {
 		m.openID = 0
 	}
 	m.wasDrag, m.dragging = m.dragging, 0
+	m.width = m.contentWidth(c)
 	now := m.app.buildNow()
 	ids := m.rowIDs(now)
 	m.keys(c, ids)

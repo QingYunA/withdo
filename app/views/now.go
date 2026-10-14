@@ -83,11 +83,13 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 			m.app.glyphSlot(c, t, it.Task, fill)
 		}
 		body(c, func() {
-			titleLine(c, t, it.Task, it.Project)
+			m.titleLine(c, t, it.Task, it.Project)
 			summaryLine(c, t, it.Summary)
 		})
 		right(c, func() {
-			m.ageLabel(c, t, it)
+			if m.width >= dropPillsBelow { // beside the inspector the title needs the room more
+				m.ageLabel(c, t, it)
+			}
 			text, label := m.actionFor(it)
 			if actionButton(c, t, it.ID, text, label).Clicked() {
 				m.act(it)
@@ -134,7 +136,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 		row.Children(func() {
 			m.app.glyphSlot(c, t, it.Task, fill)
 			body(c, func() {
-				titleLine(c, t, it.Task, it.Project)
+				m.titleLine(c, t, it.Task, it.Project)
 				summaryLine(c, t, it.Summary)
 			})
 			right(c, func() {
@@ -161,7 +163,7 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
 			m.app.glyphSlot(c, t, it.Task, fill)
-			body(c, func() { titleLine(c, t, it.Task, it.Project) })
+			body(c, func() { m.titleLine(c, t, it.Task, it.Project) })
 			if it.Label != "" {
 				theme.Text(c, theme.Meta, t.TextTertiary, it.Label).Shrink(0)
 			}

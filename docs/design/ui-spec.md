@@ -171,6 +171,25 @@ plus To do (always, as the place to add). No collapsed strips, no zero-count col
 before; drag between visible columns changes status. Dragging also reveals thin drop targets
 for hidden statuses at the right edge.
 
+Decisions made while building it (2026-10-14):
+
+- **Backlog and Done on the board** follow the list's "Done · Backlog — show" line, which sits under
+  the board header. Folded, they are drop targets that appear while a card is dragged. With them
+  shown by default the seeded project needed six columns and scrolled sideways at 1100 pt.
+- **Drop targets** for hidden statuses float over the right edge of the board, so they are in reach
+  however far it is scrolled.
+- **Review without a PR** still goes to Needs you (summary "Ready for your review", action Open).
+  A review task of my own does not: it waits on someone else.
+- **Yours** shows dated tasks due within 7 days (or overdue); later ones appear in their project or
+  the Inbox only.
+- **Reminders** stay in Needs you until marked done; the notification fires once, the row does not
+  go away.
+- **Tight rows** (the inspector open on a small window) drop the project name below 600 pt of
+  content, and the branch, pull request and age below 460 pt.
+- **Inline add** keeps its input open and empty after Enter, to catch several thoughts in a row;
+  Esc closes it.
+- A notification click opens the task in the inspector over Now.
+
 ### Inbox
 
 Same list view as a project, without the board toggle; tasks with no project.

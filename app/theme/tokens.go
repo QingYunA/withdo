@@ -188,7 +188,7 @@ const (
 	ContentPad     float32 = 56  // its side padding when there is room
 	AskHeight      float32 = 46
 	ColumnWidth    float32 = 264 // a board column at its widest
-	MinColumnWidth float32 = 208 // and at its narrowest, before the board scrolls
+	MinColumnWidth float32 = 192 // and at its narrowest, before the board scrolls
 	BoardPadding   float32 = 24
 	ColumnGap      float32 = 12
 

@@ -9,6 +9,10 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
+// listIndent is where a row's text starts: under the group header's name, past its 16 pt glyph and
+// the 8 pt gap.
+const listIndent float32 = 24
+
 // listGroup is one status of a list: a header and its rows.
 type listGroup struct {
 	status data.Status
@@ -135,7 +139,7 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	for _, g := range lm.groups {
 		m.group(c, t, g.status, g.name, g.tasks)
 	}
-	m.addTaskRow(c, t)
+	m.addTaskRow(c, t, listIndent)
 	m.foldedGroups(c, t, lm)
 }
 
@@ -160,7 +164,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	row.Children(func() {
 		ui.Box(c).Width(12).Shrink(0) // the glyph's column, and the gap after it, make 24
 		body(c, func() {
-			titleLine(c, t, task, "")
+			m.titleLine(c, t, task, "")
 			summaryLine(c, t, listSummary(task, ot))
 		})
 		right(c, func() { m.listRight(c, t, task, ot) })
@@ -213,12 +217,12 @@ func plainText(c *ui.Context, t *theme.Tokens, text string) {
 
 // addTaskRow is the quiet "+ Add a task" under To do; clicking it opens an inline input, and Enter
 // creates a task in this project, or in the Inbox.
-func (m *Main) addTaskRow(c *ui.Context, t *theme.Tokens) {
+func (m *Main) addTaskRow(c *ui.Context, t *theme.Tokens, indent float32) {
 	if m.adding && m.addNav == m.nav {
-		m.addInput(c, t)
+		m.addInput(c, t, indent)
 		return
 	}
-	row := ui.Row(c.Key("add-task")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0, -6).Padding(0, 6, 0, 30).
+	row := ui.Row(c.Key("add-task")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0, -6).Padding(0, 6, 0, indent+6).
 		Radius(theme.RadiusCard).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label("Add a task")
 	if row.Hovered() {
 		row.Background(t.BgHover)
@@ -229,8 +233,8 @@ func (m *Main) addTaskRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-func (m *Main) addInput(c *ui.Context, t *theme.Tokens) {
-	ui.Row(c.Key("add-input-row")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0).Padding(0, 0, 0, 24).AlignItems(ui.Center).Children(func() {
+func (m *Main) addInput(c *ui.Context, t *theme.Tokens, indent float32) {
+	ui.Row(c.Key("add-input-row")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0).Padding(0, 0, 0, indent).AlignItems(ui.Center).Children(func() {
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
 			in := theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
@@ -279,7 +283,7 @@ func (m *Main) foldedGroups(c *ui.Context, t *theme.Tokens, lm listModel) {
 			m.showAllDone(c, t, lm)
 		}
 	}
-	m.foldLine(c, t, lm, open)
+	m.foldLine(c, t, lm, open, 16)
 }
 
 func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
@@ -291,7 +295,7 @@ func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
 	}
 }
 
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool) {
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32) {
 	var parts []string
 	if len(lm.done) > 0 {
 		parts = append(parts, "Done "+itoa(len(lm.done)))
@@ -303,7 +307,7 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool)
 	if open {
 		verb = "hide"
 	}
-	line := ui.Row(c.Key("fold")).Height(theme.RowOneLine).Shrink(0).Margin(16, 0, 0).Gap(6).AlignItems(ui.Center).
+	line := ui.Row(c.Key("fold")).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer).Label(verb + " " + strings.Join(parts, " and "))
 	line.Children(func() {
 		theme.Text(c, theme.BodyStrong, t.TextTertiary, strings.Join(parts, " · "))
@@ -334,7 +338,7 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 			}
 		}
 	})
-	m.addTaskRow(c, t)
+	m.addTaskRow(c, t, 0)
 }
 
 // listHeader is the project's name and repository (or Inbox), the milestone menu, and the

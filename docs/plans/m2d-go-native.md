@@ -52,10 +52,10 @@ in-memory fake with realistic seed data. Wiring to `internal/domain` happens aft
 
 - Follow `docs/design/ui-spec.md` exactly: tokens, glyphs, panel, main window (sidebar, board
   with drag and drop, inspector), settings sheet, empty states, light and dark.
-- Shell behavior from the mygo web spike stays: Dock icon visible, no global shortcut, tray left
-  click toggles the panel flyout, right click shows Open main window / Settings / Quit, main
-  window close hides it, `quitting` flag so Quit works, notifications sent from Go with click
-  opening the task.
+- Shell behavior: Dock icon visible, no tray, no flyout, no global shortcut (the tray and the
+  quick panel were removed on 2026-10-14, see the Surfaces section of the spec). Main window close
+  hides it, `quitting` flag so Quit works, notifications sent from Go with click opening the task
+  in the inspector.
 - Render every surface to PNG in light and dark with mygo's view testing (`ui.Render` /
   `tt.Image()`) into `docs/design/screens/`, at 2x. These images are the design review.
 - View tests for interaction logic (filtering, keyboard selection, drop changes status,
@@ -77,9 +77,9 @@ Windows and Linux builds.
 
 ## Phase B notes (native UI)
 
-- Layout: the app is `app/` (package main, shell, tray, notifications) with three subpackages:
+- Layout: the app is `app/` (package main, shell, notifications) with three subpackages:
   `app/data` (the UI's `Store` interface, domain mirror types, in-memory fake), `app/theme` (tokens,
-  type scale, vector glyphs) and `app/views` (panel, main window, tests). `app/mygo.json` is the
+  type scale, vector glyphs) and `app/views` (Now, lists, board, inspector, tests). `app/mygo.json` is the
   mygo config; the root `go.mod` carries `mygo` as a tool, so `cd app && go tool mygo build`
   produces `app/build/darwin-arm64/ADHD Todo.app`. No separate module was needed.
 - mygo v0.4.8 is the newest release, but the docs on the main branch are ahead of it: `Element.OnEnter`,

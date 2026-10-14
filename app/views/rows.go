@@ -47,18 +47,26 @@ func body(c *ui.Context, fn func()) {
 	ui.Column(c).Grow(1).MinWidth(0).Children(fn)
 }
 
+// Content widths below which a row drops its companions: first the project name, then the branch
+// and pull request, so the title keeps its room beside the inspector.
+const (
+	dropProjectBelow float32 = 600
+	dropPillsBelow   float32 = 460
+)
+
 // titleLine is a title with its quiet companions: a branch, a pull request, a project name.
-func titleLine(c *ui.Context, t *theme.Tokens, task data.Task, project string) {
+func (m *Main) titleLine(c *ui.Context, t *theme.Tokens, task data.Task, project string) {
 	ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {
+		// In a tight row the project name gives way first, then the branch, and the title last.
 		theme.Text(c, theme.BodyStrong, t.Text, task.Title).Shrink(1).MinWidth(0).Ellipsis("…")
-		if task.Branch != "" {
-			pill(c, t, task.Branch).MaxWidth(180)
+		if task.Branch != "" && m.width >= dropPillsBelow {
+			pill(c, t, task.Branch).MaxWidth(180).Shrink(4)
 		}
-		if task.PRNumber > 0 {
-			pill(c, t, "#"+itoa(task.PRNumber))
+		if task.PRNumber > 0 && m.width >= dropPillsBelow {
+			pill(c, t, "#"+itoa(task.PRNumber)).Shrink(0)
 		}
-		if project != "" {
-			theme.Text(c, theme.Meta, t.TextTertiary, project).Shrink(2).MinWidth(0).Ellipsis("…")
+		if project != "" && m.width >= dropProjectBelow {
+			theme.Text(c, theme.Meta, t.TextTertiary, project).Shrink(8).MinWidth(0).Ellipsis("…")
 		}
 	})
 }

@@ -19,7 +19,9 @@ type boardColumn struct {
 }
 
 // boardColumns returns the columns the board draws: those with tasks, and To do always, since it
-// is where a new task goes. There are no strips and no zero-count columns.
+// is where a new task goes. There are no strips and no zero-count columns. Backlog and Done follow
+// the list's "Done · Backlog — show" line: folded away, they would push the live columns off the
+// screen, and they stay reachable as drop targets.
 func (m *Main) boardColumns() []boardColumn {
 	by := map[data.Status][]data.Task{}
 	for _, t := range m.selectionTasks() {
@@ -27,7 +29,8 @@ func (m *Main) boardColumns() []boardColumn {
 	}
 	var cols []boardColumn
 	for _, s := range data.BoardStatuses {
-		if len(by[s]) == 0 && s != data.Todo {
+		parked := s == data.Backlog || s == data.Done
+		if (len(by[s]) == 0 && s != data.Todo) || (parked && !m.expanded[m.nav]) {
 			continue
 		}
 		tasks := by[s]
@@ -70,6 +73,7 @@ func (m *Main) boardScreen(c *ui.Context, t *theme.Tokens) {
 	})
 	cols := m.boardColumns()
 	hidden := hiddenStatuses(cols)
+	m.boardFold(c, t, pad)
 	width := columnWidth(m.contentWidth(c), len(cols))
 	// The drop targets float over the scroller's right edge, so they are in reach however far
 	// the board is scrolled.
@@ -83,6 +87,19 @@ func (m *Main) boardScreen(c *ui.Context, t *theme.Tokens) {
 			})
 		})
 		m.dropTargets(c, t, hidden)
+	})
+}
+
+// boardFold is the list's last line, under the board's header: "Done 4 · Backlog 2 — show".
+func (m *Main) boardFold(c *ui.Context, t *theme.Tokens, pad float32) {
+	lm := m.listModel()
+	if len(lm.done) == 0 && len(lm.backlog) == 0 {
+		return
+	}
+	ui.Column(c).FillWidth().Shrink(0).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad).Children(func() {
+			m.foldLine(c, t, lm, m.expanded[m.nav], 4)
+		})
 	})
 }
 

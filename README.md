@@ -2,12 +2,13 @@
 
 A todo app for people juggling many things at once. Coding agents (Claude Code first) report which
 repo, branch and PR they are working on through a local MCP server, so you can see what every
-agent is doing across parallel PRs. A native macOS menu bar app shows it live. Everything is Go,
+agent is doing across parallel PRs. A native macOS app shows it live: one calm Now screen, then a
+list per project. Everything is Go,
 and the data is one local SQLite file.
 
 <p>
-  <img src="docs/design/screens/panel-data-light.png" alt="Quick panel" width="300">
-  <img src="docs/design/screens/main-board-light.png" alt="Board" width="560">
+  <img src="docs/design/screens/now-light.png" alt="Now" width="420">
+  <img src="docs/design/screens/project-list-light.png" alt="A project as a list" width="420">
 </p>
 
 More in [`docs/design/screens/`](docs/design/screens/); the design is specified in
