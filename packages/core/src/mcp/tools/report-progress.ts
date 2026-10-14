@@ -11,7 +11,7 @@ const input = z.object({
   next_step: z.string().min(1).optional().describe("What happens next, or what you are waiting on"),
   task_id: taskId.optional().describe("Task to report on; omit to match by repo and branch"),
   title: z.string().min(1).optional().describe("Title for a newly created task; defaults to the branch name"),
-  cwd: cwdSchema.optional().describe("Working directory; defaults to the server's cwd"),
+  cwd: cwdSchema.optional().describe("Your current working directory. Always pass it: it decides the repo and branch"),
   branch: z.string().min(1).optional().describe("Branch name; defaults to the current git branch of cwd"),
   pr_url: prUrl.optional(),
 });

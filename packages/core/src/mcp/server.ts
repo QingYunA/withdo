@@ -10,6 +10,7 @@ export const INSTRUCTIONS = [
   "- when you get blocked (status \"blocked\"; say in next_step what you need),",
   "- when you open a PR (pr_url, status \"review\"),",
   "- when you finish (status \"done\").",
+  "Always pass cwd: your current working directory. The server process may run in a different directory, and in a git worktree cwd decides the branch.",
   "Calls from the same repo and branch update one task, so keep each report short. Pass task_id if you have it.",
   "Do not report trivial questions or read-only exploration.",
 ].join("\n");
