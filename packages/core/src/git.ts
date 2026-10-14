@@ -1,7 +1,9 @@
-import { basename } from "node:path";
+import { basename, dirname } from "node:path";
 
 export interface GitContext {
   readonly toplevel: string;
+  /** Root of the main working tree; differs from toplevel inside a linked worktree. */
+  readonly repoRoot: string;
   /** Current branch, or null when HEAD is detached. */
   readonly branch: string | null;
   /** "owner/repo" when origin is a GitHub remote, otherwise null. */
@@ -51,6 +53,15 @@ function runGit(cwd: string, args: readonly string[]): string | null {
   }
 }
 
+/** The main working tree for a linked worktree, otherwise `toplevel`. */
+function resolveRepoRoot(toplevel: string): string {
+  const dirs = runGit(toplevel, ["rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"]);
+  const [gitDir, commonDir] = dirs?.split("\n") ?? [];
+  if (!gitDir || !commonDir || gitDir === commonDir) return toplevel;
+  // A bare repository's common dir is the repository itself.
+  return basename(commonDir) === ".git" ? dirname(commonDir) : commonDir;
+}
+
 /** Describe the git repository containing `cwd`, or null when it is not inside one. */
 export function resolveGitContext(cwd: string): GitContext | null {
   const toplevel = runGit(cwd, ["rev-parse", "--show-toplevel"]);
@@ -60,7 +71,8 @@ export function resolveGitContext(cwd: string): GitContext | null {
   const branch = runGit(toplevel, ["symbolic-ref", "--short", "-q", "HEAD"]) || null;
   const remote = runGit(toplevel, ["remote", "get-url", "origin"]);
   const repoSlug = remote ? parseRemoteUrl(remote) : null;
-  const repoName = repoSlug ? repoSlug.split("/")[1]! : basename(toplevel);
+  const repoRoot = resolveRepoRoot(toplevel);
+  const repoName = repoSlug ? repoSlug.split("/")[1]! : basename(repoRoot);
 
-  return { toplevel, branch, repoSlug, repoName };
+  return { toplevel, repoRoot, branch, repoSlug, repoName };
 }

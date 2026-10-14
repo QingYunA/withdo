@@ -79,10 +79,10 @@ export function resolveProjectFromCwd(db: Database, cwd: string): ResolvedProjec
   const git = resolveGitContext(cwd);
   if (!git) return null;
   return db.transaction((): ResolvedProject => {
-    const existing = git.repoSlug ? findBySlug(db, git.repoSlug) : findByPath(db, git.toplevel);
+    const existing = git.repoSlug ? findBySlug(db, git.repoSlug) : findByPath(db, git.repoRoot);
     const project = existing
-      ? touchPath(db, existing, git.toplevel)
-      : insertProject(db, git.repoName, git.repoSlug, git.toplevel);
+      ? touchPath(db, existing, git.repoRoot)
+      : insertProject(db, git.repoName, git.repoSlug, git.repoRoot);
     return { project, git };
   })();
 }
