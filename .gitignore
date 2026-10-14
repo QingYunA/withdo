@@ -1,11 +1,15 @@
-node_modules/
+# Go / mygo
+app/build/
+app/.mygo/
 dist/
 coverage/
+*.out
+*.test
+
+# local databases (test fixtures stay tracked)
 *.db
 *.db-wal
 *.db-shm
-.DS_Store
-apps/desktop/resources/*/bin/adhd-core
-apps/desktop/build/
-apps/desktop/.mygo/
 !internal/store/testdata/*.db
+
+.DS_Store
