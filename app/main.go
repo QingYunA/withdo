@@ -1,6 +1,6 @@
-// Command adhd-todo is the menu bar app: a quick panel under the tray icon and a main window with
-// the board, drawn with mygo native UI. It reads and writes the same SQLite database as the
-// adhd-core MCP server, so what agents report shows up live.
+// Command adhd-todo is the desktop app: one window with the Now screen and a list per project,
+// drawn with mygo native UI. It reads and writes the same SQLite database as the adhd-core MCP
+// server, so what agents report shows up live.
 package main
 
 import (
@@ -35,7 +35,7 @@ func main() {
 	app.Act = s
 
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
-	// The panel closing must not end the app, and neither must hiding the main window.
+	// Hiding the main window must not end the app.
 	mygo.App.OnWindowAllClosed(func() {})
 	// A click on the Dock icon with no window showing brings the main window back.
 	mygo.App.OnActivate(func(hasVisibleWindows bool) {
@@ -54,10 +54,6 @@ func main() {
 	})
 	mygo.App.WhenReady(func() {
 		s.createMain()
-		if err := s.createTray(); err != nil {
-			log.Printf("tray: %v", err)
-		}
-		s.updateTrayIcon()
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go notifyReminder(r) })
 		be.start(stop)

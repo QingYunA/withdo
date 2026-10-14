@@ -21,10 +21,6 @@ type shell struct {
 
 	mu      sync.Mutex
 	mainWin *mygo.Window
-	panel   *mygo.Window
-	panelV  *views.Panel
-	tray    *mygo.Tray
-	blocked bool
 
 	// quitting is set when a quit starts, so that closing the main window then really closes it.
 	quitting atomic.Bool
@@ -38,15 +34,11 @@ func (s *shell) OpenTask(id int) {
 	s.invalidateMain()
 }
 
-func (s *shell) OpenMain() { s.showMain() }
-
 func (s *shell) OpenSettings() {
 	s.showMain()
 	s.main.OpenSettings()
 	s.invalidateMain()
 }
-
-func (s *shell) ClosePanel() { s.closePanel() }
 
 func (s *shell) OpenURL(url string) {
 	if err := mygo.Shell.OpenExternal(url); err != nil {
@@ -60,20 +52,14 @@ func (s *shell) window() *mygo.Window {
 	return s.mainWin
 }
 
-func (s *shell) panelWindow() *mygo.Window {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.panel
-}
-
 func (s *shell) invalidateMain() {
 	if w := s.window(); w != nil {
 		w.Invalidate()
 	}
 }
 
-// createMain opens the main window. Closing it hides it: the app keeps running in the Dock and the
-// menu bar until Quit.
+// createMain opens the main window. Closing it hides it: the app keeps running in the Dock until
+// Quit.
 func (s *shell) createMain() {
 	win := mygo.NewWindow(mygo.WindowOptions{
 		Title:          "ADHD Todo",
@@ -104,7 +90,6 @@ func (s *shell) showMain() {
 	if win == nil {
 		return
 	}
-	s.closePanel()
 	if win.IsMinimized() {
 		win.Restore()
 	}
@@ -114,104 +99,14 @@ func (s *shell) showMain() {
 	s.app.Refresh()
 }
 
-// togglePanel opens the quick panel under the tray icon, or closes it when it is open. The panel is
-// a focusable flyout: it closes on a click outside and on an Escape the view leaves alone.
-func (s *shell) togglePanel() {
-	if s.panelWindow() != nil {
-		s.closePanel()
-		return
-	}
-	s.app.Refresh()
-	panel := views.NewPanel(s.app)
-	win := mygo.NewFlyout(mygo.FlyoutOptions{
-		Tray:      s.tray,
-		Placement: mygo.PlacementBottom,
-		Gap:       4,
-		Width:     theme.PanelWidth,
-		Height:    theme.PanelHeight,
-		Focusable: true,
-		Shadow:    true,
-		Popover:   true, // macOS draws its material, which is Liquid Glass on macOS 26 and later
-		Content:   ui.View(panel.View),
-	})
-	s.mu.Lock()
-	s.panel, s.panelV = win, panel
-	s.mu.Unlock()
-	win.OnClosed(func() {
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		if s.panel == win {
-			s.panel, s.panelV = nil, nil
-		}
-	})
-}
-
-func (s *shell) closePanel() {
-	if w := s.panelWindow(); w != nil {
-		w.Close()
-	}
-}
-
-// createTray puts the icon in the menu bar. A left click toggles the quick panel; a right click
-// opens the menu. The menu is installed only for that popup: a menu set on the tray would take the
-// left click as well.
-func (s *shell) createTray() error {
-	tray, err := mygo.NewTray(mygo.TrayOptions{Icon: trayIcon(false), IconIsTemplate: true, ToolTip: "ADHD Todo"})
-	if err != nil {
-		return err
-	}
-	s.mu.Lock()
-	s.tray = tray
-	s.mu.Unlock()
-	menu := mygo.NewMenu([]*mygo.MenuItem{
-		{Label: "Open main window", Click: func(*mygo.MenuItem, *mygo.Window) { s.showMain() }},
-		{Label: "Settings…", Click: func(*mygo.MenuItem, *mygo.Window) { s.OpenSettings() }},
-		mygo.Separator(),
-		{Role: mygo.RoleQuit},
-	})
-	tray.OnClick(s.togglePanel)
-	tray.OnRightClick(func() {
-		s.closePanel()
-		tray.SetMenu(menu)
-		defer tray.SetMenu(nil)
-		tray.PopUpMenu()
-	})
-	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { tray.Destroy() })
-	return nil
-}
-
-// storeChanged runs on any goroutine after the data changed: reload the snapshot on the main thread,
-// redraw the windows and update the tray glyph.
+// storeChanged runs on any goroutine after the data changed: reload the snapshot on the main thread
+// and redraw the window.
 func (s *shell) storeChanged() {
 	win := s.window()
 	if win == nil {
 		return
 	}
-	win.Update(func() {
-		s.app.Refresh()
-		if p := s.panelWindow(); p != nil {
-			p.Invalidate()
-		}
-		s.updateTrayIcon()
-	})
-}
-
-// updateTrayIcon shows the dot while an agent task is blocked.
-func (s *shell) updateTrayIcon() {
-	s.mu.Lock()
-	tray, was := s.tray, s.blocked
-	s.mu.Unlock()
-	now := s.app.AgentBlocked()
-	if tray == nil || now == was {
-		return
-	}
-	if err := tray.SetIcon(trayIcon(now), true); err != nil {
-		log.Printf("tray icon: %v", err)
-		return
-	}
-	s.mu.Lock()
-	s.blocked = now
-	s.mu.Unlock()
+	win.Update(s.app.Refresh)
 }
 
 // notifyReminder shows a system notification for a due reminder. The first one asks the user for

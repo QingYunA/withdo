@@ -1,5 +1,6 @@
-// Package views draws the adhd-todo windows with mygo native UI: the quick panel, the main window
-// (sidebar, board, inspector) and the settings sheet. It reads and writes through data.Store.
+// Package views draws the adhd-todo window with mygo native UI: the sidebar, the Now screen, the
+// project lists and board, the inbox, the inspector and the settings sheet. It reads and writes
+// through data.Store.
 package views
 
 import (
@@ -12,9 +13,7 @@ import (
 // Actions is what the views ask the shell to do.
 type Actions interface {
 	OpenTask(id int) // show the main window with the task open in the inspector
-	OpenMain()
 	OpenSettings()
-	ClosePanel()
 	OpenURL(url string)
 }
 
@@ -163,14 +162,4 @@ func byPriorityThenRecent(ts []data.Task) {
 		}
 		return ts[i].UpdatedAt.After(ts[j].UpdatedAt)
 	})
-}
-
-// AgentBlocked reports whether any agent task is blocked, for the tray glyph.
-func (a *App) AgentBlocked() bool {
-	for _, t := range a.snap.tasks {
-		if t.Source == data.SourceAgent && t.Status == data.Blocked {
-			return true
-		}
-	}
-	return false
 }
