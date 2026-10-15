@@ -20,7 +20,7 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
-		settingsRow(c, t, "folder", s.say.SettingsDataFolder(), s.app.Config.DataFolder, true, func() {
+		settingsRow(c, t, "folder", s.say.SettingsDataFolder(), withTilde(s.app.Config.DataFolder, s.app.Config.Home), true, func() {
 			if settingsLink(c, t, "show-folder", s.say.SettingsShowInFinder(), s.say.SettingsShowInFinder()).Clicked() {
 				s.app.Act.ShowInFinder(s.app.Config.DataFolder)
 			}

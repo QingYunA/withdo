@@ -93,10 +93,19 @@ var paneIcons = map[Pane]*ui.SVG{
 	PaneGeneral: theme.IconGear, PaneAssistant: theme.IconSparkle, PaneAgents: theme.IconAgents, PaneGitHub: theme.IconGitHub,
 }
 
-// toolbar is the band of panes, each an icon over its name, over a hairline.
+// SettingsTitleBarHeight is the height of the band's title row: tall enough for the traffic
+// lights.
+const SettingsTitleBarHeight float32 = 38
+
+// toolbar is one band for the whole top of the window, under and around the traffic lights: the
+// open pane's name centered, the panes below it each as an icon over its name, and a hairline.
 func (s *Settings) toolbar(c *ui.Context, t *theme.Tokens) ui.Element {
 	return ui.Column(c.Key("toolbar")).Shrink(0).Background(t.SettingsToolbar()).Children(func() {
-		ui.Row(c).Justify(ui.Center).Gap(4).Padding(10, 0, 12).Children(func() {
+		ui.Row(c).Height(max(c.TitleBar().Height, SettingsTitleBarHeight)).Shrink(0).Justify(ui.Center).AlignItems(ui.Center).
+			DragWindow().Children(func() {
+			theme.Text(c, theme.Section, t.Text, s.paneName(s.pane))
+		})
+		ui.Row(c).Justify(ui.Center).Gap(4).Padding(0, 0, 12).Children(func() {
 			for _, p := range []Pane{PaneGeneral, PaneAssistant, PaneAgents, PaneGitHub} {
 				s.tab(c, t, p)
 			}

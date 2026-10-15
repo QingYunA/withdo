@@ -181,8 +181,10 @@ func (s *shell) createMain() {
 	s.mu.Unlock()
 }
 
-// createSettings opens the Settings window: a fixed width, a title that is the open pane's name,
-// and a height that follows what the pane shows. Closing it destroys it.
+// createSettings opens the Settings window: a fixed width, a height that follows what the pane
+// shows, and the title and the pane icons in one band under the traffic lights, drawn by the view
+// over a hidden title bar. The window's own title is still the open pane's name. Closing it
+// destroys it.
 func (s *shell) createSettings() {
 	var win *mygo.Window
 	s.settings.OnLayout = func(title string, height float32) {
@@ -199,6 +201,8 @@ func (s *shell) createSettings() {
 		UseContentSize:  true,
 		DisableResize:   true,
 		DisableMaximize: true,
+		TitleBarStyle:   mygo.TitleBarHiddenInset,
+		TitleBarHeight:  int(views.SettingsTitleBarHeight),
 		Content:         ui.View(s.settings.View),
 	})
 	win.OnClosed(func() {
