@@ -136,3 +136,36 @@ func TestScreensManageLogbook(t *testing.T) {
 		}
 	}
 }
+
+func TestScreensManageMilestones(t *testing.T) {
+	for _, a := range appearances() {
+		for _, l := range languages {
+			suffix := l.suffix + "-" + a.suffix + ".png"
+			app, _, _ := newTestApp(t)
+			manageShot(t, "milestone-menu"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenProject, projectID: 1})
+				tt.Frame()
+				r, _ := tt.Find(m.say.A11yMilestone(m.say.MilestoneAll()))
+				x, y := r.X, r.Y+r.H+4
+				if err := tt.Click(m.say.A11yMilestone(m.say.MilestoneAll())); err != nil {
+					t.Fatal(err)
+				}
+				edit := m.say.ManageMilestoneEdit("v0.2 native")
+				return &menuSpec{
+					x: x, y: y, items: tt.Menu(),
+					subs:    map[string]bool{edit: true, m.say.ManageMilestoneEdit("v0.1 spike"): true},
+					checked: map[string]bool{m.say.MilestoneAll(): true},
+					flyout: &flyoutSpec{parent: edit, items: []string{
+						m.say.ManageMilestoneRename(), m.say.ManageMilestoneDue(), m.say.ManageMilestoneClose()}},
+				}
+			})
+			manageShot(t, "milestone-new"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenProject, projectID: 1})
+				m.newMilestone(1)
+				tt.Frame()
+				tt.Type("v0.3 polish")
+				return nil
+			})
+		}
+	}
+}

@@ -143,6 +143,7 @@ func (m *Main) View(c *ui.Context) {
 	})
 	m.settingsSheet(c, t)
 	m.newProjectSheet(c, t)
+	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
 }
 

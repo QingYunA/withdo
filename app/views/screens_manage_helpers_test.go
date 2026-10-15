@@ -33,7 +33,7 @@ type flyoutSpec struct {
 const (
 	menuRow   float32 = 24
 	menuSep   float32 = 9
-	menuWidth float32 = 188
+	menuWidth float32 = 240
 )
 
 func menuHeight(items []string) float32 {
@@ -107,7 +107,11 @@ func withMenu(win *image.RGBA, m menuSpec, dark bool, lang string) *image.RGBA {
 				offset += menuRow
 			}
 		}
-		at(menuImage(f.items, nil, f.checked, dark, lang), m.x+menuWidth-4, m.y+offset-5)
+		x := m.x + menuWidth - 4
+		if x+menuWidth > 1100 { // no room at the right: it opens to the left
+			x = m.x - menuWidth + 4
+		}
+		at(menuImage(f.items, nil, f.checked, dark, lang), x, m.y+offset-5)
 	}
 	return out
 }

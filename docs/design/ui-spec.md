@@ -210,7 +210,7 @@ before the project has a milestone) and a `List | Board` segmented control at th
 **Milestone menu.** The button reads `All milestones` or the milestone being filtered by. The menu:
 
 1. `All milestones`, a separator, then one item per milestone (checked when it filters the page),
-   as before: `v0.2 · due Oct 28`, `v0.1 (closed)`;
+   as before: `v0.2 · due Oct 28`, `v0.1 · closed`;
 2. a separator and `New milestone…`;
 3. when there are milestones, a separator and one submenu per milestone, `Edit “v0.2”`, holding
    `Rename…`, `Due date…` and `Close milestone` (`Reopen milestone` for a closed one).
