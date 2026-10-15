@@ -14,7 +14,7 @@ const (
 	HopDuration time.Duration = 900 * time.Millisecond // from taking off to settled
 	HopStagger  time.Duration = 120 * time.Millisecond // between the hops of several items
 	HopMax                    = 3                      // hops shown at once; the rest count at once
-	HopPeak     float32       = 30                     // the arc's top, above the Mine row
+	HopPeak     float32       = 10                     // the arc's top, above the Mine row: low, so it never reaches the search field
 	// HopLanding is when the sprite touches down, the rest of the hop being its squash and settle.
 	HopLanding time.Duration = 648 * time.Millisecond
 
@@ -38,12 +38,14 @@ func HopAt(elapsed time.Duration, fromX, fromY, toX, toY float32) (f HopFrame, o
 	flight := HopLanding
 	if elapsed < flight {
 		s := float32(elapsed) / float32(flight)
-		// A parabola that starts at the Agents row, peaks HopPeak above the Mine row and comes down
-		// on it. rise is how far the straight line from start to finish is lifted at the middle.
-		rise := HopPeak + (fromY-toY)/2
+		// A parabola through the start and the landing whose top is HopPeak above the landing:
+		// y = A s² + B s + fromY, solved so its vertex is at toY - HopPeak.
+		d := float64(fromY - (toY - HopPeak)) // from the start up to the top
+		bq := -2 * (d + math.Sqrt(d*float64(HopPeak)))
+		aq := float64(toY-fromY) - bq
 		return HopFrame{
 			X: fromX + (toX-fromX)*s,
-			Y: fromY + (toY-fromY)*s - 4*rise*s*(1-s),
+			Y: fromY + float32(aq*float64(s*s)+bq*float64(s)),
 			W: HopSize, H: HopSize,
 		}, true
 	}

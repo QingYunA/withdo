@@ -167,9 +167,7 @@ func (m *Main) hopOverlay(c *ui.Context) {
 		who   theme.Who
 		frame theme.HopFrame
 	}
-	// The sprite takes off at the Agents row's avatar and lands left of the badge on the Mine row.
-	fromX, fromY := h.agents.X+sidebarRowPad, h.agents.Y+(h.agents.H-theme.HopSize)/2
-	toX, toY := h.mine.X+h.mine.W-sidebarRowPad-theme.BadgeSize-hopBadgeGap-theme.HopSize, h.mine.Y+(h.mine.H-theme.HopSize)/2
+	fromX, fromY, toX, toY := h.ends()
 	for _, f := range h.flights {
 		if fr, ok := theme.HopAt(now.Sub(f.start), fromX, fromY, toX, toY); ok {
 			frames = append(frames, struct {
@@ -189,6 +187,18 @@ func (m *Main) hopOverlay(c *ui.Context) {
 		}
 	})
 }
+
+// ends are where a sprite takes off and lands (their top left corners): by the counts at the right
+// of the Agents row and of the Mine row, so it hops a short way up and a little right and never
+// covers the rows' names.
+func (h *hopper) ends() (fromX, fromY, toX, toY float32) {
+	toX = h.mine.X + h.mine.W - sidebarRowPad - theme.BadgeSize - hopBadgeGap - theme.HopSize
+	toY = h.mine.Y + (h.mine.H-theme.HopSize)/2
+	return toX - hopDrift, h.agents.Y + (h.agents.H-theme.HopSize)/2, toX, toY
+}
+
+// hopDrift is how far right the sprite moves on its way up.
+const hopDrift float32 = 14
 
 // hopBadgeGap is the room between a landed sprite and the badge it lands by.
 const hopBadgeGap float32 = 4

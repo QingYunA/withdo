@@ -21,15 +21,15 @@ func TestHopStartsAtTheAgentsRowAndLandsOnMine(t *testing.T) {
 	}
 }
 
-func TestHopArcPeaksThirtyPointsAboveTheMineRow(t *testing.T) {
-	const fx, fy, tx, ty = 20, 100, 180, 68
+func TestHopArcPeaksJustAboveTheMineRow(t *testing.T) {
+	const fx, fy, tx, ty = 166, 100, 180, 68
 	top := float32(math.MaxFloat32)
 	for e := time.Duration(0); e < HopDuration; e += time.Millisecond {
 		if f, ok := HopAt(e, fx, fy, tx, ty); ok && !f.Landed && f.Y < top {
 			top = f.Y
 		}
 	}
-	if above := ty - top; above < HopPeak-1 || above > HopPeak+8 {
+	if above := ty - top; above < HopPeak-1 || above > HopPeak+2 {
 		t.Errorf("the arc peaks %.1f pt above the Mine row, want about %.0f", above, HopPeak)
 	}
 }

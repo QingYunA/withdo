@@ -307,3 +307,25 @@ func TestAnAgentDoneWithoutAPullRequestSaysSoAndOffersReview(t *testing.T) {
 	r.tt.Frame()
 	has(t, r.tt, "Codex finished and is waiting for you", "Review")
 }
+
+// The hop is short and stays at the right of the rows: it never covers a row's name, and its arc
+// stays below the search field above Mine.
+func TestTheHopStaysByTheCountsAndBelowTheSearchField(t *testing.T) {
+	h := hopper{
+		mine:   ui.Rect{X: 10, Y: 96, W: 186, H: 32},
+		agents: ui.Rect{X: 10, Y: 128, W: 186, H: 32},
+	}
+	fx, fy, tx, ty := h.ends()
+	for e := time.Duration(0); e < theme.HopDuration; e += time.Millisecond {
+		f, ok := theme.HopAt(e, fx, fy, tx, ty)
+		if !ok {
+			continue
+		}
+		if f.X < h.mine.X+h.mine.W/2 {
+			t.Fatalf("at %v the sprite is at x %.1f, over the rows' names", e, f.X)
+		}
+		if f.Y < h.mine.Y-theme.HopPeak {
+			t.Fatalf("at %v the sprite is at y %.1f, above the Mine row by more than %v", e, f.Y, theme.HopPeak)
+		}
+	}
+}
