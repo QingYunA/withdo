@@ -77,6 +77,16 @@ func (m *Main) needsSection(c *ui.Context, t *theme.Tokens, items []data.NowItem
 func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	fill, opacity, _ := m.app.completionPhase(c, it.ID)
 	row := m.rowShell(c, t, it.ID, needRow, opacity)
+	actions := m.actionsFor(it)
+	// Two buttons beside a title in a narrow row leave it no room: they go under the summary.
+	stacked := len(actions) > 1 && m.width < stackActionsBelow
+	buttons := func() {
+		for i, a := range actions {
+			if actionButtonKeyed(c, t, "action-"+itoa(i)+"-"+itoa(it.ID), a.text, a.label).Clicked() {
+				a.run()
+			}
+		}
+	}
 	row.Children(func() {
 		if it.Kind == data.NeedReminder {
 			ui.Icon(c, theme.IconBell).Size(16, 16).TextColor(t.Accent).Shrink(0).Margin(1, 0, 0)
@@ -86,15 +96,16 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 		body(c, func() {
 			m.titleLine(c, t, it.Task, it.Project, false)
 			summaryLine(c, t, m.needSummary(it))
+			if stacked {
+				ui.Row(c).Shrink(0).Gap(8).Margin(8, 0, 0).Children(buttons)
+			}
 		})
 		right(c, func() {
 			if m.width >= dropPillsBelow { // beside the inspector the title needs the room more
 				m.ageLabel(c, t, it)
 			}
-			for i, a := range m.actionsFor(it) {
-				if actionButtonKeyed(c, t, "action-"+itoa(i)+"-"+itoa(it.ID), a.text, a.label).Clicked() {
-					a.run()
-				}
+			if !stacked {
+				buttons()
 			}
 		})
 	})
@@ -102,6 +113,10 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 		m.openRow(it.ID)
 	}
 }
+
+// stackActionsBelow is the content width under which a row with two buttons puts them under its
+// summary.
+const stackActionsBelow float32 = 560
 
 // rowAction is a button of a Needs you row: its text, what it says to assistive technology, and
 // what it does.

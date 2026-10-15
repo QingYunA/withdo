@@ -149,7 +149,11 @@ Then up to three sections. **A section with nothing in it is not drawn at all.**
    apply to any task with a pull request that is not done or cancelled; failing checks and
    requested changes only while the pull request is open (not a draft).
    Order: blocked, due reminders, closed pull requests, failing checks, requested changes, review,
-   stale. A task shows once, under the first reason it has. Each row: glyph (reminders use a bell in
+   stale. A task shows once, under the first reason it has. Screens `now-pull-requests-*`. Rows age
+from GitHub's own report, not the agent's last word; GitHub's reports (agent `github`) show in the
+task's Activity but never count as the agent speaking. A row with two buttons (the closed pull
+request) puts them under its summary when the content is under 560 pt wide, so the title keeps
+its room beside the inspector. Each row: glyph (reminders use a bell in
    `accent`), title, project name in `text.tertiary`, one summary line, age, and the action as
    a small tinted button (`bg.selected`, accent text). This container is the only box on the
    screen.
