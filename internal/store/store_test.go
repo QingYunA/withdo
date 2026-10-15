@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(3),
+		"PRAGMA user_version": int64(4),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 3 {
-		t.Errorf("SchemaVersion = %d, want 3", store.SchemaVersion())
+	if store.SchemaVersion() != 4 {
+		t.Errorf("SchemaVersion = %d, want 4", store.SchemaVersion())
 	}
 }
 
@@ -165,8 +165,57 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 3 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
 		t.Errorf("user_version = %d", v)
+	}
+}
+
+func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "v3.db")
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmts := []string{}
+	for _, f := range []string{"001_init.sql", "002_reminded_at.sql", "003_pull_requests.sql"} {
+		b, err := os.ReadFile("migrations/" + f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		stmts = append(stmts, string(b))
+	}
+	stmts = append(stmts, "PRAGMA user_version = 3",
+		"INSERT INTO tasks (title, source, created_at, updated_at) VALUES ('old','agent','t','t')")
+	for _, q := range stmts {
+		if _, err := raw.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_ = raw.Close()
+	db, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = db.Close() }()
+	var parent sql.NullInt64
+	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
+		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
+	}
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
+		t.Errorf("user_version = %d", v)
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
+		t.Error("index tasks_parent missing")
+	}
+	// A parent that is deleted leaves its subtasks standing.
+	if _, err := db.ExecContext(ctx, "INSERT INTO tasks (title, source, parent_id, created_at, updated_at) VALUES ('kid','agent',1,'t','t')"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.ExecContext(ctx, "DELETE FROM tasks WHERE id = 1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'kid'").Scan(&parent); err != nil || parent.Valid {
+		t.Errorf("kid parent_id = %v, %v; want NULL after the parent is deleted", parent, err)
 	}
 }
 
@@ -274,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 3 {
-		t.Fatalf("user_version = %d, want 3 (migration 003 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
+		t.Fatalf("user_version = %d, want 4 (migration 004 applied)", v)
 	}
 	var title, branch string
 	var pr int

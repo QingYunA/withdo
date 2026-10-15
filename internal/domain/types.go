@@ -120,6 +120,9 @@ type Task struct {
 	PRReview       *PRReview `json:"pr_review"`
 	PRCheckedAt    *string   `json:"pr_checked_at"`
 	PRClosedSeenAt *string   `json:"pr_closed_seen_at"` // the user dismissed the "closed" state
+	// ParentID is the task this one is a subtask of: the task of the agent that started this
+	// task's subagent. Nil for a top-level task.
+	ParentID *int64 `json:"parent_id"`
 }
 
 // Report is one progress note an agent filed against a task.

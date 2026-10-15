@@ -18,6 +18,7 @@ type listTasksArgs struct {
 	Cwd         string          `json:"cwd"`
 	Status      []domain.Status `json:"status"`
 	MilestoneID *int64          `json:"milestone_id"`
+	ParentID    *int64          `json:"parent_task_id"`
 	Limit       *int            `json:"limit"`
 }
 
@@ -25,13 +26,14 @@ func (t *tools) registerListTasks(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "list_tasks",
 		Title:       "List tasks",
-		Description: "List tasks, newest first, optionally filtered by project, status or milestone.",
+		Description: "List tasks, newest first, optionally filtered by project, status, milestone or parent task.",
 		InputSchema: object(map[string]*jsonschema.Schema{
 			"project_id": id("Project id"),
 			"cwd":        withDesc(cwdProp, "List tasks of the project that owns this directory"),
 			"status": {Type: "array", Description: "Only tasks in these statuses",
 				Items: statusEnum("")},
-			"milestone_id": id("Milestone id"),
+			"milestone_id":   id("Milestone id"),
+			"parent_task_id": id("Only the subtasks of this task"),
 			"limit": {Type: "integer", Minimum: ptr(1.0), Maximum: ptr(float64(maxListLimit)),
 				Description: fmt.Sprintf("Default %d", domain.DefaultTaskLimit)},
 		}),
@@ -53,7 +55,7 @@ func (t *tools) listTasks(ctx context.Context, _ *mcp.CallToolRequest, a listTas
 		}
 		scope = &resolved.Project.ID
 	}
-	filter := domain.TaskFilter{ProjectID: scope, Statuses: a.Status, MilestoneID: a.MilestoneID}
+	filter := domain.TaskFilter{ProjectID: scope, Statuses: a.Status, MilestoneID: a.MilestoneID, ParentID: a.ParentID}
 	if a.Limit != nil {
 		filter.Limit = *a.Limit
 	}

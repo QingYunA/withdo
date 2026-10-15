@@ -31,6 +31,10 @@ type Config struct {
 	MinGap      time.Duration
 	Concurrency int
 	Log         func(format string, args ...any)
+	// Housekeeping, when set, runs at the start of every check, before GitHub is asked and
+	// whatever GitHub answers: work that wants the same rhythm as the poll (launch, every
+	// Interval, window activation) but does not need gh.
+	Housekeeping func(ctx context.Context)
 }
 
 // Status is what Settings shows.
@@ -179,6 +183,9 @@ func (p *Poller) Poll(ctx context.Context) {
 	p.mu.Unlock()
 	p.notify()
 
+	if p.cfg.Housekeeping != nil {
+		p.cfg.Housekeeping(ctx)
+	}
 	auth := CheckAuth(ctx, p.cfg.Runner)
 	if auth.State == AuthReady && ctx.Err() == nil {
 		p.refresh(ctx)

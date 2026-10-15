@@ -212,10 +212,26 @@ func (f *Fake) apply(t *Task, p Patch) error {
 			t.CompletedAt = nil
 		case !wasTerminal:
 			t.CompletedAt = &now
+			f.closeSubtasks(t.ID, now)
 		}
 	}
 	t.UpdatedAt = now
 	return nil
+}
+
+// closeSubtasks mirrors the core: when a task is done or cancelled, its open subtasks (and theirs)
+// become done, each with a report from adhd-todo. The lock is held.
+func (f *Fake) closeSubtasks(parent int, now time.Time) {
+	for i := range f.tasks {
+		k := &f.tasks[i]
+		if k.ParentID == nil || *k.ParentID != parent || k.Status.Terminal() {
+			continue
+		}
+		k.Status, k.CompletedAt, k.UpdatedAt = Done, &now, now
+		f.reports = append(f.reports, Report{ID: f.newID(), TaskID: k.ID, Agent: "adhd-todo", Status: Done,
+			Summary: "Closed with its parent task", CreatedAt: now})
+		f.closeSubtasks(k.ID, now)
+	}
 }
 
 func (f *Fake) Overview() (Overview, error) {

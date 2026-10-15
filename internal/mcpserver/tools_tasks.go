@@ -143,6 +143,13 @@ func (t *tools) updateTask(ctx context.Context, _ *mcp.CallToolRequest, a update
 	return ok("Updated "+domain.FormatTaskLine(*task), map[string]any{"task": task})
 }
 
+// subtaskBrief is a subtask as get_task lists it.
+type subtaskBrief struct {
+	ID     int64         `json:"id"`
+	Title  string        `json:"title"`
+	Status domain.Status `json:"status"`
+}
+
 type getTaskArgs struct {
 	TaskID int64 `json:"task_id"`
 }
@@ -151,7 +158,7 @@ func (t *tools) registerGetTask(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "get_task",
 		Title:       "Get task",
-		Description: "Get a task together with its progress report timeline (oldest first).",
+		Description: "Get a task together with its progress report timeline (oldest first) and its subtasks.",
 		InputSchema: object(map[string]*jsonschema.Schema{
 			"task_id": id("Task id, as returned by report_progress or create_task"),
 		}, "task_id"),
@@ -170,11 +177,23 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 	if err != nil {
 		return t.fail(err)
 	}
+	subtasks, err := t.core.ListSubtasks(ctx, a.TaskID)
+	if err != nil {
+		return t.fail(err)
+	}
 	lines := []string{domain.FormatTaskLine(*task)}
 	for _, r := range reports {
 		lines = append(lines, fmt.Sprintf("- %s %s: %s", r.CreatedAt, r.Agent, r.Summary))
 	}
-	return ok(strings.Join(lines, "\n"), map[string]any{"task": task, "reports": reports})
+	brief := make([]subtaskBrief, len(subtasks))
+	if len(subtasks) > 0 {
+		lines = append(lines, "Subtasks:")
+	}
+	for i, s := range subtasks {
+		brief[i] = subtaskBrief{ID: s.ID, Title: s.Title, Status: s.Status}
+		lines = append(lines, fmt.Sprintf("- #%d [%s] %s", s.ID, s.Status, s.Title))
+	}
+	return ok(strings.Join(lines, "\n"), map[string]any{"task": task, "reports": reports, "subtasks": brief})
 }
 
 func firstNonEmpty(vals ...string) string {
