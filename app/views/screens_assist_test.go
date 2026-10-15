@@ -37,7 +37,7 @@ func TestScreensAssistThinking(t *testing.T) {
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true, Block: make(chan struct{})}
 		app, _, rec := assistApp(t, fa)
-		mainShot(t, "now-thinking-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "明天九点提醒我开会", false))
+		mainShot(t, "now-thinking-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", false))
 	}
 }
 
@@ -47,18 +47,18 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 		app, store, rec := assistApp(t, fa)
 		fa.Script = func(string) (data.Reply, error) {
 			at := fixedNow().Add(18*time.Hour + 30*time.Minute) // tomorrow 9:00
-			task, err := store.CreateTask(data.CreateTaskInput{Title: "开会", Source: data.SourceUser})
+			task, err := store.CreateTask(data.CreateTaskInput{Title: "Team meeting", Source: data.SourceUser})
 			if err != nil {
 				return data.Reply{}, err
 			}
 			if _, err = store.UpdateTask(task.ID, data.Patch{RemindAt: &at}); err != nil {
 				return data.Reply{}, err
 			}
-			return data.Reply{Text: "好的，明天 9:00 提醒你开会。", Receipts: []data.Receipt{
-				{ID: 1, TaskID: task.ID, Title: "开会", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
+			return data.Reply{Text: "Okay, I'll remind you tomorrow at 9.", Receipts: []data.Receipt{
+				{ID: 1, TaskID: task.ID, Title: "Team meeting", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
 			}}, nil
 		}
-		mainShot(t, "now-reply-receipt-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "明天九点提醒我开会", true))
+		mainShot(t, "now-reply-receipt-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", true))
 	}
 }
 

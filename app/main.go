@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/views"
@@ -26,9 +27,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("open data: %v", err)
 	}
+	home, _ := os.UserHomeDir()
 	app := views.NewApp(be.store, nil, views.Config{
 		ConnectCommand: connectCommand,
 		DataFolder:     be.dataFolder,
+		Home:           home,
 		Version:        version,
 	})
 	app.Assistant, app.Models, app.GitHub = be.assistant, be.models, be.github

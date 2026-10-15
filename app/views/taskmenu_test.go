@@ -59,7 +59,7 @@ func TestRightClickOpensOurTaskMenuAtThePointer(t *testing.T) {
 func TestTaskMenuStripsSetStatusAndPriorityInOneClick(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch")
-	click(t, tt, "Set status to Review")
+	click(t, tt, "Set status to In review")
 	if got, _ := app.Task(3); got.Status != data.Review {
 		t.Errorf("status %v", got.Status)
 	}
@@ -285,7 +285,7 @@ func TestGlyphOfMyOwnTaskCompletesItAndAnAgentsOpensTheMenu(t *testing.T) {
 	}
 	// The menu hangs under the glyph.
 	g, _ := tt.Find("Status: Blocked")
-	s, _ := tt.Find("Set status to Todo")
+	s, _ := tt.Find("Set status to To do")
 	if s.Y < g.Y {
 		t.Errorf("menu strip at %+v is above the glyph at %+v", s, g)
 	}
@@ -359,7 +359,7 @@ func TestInspectorValuesOpenOnlyTheirPieceOfTheMenu(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenTask(8) // Book dentist, in the Inbox
 	tt.Frame()
-	click(t, tt, "Status: Todo")
+	click(t, tt, "Status: To do")
 	if !tt.HasText("Set status to Done") || tt.HasText("Move to…") {
 		t.Errorf("the Status value should show the strip alone: %q", tt.Texts())
 	}
@@ -418,5 +418,42 @@ func TestInspectorDeleteTaskIsImmediateWithUndo(t *testing.T) {
 	click(t, tt, "Undo")
 	if _, ok := app.Task(8); !ok {
 		t.Error("Undo did not bring the task back")
+	}
+}
+
+func TestTaskMenuLabelsNameTheHoveredChoiceInline(t *testing.T) {
+	tt, _, _ := projectTester(t, 1)
+	rightClick(t, tt, "Write the release notes")
+	has(t, tt, "· To do", "· P2 Normal")
+	g, _ := tt.Find("Set status to Doing")
+	tt.Move(center(g))
+	tt.Frame()
+	tt.Frame()
+	has(t, tt, "· Doing", "· P2 Normal")
+	hasNot(t, tt, "· To do")
+	p, _ := tt.Find("Set priority to Urgent")
+	tt.Move(center(p))
+	tt.Frame()
+	tt.Frame()
+	has(t, tt, "· To do", "· P0 Urgent")
+}
+
+func TestMoveToStaysInTheWindowAndDoesNotJumpWhileFiltering(t *testing.T) {
+	tt, _, _ := projectTester(t, 1) // 720 pt tall; the last row is near the bottom
+	rightClick(t, tt, "Port the reminder watcher")
+	click(t, tt, "Move to…")
+	last, ok := tt.Find("Move to picpocket")
+	if !ok {
+		t.Fatalf("no picpocket in %q", tt.Texts())
+	}
+	if bottom := last.Y + last.H; bottom > 720-popEdge+1 {
+		t.Errorf("the list ends at %.0f, past the window's edge", bottom)
+	}
+	before, _ := tt.Find("Find a project")
+	tt.Type("p")
+	tt.Frame()
+	after, _ := tt.Find("Find a project")
+	if before.Y != after.Y {
+		t.Errorf("the filter moved from %.0f to %.0f while typing", before.Y, after.Y)
 	}
 }

@@ -21,6 +21,7 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 	tt := ui.NewTester(s.View, int(settingsWidth), 900)
 	tt.SetScale(2)
 	tt.SetDark(dark)
+	tt.SetTitleBar(ui.TitleBar{Height: SettingsTitleBarHeight, Left: 78})
 	still(tt)
 	if zh {
 		inChinese(tt)

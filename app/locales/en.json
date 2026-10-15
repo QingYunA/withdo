@@ -264,15 +264,15 @@
       }
     }
   },
-  "changeDueCleared": "due cleared",
+  "changeDueCleared": "Due cleared",
   "@changeDueCleared": {
     "description": "A part of an update: the due date was removed."
   },
-  "changeNotes": "notes",
+  "changeNotes": "Notes updated",
   "@changeNotes": {
     "description": "A part of an update: the notes changed."
   },
-  "changeProject": "in {project}",
+  "changeProject": "Moved to {project}",
   "@changeProject": {
     "description": "A part of an update: the task moved to a project.",
     "placeholders": {
@@ -282,23 +282,23 @@
       }
     }
   },
-  "changeReminder": "reminder {when}",
-  "@changeReminder": {
-    "description": "A part of an update: the reminder was set.",
-    "placeholders": {
-      "when": {
-        "type": "String",
-        "example": "Tomorrow 9:00 AM"
-      }
-    }
-  },
-  "changeReminderCleared": "reminder cleared",
+  "changeReminderCleared": "Reminder cleared",
   "@changeReminderCleared": {
     "description": "A part of an update: the reminder was removed."
   },
-  "changeRenamed": "renamed",
+  "changeRenamed": "Renamed",
   "@changeRenamed": {
     "description": "A part of an update: the title changed."
+  },
+  "changeStatus": "Set to {status}",
+  "@changeStatus": {
+    "description": "A part of an update: the status changed to something other than Done.",
+    "placeholders": {
+      "status": {
+        "type": "String",
+        "example": "Doing"
+      }
+    }
   },
   "convoRetry": "Retry",
   "@convoRetry": {
@@ -412,16 +412,6 @@
       }
     }
   },
-  "detailUpdated": "Updated · {changes}",
-  "@detailUpdated": {
-    "description": "Detail of a change that edited a task; changes lists what.",
-    "placeholders": {
-      "changes": {
-        "type": "String",
-        "example": "reminder Tomorrow 9:00 AM, P1"
-      }
-    }
-  },
   "errNoStore": "Couldn't reach the data store. Retrying…",
   "@errNoStore": {
     "description": "Banner under the title bar while the database is unreachable."
@@ -494,22 +484,6 @@
   "@foldShowShort": {
     "description": "End of the folded line under a list while closed."
   },
-  "groupBlocked": "Blocked",
-  "@groupBlocked": {
-    "description": "Header of the blocked group in a project list."
-  },
-  "groupDoing": "Doing",
-  "@groupDoing": {
-    "description": "Header of the doing group in a project list."
-  },
-  "groupReview": "In review",
-  "@groupReview": {
-    "description": "Header of the review group in a project list."
-  },
-  "groupTodo": "To do",
-  "@groupTodo": {
-    "description": "Header of the to do group in a project list and column of the board."
-  },
   "inboxEmptyBody": "Tasks without a project land here. Write one in the box above, or press ⌘K.",
   "@inboxEmptyBody": {
     "description": "Body of an empty Inbox. ⌘K is the shortcut of the ask field."
@@ -545,10 +519,6 @@
   "listEmptyTitle": "No tasks yet.",
   "@listEmptyTitle": {
     "description": "Title of an empty project list."
-  },
-  "listSeparator": ", ",
-  "@listSeparator": {
-    "description": "Separates the parts of an update."
   },
   "listShowAllDone": "Show all {n} →",
   "@listShowAllDone": {
@@ -1420,11 +1390,11 @@
   "@statusDone": {
     "description": "Task status: finished."
   },
-  "statusReview": "Review",
+  "statusReview": "In review",
   "@statusReview": {
     "description": "Task status: waits for a look."
   },
-  "statusTodo": "Todo",
+  "statusTodo": "To do",
   "@statusTodo": {
     "description": "Task status: planned, not started."
   },
@@ -1530,13 +1500,17 @@
   "@composerChipSetUp": {
     "description": "Chip of the composer, and a link, while no model is connected. It opens Settings > Assistant."
   },
-  "composerHintIdle": "⌘K to focus · ↵ to send · ⇧↵ new line",
+  "composerHintIdle": "⌘K",
   "@composerHintIdle": {
-    "description": "Keyboard hint at the right of the composer's bar while it is empty and not focused."
+    "description": "Key cap at the right of the composer's bar while it is not focused: the shortcut that focuses it."
   },
   "composerHintSend": "↵ to send",
   "@composerHintSend": {
-    "description": "Keyboard hint at the right of the composer's bar while it is focused or has text."
+    "description": "Keyboard hint at the right of the composer's bar while it is focused and empty."
+  },
+  "composerHintTyped": "↵ send · ⇧↵ new line",
+  "@composerHintTyped": {
+    "description": "Keyboard hints at the right of the composer's bar while it is focused and has text."
   },
   "composerLabel": "Ask the assistant",
   "@composerLabel": {

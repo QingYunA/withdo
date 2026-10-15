@@ -1,6 +1,7 @@
 package views
 
 import (
+	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -22,6 +23,17 @@ func (a *App) overviewTask(t data.Task) data.OverviewTask {
 	}
 	ot.Stale = ot.HoursSinceActivity >= stale
 	return ot
+}
+
+// withTilde writes a path under the home folder the way the user writes it: "~/Library/…".
+func withTilde(path, home string) string {
+	if home == "" || home == "/" {
+		return path
+	}
+	if rest, ok := strings.CutPrefix(path, home+"/"); ok {
+		return "~/" + rest
+	}
+	return path
 }
 
 func itoa(n int) string {

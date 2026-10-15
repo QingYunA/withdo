@@ -213,9 +213,10 @@ none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`.
   Inbox the Now one; the inspector `Change anything — “move it to friday afternoon”`.
 - **Bar** inside the card, under the text: a **context chip** at the left (`meta`, `bg.subtle`, 7 pt
   radius): `✦ Assistant · <model>` on Now and in the Inbox, `# <project>` in a project; when no model
-  is connected it reads `Set up the assistant` and opens Settings > Assistant. A hint in
-  `text.tertiary` at the right (`⌘K to focus · ↵ to send · ⇧↵ new line`, just `↵ to send` while
-  focused or typed; dropped under 560 pt), and a 28 pt round **send** button: `accent` with text,
+  is connected it reads `Set up the assistant` and opens Settings > Assistant. A hint at the right,
+  as little as the moment needs (dropped under 560 pt): while the field is not focused only a `⌘K`
+  key cap (`meta`, `text.tertiary`, a 1 pt `border` outline, 5 pt radius); focused and empty
+  `↵ to send`; focused with text `↵ send · ⇧↵ new line` (`text.tertiary`). And a 28 pt round **send** button: `accent` with text,
   neutral without; the sparkle in the chip pulses while the assistant works.
 - **The inspector's composer** is a compact variant: no chip and no hint, a sparkle, the text area
   (1 to 6 lines) and the send button; shown only when a model is connected.
@@ -246,7 +247,10 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (li
   - *Reply*: `body` in `text`, one short sentence, 6 pt under my line.
   - *Receipts*: one row per change, in the list-row style: status glyph (a bell in `accent` when
     a reminder was set), title in `body.strong`, a quiet detail in `text.tertiary`
-    (`Tomorrow 9:00 AM · reminder`, `Added to Inbox`, `Marked done`, `Updated · due Fri, P1`), and
+    (`Tomorrow 9:00 AM · reminder`, `Added to Inbox`, `Marked done`). An update reads like a
+    create, with its parts joined by ` · `: `Tomorrow 9:00 AM · reminder`, `Fri · due · P1`,
+    `Moved to adhd-todo`, `Set to Doing`, `Reminder cleared`, `Renamed`, `Notes updated`; there is no
+    `Updated` in front. And
     **Undo** at the right (`meta`, medium, `text.secondary`, tinted on hover). Clicking the row
     opens the task. After Undo the title is struck through in `text.tertiary` and the row says
     `Undone`.
@@ -293,16 +297,25 @@ the way); clicking it opens the group. With no backlog the line is not drawn.
 
 **Board view.** Kept for people who like columns, but it shows only columns that have tasks,
 plus To do (always; its `+` focuses the composer). No collapsed strips, no zero-count columns. Cards as
-before; drag between visible columns changes status. Dragging also reveals thin drop targets
-for hidden statuses at the right edge.
+before; drag between visible columns changes status. Dragging also reveals drop targets for
+hidden statuses in a strip at the bottom of the board.
+
+The header, the composer and the columns share their left and right edges: one centered block,
+at least as wide as the lists' column (684 pt) and as wide as its columns want (264 pt each), but no
+wider than the window less 24 pt on each side. When even 192 pt columns do not fit, the block fills
+the window and the columns scroll sideways. `Done 5 · Backlog 2` is a quiet text button in the
+header, before the `List | Board` control; it shows or hides those columns.
 
 Decisions made while building it (2026-10-14):
 
-- **Backlog and Done on the board** follow the list's "Done · Backlog — show" line, which sits under
-  the board header. Folded, they are drop targets that appear while a card is dragged. With them
-  shown by default the seeded project needed six columns and scrolled sideways at 1100 pt.
-- **Drop targets** for hidden statuses float over the right edge of the board, so they are in reach
-  however far it is scrolled.
+- **Backlog and Done on the board** follow the `Done 5 · Backlog 2` button of the header. Folded,
+  they are drop targets that appear while a card is dragged. With them shown by default the seeded
+  project needed six columns and scrolled sideways at 1100 pt.
+- **Drop targets** for hidden statuses float in a strip at the bottom of the board, where columns
+  are usually empty, so they cover no header or card and are in reach however far it is scrolled.
+- **One word per status**, everywhere (list groups, board columns, the inspector, the menu strips
+  and their accessibility labels, receipts, Chinese too): Backlog, To do, Doing, Blocked, In review,
+  Done, Cancelled. The stale label is `3d stale` in the list and on a card, with no `!`.
 - **Review without a PR** still goes to Needs you (summary "Ready for your review", action Open).
   A review task of my own does not: it waits on someone else.
 - **Yours** shows dated tasks due within 7 days (or overdue); later ones appear in their project or
@@ -333,7 +346,10 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
   `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
-- The inspector's **composer** is pinned at its bottom (see **Composer**); `Ask about this task…` (⌘J) focuses it. Values the assistant set in the last 10 s carry a small accent `✦` after the value.
+- The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
+  the pinned stack leaves; the **reply and composer** are pinned at the bottom under a hairline and
+  never overlap it. The reply's words line up with the properties (24 pt), a receipt's well reaches
+  the composer card's edge (14 pt). (See **Composer**); `Ask about this task…` (⌘J) focuses it. Values the assistant set in the last 10 s carry a small accent `✦` after the value.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
 
@@ -349,7 +365,9 @@ Completed rows, board cards), opened by:
 
 It is 268 pt wide, 12 pt radius, opaque `bg` (the mockup's blur is not available in mygo; at 96 % the
 rows behind showed through), a 1 pt `border` and a soft shadow; it moves into the window, or above
-the point it hangs from, when it would leave it. `Esc` or a press outside closes it (the press goes on to what is
+the point it hangs from, when it would leave it. The Move to… page, which shrinks as the filter
+narrows it, is placed once by the room its whole list needs (below the point, else above it, else
+as low as the window allows) so it does not jump while typing. `Esc` or a press outside closes it (the press goes on to what is
 under it, so a right-click on another row moves the menu there). Reference: frame 3 of
 `docs/design/mockups/v2.html`.
 
@@ -357,9 +375,12 @@ Main page, top to bottom (10 pt padding):
 
 1. `Status` label in `section` style and a **strip** of the status glyphs: backlog, to do, doing,
    blocked, review, done, cancelled. One click sets the status and closes the menu. Hover
-   tints a button (`bg.hover`) and shows its name as a tooltip; the current status is tinted `bg.selected`.
+   tints a button (`bg.hover`); the current status is tinted `bg.selected`. There is no tooltip (it
+   covered the label): the label row names the choice, `Status · Doing` (the hovered or
+   keyboard-highlighted one, else the current one; the name in `text.tertiary`).
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
-2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted).
+2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
+   reads `Priority · P1 High` the same way.
 3. a hairline;
 4. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
@@ -393,7 +414,7 @@ header reads `Search` with `12 results for “login”` in `text.tertiary`. Resu
 project and the Inbox, whatever their status, done and cancelled included (the tasks of archived
 projects are left out), matching every word of the query in the title, notes or branch, or a pull
 request number (`#42` and `42`). They are grouped by project, the Inbox last, groups ordered by the
-newest task in them. Group header: `#` mark, project name in `body.strong`, count in `text.tertiary`.
+newest task in them. Group header: `#` mark (a tray for the Inbox), project name in `body.strong`, count in `text.tertiary`.
 Row: status glyph (a button, like on Now), title, branch pill and `#PR`, and at the right the age of
 the last change. Done and cancelled rows keep their glyph (a button, so a finished task can be reopened from here).
 
@@ -470,14 +491,17 @@ screens `settings-general-*`, `settings-assistant-*`, `settings-agents-*`, `sett
 
 - **Toolbar panes**, as in System Settings: General, Assistant, Agents, GitHub, each an icon above a
   label (`meta`), 78 pt wide; the open one gets a 6 % black (white in dark) 8 pt well and an `accent` icon.
-  The window title is the open pane's name.
+  The window title is the open pane's name. The top of the window is **one band** (the toolbar
+  fill, a hairline under it): the title bar is hidden, the traffic lights sit in the band's first
+  row, the open pane's name is centered there in `section` style, and the pane icons sit under it.
 - **Grouped lists.** Pane background `#F5F5F7` (dark `#1C1C1E`); groups are white (dark `#2C2C2E`)
   rounded 10 pt blocks with a 0.5 pt hairline; rows are at least 44 pt, the label (`body`) and an
   optional `meta` line left, the control right; hairlines between rows; an optional group label
   above the block in `section` style (13 / 18, 600, `text.secondary`).
 - **General**: Language (a pop-up: System / English / 简体中文); **Archived projects** (a row per
-  archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`,
-  **Show in Finder** at the right); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
+  archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
+  from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
+  reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
   link).
 - **Assistant**: **Provider** (a pop-up of the presets), **Model** (a pop-up of the preset's
   suggestions plus `Other…`, which turns the row into a text field; a preset without suggestions shows

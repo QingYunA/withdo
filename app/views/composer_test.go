@@ -404,3 +404,51 @@ func TestACancelledRequestPutsTheTextBackInTheComposerItCameFrom(t *testing.T) {
 		t.Errorf("page composer holds %q", r.pageBuf())
 	}
 }
+
+func TestComposerHintSaysOnlyWhatTheMomentNeeds(t *testing.T) {
+	for _, l := range []struct {
+		zh                    bool
+		idle, empty, withText string
+	}{
+		{false, "⌘K", "↵ to send", "↵ send · ⇧↵ new line"},
+		{true, "⌘K", "↵ 发送", "↵ 发送 · ⇧↵ 换行"},
+	} {
+		r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+		if l.zh {
+			inChinese(r.tt)
+		}
+		r.tt.Frame()
+		has(t, r.tt, l.idle)
+		hasNot(t, r.tt, l.empty, l.withText)
+		r.tt.Key(ui.Cmd, ui.KeyK)
+		has(t, r.tt, l.empty)
+		hasNot(t, r.tt, l.idle, l.withText)
+		r.tt.Type("review PR 12")
+		has(t, r.tt, l.withText)
+		hasNot(t, r.tt, l.idle)
+	}
+}
+
+// The properties scroll in the room the reply and the composer leave; at the end of the scroll
+// the last line of them is above the reply, never under it.
+func TestInspectorBodyScrollsAboveThePinnedReply(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
+	r.tt.SetSize(1100, 640)
+	r.inInspector(t, 7, "remind me tomorrow morning")
+	r.tt.Key(0, ui.KeyEnter)
+	r.answer(t)
+	r.tt.Scroll(900, 200, 0, 3000)
+	r.tt.Frame()
+	del, ok := r.tt.Find("Delete task…")
+	reply, ok2 := r.tt.Find("Okay, I'll remind you tomorrow at 9.")
+	if !ok || !ok2 {
+		t.Fatalf("delete %v, reply %v in %q", ok, ok2, r.tt.Texts())
+	}
+	if del.Y+del.H > reply.Y {
+		t.Errorf("Delete task… ends at %.0f, under the reply that starts at %.0f", del.Y+del.H, reply.Y)
+	}
+	composer, _ := r.tt.Find("Change this task")
+	if reply.Y+reply.H > composer.Y {
+		t.Errorf("the reply ends at %.0f, under the composer at %.0f", reply.Y+reply.H, composer.Y)
+	}
+}

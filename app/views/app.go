@@ -30,6 +30,7 @@ type Actions interface {
 type Config struct {
 	ConnectCommand string // the claude mcp add command
 	DataFolder     string
+	Home           string // the user's home folder, which the data folder is shown relative to
 	Version        string
 }
 

@@ -36,6 +36,7 @@ func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
 	r.s = NewSettings(app)
 	r.s.OnLayout = func(title string, h float32) { r.title, r.height = title, h }
 	r.tt = ui.NewTester(r.s.View, int(settingsWidth), 560)
+	r.tt.SetTitleBar(ui.TitleBar{Height: SettingsTitleBarHeight, Left: 78})
 	still(r.tt)
 	r.tt.Frame()
 	r.tt.Frame()
@@ -86,6 +87,24 @@ func TestSettingsReportsItsHeightToFitItsContent(t *testing.T) {
 	r.pane(t, "Assistant")
 	if r.height == general {
 		t.Errorf("the Assistant pane is as tall as General (%v)", general)
+	}
+}
+
+func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
+	r := newSettingsRig(t)
+	r.app.Config.DataFolder = "/Users/mac/Library/Application Support/adhd-todo"
+	r.app.Config.Home = "/Users/mac"
+	r.tt.Frame()
+	has(t, r.tt, "~/Library/Application Support/adhd-todo")
+	hasNot(t, r.tt, "/Users/mac/Library/Application Support/adhd-todo")
+	if err := r.tt.Click("Show in Finder"); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(r.rec.folders, []string{"/Users/mac/Library/Application Support/adhd-todo"}) {
+		t.Errorf("revealed %v", r.rec.folders)
+	}
+	if got := withTilde("/Users/macro/x", "/Users/mac"); got != "/Users/macro/x" {
+		t.Errorf("a sibling of the home folder became %q", got)
 	}
 }
 
@@ -368,4 +387,24 @@ func hasFold(t *testing.T, tt *ui.Tester, want string) {
 		}
 	}
 	t.Errorf("no %q (in any case) in %q", want, tt.Texts())
+}
+
+// The top of the window is one band: the pane's name centered in the row of the traffic lights,
+// and the pane icons right under it.
+func TestSettingsTitleAndPanesAreOneBandUnderTheTrafficLights(t *testing.T) {
+	r := newSettingsRig(t)
+	title, ok := r.tt.Find("General")
+	if !ok {
+		t.Fatalf("no title in %q", r.tt.Texts())
+	}
+	if title.Y+title.H > SettingsTitleBarHeight {
+		t.Errorf("the title ends at %.0f, below the traffic lights' row (%.0f)", title.Y+title.H, SettingsTitleBarHeight)
+	}
+	if mid := title.X + title.W/2; mid < settingsWidth/2-1 || mid > settingsWidth/2+1 {
+		t.Errorf("the title is centered at %.0f, not in the middle of the window (%.0f)", mid, settingsWidth/2)
+	}
+	pane, _ := r.tt.Find("Assistant")
+	if pane.Y < SettingsTitleBarHeight {
+		t.Errorf("the pane icons start at %.0f, in the title's row", pane.Y)
+	}
 }

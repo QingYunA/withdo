@@ -30,30 +30,6 @@ func statusLabel(say locales.Messages, s data.Status) string {
 	return string(s)
 }
 
-// groupName is the header of a status in a list or the column of the board: the same words as the
-// status, except that To do and In review read as a place for work.
-func groupName(say locales.Messages, s data.Status) string {
-	switch s {
-	case data.Todo:
-		return say.GroupTodo()
-	case data.Doing:
-		return say.GroupDoing()
-	case data.Blocked:
-		return say.GroupBlocked()
-	case data.Review:
-		return say.GroupReview()
-	}
-	return statusLabel(say, s)
-}
-
-// boardName is the header of a board column: the group's name for To do, otherwise the status.
-func boardName(say locales.Messages, s data.Status) string {
-	if s == data.Todo {
-		return say.GroupTodo()
-	}
-	return statusLabel(say, s)
-}
-
 func priorityName(say locales.Messages, p data.Priority) string {
 	switch p {
 	case data.P0:
@@ -148,11 +124,13 @@ func (m *Main) detailMain(d data.Detail) string {
 		for _, c := range d.Changes {
 			parts = append(parts, m.changeText(c))
 		}
-		return m.say.DetailUpdated(strings.Join(parts, m.say.ListSeparator()))
+		return strings.Join(parts, " · ")
 	}
 	return m.say.DetailAdded(m.inboxOr(d.Project))
 }
 
+// changeText words one change of an update the way a new task's detail reads: "Tomorrow 9:00 AM ·
+// reminder", "Fri · due", "Marked done", "Moved to adhd-todo".
 func (m *Main) changeText(c data.Change) string {
 	now := m.app.Now()
 	switch c.Kind {
@@ -160,14 +138,17 @@ func (m *Main) changeText(c data.Change) string {
 		if c.At.IsZero() {
 			return m.say.ChangeReminderCleared()
 		}
-		return m.say.ChangeReminder(m.clock.When(c.At, now))
+		return m.say.DetailReminder(m.clock.When(c.At, now))
 	case data.ChangeDue:
 		if c.At.IsZero() {
 			return m.say.ChangeDueCleared()
 		}
-		return m.say.ChangeDue(m.clock.When(c.At, now))
+		return m.say.DetailDue(m.clock.When(c.At, now))
 	case data.ChangeStatus:
-		return statusLabel(m.say, data.Status(c.Value))
+		if data.Status(c.Value) == data.Done {
+			return m.say.DetailDone()
+		}
+		return m.say.ChangeStatus(statusLabel(m.say, data.Status(c.Value)))
 	case data.ChangeProject:
 		return m.say.ChangeProject(m.inboxOr(c.Value))
 	case data.ChangeRenamed:

@@ -147,7 +147,7 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
 	ui.Row(c.Key("group-"+string(s))).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.StatusGlyph(c, t, s, 0)
-		theme.Text(c, theme.BodyStrong, t.Text, groupName(m.say, s))
+		theme.Text(c, theme.BodyStrong, t.Text, statusLabel(m.say, s))
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(tasks)))
 	})
 	for _, task := range tasks {
@@ -253,8 +253,8 @@ func (m *Main) foldParts(parts []string) string {
 	return strings.Join(parts, "")
 }
 
-// foldLine is the line that folds Backlog, and on the board Done as well (doneToo): "Backlog 2 — show".
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32, doneToo bool) {
+// foldCounts are the counts the folded line names: "Done 4" and "Backlog 2", Done only on the board.
+func (m *Main) foldCounts(lm listModel, doneToo bool) []string {
 	var parts []string
 	if doneToo && len(lm.done) > 0 {
 		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Done), len(lm.done)))
@@ -262,6 +262,12 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool,
 	if len(lm.backlog) > 0 {
 		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Backlog), len(lm.backlog)))
 	}
+	return parts
+}
+
+// foldLine is the line that folds Backlog, and on the board Done as well (doneToo): "Backlog 2 — show".
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32, doneToo bool) {
+	parts := m.foldCounts(lm, doneToo)
 	label, verb := m.say.FoldShow(m.foldParts(parts)), m.say.FoldShowShort()
 	if open {
 		label, verb = m.say.FoldHide(m.foldParts(parts)), m.say.FoldHideShort()
@@ -305,6 +311,9 @@ func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
 	title, sub := m.headerText()
 	m.pageHeader(c, t, title, sub, func() {
 		m.milestoneMenu(c, t)
+		if m.boardActive() {
+			m.boardFold(c, t)
+		}
 		if m.nav.screen == screenProject {
 			m.viewToggle(c, t)
 		}
