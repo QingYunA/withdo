@@ -9,6 +9,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/agent"
+	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/ghpoll"
 	"github.com/QingYunA/adhd-todo/internal/paths"
 	"github.com/QingYunA/adhd-todo/internal/providers"
@@ -60,7 +61,7 @@ func openReal(path string) (*backend, error) {
 	ag := agent.New(agent.Config{
 		Core: r.Core(), Model: mgr.Model, Now: func() time.Time { return time.Now().In(loc) },
 	})
-	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core()})
+	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core(), Housekeeping: closeFinishedSubtasks(r.Core())})
 	return &backend{
 		store:      r,
 		dataFolder: dir,
@@ -70,6 +71,18 @@ func openReal(path string) (*backend, error) {
 		models:     &data.ProviderSettings{Provider: mgr},
 		github:     data.PollerGitHub{Poller: poller},
 	}, nil
+}
+
+// closeFinishedSubtasks is the poller's housekeeping: at launch, every few minutes and when the window
+// comes back, subtasks whose branch was merged or deleted become done. The store's watcher shows it.
+func closeFinishedSubtasks(core *domain.Core) func(context.Context) {
+	return func(ctx context.Context) {
+		if n, err := core.CloseFinishedSubtasks(ctx); err != nil {
+			log.Printf("close finished subtasks: %v", err)
+		} else if n > 0 {
+			log.Printf("closed %d subtasks whose branch was merged or deleted", n)
+		}
+	}
 }
 
 func openFake(empty bool) *backend {

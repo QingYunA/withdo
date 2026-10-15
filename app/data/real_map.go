@@ -63,7 +63,7 @@ func fromMilestone(m domain.Milestone) Milestone {
 
 func fromTask(t domain.Task) Task {
 	out := Task{
-		ID: int(t.ID), ProjectID: intPtr(t.ProjectID), MilestoneID: intPtr(t.MilestoneID),
+		ID: int(t.ID), ParentID: intPtr(t.ParentID), ProjectID: intPtr(t.ProjectID), MilestoneID: intPtr(t.MilestoneID),
 		Title: t.Title, Notes: str(t.Notes), Status: Status(t.Status), Priority: Priority(t.Priority),
 		DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
 		Branch: str(t.Branch), PRURL: str(t.PRURL), Source: Source(t.Source),
