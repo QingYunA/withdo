@@ -31,6 +31,7 @@ func main() {
 		DataFolder:     be.dataFolder,
 		Version:        version,
 	})
+	app.Assistant, app.Models = be.assistant, be.models
 	s := &shell{app: app, main: views.NewMain(app)}
 	app.Act = s
 

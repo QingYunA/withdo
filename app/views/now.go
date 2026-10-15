@@ -12,6 +12,7 @@ func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
 	m.pageHeader(c, t, "Now", m.app.Now().Format("Monday, Jan 2"), nil)
 	ui.Box(c).Height(18).Shrink(0)
 	m.askField(c, t)
+	m.convoSheet(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

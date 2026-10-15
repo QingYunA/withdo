@@ -65,15 +65,23 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	}
 }
 
-// escape closes the inline input, then the inspector, then clears the selection.
+// escape cancels a running request, then closes the conversation sheet, the inline input and the
+// inspector, then clears the selection; with nothing left to close a further Esc makes the
+// assistant forget the conversation.
 func (m *Main) escape() {
 	switch {
+	case m.convo.thinking:
+		m.cancelAsk()
+	case m.convo.open:
+		m.closeSheet()
 	case m.adding:
 		m.cancelAdding()
 	case m.openID != 0:
 		m.openID = 0
-	default:
+	case m.sel != 0:
 		m.sel = 0
+	case m.convo.live:
+		m.forgetConversation()
 	}
 }
 

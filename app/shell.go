@@ -46,6 +46,13 @@ func (s *shell) OpenURL(url string) {
 	}
 }
 
+// Post runs fn on the main thread and redraws; the assistant answers through it.
+func (s *shell) Post(fn func()) {
+	if w := s.window(); w != nil {
+		w.Update(fn)
+	}
+}
+
 func (s *shell) window() *mygo.Window {
 	s.mu.Lock()
 	defer s.mu.Unlock()

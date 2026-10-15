@@ -55,6 +55,9 @@ func NewReal(db *sql.DB, opts RealOptions) *Real {
 	}
 }
 
+// Core is the domain layer the store writes through, for the built-in agent's tools.
+func (r *Real) Core() *domain.Core { return r.core }
+
 // Start begins watching the database. Reminders that came due while the app was closed are
 // delivered right away, so subscribe first. Start is a no-op when already started.
 func (r *Real) Start() {
