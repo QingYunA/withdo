@@ -91,7 +91,7 @@ func (m *Main) receiptLines(c *ui.Context, t *theme.Tokens, turn convoTurn, comp
 	}
 }
 
-// receiptLine is "✓ Added title · Fri · P1" with Undo at the right; once undone the title is struck
+// receiptLine is "✓ Added title · Fri · P1" (the check is green) with Undo at the right; once undone the title is struck
 // through and the line says so. Clicking it opens the task. Without its title (the inspector shows
 // it already) the rest follows the verb directly.
 func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTitle bool) {
@@ -104,11 +104,7 @@ func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTit
 	row := ui.Row(c.Key("receipt-" + itoa(r.ID))).Height(answerLineHeight).Shrink(0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer)
 	row.Children(func() {
-		if r.Bell && !undone {
-			ui.Icon(c, theme.IconBell).Size(14, 14).TextColor(t.Accent).Shrink(0)
-		} else {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
-		}
+		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
 		if verb != "" {
 			theme.Text(c, theme.Compact, quiet, verb).Shrink(0)
 		}
