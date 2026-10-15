@@ -115,11 +115,20 @@ Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only
 is open). Content is a centered column, max 820 pt wide, 56 pt side padding, so lists read
 like a document, not a spreadsheet.
 
-**Sidebar.** `Now` (count = items in Needs you + Agents at work + Yours), `Inbox` (count),
-then `PROJECTS`: one row per project, name only; a 6 pt red dot at the right when it has a
-blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
-task shows no count. Settings is a gear button at the bottom. Selected row: `bg.selected`,
-7 pt radius.
+**Sidebar.** A search field first (see **Search**), then `Now` (count = items in Needs you + Agents
+at work + Yours), `Inbox` (count) and `Logbook` (no count: it only grows), then `PROJECTS` with a
+quiet `+` at the right of its header: one row per project, name only; a 6 pt red dot at the right when
+it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
+task shows no count. Settings is a gear button at the bottom. Selected row: `bg.selected`, 7 pt radius.
+
+- **`+` on PROJECTS** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
+  `text.secondary` on hover.
+- **Right-click a project**: `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
+  row itself: the label becomes an input with the text selected, Enter saves, Esc and a click away put
+  the old name back. Archive acts at once (the project is in Settings > General > Archived projects,
+  one click from coming back); Delete… asks first (**Delete confirmation**). Archiving or deleting the
+  project on screen goes to Now.
+- A project with no repository shows no repository line under its name on its page.
 
 ### Now (home)
 
@@ -195,8 +204,19 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (li
 
 ### Project
 
-Header: project name in `title`, repo slug in `text.tertiary`, a milestone menu (only if the
-project has milestones) and a `List | Board` segmented control at the right (List default).
+Header: project name in `title`, repo slug in `text.tertiary`, a milestone menu (always shown, even
+before the project has a milestone) and a `List | Board` segmented control at the right (List default).
+
+**Milestone menu.** The button reads `All milestones` or the milestone being filtered by. The menu:
+
+1. `All milestones`, a separator, then one item per milestone (checked when it filters the page),
+   as before: `v0.2 · due Oct 28`, `v0.1 (closed)`;
+2. a separator and `New milestone…`;
+3. when there are milestones, a separator and one submenu per milestone, `Edit “v0.2”`, holding
+   `Rename…`, `Due date…` and `Close milestone` (`Reopen milestone` for a closed one).
+
+`New milestone…`, `Rename…` and `Due date…` open the **Milestone sheet**. Closing and reopening act
+at once. A project that has no milestone shows the menu with `All milestones` and `New milestone…`.
 
 **List view.** Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
 name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
@@ -235,15 +255,93 @@ Same list view as a project, without the board toggle; tasks with no project.
 
 ### Inspector (360 pt, slides in 160 ms)
 
-Unchanged from the previous spec: large editable title; property list (Status, Priority,
+Unchanged from the previous spec: large editable title; property list (Status, Priority, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels in `meta` secondary and values
 editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
+- **Project** is a value button like Status. Its menu is the same as the task menu's `Move to`:
+  `Inbox`, a separator, then the projects, the current one checked. Moving a task to another project
+  clears its milestone (milestones belong to one project); the Milestone row follows the project.
+- At the bottom, below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It asks
+  first (**Delete confirmation**) and closes the pane after.
+
+### Context menus
+
+Native menus (right-click or the menu key on a focused row), the same on every surface that shows the
+task: list rows, Now rows, search and logbook rows, and board cards.
+
+| Item | Contents |
+|---|---|
+| `Status ▸` | the seven statuses, the current one checked |
+| `Priority ▸` | P0 Urgent … P3 Low, the current one checked |
+| `Move to ▸` | `Inbox`, a separator, the projects; the current one checked |
+| `Open PR` | only when the task has a pull request; opens it in the browser |
+| separator | |
+| `Delete…` | asks first |
+
+A project's menu is in the Sidebar. Menus never carry a destructive default and never use color.
+
+### Search
+
+`⌘F`, or a click in the search field at the top of the sidebar, puts the cursor there. The field is a
+28 pt well on the sidebar material (`bg.hover`, 7 pt radius) with a magnifier, the placeholder
+`Search` and a `⌘F` hint at the right while empty.
+
+Typing replaces the page with **Search results**; the sidebar selection stays where it was. The page
+header reads `Search` with `12 results for “login”` in `text.tertiary`. Results are tasks of every
+project and the Inbox, whatever their status, done and cancelled included (the tasks of archived
+projects are left out), matching every word of the query in the title, notes or branch, or a pull
+request number (`#42` and `42`). They are grouped by project, the Inbox last, groups ordered by the
+newest task in them. Group header: `#` mark, project name in `body.strong`, count in `text.tertiary`.
+Row: status glyph (a button, like on Now), title, branch pill and `#PR`, and at the right the age of
+the last change. Done and cancelled rows keep their glyph and read in `text.secondary`.
+
+- **No match**: `No tasks match “xyz”` and, in secondary, `Search looks in titles, notes, branches and
+  pull request numbers, in every project.`
+- **Keys**: in the field `↓` moves to the first result (and on down through the rows, as on every
+  list), `↑` from the first goes back to the field, `↵` opens the highlighted row in the inspector
+  (the first result when none is highlighted yet), `Esc` clears the text and leaves the field.
+  With a result highlighted and the inspector open, `Esc` closes the inspector first, then clears the
+  highlight, then the search. Clicking a sidebar item or `⌘1` `⌘2` `⌘3` ends the search.
+- At most 100 results are shown; a quiet last line says when there are more.
+
+### Logbook
+
+The `Logbook` sidebar item, under Inbox: the done and cancelled tasks of every active project and the
+Inbox, newest first by completion, grouped by day. Page title `Logbook`, subtitle `Done and cancelled,
+newest first`. Day header in `body.strong` with the count in `text.tertiary`: `Today`, `Yesterday`,
+then a date (`Oct 12`, `Oct 12, 2025` in another year), written by `app/words`. Row: the status glyph
+(done check or cancelled slash, a button: choosing another status reopens the task), title, project
+name, and at the right the time of day it was finished.
+
+- **Empty**: `Nothing finished yet` and `Tasks you mark done or cancel collect here, newest first.`
+- 100 tasks are listed; `Show older` at the end loads 100 more.
+- The same keys as any list: `↑ ↓ ↵ Space Esc`, `⌘3` opens it.
+
+### Sheets and confirmations
+
+Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padding) but 400 pt wide.
+`Esc` and the Cancel button close them; the primary button is the accent one.
+
+- **New project**: title `New project`; field `Name` (focused); field `GitHub repository` (optional,
+  mono, placeholder `owner/repo`) with the line `Agent reports from this repository land in the
+  project.` Create is off until the name has text. A pasted GitHub address is read as `owner/repo`.
+  Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like
+  QingYunA/adhd-todo.` and `“adhd-todo” already uses this repository.` Enter in either field creates;
+  the new project opens.
+- **Milestone sheet**: `New milestone` (Title, Due date optional), `Rename milestone` (Title) and
+  `Due date` (a calendar and a Clear link). Done is the primary button; Enter saves.
+- **Delete confirmation** (a project, a task): title `Delete “name”?`; body in `text.secondary`.
+  For a project: `This removes its 14 tasks, their reports and its milestones. It can't be undone.
+  To keep them, archive it instead.` (`This removes the project and its milestones.` when it has no
+  task.) For a task: `Its progress reports go with it. This can't be undone.` Buttons `Cancel`
+  (focused, so Enter does not delete) and `Delete` (accent, not red). Esc cancels.
+
 ### Keyboard
 
-`⌘K` ask field · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌘K` ask field · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection · `⌘1` Now, `⌘2` Inbox.
+inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Logbook.
 
 While a text input has the keyboard its keys are its own (`Element.OnTextKey`), and the window's
 arrows, `↵`, `Space` and `Esc` stay out of the way:
@@ -254,6 +352,9 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inline "Add a task" | adds and stays open and empty | closes | |
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
+| Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
+| Rename project (sidebar) | saves | puts the old name back | |
+| New project, milestone sheets | creates / saves | closes the sheet | |
 
 ### Settings
 
@@ -261,7 +362,12 @@ A 640 pt sheet with a `General | Models` switch (the quiet segmented well of the
 toggle) beside Done.
 
 **General**: "Connect Claude Code" with the copyable registration command, data folder path,
-About. Nothing else.
+**Archived projects**, Language, About. Nothing else.
+
+*Archived projects* is a block under the data folder: one 32 pt row per archived project (name in
+`body`, repository in `text.tertiary`, a tinted **Restore** button at the right). With none it says
+`No archived projects. Archive one from its menu in the sidebar.` At most five rows show; the list
+scrolls beyond. A report from an agent in an archived project's repository restores it too.
 
 **Models** (screens `settings-models`, `settings-models-edit`): the provider list at the left,
 the open provider's fields at the right.
@@ -292,6 +398,9 @@ the open provider's fields at the right.
   "您", full-width punctuation (，。：“”), a space between a number and Latin text but none
   before a unit ("3天前", "2分钟前"). `⌘K`, PR, MCP, Claude Code and branch names stay as they are.
   Examples: "需要你处理", "Agent 进行中", "你的任务", "全部处理完了。", "已添加到收件箱".
+  Management words: "新建项目", "重命名", "归档", "删除…", "移到" (Move to), "搜索", "已完成" for the
+  Logbook (as macOS Reminders names it; the page's subtitle says it holds cancelled tasks too, and
+  "日志" would read as log files to a developer).
 - Section headers are uppercase with tracking in English only: a text with Han characters gets
   neither (`theme.Text`).
 - Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12"); in Chinese "刚刚", "2分钟前",
