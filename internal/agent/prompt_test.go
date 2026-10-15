@@ -1,0 +1,107 @@
+package agent
+
+import (
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/domain"
+)
+
+func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
+	loc := loadZone(t, "Asia/Shanghai")
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, loc)
+	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}, {ID: 4, Name: "picpocket"}})
+	for _, want := range []string{
+		"Wednesday, 2026-10-14 14:30",
+		"Asia/Shanghai",
+		"UTC+08:00",
+		"2026-10-14T14:30:00+08:00",
+		"Thu 2026-10-15",
+		"stays +08:00",
+		"- 3, adhd-todo",
+		"- 4, picpocket",
+		"Reply in the language the user wrote in",
+		"ask_user",
+		"never invent task ids",
+	} {
+		if !strings.Contains(strings.ToLower(p), strings.ToLower(want)) {
+			t.Errorf("prompt lacks %q:\n%s", want, p)
+		}
+	}
+}
+
+func TestPromptWithoutProjects(t *testing.T) {
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil)
+	contains(t, "prompt", p, "none yet")
+	contains(t, "prompt", p, "UTC+00:00")
+}
+
+func TestPromptSkipsArchivedProjects(t *testing.T) {
+	arch := "2026-01-01T00:00:00.000Z"
+	p := BuildPrompt(time.Now(), []domain.Project{{ID: 1, Name: "live"}, {ID: 2, Name: "gone", ArchivedAt: &arch}})
+	contains(t, "prompt", p, "live")
+	if strings.Contains(p, "gone") {
+		t.Error("archived project listed")
+	}
+}
+
+func TestPromptSpellsOutDaylightSavingChange(t *testing.T) {
+	loc := loadZone(t, "America/New_York")
+	now := time.Date(2026, 3, 7, 20, 0, 0, 0, loc) // the evening before the clocks go forward
+	p := BuildPrompt(now, nil)
+	contains(t, "prompt", p, "-05:00 today and changes")
+	contains(t, "prompt", p, "-04:00 from 2026-03-08")
+	contains(t, "prompt", p, "Sun 2026-03-08")
+	if strings.Contains(p, "stays") {
+		t.Error("claims the offset is fixed")
+	}
+}
+
+func TestWhenLabel(t *testing.T) {
+	loc := loadZone(t, "Asia/Shanghai")
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, loc)
+	cases := map[string]string{
+		"2026-10-14T08:00:00.000Z": "Today 4:00 PM",
+		"2026-10-15T01:00:00.000Z": "Tomorrow 9:00 AM",
+		"2026-10-16T05:30:00.000Z": "Fri 1:30 PM",
+		"2026-10-13T01:00:00.000Z": "Yesterday 9:00 AM",
+		"2026-10-24T01:00:00.000Z": "Oct 24 9:00 AM",
+		"2027-01-02T01:00:00.000Z": "Jan 2, 2027 9:00 AM",
+		"garbage":                  "garbage",
+	}
+	for in, want := range cases {
+		eq(t, in, whenLabel(in, now), want)
+	}
+}
+
+func TestParseWhen(t *testing.T) {
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC)
+	good := map[string]string{
+		"2026-10-15T09:00:00+08:00": "2026-10-15T01:00:00.000Z",
+		"2026-10-15T09:00:00Z":      "2026-10-15T09:00:00.000Z",
+		" 2026-10-14T14:30:30Z ":    "2026-10-14T14:30:30.000Z", // inside the grace window
+	}
+	for in, want := range good {
+		got, err := parseWhen("remind_at", in, now, true)
+		if err != nil || got != want {
+			t.Errorf("parseWhen(%q) = %q, %v; want %q", in, got, err, want)
+		}
+	}
+	for _, in := range []string{"2026-10-15T09:00:00", "2026-10-15", "tomorrow 9am", "2026-10-15 09:00", ""} {
+		if _, err := parseWhen("remind_at", in, now, true); err == nil {
+			t.Errorf("parseWhen(%q) accepted a time without a zone", in)
+		}
+	}
+	if _, err := parseWhen("remind_at", "2026-10-14T14:00:00Z", now, true); err == nil {
+		t.Error("accepted a reminder in the past")
+	}
+	if _, err := parseWhen("due_at", "2026-10-14T14:00:00Z", now, false); err != nil {
+		t.Errorf("a past due date is allowed: %v", err)
+	}
+	if got := localRFC3339(nil, time.UTC); got != "" {
+		t.Errorf("localRFC3339(nil) = %q", got)
+	}
+	bad := "oops"
+	eq(t, "unparsable stored time", localRFC3339(&bad, time.UTC), "oops")
+}
