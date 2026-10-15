@@ -53,7 +53,7 @@ func (m *Main) allClear(c *ui.Context, t *theme.Tokens) {
 		theme.Text(c, theme.Input, t.Text, m.say.NowAllClear())
 		theme.Text(c, theme.Body, t.TextSecondary, m.say.NowAllClearBody())
 		if link(c, t, m.say.LinkHowToConnect()).Margin(6, 0, 0).Clicked() {
-			m.settings = true
+			m.openSettings(PaneAgents)
 		}
 	})
 }

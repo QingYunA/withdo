@@ -32,7 +32,7 @@ type nav struct {
 	projectID int
 }
 
-// Main is the window: sidebar, one screen, the inspector, and the settings sheet.
+// Main is the window: sidebar, one screen and the inspector, with the sheets that float over them.
 type Main struct {
 	app *App
 
@@ -48,8 +48,6 @@ type Main struct {
 	width     float32 // the room the screen has this frame
 	wantAsk   bool    // Cmd+K was pressed: the ask field takes the focus once it is drawn
 	askFrames int     // how many frames the ask field has been drawn since the screen changed
-	settings  bool
-	models    modelsState // Settings > Models
 
 	milestone map[int]int  // milestone filter per project, 0 for all
 	board     map[int]bool // projects shown as a board
@@ -96,13 +94,8 @@ func (m *Main) OpenTask(id int) {
 	m.inspector.reset()
 }
 
-// OpenSettings shows the settings sheet.
-func (m *Main) OpenSettings() { m.settings = true }
-
-// openModels shows the settings sheet on its Models tab.
-func (m *Main) openModels() {
-	m.settings, m.models.tab = true, tabModels
-}
+// openSettings asks the shell for the Settings window, on a pane.
+func (m *Main) openSettings(p Pane) { m.app.Act.OpenSettings(p) }
 
 func (m *Main) goTo(n nav) {
 	m.clearSearch()
@@ -141,7 +134,6 @@ func (m *Main) View(c *ui.Context) {
 		m.content(c, t, now)
 		m.inspectorPane(c, t)
 	})
-	m.settingsSheet(c, t)
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)

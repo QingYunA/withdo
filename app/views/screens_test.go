@@ -63,7 +63,6 @@ func TestScreensSeed(t *testing.T) {
 			tt.SetSize(860, 540)
 			m.OpenTask(2)
 		})
-		mainShot(t, "settings-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
 		mainShot(t, "now-selection-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.Key(0, ui.KeyDown)
 			tt.Key(0, ui.KeyDown)

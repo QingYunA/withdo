@@ -80,35 +80,6 @@ func TestScreensAssistNoModel(t *testing.T) {
 	}
 }
 
-func TestScreensSettingsModels(t *testing.T) {
-	for _, a := range appearances() {
-		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: true})
-		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
-		mustNil(t, app.Models.SetActive("anthropic"))
-		mainShot(t, "settings-models-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.openModels() })
-	}
-}
-
-func TestScreensSettingsModelsEdit(t *testing.T) {
-	for _, a := range appearances() {
-		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: true})
-		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
-		mustNil(t, app.Models.SetActive("anthropic"))
-		mainShot(t, "settings-models-edit-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
-			m.openModels()
-			tt.Frame()
-			mustNil(t, tt.Click("OpenAI"))
-			tt.Frame()
-			mustNil(t, tt.Click("Paste your API key"))
-			tt.Type("sk-proj-demo")
-			tt.Key(0, ui.KeyEnter)
-			tt.Frame()
-			mustNil(t, tt.Click("Test"))
-			app.Act.(*recorder).drain(t)
-		})
-	}
-}
-
 func mustNil(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {

@@ -164,20 +164,6 @@ func (msgs Messages) A11yPriority(priority string) string {
 	return Catalog.Format(msgs.locale, "a11yPriority", map[string]any{"priority": priority})
 }
 
-// A11ySettingsClose says "Close settings"
-// in the language the app shows.
-//
-// Accessibility label of the Done button of the settings sheet.
-func A11ySettingsClose() string { return In(i18n.Locale()).A11ySettingsClose() }
-
-// A11ySettingsClose says "Close settings"
-// in the language of msgs.
-//
-// Accessibility label of the Done button of the settings sheet.
-func (msgs Messages) A11ySettingsClose() string {
-	return Catalog.Format(msgs.locale, "a11ySettingsClose", nil)
-}
-
 // A11yStatus says "Status: {status}"
 // in the language the app shows.
 //
@@ -204,20 +190,6 @@ func A11yUndo(title string) string { return In(i18n.Locale()).A11yUndo(title) }
 // Accessibility label of the Undo button.
 func (msgs Messages) A11yUndo(title string) string {
 	return Catalog.Format(msgs.locale, "a11yUndo", map[string]any{"title": title})
-}
-
-// A11yUseModel says "Use model {name}"
-// in the language the app shows.
-//
-// Accessibility label of a model suggestion chip.
-func A11yUseModel(name string) string { return In(i18n.Locale()).A11yUseModel(name) }
-
-// A11yUseModel says "Use model {name}"
-// in the language of msgs.
-//
-// Accessibility label of a model suggestion chip.
-func (msgs Messages) A11yUseModel(name string) string {
-	return Catalog.Format(msgs.locale, "a11yUseModel", map[string]any{"name": name})
 }
 
 // A11yViewBoard says "Board view"
@@ -2144,20 +2116,6 @@ func (msgs Messages) ModelsBaseURL() string {
 	return Catalog.Format(msgs.locale, "modelsBaseURL", nil)
 }
 
-// ModelsInUse says "In use"
-// in the language the app shows.
-//
-// Shown on the provider the assistant uses.
-func ModelsInUse() string { return In(i18n.Locale()).ModelsInUse() }
-
-// ModelsInUse says "In use"
-// in the language of msgs.
-//
-// Shown on the provider the assistant uses.
-func (msgs Messages) ModelsInUse() string {
-	return Catalog.Format(msgs.locale, "modelsInUse", nil)
-}
-
 // ModelsKeyPlaceholder says "Paste your API key"
 // in the language the app shows.
 //
@@ -2170,22 +2128,6 @@ func ModelsKeyPlaceholder() string { return In(i18n.Locale()).ModelsKeyPlacehold
 // Placeholder of the empty key field.
 func (msgs Messages) ModelsKeyPlaceholder() string {
 	return Catalog.Format(msgs.locale, "modelsKeyPlaceholder", nil)
-}
-
-// ModelsKeySaved says "Saved in your Keychain — paste a new one to replace it"
-// in the language the app shows.
-//
-// Placeholder of the key field once a key is stored. Keychain is the macOS
-// Keychain.
-func ModelsKeySaved() string { return In(i18n.Locale()).ModelsKeySaved() }
-
-// ModelsKeySaved says "Saved in your Keychain — paste a new one to replace it"
-// in the language of msgs.
-//
-// Placeholder of the key field once a key is stored. Keychain is the macOS
-// Keychain.
-func (msgs Messages) ModelsKeySaved() string {
-	return Catalog.Format(msgs.locale, "modelsKeySaved", nil)
 }
 
 // ModelsModel says "Model"
@@ -2258,20 +2200,6 @@ func (msgs Messages) ModelsTest() string {
 	return Catalog.Format(msgs.locale, "modelsTest", nil)
 }
 
-// ModelsTestConnection says "Test connection"
-// in the language the app shows.
-//
-// Accessibility label of the Test button.
-func ModelsTestConnection() string { return In(i18n.Locale()).ModelsTestConnection() }
-
-// ModelsTestConnection says "Test connection"
-// in the language of msgs.
-//
-// Accessibility label of the Test button.
-func (msgs Messages) ModelsTestConnection() string {
-	return Catalog.Format(msgs.locale, "modelsTestConnection", nil)
-}
-
 // ModelsTesting says "Testing…"
 // in the language the app shows.
 //
@@ -2284,20 +2212,6 @@ func ModelsTesting() string { return In(i18n.Locale()).ModelsTesting() }
 // Test button while the request runs.
 func (msgs Messages) ModelsTesting() string {
 	return Catalog.Format(msgs.locale, "modelsTesting", nil)
-}
-
-// ModelsUseThis says "Use this one"
-// in the language the app shows.
-//
-// Button that makes a provider the one in use.
-func ModelsUseThis() string { return In(i18n.Locale()).ModelsUseThis() }
-
-// ModelsUseThis says "Use this one"
-// in the language of msgs.
-//
-// Button that makes a provider the one in use.
-func (msgs Messages) ModelsUseThis() string {
-	return Catalog.Format(msgs.locale, "modelsUseThis", nil)
 }
 
 // ModelsWorks says "Works · {ms} ms"
@@ -3068,20 +2982,6 @@ func (msgs Messages) SectionYours() string {
 	return Catalog.Format(msgs.locale, "sectionYours", nil)
 }
 
-// SettingsAbout says "adhd-todo {version}  ·  Open source, MIT license"
-// in the language the app shows.
-//
-// About line at the bottom of the settings sheet.
-func SettingsAbout(version string) string { return In(i18n.Locale()).SettingsAbout(version) }
-
-// SettingsAbout says "adhd-todo {version}  ·  Open source, MIT license"
-// in the language of msgs.
-//
-// About line at the bottom of the settings sheet.
-func (msgs Messages) SettingsAbout(version string) string {
-	return Catalog.Format(msgs.locale, "settingsAbout", map[string]any{"version": version})
-}
-
 // SettingsConnectBody says "Run this once in a terminal. Agents then report their progress here."
 // in the language the app shows.
 //
@@ -3150,20 +3050,6 @@ func SettingsDataFolder() string { return In(i18n.Locale()).SettingsDataFolder()
 // Header of the block that shows where the data lives.
 func (msgs Messages) SettingsDataFolder() string {
 	return Catalog.Format(msgs.locale, "settingsDataFolder", nil)
-}
-
-// SettingsDone says "Done"
-// in the language the app shows.
-//
-// Button that closes the settings sheet.
-func SettingsDone() string { return In(i18n.Locale()).SettingsDone() }
-
-// SettingsDone says "Done"
-// in the language of msgs.
-//
-// Button that closes the settings sheet.
-func (msgs Messages) SettingsDone() string {
-	return Catalog.Format(msgs.locale, "settingsDone", nil)
 }
 
 // SettingsGeneral says "General"
@@ -3364,34 +3250,6 @@ func (msgs Messages) SettingsLanguage() string {
 	return Catalog.Format(msgs.locale, "settingsLanguage", nil)
 }
 
-// SettingsModels says "Models"
-// in the language the app shows.
-//
-// Tab of the settings sheet.
-func SettingsModels() string { return In(i18n.Locale()).SettingsModels() }
-
-// SettingsModels says "Models"
-// in the language of msgs.
-//
-// Tab of the settings sheet.
-func (msgs Messages) SettingsModels() string {
-	return Catalog.Format(msgs.locale, "settingsModels", nil)
-}
-
-// SettingsTitle says "Settings"
-// in the language the app shows.
-//
-// Title of the settings sheet.
-func SettingsTitle() string { return In(i18n.Locale()).SettingsTitle() }
-
-// SettingsTitle says "Settings"
-// in the language of msgs.
-//
-// Title of the settings sheet.
-func (msgs Messages) SettingsTitle() string {
-	return Catalog.Format(msgs.locale, "settingsTitle", nil)
-}
-
 // SpanDays says "{n}d"
 // in the language the app shows.
 //
@@ -3544,6 +3402,266 @@ func StatusTodo() string { return In(i18n.Locale()).StatusTodo() }
 // Task status: planned, not started.
 func (msgs Messages) StatusTodo() string {
 	return Catalog.Format(msgs.locale, "statusTodo", nil)
+}
+
+// A11yPane says "{name} settings"
+// in the language the app shows.
+//
+// Accessibility label of a toolbar pane of the Settings window.
+func A11yPane(name string) string { return In(i18n.Locale()).A11yPane(name) }
+
+// A11yPane says "{name} settings"
+// in the language of msgs.
+//
+// Accessibility label of a toolbar pane of the Settings window.
+func (msgs Messages) A11yPane(name string) string {
+	return Catalog.Format(msgs.locale, "a11yPane", map[string]any{"name": name})
+}
+
+// MenuSettings says "Settings…"
+// in the language the app shows.
+//
+// Item of the app menu that opens the Settings window (⌘,).
+func MenuSettings() string { return In(i18n.Locale()).MenuSettings() }
+
+// MenuSettings says "Settings…"
+// in the language of msgs.
+//
+// Item of the app menu that opens the Settings window (⌘,).
+func (msgs Messages) MenuSettings() string {
+	return Catalog.Format(msgs.locale, "menuSettings", nil)
+}
+
+// ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
+// in the language the app shows.
+//
+// Line under the Base URL label in Settings > Assistant.
+func ModelsBaseURLHelp() string { return In(i18n.Locale()).ModelsBaseURLHelp() }
+
+// ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
+// in the language of msgs.
+//
+// Line under the Base URL label in Settings > Assistant.
+func (msgs Messages) ModelsBaseURLHelp() string {
+	return Catalog.Format(msgs.locale, "modelsBaseURLHelp", nil)
+}
+
+// ModelsKeyHelp says "Kept in your Keychain"
+// in the language the app shows.
+//
+// Line under the API key label in Settings > Assistant.
+func ModelsKeyHelp() string { return In(i18n.Locale()).ModelsKeyHelp() }
+
+// ModelsKeyHelp says "Kept in your Keychain"
+// in the language of msgs.
+//
+// Line under the API key label in Settings > Assistant.
+func (msgs Messages) ModelsKeyHelp() string {
+	return Catalog.Format(msgs.locale, "modelsKeyHelp", nil)
+}
+
+// ModelsOther says "Other…"
+// in the language the app shows.
+//
+// Last item of the model pop-up: type a model name that is not in the list.
+func ModelsOther() string { return In(i18n.Locale()).ModelsOther() }
+
+// ModelsOther says "Other…"
+// in the language of msgs.
+//
+// Last item of the model pop-up: type a model name that is not in the list.
+func (msgs Messages) ModelsOther() string {
+	return Catalog.Format(msgs.locale, "modelsOther", nil)
+}
+
+// ModelsProtocol says "Protocol"
+// in the language the app shows.
+//
+// Label of the row that picks the API a custom endpoint speaks.
+func ModelsProtocol() string { return In(i18n.Locale()).ModelsProtocol() }
+
+// ModelsProtocol says "Protocol"
+// in the language of msgs.
+//
+// Label of the row that picks the API a custom endpoint speaks.
+func (msgs Messages) ModelsProtocol() string {
+	return Catalog.Format(msgs.locale, "modelsProtocol", nil)
+}
+
+// ModelsStatusNone says "Not tested yet"
+// in the language the app shows.
+//
+// Status row of Settings > Assistant before the connection was tested.
+func ModelsStatusNone() string { return In(i18n.Locale()).ModelsStatusNone() }
+
+// ModelsStatusNone says "Not tested yet"
+// in the language of msgs.
+//
+// Status row of Settings > Assistant before the connection was tested.
+func (msgs Messages) ModelsStatusNone() string {
+	return Catalog.Format(msgs.locale, "modelsStatusNone", nil)
+}
+
+// ModelsTestAgain says "Test again"
+// in the language the app shows.
+//
+// Link of the status row of Settings > Assistant after a test.
+func ModelsTestAgain() string { return In(i18n.Locale()).ModelsTestAgain() }
+
+// ModelsTestAgain says "Test again"
+// in the language of msgs.
+//
+// Link of the status row of Settings > Assistant after a test.
+func (msgs Messages) ModelsTestAgain() string {
+	return Catalog.Format(msgs.locale, "modelsTestAgain", nil)
+}
+
+// SettingsAboutLicense says "Open source, MIT license"
+// in the language the app shows.
+//
+// Second line of the About row of Settings > General.
+func SettingsAboutLicense() string { return In(i18n.Locale()).SettingsAboutLicense() }
+
+// SettingsAboutLicense says "Open source, MIT license"
+// in the language of msgs.
+//
+// Second line of the About row of Settings > General.
+func (msgs Messages) SettingsAboutLicense() string {
+	return Catalog.Format(msgs.locale, "settingsAboutLicense", nil)
+}
+
+// SettingsAboutLink says "GitHub ↗"
+// in the language the app shows.
+//
+// Link of the About row of Settings > General that opens the project on
+// GitHub.
+func SettingsAboutLink() string { return In(i18n.Locale()).SettingsAboutLink() }
+
+// SettingsAboutLink says "GitHub ↗"
+// in the language of msgs.
+//
+// Link of the About row of Settings > General that opens the project on
+// GitHub.
+func (msgs Messages) SettingsAboutLink() string {
+	return Catalog.Format(msgs.locale, "settingsAboutLink", nil)
+}
+
+// SettingsAboutName says "adhd-todo {version}"
+// in the language the app shows.
+//
+// Name and version row of Settings > General.
+func SettingsAboutName(version string) string { return In(i18n.Locale()).SettingsAboutName(version) }
+
+// SettingsAboutName says "adhd-todo {version}"
+// in the language of msgs.
+//
+// Name and version row of Settings > General.
+func (msgs Messages) SettingsAboutName(version string) string {
+	return Catalog.Format(msgs.locale, "settingsAboutName", map[string]any{"version": version})
+}
+
+// SettingsAdvanced says "Advanced"
+// in the language the app shows.
+//
+// Group label in Settings > Assistant for the settings most people leave
+// alone.
+func SettingsAdvanced() string { return In(i18n.Locale()).SettingsAdvanced() }
+
+// SettingsAdvanced says "Advanced"
+// in the language of msgs.
+//
+// Group label in Settings > Assistant for the settings most people leave
+// alone.
+func (msgs Messages) SettingsAdvanced() string {
+	return Catalog.Format(msgs.locale, "settingsAdvanced", nil)
+}
+
+// SettingsGitHubNone says "Following pull requests isn't available here."
+// in the language the app shows.
+//
+// Line of Settings > GitHub when the app has no pull request poller.
+func SettingsGitHubNone() string { return In(i18n.Locale()).SettingsGitHubNone() }
+
+// SettingsGitHubNone says "Following pull requests isn't available here."
+// in the language of msgs.
+//
+// Line of Settings > GitHub when the app has no pull request poller.
+func (msgs Messages) SettingsGitHubNone() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubNone", nil)
+}
+
+// SettingsPaneAgents says "Agents"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) about coding
+// agents reporting here.
+func SettingsPaneAgents() string { return In(i18n.Locale()).SettingsPaneAgents() }
+
+// SettingsPaneAgents says "Agents"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) about coding
+// agents reporting here.
+func (msgs Messages) SettingsPaneAgents() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAgents", nil)
+}
+
+// SettingsPaneAssistant says "Assistant"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) for the
+// built-in assistant's model.
+func SettingsPaneAssistant() string { return In(i18n.Locale()).SettingsPaneAssistant() }
+
+// SettingsPaneAssistant says "Assistant"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) for the
+// built-in assistant's model.
+func (msgs Messages) SettingsPaneAssistant() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAssistant", nil)
+}
+
+// SettingsProvider says "Provider"
+// in the language the app shows.
+//
+// Label of the row that picks the assistant's model provider.
+func SettingsProvider() string { return In(i18n.Locale()).SettingsProvider() }
+
+// SettingsProvider says "Provider"
+// in the language of msgs.
+//
+// Label of the row that picks the assistant's model provider.
+func (msgs Messages) SettingsProvider() string {
+	return Catalog.Format(msgs.locale, "settingsProvider", nil)
+}
+
+// SettingsShowInFinder says "Show in Finder"
+// in the language the app shows.
+//
+// Link in Settings > General that reveals the data folder in Finder.
+func SettingsShowInFinder() string { return In(i18n.Locale()).SettingsShowInFinder() }
+
+// SettingsShowInFinder says "Show in Finder"
+// in the language of msgs.
+//
+// Link in Settings > General that reveals the data folder in Finder.
+func (msgs Messages) SettingsShowInFinder() string {
+	return Catalog.Format(msgs.locale, "settingsShowInFinder", nil)
+}
+
+// SettingsAssistantNone says "The assistant isn't available here."
+// in the language the app shows.
+//
+// Line of Settings > Assistant when the app has no assistant.
+func SettingsAssistantNone() string { return In(i18n.Locale()).SettingsAssistantNone() }
+
+// SettingsAssistantNone says "The assistant isn't available here."
+// in the language of msgs.
+//
+// Line of Settings > Assistant when the app has no assistant.
+func (msgs Messages) SettingsAssistantNone() string {
+	return Catalog.Format(msgs.locale, "settingsAssistantNone", nil)
 }
 
 // ValueNone says "None"

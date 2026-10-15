@@ -23,17 +23,19 @@ func fixedNow() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.Lo
 type recorder struct {
 	opened   []int
 	urls     []string
-	settings int
-	language string // what SetLanguage last chose
+	panes    []Pane   // what OpenSettings was asked to show
+	folders  []string // what ShowInFinder was asked to reveal
+	language string   // what SetLanguage last chose
 
 	mu     sync.Mutex
 	posted []func()
 	wake   chan struct{}
 }
 
-func (r *recorder) OpenTask(id int)    { r.opened = append(r.opened, id) }
-func (r *recorder) OpenSettings()      { r.settings++ }
-func (r *recorder) OpenURL(url string) { r.urls = append(r.urls, url) }
+func (r *recorder) OpenTask(id int)          { r.opened = append(r.opened, id) }
+func (r *recorder) OpenSettings(p Pane)      { r.panes = append(r.panes, p) }
+func (r *recorder) OpenURL(url string)       { r.urls = append(r.urls, url) }
+func (r *recorder) ShowInFinder(path string) { r.folders = append(r.folders, path) }
 
 func (r *recorder) Languages() []string    { return []string{"en", "zh-Hans"} }
 func (r *recorder) Language() string       { return r.language }

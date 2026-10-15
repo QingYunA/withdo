@@ -122,7 +122,7 @@ func (m *Main) noModelHint(c *ui.Context, t *theme.Tokens, focused bool) {
 	ui.Row(c.Key("no-model")).Shrink(0).Margin(8, 0, 0, 4).Gap(5).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, m.say.AskNoModel())
 		if link(c, t, m.say.AskSetUp()).Clicked() {
-			m.openModels()
+			m.openSettings(PaneAssistant)
 		}
 	})
 }

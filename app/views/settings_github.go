@@ -14,54 +14,55 @@ const (
 	ghLoginCommand   = "gh auth login"
 )
 
-// ghRefreshEvery redraws the open sheet so that "checked 2m ago" keeps up with the clock.
+// ghRefreshEvery redraws the open pane so that "checked 2m ago" keeps up with the clock.
 const ghRefreshEvery = 30 * time.Second
 
-// githubBlock is Settings > GitHub: whether pull requests are followed, and when they were last
-// looked at, or how to make it work. It is left out when the app has no poller.
-func (m *Main) githubBlock(c *ui.Context, t *theme.Tokens) {
-	gh := m.app.GitHub
+// githubPane is whether pull requests are followed, and when they were last looked at, or how to
+// make it work. With no poller it says so.
+func (s *Settings) githubPane(c *ui.Context, t *theme.Tokens) {
+	gh := s.app.GitHub
 	if gh == nil {
+		group(c, t, "github", func() { settingsRow(c, t, "none", s.say.SettingsGitHubNone(), "", true, nil) })
 		return
 	}
 	st := gh.Status()
 	c.After(ghRefreshEvery)
-	ui.Column(c).Gap(8).Children(func() {
-		theme.Text(c, theme.BodyStrong, t.Text, m.say.SettingsGitHub())
-		ui.Row(c).Gap(12).AlignItems(ui.Start).Children(func() {
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, m.githubLine(st), 0).Grow(1).MinWidth(0)
-			m.checkNowLink(c, t, st)
+	group(c, t, "github", func() {
+		ui.Row(c).Shrink(0).MinHeight(theme.SettingsRowMin).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
+			theme.Paragraph(c, theme.Body, t.Text, s.githubLine(st), 0).Grow(1).MinWidth(0)
+			s.checkNowLink(c, t, st)
 		})
 		if command := githubFix(st.State); command != "" {
-			ui.Row(c).Padding(10, 12).Radius(theme.RadiusCard).Background(t.BgSubtle).Children(func() {
-				theme.Text(c, theme.Mono, t.Text, command).Selectable()
+			hairline(c, t).Margin(0, 14)
+			ui.Column(c).Shrink(0).Padding(10, 14, 12).Children(func() {
+				commandWell(c, t, command, nil)
 			})
 		}
 	})
 }
 
-// githubLine is the sentence under the title for a status.
-func (m *Main) githubLine(st data.GitHubStatus) string {
+// githubLine is the sentence for a status.
+func (s *Settings) githubLine(st data.GitHubStatus) string {
 	switch st.State {
 	case data.GitHubReady:
-		checked := m.checkedAgo(st.CheckedAt)
+		checked := s.checkedAgo(st.CheckedAt)
 		if st.Account == "" {
-			return m.say.SettingsGitHubConnectedAnon(checked)
+			return s.say.SettingsGitHubConnectedAnon(checked)
 		}
-		return m.say.SettingsGitHubConnected(st.Account, checked)
+		return s.say.SettingsGitHubConnected(st.Account, checked)
 	case data.GitHubMissing:
-		return m.say.SettingsGitHubMissing()
+		return s.say.SettingsGitHubMissing()
 	case data.GitHubSignedOut:
-		return m.say.SettingsGitHubSignedOut()
+		return s.say.SettingsGitHubSignedOut()
 	case data.GitHubOffline:
-		return m.say.SettingsGitHubOffline()
+		return s.say.SettingsGitHubOffline()
 	}
-	return m.say.SettingsGitHubCheckingFirst()
+	return s.say.SettingsGitHubCheckingFirst()
 }
 
 // githubFix is the command that fixes a state, or empty when there is nothing to run.
-func githubFix(s data.GitHubState) string {
-	switch s {
+func githubFix(st data.GitHubState) string {
+	switch st {
 	case data.GitHubMissing:
 		return ghInstallCommand
 	case data.GitHubSignedOut:
@@ -70,24 +71,24 @@ func githubFix(s data.GitHubState) string {
 	return ""
 }
 
-func (m *Main) checkedAgo(at time.Time) string {
-	now := m.app.Now()
+func (s *Settings) checkedAgo(at time.Time) string {
+	now := s.app.Now()
 	if now.Sub(at) < time.Minute {
-		return m.say.SettingsGitHubCheckedNow()
+		return s.say.SettingsGitHubCheckedNow()
 	}
-	return m.say.SettingsGitHubChecked(m.clock.Age(at, now))
+	return s.say.SettingsGitHubChecked(s.clock.Age(at, now))
 }
 
 // checkNowLink asks for a check. While one runs it reads Checking… and does nothing; before the
 // first check has ended there is nothing to ask for.
-func (m *Main) checkNowLink(c *ui.Context, t *theme.Tokens, st data.GitHubStatus) {
+func (s *Settings) checkNowLink(c *ui.Context, t *theme.Tokens, st data.GitHubStatus) {
 	switch {
 	case st.State == data.GitHubUnknown:
 	case st.Checking:
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.SettingsGitHubChecking()).Shrink(0)
+		theme.Text(c, theme.Body, t.TextTertiary, s.say.SettingsGitHubChecking()).Shrink(0)
 	default:
-		if link(c.Key("github-check"), t, m.say.SettingsGitHubCheckNow()).Shrink(0).Clicked() {
-			m.app.GitHub.CheckNow()
+		if settingsLink(c, t, "github-check", s.say.SettingsGitHubCheckNow(), s.say.SettingsGitHubCheckNow()).Clicked() {
+			s.app.GitHub.CheckNow()
 		}
 	}
 }

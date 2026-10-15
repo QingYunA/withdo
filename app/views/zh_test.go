@@ -116,38 +116,42 @@ func TestChineseInspector(t *testing.T) {
 }
 
 func TestChineseSettingsAndLanguageChoice(t *testing.T) {
-	app, _, rec := newTestApp(t)
-	tt, m, _ := newTesterFor(app, 1100)
-	inChinese(tt)
-	m.OpenSettings()
-	tt.Frame()
-	has(t, tt, "设置", "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "数据文件夹", "语言",
-		"跟随系统", "English", "简体中文", "adhd-todo 0.2.0  ·  开源，MIT 许可证", "完成")
-	if err := tt.Click("English"); err != nil {
+	r := newSettingsRig(t)
+	inChinese(r.tt)
+	r.tt.Frame()
+	has(t, r.tt, "通用", "助手", "Agent", "GitHub", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
+		"数据文件夹", "在访达中显示", "adhd-todo 0.2.0", "开源，MIT 许可证")
+	if r.title != "通用" {
+		t.Errorf("title %q", r.title)
+	}
+	if err := r.tt.Click("跟随系统"); err != nil {
 		t.Fatal(err)
 	}
-	if rec.language != "en" {
-		t.Errorf("chose %q", rec.language)
-	}
-	if err := tt.Click("跟随系统"); err != nil {
+	if err := r.tt.Click("English"); err != nil {
 		t.Fatal(err)
 	}
-	if rec.language != "" {
-		t.Errorf("chose %q after System", rec.language)
+	if r.rec.language != "en" {
+		t.Errorf("chose %q", r.rec.language)
 	}
 }
 
-func TestChineseModelsTab(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+func TestChineseAssistantPane(t *testing.T) {
+	r := newSettingsRig(t)
 	inChinese(r.tt)
-	r.m.openModels()
-	r.tt.Frame()
-	has(t, r.tt, "通用", "模型", "Base URL", "API 密钥", "需要 API 密钥", "使用这个", "测试连接", "自定义")
-	hasNot(t, r.tt, "Custom")
-	if err := r.tt.Click("Magpie"); err != nil {
+	r.pane(t, "助手")
+	has(t, r.tt, "服务商", "模型", "API 密钥", "保存在钥匙串中", "还没有测试", "测试", "高级", "Base URL", "只有使用网关（例如 Magpie）时才需要改")
+	hasNot(t, r.tt, "Provider", "Not tested yet")
+	if err := r.tt.Click("claude-haiku-5-5"); err != nil {
 		t.Fatal(err)
 	}
-	has(t, r.tt, "使用本机的 Magpie 网关 127.0.0.1:3425")
+	has(t, r.tt, "其他…")
+}
+
+func TestChineseAgentsPane(t *testing.T) {
+	r := newSettingsRig(t)
+	inChinese(r.tt)
+	r.pane(t, "Agent")
+	has(t, r.tt, "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "拷贝")
 }
 
 func TestChineseConversation(t *testing.T) {

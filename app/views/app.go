@@ -1,6 +1,6 @@
-// Package views draws the adhd-todo window with mygo native UI: the sidebar, the Now screen, the
-// project lists and board, the inbox, the inspector and the settings sheet. It reads and writes
-// through data.Store.
+// Package views draws the adhd-todo windows with mygo native UI: the main window (the sidebar,
+// the Now screen, the project lists and board, the inbox and the inspector) and the Settings
+// window. It reads and writes through data.Store.
 package views
 
 import (
@@ -12,9 +12,10 @@ import (
 
 // Actions is what the views ask the shell to do.
 type Actions interface {
-	OpenTask(id int) // show the main window with the task open in the inspector
-	OpenSettings()
+	OpenTask(id int)        // show the main window with the task open in the inspector
+	OpenSettings(pane Pane) // show the Settings window on a pane
 	OpenURL(url string)
+	ShowInFinder(path string)
 	// Post runs fn on the UI thread and redraws. The assistant answers through it.
 	Post(fn func())
 	// Languages are the languages the interface is written in. Language is the one the user
@@ -25,7 +26,7 @@ type Actions interface {
 	SetLanguage(tag string)
 }
 
-// Config is what the settings sheet shows.
+// Config is what the Settings window shows.
 type Config struct {
 	ConnectCommand string // the claude mcp add command
 	DataFolder     string
@@ -39,11 +40,11 @@ type App struct {
 	Act    Actions
 	Config Config
 	Now    func() time.Time
-	// Assistant is the built-in agent behind the ask field; nil leaves the field adding Inbox
-	// tasks. Models is Settings > Models; nil hides that tab.
+	// Assistant is the built-in agent behind the composer; nil leaves the composer adding plain
+	// tasks. Models is Settings > Assistant; nil leaves that pane empty.
 	Assistant data.Assistant
 	Models    data.ModelSettings
-	// GitHub is the pull request poller behind Settings > GitHub; nil leaves the section out.
+	// GitHub is the pull request poller behind Settings > GitHub; nil leaves the pane empty.
 	GitHub data.GitHub
 
 	snap       snapshot

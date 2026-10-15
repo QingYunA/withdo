@@ -359,7 +359,7 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0)
 		if m.nav.screen == screenProject {
 			if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
-				m.settings = true
+				m.openSettings(PaneAgents)
 			}
 		}
 	})

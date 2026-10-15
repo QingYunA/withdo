@@ -296,10 +296,9 @@ func TestNoModelHintAppearsOnFocusAndOpensSettingsOnModels(t *testing.T) {
 	if err := r.tt.Click("Set up"); err != nil {
 		t.Fatal(err)
 	}
-	if !r.m.settings || r.m.models.tab != tabModels {
-		t.Fatalf("settings %v tab %v", r.m.settings, r.m.models.tab)
+	if len(r.rec.panes) != 1 || r.rec.panes[0] != PaneAssistant {
+		t.Fatalf("asked to show %v, want the Assistant pane", r.rec.panes)
 	}
-	has(t, r.tt, "Base URL", "Anthropic", "Magpie")
 }
 
 func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {

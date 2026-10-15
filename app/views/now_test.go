@@ -36,8 +36,8 @@ func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
 }
 
 func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
-	app, _ := newEmptyApp(t)
-	tt, m, _ := newTesterFor(app, 1100)
+	app, rec := newEmptyApp(t)
+	tt, _, _ := newTesterFor(app, 1100)
 	for _, want := range []string{"All clear.", "Agents report here through the adhd-todo MCP server.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
@@ -51,8 +51,8 @@ func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 	if err := tt.Click("How to connect"); err != nil {
 		t.Fatal(err)
 	}
-	if !m.settings {
-		t.Error("How to connect did not open Settings")
+	if len(rec.panes) != 1 || rec.panes[0] != PaneAgents {
+		t.Errorf("How to connect asked for %v, want the Agents pane", rec.panes)
 	}
 }
 

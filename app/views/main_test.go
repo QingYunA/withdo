@@ -77,27 +77,6 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	}
 }
 
-func TestSettingsSheetCopiesTheCommand(t *testing.T) {
-	tt, m, app := newMainTester(t, 1100)
-	m.OpenSettings()
-	tt.Frame()
-	if !tt.HasText("Connect Claude Code") || !tt.HasText(app.Config.DataFolder) {
-		t.Fatalf("sheet texts %q", tt.Texts())
-	}
-	if err := tt.Click("Copy command"); err != nil {
-		t.Fatal(err)
-	}
-	if tt.Clipboard() != app.Config.ConnectCommand {
-		t.Errorf("clipboard %q", tt.Clipboard())
-	}
-	if err := tt.Click("Close settings"); err != nil {
-		t.Fatal(err)
-	}
-	if m.settings {
-		t.Error("sheet still open")
-	}
-}
-
 func TestSidebarListsNowInboxAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	for _, want := range []string{"Now", "Inbox", "PROJECTS", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {

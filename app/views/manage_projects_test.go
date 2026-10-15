@@ -183,7 +183,7 @@ func TestRenameAProjectInTheSidebar(t *testing.T) {
 	}
 }
 
-func TestArchiveAProjectAndRestoreItInSettings(t *testing.T) {
+func TestArchivingTheOpenProjectGoesToNow(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 3})
 	tt.Frame()
@@ -199,23 +199,6 @@ func TestArchiveAProjectAndRestoreItInSettings(t *testing.T) {
 	}
 	if tt.HasText("Export thumbnails to HEIC") {
 		t.Error("tasks of an archived project are still shown")
-	}
-
-	m.OpenSettings()
-	tt.Frame()
-	for _, want := range []string{"Archived projects", "picpocket", "QingYunA/picpocket", "Restore"} {
-		if !tt.HasText(want) {
-			t.Errorf("settings lack %q: %q", want, tt.Texts())
-		}
-	}
-	if err := tt.Click("Restore picpocket"); err != nil {
-		t.Fatal(err)
-	}
-	if !slices.Contains(projectNames(app), "picpocket") {
-		t.Errorf("not restored: %v", projectNames(app))
-	}
-	if !tt.HasText("No archived projects. Archive one from its menu in the sidebar.") {
-		t.Errorf("the empty line is missing: %q", tt.Texts())
 	}
 }
 
