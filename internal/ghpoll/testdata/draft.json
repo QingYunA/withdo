@@ -1,0 +1,1 @@
+{"closedAt":null,"isDraft":true,"mergedAt":null,"reviewDecision":"","state":"OPEN","statusCheckRollup":[{"__typename":"CheckRun","completedAt":"2026-10-14T08:24:51Z","conclusion":"FAILURE","detailsUrl":"https://github.com/acme/widgets/actions/runs/5/job/1","name":"test","startedAt":"2026-10-14T08:19:02Z","status":"COMPLETED","workflowName":"CI"}]}
