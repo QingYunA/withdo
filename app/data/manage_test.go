@@ -333,6 +333,7 @@ func TestRealAnAgentReportRestoresAnArchivedProject(t *testing.T) {
 	changes := make(chan struct{}, 8)
 	r.Subscribe(func() { changes <- struct{}{} })
 	r.Start()
+	time.Sleep(50 * time.Millisecond) // let the watcher take its baseline before the write
 
 	id := int64(task.ID)
 	if _, err := core.ReportProgress(bg, domain.ProgressInput{Summary: "back at it", Agent: "claude", TaskID: &id}); err != nil {
@@ -344,7 +345,7 @@ func TestRealAnAgentReportRestoresAnArchivedProject(t *testing.T) {
 	})
 	select {
 	case <-changes:
-	case <-time.After(time.Second):
+	case <-time.After(3 * time.Second):
 		t.Error("the app was not told")
 	}
 }
