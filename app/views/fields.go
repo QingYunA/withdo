@@ -34,6 +34,7 @@ type fieldSpec struct {
 	placeholder string
 	multiline   bool // a text area; Enter saves a single-line title but breaks a line in notes
 	enterSaves  bool // Enter saves instead of breaking the line
+	secret      bool // a password field: the text is hidden
 	minLines    int
 	maxLines    int
 }
@@ -61,6 +62,9 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 			}
 		}
 		s.style.Apply(el).TextColor(s.color).Label(s.name)
+		if s.secret && !s.multiline {
+			el.Password()
+		}
 		if f.buf == "" && s.placeholder != "" {
 			theme.Text(c, s.style, t.TextTertiary, s.placeholder).Absolute().Left(0).Top(0).PassThrough()
 		}

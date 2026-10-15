@@ -41,6 +41,7 @@ type Main struct {
 	wantAsk   bool    // Cmd+K was pressed: the ask field takes the focus once it is drawn
 	askFrames int     // how many frames the ask field has been drawn since the screen changed
 	settings  bool
+	models    modelsState // Settings > Models
 
 	milestone map[int]int  // milestone filter per project, 0 for all
 	board     map[int]bool // projects shown as a board
@@ -53,6 +54,8 @@ type Main struct {
 	wasDrag   int // the one dragged in the frame before: the targets live a frame past the drop
 
 	ask     askState
+	convo   convo     // the conversation sheet under the ask field
+	hintOn  bool      // the "Connect a model" line is showing under the field
 	askRef  ui.Handle // the ask field, for Cmd+K
 	listRef ui.Handle // the page, so the arrow keys and Space reach it
 
@@ -82,9 +85,14 @@ func (m *Main) OpenTask(id int) {
 // OpenSettings shows the settings sheet.
 func (m *Main) OpenSettings() { m.settings = true }
 
+// openModels shows the settings sheet on its Models tab.
+func (m *Main) openModels() {
+	m.settings, m.models.tab = true, tabModels
+}
+
 func (m *Main) goTo(n nav) {
 	if m.nav != n {
-		m.nav, m.openID, m.sel, m.askFrames = n, 0, 0, 0
+		m.nav, m.openID, m.sel, m.askFrames, m.hintOn = n, 0, 0, 0, false
 		m.cancelAdding()
 		m.scroll = ui.ScrollState{}
 	}

@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,11 +24,56 @@ type recorder struct {
 	opened   []int
 	urls     []string
 	settings int
+
+	mu     sync.Mutex
+	posted []func()
+	wake   chan struct{}
 }
 
 func (r *recorder) OpenTask(id int)    { r.opened = append(r.opened, id) }
 func (r *recorder) OpenSettings()      { r.settings++ }
 func (r *recorder) OpenURL(url string) { r.urls = append(r.urls, url) }
+
+// Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
+func (r *recorder) Post(fn func()) {
+	r.mu.Lock()
+	r.posted = append(r.posted, fn)
+	if r.wake != nil {
+		select {
+		case r.wake <- struct{}{}:
+		default:
+		}
+	}
+	r.mu.Unlock()
+}
+
+// drain waits up to a second for something to be posted, then runs everything posted.
+func (r *recorder) drain(t *testing.T) {
+	t.Helper()
+	r.mu.Lock()
+	if r.wake == nil {
+		r.wake = make(chan struct{}, 1)
+	}
+	r.mu.Unlock()
+	deadline := time.After(time.Second)
+	for {
+		r.mu.Lock()
+		fns := r.posted
+		r.posted = nil
+		r.mu.Unlock()
+		if len(fns) > 0 {
+			for _, fn := range fns {
+				fn()
+			}
+			return
+		}
+		select {
+		case <-r.wake:
+		case <-deadline:
+			t.Fatal("nothing was posted to the UI thread")
+		}
+	}
+}
 
 func testConfig() Config {
 	return Config{

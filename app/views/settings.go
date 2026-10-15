@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	sheetWidth float32 = 460
+	sheetWidth float32 = 640
 	copiedFor          = 1500 * time.Millisecond
 )
 
@@ -21,6 +21,10 @@ func (m *Main) settingsSheet(c *ui.Context, t *theme.Tokens) {
 			Shadow(0, 20, 48, 0, t.Shadow)
 		ui.Column(c).Gap(20).Children(func() {
 			m.sheetHeader(c, t)
+			if m.models.tab == tabModels && m.app.Models != nil {
+				m.modelsTab(c, t)
+				return
+			}
 			m.connectBlock(c, t)
 			m.dataBlock(c, t)
 			hairline(c, t)
@@ -33,7 +37,15 @@ func (m *Main) sheetHeader(c *ui.Context, t *theme.Tokens) {
 	ui.Row(c).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Title, t.Text, "Settings")
 		ui.Spacer(c)
-		if ui.PrimaryButton(c.Key("done"), "Done").Label("Close settings").Clicked() || c.Shortcut(0, ui.KeyEnter) {
+		if m.app.Models != nil {
+			if i := segmented(c, t, "settings-tab", []string{"General", "Models"}, int(m.models.tab)); i >= 0 {
+				m.models.tab = settingsTab(i)
+			}
+			ui.Box(c).Width(12).Shrink(0)
+		}
+		// Enter belongs to the fields on the Models tab, where it saves.
+		enter := m.models.tab == tabGeneral && c.Shortcut(0, ui.KeyEnter)
+		if ui.PrimaryButton(c.Key("done"), "Done").Label("Close settings").Clicked() || enter {
 			m.settings = false
 		}
 	})

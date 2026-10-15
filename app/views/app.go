@@ -15,6 +15,8 @@ type Actions interface {
 	OpenTask(id int) // show the main window with the task open in the inspector
 	OpenSettings()
 	OpenURL(url string)
+	// Post runs fn on the UI thread and redraws. The assistant answers through it.
+	Post(fn func())
 }
 
 // Config is what the settings sheet shows.
@@ -31,6 +33,10 @@ type App struct {
 	Act    Actions
 	Config Config
 	Now    func() time.Time
+	// Assistant is the built-in agent behind the ask field; nil leaves the field adding Inbox
+	// tasks. Models is Settings > Models; nil hides that tab.
+	Assistant data.Assistant
+	Models    data.ModelSettings
 
 	snap       snapshot
 	completing map[int]completion
