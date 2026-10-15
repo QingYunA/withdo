@@ -1,4 +1,4 @@
-// Command adhd-todo is the desktop app: one window with the Now screen and a list per project,
+// Command adhd-todo is the desktop app: one window with the Mine and Agents screens and a list per project,
 // drawn with mygo native UI. It reads and writes the same SQLite database as the adhd-core MCP
 // server, so what agents report shows up live.
 package main

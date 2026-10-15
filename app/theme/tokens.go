@@ -159,7 +159,7 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 const (
 	RadiusControl float32 = 6  // pills, inputs
 	RadiusCard    float32 = 9  // cards, rows
-	RadiusPanel   float32 = 12 // composer, Needs you container, popovers, sheets
+	RadiusPanel   float32 = 12 // composer, From your agents container, popovers, sheets
 	RadiusTile    float32 = 10 // board cards
 )
 

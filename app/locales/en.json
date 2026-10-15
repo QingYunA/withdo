@@ -1802,7 +1802,7 @@
   "@actionReview": {
     "description": "Button of a row where an agent finished and waits for a look."
   },
-  "propParent": "Parent task",
+  "propParent": "Parent",
   "@propParent": {
     "description": "Label of the inspector row of a subtask: the task it belongs to."
   },

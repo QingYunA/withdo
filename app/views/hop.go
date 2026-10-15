@@ -149,11 +149,15 @@ func (h *hopper) inFlight(id int, now time.Time) bool {
 // badgeOpacity is the badge's opacity: it fades in with Reduce Motion, and is simply there
 // otherwise.
 func (m *Main) badgeOpacity(c *ui.Context) float32 {
-	if !c.Preferences().ReduceMotion {
+	return badgeFadeOpacity(c.Preferences().ReduceMotion, m.app.Now(), m.hop.shownAt)
+}
+
+// badgeFadeOpacity is the opacity of a badge that appeared at shownAt, at now.
+func badgeFadeOpacity(reduceMotion bool, now, shownAt time.Time) float32 {
+	if !reduceMotion {
 		return 1
 	}
-	f := float32(m.app.Now().Sub(m.hop.shownAt)) / float32(badgeFade)
-	return min(max(f, 0), 1)
+	return min(max(float32(now.Sub(shownAt))/float32(badgeFade), 0), 1)
 }
 
 // hopOverlay draws the sprites on their way, above the whole window, and nothing at all when none is.

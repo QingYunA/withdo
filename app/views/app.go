@@ -1,5 +1,5 @@
 // Package views draws the adhd-todo windows with mygo native UI: the main window (the sidebar,
-// the Now screen, the project lists and board, the inbox and the inspector) and the Settings
+// the Mine and Agents screens, the project lists and board, the inbox and the inspector) and the Settings
 // window. It reads and writes through data.Store.
 package views
 
@@ -129,7 +129,7 @@ func (a *App) SetStatus(t data.Task, s data.Status) {
 	_ = a.Update(t.ID, data.Patch{Status: data.StatusPtr(s)})
 }
 
-// KeepClosedPR dismisses the Needs you row of a task whose pull request was closed, and refreshes.
+// KeepClosedPR dismisses the From your agents row of a task whose pull request was closed, and refreshes.
 func (a *App) KeepClosedPR(id int) {
 	if err := a.Store.KeepClosedPR(id); err != nil {
 		a.snap.err = err

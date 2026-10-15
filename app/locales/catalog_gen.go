@@ -4584,13 +4584,13 @@ func (msgs Messages) ActionReview() string {
 	return Catalog.Format(msgs.locale, "actionReview", nil)
 }
 
-// PropParent says "Parent task"
+// PropParent says "Parent"
 // in the language the app shows.
 //
 // Label of the inspector row of a subtask: the task it belongs to.
 func PropParent() string { return In(i18n.Locale()).PropParent() }
 
-// PropParent says "Parent task"
+// PropParent says "Parent"
 // in the language of msgs.
 //
 // Label of the inspector row of a subtask: the task it belongs to.

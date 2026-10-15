@@ -85,7 +85,7 @@ display. Views keep using the tokens; no literal sizes.
 ### Space, shape, motion
 
 - 4 pt grid. Common gaps 4, 8, 12, 16, 24.
-- Radii: 6 (pills, inputs), 9 (rows), 10 (board cards), 12 (composer, Needs you container, popovers).
+- Radii: 6 (pills, inputs), 9 (rows), 10 (board cards), 12 (composer, From your agents container, popovers).
 - Shadows only on floating things: drag ghost, popovers, the window.
 - Motion 160 ms ease-out for hover, selection and drawer; 220 ms spring for a card
   appearing and a card settling after a drop. Respect Reduce Motion: fade only.
@@ -129,7 +129,7 @@ in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay 
 - **List rows** (a project, the Inbox, the Done group): an 18 pt avatar in the column of the group
   glyph, vertically centered on the row; the title stays on the group's title (the avatar's slot
   gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
-  status glyph (Now, Done today, Completed, search) keep the glyph: it is the way to complete or reopen.
+  status glyph (Mine's Today and Later, Done today, Completed, search) keep the glyph: it is the way to complete or reopen.
 - **Board cards**: a 12 pt avatar first in the meta line, before the blocked mark, the badge, the
   branch and the age. The line is always drawn.
 - **Inspector**: a **From** row right under Status: the 18 pt avatar and the agent's name as people
@@ -143,7 +143,9 @@ in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay 
 - **Assistant**: the composer's mark is the assistant's 18 pt avatar (it pulses while the assistant
   works, as the sparkle did); a one-line answer that changed nothing starts with its 12 pt avatar.
   Receipts keep their green check.
-- **Sidebar**: Now `IconNow`, Inbox `IconInbox`, Completed `IconDone`, 16 pt in `text.secondary`;
+- **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
+  (`theme.AccentBot`), both 18 pt (a point of the row's gap on each side keeps the labels in line);
+  Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 16 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
   does not choose it).
 - **The drawn task menu** (and its Move to and reminder pages) puts a 15 pt line icon before each
@@ -151,7 +153,7 @@ in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay 
   reminder presets `IconClock` / `IconCalendar`, No reminder `IconClose`, Custom `IconPlus`, a
   project `IconFolder` in its color (white on the highlighted row), Delete `IconTrash` in
   `status.blocked` with its text. The native context menus are text only.
-- **Empty states** (Now, Inbox, a project, Completed, search with no hits): `theme.DuoIcon` at 60 pt
+- **Empty states** (Mine, Agents, Inbox, a project, Completed, search with no hits): `theme.DuoIcon` at 60 pt
   (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
   line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
   forward ("How to connect").
@@ -169,8 +171,11 @@ Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only
 is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
 like a document, not a spreadsheet.
 
-**Sidebar.** A search field first (see **Search**), then `Now` (count = items in Needs you + Agents
-at work + Yours), `Inbox` (count) and `Completed` (no count: it only grows), then `Projects` (sentence
+**Sidebar.** A search field first (see **Search**), then `Mine` / `我的` (a plain count: the rows
+from your agents plus Today; when the user has not seen what agents handed over, a 18 pt red badge
+with their number instead, `status.blocked` with white `badge` text) and `Agents` / `Agent` (count =
+tasks at work, never their subtasks), `Inbox` (count), `Calendar` and `Completed` (no count: it
+only grows), `⌘1` to `⌘5` in that order, then `Projects` (sentence
 case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
 **on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
@@ -185,70 +190,127 @@ task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tal
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
   the old name back. Archive acts at once (the project is in Settings > General > Archived projects,
   one click from coming back); Delete… asks first (**Delete confirmation**). Archiving or deleting the
-  project on screen goes to Now.
+  project on screen goes to Mine.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
-### Now (home)
+### Mine (home)
 
-Header: `Now` in `title` + the date in `text.tertiary`, nothing else.
+Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else. Reference:
+`docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
+new item: the hop (below) is the signal.
 
 **Composer.** The one input is the **Composer** (see **Composer** below), the first thing on the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
-assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Now) and
+assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Mine) and
 shows a quiet "Added to Inbox" line under the box for 1.5 s.
 
-Then up to four sections. **A section with nothing in it is not drawn at all.**
+Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
+a row anywhere (see **Subtasks**).
 
-1. **Needs you** — inside one bordered container (12 pt radius, rows split by hairlines):
-   - blocked tasks (any source): summary line `Agent is waiting: "<next_step or summary>"`,
-     action **Open** (opens the inspector);
-   - review tasks with a PR: `PR #12 is ready for your review`, action **Open PR** (browser);
-   - stale agent tasks (no report for `stale_hours`): `No update for 3d`, action **Open**;
-   - reminders that are due: `You asked to be reminded at 4:00 PM`, action **Done**;
-   - a pull request closed without merging (M4a): `PR #12 was closed without merging`, actions
-     **Cancel task** (status cancelled) and **Keep** (the row goes away for good, until the pull
-     request changes state again);
-   - a pull request whose checks are failing: `Checks are failing on PR #12`, action **Open PR**;
-   - a pull request where changes were requested: `Changes were requested on PR #12`, action
-     **Open PR**.
+1. **From your agents** / `Agent 交过来的` — inside one bordered container (12 pt radius, rows
+   split by hairlines), the only box on the screen. What agents handed over, blocked first. Each
+   row: the agent's 18 pt avatar, the title, one reason line (`reason · project name`, the project
+   dropped below 600 pt), the age, and one tinted button (`bg.selected`, accent text):
+   - an agent task that is blocked: `Claude Code is stuck: "<next_step or summary>"` (`卡住了`),
+     button **Answer** / `回答` (opens the inspector); with nothing to quote, `Claude Code is stuck
+     and waits for you`;
+   - an agent task in review: with a PR `PR #12 is ready for your review`, button **Open PR**;
+     without one `Claude Code finished and is waiting for you` (`做完了，等你试用`), button
+     **Review** / `去看看`;
+   - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open**;
+   - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
+   - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
+     task** and **Keep** (the row goes away for good, until the pull request changes state again);
+   - a pull request whose checks are failing, or where changes were requested: **Open PR**.
    The three pull request rows come from the GitHub poller (see **GitHub** under Settings) and
-   apply to any task with a pull request that is not done or cancelled; failing checks and
-   requested changes only while the pull request is open (not a draft).
-   Order: blocked, due reminders, closed pull requests, failing checks, requested changes, review,
-   stale. A task shows once, under the first reason it has. Screens `now-pull-requests-*`. Rows age
-from GitHub's own report, not the agent's last word; GitHub's reports (agent `github`) show in the
-task's Activity but never count as the agent speaking. A row with two buttons (the closed pull
-request) puts them under its summary when the content is under 560 pt wide, so the title keeps
-its room beside the inspector. Each row: glyph (reminders use a bell in
-   `accent`), title, project name in `text.tertiary`, one summary line, age, and the action as
-   a small tinted button (`bg.selected`, accent text). This container is the only box on the
-   screen.
-2. **Agents at work** — agent tasks in doing, newest report first, across all projects. Row:
-   glyph, title, branch pill, project name (only when not inside a project), latest report
-   summary on line 2, age on the right. A 6 pt `status.doing` dot with a soft ring before the
-   age when the last report is under 10 minutes old ("live").
-3. **Yours** — user tasks in todo / doing: due or reminded today and overdue first, then the
-   next 7 days, then undated (at most 7 undated; a "Show all in Inbox" link after). Row: glyph,
-   title, project name, due label on the right ("Today", "Tomorrow", "Fri", "Oct 20").
+   apply to any task with a pull request that is not done or cancelled (failing checks and
+   requested changes only while it is open, not a draft). Order: blocked, due reminders, closed
+   pull requests, failing checks, requested changes, review, stale; the longest wait first within a
+   kind. A task shows once, under the first reason it has. Pull request rows age from GitHub's own
+   report, not the agent's last word; GitHub's reports (agent `github`) show in Activity but never
+   count as the agent speaking. A row with two buttons puts them under its summary below 560 pt of
+   content, and every row does below 420 pt. Screens `mine-pull-requests-*`.
+2. **Today** / `今天` — the user's tasks (a user task that is blocked or doing, too): due or
+   reminded today and overdue first by time, then what is in progress. Row: the status glyph (it
+   ticks the task off), title, project name, `P0`/`P1` badge, due label at the right ("2:30 PM",
+   "Today").
+3. **Later** / `之后` — the user's tasks due in the next 7 days by date, then undated by priority
+   (at most 7; a "Show all in Inbox" link after). Later ones stay in their project or the Inbox.
+4. **Done today** / `今天做完` — what was finished since local midnight, by anyone, newest first:
+   the `done` glyph, the title in `text.secondary` at weight 400, and at the right who did it, then
+   the time of day: `Claude Code · PR #245 merged` or `You`, then `2:05 PM`. At most five; past
+   them a `Show all in Completed` link. It does not count toward the sidebar and never makes Mine
+   "not clear". Who finished a task: the agent that filed a report at the moment it closed (within
+   five seconds of the completion, or later), else me.
 
-4. **Done today** — what was finished since local midnight, by anyone: agents and me, newest first,
-   so the day shows what got done and not only what is left. The same row as the others with the
-   `done` glyph, the title in `text.secondary` at weight 400, and at the right who did it, then
-   the time of day: `Claude Code · PR #245 merged` (the agent's name, then what its latest report
-   says, cut to one line) or `You`, then `2:05 PM`. At most five; past them a `Show all in
-   Completed` link opens Completed. The section does not count toward the sidebar's Now badge and
-   never makes Now "not clear": **Nothing needs you** looks at the first three. Who finished a task:
-   the agent that filed a report at the moment it closed (a report within five seconds of the
-   completion, or later), else me.
+The sidebar count is the rows of From your agents plus Today. **Nothing needs you.** When those
+three sections are empty (Done today may still show): the empty state under the composer,
+`Nothing needs you right now` and in secondary `Your agents are at work. Whatever happens shows up
+here.` (zh `现在没有要你处理的事` / `Agent 们在干活，有动静会出现在这里`), with a "How to connect" link.
 
-**Nothing needs you.** When the first three sections are empty (Done today may still show below it): the
-empty state under the composer (see **Avatars and icons**), `Nothing needs you right now` and in
-secondary `Your agents are at work. Whatever happens shows up here.` (zh `现在没有要你处理的事` /
-`Agent 们在干活，有动静会出现在这里`), with a "How to connect" link (opens Settings).
+Tight rows (the inspector open on a small window): the project name goes below 600 pt of content;
+the branch, pull request and age below 460 pt.
+
+### Agents
+
+Header: `Agents` / `Agent` in `title` + `3 working` / `3 个在做` in `text.tertiary` (nothing when
+none). The composer's placeholder is `Ask what your agents are doing` / `问问 Agent 们在做什么`.
+Frame 2 of v5.
+
+1. **Working** / `在做` — agent tasks in doing or blocked, newest report first, across all
+   projects. A row: the agent's 18 pt avatar, the title, one meta line `Claude Code · main · what it
+   said; next: …` (agent, branch when the row is wide enough, summary), and at the right the live
+   dot (last report under 10 minutes old) or, for a blocked task, a `Blocked` pill, then the age.
+   Its subtasks hang under it on a 1 pt `border` rail that starts at the middle of the avatar:
+   12 pt avatar, title in `body`, a status pill and the age. Pills are 13 pt `meta` labels on a
+   12 % tint of the status color: `Done` / `完成` (green), `Doing` / `进行中` (blue), `Handed back`
+   / `交回主代理` (grey, an agent in review: the main agent reviews it, not the user), other
+   statuses by their own name. Cancelled subtasks are left out. A click on a subtask opens it; on
+   the parent, the parent.
+2. **Done today** / `今天做完` — agent tasks finished since midnight, newest first, five at most:
+   the title in `text.secondary`, `3 subtasks` / `3 个子任务` when it had any, and the time. Their
+   subtasks are not rows.
+
+Nothing at work and nothing finished: the empty state `No agents at work` / `没有 Agent 在做事`
+with `When an agent reports its progress, it shows up here.` and the "How to connect" link.
+
+### Subtasks
+
+A subtask is a task with a parent (`Task.ParentID`): the work a subagent reports under the task of
+the agent that started it. **A subtask never gets a row of its own** in a project's list, the board,
+the Inbox, Mine, Agents, Completed, the calendar or the sidebar counts; it shows only under its
+parent on Agents, and in two other places:
+
+- **Search** finds subtasks like any task and puts the parent's title where a result keeps its
+  project name (`Port the MCP tools  Port core to Go`).
+- **The inspector** of a parent lists its subtasks under the properties (header `Subtasks` /
+  `子任务`, 12 pt avatar, title, status pill; every one, cancelled included; a click opens it). The
+  inspector of a subtask has a `Parent` / `父任务` row (`IconBranch`) with the parent's title as an
+  accent link that opens it.
+
+### The hop
+
+When an agent hands something over and the user is not looking at Mine, the agent's 24 pt sprite
+jumps from the Agents row to the Mine row (frame 3 of v5): it rises from the avatar of the Agents
+row, arcs (the top is 30 pt above the Mine row), lands left of Mine's badge, squashes (30 % wider and
+shorter, feet on the row) and settles; the badge counts up as it lands. 0.9 s (648 ms in the air).
+Several items hop 120 ms apart, three at most at once; the others count at once. The motion is
+`theme.HopAt`, a function of the time since take-off and of the two rows' rectangles (the rows'
+`Bounds()` of the frame before), drawn in a `ui.Overlay` from the app's clock, **only while a hop
+plays**: a frame is asked for every 16 ms meanwhile and none when it is over or when nothing hops
+(`hopper.asked`, tested with the fake clock). With **Reduce Motion** nothing moves: the badge counts
+at once and fades in over 160 ms.
+
+"New" means a row of From your agents the user has not seen: shown with its hand-over time (the
+latest report; the due time of a reminder; GitHub's report for a pull request) later than the one
+recorded. **Seen** is recorded per task id with that time, in `seen.json` in the data folder
+(`data.FileSeen`; the demo keeps it in memory), whenever Mine is shown, and entries of tasks that no
+longer exist are dropped. A row handed over again (a newer report) is new again. A launch that finds
+rows recorded as seen does not hop for them.
 
 ### Composer
 
-One component, four places: the top of **Now**, the top of **every project** (under the header, above
+One component, five places: the top of **Mine**, of **Agents**, the top of **every project** (under the header, above
 the list or the board), the top of the **Inbox**, and the bottom of the **inspector**. It replaces the
 old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
 none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
@@ -257,7 +319,7 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **At rest.** One line, 50 pt tall, 12 pt radius, `bg.subtle`, **no border, no shadow**; a 16 pt
   assistant avatar (18 pt) at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
   `text.tertiary`; `⌘K` in `meta` `text.tertiary` at the right (not in the inspector's). The
-  placeholder is short: Now `Tell me anything — I'll turn it into tasks`; a project and the Inbox
+  placeholder is short: Mine `Tell me anything — I'll turn it into tasks`, Agents `Ask what your agents are doing`; a project and the Inbox
   `Add a task, or ask me anything`; the inspector `Change anything about this task`.
 - **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
   ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the avatar and `⌘K` give
@@ -270,10 +332,10 @@ page's title already says where a task goes, so the input has no label, no chip 
   else leaves the field. `↓` on a page walks into the rows. `↵` on an empty field opens the highlighted
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
 - **No model connected.** The same field; `↵` adds a plain task in the place of the page (a project,
-  the Inbox; Now → Inbox) and a quiet `✓ Added to Inbox` line shows 1.5 s under the field. The only
+  the Inbox; Mine → Inbox) and a quiet `✓ Added to Inbox` line shows 1.5 s under the field. The only
   extra is the line `Set up the assistant` (a link to Settings > Assistant) under the field while it
   is focused and empty. The inspector's composer is not drawn without a model.
-- **Scope.** The composer tells the assistant where it is. On Now: nothing (new tasks go to the
+- **Scope.** The composer tells the assistant where it is. On Mine and Agents: nothing (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
   the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”
   mean it.
@@ -302,7 +364,7 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
     title is what the words made of it: a deadline as its day (`Fri`; a time only when one was said,
     `Fri 3:00 PM`; `18:00` is the assistant's default end of day and reads as the day alone), a
     reminder as `Tomorrow 9:00 AM · reminder`, `P1` when the priority is not the default, and the
-    project or `Inbox` only when it is not the page the words were typed on (on Now, a task in the
+    project or `Inbox` only when it is not the page the words were typed on (on Mine, a task in the
     Inbox says nothing). Up to **three** lines; more receipts end in `and 1 more` (`meta`-quiet, no
     Undo). Clicking a line opens the task. After Undo the title is struck through in `text.tertiary`
     and the line says `Undone`. In the inspector the same lines sit above its box and leave the
@@ -310,7 +372,7 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   - *It changed nothing* but said something: one grey line, the assistant's 12 pt avatar and
     its sentence in `text.secondary`.
   - *A question*: the question in `body`, its 2 to 4 options as small tinted buttons below (the
-    style of the Needs you actions), wrapping when they must. A click sends the option as the
+    style of the From your agents buttons), wrapping when they must. A click sends the option as the
     answer; typing a free one works too (the placeholder says `Type an answer, or pick one below`).
     A question **stays until it is answered**; once answered its buttons are gone.
   - *An error*: neutral words ("Couldn't reach the model. Is the address right and the server
@@ -326,7 +388,7 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
   field's own. (The task menu's Delete keeps its own Undo toast.)
 - **No model connected.** See **Composer**.
-- Times in receipts follow the Now screen's words: `Today`, `Tomorrow`, a weekday, then a date,
+- Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`) when there is one to say.
 
 ### Project
@@ -395,18 +457,17 @@ Decisions made while building it (2026-10-14):
 - **One word per status**, everywhere (list groups, board lanes, the inspector, the menu strips
   and their accessibility labels, receipts, Chinese too): Backlog, To do, Doing, Blocked, In review,
   Done, Cancelled. The stale label is `3d stale` in the list and on a card, with no `!`.
-- **Review without a PR** still goes to Needs you (summary "Ready for your review", action Open).
-  A review task of my own does not: it waits on someone else.
-- **Yours** shows dated tasks due within 7 days (or overdue); later ones appear in their project or
-  the Inbox only.
-- **Reminders** stay in Needs you until marked done; the notification fires once, the row does not
+- **Review without a PR** still goes to From your agents (`Claude Code finished and is waiting for
+  you`, action Review). A review task of my own does not: it waits on someone else.
+- **Later** shows dated tasks due within 7 days; later ones appear in their project or the Inbox only.
+- **Reminders** stay in Today (an agent task's in From your agents) until marked done; the notification fires once, the row does not
   go away.
-- **Tight rows** (the inspector open on a small window): Now's rows drop the project name below 600 pt of
-  content, and the branch, pull request and age below 460 pt. Needs you rows with two buttons put
-  them under the summary below 560 pt, and every Needs you row does below 420 pt (the 860 pt window
+- **Tight rows** (the inspector open on a small window): Mine's rows drop the project name below 600 pt of
+  content, and the branch, pull request and age below 460 pt. From your agents rows with two buttons put
+  them under the summary below 560 pt, and every such row does below 420 pt (the 860 pt window
   with the inspector open leaves 282 pt), so the title keeps its width. A finished row drops who
   finished it below 460 pt and what they said below 600 pt.
-- A notification click opens the task in the inspector over Now.
+- A notification click opens the task in the inspector over Mine.
 
 ### Inbox
 
@@ -439,7 +500,7 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
 ### Task menu
 
 Our own popover, not the system's, so it can show the status glyphs and priority as one-click
-strips. The same menu on every surface that shows the task (list rows, Now rows, search and
+strips. The same menu on every surface that shows the task (list rows, Mine rows, search and
 Completed rows, board cards), opened by:
 
 - a **right-click** on a row or card (at the pointer);
@@ -498,7 +559,7 @@ project and the Inbox, whatever their status, done and cancelled included (the t
 projects are left out), matching every word of the query in the title, notes or branch, or a pull
 request number (`#42` and `42`). They are grouped by project, the Inbox last, groups ordered by the
 newest task in them. Group header: `#` mark (a tray for the Inbox), project name in `body.strong`, count in `text.tertiary`.
-Row: status glyph (a button, like on Now), title, branch pill and `#PR`, and at the right the age of
+Row: status glyph (a button, like on Mine), title, branch pill and `#PR`, and at the right the age of
 the last change. Done and cancelled rows keep their glyph (a button, so a finished task can be reopened from here).
 
 - **No match**: `No tasks match “xyz”` and, in secondary, `Search looks in titles, notes, branches and
@@ -514,7 +575,7 @@ the last change. Done and cancelled rows keep their glyph (a button, so a finish
 
 The `Completed` sidebar item (`已完成`, was Logbook), under Inbox: the done and cancelled tasks of every
 active project and the Inbox, newest first by completion, grouped by day. Page title `Completed`,
-subtitle `Done and cancelled, newest first`. Now's `Show all in Completed` and a list's
+subtitle `Done and cancelled, newest first`. Mine's `Show all in Completed` and a list's
 `Show all` lead the eye here. Day header in `body.strong` with the count in `text.tertiary`: `Today`, `Yesterday`,
 then a date (`Oct 12`, `Oct 12, 2025` in another year), written by `app/words`. Row: the status glyph
 (done check or cancelled slash, a button: choosing another status reopens the task), title, project
@@ -592,7 +653,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed, `⌘4` Calendar.
+inspector, then clears the selection, then the search · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed.
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant

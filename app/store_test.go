@@ -69,6 +69,33 @@ func TestOpenBackendUsesTheEnvironmentDatabase(t *testing.T) {
 	}
 }
 
+func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("ADHD_TODO_DB", filepath.Join(dir, "my.db"))
+	be, err := openBackend(false, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = be.close() }()
+	file, ok := be.seen.(data.FileSeen)
+	if !ok || file.Path != filepath.Join(dir, seenFile) {
+		t.Fatalf("seen store %#v, want a file named %s in the data folder", be.seen, seenFile)
+	}
+	if err := file.SaveSeen(data.Seen{4: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := file.LoadSeen(); len(got) != 1 {
+		t.Errorf("loaded %v", got)
+	}
+	fake, err := openBackend(true, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := fake.seen.(*data.MemorySeen); !ok {
+		t.Errorf("the demo keeps seen in %T, want memory", fake.seen)
+	}
+}
+
 func TestOpenBackendFakes(t *testing.T) {
 	for _, tc := range []struct {
 		fake, empty bool

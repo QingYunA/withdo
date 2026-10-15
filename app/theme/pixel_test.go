@@ -1,6 +1,24 @@
 package theme
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/egoist/mygo/ui"
+)
+
+func TestAccentBotIsTheRobotInTheAccentColorAndIsMadeOncePerColor(t *testing.T) {
+	accent := ui.Hex("#5B5BD6")
+	a, b := AccentBot(accent), AccentBot(accent)
+	if a.Sprite() != b.Sprite() {
+		t.Error("the same color made two sprites")
+	}
+	if a.Sprite().Palette['m'] != accent || len(a.Sprite().Rows) != AvatarGrid {
+		t.Errorf("palette %v", a.Sprite().Palette)
+	}
+	if AccentBot(ui.Hex("#7C7CF0")).Sprite() == a.Sprite() {
+		t.Error("another color shares the sprite")
+	}
+}
 
 func TestSpritesAreTwelveSquareAndUseTheirPalette(t *testing.T) {
 	all := map[string]*Sprite{"you": spriteYou, "assistant": spriteAssistant, "claude": spriteClaude,
