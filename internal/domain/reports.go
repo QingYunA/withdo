@@ -143,6 +143,10 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 	if err != nil {
 		return nil, err
 	}
+	// An agent reporting into an archived project is working there again.
+	if err := c.unarchiveByID(ctx, q, task.ProjectID); err != nil {
+		return nil, err
+	}
 	// Always touch the task so updated_at reflects the report. A task found by
 	// branch only takes status and PR; one targeted by id also takes the branch.
 	patch := TaskPatch{Status: in.Status}
