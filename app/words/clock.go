@@ -5,6 +5,8 @@
 package words
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -162,3 +164,33 @@ func (k Clock) DayShort(t, now time.Time) string { return k.day(t.In(now.Locatio
 // Day names the calendar day of t as a heading: "Today", "Yesterday", the weekday inside the next
 // six days, otherwise a date.
 func (k Clock) Day(t, now time.Time) string { return k.day(t, now, false) }
+
+// MonthTitle is the month the calendar shows, as its title: "October 2026" or "2026 年 10 月".
+func (k Clock) MonthTitle(t time.Time) string {
+	return k.Say.CalendarMonthTitle(k.Say.CalendarMonthFull(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Year()))
+}
+
+// CalendarDay is a day as the composer names it on the calendar: "Fri, Oct 16" or "10 月 16 日周五".
+func (k Clock) CalendarDay(t time.Time) string {
+	return k.Say.CalendarDayLabel(k.Weekday(t), k.Say.CalendarMonthShort(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Day()))
+}
+
+// MonthDay is the label of the first day of a month in the grid: "Nov 1" or "11 月 1 日".
+func (k Clock) MonthDay(t time.Time) string {
+	return k.Say.CalendarMonthDay(k.Say.CalendarMonthShort(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Day()))
+}
+
+// Weekday is the short weekday: "Mon" or "周一".
+func (k Clock) Weekday(t time.Time) string { return k.format(t, "EEE") }
+
+// FirstWeekday is the day the calendar's weeks start on: the one the user's system says, and
+// without a system region Monday for Chinese and Sunday for the rest.
+func FirstWeekday(language string, region i18n.Region) time.Weekday {
+	switch {
+	case region.Locale != "":
+		return region.FirstWeekday
+	case strings.HasPrefix(language, "zh"):
+		return time.Monday
+	}
+	return time.Sunday
+}

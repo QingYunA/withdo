@@ -23,6 +23,7 @@ const (
 	screenInbox
 	screenProject
 	screenCompleted
+	screenCalendar
 )
 
 // nav says what the sidebar selected: Now, the Inbox, or a project. It is comparable, so it keys
@@ -38,8 +39,9 @@ type Main struct {
 
 	// say and clock word the interface in the language and formats the window shows; View sets
 	// them every frame.
-	say   locales.Messages
-	clock words.Clock
+	say       locales.Messages
+	clock     words.Clock
+	weekStart time.Weekday // the day the calendar's weeks start on
 
 	nav    nav
 	openID int // task open in the inspector, 0 for none
@@ -56,9 +58,10 @@ type Main struct {
 	expanded  map[nav]bool // Done and Backlog opened under a list
 	allDone   map[nav]bool // every Done task, not the recent three or five
 
-	manage    manageState // the sheets, renaming, search and Completed
-	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
-	renameRef ui.Handle   // the input that renames a project in the sidebar
+	cal       calendarState // the Calendar page: its month and its selected day
+	manage    manageState   // the sheets, renaming, search and Completed
+	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
+	renameRef ui.Handle     // the input that renames a project in the sidebar
 
 	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
 	convo   convo                        // the answer under the composer that sent the last request
@@ -108,6 +111,7 @@ func (m *Main) goTo(n nav) {
 func (m *Main) View(c *ui.Context) {
 	t := theme.Resolve(c)
 	m.say, m.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
+	m.weekStart = firstWeekday(c)
 	vibrant := c.Vibrancy()
 	if vibrant {
 		c.Root().Background(ui.Transparent)
@@ -151,6 +155,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 			m.page(c, t, func() { m.nowScreen(c, t, now) })
 		case m.nav.screen == screenCompleted:
 			m.page(c, t, func() { m.completedScreen(c, t) })
+		case m.nav.screen == screenCalendar:
+			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
 		case m.boardActive():
 			m.boardScreen(c, t)
 		default:
@@ -196,10 +202,15 @@ func (m *Main) sidePad(c *ui.Context) float32 {
 // page scrolls a centered column of at most 820 pt, the way a document reads. The column is the
 // keyboard's focus, so the arrow keys and Space work as soon as the screen opens.
 func (m *Main) page(c *ui.Context, t *theme.Tokens, body func()) {
+	m.pageIn(c, t, theme.ContentMax, body)
+}
+
+// pageIn is page for a column of at most maxWidth.
+func (m *Main) pageIn(c *ui.Context, t *theme.Tokens, maxWidth float32, body func()) {
 	pad := m.sidePad(c)
 	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
-			col := ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad, 48).Focusable().FocusRing(false)
+			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, 48).Focusable().FocusRing(false)
 			if !m.focusComposer && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
 				col.AutoFocus()
 			}

@@ -35,14 +35,15 @@ type composer struct {
 	setUpHover bool
 }
 
-// pageHasComposer reports whether the screen shows a composer: Now, a project and the Inbox do;
+// pageHasComposer reports whether the screen shows a composer: Now, a project, the Inbox and the
+// Calendar do;
 // the Completed page and the search results do not.
 func (m *Main) pageHasComposer() bool {
 	if m.searching() {
 		return false
 	}
 	switch m.nav.screen {
-	case screenNow, screenInbox, screenProject:
+	case screenNow, screenInbox, screenProject, screenCalendar:
 		return true
 	}
 	return false
@@ -58,6 +59,8 @@ func (m *Main) placeOf(s surface) data.Place {
 		return data.Place{Kind: data.PlaceInbox}
 	case screenProject:
 		return data.Place{Kind: data.PlaceProject, ProjectID: m.nav.projectID}
+	case screenCalendar:
+		return m.calendarPlace()
 	}
 	return data.Place{Kind: data.PlaceNow}
 }
@@ -182,6 +185,10 @@ func (m *Main) addPlain(text string) {
 	project := ""
 	if place.Kind == data.PlaceProject {
 		in.ProjectID, project = data.IntPtr(place.ProjectID), m.app.projectName(&place.ProjectID)
+	}
+	if place.Kind == data.PlaceCalendar { // a plain task added to a day is due that day, at the end of it
+		due := data.EndOfDay(m.calendarDay())
+		in.DueAt = &due
 	}
 	if err := m.app.AddTask(in); err != nil {
 		return
