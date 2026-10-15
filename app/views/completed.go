@@ -44,8 +44,8 @@ func (m *Main) completedTasks() []data.Task {
 	if l.more {
 		tasks = tasks[:l.limit]
 	}
-	l.tasks = tasks
-	return tasks
+	l.tasks = topLevel(tasks) // a finished subtask is part of its parent's story
+	return l.tasks
 }
 
 // completedDays groups the tasks by the day they were finished, in the order they come.

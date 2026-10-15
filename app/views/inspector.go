@@ -69,6 +69,7 @@ func (m *Main) inspectorPane(c *ui.Context, t *theme.Tokens) {
 				ui.Column(c).Padding(20, 24, 32).Gap(20).Children(func() {
 					m.titleField(c, t, task)
 					m.properties(c, t, task)
+					m.subtasks(c, t, task)
 					m.notesField(c, t, task)
 					m.activity(c, t, task)
 					m.deleteTaskButton(c, t, task)

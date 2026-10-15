@@ -34,7 +34,7 @@ func main() {
 		Home:           home,
 		Version:        version,
 	})
-	app.Assistant, app.Models, app.GitHub = be.assistant, be.models, be.github
+	app.Assistant, app.Models, app.GitHub, app.Seen = be.assistant, be.models, be.github, be.seen
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
 

@@ -181,6 +181,7 @@ const (
 // Layout metrics shared by several surfaces.
 const (
 	GlyphSize      float32 = 18
+	BadgeSize      float32 = 18 // the red count beside Mine
 	IconProp       float32 = 14 // the line icon before a property's label in the inspector
 	IconMenu       float32 = 15 // the line icon before an item of the drawn task menu
 	HitTarget      float32 = 24

@@ -218,7 +218,7 @@ func TestArchivingTheOpenProjectGoesToNow(t *testing.T) {
 	if slices.Contains(projectNames(app), "picpocket") {
 		t.Errorf("the archived project is still listed: %v", projectNames(app))
 	}
-	if m.nav.screen != screenNow {
+	if m.nav.screen != screenMine {
 		t.Errorf("nav = %+v: archiving the open project goes to Now", m.nav)
 	}
 	if tt.HasText("Export thumbnails to HEIC") {
@@ -272,7 +272,7 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	if slices.Contains(projectNames(app), "adhd-todo") || app.taskCount(1) != 0 {
 		t.Errorf("project %v, tasks %d", projectNames(app), app.taskCount(1))
 	}
-	if m.nav.screen != screenNow {
+	if m.nav.screen != screenMine {
 		t.Errorf("nav = %+v: deleting the open project goes to Now", m.nav)
 	}
 }

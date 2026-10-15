@@ -47,7 +47,11 @@ type App struct {
 	Models    data.ModelSettings
 	// GitHub is the pull request poller behind Settings > GitHub; nil leaves the pane empty.
 	GitHub data.GitHub
+	// Seen keeps which handed-over items the user has seen; nil keeps that for this run only.
+	Seen data.SeenStore
 
+	seen       data.Seen
+	seenLoaded bool
 	snap       snapshot
 	rev        int // counts the snapshots, so a search or Completed knows its answer is old
 	completing map[int]completion
@@ -211,12 +215,38 @@ func (a *App) firstReport(id int, github bool) *data.Report {
 	return nil
 }
 
-// buildNow sorts the snapshot into the sections of the Now screen. A task that was just marked
-// done stays in its place while its completion plays.
-func (a *App) buildNow() data.Now {
+// mineInput is what the Mine and Agents screens are built from. A task that was just marked done
+// stays in its place while its completion plays.
+func (a *App) mineInput() data.MineInput {
 	tasks := a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
-	return data.BuildNow(data.NowInput{
+	return data.MineInput{
 		Now: a.Now(), Tasks: tasks, StaleHours: a.snap.overview.StaleHours,
 		Latest: a.latestReport, Event: a.githubReport, ProjectName: a.projectName,
-	})
+	}
+}
+
+// buildMine sorts the snapshot into the sections of the Mine screen.
+func (a *App) buildMine() data.Mine { return data.BuildMine(a.mineInput()) }
+
+// buildAgents lists what the agents are doing, with their subtasks.
+func (a *App) buildAgents() data.AgentsScreen { return data.BuildAgents(a.mineInput()) }
+
+// topLevel are the tasks that get a row of their own: the snapshot without the subtasks, which live
+// under their parent.
+func topLevel(tasks []data.Task) []data.Task {
+	out := make([]data.Task, 0, len(tasks))
+	for _, t := range tasks {
+		if !t.IsSubtask() {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// parentOf is the task a subtask belongs to, when it is in the snapshot.
+func (a *App) parentOf(t data.Task) (data.Task, bool) {
+	if t.ParentID == nil {
+		return data.Task{}, false
+	}
+	return a.Task(*t.ParentID)
 }

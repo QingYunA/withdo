@@ -62,9 +62,9 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	}
 }
 
-func TestSidebarListsNowInboxAndProjects(t *testing.T) {
+func TestSidebarListsMineAgentsInboxAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Now", "Inbox", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+	for _, want := range []string{"Mine", "Agents", "Inbox", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
 		if !tt.HasText(want) {
 			t.Errorf("sidebar is missing %q", want)
 		}
@@ -81,18 +81,25 @@ func TestSidebarListsNowInboxAndProjects(t *testing.T) {
 	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") {
 		t.Errorf("inbox shows %q", tt.Texts())
 	}
-	if err := tt.Click("Now"); err != nil {
+	if err := tt.Click("Agents"); err != nil {
 		t.Fatal(err)
 	}
-	if m.nav.screen != screenNow {
-		t.Error("Now did not open")
+	if m.nav.screen != screenAgents || !tt.HasText("3 working") {
+		t.Errorf("Agents did not open: %+v", m.nav)
+	}
+	if err := tt.Click("Mine"); err != nil {
+		t.Fatal(err)
+	}
+	if m.nav.screen != screenMine {
+		t.Error("Mine did not open")
 	}
 }
 
 func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	// Now counts every row of its three sections; Inbox the open inbox tasks; a project with a
-	// blocked task shows a dot instead of its count.
+	// Mine counts what is handed over and what is due today (and nothing it has not seen: the first
+	// frame is on Mine); Agents the tasks at work, never their subtasks; Inbox the open inbox tasks;
+	// a project with a blocked task shows a dot instead of its count.
 	got := tt.Texts()
 	idx := func(s string) int {
 		for i, x := range got {
@@ -102,20 +109,20 @@ func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 		}
 		return -1
 	}
-	if got[idx("Now")+1] != "9" || got[idx("Inbox")+1] != "3" {
-		t.Errorf("counts after Now and Inbox: %q", got[:8])
+	if got[idx("Mine")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Inbox")+1] != "3" {
+		t.Errorf("counts after Mine, Agents and Inbox: %q", got[:10])
 	}
 	if got[idx("adhd-todo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
 		t.Errorf("project counts: %q", got[:14])
 	}
 }
 
-func TestOpenTaskFromANotificationShowsItOverNow(t *testing.T) {
+func TestOpenTaskFromANotificationShowsItOverMine(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 2})
 	m.OpenTask(7)
 	tt.Frame()
-	if m.nav.screen != screenNow || m.openID != 7 || !tt.HasText("Activity") {
+	if m.nav.screen != screenMine || m.openID != 7 || !tt.HasText("Activity") {
 		t.Errorf("nav %+v open %d", m.nav, m.openID)
 	}
 	m.OpenTask(99999) // a task that no longer exists changes nothing

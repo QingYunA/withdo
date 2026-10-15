@@ -14,6 +14,9 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/providers"
 )
 
+// seenFile is the record of the handed-over rows the user has seen, in the data folder.
+const seenFile = "seen.json"
+
 // ghRunner runs the gh CLI for the pull request poller. Tests replace it: they never reach GitHub.
 var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 
@@ -31,6 +34,8 @@ type backend struct {
 	models    data.ModelSettings
 	// github is the pull request poller behind Settings > GitHub.
 	github data.GitHub
+	// seen keeps which handed-over rows of Mine the user has seen, between runs.
+	seen data.SeenStore
 }
 
 // openBackend returns the fake (with seed data, or empty) when asked for, otherwise the shared
@@ -69,6 +74,7 @@ func openReal(path string) (*backend, error) {
 		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr},
 		models:     &data.ProviderSettings{Provider: mgr},
 		github:     data.PollerGitHub{Poller: poller},
+		seen:       data.FileSeen{Path: filepath.Join(dir, seenFile)},
 	}, nil
 }
 
@@ -84,6 +90,7 @@ func openFake(empty bool) *backend {
 		dataFolder: "(in-memory demo data)",
 		start:      func(stop <-chan struct{}) { go tickFake(f, stop) },
 		models:     demoModels(),
+		seen:       &data.MemorySeen{},
 		github:     data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: time.Now()}),
 	}
 }

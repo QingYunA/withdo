@@ -472,12 +472,12 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 
 func TestTheLinePushesTheSectionsDown(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
-	before, _ := r.tt.Find("Needs you")
+	before, _ := r.tt.Find("From your agents")
 	r.ask("remind me")
 	r.answer(t)
-	after, _ := r.tt.Find("Needs you")
+	after, _ := r.tt.Find("From your agents")
 	if after.Y <= before.Y+40 {
-		t.Errorf("Needs you moved from %v to %v; the sheet should push it down", before.Y, after.Y)
+		t.Errorf("From your agents moved from %v to %v; the sheet should push it down", before.Y, after.Y)
 	}
 }
 

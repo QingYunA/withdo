@@ -39,7 +39,7 @@ func zhShot(t *testing.T, name string, app *App, dark bool, setup func(tt *ui.Te
 func TestScreensChineseSeed(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := newTestApp(t)
-		zhShot(t, "now-zh-"+a.suffix+".png", app, a.dark, nil)
+		zhShot(t, "mine-zh-"+a.suffix+".png", app, a.dark, nil)
 		zhShot(t, "project-list-zh-"+a.suffix+".png", app, a.dark, toProject(1))
 		zhShot(t, "project-board-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			toProject(1)(tt, m)
@@ -48,7 +48,7 @@ func TestScreensChineseSeed(t *testing.T) {
 		zhShot(t, "inbox-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 		zhShot(t, "inspector-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
 		empty, _ := newEmptyApp(t)
-		zhShot(t, "now-empty-zh-"+a.suffix+".png", empty, a.dark, nil)
+		zhShot(t, "mine-empty-zh-"+a.suffix+".png", empty, a.dark, nil)
 	}
 }
 
@@ -69,14 +69,14 @@ func TestScreensChineseConversation(t *testing.T) {
 				{ID: 1, TaskID: task.ID, Title: "开会", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
 			}}, nil
 		}
-		zhShot(t, "now-reply-receipt-zh-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "明天九点提醒我开会", true))
+		zhShot(t, "mine-reply-receipt-zh-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "明天九点提醒我开会", true))
 
 		q := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Question: &data.Question{
 			Text:    "有两个任务匹配“发布说明”，哪一个完成了？",
 			Options: []string{"Write the release notes", "Release notes for v0.2"},
 		}}, nil)}
 		qapp, _, qrec := assistApp(t, q)
-		zhShot(t, "now-question-zh-"+a.suffix+".png", qapp, a.dark, sendAnd(t, qrec, "发布说明写完了", true))
+		zhShot(t, "mine-question-zh-"+a.suffix+".png", qapp, a.dark, sendAnd(t, qrec, "发布说明写完了", true))
 	}
 }
 
@@ -93,7 +93,7 @@ func TestScreensChineseRealShape(t *testing.T) {
 		}
 		app := NewApp(r, &recorder{}, testConfig())
 		app.Now = func() time.Time { return now }
-		zhShot(t, "now-real-zh-"+a.suffix+".png", app, a.dark, nil)
+		zhShot(t, "mine-real-zh-"+a.suffix+".png", app, a.dark, nil)
 		ps, _ := r.ListProjects()
 		for _, p := range ps {
 			if p.RepoSlug != "" {

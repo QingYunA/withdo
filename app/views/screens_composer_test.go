@@ -80,14 +80,14 @@ func TestScreensComposer(t *testing.T) {
 			}
 
 			empty, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
-			shotOf("now-composer-empty", empty, nil)
+			shotOf("mine-composer-empty", empty, nil)
 			typed, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
-			shotOf("now-composer-typed", typed, func(tt *ui.Tester, m *Main) {
+			shotOf("mine-composer-typed", typed, func(tt *ui.Tester, m *Main) {
 				tt.Key(ui.Cmd, ui.KeyK)
 				tt.Type(text)
 			})
 			long, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
-			shotOf("now-composer-long", long, func(tt *ui.Tester, m *Main) {
+			shotOf("mine-composer-long", long, func(tt *ui.Tester, m *Main) {
 				tt.Key(ui.Cmd, ui.KeyK)
 				for i, line := range []string{text, "ask Anna about the invoice", "book the dentist for next week", "check the build on main"} {
 					if i > 0 {
@@ -97,7 +97,7 @@ func TestScreensComposer(t *testing.T) {
 				}
 			})
 			off, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})
-			shotOf("now-composer-no-model", off, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) }) // focused: the one extra line shows
+			shotOf("mine-composer-no-model", off, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) }) // focused: the one extra line shows
 
 			fa := &data.FakeAssistant{Ready: true}
 			app, store, rec := readyApp(t, fa)

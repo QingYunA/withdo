@@ -3,6 +3,7 @@ package theme
 import (
 	"hash/fnv"
 	"strings"
+	"sync"
 
 	"github.com/egoist/mygo/ui"
 )
@@ -191,12 +192,34 @@ func bot(name string) *Sprite {
 		_, _ = h.Write([]byte(strings.ToLower(name)))
 		tint = botTints[1+int(h.Sum32()%uint32(len(botTints)-1))]
 	}
-	base := ui.Hex(tint)
+	return botIn(ui.Hex(tint))
+}
+
+// botIn is the robot in one color.
+func botIn(base ui.Color) *Sprite {
 	return &Sprite{Rows: botRows, Palette: map[rune]ui.Color{
 		'm': base, 'd': base.Mix(ui.Hex("#000000"), 0.22), 'a': base.Mix(ui.Hex("#FFFFFF"), 0.45),
 		'w': ui.Hex("#FFFFFF"), 'e': ui.Hex("#2A2A33"),
 	}}
 }
+
+// AccentBot is the robot in the accent color: the sidebar's Agents row, which stands for all of
+// them. The sprites are made once per color.
+func AccentBot(accent ui.Color) Who {
+	accentBots.mu.Lock()
+	defer accentBots.mu.Unlock()
+	sp, ok := accentBots.by[accent]
+	if !ok {
+		sp = botIn(accent)
+		accentBots.by[accent] = sp
+	}
+	return Who{Kind: AvatarOther, sprite: sp}
+}
+
+var accentBots = struct {
+	mu sync.Mutex
+	by map[ui.Color]*Sprite
+}{by: map[ui.Color]*Sprite{}}
 
 // Sprite returns the drawing behind an avatar.
 func (w Who) Sprite() *Sprite {
@@ -219,9 +242,10 @@ func SpriteIcon(c *ui.Context, s *Sprite, size float32) ui.Element {
 	})
 }
 
-// DrawSprite fills r with the sprite's pixels, runs of one color as one rectangle.
+// DrawSprite fills r with the sprite's pixels, runs of one color as one rectangle. A rectangle that
+// is not in the sprite's proportion stretches its pixels: the hop squashes the sprite this way.
 func DrawSprite(p *ui.Painter, r ui.Rect, s *Sprite) {
-	u := r.H / float32(s.Height())
+	ux, uy := r.W/float32(s.Width()), r.H/float32(s.Height())
 	for y, row := range s.Rows {
 		runes := []rune(row)
 		for x := 0; x < len(runes); {
@@ -231,7 +255,7 @@ func DrawSprite(p *ui.Painter, r ui.Rect, s *Sprite) {
 				end++
 			}
 			if col, ok := s.Palette[ch]; ok {
-				p.Fill(ui.Rect{X: r.X + float32(x)*u, Y: r.Y + float32(y)*u, W: float32(end-x) * u, H: u}, col, 0)
+				p.Fill(ui.Rect{X: r.X + float32(x)*ux, Y: r.Y + float32(y)*uy, W: float32(end-x) * ux, H: uy}, col, 0)
 			}
 			x = end
 		}

@@ -110,9 +110,9 @@ func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testi
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	// What sits under the composer moves with its height.
 	below := func() float32 {
-		rect, ok := r.tt.Find("Needs you")
+		rect, ok := r.tt.Find("From your agents")
 		if !ok {
-			t.Fatalf("no Needs you in %q", r.tt.Texts())
+			t.Fatalf("no From your agents in %q", r.tt.Texts())
 		}
 		return rect.Y
 	}

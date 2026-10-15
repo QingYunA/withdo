@@ -19,14 +19,15 @@ const dragStrip float32 = 24
 type screen int
 
 const (
-	screenNow screen = iota
+	screenMine screen = iota
+	screenAgents
 	screenInbox
 	screenProject
 	screenCompleted
 	screenCalendar
 )
 
-// nav says what the sidebar selected: Now, the Inbox, or a project. It is comparable, so it keys
+// nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
 // the per-screen state.
 type nav struct {
 	screen    screen
@@ -44,8 +45,11 @@ type Main struct {
 	weekStart time.Weekday // the day the calendar's weeks start on
 
 	nav    nav
-	openID int // task open in the inspector, 0 for none
-	sel    int // task the keyboard highlights, 0 for none
+	mine   data.Mine         // what the Mine screen shows this frame
+	agents data.AgentsScreen // what the Agents screen shows this frame
+	hop    hopper            // the hop to the Mine row, and the badge there
+	openID int               // task open in the inspector, 0 for none
+	sel    int               // task the keyboard highlights, 0 for none
 	moved  bool
 	width  float32 // the room the screen has this frame
 	// focusComposer is set by Cmd+K: the page's composer takes the focus once it is drawn.
@@ -77,7 +81,7 @@ type Main struct {
 	copied    time.Time
 }
 
-// NewMain opens on Now.
+// NewMain opens on Mine.
 func NewMain(a *App) *Main {
 	return &Main{
 		app: a, milestone: map[int]int{}, board: map[int]bool{},
@@ -85,7 +89,7 @@ func NewMain(a *App) *Main {
 	}
 }
 
-// OpenTask shows a task in the inspector, over the Now screen.
+// OpenTask shows a task in the inspector, over the Mine screen.
 func (m *Main) OpenTask(id int) {
 	if _, ok := m.app.Task(id); !ok {
 		return
@@ -128,31 +132,35 @@ func (m *Main) View(c *ui.Context) {
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)
-	now := m.app.buildNow()
-	ids := m.rowIDs(now)
+	m.mine, m.agents = m.app.buildMine(), m.app.buildAgents()
+	m.hopTick(c)
+	ids := m.rowIDs()
 	m.keys(c, ids)
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
-		m.sidebar(c, t, vibrant, now)
+		m.sidebar(c, t, vibrant)
 		vline(c, t)
-		m.content(c, t, now)
+		m.content(c, t)
 		m.inspectorPane(c, t)
 	})
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
 	m.taskMenuView(c, t)
+	m.hopOverlay(c)
 }
 
 // content is the screen the sidebar chose.
-func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
+func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c).Grow(1).MinWidth(0).Background(t.Bg).Children(func() {
 		ui.Box(c).Height(dragStrip).Shrink(0).DragWindow()
 		m.errorStrip(c, t)
 		switch {
 		case m.searching():
 			m.page(c, t, func() { m.searchScreen(c, t) })
-		case m.nav.screen == screenNow:
-			m.page(c, t, func() { m.nowScreen(c, t, now) })
+		case m.nav.screen == screenMine:
+			m.page(c, t, func() { m.mineScreen(c, t) })
+		case m.nav.screen == screenAgents:
+			m.page(c, t, func() { m.agentsScreen(c, t) })
 		case m.nav.screen == screenCompleted:
 			m.page(c, t, func() { m.completedScreen(c, t) })
 		case m.nav.screen == screenCalendar:

@@ -6,9 +6,12 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// sidebar is the source list over the window's material: Now, Inbox, then the projects, then
-// Settings at the bottom.
-func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.Now) {
+// sidebarRowPad is the padding inside a sidebar row, left and right.
+const sidebarRowPad float32 = 10
+
+// sidebar is the source list over the window's material: Mine and Agents, Inbox, Calendar and
+// Completed, then the projects, then Settings at the bottom.
+func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
 	if !vibrant {
 		side.Background(t.BgSubtle)
@@ -16,7 +19,8 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
 		m.searchField(c, t)
-		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
+		m.mineRow(c, t)
+		m.agentsRow(c, t)
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
 		m.navRow(c, t, "calendar", nav{screen: screenCalendar}, theme.IconCalendar, m.say.NavCalendar(), 0)
@@ -38,13 +42,66 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 // openCount counts what is on the plate: not done, not cancelled, not parked in the backlog.
 func openCount(tasks []data.Task, match func(data.Task) bool) (n int, blocked bool) {
 	for _, t := range tasks {
-		if !match(t) || t.Status.Terminal() || t.Status == data.Backlog {
+		if !match(t) || t.IsSubtask() || t.Status.Terminal() || t.Status == data.Backlog {
 			continue
 		}
 		n++
 		blocked = blocked || t.Status == data.Blocked
 	}
 	return n, blocked
+}
+
+// mineRow is Mine: the pixel you, and at the right the number of handed-over rows not seen yet in
+// a red badge, else how many rows wait on you.
+func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
+	to := nav{}
+	selected := m.nav == to && !m.searching()
+	row := sidebarRow(c, t, "mine", selected)
+	m.hop.mine = row.Bounds()
+	row.Children(func() {
+		avatarSlot(c, theme.You)
+		sidebarLabel(c, t, m.say.NavMine(), selected)
+		if n := m.hop.shown; n > 0 {
+			m.unseenBadge(c, t, n)
+		} else {
+			sidebarCount(c, t, m.mine.Count())
+		}
+	})
+	if row.Clicked() {
+		m.goTo(to)
+	}
+}
+
+// agentsRow is Agents: the robot in the accent color, and how many tasks are at work.
+func (m *Main) agentsRow(c *ui.Context, t *theme.Tokens) {
+	to := nav{screen: screenAgents}
+	selected := m.nav == to && !m.searching()
+	row := sidebarRow(c, t, "agents", selected)
+	m.hop.agents = row.Bounds()
+	row.Children(func() {
+		avatarSlot(c, theme.AccentBot(t.Accent))
+		sidebarLabel(c, t, m.say.NavAgents(), selected)
+		sidebarCount(c, t, m.agents.Count())
+	})
+	if row.Clicked() {
+		m.goTo(to)
+	}
+}
+
+// avatarSlot is an avatar in the place of a row's 16 pt icon: 18 pt wide, so it takes a point of the
+// row's gap on each side and the labels stay in line.
+func avatarSlot(c *ui.Context, who theme.Who) {
+	theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarRow).Margin(0, -1)
+}
+
+// unseenBadge is the red count of what agents handed over since the user last looked.
+func (m *Main) unseenBadge(c *ui.Context, t *theme.Tokens, n int) {
+	badge := ui.Row(c.Key("unseen")).Height(theme.BadgeSize).MinWidth(theme.BadgeSize).Padding(0, 5).Shrink(0).
+		Radius(theme.BadgeSize / 2).Background(t.Blocked()).AlignItems(ui.Center).Justify(ui.Center).Label(m.say.A11yMineUnseen(n))
+	if op := m.badgeOpacity(c); op < 1 {
+		badge.Opacity(op)
+	}
+	badge.Children(func() { theme.Text(c, theme.Badge, t.AccentText, itoa(n)) })
 }
 
 func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *ui.SVG, label string, count int) {
@@ -141,7 +198,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 
 // sidebarRow is a 32 pt row inset 10 pt, highlighted by selection or hover.
 func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Element {
-	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, 10).Gap(10).
+	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, sidebarRowPad).Gap(10).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case selected:

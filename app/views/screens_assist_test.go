@@ -37,7 +37,7 @@ func TestScreensAssistThinking(t *testing.T) {
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true, Block: make(chan struct{})}
 		app, _, rec := assistApp(t, fa)
-		mainShot(t, "now-thinking-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", false))
+		mainShot(t, "mine-thinking-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", false))
 	}
 }
 
@@ -58,7 +58,7 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 				{ID: 1, TaskID: task.ID, Title: "Team meeting", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
 			}}, nil
 		}
-		mainShot(t, "now-reply-receipt-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", true))
+		mainShot(t, "mine-reply-receipt-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", true))
 	}
 }
 
@@ -68,7 +68,7 @@ func TestScreensAssistSentenceAndSeveral(t *testing.T) {
 	for _, a := range appearances() {
 		sentence := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)}
 		app, _, rec := assistApp(t, sentence)
-		mainShot(t, "now-reply-sentence-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "write the release notes", true))
+		mainShot(t, "mine-reply-sentence-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "write the release notes", true))
 
 		fa := &data.FakeAssistant{Ready: true}
 		several, store, rec2 := assistApp(t, fa)
@@ -89,7 +89,7 @@ func TestScreensAssistSentenceAndSeveral(t *testing.T) {
 			}
 			return reply, nil
 		}
-		mainShot(t, "now-reply-receipts-"+a.suffix+".png", several, a.dark, sendAnd(t, rec2, "buy milk, call the dentist tomorrow, water the plants, send the invoice to Anna", true))
+		mainShot(t, "mine-reply-receipts-"+a.suffix+".png", several, a.dark, sendAnd(t, rec2, "buy milk, call the dentist tomorrow, water the plants, send the invoice to Anna", true))
 	}
 }
 
@@ -100,14 +100,14 @@ func TestScreensAssistQuestion(t *testing.T) {
 			Options: []string{"Write the release notes", "Release notes for v0.2"},
 		}}, nil)}
 		app, _, rec := assistApp(t, fa)
-		mainShot(t, "now-question-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "release notes are done", true))
+		mainShot(t, "mine-question-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "release notes are done", true))
 	}
 }
 
 func TestScreensAssistNoModel(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})
-		mainShot(t, "now-no-model-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) })
+		mainShot(t, "mine-no-model-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) })
 	}
 }
 

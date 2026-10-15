@@ -121,6 +121,7 @@ func BuildCalendar(in CalendarInput) []CalDay {
 	for _, t := range in.Tasks {
 		base := CalItem{Task: t, Agent: agent(t)}
 		switch {
+		case t.IsSubtask(): // a subtask is its parent's business, not a row of the day
 		case t.Status == Cancelled:
 		case t.Status == Done:
 			base.Kind = CalDone

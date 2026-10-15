@@ -23,9 +23,9 @@ func TestCompletedSitsUnderInboxInTheSidebar(t *testing.T) {
 	if !above(t, tt, "Inbox", "Completed") || !above(t, tt, "Completed", "Projects") {
 		t.Errorf("sidebar order: %q", tt.Texts())
 	}
-	tt.Key(ui.Cmd, ui.Key3)
+	tt.Key(ui.Cmd, ui.Key5)
 	if m.nav.screen != screenCompleted {
-		t.Errorf("Cmd+3 went to %+v", m.nav)
+		t.Errorf("Cmd+5 went to %+v", m.nav)
 	}
 }
 

@@ -35,15 +35,14 @@ type composer struct {
 	setUpHover bool
 }
 
-// pageHasComposer reports whether the screen shows a composer: Now, a project, the Inbox and the
-// Calendar do;
-// the Completed page and the search results do not.
+// pageHasComposer reports whether the screen shows a composer: Mine, Agents, a project, the Inbox and
+// the Calendar do; the Completed page and the search results do not.
 func (m *Main) pageHasComposer() bool {
 	if m.searching() {
 		return false
 	}
 	switch m.nav.screen {
-	case screenNow, screenInbox, screenProject, screenCalendar:
+	case screenMine, screenAgents, screenInbox, screenProject, screenCalendar:
 		return true
 	}
 	return false

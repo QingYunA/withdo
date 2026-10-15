@@ -269,6 +269,7 @@ func TestTaskMenuOnBoardCardsNowRowsSearchAndCompleted(t *testing.T) {
 
 func TestGlyphOfMyOwnTaskCompletesItAndAnAgentsOpensTheMenu(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
+	tt.SetSize(1100, 1200) // room under the glyph of Done today, which is near the bottom
 	click(t, tt, "Mark done: Book dentist")
 	if got, _ := app.Task(8); got.Status != data.Done {
 		t.Errorf("status %v after one click on the glyph", got.Status)
@@ -276,15 +277,15 @@ func TestGlyphOfMyOwnTaskCompletesItAndAnAgentsOpensTheMenu(t *testing.T) {
 	if m.pop.open || m.openID != 0 {
 		t.Errorf("menu open %v, inspector %d: the click should do one thing", m.pop.open, m.openID)
 	}
-	click(t, tt, "Status: Blocked") // Fix tray race on launch, an agent's
-	if !m.pop.open || m.pop.task != 3 || !tt.HasText("Set status to Done") {
+	click(t, tt, "Status: Done") // Port the MCP server, an agent's, in Done today
+	if !m.pop.open || m.pop.task != 20 || !tt.HasText("Set status to Doing") {
 		t.Errorf("an agent's glyph: menu open %v for %d", m.pop.open, m.pop.task)
 	}
-	if got, _ := app.Task(3); got.Status != data.Blocked {
+	if got, _ := app.Task(20); got.Status != data.Done {
 		t.Errorf("an agent's task changed to %v by a click on its glyph", got.Status)
 	}
 	// The menu hangs under the glyph.
-	g, _ := tt.Find("Status: Blocked")
+	g, _ := tt.Find("Status: Done")
 	s, _ := tt.Find("Set status to To do")
 	if s.Y < g.Y {
 		t.Errorf("menu strip at %+v is above the glyph at %+v", s, g)

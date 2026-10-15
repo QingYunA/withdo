@@ -16,6 +16,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Column(c).Gap(2).Children(func() {
 		m.statusRow(c, t, task)
 		m.fromRow(c, t, task)
+		m.parentRow(c, t, task)
 		m.priorityRow(c, t, task)
 		m.taskProjectRow(c, t, task)
 		m.milestoneRow(c, t, task)
@@ -34,7 +35,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 var propIcons = map[string]*ui.SVG{
 	"status": theme.IconStatus, "from": theme.IconAgent, "priority": theme.IconFlag, "project": theme.IconFolder,
 	"milestone": theme.IconDiamond, "due": theme.IconCalendar, "remind": theme.IconBell, "branch": theme.IconBranch,
-	"pr": theme.IconPR,
+	"pr": theme.IconPR, "parent": theme.IconBranch,
 }
 
 // propRow lays out a label (a line icon and its words) and a value on one 32 pt line.

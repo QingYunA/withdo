@@ -330,15 +330,15 @@ func TestRealFeedsTheNowScreen(t *testing.T) {
 		}
 		return &d.Reports[0]
 	}
-	n := BuildNow(NowInput{Now: now, Tasks: tasks, Latest: latest, ProjectName: func(*int) string { return "rocket" }})
-	if len(n.Needs) != 3 || len(n.Agents) != 0 || len(n.Yours) != 0 {
-		t.Fatalf("sections %d/%d/%d: %+v", len(n.Needs), len(n.Agents), len(n.Yours), n.Needs)
+	n := BuildMine(MineInput{Now: now, Tasks: tasks, Latest: latest, ProjectName: func(*int) string { return "rocket" }})
+	if len(n.FromAgents) != 2 || len(n.Today) != 1 || len(n.Later) != 0 {
+		t.Fatalf("sections %d/%d/%d: %+v", len(n.FromAgents), len(n.Today), len(n.Later), n.FromAgents)
 	}
-	if n.Needs[0].Kind != NeedBlocked || n.Needs[1].Kind != NeedReminder || n.Needs[2].Kind != NeedReview {
-		t.Errorf("order %v %v %v", n.Needs[0].Kind, n.Needs[1].Kind, n.Needs[2].Kind)
+	if n.FromAgents[0].Kind != NeedBlocked || n.FromAgents[1].Kind != NeedReview {
+		t.Errorf("order %v %v", n.FromAgents[0].Kind, n.FromAgents[1].Kind)
 	}
-	if n.Needs[0].Words != "Needs a decision on the policy" || n.Needs[1].RemindAt == nil || n.Needs[2].PRNumber != 12 {
-		t.Errorf("needs %+v", n.Needs)
+	if n.FromAgents[0].Words != "Needs a decision on the policy" || n.Today[0].RemindAt == nil || n.FromAgents[1].PRNumber != 12 {
+		t.Errorf("rows %+v / %+v", n.FromAgents, n.Today)
 	}
 }
 

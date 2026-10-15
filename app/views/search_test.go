@@ -96,7 +96,7 @@ func TestSearchKeyboard(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
 	searchFor(t, tt, "port")
-	ids := m.rowIDs(m.app.buildNow())
+	ids := m.rowIDs()
 	if len(ids) < 2 {
 		t.Fatalf("results %v", ids)
 	}

@@ -184,18 +184,16 @@ func (m *Main) inboxOr(project string) string {
 	return project
 }
 
-// needSummary is the second line of a Needs you row: why it is there.
-func (m *Main) needSummary(it data.NowItem) string {
+// needSummary is the second line of a handed-over row: why it is there.
+func (m *Main) needSummary(it data.Item) string {
 	now := m.app.Now()
+	agent := agentName(m.app.taskAgent(it.Task))
 	switch it.Kind {
 	case data.NeedBlocked:
-		switch {
-		case it.Source != data.SourceAgent:
-			return m.say.NeedBlockedByMe()
-		case it.Words == "":
-			return m.say.NeedAgentWaiting()
+		if it.Words == "" {
+			return m.say.NeedAgentStuckPlain(agent)
 		}
-		return m.say.NeedAgentWaitingFor(it.Words)
+		return m.say.NeedAgentStuck(agent, it.Words)
 	case data.NeedReminder:
 		return m.clock.Reminder(*it.RemindAt, now)
 	case data.NeedPRClosed:
@@ -208,13 +206,13 @@ func (m *Main) needSummary(it data.NowItem) string {
 		if it.PRNumber > 0 {
 			return m.say.NeedReviewPR(itoa(it.PRNumber))
 		}
-		return m.say.NeedReview()
+		return m.say.NeedAgentDone(agent)
 	}
 	return m.say.NeedNoUpdate(m.clock.Span(it.Hours))
 }
 
 // agentSummary is the second line of an agent row: what it said, and what it does next.
-func (m *Main) agentSummary(it data.NowItem) string {
+func (m *Main) agentSummary(it data.Item) string {
 	if it.NextStep == "" {
 		return it.Summary
 	}

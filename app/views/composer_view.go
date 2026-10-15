@@ -91,6 +91,9 @@ func (m *Main) placeholder(s surface) string {
 	case cv.open && cv.owner == s && len(cv.turns) > 0 && cv.turns[len(cv.turns)-1].question != nil:
 		return m.say.AskAnswerHint()
 	}
+	if s == surfacePage && m.nav.screen == screenAgents {
+		return m.say.ComposerPlaceholderAgents()
+	}
 	switch m.placeOf(s).Kind {
 	case data.PlaceCalendar:
 		return m.say.CalendarPlaceholder(m.clock.CalendarDay(m.calendarDay()))

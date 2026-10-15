@@ -108,7 +108,7 @@ func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill
 }
 
 // ageLabel is how long ago, in the stale color when the agent went quiet.
-func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.NowItem) {
+func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.Item) {
 	color := t.TextTertiary
 	if it.Stale {
 		color = t.Stale
@@ -124,7 +124,7 @@ func liveDot(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// actionButton is the small tinted button at the right of a Needs you row.
+// actionButton is the small tinted button at the right of a handed-over row.
 func actionButton(c *ui.Context, t *theme.Tokens, key int, text, label string) ui.Element {
 	return actionButtonKeyed(c, t, "action-"+itoa(key), text, label)
 }
