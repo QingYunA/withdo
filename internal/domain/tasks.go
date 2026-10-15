@@ -338,3 +338,28 @@ func findOpenTask(ctx context.Context, q store.Querier, projectID *int64, branch
 	return one(q.QueryRowContext(ctx, `SELECT `+taskCols+` FROM tasks WHERE project_id IS ? AND branch = ?
 		AND status NOT IN ('done','cancelled') ORDER BY id DESC LIMIT 1`, projectID, branch), scanTask)
 }
+
+// DeleteTask removes a task and its progress reports. It exists for Undo of a
+// task the built-in agent just created; a missing task is a not-found error.
+func (c *Core) DeleteTask(ctx context.Context, id int64) error {
+	err := c.write(ctx, func(q store.Querier) error {
+		cur, err := getTask(ctx, q, id)
+		if err != nil {
+			return err
+		}
+		if cur == nil {
+			return notFound("task_id", "task", id)
+		}
+		if _, err := q.ExecContext(ctx, "DELETE FROM reports WHERE task_id = ?", id); err != nil {
+			return fmt.Errorf("delete reports: %w", err)
+		}
+		if _, err := q.ExecContext(ctx, "DELETE FROM tasks WHERE id = ?", id); err != nil {
+			return fmt.Errorf("delete task: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("delete task %d: %w", id, err)
+	}
+	return nil
+}

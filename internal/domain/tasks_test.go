@@ -297,3 +297,26 @@ func TestListTasksFilters(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteTask(t *testing.T) {
+	c, _ := newCore(t)
+	keep := mustTask(t, c, domain.CreateTaskInput{Title: "keep"})
+	gone := mustTask(t, c, domain.CreateTaskInput{Title: "gone"})
+	if err := c.DeleteTask(ctx, gone.ID); err != nil {
+		t.Fatal(err)
+	}
+	if got := must[*domain.Task](t)(c.GetTask(ctx, gone.ID)); got != nil {
+		t.Errorf("task still there: %+v", got)
+	}
+	if got := must[*domain.Task](t)(c.GetTask(ctx, keep.ID)); got == nil {
+		t.Error("deleted the wrong task")
+	}
+	withReport := mustTask(t, c, domain.CreateTaskInput{Title: "with report"})
+	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: withReport.ID, Agent: "claude", Summary: "x"}))
+	if err := c.DeleteTask(ctx, withReport.ID); err != nil {
+		t.Fatalf("task with reports: %v", err)
+	}
+	if err := c.DeleteTask(ctx, gone.ID); !domain.IsNotFound(err) {
+		t.Errorf("second delete = %v, want not found", err)
+	}
+}
