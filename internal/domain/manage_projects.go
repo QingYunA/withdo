@@ -17,14 +17,9 @@ type CreateProjectInput struct {
 	RepoSlug string
 }
 
-// ValidRepoSlug reports whether s, after the reading CreateProject gives it, is an owner/repo.
-func ValidRepoSlug(s string) bool {
-	_, ok := normalizeSlug(s)
-	return ok
-}
-
-// normalizeSlug trims s and reads a GitHub URL or remote as owner/repo.
-func normalizeSlug(s string) (string, bool) {
+// NormalizeRepoSlug reads s as the "owner/repo" of a GitHub repository: it trims it, and takes the
+// repository out of a pasted GitHub URL or git remote. ok is false when the result is no owner/repo.
+func NormalizeRepoSlug(s string) (slug string, ok bool) {
 	s = strings.TrimSpace(s)
 	if parsed := gitctx.ParseRemoteURL(s); parsed != "" {
 		s = parsed
@@ -41,7 +36,7 @@ func (c *Core) CreateProject(ctx context.Context, in CreateProjectInput) (*Proje
 	}
 	var slug *string
 	if strings.TrimSpace(in.RepoSlug) != "" {
-		s, ok := normalizeSlug(in.RepoSlug)
+		s, ok := NormalizeRepoSlug(in.RepoSlug)
 		if !ok {
 			return nil, invalid("repo_slug", "must look like owner/repo")
 		}

@@ -78,7 +78,7 @@ func (f *Fake) ListTasks(flt Filter) ([]Task, error) {
 	defer f.mu.Unlock()
 	var out []Task
 	for _, t := range f.tasks {
-		if matches(t, flt) {
+		if matches(t, flt) && !f.inArchived(t) {
 			out = append(out, t)
 		}
 	}
@@ -185,6 +185,13 @@ func (f *Fake) apply(t *Task, p Patch) error {
 	}
 	if p.Branch != nil {
 		t.Branch = *p.Branch
+	}
+	if p.ProjectID != nil {
+		if _, ok := f.project(*p.ProjectID); *p.ProjectID != 0 && !ok {
+			return fmt.Errorf("project %d not found", *p.ProjectID)
+		}
+		t.ProjectID = nilIfZero(*p.ProjectID)
+		t.MilestoneID = nil // a milestone belongs to one project, so a move leaves it behind
 	}
 	if p.MilestoneID != nil {
 		t.MilestoneID = nilIfZero(*p.MilestoneID)

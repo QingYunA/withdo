@@ -161,6 +161,7 @@ type Patch struct {
 	Notes       *string
 	Status      *Status
 	Priority    *Priority
+	ProjectID   *int // 0 moves the task to the Inbox; a move without MilestoneID drops the milestone
 	MilestoneID *int
 	DueAt       *time.Time
 	RemindAt    *time.Time
@@ -176,6 +177,8 @@ type Reminder struct {
 
 // Store is everything the UI needs. internal/domain and internal/watch will implement it.
 type Store interface {
+	Manager
+
 	ListProjects() ([]Project, error)
 	Overview() (Overview, error)
 	ListTasks(Filter) ([]Task, error)

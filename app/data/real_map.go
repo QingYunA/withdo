@@ -148,6 +148,14 @@ func toPatch(p Patch) domain.TaskPatch {
 		pr := domain.Priority(*p.Priority)
 		out.Priority = &pr
 	}
+	if p.ProjectID != nil {
+		out.ProjectID = domain.Clear[int64]()
+		if *p.ProjectID != 0 {
+			out.ProjectID = domain.Set(int64(*p.ProjectID))
+		}
+		// A milestone belongs to one project, so a move leaves it behind.
+		out.MilestoneID = domain.Clear[int64]()
+	}
 	if p.MilestoneID != nil {
 		if *p.MilestoneID == 0 {
 			out.MilestoneID = domain.Clear[int64]()
