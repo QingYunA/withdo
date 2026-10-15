@@ -81,12 +81,12 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 12, 0, 24).AlignItems(ui.Center).DragWindow().Children(func() {
 		name := m.app.projectName(task.ProjectID)
 		if name == "" {
-			name = "Inbox"
+			name = m.say.NavInbox()
 		}
 		theme.Text(c, theme.Meta, t.TextSecondary, name+"  ·  #"+itoa(task.ID))
 		ui.Spacer(c)
 		btn := ui.ButtonBase(c.Key("close")).Size(theme.HitTarget, theme.HitTarget).Center().Radius(theme.RadiusControl).
-			Label("Close").Tooltip("Close (esc)").TextColor(t.TextSecondary)
+			Label(m.say.InspectorClose()).Tooltip(m.say.InspectorCloseTip()).TextColor(t.TextSecondary)
 		if btn.Hovered() {
 			btn.Background(t.BgHover)
 		}
@@ -99,7 +99,7 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	title, ok := textField(c, t, m.inspector.fields, fieldSpec{
-		name: "Title", value: task.Title, style: theme.Title, color: t.Text,
+		name: "Title", label: m.say.FieldTitle(), value: task.Title, style: theme.Title, color: t.Text,
 		multiline: true, enterSaves: true, escReverts: true, minLines: 1, maxLines: 4,
 	})
 	if ok && title != "" {
@@ -109,7 +109,7 @@ func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	notes, ok := textField(c, t, m.inspector.fields, fieldSpec{
-		name: "Notes", value: task.Notes, style: theme.Body, color: t.Text, placeholder: "Add notes…",
+		name: "Notes", label: m.say.FieldNotes(), value: task.Notes, style: theme.Body, color: t.Text, placeholder: m.say.NotesPlaceholder(),
 		multiline: true, escReverts: true, minLines: 3, maxLines: 12,
 	})
 	if ok {

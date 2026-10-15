@@ -1,9 +1,7 @@
 package data
 
 import (
-	"fmt"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -27,14 +25,15 @@ const (
 // NowItem is one row of the Now screen.
 type NowItem struct {
 	Task
-	Project string // project name, empty for the inbox
-	Kind    NeedKind
-	Summary string    // the second line, empty when there is nothing to say
-	Since   time.Time // the latest report, a due reminder's time, or the last update
-	Stale   bool      // no report for the stale threshold
-	Hours   int       // hours since Since
-	Live    bool      // an agent task whose last report is under LiveWithin old
-	Label   string    // the due label of my own task: "Today", "Tomorrow", "Fri", "Oct 20"
+	Project  string // project name, empty for the inbox
+	Kind     NeedKind
+	Summary  string    // an agent task: what its latest report says
+	NextStep string    // an agent task: what its latest report says comes next
+	Words    string    // a blocked agent task: what it said it waits for
+	Since    time.Time // the latest report, a due reminder's time, or the last update
+	Stale    bool      // no report for the stale threshold
+	Hours    int       // hours since Since
+	Live     bool      // an agent task whose last report is under LiveWithin old
 }
 
 // Now is what the home screen shows. A section with no items is not drawn.
@@ -132,62 +131,23 @@ func (b nowBuilder) need(t Task, out *Now) bool {
 		it.Since = *t.RemindAt
 		it.Hours = int(b.Now.Sub(it.Since) / time.Hour)
 	}
-	it.Summary = b.needSummary(it)
+	if kind == NeedBlocked && t.Source == SourceAgent {
+		it.Words = blockedWords(b.Latest(t.ID))
+	}
 	out.Needs = append(out.Needs, it)
 	return true
 }
 
-func (b nowBuilder) needSummary(it NowItem) string {
-	switch it.Kind {
-	case NeedBlocked:
-		return blockedSummary(it.Task, b.Latest(it.ID))
-	case NeedReminder:
-		return "You asked to be reminded " + reminderWhen(*it.RemindAt, b.Now)
-	case NeedReview:
-		if it.PRNumber > 0 {
-			return fmt.Sprintf("PR #%d is ready for your review", it.PRNumber)
-		}
-		return "Ready for your review"
+// blockedWords is what a blocked agent task said it waits for: the next step of its latest
+// report, else the summary.
+func blockedWords(r *Report) string {
+	if r == nil {
+		return ""
 	}
-	return "No update for " + Short(it.Hours)
-}
-
-func blockedSummary(t Task, r *Report) string {
-	words := ""
-	if r != nil {
-		words = r.NextStep
-		if words == "" {
-			words = r.Summary
-		}
+	if r.NextStep != "" {
+		return r.NextStep
 	}
-	switch {
-	case t.Source != SourceAgent:
-		return "Marked as blocked"
-	case words == "":
-		return "Agent is waiting"
-	}
-	return "Agent is waiting: “" + words + "”"
-}
-
-// reminderWhen reads "at 4:00 PM", "yesterday at 4:00 PM" or "on Oct 12 at 4:00 PM".
-func reminderWhen(at, now time.Time) string {
-	clock := at.In(now.Location()).Format("3:04 PM")
-	switch day := DayWord(at, now); day {
-	case "today":
-		return "at " + clock
-	case "yesterday":
-		return "yesterday at " + clock
-	default:
-		return "on " + day + " at " + clock
-	}
-}
-
-// Short writes a span of hours as "5h" or "3d".
-func Short(hours int) string {
-	if hours >= 48 {
-		return fmt.Sprintf("%dd", hours/24)
-	}
-	return fmt.Sprintf("%dh", max(hours, 1))
+	return r.Summary
 }
 
 func sortNeeds(ns []NowItem) {
@@ -203,23 +163,9 @@ func (b nowBuilder) agent(t Task) NowItem {
 	it := b.item(t)
 	it.Live = b.Now.Sub(it.Since) < LiveWithin
 	if r := b.Latest(t.ID); r != nil {
-		it.Summary = r.Summary
-		if r.NextStep != "" {
-			it.Summary += "; next: " + lowerFirst(r.NextStep)
-		}
+		it.Summary, it.NextStep = r.Summary, r.NextStep
 	}
 	return it
-}
-
-func lowerFirst(s string) string {
-	if s == "" || strings.ToUpper(s[:1]) != s[:1] {
-		return s
-	}
-	// Keep acronyms and names ("MCP tools") as they are.
-	if len(s) > 1 && strings.ToUpper(s[1:2]) == s[1:2] && strings.ToLower(s[1:2]) != s[1:2] {
-		return s
-	}
-	return strings.ToLower(s[:1]) + s[1:]
 }
 
 // DueReminder reports whether a reminder is due and the task still open.
@@ -252,7 +198,6 @@ func (b nowBuilder) yours(tasks []Task) (rows []NowItem, more int) {
 			continue
 		}
 		it.Since = at
-		it.Label = dueLabel(t, at, b.Now)
 		dated = append(dated, it)
 	}
 	sort.SliceStable(dated, func(i, j int) bool { return dated[i].Since.Before(dated[j].Since) })
@@ -266,38 +211,4 @@ func (b nowBuilder) yours(tasks []Task) (rows []NowItem, more int) {
 		more, undated = len(undated)-MaxUndated, undated[:MaxUndated]
 	}
 	return append(dated, undated...), more
-}
-
-// DueLabel is the right-hand label of one of my tasks: "Today", "Tomorrow", "Fri", "Oct 20". A
-// reminder that is still ahead today reads as its time of day. It is empty for a task with neither
-// a due nor a reminder time.
-func DueLabel(t Task, now time.Time) string {
-	at, ok := NextMoment(t)
-	if !ok {
-		return ""
-	}
-	return dueLabel(t, at, now)
-}
-
-func dueLabel(t Task, at, now time.Time) string {
-	if t.RemindAt != nil && at.Equal(*t.RemindAt) && DayWord(at, now) == "today" {
-		return at.In(now.Location()).Format("3:04 PM")
-	}
-	switch day := DayWord(at, now); day {
-	case "today", "tomorrow", "yesterday":
-		return Capital(day)
-	default:
-		if days := dayIndex(at.In(now.Location())) - dayIndex(now); days > 1 && days < 7 {
-			return at.In(now.Location()).Format("Mon") // "Friday" -> "Fri"
-		}
-		return day
-	}
-}
-
-// Capital upper-cases the first letter of a word.
-func Capital(s string) string {
-	if s == "" {
-		return s
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
 }

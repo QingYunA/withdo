@@ -11,7 +11,6 @@ import (
 
 const (
 	noticeFor = 1500 * time.Millisecond
-	askHint   = `Tell me what to remember — "remind me to review PR #12 at 4pm"`
 	// noticeRoom is the gap under the field. The confirmation sits in it and the section header
 	// margin below, so showing it never moves the page.
 	noticeRoom float32 = 6
@@ -46,7 +45,7 @@ func (m *Main) askField(c *ui.Context, t *theme.Tokens) {
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
 			theme.Input.Apply(ui.TextInputBase(c.Key("ask-input"), &m.ask.buf)).TextColor(t.Text).
-				Label("Ask").Bind(&m.askRef).OnTextKey(m.askKey)
+				Label(m.say.AskLabel()).Bind(&m.askRef).OnTextKey(m.askKey)
 			m.takeFocus(c)
 			if m.ask.buf == "" {
 				theme.Text(c, theme.Input, t.TextTertiary, m.placeholder()).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
@@ -86,11 +85,11 @@ func (m *Main) askKey(k ui.TextKey) bool {
 func (m *Main) placeholder() string {
 	switch {
 	case m.convo.thinking:
-		return "Thinking…"
+		return m.say.AskThinking()
 	case m.convo.open && len(m.convo.turns) > 0 && m.convo.turns[len(m.convo.turns)-1].question != nil:
-		return "Type an answer, or pick one below"
+		return m.say.AskAnswerHint()
 	}
-	return askHint
+	return m.say.AskHint()
 }
 
 // sparkle is the accent mark in the field. While the assistant works it pulses, unless Reduce
@@ -121,8 +120,8 @@ func (m *Main) noModelHint(c *ui.Context, t *theme.Tokens, focused bool) {
 		return // "Added to Inbox" has the line under the field for 1.5 s
 	}
 	ui.Row(c.Key("no-model")).Shrink(0).Margin(8, 0, 0, 4).Gap(5).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, "Connect a model to let me understand you —")
-		if link(c, t, "Set up").Clicked() {
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.AskNoModel())
+		if link(c, t, m.say.AskSetUp()).Clicked() {
 			m.openModels()
 		}
 	})
@@ -192,7 +191,7 @@ func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	room.Children(func() {
 		ui.Row(c).Absolute().Left(4).Top(8).Gap(6).Opacity(opacity).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.TextSecondary)
-			theme.Text(c, theme.Meta, t.TextSecondary, "Added to Inbox")
+			theme.Text(c, theme.Meta, t.TextSecondary, m.say.AskAdded())
 		})
 	})
 }

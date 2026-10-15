@@ -54,15 +54,15 @@ func optWhen(field, s string, now time.Time, future bool) (*string, error) {
 	return &stored, nil
 }
 
-func (tb *toolbox) createDetail(t domain.Task) string {
+func (tb *toolbox) createDetail(t domain.Task) Detail {
 	now := tb.now()
 	switch {
 	case t.RemindAt != nil:
-		return whenLabel(*t.RemindAt, now) + " · reminder"
+		return Detail{Kind: DetailReminder, At: storedTime(*t.RemindAt, now)}
 	case t.DueAt != nil:
-		return whenLabel(*t.DueAt, now) + " · due"
+		return Detail{Kind: DetailDue, At: storedTime(*t.DueAt, now)}
 	}
-	return "Added to " + tb.projectName(t.ProjectID)
+	return Detail{Kind: DetailAdded, Project: tb.projectLabel(t.ProjectID)}
 }
 
 type updateArgs struct {
@@ -165,39 +165,40 @@ func isEmptyPatch(p domain.TaskPatch) bool {
 		!p.DueAt.Present && !p.RemindAt.Present
 }
 
-// changeDetail summarizes what an update changed: "Updated · reminder Tomorrow 9:00 AM, P1".
-func (tb *toolbox) changeDetail(p domain.TaskPatch, after domain.Task) string {
+// changeDetail lists what an update changed, in the order the receipt says it.
+func (tb *toolbox) changeDetail(p domain.TaskPatch, after domain.Task) Detail {
 	now := tb.now()
-	var parts []string
+	var changes []Change
 	if p.RemindAt.Present {
-		parts = append(parts, orCleared("reminder", after.RemindAt, now))
+		changes = append(changes, Change{Kind: ChangeReminder, At: storedOrZero(after.RemindAt, now)})
 	}
 	if p.DueAt.Present {
-		parts = append(parts, orCleared("due", after.DueAt, now))
+		changes = append(changes, Change{Kind: ChangeDue, At: storedOrZero(after.DueAt, now)})
 	}
 	if p.Status != nil {
-		parts = append(parts, string(after.Status))
+		changes = append(changes, Change{Kind: ChangeStatus, Value: string(after.Status)})
 	}
 	if p.Priority != nil {
-		parts = append(parts, string(after.Priority))
+		changes = append(changes, Change{Kind: ChangePriority, Value: string(after.Priority)})
 	}
 	if p.ProjectID.Present {
-		parts = append(parts, "in "+tb.projectName(after.ProjectID))
+		changes = append(changes, Change{Kind: ChangeProject, Value: tb.projectLabel(after.ProjectID)})
 	}
 	if p.Title != nil {
-		parts = append(parts, "renamed")
+		changes = append(changes, Change{Kind: ChangeRenamed})
 	}
 	if p.Notes.Present {
-		parts = append(parts, "notes")
+		changes = append(changes, Change{Kind: ChangeNotes})
 	}
-	return "Updated · " + strings.Join(parts, ", ")
+	return Detail{Kind: DetailUpdated, Changes: changes}
 }
 
-func orCleared(what string, stored *string, now time.Time) string {
+// storedOrZero is a stored timestamp as a time, or the zero time for a cleared field.
+func storedOrZero(stored *string, now time.Time) time.Time {
 	if stored == nil {
-		return what + " cleared"
+		return time.Time{}
 	}
-	return what + " " + whenLabel(*stored, now)
+	return storedTime(*stored, now)
 }
 
 type completeArgs struct {
@@ -222,7 +223,7 @@ func (tb *toolbox) complete(ctx context.Context, a completeArgs) (reply, error) 
 	if err != nil {
 		return fail(ctx, err)
 	}
-	tb.addReceipt(Receipt{TaskID: after.ID, Title: after.Title, Status: string(after.Status), Detail: "Marked done"},
+	tb.addReceipt(Receipt{TaskID: after.ID, Title: after.Title, Status: string(after.Status), Detail: Detail{Kind: DetailDone}},
 		undoPatch(tb.core, *before, patch))
 	v := tb.view(*after)
 	return reply{OK: true, Task: &v}, nil

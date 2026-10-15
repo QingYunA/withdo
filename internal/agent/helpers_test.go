@@ -182,3 +182,15 @@ func str(s *string) string {
 	}
 	return *s
 }
+
+// wantMoment checks that a detail is of kind and names the instant written as RFC 3339.
+func wantMoment(t *testing.T, d Detail, kind DetailKind, rfc3339 string) {
+	t.Helper()
+	want, err := time.Parse(time.RFC3339, rfc3339)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Kind != kind || !d.At.Equal(want) {
+		t.Errorf("detail = %+v, want kind %v at %s", d, kind, rfc3339)
+	}
+}

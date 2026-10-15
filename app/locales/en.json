@@ -1,0 +1,1021 @@
+{
+  "@@locale": "en",
+  "a11yCopyCommand": "Copy command",
+  "@a11yCopyCommand": {
+    "description": "Accessibility label of the copy button."
+  },
+  "a11yDate": "{label}: {value}",
+  "@a11yDate": {
+    "description": "Accessibility label of a due or reminder value in the inspector.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Due"
+      },
+      "value": {
+        "type": "String",
+        "example": "Tomorrow"
+      }
+    }
+  },
+  "a11yMarkDone": "Mark done: {title}",
+  "@a11yMarkDone": {
+    "description": "Accessibility label of the Done button of a row.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Book dentist"
+      }
+    }
+  },
+  "a11yMilestone": "Milestone: {name}",
+  "@a11yMilestone": {
+    "description": "Accessibility label of the milestone menu.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "v0.2"
+      }
+    }
+  },
+  "a11yOpenPR": "Open pull request #{number}",
+  "@a11yOpenPR": {
+    "description": "Accessibility label of the Open PR button.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "a11yOpenTask": "Open {title}",
+  "@a11yOpenTask": {
+    "description": "Accessibility label of the Open button of a row.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Book dentist"
+      }
+    }
+  },
+  "a11yPriority": "Priority: {priority}",
+  "@a11yPriority": {
+    "description": "Accessibility label of the priority value in the inspector.",
+    "placeholders": {
+      "priority": {
+        "type": "String",
+        "example": "P1  High"
+      }
+    }
+  },
+  "a11ySettingsClose": "Close settings",
+  "@a11ySettingsClose": {
+    "description": "Accessibility label of the Done button of the settings sheet."
+  },
+  "a11yStatus": "Status: {status}",
+  "@a11yStatus": {
+    "description": "Accessibility label of a status glyph button.",
+    "placeholders": {
+      "status": {
+        "type": "String",
+        "example": "Doing"
+      }
+    }
+  },
+  "a11yUndo": "Undo: {title}",
+  "@a11yUndo": {
+    "description": "Accessibility label of the Undo button.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Team meeting"
+      }
+    }
+  },
+  "a11yUseModel": "Use model {name}",
+  "@a11yUseModel": {
+    "description": "Accessibility label of a model suggestion chip.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "claude-haiku-5-5"
+      }
+    }
+  },
+  "a11yViewBoard": "Board view",
+  "@a11yViewBoard": {
+    "description": "Accessibility label of the Board segment."
+  },
+  "a11yViewList": "List view",
+  "@a11yViewList": {
+    "description": "Accessibility label of the List segment."
+  },
+  "actionDone": "Done",
+  "@actionDone": {
+    "description": "Small button on a reminder row: mark the task done."
+  },
+  "actionOpen": "Open",
+  "@actionOpen": {
+    "description": "Small button on a row: open the task."
+  },
+  "actionOpenPR": "Open PR",
+  "@actionOpenPR": {
+    "description": "Small button on a row whose pull request waits for review."
+  },
+  "activityEmpty": "No reports yet. Agents file their progress here as they work.",
+  "@activityEmpty": {
+    "description": "Shown when a task has no reports."
+  },
+  "activityNext": "Next: {step}",
+  "@activityNext": {
+    "description": "What an agent does next, in a report.",
+    "placeholders": {
+      "step": {
+        "type": "String",
+        "example": "run the tests"
+      }
+    }
+  },
+  "activityTitle": "Activity",
+  "@activityTitle": {
+    "description": "Header of the list of reports in the inspector. English is shown in capitals."
+  },
+  "ageDays": "{n}d",
+  "@ageDays": {
+    "description": "How long ago something happened, in days (under a week).",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "ageHours": "{n}h",
+  "@ageHours": {
+    "description": "How long ago something happened, in hours.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "ageMinutes": "{n}m",
+  "@ageMinutes": {
+    "description": "How long ago something happened, in minutes.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "ageNow": "now",
+  "@ageNow": {
+    "description": "How long ago something happened: under a minute."
+  },
+  "agentSummaryNext": "{summary}; next: {step}",
+  "@agentSummaryNext": {
+    "description": "Second line of an agent task: its latest report and what it does next.",
+    "placeholders": {
+      "summary": {
+        "type": "String",
+        "example": "Wrote the migration"
+      },
+      "step": {
+        "type": "String",
+        "example": "run the tests"
+      }
+    }
+  },
+  "askAdded": "Added to Inbox",
+  "@askAdded": {
+    "description": "Confirmation under the ask field after a task was added."
+  },
+  "askAnswerHint": "Type an answer, or pick one below",
+  "@askAnswerHint": {
+    "description": "Placeholder of the ask field while the assistant waits for an answer."
+  },
+  "askHint": "Tell me what to remember — \"remind me to review PR #12 at 4pm\"",
+  "@askHint": {
+    "description": "Placeholder of the ask field. The example is something the user could type."
+  },
+  "askLabel": "Ask",
+  "@askLabel": {
+    "description": "Accessibility label of the ask field."
+  },
+  "askNoModel": "Connect a model to let me understand you —",
+  "@askNoModel": {
+    "description": "Hint under the ask field while no model is connected; a link follows."
+  },
+  "askSetUp": "Set up",
+  "@askSetUp": {
+    "description": "Link after the no model hint that opens Settings > Models."
+  },
+  "askThinking": "Thinking…",
+  "@askThinking": {
+    "description": "Placeholder of the ask field while the assistant works."
+  },
+  "boardEmpty": "Nothing waiting. Drag a card here to plan it.",
+  "@boardEmpty": {
+    "description": "Hint in the empty To do column of the board."
+  },
+  "boardShowAll": "Show all {n}",
+  "@boardShowAll": {
+    "description": "Link under the recent done tasks of a board column.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "changeDue": "due {when}",
+  "@changeDue": {
+    "description": "A part of an update: the due date was set.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Fri 9:00 AM"
+      }
+    }
+  },
+  "changeDueCleared": "due cleared",
+  "@changeDueCleared": {
+    "description": "A part of an update: the due date was removed."
+  },
+  "changeNotes": "notes",
+  "@changeNotes": {
+    "description": "A part of an update: the notes changed."
+  },
+  "changeProject": "in {project}",
+  "@changeProject": {
+    "description": "A part of an update: the task moved to a project.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "changeReminder": "reminder {when}",
+  "@changeReminder": {
+    "description": "A part of an update: the reminder was set.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Tomorrow 9:00 AM"
+      }
+    }
+  },
+  "changeReminderCleared": "reminder cleared",
+  "@changeReminderCleared": {
+    "description": "A part of an update: the reminder was removed."
+  },
+  "changeRenamed": "renamed",
+  "@changeRenamed": {
+    "description": "A part of an update: the title changed."
+  },
+  "convoRetry": "Retry",
+  "@convoRetry": {
+    "description": "Link that sends a failed request again, and that loads the data again."
+  },
+  "convoStopped": "Stopped.",
+  "@convoStopped": {
+    "description": "Shown under a turn the user stopped after some changes were made."
+  },
+  "convoUndo": "Undo",
+  "@convoUndo": {
+    "description": "Button at the right of a change the assistant made."
+  },
+  "convoUndoFailed": "Couldn't undo that: {reason}",
+  "@convoUndoFailed": {
+    "description": "Shown when undoing a change failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "task not found"
+      }
+    }
+  },
+  "convoUndone": "Undone",
+  "@convoUndone": {
+    "description": "Shown at the right of a change that was undone."
+  },
+  "dayAndTime": "{day} {time}",
+  "@dayAndTime": {
+    "description": "A day and a time of day together, e.g. Tomorrow 9:00 AM.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Tomorrow"
+      },
+      "time": {
+        "type": "String",
+        "example": "9:00 AM"
+      }
+    }
+  },
+  "dayAndTimeComma": "{day}, {time}",
+  "@dayAndTimeComma": {
+    "description": "A day and a time of day in the inspector, e.g. Tomorrow, 10:00.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Tomorrow"
+      },
+      "time": {
+        "type": "String",
+        "example": "10:00"
+      }
+    }
+  },
+  "dayToday": "Today",
+  "@dayToday": {
+    "description": "Due label: today."
+  },
+  "dayTodayInline": "today",
+  "@dayTodayInline": {
+    "description": "The day today, inside a sentence."
+  },
+  "dayTomorrow": "Tomorrow",
+  "@dayTomorrow": {
+    "description": "Due label: tomorrow."
+  },
+  "dayTomorrowInline": "tomorrow",
+  "@dayTomorrowInline": {
+    "description": "The day tomorrow, inside a sentence."
+  },
+  "dayYesterday": "Yesterday",
+  "@dayYesterday": {
+    "description": "Due label: yesterday."
+  },
+  "dayYesterdayInline": "yesterday",
+  "@dayYesterdayInline": {
+    "description": "The day yesterday, inside a sentence."
+  },
+  "detailAdded": "Added to {project}",
+  "@detailAdded": {
+    "description": "Detail of a change that added a task without a date.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "Inbox"
+      }
+    }
+  },
+  "detailDone": "Marked done",
+  "@detailDone": {
+    "description": "Detail of a change that completed a task."
+  },
+  "detailDue": "{when} · due",
+  "@detailDue": {
+    "description": "Detail of a change that set a due date.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Tomorrow 9:00 AM"
+      }
+    }
+  },
+  "detailReminder": "{when} · reminder",
+  "@detailReminder": {
+    "description": "Detail of a change that set a reminder.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Tomorrow 9:00 AM"
+      }
+    }
+  },
+  "detailUpdated": "Updated · {changes}",
+  "@detailUpdated": {
+    "description": "Detail of a change that edited a task; changes lists what.",
+    "placeholders": {
+      "changes": {
+        "type": "String",
+        "example": "reminder Tomorrow 9:00 AM, P1"
+      }
+    }
+  },
+  "errNoStore": "Couldn't reach the data store. Retrying…",
+  "@errNoStore": {
+    "description": "Banner under the title bar while the database is unreachable."
+  },
+  "fieldBranch": "Branch",
+  "@fieldBranch": {
+    "description": "Label of the git branch of a task."
+  },
+  "fieldNotes": "Notes",
+  "@fieldNotes": {
+    "description": "Accessibility label of the task notes field."
+  },
+  "fieldTitle": "Title",
+  "@fieldTitle": {
+    "description": "Accessibility label of the task title field."
+  },
+  "foldAnd": "{first} and {second}",
+  "@foldAnd": {
+    "description": "Joins two counts in the accessibility label of the folded line.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Done 4"
+      },
+      "second": {
+        "type": "String",
+        "example": "Backlog 2"
+      }
+    }
+  },
+  "foldCount": "{name} {count}",
+  "@foldCount": {
+    "description": "A status and how many tasks it has, in the folded line under a list, e.g. Done 4.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Done"
+      },
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "foldHide": "hide {parts}",
+  "@foldHide": {
+    "description": "Accessibility label of the folded line while open.",
+    "placeholders": {
+      "parts": {
+        "type": "String",
+        "example": "Done 4 and Backlog 2"
+      }
+    }
+  },
+  "foldHideShort": "— hide",
+  "@foldHideShort": {
+    "description": "End of the folded line under a list while open."
+  },
+  "foldShow": "show {parts}",
+  "@foldShow": {
+    "description": "Accessibility label of the folded line while closed.",
+    "placeholders": {
+      "parts": {
+        "type": "String",
+        "example": "Done 4 and Backlog 2"
+      }
+    }
+  },
+  "foldShowShort": "— show",
+  "@foldShowShort": {
+    "description": "End of the folded line under a list while closed."
+  },
+  "groupBlocked": "Blocked",
+  "@groupBlocked": {
+    "description": "Header of the blocked group in a project list."
+  },
+  "groupDoing": "Doing",
+  "@groupDoing": {
+    "description": "Header of the doing group in a project list."
+  },
+  "groupReview": "In review",
+  "@groupReview": {
+    "description": "Header of the review group in a project list."
+  },
+  "groupTodo": "To do",
+  "@groupTodo": {
+    "description": "Header of the to do group in a project list and column of the board."
+  },
+  "inboxEmptyBody": "Tasks without a project land here. Add one below, or press ⌘K on Now.",
+  "@inboxEmptyBody": {
+    "description": "Body of an empty Inbox. ⌘K is the shortcut of the ask field."
+  },
+  "inboxEmptyTitle": "Your inbox is clear.",
+  "@inboxEmptyTitle": {
+    "description": "Title of an empty Inbox."
+  },
+  "inboxSubtitle": "Tasks without a project",
+  "@inboxSubtitle": {
+    "description": "Quiet line next to the Inbox title."
+  },
+  "inspectorClose": "Close",
+  "@inspectorClose": {
+    "description": "Accessibility label of the close button of the inspector."
+  },
+  "inspectorCloseTip": "Close (esc)",
+  "@inspectorCloseTip": {
+    "description": "Tooltip of the close button of the inspector."
+  },
+  "languageSystem": "System",
+  "@languageSystem": {
+    "description": "Language choice that follows the system's languages."
+  },
+  "linkHowToConnect": "How to connect",
+  "@linkHowToConnect": {
+    "description": "Link that opens Settings on how to connect Claude Code."
+  },
+  "listAddTask": "Add a task",
+  "@listAddTask": {
+    "description": "Accessibility label of the add row in a list and on the board."
+  },
+  "listAddTaskRow": "+ Add a task",
+  "@listAddTaskRow": {
+    "description": "The quiet add row in a list and on the board."
+  },
+  "listEmptyBody": "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself.",
+  "@listEmptyBody": {
+    "description": "Body of an empty project list."
+  },
+  "listEmptyTitle": "No tasks yet.",
+  "@listEmptyTitle": {
+    "description": "Title of an empty project list."
+  },
+  "listNewTaskTitle": "New task title",
+  "@listNewTaskTitle": {
+    "description": "Accessibility label of the input that names a new task."
+  },
+  "listSeparator": ", ",
+  "@listSeparator": {
+    "description": "Separates the parts of an update."
+  },
+  "listShowAllDone": "Show all {n} done",
+  "@listShowAllDone": {
+    "description": "Link under the recent done tasks of a list.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "listTaskTitle": "Task title",
+  "@listTaskTitle": {
+    "description": "Placeholder of the input that names a new task."
+  },
+  "milestoneAll": "All milestones",
+  "@milestoneAll": {
+    "description": "Milestone menu entry that shows every task."
+  },
+  "milestoneClosed": "{title} · closed",
+  "@milestoneClosed": {
+    "description": "A closed milestone in the milestone menu.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "v0.1"
+      }
+    }
+  },
+  "milestoneDue": "{title} · due {day}",
+  "@milestoneDue": {
+    "description": "An open milestone with a date in the milestone menu.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "v0.2"
+      },
+      "day": {
+        "type": "String",
+        "example": "Oct 20"
+      }
+    }
+  },
+  "modelsAPIKey": "API key",
+  "@modelsAPIKey": {
+    "description": "Label of the key field of a model provider."
+  },
+  "modelsBaseURL": "Base URL",
+  "@modelsBaseURL": {
+    "description": "Label of the address field of a model provider."
+  },
+  "modelsInUse": "In use",
+  "@modelsInUse": {
+    "description": "Shown on the provider the assistant uses."
+  },
+  "modelsKeyPlaceholder": "Paste your API key",
+  "@modelsKeyPlaceholder": {
+    "description": "Placeholder of the empty key field."
+  },
+  "modelsKeySaved": "Saved in your Keychain — paste a new one to replace it",
+  "@modelsKeySaved": {
+    "description": "Placeholder of the key field once a key is stored. Keychain is the macOS Keychain."
+  },
+  "modelsModel": "Model",
+  "@modelsModel": {
+    "description": "Label of the model name field of a model provider."
+  },
+  "modelsNeedsKey": "Needs an API key",
+  "@modelsNeedsKey": {
+    "description": "Note under a provider's name when it has no key yet."
+  },
+  "modelsProtocolAnthropic": "Anthropic API",
+  "@modelsProtocolAnthropic": {
+    "description": "Protocol choice of the Custom provider."
+  },
+  "modelsProtocolOpenAI": "OpenAI-compatible",
+  "@modelsProtocolOpenAI": {
+    "description": "Protocol choice of the Custom provider."
+  },
+  "modelsTest": "Test",
+  "@modelsTest": {
+    "description": "Test button of a provider."
+  },
+  "modelsTestConnection": "Test connection",
+  "@modelsTestConnection": {
+    "description": "Accessibility label of the Test button."
+  },
+  "modelsTesting": "Testing…",
+  "@modelsTesting": {
+    "description": "Test button while the request runs."
+  },
+  "modelsUseThis": "Use this one",
+  "@modelsUseThis": {
+    "description": "Button that makes a provider the one in use."
+  },
+  "modelsWorks": "Works · {ms} ms",
+  "@modelsWorks": {
+    "description": "Result of a successful test, with the time it took.",
+    "placeholders": {
+      "ms": {
+        "type": "String",
+        "example": "640"
+      }
+    }
+  },
+  "navInbox": "Inbox",
+  "@navInbox": {
+    "description": "Sidebar row and page title for tasks without a project. Also the name of the inbox in other sentences."
+  },
+  "navNoProjects": "Projects appear when an agent reports from a repository.",
+  "@navNoProjects": {
+    "description": "Hint in the sidebar while there are no projects."
+  },
+  "navNow": "Now",
+  "@navNow": {
+    "description": "Sidebar row and page title of the home screen."
+  },
+  "navProjects": "Projects",
+  "@navProjects": {
+    "description": "Header of the list of projects in the sidebar."
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Sidebar row that opens the settings sheet."
+  },
+  "needAgentWaiting": "Agent is waiting",
+  "@needAgentWaiting": {
+    "description": "Second line of a blocked agent task with nothing more to say."
+  },
+  "needAgentWaitingFor": "Agent is waiting: “{words}”",
+  "@needAgentWaitingFor": {
+    "description": "Second line of a blocked agent task; words is what the agent said it needs.",
+    "placeholders": {
+      "words": {
+        "type": "String",
+        "example": "Which branch should I use?"
+      }
+    }
+  },
+  "needBlockedByMe": "Marked as blocked",
+  "@needBlockedByMe": {
+    "description": "Second line of a blocked task the user created."
+  },
+  "needNoUpdate": "No update for {span}",
+  "@needNoUpdate": {
+    "description": "Second line of an agent task gone quiet. The span is such as 5h or 3d.",
+    "placeholders": {
+      "span": {
+        "type": "String",
+        "example": "3d"
+      }
+    }
+  },
+  "needReminderOn": "You asked to be reminded on {day} at {time}",
+  "@needReminderOn": {
+    "description": "Second line of a due reminder from an earlier day. The day is a date such as Oct 12.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Oct 12"
+      },
+      "time": {
+        "type": "String",
+        "example": "4:00 PM"
+      }
+    }
+  },
+  "needReminderToday": "You asked to be reminded at {time}",
+  "@needReminderToday": {
+    "description": "Second line of a due reminder, for a time today.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "4:00 PM"
+      }
+    }
+  },
+  "needReminderYesterday": "You asked to be reminded yesterday at {time}",
+  "@needReminderYesterday": {
+    "description": "Second line of a due reminder, for a time yesterday.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "4:00 PM"
+      }
+    }
+  },
+  "needReview": "Ready for your review",
+  "@needReview": {
+    "description": "Second line of an agent task waiting for review, without a pull request."
+  },
+  "needReviewPR": "PR #{number} is ready for your review",
+  "@needReviewPR": {
+    "description": "Second line of an agent task waiting for review, with its pull request.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "notesPlaceholder": "Add notes…",
+  "@notesPlaceholder": {
+    "description": "Placeholder of the empty notes field."
+  },
+  "notifyReminder": "Reminder: {title}",
+  "@notifyReminder": {
+    "description": "Title of the system notification of a due reminder.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Book dentist"
+      }
+    }
+  },
+  "nowAllClear": "All clear.",
+  "@nowAllClear": {
+    "description": "Title of the calm Now screen when nothing needs attention."
+  },
+  "nowAllClearBody": "Agents report here through the adhd-todo MCP server.",
+  "@nowAllClearBody": {
+    "description": "Second line of the calm Now screen. MCP is a product name."
+  },
+  "nowShowAllInInbox": "Show all in Inbox",
+  "@nowShowAllInInbox": {
+    "description": "Link under the user's tasks on Now when more tasks exist than fit."
+  },
+  "pickerClear": "Clear",
+  "@pickerClear": {
+    "description": "Button that removes a due date or reminder."
+  },
+  "pickerDay": "Day",
+  "@pickerDay": {
+    "description": "Accessibility label of the calendar of the date picker."
+  },
+  "pickerDone": "Done",
+  "@pickerDone": {
+    "description": "Button that closes the date picker."
+  },
+  "pickerTime": "Time",
+  "@pickerTime": {
+    "description": "Accessibility label of the time input of the date picker."
+  },
+  "priorityHigh": "High",
+  "@priorityHigh": {
+    "description": "Priority P1."
+  },
+  "priorityLow": "Low",
+  "@priorityLow": {
+    "description": "Priority P3."
+  },
+  "priorityNormal": "Normal",
+  "@priorityNormal": {
+    "description": "Priority P2."
+  },
+  "priorityUrgent": "Urgent",
+  "@priorityUrgent": {
+    "description": "Priority P0."
+  },
+  "problemBusy": "The assistant is still working on the last request.",
+  "@problemBusy": {
+    "description": "Assistant error: a second request while one runs."
+  },
+  "problemCancelled": "Cancelled.",
+  "@problemCancelled": {
+    "description": "Assistant error: the request was cancelled."
+  },
+  "problemKeyRejected": "The provider didn't accept the API key.",
+  "@problemKeyRejected": {
+    "description": "Assistant error: HTTP 401 or 403."
+  },
+  "problemNoKey": "This provider needs an API key.",
+  "@problemNoKey": {
+    "description": "Assistant error: the provider has no key."
+  },
+  "problemNotConfigured": "No model is connected yet.",
+  "@problemNotConfigured": {
+    "description": "Assistant error: no model is set up."
+  },
+  "problemRateLimited": "The provider is busy or out of quota. Try again in a moment.",
+  "@problemRateLimited": {
+    "description": "Assistant error: HTTP 429."
+  },
+  "problemTimeout": "The model took too long to answer.",
+  "@problemTimeout": {
+    "description": "Assistant error: timeout."
+  },
+  "problemUnknownModel": "The provider doesn't know this model or address.",
+  "@problemUnknownModel": {
+    "description": "Assistant error: HTTP 404."
+  },
+  "problemUnreachable": "Couldn't reach the model. Is the address right and the server running?",
+  "@problemUnreachable": {
+    "description": "Assistant error: connection refused or unknown host."
+  },
+  "propDue": "Due",
+  "@propDue": {
+    "description": "Label of the due date in the inspector."
+  },
+  "propMilestone": "Milestone",
+  "@propMilestone": {
+    "description": "Label of a property in the inspector."
+  },
+  "propPriority": "Priority",
+  "@propPriority": {
+    "description": "Label of a property in the inspector."
+  },
+  "propPullRequest": "Pull request",
+  "@propPullRequest": {
+    "description": "Label of the pull request in the inspector. PR stays as it is."
+  },
+  "propRemind": "Remind",
+  "@propRemind": {
+    "description": "Label of the reminder time in the inspector."
+  },
+  "propStatus": "Status",
+  "@propStatus": {
+    "description": "Label of a property in the inspector."
+  },
+  "providerCustom": "Custom",
+  "@providerCustom": {
+    "description": "Name of the provider that takes any endpoint. The other providers are named by their products."
+  },
+  "providerNoteCustom": "Any OpenAI-compatible or Anthropic-compatible endpoint.",
+  "@providerNoteCustom": {
+    "description": "Note of the Custom provider."
+  },
+  "providerNoteMagpie": "Uses your Magpie gateway at 127.0.0.1:3425",
+  "@providerNoteMagpie": {
+    "description": "Note of the Magpie provider."
+  },
+  "providerNoteOllama": "Runs on this Mac. No key needed.",
+  "@providerNoteOllama": {
+    "description": "Note of the Ollama provider."
+  },
+  "sectionAgents": "Agents at work",
+  "@sectionAgents": {
+    "description": "Section header on Now: agent tasks in progress. English is shown in capitals."
+  },
+  "sectionNeeds": "Needs you",
+  "@sectionNeeds": {
+    "description": "Section header on Now: what waits on the user. English is shown in capitals."
+  },
+  "sectionYours": "Yours",
+  "@sectionYours": {
+    "description": "Section header on Now: the user's own tasks. English is shown in capitals."
+  },
+  "settingsAbout": "adhd-todo {version}  ·  Open source, MIT license",
+  "@settingsAbout": {
+    "description": "About line at the bottom of the settings sheet.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "settingsConnectBody": "Run this once in a terminal. Agents then report their progress here.",
+  "@settingsConnectBody": {
+    "description": "Explains the command shown below it."
+  },
+  "settingsConnectTitle": "Connect Claude Code",
+  "@settingsConnectTitle": {
+    "description": "Header of the block that shows the command registering the MCP server."
+  },
+  "settingsCopied": "Copied",
+  "@settingsCopied": {
+    "description": "Copy button for 1.5 seconds after a click."
+  },
+  "settingsCopy": "Copy",
+  "@settingsCopy": {
+    "description": "Copy button."
+  },
+  "settingsDataFolder": "Data folder",
+  "@settingsDataFolder": {
+    "description": "Header of the block that shows where the data lives."
+  },
+  "settingsDone": "Done",
+  "@settingsDone": {
+    "description": "Button that closes the settings sheet."
+  },
+  "settingsGeneral": "General",
+  "@settingsGeneral": {
+    "description": "Tab of the settings sheet."
+  },
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {
+    "description": "Header of the language block in Settings."
+  },
+  "settingsModels": "Models",
+  "@settingsModels": {
+    "description": "Tab of the settings sheet."
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Title of the settings sheet."
+  },
+  "spanDays": "{n}d",
+  "@spanDays": {
+    "description": "A span of days, short.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "spanHours": "{n}h",
+  "@spanHours": {
+    "description": "A span of hours, short.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "staleDays": "{n}d stale",
+  "@staleDays": {
+    "description": "Label of an agent task that went quiet, in days.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "staleHours": "{n}h stale",
+  "@staleHours": {
+    "description": "Label of an agent task that went quiet, in hours.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "54"
+      }
+    }
+  },
+  "statusBacklog": "Backlog",
+  "@statusBacklog": {
+    "description": "Task status: parked, not planned yet."
+  },
+  "statusBlocked": "Blocked",
+  "@statusBlocked": {
+    "description": "Task status: stuck."
+  },
+  "statusCancelled": "Cancelled",
+  "@statusCancelled": {
+    "description": "Task status: dropped."
+  },
+  "statusDoing": "Doing",
+  "@statusDoing": {
+    "description": "Task status: being worked on."
+  },
+  "statusDone": "Done",
+  "@statusDone": {
+    "description": "Task status: finished."
+  },
+  "statusReview": "Review",
+  "@statusReview": {
+    "description": "Task status: waits for a look."
+  },
+  "statusTodo": "Todo",
+  "@statusTodo": {
+    "description": "Task status: planned, not started."
+  },
+  "valueNone": "None",
+  "@valueNone": {
+    "description": "Value of a property that is not set."
+  },
+  "viewBoard": "Board",
+  "@viewBoard": {
+    "description": "Segment of the List | Board switch."
+  },
+  "viewList": "List",
+  "@viewList": {
+    "description": "Segment of the List | Board switch."
+  },
+  "windowTitle": "ADHD Todo",
+  "@windowTitle": {
+    "description": "Title of the main window."
+  }
+}

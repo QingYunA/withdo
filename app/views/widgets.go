@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -39,11 +40,13 @@ func link(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 // glyphButton is the status glyph with a 24 pt hit target; clicking it opens the status menu.
 // fill, when above 0, plays the completion animation.
 func (a *App) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) ui.Element {
+	say := locales.In(c.Locale())
+	name := statusLabel(say, task.Status)
 	btn := ui.ButtonBase(c.Key("glyph")).Size(theme.HitTarget, theme.HitTarget).Shrink(0).Center().Radius(theme.RadiusControl).
-		Label("Status: " + task.Status.Label()).Tooltip(task.Status.Label())
+		Label(say.A11yStatus(name)).Tooltip(name)
 	btn.Menu(func(m *ui.Menu) {
 		for _, s := range data.Statuses {
-			if m.Item(s.Label()).Checked(task.Status == s).Chosen() {
+			if m.Item(statusLabel(say, s)).Checked(task.Status == s).Chosen() {
 				a.SetStatus(task, s)
 			}
 		}
@@ -62,7 +65,7 @@ func segmented(c *ui.Context, t *theme.Tokens, key string, labels []string, sele
 	ui.Row(c.Key(key)).Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Children(func() {
 		for i, name := range labels {
 			on := i == selected
-			seg := ui.ButtonBase(c.Key(key+"-"+name)).Padding(3, 10).Radius(5).Label(name).Cursor(ui.CursorPointer)
+			seg := ui.ButtonBase(c.Key(key+"-"+itoa(i))).Padding(3, 10).Radius(5).Label(name).Cursor(ui.CursorPointer)
 			switch {
 			case on:
 				seg.Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))

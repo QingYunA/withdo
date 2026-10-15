@@ -17,6 +17,12 @@ type Actions interface {
 	OpenURL(url string)
 	// Post runs fn on the UI thread and redraws. The assistant answers through it.
 	Post(fn func())
+	// Languages are the languages the interface is written in. Language is the one the user
+	// chose, empty while the interface follows the system's; SetLanguage chooses one, or "" to
+	// follow the system's again.
+	Languages() []string
+	Language() string
+	SetLanguage(tag string)
 }
 
 // Config is what the settings sheet shows.

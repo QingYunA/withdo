@@ -49,11 +49,17 @@ func (r *assistRig) answer(t *testing.T) {
 	r.tt.Frame()
 }
 
+// tomorrowReminder is the detail of a reminder tomorrow at 9:00, which is 18.5 hours after the
+// fixed clock.
+func tomorrowReminder() data.Detail {
+	return data.Detail{Kind: data.DetailReminder, At: fixedNow().Add(18*time.Hour + 30*time.Minute)}
+}
+
 func reminderReply() data.Reply {
 	return data.Reply{
 		Text: "Okay, I'll remind you tomorrow at 9.",
 		Receipts: []data.Receipt{
-			{ID: 11, TaskID: 5, Title: "Team meeting", Detail: "Tomorrow 9:00 AM · reminder", Status: data.Todo, Bell: true},
+			{ID: 11, TaskID: 5, Title: "Team meeting", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
 		},
 	}
 }
@@ -108,7 +114,7 @@ func TestTurnShowsReplyAndReceiptWithUndo(t *testing.T) {
 func TestReceiptRowOpensTheTask(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{
 		Text:     "Done.",
-		Receipts: []data.Receipt{{ID: 1, TaskID: 3, Title: "Fix tray race on launch", Detail: "Marked done", Status: data.Done}},
+		Receipts: []data.Receipt{{ID: 1, TaskID: 3, Title: "Fix tray race on launch", Detail: data.Detail{Kind: data.DetailDone}, Status: data.Done}},
 	}, nil)})
 	r.ask("close the tray task")
 	r.answer(t)

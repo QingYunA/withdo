@@ -25,9 +25,10 @@ func TestReminderInShanghai(t *testing.T) {
 		t.Fatalf("receipts = %+v", res.Receipts)
 	}
 	rc := res.Receipts[0]
-	if rc.Title != "开会" || rc.Detail != "Tomorrow 9:00 AM · reminder" || !rc.Bell {
+	if rc.Title != "开会" || !rc.Bell {
 		t.Errorf("receipt = %+v", rc)
 	}
+	wantMoment(t, rc.Detail, DetailReminder, "2026-10-15T09:00:00+08:00")
 	tk := r.task(rc.TaskID)
 	eq(t, "remind_at", str(tk.RemindAt), "2026-10-15T01:00:00.000Z")
 	eq(t, "source", string(tk.Source), "user")
@@ -41,7 +42,7 @@ func TestReminderInNewYork(t *testing.T) {
 		say("Done."))
 	res := r.ask("remind me about standup tomorrow 9am")
 	eq(t, "remind_at", str(r.task(res.Receipts[0].TaskID).RemindAt), "2026-10-15T13:00:00.000Z")
-	eq(t, "detail", res.Receipts[0].Detail, "Tomorrow 9:00 AM · reminder")
+	wantMoment(t, res.Receipts[0].Detail, DetailReminder, "2026-10-15T09:00:00-04:00")
 }
 
 func TestReminderAcrossDST(t *testing.T) {
@@ -52,7 +53,7 @@ func TestReminderAcrossDST(t *testing.T) {
 		say("ok"))
 	res := r.ask("remind me to call mom tomorrow at 9")
 	eq(t, "remind_at", str(r.task(res.Receipts[0].TaskID).RemindAt), "2026-03-08T13:00:00.000Z")
-	eq(t, "detail", res.Receipts[0].Detail, "Tomorrow 9:00 AM · reminder")
+	wantMoment(t, res.Receipts[0].Detail, DetailReminder, "2026-03-08T09:00:00-04:00")
 	// What a model would get wrong by adding a day to today's offset is a different instant.
 	if naive := time.Date(2026, 3, 8, 14, 0, 0, 0, time.UTC); str(r.task(res.Receipts[0].TaskID).RemindAt) == domain.FormatTime(naive) {
 		t.Error("stored the naive -05:00 instant")

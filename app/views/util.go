@@ -25,14 +25,6 @@ func (a *App) overviewTask(t data.Task) data.OverviewTask {
 	return ot
 }
 
-// staleWords reads "3d stale" or "54h stale" from the hours since the last sign of life.
-func staleWords(hours int) string {
-	if hours >= 48 {
-		return itoa(hours/24) + "d stale"
-	}
-	return itoa(hours) + "h stale"
-}
-
 func itoa(n int) string {
 	if n == 0 {
 		return "0"

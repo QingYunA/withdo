@@ -2,7 +2,10 @@ package data
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/agent"
 )
 
 // Assistant is the built-in agent behind the ask field, as the UI sees it.
@@ -31,10 +34,37 @@ type Receipt struct {
 	ID     int // for Undo
 	TaskID int
 	Title  string
-	Detail string // "Tomorrow 9:00 AM · reminder"
+	Detail Detail // what changed, as data: the views word it
 	Status Status
 	Bell   bool // the change set a reminder
 }
+
+// Detail is what a receipt says about a change: a reminder at a time, a due time, the fields an
+// update changed. The agent reports it as data and the views word it in the user's language.
+type Detail = agent.Detail
+
+// The kinds of Detail and of the changes an update lists, as the agent names them.
+type (
+	DetailKind = agent.DetailKind
+	Change     = agent.Change
+	ChangeKind = agent.ChangeKind
+)
+
+const (
+	DetailAdded    = agent.DetailAdded
+	DetailReminder = agent.DetailReminder
+	DetailDue      = agent.DetailDue
+	DetailUpdated  = agent.DetailUpdated
+	DetailDone     = agent.DetailDone
+
+	ChangeReminder = agent.ChangeReminder
+	ChangeDue      = agent.ChangeDue
+	ChangeStatus   = agent.ChangeStatus
+	ChangePriority = agent.ChangePriority
+	ChangeProject  = agent.ChangeProject
+	ChangeRenamed  = agent.ChangeRenamed
+	ChangeNotes    = agent.ChangeNotes
+)
 
 // Question is a short question with 2 to 4 answers to pick from; a typed answer works too.
 type Question struct {
@@ -72,4 +102,42 @@ type ModelSettings interface {
 	SetActive(id string) error
 	// Test sends a one-token request with what is typed, saved or not.
 	Test(ctx context.Context, id string, e ProviderEdit) (time.Duration, error)
+}
+
+// Problem says why a request to the model failed, so the views can word it in the user's
+// language.
+type Problem int
+
+const (
+	ProblemOther         Problem = iota // anything else: the text is the provider's own
+	ProblemNotConfigured                // no model is connected
+	ProblemNoKey                        // the provider needs an API key
+	ProblemCancelled
+	ProblemTimeout
+	ProblemUnreachable // connection refused or an unknown host
+	ProblemKeyRejected
+	ProblemUnknownModel
+	ProblemRateLimited
+	ProblemBusy // a second request while one runs
+)
+
+// ProblemError is a failure the views word themselves. Error is the English text; Err is the
+// failure it describes.
+type ProblemError struct {
+	Problem Problem
+	Text    string
+	Err     error
+}
+
+func (e *ProblemError) Error() string { return e.Text }
+func (e *ProblemError) Unwrap() error { return e.Err }
+
+// ProblemOf says what kind of failure err is; ProblemOther for any error that is not a
+// ProblemError.
+func ProblemOf(err error) Problem {
+	var p *ProblemError
+	if errors.As(err, &p) {
+		return p.Problem
+	}
+	return ProblemOther
 }

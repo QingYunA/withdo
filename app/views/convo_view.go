@@ -59,7 +59,7 @@ func (m *Main) turnView(c *ui.Context, t *theme.Tokens, i int, turn convoTurn, l
 			m.questionView(c, t, i, *turn.question, last && !m.convo.thinking)
 		}
 		if turn.stopped {
-			theme.Text(c, theme.Meta, t.TextTertiary, "Stopped.").Margin(6, 0, 0)
+			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoStopped()).Margin(6, 0, 0)
 		}
 		if turn.err != "" {
 			m.errorView(c, t, turn.err, last)
@@ -97,11 +97,11 @@ func (m *Main) receiptRow(c *ui.Context, t *theme.Tokens, r data.Receipt) {
 		if undone {
 			title.Strikethrough()
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, r.Detail).Shrink(2).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextTertiary, m.detailText(r.Detail)).Shrink(2).MinWidth(0).Ellipsis("…")
 		ui.Spacer(c)
 		if undone {
-			theme.Text(c, theme.Meta, t.TextTertiary, "Undone").Shrink(0)
-		} else if undoButton(c, t, r).Clicked() {
+			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoUndone()).Shrink(0)
+		} else if m.undoButton(c, t, r).Clicked() {
 			m.undo(r)
 		}
 	})
@@ -111,16 +111,16 @@ func (m *Main) receiptRow(c *ui.Context, t *theme.Tokens, r data.Receipt) {
 }
 
 // undoButton is the quiet Undo at the right of a receipt.
-func undoButton(c *ui.Context, t *theme.Tokens, r data.Receipt) ui.Element {
+func (m *Main) undoButton(c *ui.Context, t *theme.Tokens, r data.Receipt) ui.Element {
 	btn := ui.ButtonBase(c.Key("undo-"+itoa(r.ID))).Padding(3, 8).Radius(theme.RadiusControl).Shrink(0).
-		Label("Undo: " + r.Title).Cursor(ui.CursorPointer)
+		Label(m.say.A11yUndo(r.Title)).Cursor(ui.CursorPointer)
 	ink := t.TextSecondary
 	if btn.Hovered() {
 		btn.Background(t.BgSelected)
 		ink = t.Accent
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	btn.Children(func() { theme.Text(c, theme.MetaStrong, ink, "Undo") })
+	btn.Children(func() { theme.Text(c, theme.MetaStrong, ink, m.say.ConvoUndo()) })
 	return btn
 }
 
@@ -155,7 +155,7 @@ func optionButton(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 func (m *Main) errorView(c *ui.Context, t *theme.Tokens, text string, last bool) {
 	ui.Row(c).Shrink(0).Margin(6, 0, 0).Gap(10).AlignItems(ui.Center).Children(func() {
 		theme.Paragraph(c, theme.Body, t.TextSecondary, text, 0).Shrink(1).MinWidth(0)
-		if last && link(c, t, "Retry").Shrink(0).Clicked() {
+		if last && link(c, t, m.say.ConvoRetry()).Shrink(0).Clicked() {
 			m.retry()
 		}
 	})

@@ -79,25 +79,18 @@ func TestAddProjectIsEmptyAndListed(t *testing.T) {
 	}
 }
 
-func TestWordsForTimes(t *testing.T) {
-	now := fixedNow()
-	cases := []struct {
-		got, want string
-	}{
-		{Age(now.Add(-30*time.Second), now), "now"},
-		{Age(now.Add(-2*time.Minute), now), "2m"},
-		{Age(now.Add(-3*time.Hour), now), "3h"},
-		{Age(now.Add(-48*time.Hour), now), "2d"},
-		{Age(now.Add(-10*24*time.Hour), now), "Oct 4"},
-		{When(now.Add(time.Hour), now), "in 1h"},
-		{When(now.Add(20*time.Minute), now), "in 20m"},
-		{When(now.Add(24*time.Hour), now), "tomorrow"},
-		{When(now.Add(-2*time.Hour), now), "2h ago"},
-		{DayWord(now.Add(3*24*time.Hour), now), "Saturday"},
-	}
-	for _, c := range cases {
-		if c.got != c.want {
-			t.Errorf("got %q, want %q", c.got, c.want)
+func TestDaysFromCountsCalendarDays(t *testing.T) {
+	now := fixedNow() // 2:30 PM
+	for d, want := range map[time.Duration]int{
+		-30 * time.Minute:    0,
+		9 * time.Hour:        0, // 11:30 PM
+		10 * time.Hour:       1, // 12:30 AM
+		-15 * time.Hour:      -1,
+		3 * 24 * time.Hour:   3,
+		-10 * 24 * time.Hour: -10,
+	} {
+		if got := DaysFrom(now.Add(d), now); got != want {
+			t.Errorf("DaysFrom(now%+v) = %d, want %d", d, got, want)
 		}
 	}
 }

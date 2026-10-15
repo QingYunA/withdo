@@ -126,18 +126,11 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width flo
 	box.Children(func() {
 		ui.Row(c.Key("header")).Height(40).Shrink(0).Padding(0, 0, 0, 6).Gap(8).AlignItems(ui.Center).Children(func() {
 			theme.StatusGlyph(c, t, col.status, 0)
-			theme.Text(c, theme.BodyStrong, t.Text, boardName(col.status))
+			theme.Text(c, theme.BodyStrong, t.Text, boardName(m.say, col.status))
 			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(col.tasks)))
 		})
 		m.columnBody(c, t, col)
 	})
-}
-
-func boardName(s data.Status) string {
-	if s == data.Todo {
-		return "To do"
-	}
-	return s.Label()
 }
 
 func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
@@ -152,12 +145,12 @@ func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
 				m.boardAdd(c, t)
 			}
 			if len(tasks) == 0 && col.status == data.Todo && !m.adding {
-				theme.Paragraph(c, theme.Meta, t.TextTertiary, "Nothing waiting. Drag a card here to plan it.", 3).Padding(2, 6, 0)
+				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.BoardEmpty(), 3).Padding(2, 6, 0)
 			}
 			for _, task := range tasks {
 				m.card(c, t, task)
 			}
-			if hidden > 0 && link(c, t, "Show all "+itoa(hidden+len(tasks))).Margin(4, 0, 0, 6).Clicked() {
+			if hidden > 0 && link(c, t, m.say.BoardShowAll(hidden+len(tasks))).Margin(4, 0, 0, 6).Clicked() {
 				m.allDone[m.nav] = true
 			}
 		})
@@ -171,20 +164,20 @@ func (m *Main) boardAdd(c *ui.Context, t *theme.Tokens) {
 			box := ui.Box(c).Grow(1).MinWidth(0)
 			box.Children(func() {
 				theme.BodyStrong.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-					Label("New task title").AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
+					Label(m.say.ListNewTaskTitle()).AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
 				if m.addBuf == "" {
-					theme.Text(c, theme.BodyStrong, t.TextTertiary, "Task title").Absolute().Left(0).Top(0).PassThrough()
+					theme.Text(c, theme.BodyStrong, t.TextTertiary, m.say.ListTaskTitle()).Absolute().Left(0).Top(0).PassThrough()
 				}
 			})
 		})
 		return
 	}
 	row := ui.Row(c.Key("board-add")).Height(theme.RowOneLine).Padding(0, 6).Radius(theme.RadiusCard).
-		AlignItems(ui.Center).Cursor(ui.CursorPointer).Label("Add a task")
+		AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ListAddTask())
 	if row.Hovered() {
 		row.Background(t.BgHover)
 	}
-	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "+ Add a task") })
+	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, m.say.ListAddTaskRow()) })
 	if row.Clicked() {
 		m.adding, m.addNav, m.addBuf = true, m.nav, ""
 	}
@@ -209,7 +202,7 @@ func (m *Main) dropTargets(c *ui.Context, t *theme.Tokens, hidden []data.Status)
 			}
 			target.Children(func() {
 				theme.StatusGlyph(c, t, s, 0)
-				theme.Text(c, theme.Body, t.TextSecondary, boardName(s))
+				theme.Text(c, theme.Body, t.TextSecondary, boardName(m.say, s))
 			})
 		}
 	})

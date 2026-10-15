@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -22,7 +23,7 @@ func TestScreensGlyphs(t *testing.T) {
 					for _, s := range data.Statuses {
 						ui.Column(c.Key(string(s))).Gap(6).AlignItems(ui.Center).Children(func() {
 							theme.StatusGlyph(c, tk, s, 0)
-							theme.Text(c, theme.Meta, tk.TextSecondary, s.Label())
+							theme.Text(c, theme.Meta, tk.TextSecondary, statusLabel(locales.In(""), s))
 						})
 					}
 				})

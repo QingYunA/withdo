@@ -337,14 +337,7 @@ func TestRealFeedsTheNowScreen(t *testing.T) {
 	if n.Needs[0].Kind != NeedBlocked || n.Needs[1].Kind != NeedReminder || n.Needs[2].Kind != NeedReview {
 		t.Errorf("order %v %v %v", n.Needs[0].Kind, n.Needs[1].Kind, n.Needs[2].Kind)
 	}
-	want := []string{
-		"Agent is waiting: “Needs a decision on the policy”",
-		"You asked to be reminded at 2:29 PM",
-		"PR #12 is ready for your review",
-	}
-	for i, it := range n.Needs {
-		if it.Summary != want[i] {
-			t.Errorf("need %d summary %q, want %q", i, it.Summary, want[i])
-		}
+	if n.Needs[0].Words != "Needs a decision on the policy" || n.Needs[1].RemindAt == nil || n.Needs[2].PRNumber != 12 {
+		t.Errorf("needs %+v", n.Needs)
 	}
 }

@@ -284,9 +284,35 @@ the open provider's fields at the right.
 
 ## Writing
 
-- English UI copy for now. Sentence case everywhere ("Add a task", not "Add A Task").
-- Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12").
-- Never blame: "Couldn't reach the data store. Retrying…" rather than "Error".
+- UI copy comes in English and Simplified Chinese. English is the source; the system language picks
+  the language, and Settings > General > Language can override it (System, English, 简体中文).
+- English: sentence case everywhere ("Add a task", not "Add A Task"). Never blame: "Couldn't reach
+  the data store. Retrying…" rather than "Error".
+- Chinese reads like macOS's own Simplified Chinese: short, natural, no translationese, "你" without
+  "您", full-width punctuation (，。：“”), a space between a number and Latin text but none
+  before a unit ("3天前", "2分钟前"). `⌘K`, PR, MCP, Claude Code and branch names stay as they are.
+  Examples: "需要你处理", "Agent 进行中", "你的任务", "全部处理完了。", "已添加到收件箱".
+- Section headers are uppercase with tracking in English only: a text with Han characters gets
+  neither (`theme.Text`).
+- Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12"); in Chinese "刚刚", "2分钟前",
+  "3小时前", "2天前", then "10月12日". Due labels: "Today", "Tomorrow", "Fri", "Oct 20", the time of
+  day for a reminder today ("4:00 PM", "下午4:00"). Dates and hours follow the user's regional
+  formats (`ui.Context.Region()`, so 12 or 24 hours), written by `app/words`.
+- The assistant's own replies are in the language the user writes in; they are not in the catalog.
+
+### Adding a string
+
+1. Add the key to `app/locales/en.json` with an `@key` description for translators (what it is and
+   where it shows; `placeholders` with an `example` for each argument).
+2. Add the same key to `app/locales/zh-Hans.json` with the same placeholders.
+3. `cd app && go tool mygo generate` writes `locales/catalog_gen.go`; commit it. `go tool mygo i18n
+   check` and `go test ./app/locales` must pass.
+4. Say it in a view with `m.say.KeyName(args)` (a `locales.Messages` for the window's language);
+   outside a view, `locales.KeyName(args)` says it in the language the app shows. Never build a
+   sentence from pieces: give the message the arguments it needs, so each language orders them.
+5. Times go through `app/words` (`m.clock`), never `time.Format`. Packages in `internal/` hold no
+   wording: they return data (kinds, times, values) and `app/views` words it.
+6. Keys of elements (`c.Key`) never use a translated text.
 
 ## Review checklist
 

@@ -15,18 +15,18 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 	}
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
-		m.navRow(c, t, "now", nav{}, theme.IconNow, "Now", now.Count())
+		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
-		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, "Inbox", inbox)
+		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
 		ui.Row(c).Padding(18, 18, 6).Shrink(0).Children(func() {
-			theme.Text(c, theme.Section, t.TextTertiary, "Projects")
+			theme.Text(c, theme.Section, t.TextTertiary, m.say.NavProjects())
 		})
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
 			m.projectRow(c, t, p, n, blocked)
 		}
 		if len(m.app.snap.projects) == 0 {
-			theme.Paragraph(c, theme.Meta, t.TextTertiary, "Projects appear when an agent reports from a repository.", 0).Padding(0, 18)
+			theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.NavNoProjects(), 0).Padding(0, 18)
 		}
 		ui.Spacer(c)
 		m.settingsRow(c, t)
@@ -83,7 +83,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	row := sidebarRow(c, t, "settings", false)
 	row.Children(func() {
 		ui.Icon(c, theme.IconGear).Size(16, 16).TextColor(t.TextSecondary)
-		sidebarLabel(c, t, "Settings", false)
+		sidebarLabel(c, t, m.say.NavSettings(), false)
 	})
 	if row.Clicked() {
 		m.settings = true

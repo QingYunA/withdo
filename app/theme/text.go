@@ -1,6 +1,10 @@
 package theme
 
-import "github.com/egoist/mygo/ui"
+import (
+	"unicode"
+
+	"github.com/egoist/mygo/ui"
+)
 
 // Style is one row of the type scale.
 type Style struct {
@@ -39,11 +43,27 @@ func (s Style) Apply(e ui.Element) ui.Element {
 }
 
 // Text builds a single line of text in a style and color. Section styles are uppercased.
+//
+// Capitals and letter spacing suit Latin text, not Han characters: a text with any gets neither,
+// as "Agent 进行中" stays as it is written.
 func Text(c *ui.Context, s Style, color ui.Color, text string) ui.Element {
+	if hasHan(text) {
+		s.Tracking, s.Upper = 0, false
+	}
 	if s.Upper {
 		text = upper(text)
 	}
 	return s.Apply(ui.Text(c, text)).TextColor(color).SingleLine()
+}
+
+// hasHan reports whether s holds a Han character, which is spaced by its design.
+func hasHan(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Han, r) {
+			return true
+		}
+	}
+	return false
 }
 
 func upper(s string) string {

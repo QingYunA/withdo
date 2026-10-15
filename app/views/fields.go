@@ -26,7 +26,8 @@ func (f fields) get(name string) *field {
 
 // fieldSpec describes a text field.
 type fieldSpec struct {
-	name        string
+	name        string // the key of the field, whatever the language
+	label       string // what assistive technology calls it
 	value       string // what the store holds
 	style       theme.Style
 	color       ui.Color
@@ -74,7 +75,7 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 		} else {
 			el = ui.TextInputBase(c.Key(s.name), &f.buf)
 		}
-		s.style.Apply(el).TextColor(s.color).Label(s.name).OnTextKey(f.key(s))
+		s.style.Apply(el).TextColor(s.color).Label(s.label).OnTextKey(f.key(s))
 		if s.secret && !s.multiline {
 			el.Password()
 		}

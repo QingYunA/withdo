@@ -4,7 +4,9 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
+	"github.com/QingYunA/adhd-todo/app/words"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -32,6 +34,11 @@ type nav struct {
 // Main is the window: sidebar, one screen, the inspector, and the settings sheet.
 type Main struct {
 	app *App
+
+	// say and clock word the interface in the language and formats the window shows; View sets
+	// them every frame.
+	say   locales.Messages
+	clock words.Clock
 
 	nav       nav
 	openID    int // task open in the inspector, 0 for none
@@ -103,6 +110,7 @@ func (m *Main) goTo(n nav) {
 // View builds the window for one frame.
 func (m *Main) View(c *ui.Context) {
 	t := theme.Resolve(c)
+	m.say, m.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
 	vibrant := c.Vibrancy()
 	if vibrant {
 		c.Root().Background(ui.Transparent)
@@ -186,9 +194,9 @@ func (m *Main) errorStrip(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	ui.Row(c).Shrink(0).Padding(8, 24).Gap(8).Background(t.BgSubtle).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, "Couldn't reach the data store. Retrying…")
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.ErrNoStore())
 		ui.Spacer(c)
-		if link(c, t, "Retry").Clicked() {
+		if link(c, t, m.say.ConvoRetry()).Clicked() {
 			m.app.Refresh()
 		}
 	})

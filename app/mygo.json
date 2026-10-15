@@ -2,5 +2,9 @@
   "name": "ADHD Todo",
   "identifier": "dev.adhdtodo.desktop",
   "version": "0.2.0",
-  "out": "build"
+  "out": "build",
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
+  }
 }
