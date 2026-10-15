@@ -31,6 +31,15 @@ func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
 	}
 }
 
+// The user writes Chinese as often as English, so the inference rules carry the Chinese words too,
+// and one message may hold several tasks or report one done.
+func TestPromptInfersFromChineseAndSplitsLists(t *testing.T) {
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
+	for _, want := range []string{"紧急", "不急", "线上挂了", "明早", "下班前", "周末", "separate tasks", "complete_task", "Titles are short"} {
+		contains(t, "prompt", p, want)
+	}
+}
+
 func TestPromptWithoutProjects(t *testing.T) {
 	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
 	contains(t, "prompt", p, "none yet")

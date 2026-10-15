@@ -74,13 +74,13 @@ func TestPromptTellsTheModelWhereTheRequestComesFrom(t *testing.T) {
 func TestPromptHasTheInferenceRules(t *testing.T) {
 	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
 	for _, want := range []string{
-		`"urgent", "asap" or "blocker"`, "P1",
+		`"urgent", "asap", "blocker"`, "P1",
 		`"someday"`, "P3",
 		`"drop everything"`, `"production is down"`, "P0",
 		`"p1"`, // a priority the user writes is taken as written
 		`"remind me"`, "remind_at",
 		`"by Friday"`, "due_at",
-		"morning is 09:00", "afternoon 14:00", "evening 19:00", `"tonight" 20:00`,
+		"is 09:00", "afternoon (下午) 14:00", "evening (晚上) 19:00", `"tonight" (今晚) 20:00`,
 		"bare day", "end of day",
 		"what you inferred",
 	} {
