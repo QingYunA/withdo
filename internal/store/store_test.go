@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(2),
+		"PRAGMA user_version": int64(3),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 2 {
-		t.Errorf("SchemaVersion = %d, want 2", store.SchemaVersion())
+	if store.SchemaVersion() != 3 {
+		t.Errorf("SchemaVersion = %d, want 3", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 2 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 3 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -270,23 +270,12 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 	}
 }
 
-// ts-v2.db was written by the TypeScript core (bun:sqlite, user_version 2).
+// ts-v2.db was written by the TypeScript core (bun:sqlite, user_version 2): the oldest database a
+// user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
-	data, err := os.ReadFile("testdata/ts-v2.db")
-	if err != nil {
-		t.Fatal(err)
-	}
-	path := filepath.Join(t.TempDir(), "copy.db")
-	if err := os.WriteFile(path, data, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	db, err := store.Open(ctx, path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = db.Close() }()
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 2 {
-		t.Fatalf("user_version = %d, want 2 (no migration expected)", v)
+	db := openCopyOf(t, "testdata/ts-v2.db")
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 3 {
+		t.Fatalf("user_version = %d, want 3 (migration 003 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -299,4 +288,50 @@ func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	if _, err := db.ExecContext(ctx, "INSERT INTO reports (task_id, agent, summary, created_at) VALUES (1,'go','hi','t')"); err != nil {
 		t.Errorf("writing to a TS-created database: %v", err)
 	}
+}
+
+// Migration 003 adds the pull request columns; a task that predates them has none of the five set.
+func TestMigration003AddsPullRequestColumnsToExistingRows(t *testing.T) {
+	db := openCopyOf(t, "testdata/ts-v2.db")
+	var state, checks, review, checkedAt, closedSeen sql.NullString
+	err := db.QueryRowContext(ctx,
+		"SELECT pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at FROM tasks").
+		Scan(&state, &checks, &review, &checkedAt, &closedSeen)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, v := range map[string]sql.NullString{"pr_state": state, "pr_checks": checks, "pr_review": review,
+		"pr_checked_at": checkedAt, "pr_closed_seen_at": closedSeen} {
+		if v.Valid {
+			t.Errorf("%s = %q, want NULL for a row from before the migration", name, v.String)
+		}
+	}
+	good := "UPDATE tasks SET pr_state='merged', pr_checks='failing', pr_review='changes_requested', pr_checked_at='t', pr_closed_seen_at='t'"
+	if _, err := db.ExecContext(ctx, good); err != nil {
+		t.Errorf("valid values: %v", err)
+	}
+	for _, col := range []string{"pr_state", "pr_checks", "pr_review"} {
+		if _, err := db.ExecContext(ctx, "UPDATE tasks SET "+col+" = 'nope'"); err == nil {
+			t.Errorf("%s should reject an unknown value", col)
+		}
+	}
+}
+
+// openCopyOf opens a copy of a database file from testdata, so the original stays at its version.
+func openCopyOf(t *testing.T, file string) *sql.DB {
+	t.Helper()
+	data, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "copy.db")
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	db, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+	return db
 }
