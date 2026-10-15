@@ -82,7 +82,7 @@ func (s *Settings) tile(c *ui.Context, t *theme.Tokens, p data.Provider) {
 		btn.Shadow(0, 0, 0, 1, t.Border)
 	}
 	btn.Children(func() {
-		theme.ProviderLogo(c, p.ID, p.Monogram, theme.LogoTile)
+		providerLogo(c, t, p.ID, theme.LogoTile)
 		theme.Text(c, theme.Meta, t.Text, name).Ellipsis("…").Margin(0, 4)
 		if p.Configured {
 			theme.Dot(c, t.Status(data.Done), 7).Absolute().Top(6).Right(7)
@@ -92,6 +92,16 @@ func (s *Settings) tile(c *ui.Context, t *theme.Tokens, p data.Provider) {
 		s.assist.changing, s.assist.pick, s.assist.err = true, p.ID, ""
 		s.fetchModels(p, "")
 	}
+}
+
+// providerLogo is a provider's logo in the colors of the theme: a one-color mark takes the text
+// color, so that it is white in dark mode, and Custom's plus the quiet one.
+func providerLogo(c *ui.Context, t *theme.Tokens, id string, size float32) ui.Element {
+	ink := t.Text
+	if id == "custom" {
+		ink = t.TextSecondary
+	}
+	return theme.ProviderLogo(c, id, size).TextColor(ink)
 }
 
 // formLabelWidth is the width of the labels at the left of the fields.

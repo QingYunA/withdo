@@ -10,6 +10,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/views"
+	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/egoist/mygo"
 )
 
@@ -33,6 +34,7 @@ func main() {
 		DataFolder:     be.dataFolder,
 		Home:           home,
 		Version:        version,
+		AgentSetup:     agentsetup.New(home),
 	})
 	app.Assistant, app.Models, app.GitHub = be.assistant, be.models, be.github
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}

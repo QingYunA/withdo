@@ -79,7 +79,7 @@ func (s *Settings) inUseCard(c *ui.Context, t *theme.Tokens, p data.Provider) {
 	}
 	group(c, t, "inuse", func() {
 		ui.Row(c).Shrink(0).Padding(14, 16).Gap(14).AlignItems(ui.Center).Children(func() {
-			theme.ProviderLogo(c, p.ID, p.Monogram, theme.LogoCard)
+			providerLogo(c, t, p.ID, theme.LogoCard)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 				theme.Text(c, theme.BodyStrong, t.Text, providerName(s.say, p)).Ellipsis("…")
 				s.statusLine(c, t, p, res)
@@ -139,7 +139,7 @@ func (s *Settings) alsoRow(c *ui.Context, t *theme.Tokens, p data.Provider, firs
 				s.runTest(p)
 			}
 		}
-	}, func() { theme.ProviderLogo(c, p.ID, p.Monogram, theme.LogoRow) })
+	}, func() { providerLogo(c, t, p.ID, theme.LogoRow) })
 }
 
 // edit is the provider as it is stored, to which one change is made.

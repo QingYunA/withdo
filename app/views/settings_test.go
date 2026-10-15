@@ -17,6 +17,7 @@ type settingsRig struct {
 	app *App
 	rec *recorder
 	fm  *data.FakeModels
+	mac *agentRig // this Mac, for the Agents pane
 
 	title string
 }
@@ -30,7 +31,8 @@ func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
 	for _, f := range mod {
 		f(app)
 	}
-	r := &settingsRig{app: app, rec: rec, fm: fm}
+	r := &settingsRig{app: app, rec: rec, fm: fm, mac: newAgentRig(t)}
+	app.Config.AgentSetup = r.mac.env
 	r.s = NewSettings(app)
 	r.s.OnTitle = func(title string) { r.title = title }
 	w, h := r.s.ContentSize()
@@ -100,7 +102,7 @@ func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	has(t, r.tt, "Language", "System", "No archived projects. Archive one from its menu in the sidebar.",
 		"Data folder", r.app.Config.DataFolder, "Show in Finder", "adhd-todo 0.2.0", "Open source, MIT license", "GitHub ↗")
 	hasFold(t, r.tt, "Archived projects")
-	hasNot(t, r.tt, "Connect Claude Code")
+	hasNot(t, r.tt, "Install MCP")
 	if err := r.tt.Click("Show in Finder"); err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +163,10 @@ func TestArchivedProjectsListWithRestore(t *testing.T) {
 func TestAgentsPaneCopiesTheCommand(t *testing.T) {
 	r := newSettingsRig(t)
 	r.pane(t, "Agents")
-	has(t, r.tt, "Connect Claude Code", "Run this once in a terminal. Agents then report their progress here.", r.app.Config.ConnectCommand, "Copy")
+	has(t, r.tt, "Or run this once in a terminal, for Claude Code", r.app.Config.ConnectCommand, "Copy")
+	hasNot(t, r.tt, "Connect Claude Code")
+	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Frame()
 	if err := r.tt.Click("Copy command"); err != nil {
 		t.Fatal(err)
 	}

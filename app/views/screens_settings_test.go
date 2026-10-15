@@ -45,6 +45,12 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	t.Helper()
 	app, store, _ := newTestApp(t)
+	mac := newAgentRig(t)
+	app.Config.AgentSetup = mac.env
+	mac.has("claude", "codex", "gemini", "opencode", "code")
+	mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`)
+	mac.write(".codex/config.toml", "[mcp_servers.adhd-todo]\ncommand = \"x\"\n")
+	mac.write(".cursor/mcp.json", "{}")
 	app.Models = newFakeModels(t)
 	app.GitHub = data.NewFakeGitHub(st)
 	mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))

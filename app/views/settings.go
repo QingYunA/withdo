@@ -27,12 +27,14 @@ const copiedFor = 1500 * time.Millisecond
 // Settings is the content of the Settings window: a toolbar of panes over grouped lists. It has
 // the state of its panes; the data comes from the App the main window shares.
 type Settings struct {
-	app    *App
-	say    locales.Messages
-	clock  words.Clock
-	pane   Pane
-	assist assistState
-	copied time.Time
+	app       *App
+	say       locales.Messages
+	clock     words.Clock
+	pane      Pane
+	assist    assistState
+	copied    time.Time
+	copiedKey string // the copy button that was pressed
+	setup     setupState
 
 	// OnTitle is told the open pane's name, for the window's title, whenever it changes. The window
 	// itself never changes size: see ContentSize.

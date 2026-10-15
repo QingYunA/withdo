@@ -22,6 +22,24 @@ const (
 type Sprite struct {
 	Rows    []string
 	Palette map[rune]ui.Color
+	// Dark, when set, replaces the colors of the keys it has in dark mode, for a drawing that is
+	// itself dark and would vanish on a dark window.
+	Dark map[rune]ui.Color
+}
+
+// inDark is the sprite as it is drawn in dark mode.
+func (s *Sprite) inDark() *Sprite {
+	if len(s.Dark) == 0 {
+		return s
+	}
+	pal := make(map[rune]ui.Color, len(s.Palette))
+	for k, v := range s.Palette {
+		pal[k] = v
+	}
+	for k, v := range s.Dark {
+		pal[k] = v
+	}
+	return &Sprite{Rows: s.Rows, Palette: pal}
 }
 
 // Width is the sprite's width in pixels.
@@ -46,6 +64,13 @@ const (
 	AvatarCodex
 	AvatarCursor
 	AvatarGemini
+	AvatarOpencode
+	AvatarCopilot
+	AvatarQwen
+	AvatarKimi
+	AvatarWindsurf
+	AvatarZed
+	AvatarCline
 	AvatarOther
 )
 
@@ -134,7 +159,41 @@ var (
 		".....v......",
 		"............",
 	}}
-	botRows = []string{
+	spriteOpencode = &Sprite{Palette: pal("k#2B2B30 g#9FA3AD"), Dark: pal("k#D9DADF g#5C606A"), Rows: []string{
+		"............",
+		"..kkkkkkkk..",
+		"..kkkkkkkk..",
+		"..kk....kk..",
+		"..kk.gg.kk..",
+		"..kk.gg.kk..",
+		"..kk.gg.kk..",
+		"..kk....kk..",
+		"..kkkkkkkk..",
+		"..kkkkkkkk..",
+		"............",
+		"............",
+	}}
+	spriteCopilot = &Sprite{Palette: pal("k#24292F w#FFFFFF b#8250DF"), Dark: pal("k#D0D7DE w#24292F"), Rows: []string{
+		"............",
+		"...kkkkkk...",
+		"..kkkkkkkk..",
+		".kkwwkkwwkk.",
+		".kwwbwwbwwk.",
+		".kkwwkkwwkk.",
+		".kkkkkkkkkk.",
+		".kkk.kk.kkk.",
+		"..kkkkkkkk..",
+		"...kkkkkk...",
+		"............",
+		"............",
+	}}
+	// The agents without a drawing of their own get the robot in the color of their brand.
+	spriteQwen     = tintedBot("#615CED")
+	spriteKimi     = tintedBot("#1F6FEB")
+	spriteWindsurf = tintedBot("#0EA5A4")
+	spriteZed      = tintedBot("#3F9E4D")
+	spriteCline    = tintedBot("#D9488B")
+	botRows        = []string{
 		".....a......",
 		".....m......",
 		"..mmmmmmmm..",
@@ -180,6 +239,20 @@ func AgentAvatar(name string) Who {
 		return Who{Kind: AvatarCursor, sprite: spriteCursor}
 	case strings.Contains(n, "gemini"):
 		return Who{Kind: AvatarGemini, sprite: spriteGemini}
+	case strings.Contains(n, "opencode"):
+		return Who{Kind: AvatarOpencode, sprite: spriteOpencode}
+	case strings.Contains(n, "copilot") || strings.Contains(n, "visual studio code"):
+		return Who{Kind: AvatarCopilot, sprite: spriteCopilot}
+	case strings.Contains(n, "qwen"):
+		return Who{Kind: AvatarQwen, sprite: spriteQwen}
+	case strings.Contains(n, "kimi"):
+		return Who{Kind: AvatarKimi, sprite: spriteKimi}
+	case strings.Contains(n, "windsurf"):
+		return Who{Kind: AvatarWindsurf, sprite: spriteWindsurf}
+	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
+		return Who{Kind: AvatarZed, sprite: spriteZed}
+	case strings.Contains(n, "cline"):
+		return Who{Kind: AvatarCline, sprite: spriteCline}
 	}
 	return Who{Kind: AvatarOther, sprite: bot(name)}
 }
@@ -191,6 +264,11 @@ func bot(name string) *Sprite {
 		_, _ = h.Write([]byte(strings.ToLower(name)))
 		tint = botTints[1+int(h.Sum32()%uint32(len(botTints)-1))]
 	}
+	return tintedBot(tint)
+}
+
+// tintedBot is the robot in one color, which is shaded and lightened for its feet and antenna.
+func tintedBot(tint string) *Sprite {
 	base := ui.Hex(tint)
 	return &Sprite{Rows: botRows, Palette: map[rune]ui.Color{
 		'm': base, 'd': base.Mix(ui.Hex("#000000"), 0.22), 'a': base.Mix(ui.Hex("#FFFFFF"), 0.45),
@@ -214,6 +292,9 @@ func AvatarIcon(c *ui.Context, w Who, size float32) ui.Element {
 // SpriteIcon draws a sprite size points tall, as wide as its pixels make it.
 func SpriteIcon(c *ui.Context, s *Sprite, size float32) ui.Element {
 	u := size / float32(s.Height())
+	if Resolve(c).Dark {
+		s = s.inDark()
+	}
 	return ui.Box(c).Size(u*float32(s.Width()), size).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
 		DrawSprite(p, r, s)
 	})

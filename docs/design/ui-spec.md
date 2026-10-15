@@ -616,7 +616,7 @@ A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `
 sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane
 asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
 under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
-the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7; screens
+the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7, and `v5.html` frames 5 and 6 (logos, Agents); screens
 `settings-general-*`, `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
 `settings-change-*`, `settings-change-error-*`, `settings-custom-*`, `settings-agents-*`,
 `settings-github-*`.
@@ -636,8 +636,8 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
   link).
-- **Assistant**, at rest (M5): the label **In use** and one card (a group): the provider's **logo
-  tile** (38 pt, a rounded square in the provider's color with a monogram, `theme.ProviderLogo`), its
+- **Assistant**, at rest (M5): the label **In use** and one card (a group): the provider's **logo**
+  (38 pt, `theme.ProviderLogo`, see **Provider logos** below), its
   name (`body` 500), then `model · ● Connected · 312 ms` in `meta` (the model in `text.secondary`, the
   dot and words in the done green), and **Change** at the right. Before any test the line reads
   `Not tested yet` with a **Test** link; a test that failed shows its friendly error in `meta` under
@@ -664,12 +664,53 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   key or model field is the same as the button. **Custom** adds **Base URL** and **Protocol**
   (OpenAI-compatible | Anthropic API) above the key, and its model is always typed. Magpie and Ollama
   have no key row. A missing key, base URL or model is said under the fields without a request.
-- **Agents** (M5): **Agents that reported**: a row per agent that ever reported, the latest first:
-  its 36 pt pixel avatar (`theme.AvatarIcon(theme.AgentAvatar(name))`), its name (Claude Code, Codex,
-  Cursor, Gemini CLI, any other as it reported), `N reports today` (or `No reports today`) in `meta`,
-  and how long ago the last report was at the right (`2m`, `6m`, `1d`). The GitHub poller's reports
-  are not an agent and are left out. Under the list: `Connect Claude Code`, one line on what agents
-  report, the registration command in a mono well with **Copy**.
+- **Provider logos** (M6): the official marks of lobe-icons (MIT, `@lobehub/icons-static-svg` 1.95.1),
+  vendored as SVG under `app/theme/logos/` with their LICENSE and embedded in the binary, so nothing is
+  fetched. `theme.ProviderLogo(c, presetID, size)` draws one `size` pt square: Anthropic (`claude-color`),
+  DeepSeek, 智谱, 通义千问, Gemini, OpenRouter and 硅基流动 in their own colors (`ui.Image`); OpenAI,
+  Kimi and Ollama only have one color, so they use `ui.Icon` and follow the text color (white in dark
+  mode; the caller sets it with `TextColor`, Settings uses `text`); Magpie is the pixel robot in teal;
+  Custom is a plus in `text.secondary`. Sizes: `LogoCard` 38, `LogoTile` 32, `LogoRow` 28, `LogoChip` 16
+  (for the composer's model chip). The provider logo is never a colored tile with letters any more.
+- **Agents** (M6, `v5.html` frame 6): the label **Agents on this Mac**, one plain `meta` line under
+  it ("Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here.
+  It does not install or start the agent."), then ten agents in **two columns**, each column a white
+  group, read left to right, top to bottom: Claude Code, Codex, Gemini CLI, Cursor, opencode,
+  Copilot (VS Code), Qwen Code, Kimi CLI, Windsurf, Zed. A row (at least 44 pt): the 24 pt pixel
+  avatar (`theme.AgentAvatar`), the name (`body`), one `meta` line, and at the right one of
+  - `✓ MCP installed` (done green): adhd-todo is in the agent's MCP config, or the agent has reported;
+  - **Install MCP** (the accent button): the agent is on this Mac (its command is on PATH, or its
+    config folder is there) and has no adhd-todo yet. While it runs the button reads `Installing…`;
+  - **Get it ↗** (a link to the agent's site): the agent is not on this Mac.
+  The line under the name is `N reports today` when the agent reported today, else `No reports
+  today` when it ever reported, else `Found · gemini` / `Found · ~/.cursor` (what was found), else
+  `Not on this Mac`. The agent that reported is matched by `agentName` (`claude-code` is Claude Code).
+  An install that fails says why in the row, in `meta` and the blocked red, in plain words (the last
+  line the agent's own command printed, "adhd-core isn't at ~/.local/bin/adhd-core", a timeout).
+  A config file with comments (Zed's `settings.json`) is **never rewritten**: a `Add this to
+  ~/.config/zed/settings.json:` line and the snippet in the mono well with **Copy** appear under the
+  columns. At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
+  `claude mcp add` command in a mono well with **Copy**. "Install MCP" is the only word for this; it
+  is never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
+  `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's PATH
+  lacks) every 30 s and after an install; **nothing is installed without the button**.
+  - Commands, run with the absolute `~/.local/bin/adhd-core` and a 30 s timeout: `claude mcp add --scope
+    user adhd-todo -- <core> mcp`; `codex mcp add adhd-todo -- <core> mcp`; `gemini mcp add -s user
+    adhd-todo <core> mcp`; `qwen mcp add --scope user adhd-todo <core> mcp`; `kimi mcp add --transport
+    stdio adhd-todo -- <core> mcp`; `code --add-mcp '{"name":"adhd-todo","command":"<core>","args":["mcp"]}'`.
+  - Files (copied first to `<file>.adhd-todo.bak`, key order, number text and indentation kept, created
+    when missing): Cursor `~/.cursor/mcp.json` `mcpServers`; opencode `~/.config/opencode/opencode.json`
+    `mcp` (`type: local`, `command: [core, "mcp"]`); Windsurf `~/.codeium/windsurf/mcp_config.json`
+    `mcpServers`; Zed `~/.config/zed/settings.json` `context_servers`.
+  - Installed is read from `~/.claude.json`, `~/.codex/config.toml` (`[mcp_servers.adhd-todo]`),
+    `~/.gemini/settings.json`, `~/.qwen/settings.json`, `~/.kimi/mcp.json`, the files above, and VS
+    Code's user `mcp.json` (`servers`).
+- **Avatars of agents** (M6): besides Claude Code, Codex, Cursor and Gemini CLI, a dark rounded square
+  with a gray center for opencode and a dark head with white goggles and purple pupils for Copilot
+  (both are lightened in dark mode); Qwen Code, Kimi CLI, Windsurf, Zed and Cline are the robot in their
+  brand color. `agentName` and `theme.AgentAvatar` agree on the names agents report under
+  (`Visual Studio Code` is Copilot (VS Code), `qwen-code-mcp-client` and `qwen-cli-mcp-client-*` are Qwen
+  Code); any other name gets a robot colored by the name.
 - **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads

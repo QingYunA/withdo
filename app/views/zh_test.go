@@ -155,9 +155,8 @@ func TestChineseAgentsPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.pane(t, "Agent")
-	has(t, r.tt, "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "拷贝")
-	hasFold(t, r.tt, "接入的 Agent")
-	has(t, r.tt, "Claude Code")
+	has(t, r.tt, "这台 Mac 上的 Agent", "Claude Code", "拷贝")
+	hasNot(t, r.tt, "连接 Claude Code")
 }
 
 func TestChineseConversation(t *testing.T) {
