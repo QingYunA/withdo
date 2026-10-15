@@ -3264,34 +3264,6 @@ func (msgs Messages) SectionYours() string {
 	return Catalog.Format(msgs.locale, "sectionYours", nil)
 }
 
-// SettingsConnectBody says "Run this once in a terminal. Agents then report their progress here."
-// in the language the app shows.
-//
-// Explains the command shown below it.
-func SettingsConnectBody() string { return In(i18n.Locale()).SettingsConnectBody() }
-
-// SettingsConnectBody says "Run this once in a terminal. Agents then report their progress here."
-// in the language of msgs.
-//
-// Explains the command shown below it.
-func (msgs Messages) SettingsConnectBody() string {
-	return Catalog.Format(msgs.locale, "settingsConnectBody", nil)
-}
-
-// SettingsConnectTitle says "Connect Claude Code"
-// in the language the app shows.
-//
-// Header of the block that shows the command registering the MCP server.
-func SettingsConnectTitle() string { return In(i18n.Locale()).SettingsConnectTitle() }
-
-// SettingsConnectTitle says "Connect Claude Code"
-// in the language of msgs.
-//
-// Header of the block that shows the command registering the MCP server.
-func (msgs Messages) SettingsConnectTitle() string {
-	return Catalog.Format(msgs.locale, "settingsConnectTitle", nil)
-}
-
 // SettingsCopied says "Copied"
 // in the language the app shows.
 //
@@ -4422,20 +4394,6 @@ func (msgs Messages) SettingsNeedsModel() string {
 	return Catalog.Format(msgs.locale, "settingsNeedsModel", nil)
 }
 
-// SettingsAgentsConnected says "Agents that reported"
-// in the language the app shows.
-//
-// Group label above the agents that have reported, in Settings > Agents.
-func SettingsAgentsConnected() string { return In(i18n.Locale()).SettingsAgentsConnected() }
-
-// SettingsAgentsConnected says "Agents that reported"
-// in the language of msgs.
-//
-// Group label above the agents that have reported, in Settings > Agents.
-func (msgs Messages) SettingsAgentsConnected() string {
-	return Catalog.Format(msgs.locale, "settingsAgentsConnected", nil)
-}
-
 // SettingsAgentIdle says "No reports today"
 // in the language the app shows.
 //
@@ -4462,4 +4420,256 @@ func SettingsAgentReports(count int) string { return In(i18n.Locale()).SettingsA
 // Line under an agent: how many times it reported today.
 func (msgs Messages) SettingsAgentReports(count int) string {
 	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
+}
+
+// SettingsAgentsTitle says "Agents on this Mac"
+// in the language the app shows.
+//
+// Group label above the list of coding agents in Settings > Agents.
+func SettingsAgentsTitle() string { return In(i18n.Locale()).SettingsAgentsTitle() }
+
+// SettingsAgentsTitle says "Agents on this Mac"
+// in the language of msgs.
+//
+// Group label above the list of coding agents in Settings > Agents.
+func (msgs Messages) SettingsAgentsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsTitle", nil)
+}
+
+// SettingsAgentsBody says "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or…"
+// in the language the app shows.
+//
+// One plain line under the title of Settings > Agents: what Install MCP
+// does and does not do.
+func SettingsAgentsBody() string { return In(i18n.Locale()).SettingsAgentsBody() }
+
+// SettingsAgentsBody says "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or…"
+// in the language of msgs.
+//
+// One plain line under the title of Settings > Agents: what Install MCP
+// does and does not do.
+func (msgs Messages) SettingsAgentsBody() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsBody", nil)
+}
+
+// SettingsAgentFound says "Found · {where}"
+// in the language the app shows.
+//
+// Line under an agent that is on this Mac but has not reported today; where
+// is the command or folder found, such as gemini or ~/.cursor.
+func SettingsAgentFound(where string) string { return In(i18n.Locale()).SettingsAgentFound(where) }
+
+// SettingsAgentFound says "Found · {where}"
+// in the language of msgs.
+//
+// Line under an agent that is on this Mac but has not reported today; where
+// is the command or folder found, such as gemini or ~/.cursor.
+func (msgs Messages) SettingsAgentFound(where string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentFound", map[string]any{"where": where})
+}
+
+// SettingsAgentAbsent says "Not on this Mac"
+// in the language the app shows.
+//
+// Line under an agent that is not on this Mac.
+func SettingsAgentAbsent() string { return In(i18n.Locale()).SettingsAgentAbsent() }
+
+// SettingsAgentAbsent says "Not on this Mac"
+// in the language of msgs.
+//
+// Line under an agent that is not on this Mac.
+func (msgs Messages) SettingsAgentAbsent() string {
+	return Catalog.Format(msgs.locale, "settingsAgentAbsent", nil)
+}
+
+// SettingsAgentInstall says "Install MCP"
+// in the language the app shows.
+//
+// Button that adds adhd-todo's MCP server to an agent.
+func SettingsAgentInstall() string { return In(i18n.Locale()).SettingsAgentInstall() }
+
+// SettingsAgentInstall says "Install MCP"
+// in the language of msgs.
+//
+// Button that adds adhd-todo's MCP server to an agent.
+func (msgs Messages) SettingsAgentInstall() string {
+	return Catalog.Format(msgs.locale, "settingsAgentInstall", nil)
+}
+
+// SettingsAgentInstalling says "Installing…"
+// in the language the app shows.
+//
+// Shown in place of the Install MCP button while it runs.
+func SettingsAgentInstalling() string { return In(i18n.Locale()).SettingsAgentInstalling() }
+
+// SettingsAgentInstalling says "Installing…"
+// in the language of msgs.
+//
+// Shown in place of the Install MCP button while it runs.
+func (msgs Messages) SettingsAgentInstalling() string {
+	return Catalog.Format(msgs.locale, "settingsAgentInstalling", nil)
+}
+
+// SettingsAgentInstalled says "MCP installed"
+// in the language the app shows.
+//
+// At the right of an agent that already has adhd-todo's MCP server. A check
+// mark comes before it.
+func SettingsAgentInstalled() string { return In(i18n.Locale()).SettingsAgentInstalled() }
+
+// SettingsAgentInstalled says "MCP installed"
+// in the language of msgs.
+//
+// At the right of an agent that already has adhd-todo's MCP server. A check
+// mark comes before it.
+func (msgs Messages) SettingsAgentInstalled() string {
+	return Catalog.Format(msgs.locale, "settingsAgentInstalled", nil)
+}
+
+// SettingsAgentGet says "Get it ↗"
+// in the language the app shows.
+//
+// Link to the website of an agent that is not on this Mac.
+func SettingsAgentGet() string { return In(i18n.Locale()).SettingsAgentGet() }
+
+// SettingsAgentGet says "Get it ↗"
+// in the language of msgs.
+//
+// Link to the website of an agent that is not on this Mac.
+func (msgs Messages) SettingsAgentGet() string {
+	return Catalog.Format(msgs.locale, "settingsAgentGet", nil)
+}
+
+// A11yInstallMCP says "Install the MCP in {agent}"
+// in the language the app shows.
+//
+// Accessibility label of the Install MCP button of an agent.
+func A11yInstallMCP(agent string) string { return In(i18n.Locale()).A11yInstallMCP(agent) }
+
+// A11yInstallMCP says "Install the MCP in {agent}"
+// in the language of msgs.
+//
+// Accessibility label of the Install MCP button of an agent.
+func (msgs Messages) A11yInstallMCP(agent string) string {
+	return Catalog.Format(msgs.locale, "a11yInstallMCP", map[string]any{"agent": agent})
+}
+
+// A11yGetAgent says "Get {agent}"
+// in the language the app shows.
+//
+// Accessibility label of the Get it link of an agent.
+func A11yGetAgent(agent string) string { return In(i18n.Locale()).A11yGetAgent(agent) }
+
+// A11yGetAgent says "Get {agent}"
+// in the language of msgs.
+//
+// Accessibility label of the Get it link of an agent.
+func (msgs Messages) A11yGetAgent(agent string) string {
+	return Catalog.Format(msgs.locale, "a11yGetAgent", map[string]any{"agent": agent})
+}
+
+// SettingsAgentsCommand says "Or run this once in a terminal, for Claude Code"
+// in the language the app shows.
+//
+// Line above the command that installs the MCP into Claude Code, at the
+// bottom of Settings > Agents.
+func SettingsAgentsCommand() string { return In(i18n.Locale()).SettingsAgentsCommand() }
+
+// SettingsAgentsCommand says "Or run this once in a terminal, for Claude Code"
+// in the language of msgs.
+//
+// Line above the command that installs the MCP into Claude Code, at the
+// bottom of Settings > Agents.
+func (msgs Messages) SettingsAgentsCommand() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsCommand", nil)
+}
+
+// SettingsAgentNoCore says "adhd-core isn't at {path}. Build it first, then try again."
+// in the language the app shows.
+//
+// Why Install MCP did nothing: the adhd-core program the agent would run is
+// missing.
+func SettingsAgentNoCore(path string) string { return In(i18n.Locale()).SettingsAgentNoCore(path) }
+
+// SettingsAgentNoCore says "adhd-core isn't at {path}. Build it first, then try again."
+// in the language of msgs.
+//
+// Why Install MCP did nothing: the adhd-core program the agent would run is
+// missing.
+func (msgs Messages) SettingsAgentNoCore(path string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentNoCore", map[string]any{"path": path})
+}
+
+// SettingsAgentGone says "{agent} isn't on this Mac anymore."
+// in the language the app shows.
+//
+// Why Install MCP did nothing: the agent's command is gone.
+func SettingsAgentGone(agent string) string { return In(i18n.Locale()).SettingsAgentGone(agent) }
+
+// SettingsAgentGone says "{agent} isn't on this Mac anymore."
+// in the language of msgs.
+//
+// Why Install MCP did nothing: the agent's command is gone.
+func (msgs Messages) SettingsAgentGone(agent string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentGone", map[string]any{"agent": agent})
+}
+
+// SettingsAgentTimeout says "{agent} took too long to answer. Try again."
+// in the language the app shows.
+//
+// Why Install MCP did nothing: the agent's command did not finish in time.
+func SettingsAgentTimeout(agent string) string { return In(i18n.Locale()).SettingsAgentTimeout(agent) }
+
+// SettingsAgentTimeout says "{agent} took too long to answer. Try again."
+// in the language of msgs.
+//
+// Why Install MCP did nothing: the agent's command did not finish in time.
+func (msgs Messages) SettingsAgentTimeout(agent string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentTimeout", map[string]any{"agent": agent})
+}
+
+// SettingsAgentFailed says "{agent} said: {said}"
+// in the language the app shows.
+//
+// Why Install MCP failed: the last line the agent's own command printed.
+func SettingsAgentFailed(agent string, said string) string {
+	return In(i18n.Locale()).SettingsAgentFailed(agent, said)
+}
+
+// SettingsAgentFailed says "{agent} said: {said}"
+// in the language of msgs.
+//
+// Why Install MCP failed: the last line the agent's own command printed.
+func (msgs Messages) SettingsAgentFailed(agent string, said string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentFailed", map[string]any{"agent": agent, "said": said})
+}
+
+// SettingsAgentManual says "{file} has comments, so adhd-todo won't rewrite it. Add this to it:"
+// in the language the app shows.
+//
+// Shown under the agents when an agent's config file is not plain JSON; the
+// snippet to add follows in a box.
+func SettingsAgentManual(file string) string { return In(i18n.Locale()).SettingsAgentManual(file) }
+
+// SettingsAgentManual says "{file} has comments, so adhd-todo won't rewrite it. Add this to it:"
+// in the language of msgs.
+//
+// Shown under the agents when an agent's config file is not plain JSON; the
+// snippet to add follows in a box.
+func (msgs Messages) SettingsAgentManual(file string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentManual", map[string]any{"file": file})
+}
+
+// SettingsAgentCannot says "Couldn't install: {why}"
+// in the language the app shows.
+//
+// Why Install MCP failed, for a reason with no sentence of its own.
+func SettingsAgentCannot(why string) string { return In(i18n.Locale()).SettingsAgentCannot(why) }
+
+// SettingsAgentCannot says "Couldn't install: {why}"
+// in the language of msgs.
+//
+// Why Install MCP failed, for a reason with no sentence of its own.
+func (msgs Messages) SettingsAgentCannot(why string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentCannot", map[string]any{"why": why})
 }

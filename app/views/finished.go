@@ -40,6 +40,20 @@ func agentName(agent string) string {
 		return "Cursor"
 	case strings.Contains(n, "gemini"):
 		return "Gemini CLI"
+	case strings.Contains(n, "opencode"):
+		return "opencode"
+	case strings.Contains(n, "copilot") || strings.Contains(n, "visual studio code"):
+		return "Copilot (VS Code)"
+	case strings.Contains(n, "qwen"):
+		return "Qwen Code"
+	case strings.Contains(n, "kimi"):
+		return "Kimi CLI"
+	case strings.Contains(n, "windsurf"):
+		return "Windsurf"
+	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
+		return "Zed"
+	case strings.Contains(n, "cline"):
+		return "Cline"
 	}
 	return agent
 }

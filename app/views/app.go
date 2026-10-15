@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 )
 
 // Actions is what the views ask the shell to do.
@@ -32,6 +33,8 @@ type Config struct {
 	DataFolder     string
 	Home           string // the user's home folder, which the data folder is shown relative to
 	Version        string
+	// AgentSetup finds the coding agents on this Mac and installs the MCP into them; nil finds none.
+	AgentSetup *agentsetup.Env
 }
 
 // App is the state the windows share: the store, a snapshot of its data, and the tasks that are

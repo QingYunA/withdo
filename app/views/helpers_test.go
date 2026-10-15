@@ -95,7 +95,9 @@ func newTestApp(t *testing.T) (*App, *data.Fake, *recorder) {
 	t.Helper()
 	store := data.NewFake(fixedNow)
 	rec := &recorder{}
-	app := NewApp(store, rec, testConfig())
+	cfg := testConfig()
+	cfg.AgentSetup = newAgentRig(t).env
+	app := NewApp(store, rec, cfg)
 	app.Now = fixedNow
 	return app, store, rec
 }
@@ -103,7 +105,9 @@ func newTestApp(t *testing.T) (*App, *data.Fake, *recorder) {
 func newEmptyApp(t *testing.T) (*App, *recorder) {
 	t.Helper()
 	rec := &recorder{}
-	app := NewApp(data.NewEmptyFake(fixedNow), rec, testConfig())
+	cfg := testConfig()
+	cfg.AgentSetup = newAgentRig(t).env
+	app := NewApp(data.NewEmptyFake(fixedNow), rec, cfg)
 	app.Now = fixedNow
 	return app, rec
 }

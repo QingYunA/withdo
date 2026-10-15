@@ -71,6 +71,8 @@ func TestAgentNamesAreTheProductsNames(t *testing.T) {
 	for in, want := range map[string]string{
 		"claude-code": "Claude Code", "codex": "Codex", "Cursor": "Cursor", "gemini-cli": "Gemini CLI",
 		"github": "GitHub", "agent": "Agent", "": "Agent", "opencode": "opencode",
+		"Visual Studio Code": "Copilot (VS Code)", "qwen-code-mcp-client": "Qwen Code", "qwen-cli-mcp-client-x": "Qwen Code",
+		"kimi-cli": "Kimi CLI", "Zed": "Zed", "windsurf": "Windsurf", "cline": "Cline", "optimized-agent": "optimized-agent",
 	} {
 		if got := agentName(in); got != want {
 			t.Errorf("agentName(%q) = %q, want %q", in, got, want)

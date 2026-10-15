@@ -1320,14 +1320,6 @@
   "@sectionYours": {
     "description": "Section header on Now: the user's own tasks. English is shown in capitals."
   },
-  "settingsConnectBody": "Run this once in a terminal. Agents then report their progress here.",
-  "@settingsConnectBody": {
-    "description": "Explains the command shown below it."
-  },
-  "settingsConnectTitle": "Connect Claude Code",
-  "@settingsConnectTitle": {
-    "description": "Header of the block that shows the command registering the MCP server."
-  },
   "settingsCopied": "Copied",
   "@settingsCopied": {
     "description": "Copy button for 1.5 seconds after a click."
@@ -1724,10 +1716,6 @@
   "@settingsNeedsModel": {
     "description": "Shown when Save and test is pressed with no model."
   },
-  "settingsAgentsConnected": "Agents that reported",
-  "@settingsAgentsConnected": {
-    "description": "Group label above the agents that have reported, in Settings > Agents."
-  },
   "settingsAgentIdle": "No reports today",
   "@settingsAgentIdle": {
     "description": "Line under an agent that reported before but not today."
@@ -1739,6 +1727,132 @@
       "count": {
         "type": "int",
         "example": "14"
+      }
+    }
+  },
+  "settingsAgentsTitle": "Agents on this Mac",
+  "@settingsAgentsTitle": {
+    "description": "Group label above the list of coding agents in Settings > Agents."
+  },
+  "settingsAgentsBody": "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or start the agent.",
+  "@settingsAgentsBody": {
+    "description": "One plain line under the title of Settings > Agents: what Install MCP does and does not do."
+  },
+  "settingsAgentFound": "Found · {where}",
+  "@settingsAgentFound": {
+    "description": "Line under an agent that is on this Mac but has not reported today; where is the command or folder found, such as gemini or ~/.cursor.",
+    "placeholders": {
+      "where": {
+        "type": "String",
+        "example": "gemini"
+      }
+    }
+  },
+  "settingsAgentAbsent": "Not on this Mac",
+  "@settingsAgentAbsent": {
+    "description": "Line under an agent that is not on this Mac."
+  },
+  "settingsAgentInstall": "Install MCP",
+  "@settingsAgentInstall": {
+    "description": "Button that adds adhd-todo's MCP server to an agent."
+  },
+  "settingsAgentInstalling": "Installing…",
+  "@settingsAgentInstalling": {
+    "description": "Shown in place of the Install MCP button while it runs."
+  },
+  "settingsAgentInstalled": "MCP installed",
+  "@settingsAgentInstalled": {
+    "description": "At the right of an agent that already has adhd-todo's MCP server. A check mark comes before it."
+  },
+  "settingsAgentGet": "Get it ↗",
+  "@settingsAgentGet": {
+    "description": "Link to the website of an agent that is not on this Mac."
+  },
+  "a11yInstallMCP": "Install the MCP in {agent}",
+  "@a11yInstallMCP": {
+    "description": "Accessibility label of the Install MCP button of an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "a11yGetAgent": "Get {agent}",
+  "@a11yGetAgent": {
+    "description": "Accessibility label of the Get it link of an agent.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "settingsAgentsCommand": "Or run this once in a terminal, for Claude Code",
+  "@settingsAgentsCommand": {
+    "description": "Line above the command that installs the MCP into Claude Code, at the bottom of Settings > Agents."
+  },
+  "settingsAgentNoCore": "adhd-core isn't at {path}. Build it first, then try again.",
+  "@settingsAgentNoCore": {
+    "description": "Why Install MCP did nothing: the adhd-core program the agent would run is missing.",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/.local/bin/adhd-core"
+      }
+    }
+  },
+  "settingsAgentGone": "{agent} isn't on this Mac anymore.",
+  "@settingsAgentGone": {
+    "description": "Why Install MCP did nothing: the agent's command is gone.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "settingsAgentTimeout": "{agent} took too long to answer. Try again.",
+  "@settingsAgentTimeout": {
+    "description": "Why Install MCP did nothing: the agent's command did not finish in time.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "settingsAgentFailed": "{agent} said: {said}",
+  "@settingsAgentFailed": {
+    "description": "Why Install MCP failed: the last line the agent's own command printed.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      },
+      "said": {
+        "type": "String",
+        "example": "unknown option"
+      }
+    }
+  },
+  "settingsAgentManual": "{file} has comments, so adhd-todo won't rewrite it. Add this to it:",
+  "@settingsAgentManual": {
+    "description": "Shown under the agents when an agent's config file is not plain JSON; the snippet to add follows in a box.",
+    "placeholders": {
+      "file": {
+        "type": "String",
+        "example": "~/.config/zed/settings.json"
+      }
+    }
+  },
+  "settingsAgentCannot": "Couldn't install: {why}",
+  "@settingsAgentCannot": {
+    "description": "Why Install MCP failed, for a reason with no sentence of its own.",
+    "placeholders": {
+      "why": {
+        "type": "String",
+        "example": "permission denied"
       }
     }
   }
