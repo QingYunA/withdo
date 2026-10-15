@@ -83,7 +83,7 @@ func TestScreensAssistNoModel(t *testing.T) {
 func TestScreensSettingsModels(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: true})
-		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-4-5", Key: "sk-ant-demo"}))
+		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
 		mustNil(t, app.Models.SetActive("anthropic"))
 		mainShot(t, "settings-models-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.openModels() })
 	}
@@ -92,7 +92,7 @@ func TestScreensSettingsModels(t *testing.T) {
 func TestScreensSettingsModelsEdit(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: true})
-		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-4-5", Key: "sk-ant-demo"}))
+		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
 		mustNil(t, app.Models.SetActive("anthropic"))
 		mainShot(t, "settings-models-edit-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			m.openModels()

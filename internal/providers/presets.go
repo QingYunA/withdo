@@ -43,9 +43,9 @@ const (
 // Presets lists every provider in the order Settings shows them.
 var Presets = []Preset{
 	{ID: IDAnthropic, Name: "Anthropic", Protocol: Anthropic,
-		Models: []string{"claude-haiku-4-5", "claude-sonnet-4-5", "claude-sonnet-5-5"}},
+		Models: []string{"claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"}},
 	{ID: IDMagpie, Name: "Magpie", Protocol: Anthropic, BaseURL: "http://127.0.0.1:3425", FixedKey: "magpie",
-		Models: []string{"claude-sonnet-4-5", "claude-haiku-4-5", "claude-sonnet-5-5"},
+		Models: []string{"claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"},
 		Note:   "Uses your Magpie gateway at 127.0.0.1:3425"},
 	{ID: "openai", Name: "OpenAI", Protocol: OpenAI, BaseURL: "https://api.openai.com/v1",
 		Models: []string{"gpt-4.1-mini", "gpt-4.1", "gpt-5-mini"}},
