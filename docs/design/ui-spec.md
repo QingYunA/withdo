@@ -278,7 +278,10 @@ Decisions made while building it (2026-10-14):
 - **Reminders** stay in Needs you until marked done; the notification fires once, the row does not
   go away.
 - **Tight rows** (the inspector open on a small window) drop the project name below 600 pt of
-  content, and the branch, pull request and age below 460 pt.
+  content, and the branch, pull request and age below 460 pt. Needs you rows with two buttons put
+  them under the summary below 560 pt, and every Needs you row does below 420 pt (the 860 pt window
+  with the inspector open leaves 282 pt), so the title keeps its width. A finished row drops who
+  finished it below 460 pt and what they said below 600 pt.
 - **Inline add** keeps its input open and empty after Enter, to catch several thoughts in a row;
   Esc closes it.
 - A notification click opens the task in the inspector over Now.
@@ -311,8 +314,9 @@ Completed rows, board cards), opened by:
 - a click on the **status glyph** of an agent's task, or of a finished task (at the glyph);
 - **S**, **P**, **M**, **R** on the selected row (below the row), and `⌘J`, `⌘⌫` (see Keyboard).
 
-It is 268 pt wide, 12 pt radius, `bg` at 96 %, a 1 pt `border` and a soft shadow; it moves into the
-window when it would leave it. `Esc` or a press outside closes it (the press goes on to what is
+It is 268 pt wide, 12 pt radius, opaque `bg` (the mockup's blur is not available in mygo; at 96 % the
+rows behind showed through), a 1 pt `border` and a soft shadow; it moves into the window, or above
+the point it hangs from, when it would leave it. `Esc` or a press outside closes it (the press goes on to what is
 under it, so a right-click on another row moves the menu there). Reference: frame 3 of
 `docs/design/mockups/v2.html`.
 
@@ -327,10 +331,12 @@ Main page, top to bottom (10 pt padding):
 4. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
    `Esc` goes back to the main page;
-5. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right: `Later
-   today` (6:00 PM, only while that is over half an hour away), `Tomorrow` (9:00 AM), `Next
-   Monday` (9:00 AM), `This weekend` (Saturday 10:00 AM, not on Saturday after 10:00 or on
-   Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day and Done;
+5. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right (the time
+   alone for today and tomorrow, `Mon 9:00 AM` for the others): `Later today` (6:00 PM, only while
+   that is over half an hour away), `Tomorrow` (9:00 AM), `Next Monday` (9:00 AM, left out on a
+   Sunday, when it is tomorrow), `This weekend` (Saturday 10:00 AM, not from Saturday 9:30 or on
+   Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day, Clear and
+   `Set reminder`;
 6. `Open PR`, only when the task has a pull request;
 7. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
 8. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.

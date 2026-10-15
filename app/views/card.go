@@ -88,28 +88,43 @@ func (m *Main) cardText(c *ui.Context, t *theme.Tokens, task data.Task) {
 	})
 }
 
-// cardMeta is the second line: priority bars when it is not the default, the branch, the pull
-// request, and on the right the agent's age, a stale label, or when I wanted to be reminded.
+// cardMeta is what else is worth a glance: priority bars when it is not the default, the branch
+// and the pull request, and the agent's age, a stale label, or when I wanted to be reminded. The
+// branch has a line of its own, so it keeps its room in a narrow card.
 func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task) {
 	right := m.metaRight(task)
-	if task.Priority == data.P2 && task.Branch == "" && task.PRNumber == 0 && right == nil {
-		return
-	}
-	ui.Row(c).Gap(8).MinHeight(16).AlignItems(ui.Center).Children(func() {
-		if task.Priority != data.P2 {
-			theme.PriorityBars(c, t, task.Priority).Shrink(0)
-		}
-		if task.Branch != "" {
-			pill(c, t, task.Branch)
-		}
-		if task.PRNumber > 0 {
-			theme.Text(c, theme.Mono, t.TextSecondary, fmt.Sprintf("#%d", task.PRNumber)).Shrink(0)
-		}
+	refs := task.Branch != "" || task.PRNumber > 0
+	bars := task.Priority != data.P2
+	// Without priority bars the age shares the line of the branch.
+	ageUp := bars || !refs
+	line := func(fn func()) { ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(fn) }
+	atRight := func() {
 		ui.Spacer(c)
 		if right != nil {
 			right(c, t)
 		}
-	})
+	}
+	if bars || (right != nil && ageUp) {
+		line(func() {
+			if bars {
+				theme.PriorityBars(c, t, task.Priority).Shrink(0)
+			}
+			atRight()
+		})
+	}
+	if refs {
+		line(func() {
+			if task.Branch != "" {
+				pill(c, t, task.Branch)
+			}
+			if task.PRNumber > 0 {
+				theme.Text(c, theme.Mono, t.TextSecondary, fmt.Sprintf("#%d", task.PRNumber)).Shrink(0)
+			}
+			if !ageUp {
+				atRight()
+			}
+		})
+	}
 }
 
 // metaRight builds the right end of the second line, or returns nil when there is nothing to say.

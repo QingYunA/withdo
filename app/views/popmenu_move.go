@@ -111,7 +111,11 @@ func (m *Main) remindPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 		default:
 			label = m.say.MenuThisWeekend()
 		}
-		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.kind)), label: label, hint: m.clock.When(p.at, now), run: set(p.at)})
+		hint := m.clock.When(p.at, now) // "Mon 9:00 AM"; today and tomorrow are in the label already
+		if p.kind == remindLater || p.kind == remindTomorrow {
+			hint = m.clock.Time(p.at)
+		}
+		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.kind)), label: label, hint: hint, run: set(p.at)})
 	}
 	menuRule(c, t)
 	m.popRow(c, t, popSpec{key: "remind-none", label: m.say.MenuNoReminder(), run: set(time.Time{})})

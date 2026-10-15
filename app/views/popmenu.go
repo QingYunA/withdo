@@ -99,7 +99,7 @@ func (m *Main) taskMenuView(c *ui.Context, t *theme.Tokens) {
 	ui.Overlay(c, func() {
 		anchor := ui.Box(c.Key("pop-anchor")).Absolute().Left(pm.x).Top(pm.y).Size(1, 1)
 		panel := ui.Column(c.Key("pop-panel")).Width(popWidth).Padding(popPad).Radius(theme.RadiusPanel).
-			Background(t.Bg.Alpha(0.96)).Border(1, t.Border).Role(ui.RoleDialog).Label(m.say.A11yTaskMenu()).
+			Background(t.Bg).Border(1, t.Border).Role(ui.RoleDialog).Label(m.say.A11yTaskMenu()).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.25)).Shadow(0, 12, 36, 0, t.Shadow.Alpha(0.6))
 		panel.AttachTo(anchor, ui.AnchorBottomLeft, ui.AnchorTopLeft)
 		pm.items = pm.items[:0]

@@ -135,7 +135,7 @@ func TestTaskMenuRemindsFromPresets(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Remind me…")
-	for _, want := range []string{"Later today", "Today 6:00 PM", "Tomorrow", "Tomorrow 9:00 AM", "Next Monday", "Mon 9:00 AM", "This weekend", "Sat 10:00 AM", "No reminder", "Custom…"} {
+	for _, want := range []string{"Later today", "6:00 PM", "Tomorrow", "9:00 AM", "Next Monday", "Mon 9:00 AM", "This weekend", "Sat 10:00 AM", "No reminder", "Custom…"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -381,7 +381,7 @@ func TestInspectorValuesOpenOnlyTheirPieceOfTheMenu(t *testing.T) {
 		t.Errorf("project %q", got)
 	}
 	click(t, tt, "Remind: None")
-	click(t, tt, "Tomorrow 9:00 AM")
+	click(t, tt, "9:00 AM")
 	if got, _ := app.Task(8); got.RemindAt == nil || got.RemindAt.Day() != 15 {
 		t.Errorf("remind at %v", got.RemindAt)
 	}

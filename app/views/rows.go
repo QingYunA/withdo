@@ -97,6 +97,13 @@ func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill fl
 	m.glyphButton(c, t, task, fill).Margin(-pad)
 }
 
+// glyphSlotTop is glyphSlot for a row whose lines start at its top (a title with a summary under
+// it): the glyph sits 2 pt lower, level with the middle of the first line.
+func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
+	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	m.glyphButton(c, t, task, fill).Margin(2-pad, -pad, -pad-2, -pad)
+}
+
 // ageLabel is how long ago, in the stale color when the agent went quiet.
 func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	color := t.TextTertiary

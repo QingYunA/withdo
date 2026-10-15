@@ -66,7 +66,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row := sidebarRow(c, t, p.ID, selected)
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
-		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
+		ui.Box(c).Size(16, theme.Compact.Line).Shrink(0).Center().Children(func() {
 			theme.Text(c, theme.Compact, t.TextTertiary, "#")
 		})
 		if renaming {
