@@ -3,6 +3,7 @@ package views
 import (
 	"testing"
 
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -51,6 +52,40 @@ func TestScreensManageProjects(t *testing.T) {
 			archived.Refresh()
 			manageShot(t, "settings-archived"+suffix, archived, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.OpenSettings()
+				return nil
+			})
+		}
+	}
+}
+
+func TestScreensManageTasks(t *testing.T) {
+	for _, a := range appearances() {
+		for _, l := range languages {
+			suffix := l.suffix + "-" + a.suffix + ".png"
+			app, _, _ := newTestApp(t)
+			manageShot(t, "task-menu"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenProject, projectID: 1})
+				tt.Frame()
+				r, _ := tt.Find("Fix tray race on launch")
+				x, y := r.X+40, r.Y+r.H/2
+				tt.RightClickAt(x, y)
+				var statuses []string
+				for _, s := range data.Statuses {
+					statuses = append(statuses, statusLabel(m.say, s))
+				}
+				return &menuSpec{
+					x: x, y: y, items: tt.Menu(),
+					subs: map[string]bool{m.say.PropStatus(): true, m.say.PropPriority(): true, m.say.ManageMoveTo(): true},
+					flyout: &flyoutSpec{parent: m.say.PropStatus(), items: statuses, checked: map[string]bool{statusLabel(m.say, data.Blocked): true}},
+				}
+			})
+			manageShot(t, "task-delete"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenProject, projectID: 1})
+				m.askDeleteTask(3)
+				return nil
+			})
+			manageShot(t, "inspector-project"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.OpenTask(5)
 				return nil
 			})
 		}

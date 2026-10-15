@@ -16,6 +16,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Column(c).Gap(2).Children(func() {
 		m.statusRow(c, t, task)
 		m.priorityRow(c, t, task)
+		m.taskProjectRow(c, t, task)
 		m.milestoneRow(c, t, task)
 		m.dateRow(c, t, "due", m.say.PropDue(), task.DueAt, &m.inspector.dueOpen, func(tm time.Time) data.Patch { return data.Patch{DueAt: &tm} }, false)
 		m.dateRow(c, t, "remind", m.say.PropRemind(), task.RemindAt, &m.inspector.remOpen, func(tm time.Time) data.Patch { return data.Patch{RemindAt: &tm} }, true)
