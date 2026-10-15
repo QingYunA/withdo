@@ -14,6 +14,10 @@ Requested 2026-10-15, before M4 (gh polling, which waits).
 - Tradeoff, accepted: the app is ad-hoc signed, so macOS asks once after each new build before
   the app can read the key ("Always Allow"). With a Developer ID signature it asks once.
 
+Done: `app/keys.go` (decoding in `decodeLegacySecret`, unit-tested without the keychain);
+`go-keyring` is out of `go.mod`. Tests never touch the real keychain, and the live agent test now
+takes its key from `ADHD_TODO_LIVE_KEY`.
+
 ## 2. OnTextKey for the text inputs
 
 Keys typed in a focused input are handled by that input with `Element.OnTextKey`, instead of
@@ -49,3 +53,18 @@ protocols but leaves HTTP, SSE and the Eino side to the host, so it would add a 
 without removing code.
 
 Done when `go list -deps ./app | grep -E 'aws|cloud.google'` is empty and the app is measured.
+
+Done: `internal/providers/anthropic` (about 270 lines, tests excluded: `model.go` for the client
+and options, `convert.go` for messages, tools and replies). It builds its client with
+`option.WithoutEnvironmentDefaults`, so `ANTHROPIC_*` variables in the environment never reach it.
+Not supported: images, thinking, prompt caching, tool choice. `go list -deps ./app | grep -E
+'aws|cloud.google|google.golang.org/api'` is empty. Measured on arm64 with `mygo build`:
+
+| | before | after |
+|---|---|---|
+| ADHD Todo.app | 41.1 MB | 33.5 MB |
+| ADHD Todo 0.2.0 arm64.dmg | 9.7 MB | 8.0 MB |
+
+The saving is smaller than the 25 MB guessed above. What is left is mostly the Go runtime, SQLite
+(about 2 MB of symbols), eino (about 2 MB), the core Anthropic SDK (about 1.5 MB, its `Beta` types
+included) and mygo; eino-ext's OpenAI model adds about 0.2 MB, so nothing there needs work.
