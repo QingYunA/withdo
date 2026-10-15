@@ -316,5 +316,18 @@
   "settingsAgentTimeout": "{agent} 太久没有回应，再试一次。",
   "settingsAgentFailed": "{agent} 说：{said}",
   "settingsAgentManual": "{file} 里有注释，adhd-todo 不会改写它。请把下面这段加进去：",
-  "settingsAgentCannot": "没能安装：{why}"
+  "settingsAgentCannot": "没能安装：{why}",
+  "composerModelLabel": "模型：{model}",
+  "composerModelTitle": "换个模型",
+  "composerModelNone": "还没有连接模型。",
+  "composerAttach": "添加图片",
+  "composerAttachTitle": "选择图片",
+  "composerPictureRemove": "移除 {name}",
+  "composerPicture": "图片 {name}",
+  "composerPictureLimit": "一次最多 4 张图片。",
+  "composerPictureFormat": "这个文件不是 PNG、JPEG、GIF 或 WebP 图片。",
+  "composerPictureSize": "这张图片太大了，缩小后也超限。",
+  "composerPictureUnreadable": "读不了这个文件。",
+  "composerPictureDrop": "松手即可添加图片",
+  "problemNoImages": "{model} 看不了图片。"
 }

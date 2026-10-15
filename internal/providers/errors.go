@@ -20,6 +20,7 @@ const (
 	KindKeyRejected
 	KindUnknownModel
 	KindRateLimited
+	KindNoImages // the model does not take pictures
 )
 
 // Classify says what sort of failure err is. It never looks at a key.
@@ -41,6 +42,9 @@ func Classify(err error) Kind {
 	case strings.Contains(low, "connection refused") || strings.Contains(low, "no such host") ||
 		strings.Contains(low, "dial tcp"):
 		return KindUnreachable
+	case hasStatus(low, "image_url", "image input", "image content", "support image", "support vision", "vision input",
+		"multimodal", "multi-modal", "images are not"):
+		return KindNoImages
 	case hasStatus(low, "401", "403", "invalid x-api-key", "invalid api key", "authentication", "unauthorized"):
 		return KindKeyRejected
 	case hasStatus(low, "404", "model_not_found", "not_found"):
@@ -72,6 +76,8 @@ func Friendly(err error) string {
 		return "The provider didn't accept the API key."
 	case KindUnknownModel:
 		return "The provider doesn't know this model or address."
+	case KindNoImages:
+		return "This model cannot read images."
 	case KindRateLimited:
 		return "The provider is busy or out of quota. Try again in a moment."
 	}

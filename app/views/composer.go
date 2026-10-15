@@ -33,6 +33,17 @@ type composer struct {
 	noticeText string
 	// setUpHover keeps the "Set up the assistant" line while the pointer is on it.
 	setUpHover bool
+	// pics are the images attached to the next request, pending how many are still being read.
+	// They are never stored.
+	pics    []picture
+	pending int
+	// problem is the quiet line about an image that was not taken, shown for a few seconds.
+	problem   string
+	problemAt time.Time
+	// modelOpen is the model popover; ctlHover keeps the bottom row while the pointer is on it and
+	// plusHover the + of an empty focused box (a press on a button takes the focus from the field,
+	// and the box must not change under the pointer); dragOver is a file dragged over.
+	modelOpen, ctlHover, plusHover, dragOver bool
 }
 
 // pageHasComposer reports whether the screen shows a composer: Now, a project, the Inbox and the
@@ -158,19 +169,20 @@ func (cs *composer) keepDraft(from, to nav) {
 // or opens the highlighted row when the page's composer is empty.
 func (m *Main) submit(s surface) {
 	cs := &m.cmp[s]
-	text := strings.TrimSpace(cs.buf)
-	if text == "" {
+	text, pics := strings.TrimSpace(cs.buf), cs.pics
+	ready := m.assistReady()
+	if text == "" && !(ready && len(pics) > 0) {
 		if s == surfacePage {
 			m.openSelected()
 		}
 		return
 	}
-	if m.assistReady() {
-		if m.convo.thinking {
+	if ready {
+		if m.convo.thinking || cs.pending > 0 {
 			return // one request at a time; what I typed stays in the field
 		}
-		cs.buf = ""
-		m.sendToAssistant(text, m.placeOf(s), s)
+		cs.buf, cs.pics = "", nil
+		m.sendToAssistant(text, m.placeOf(s), s, pics...)
 		return
 	}
 	if s == surfacePage {

@@ -1855,5 +1855,81 @@
         "example": "permission denied"
       }
     }
+  },
+  "composerModelLabel": "Model: {model}",
+  "@composerModelLabel": {
+    "description": "Accessibility label of the model chip at the bottom right of the composer: the model in use.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "DeepSeek · deepseek-chat"
+      }
+    }
+  },
+  "composerModelTitle": "Switch model",
+  "@composerModelTitle": {
+    "description": "Heading of the popover that lists the configured models, opened from the model chip."
+  },
+  "composerModelNone": "No model is connected yet.",
+  "@composerModelNone": {
+    "description": "Line of the model popover when no provider is configured (it is not normally reachable)."
+  },
+  "composerAttach": "Add images",
+  "@composerAttach": {
+    "description": "Accessibility label and tooltip of the + button of the composer, which opens a file panel for images."
+  },
+  "composerAttachTitle": "Choose images",
+  "@composerAttachTitle": {
+    "description": "Title of the file panel that opens from the + button of the composer."
+  },
+  "composerPictureRemove": "Remove {name}",
+  "@composerPictureRemove": {
+    "description": "Accessibility label of the x on the thumbnail of an attached image.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "screenshot.png"
+      }
+    }
+  },
+  "composerPicture": "Image {name}",
+  "@composerPicture": {
+    "description": "Accessibility label of the thumbnail of an attached image.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "screenshot.png"
+      }
+    }
+  },
+  "composerPictureLimit": "At most 4 images at a time.",
+  "@composerPictureLimit": {
+    "description": "Quiet line under the composer when a fifth image is added."
+  },
+  "composerPictureFormat": "That file isn't a PNG, JPEG, GIF or WebP image.",
+  "@composerPictureFormat": {
+    "description": "Quiet line under the composer when a dropped, pasted or chosen file cannot be read as an image (a HEIC photo, a PDF)."
+  },
+  "composerPictureSize": "That image is too large, even shrunk.",
+  "@composerPictureSize": {
+    "description": "Quiet line under the composer when an image is still over 5 MB after it was shrunk."
+  },
+  "composerPictureUnreadable": "Couldn't read that file.",
+  "@composerPictureUnreadable": {
+    "description": "Quiet line under the composer when a dropped file cannot be opened."
+  },
+  "composerPictureDrop": "Drop images to attach",
+  "@composerPictureDrop": {
+    "description": "Hint inside the composer while image files are dragged over it."
+  },
+  "problemNoImages": "{model} cannot read images.",
+  "@problemNoImages": {
+    "description": "Assistant error: pictures were sent to a model that does not take them. The model chip opens next, to pick another.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "deepseek-chat"
+      }
+    }
   }
 }

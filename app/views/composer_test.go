@@ -131,8 +131,12 @@ func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testi
 		return below()
 	}
 	one, two, four, six, nine := lines(1), lines(2), lines(4), lines(6), lines(9)
-	if focused != rest || one != rest {
-		t.Errorf("the box moved the page: rest %v, focused %v, one line %v; it is one 50 pt line in each", rest, focused, one)
+	if focused != rest {
+		t.Errorf("focusing the empty box moved the page: rest %v, focused %v; it is one 50 pt line in each", rest, focused)
+	}
+	// Once there is text the second row (+, model, send) shows under the line.
+	if extra := one - rest; extra < 28 || extra > 40 {
+		t.Errorf("with one line of text the box grew by %v, want the second row (28 to 40): rest %v, one line %v", extra, rest, one)
 	}
 	if four-two != 50 || six-four != 50 {
 		t.Errorf("the box does not grow a line at a time: 1 line %v, 2 lines %v, 4 lines %v, 6 lines %v", one, two, four, six)
