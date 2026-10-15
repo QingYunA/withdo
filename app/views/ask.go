@@ -91,11 +91,14 @@ const pulsePeriod = 1400
 // noModelHint is the one line under the field while no model is connected. It stays once shown
 // until I leave the screen, so a click on Set up still finds it after the field loses focus.
 func (m *Main) noModelHint(c *ui.Context, t *theme.Tokens, focused bool) {
+	if m.app.Assistant == nil {
+		return
+	}
 	if focused && !m.assistReady() {
 		m.hintOn = true
 	}
-	if !m.hintOn || m.assistReady() {
-		return
+	if !m.hintOn || m.assistReady() || m.noticeShowing() {
+		return // "Added to Inbox" has the line under the field for 1.5 s
 	}
 	ui.Row(c.Key("no-model")).Shrink(0).Margin(8, 0, 0, 4).Gap(5).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, "Connect a model to let me understand you —")
@@ -146,6 +149,11 @@ func (m *Main) submitAsk() {
 		return
 	}
 	m.ask.buf, m.ask.noticeAt = "", m.app.Now()
+}
+
+// noticeShowing is true while "Added to Inbox" is on screen.
+func (m *Main) noticeShowing() bool {
+	return !m.ask.noticeAt.IsZero() && m.app.Now().Sub(m.ask.noticeAt) < noticeFor
 }
 
 // notice is the inline "Added to Inbox" confirmation: 1.5 s, fading at the end.

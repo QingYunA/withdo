@@ -40,6 +40,15 @@ Agents then report progress to the app. To see what they are doing from a termin
 adhd-core overview
 ```
 
+## Ask field (built-in assistant)
+
+The ask field on the Now screen can understand what you type ("明天九点提醒我开会", "PR 12 merged,
+close that task") and change tasks for you, with an Undo. It needs a model: open Settings > Models,
+pick a provider (Anthropic, Magpie, OpenAI, DeepSeek, Kimi, OpenRouter, Ollama or any compatible
+endpoint), paste its API key (stored in the system keychain) and press Test. Until then the field
+just adds Inbox tasks. Provider choices live in `models.json` next to the database. To run the
+optional live check: `ADHD_TODO_LIVE_MODEL=1 go test ./internal/agent -run TestLiveModel -v`.
+
 ## Data
 
 The database is `~/Library/Application Support/adhd-todo/adhd-todo.db` on macOS
@@ -56,6 +65,6 @@ go run ./app -fake                               # demo data instead of the data
 SCREENS_OUT=$PWD/docs/design/screens go test ./app/...   # re-render the design screenshots
 ```
 
-Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core),
+Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
 `app/` (mygo UI: `data`, `theme`, `views`).
 

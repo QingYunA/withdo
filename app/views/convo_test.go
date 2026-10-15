@@ -308,6 +308,23 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 	}
 }
 
+func TestHintYieldsToTheAddedToInboxNotice(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
+	r.ask("Water the plants")
+	has(t, r.tt, "Added to Inbox")
+	hasNot(t, r.tt, "Set up")
+	r.now = r.now.Add(2 * time.Second)
+	r.tt.Frame()
+	has(t, r.tt, "Set up")
+	hasNot(t, r.tt, "Added to Inbox")
+}
+
+func TestNoHintWithoutAnAssistantAtAll(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
+	tt.Key(ui.Cmd, ui.KeyK)
+	hasNot(t, tt, "Set up")
+}
+
 func TestNoHintOnceAModelIsConnected(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	r.tt.Key(ui.Cmd, ui.KeyK)

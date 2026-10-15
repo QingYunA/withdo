@@ -127,7 +127,8 @@ Header: `Now` in `title` + the date in `text.tertiary`.
 
 **Ask field.** 46 pt tall, 12 pt radius, `bg.subtle`, a small accent sparkle, placeholder
 `Tell me what to remember — "remind me to review PR #12 at 4pm"`, a `⌘K` key cap at the right.
-`⌘K` focuses it from anywhere. Until M3, Enter creates an Inbox task and shows an inline
+`⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
+assistant (see **Assistant** below). With none, Enter creates an Inbox task and shows an inline
 "Added to Inbox" confirmation under the field for 1.5 s.
 
 Then up to three sections. **A section with nothing in it is not drawn at all.**
@@ -153,6 +154,44 @@ Then up to three sections. **A section with nothing in it is not drawn at all.**
 **All clear.** When all three sections are empty: a centered calm message under the ask field —
 "All clear." and in secondary "Agents report here through the adhd-todo MCP server." with a
 "How to connect" link (opens Settings).
+
+### Assistant (M3)
+
+The ask field is the entry to a small built-in agent (Eino, `internal/agent`). It acts at once and
+reports what it did with an Undo; it asks only when an action would be wrong without the answer.
+Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (light and dark).
+
+- **Working.** The sparkle pulses (a plain accent sparkle with Reduce Motion), the empty field's
+  placeholder reads `Thinking…`, and the typed text has moved into the sheet. One request at a
+  time: Enter while it works keeps what is typed. **Esc cancels** the request (its context is
+  cancelled); with nothing changed yet the sheet closes and the text returns to the field.
+- **Conversation sheet.** Opens directly under the ask field, inside the content column, and
+  pushes the sections down; a hairline marks where it ends. It is part of the page, not a chat:
+  no bubbles, no avatars, no timestamps, everything on the column's left edge. It holds this
+  conversation only (the last three exchanges), never stored.
+  - *My line*: `body` in `text.secondary`.
+  - *Reply*: `body` in `text`, one short sentence, 6 pt under my line.
+  - *Receipts*: one row per change, in the list-row style: status glyph (a bell in `accent` when
+    a reminder was set), title in `body.strong`, a quiet detail in `text.tertiary`
+    (`Tomorrow 9:00 AM · reminder`, `Added to Inbox`, `Marked done`, `Updated · due Fri, P1`), and
+    **Undo** at the right (`meta`, medium, `text.secondary`, tinted on hover). Clicking the row
+    opens the task. After Undo the title is struck through in `text.tertiary` and the row says
+    `Undone`.
+  - *Question*: `body` text; its 2 to 4 options are small tinted buttons, the same style as the
+    Needs you actions, wrapping onto a second line when they must. A click sends the option as
+    my answer; typing a free answer works too (the placeholder says `Type an answer, or pick one
+    below`). A question never times out. Once answered its buttons are gone.
+  - *Error*: neutral words ("Couldn't reach the model. Is the address right and the server
+    running?", "The provider didn't accept the API key.") with **Retry** as a link. No red.
+  - After a turn that asked nothing and failed nothing the sheet **closes itself after 4 s**
+    (Undo restarts the 4 s), or at once on **Esc**. A second **Esc** with nothing else to close
+    makes the assistant forget the conversation (it also forgets after 10 minutes idle).
+- **No model connected.** Focusing the ask field shows one line under it, `Connect a model to
+  let me understand you — Set up` (`meta`, `Set up` is a link), which opens Settings > Models.
+  It stays until you leave the screen so the click still finds it. Enter keeps adding Inbox
+  tasks (the M2 behavior).
+- Times in receipts follow the Now screen's words: `Today`, `Tomorrow`, a weekday, then a date,
+  followed by the clock (`9:00 AM`).
 
 ### Project
 
@@ -208,8 +247,30 @@ inspector, then clears the selection · `⌘1` Now, `⌘2` Inbox.
 
 ### Settings
 
-A sheet: "Connect Claude Code" with the copyable registration command, data folder path,
+A 640 pt sheet with a `General | Models` switch (the quiet segmented well of the List | Board
+toggle) beside Done.
+
+**General**: "Connect Claude Code" with the copyable registration command, data folder path,
 About. Nothing else.
+
+**Models** (screens `settings-models`, `settings-models-edit`): the provider list at the left,
+the open provider's fields at the right.
+- *List*: one 32 pt row per preset: Anthropic, Magpie, OpenAI, DeepSeek, Kimi, OpenRouter,
+  Ollama, Custom. A radio at the left marks the one in use (`accent`); the row being viewed gets
+  `bg.selected`. Clicking a row opens its fields; it does not switch the provider.
+- *Fields* (30 pt wells on `bg.subtle`, label above in `meta`): **Base URL** (the preset's value,
+  its default shown as the placeholder), **Model** (with the preset's suggestions as small mono
+  chips under it; a click fills it), **API key** (a secure field; once stored the placeholder
+  says "Saved in your Keychain — paste a new one to replace it"; the key is never shown again).
+  Fields save on Enter or blur. Magpie and Ollama have no key field; Magpie says "Uses your
+  Magpie gateway at 127.0.0.1:3425". Custom adds an `OpenAI-compatible | Anthropic API` switch.
+- *Header of the fields*: provider name, a note (or "Needs an API key"), and at the right `In
+  use` with a check, or a tinted **Use this one** button.
+- **Test** sends a 1-token request with what is typed, saved or not, and says `Works · 640 ms`
+  or the error in the words above (`text.secondary`; no green, no red).
+- Keys live in the system keychain (service `adhd-todo`), never in the database, the provider
+  file or the logs. The active provider and per-provider overrides are in `models.json` next to
+  the database.
 
 ## Writing
 
