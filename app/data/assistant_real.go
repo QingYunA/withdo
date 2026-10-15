@@ -23,7 +23,7 @@ func (a *AgentAssistant) Configured() bool { return a.Provider.Configured() }
 
 // Ask implements Assistant. The error is already in plain words.
 func (a *AgentAssistant) Ask(ctx context.Context, text string, place Place) (Reply, error) {
-	res, err := a.Agent.Ask(ctx, text, agent.Scope{Kind: agent.ScopeKind(place.Kind), ProjectID: int64(place.ProjectID), TaskID: int64(place.TaskID)})
+	res, err := a.Agent.Ask(ctx, text, agent.Scope{Kind: agent.ScopeKind(place.Kind), ProjectID: int64(place.ProjectID), TaskID: int64(place.TaskID), Day: place.Day})
 	out := Reply{Text: res.Reply}
 	for _, r := range res.Receipts {
 		out.Receipts = append(out.Receipts, Receipt{

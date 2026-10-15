@@ -142,7 +142,7 @@ func (f *Fake) CreateTask(in CreateTaskInput) (Task, error) {
 	t := Task{
 		ID: f.newID(), ProjectID: in.ProjectID, Title: in.Title, Status: orStatus(in.Status, Todo),
 		Priority: orPriority(in.Priority, P2), Source: orSource(in.Source, SourceUser),
-		CreatedAt: now, UpdatedAt: now,
+		CreatedAt: now, UpdatedAt: now, DueAt: in.DueAt,
 	}
 	if t.Status.Terminal() {
 		t.CompletedAt = &now

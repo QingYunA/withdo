@@ -171,7 +171,7 @@ func (r *Real) GetTask(id int) (TaskDetail, error) {
 func (r *Real) CreateTask(in CreateTaskInput) (Task, error) {
 	t, err := r.core.CreateTask(r.ctx(), domain.CreateTaskInput{
 		Title: in.Title, Source: domain.Source(in.Source), ProjectID: int64Ptr(in.ProjectID),
-		Status: domain.Status(in.Status), Priority: domain.Priority(in.Priority),
+		Status: domain.Status(in.Status), Priority: domain.Priority(in.Priority), DueAt: formatTimePtr(in.DueAt),
 	})
 	if err != nil {
 		return Task{}, err

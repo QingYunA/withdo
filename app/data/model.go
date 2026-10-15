@@ -159,6 +159,7 @@ type CreateTaskInput struct {
 	ProjectID *int
 	Status    Status
 	Priority  Priority
+	DueAt     *time.Time
 }
 
 // Patch changes a task. A nil field is left alone. To clear a nullable field set the zero value:

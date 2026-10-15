@@ -341,3 +341,19 @@ func TestRealFeedsTheNowScreen(t *testing.T) {
 		t.Errorf("needs %+v", n.Needs)
 	}
 }
+
+func TestRealCreatesATaskWithADueDate(t *testing.T) {
+	r, _ := realPair(t, nil)
+	due := time.Date(2026, 10, 16, 18, 0, 0, 0, time.Local)
+	task, err := r.CreateTask(CreateTaskInput{Title: "On Friday", Source: SourceUser, DueAt: &due})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if task.DueAt == nil || !task.DueAt.Equal(due) {
+		t.Fatalf("due %v, want %v", task.DueAt, due)
+	}
+	got, err := r.GetTask(task.ID)
+	if err != nil || got.Task.DueAt == nil || !got.Task.DueAt.Equal(due) {
+		t.Fatalf("stored %+v, %v", got.Task.DueAt, err)
+	}
+}

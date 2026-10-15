@@ -196,3 +196,47 @@ func TestReceiptsShowWhatWasInferred(t *testing.T) {
 		t.Errorf("low priority: %+v", low)
 	}
 }
+
+func TestCalendarScopeNamesTheSelectedDay(t *testing.T) {
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.FixedZone("CST", 8*3600))
+	sc := Scope{Kind: ScopeCalendar, Day: "2026-10-16"}
+	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}}, sc, nil)
+	for _, want := range []string{
+		"the Calendar page", "Friday, 2026-10-16", "no time words", "18:00",
+		"2026-10-16T18:00:00+08:00", "Inbox unless",
+		"name another day", "that day wins",
+	} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q:\n%s", want, p)
+		}
+	}
+	if strings.Contains(p, "the Now page") || strings.Contains(p, "Focused task") {
+		t.Errorf("prompt names another place:\n%s", p)
+	}
+}
+
+func TestCalendarScopeWithoutAUsableDayReadsAsTheNowPage(t *testing.T) {
+	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC)
+	for _, day := range []string{"", "tomorrow", "2026-13-40"} {
+		p := BuildPrompt(now, nil, Scope{Kind: ScopeCalendar, Day: day}, nil)
+		if !strings.Contains(p, "the Now page") || strings.Contains(p, "Calendar page") {
+			t.Errorf("day %q:\n%s", day, p)
+		}
+	}
+}
+
+func TestCalendarScopeCreatesInTheInboxAndLeavesTheDayToTheModel(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14,
+		call("create_task", m{"title": "Buy milk", "due_at": "2026-10-16T18:00:00+08:00"}), say("Added it, due Friday."))
+	r.project("a-project")
+	res := r.askIn(Scope{Kind: ScopeCalendar, Day: "2026-10-16"}, "buy milk")
+	if len(res.Receipts) != 1 {
+		t.Fatalf("receipts %+v", res.Receipts)
+	}
+	tk := r.task(res.Receipts[0].TaskID)
+	if tk.ProjectID != nil {
+		t.Errorf("task went to project %d", *tk.ProjectID)
+	}
+	eq(t, "due_at", str(tk.DueAt), "2026-10-16T10:00:00.000Z")
+	contains(t, "system prompt", r.system(), "Friday, 2026-10-16")
+}

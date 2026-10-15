@@ -12,10 +12,11 @@ import (
 type ScopeKind int
 
 const (
-	ScopeNow     ScopeKind = iota // the Now page: no place of its own
-	ScopeProject                  // a project's page
-	ScopeInbox                    // the Inbox page
-	ScopeTask                     // the inspector of one task
+	ScopeNow      ScopeKind = iota // the Now page: no place of its own
+	ScopeProject                   // a project's page
+	ScopeInbox                     // the Inbox page
+	ScopeTask                      // the inspector of one task
+	ScopeCalendar                  // the Calendar page, with a day selected
 )
 
 // Scope is the place a request comes from. It decides where a new task goes and what "this" and
@@ -24,6 +25,8 @@ type Scope struct {
 	Kind      ScopeKind
 	ProjectID int64 // ScopeProject
 	TaskID    int64 // ScopeTask
+	// Day is the selected day of the Calendar page, "2006-01-02" in the user's zone (ScopeCalendar).
+	Day string
 }
 
 // scopeSection is the part of the prompt that states the scope. A project that is gone or
@@ -39,6 +42,10 @@ func scopeSection(now time.Time, projects []domain.Project, sc Scope, focus *dom
 		if p, ok := activeProject(projects, sc.ProjectID); ok {
 			return fmt.Sprintf("Where the request comes from: the page of the project “%s” (id %d). A new task goes in that "+
 				"project unless the words name another project (then use that one) or the Inbox (then pass project_id 0).\n", p.Name, p.ID)
+		}
+	case sc.Kind == ScopeCalendar:
+		if day, ok := selectedDay(now, sc.Day); ok {
+			return calendarSection(day)
 		}
 	case sc.Kind == ScopeInbox:
 		return "Where the request comes from: the Inbox page. A new task goes to the Inbox unless the words name a project.\n"
@@ -83,4 +90,22 @@ func focusedTask(now time.Time, projects []domain.Project, t domain.Task) string
 		line += "Its notes: " + strings.TrimSpace(*t.Notes) + "\n"
 	}
 	return line
+}
+
+// selectedDay reads the day of a calendar scope in the user's zone; a day that does not parse
+// leaves the scope reading as the Now page.
+func selectedDay(now time.Time, s string) (time.Time, bool) {
+	day, err := time.ParseInLocation("2006-01-02", s, now.Location())
+	return day, err == nil
+}
+
+// calendarSection states the Calendar page and its selected day: a task with no time words is due
+// that day at 18:00, written out in full so the model does not work out the offset.
+func calendarSection(day time.Time) string {
+	due := time.Date(day.Year(), day.Month(), day.Day(), 18, 0, 0, 0, day.Location())
+	return fmt.Sprintf("Where the request comes from: the Calendar page, with %s selected. A new task goes to the Inbox "+
+		"unless the words name a project. The selected day is the default day: a task with no time words (“buy milk”) is due "+
+		"that day at 18:00 local, due_at %s, and a time of day without a day (“at 3pm”) is on that day. "+
+		"If the words name another day (“tomorrow”, “next Monday”), that day wins.\n",
+		day.Format("Monday, 2006-01-02"), due.Format(time.RFC3339))
 }
