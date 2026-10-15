@@ -2,8 +2,6 @@ package views
 
 import (
 	"context"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -11,18 +9,21 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// otherModel is the value of the model pop-up's last item, which turns the row into a text field.
-const otherModel = "\x00other"
-
-// assistState is Settings > Assistant: the typed fields, what the Test link last said, and which
-// providers' model row is a text field.
+// assistState is Settings > Assistant. At rest the pane shows the provider in use and the others
+// that are set up; Change opens the grid of providers (settings_providers.go), where one is
+// picked, its key and model are typed, and Save and test makes it the one in use.
 type assistState struct {
-	fs    fields
-	test  testResult
-	other map[string]bool
+	test     testResult // what the last test said, for one provider
+	changing bool       // the grid is open
+	pick     string     // the provider picked in the grid
+	drafts   map[string]*draft
+	lists    map[string]*modelList
+	fs       fields // the typed fields' keyboard state
+	saving   bool   // Save and test is running
+	err      string // why the last Save and test failed, shown under the form
 }
 
-// testResult is what the Test link last said, for one provider.
+// testResult is what the last test said, for one provider.
 type testResult struct {
 	id      string
 	running bool
@@ -30,202 +31,91 @@ type testResult struct {
 	ok      bool
 }
 
-// assistantPane is the model the assistant uses: its provider, model and key, whether they work,
-// and the base URL under Advanced.
+// assistantPane is the provider in use and the others set up, or the grid when none is.
 func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 	if s.app.Models == nil {
 		group(c, t, "assistant", func() { settingsRow(c, t, "none", s.say.SettingsAssistantNone(), "", true, nil) })
 		return
 	}
-	if s.assist.fs == nil {
-		s.assist.fs, s.assist.other = fields{}, map[string]bool{}
+	if s.assist.drafts == nil {
+		s.assist.drafts, s.assist.lists, s.assist.fs = map[string]*draft{}, map[string]*modelList{}, fields{}
 	}
 	ps := s.app.Models.Providers()
-	p := currentProvider(ps)
-	group(c, t, "assistant", func() {
-		settingsRow(c, t, "provider", s.say.SettingsProvider(), s.providerSub(p), true, func() { s.providerControl(c, t, ps, p) })
-		settingsRow(c, t, "model", s.say.ModelsModel(), "", false, func() { s.modelControl(c, t, p) })
-		if p.HasKeyField {
-			settingsRow(c, t, "key", s.say.ModelsAPIKey(), s.say.ModelsKeyHelp(), false, func() { s.keyControl(c, t, p) })
-		}
-		s.statusRow(c, t, p)
-	})
-	groupLabel(c, t, s.say.SettingsAdvanced())
-	group(c, t, "advanced", func() {
-		settingsRow(c, t, "url", s.say.ModelsBaseURL(), s.say.ModelsBaseURLHelp(), true, func() {
-			fieldWell(c, t, "url", wellWidth, func() {
-				if v, ok := textField(c, t, s.assist.fs, fieldSpec{
-					name: p.ID + "/url", label: s.say.ModelsBaseURL(), value: p.BaseURL, style: theme.Body, color: t.Text,
-					placeholder: p.DefaultBaseURL, escReverts: true,
-				}); ok {
-					s.save(p, "url", v)
-				}
-			})
-		})
-		if p.PickProtocol {
-			settingsRow(c, t, "protocol", s.say.ModelsProtocol(), "", false, func() { s.protocolControl(c, t, p) })
-		}
-	})
-}
-
-// currentProvider is the active provider, or the first when none is: saving its key makes it the
-// active one.
-func currentProvider(ps []data.Provider) data.Provider {
-	for _, p := range ps {
-		if p.Active {
-			return p
-		}
-	}
-	return ps[0]
-}
-
-// providerSub is the line under the provider: what it says about itself, or that it needs a key.
-func (s *Settings) providerSub(p data.Provider) string {
-	note := providerNote(s.say, p)
-	if note == "" && p.HasKeyField && !s.app.Models.KeySaved(p.ID) {
-		return s.say.ModelsNeedsKey()
-	}
-	return note
-}
-
-func (s *Settings) providerControl(c *ui.Context, t *theme.Tokens, ps []data.Provider, cur data.Provider) {
-	opts := make([]popOption, len(ps))
+	var inUse *data.Provider
+	var others []data.Provider
 	for i, p := range ps {
-		opts[i] = popOption{p.ID, providerName(s.say, p)}
-	}
-	if id, ok := popUp(c, t, "provider", cur.ID, opts); ok {
-		s.assist.test = testResult{}
-		s.fail(cur, s.app.Models.SetActive(id))
-	}
-}
-
-// modelControl is a pop-up of the preset's suggestions and Other…, or the text field Other… turns
-// into; a model the suggestions lack, and a preset with none, show the field.
-func (s *Settings) modelControl(c *ui.Context, t *theme.Tokens, p data.Provider) {
-	if len(p.Suggestions) > 0 && !s.assist.other[p.ID] && slices.Contains(p.Suggestions, p.Model) {
-		opts := make([]popOption, 0, len(p.Suggestions)+1)
-		for _, m := range p.Suggestions {
-			opts = append(opts, popOption{m, m})
+		switch {
+		case p.Active:
+			inUse = &ps[i]
+		case p.Configured:
+			others = append(others, p)
 		}
-		opts = append(opts, popOption{otherModel, s.say.ModelsOther()})
-		switch v, ok := popUp(c, t, "model-"+p.ID, p.Model, opts); {
-		case !ok:
-		case v == otherModel:
-			s.assist.other[p.ID] = true
-		default:
-			s.save(p, "model", v)
-		}
+	}
+	setUp := inUse != nil || len(others) > 0
+	if s.assist.changing || !setUp {
+		s.changePane(c, t, ps, inUse, setUp)
 		return
 	}
-	fieldWell(c, t, "model", wellWidth, func() {
-		if v, ok := textField(c, t, s.assist.fs, fieldSpec{
-			name: p.ID + "/model", label: s.say.ModelsModel(), value: p.Model, style: theme.Body, color: t.Text,
-			escReverts: true, focus: s.assist.other[p.ID],
-		}); ok {
-			s.save(p, "model", v)
-		}
-	})
-}
-
-// keyControl is the secure field; once a key is stored it shows dots and a check, never the key.
-func (s *Settings) keyControl(c *ui.Context, t *theme.Tokens, p data.Provider) {
-	saved := s.app.Models.KeySaved(p.ID)
-	placeholder := s.say.ModelsKeyPlaceholder()
-	if saved {
-		placeholder = "••••••••••••••••••••"
+	if inUse != nil {
+		groupLabel(c, t, s.say.SettingsInUse())
+		s.inUseCard(c, t, *inUse)
 	}
-	ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
-		fieldWell(c, t, "key", wellWidth, func() {
-			if v, ok := textField(c, t, s.assist.fs, fieldSpec{
-				name: p.ID + "/key", label: s.say.ModelsAPIKey(), style: theme.Body, color: t.Text, placeholder: placeholder, secret: true,
-			}); ok {
-				s.save(p, "key", v)
+	if len(others) > 0 {
+		groupLabel(c, t, s.say.SettingsAlsoSetUp())
+		group(c, t, "also", func() {
+			for i, p := range others {
+				s.alsoRow(c, t, p, i == 0)
 			}
 		})
-		if saved {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
-		}
-	})
-}
-
-func (s *Settings) protocolControl(c *ui.Context, t *theme.Tokens, p data.Provider) {
-	sel := 0
-	if p.Anthropic {
-		sel = 1
-	}
-	if i := segmented(c, t, "protocol", []string{s.say.ModelsProtocolOpenAI(), s.say.ModelsProtocolAnthropic()}, sel); i >= 0 {
-		e := s.edit(p)
-		e.Anthropic = i == 1
-		s.fail(p, s.app.Models.Save(p.ID, e))
 	}
 }
 
-// edit is the provider as it is stored, to which one change is made.
-func (s *Settings) edit(p data.Provider) data.ProviderEdit {
-	return data.ProviderEdit{BaseURL: p.BaseURL, Model: p.Model, Anthropic: p.Anthropic}
-}
-
-// save stores one field the user finished editing. A key goes to the keychain, makes the provider
-// the one in use and is tested at once.
-func (s *Settings) save(p data.Provider, field, v string) {
-	e, v := s.edit(p), strings.TrimSpace(v)
-	switch field {
-	case "url":
-		e.BaseURL = v
-	case "model":
-		e.Model = v
-		s.assist.other[p.ID] = false
-	case "key":
-		if v == "" {
-			return
-		}
-		e.Key = v
-	}
-	if s.fail(p, s.app.Models.Save(p.ID, e)) != nil {
-		return
-	}
-	if field == "key" {
-		if !p.Active {
-			s.fail(p, s.app.Models.SetActive(p.ID))
-		}
-		s.runTest(p)
-	}
-}
-
-// fail shows an error from the settings store in the status row, where it is seen.
-func (s *Settings) fail(p data.Provider, err error) error {
-	if err != nil {
-		s.assist.test = testResult{id: p.ID, text: problemText(s.say, err)}
-	}
-	return err
-}
-
-// statusRow says whether the connection works, and offers to test it.
-func (s *Settings) statusRow(c *ui.Context, t *theme.Tokens, p data.Provider) {
+// inUseCard is the provider the assistant uses: its logo, name, model and how the last test went,
+// with Change.
+func (s *Settings) inUseCard(c *ui.Context, t *theme.Tokens, p data.Provider) {
 	res := s.assist.test
 	if res.id != p.ID {
 		res = testResult{}
 	}
-	text, dot := s.say.ModelsStatusNone(), t.TextTertiary
-	switch {
-	case res.running:
-		text = s.say.ModelsTesting()
-	case res.ok:
-		text, dot = res.text, t.Status(data.Done)
-	case res.text != "":
-		text = res.text
-	}
-	ui.Box(c.Key("rule-status")).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
-	ui.Row(c.Key("row-status")).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(8).AlignItems(ui.Center).Children(func() {
-		statusDot(c, dot)
-		ink := t.TextSecondary
-		if res.ok {
-			ink = t.Text
+	group(c, t, "inuse", func() {
+		ui.Row(c).Shrink(0).Padding(14, 16).Gap(14).AlignItems(ui.Center).Children(func() {
+			theme.ProviderLogo(c, p.ID, p.Monogram, theme.LogoCard)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
+				theme.Text(c, theme.BodyStrong, t.Text, providerName(s.say, p)).Ellipsis("…")
+				s.statusLine(c, t, p, res)
+				if !res.ok && !res.running && res.text != "" {
+					theme.Paragraph(c, theme.Meta, t.Blocked(), res.text, 2)
+				}
+			})
+			if settingsButton(c, t, "change", s.say.SettingsChange(), false).Clicked() {
+				s.assist.changing, s.assist.pick = true, p.ID
+				s.assist.err = ""
+				s.fetchModels(p, "")
+			}
+		})
+	})
+}
+
+// statusLine is the model and how the connection to it is: connected with the time a request
+// took, being tested, not tested, or failed (the words of the failure are under it).
+func (s *Settings) statusLine(c *ui.Context, t *theme.Tokens, p data.Provider, res testResult) {
+	ui.Row(c).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
+		if p.Model != "" {
+			theme.Text(c, theme.Meta, t.TextSecondary, p.Model).Ellipsis("…")
 		}
-		theme.Paragraph(c, theme.Body, ink, text, 0).Grow(1).MinWidth(0)
-		if !res.running {
+		switch {
+		case res.running:
+			theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsTesting())
+		case res.ok:
+			theme.Text(c, theme.Meta, t.TextTertiary, "·")
+			statusDot(c, t.Status(data.Done))
+			theme.Text(c, theme.Meta, t.Status(data.Done), res.text)
+		default:
+			if res.text == "" {
+				theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsStatusNone())
+			}
 			link := s.say.ModelsTest()
-			if res.ok || res.text != "" {
+			if res.text != "" {
 				link = s.say.ModelsTestAgain()
 			}
 			if settingsLink(c, t, "test", link, link).Clicked() {
@@ -233,6 +123,28 @@ func (s *Settings) statusRow(c *ui.Context, t *theme.Tokens, p data.Provider) {
 			}
 		}
 	})
+}
+
+// alsoRow is a provider that is set up but not in use, with Use.
+func (s *Settings) alsoRow(c *ui.Context, t *theme.Tokens, p data.Provider, first bool) {
+	sub := p.Model
+	if !p.HasKeyField {
+		sub += " · " + providerNote(s.say, p)
+	}
+	settingsRowLead(c, t, "also-"+p.ID, providerName(s.say, p), sub, first, func() {
+		use := s.say.SettingsUse()
+		if settingsLink(c, t, "use-"+p.ID, use, s.say.A11yUseProvider(providerName(s.say, p))).Clicked() {
+			s.assist.test = testResult{}
+			if s.app.Models.SetActive(p.ID) == nil {
+				s.runTest(p)
+			}
+		}
+	}, func() { theme.ProviderLogo(c, p.ID, p.Monogram, theme.LogoRow) })
+}
+
+// edit is the provider as it is stored, to which one change is made.
+func (s *Settings) edit(p data.Provider) data.ProviderEdit {
+	return data.ProviderEdit{BaseURL: p.BaseURL, Model: p.Model, Anthropic: p.Anthropic}
 }
 
 // runTest sends a one-token request off the UI thread and shows how it went.
@@ -253,5 +165,27 @@ func (s *Settings) outcomeOf(id string, d time.Duration, err error) testResult {
 	if err != nil {
 		return testResult{id: id, text: problemText(s.say, err)}
 	}
-	return testResult{id: id, ok: true, text: s.say.ModelsWorks(itoa(int(d.Milliseconds())))}
+	return testResult{id: id, ok: true, text: s.say.SettingsConnected(itoa(int(d.Milliseconds())))}
+}
+
+// settingsButton is a button of a settings pane: a quiet raised one, or the accent one for the
+// action the pane is for.
+func settingsButton(c *ui.Context, t *theme.Tokens, key, text string, primary bool) ui.Element {
+	btn := ui.ButtonBase(c.Key(key)).Shrink(0).Padding(5, 13).Radius(7).Label(text).Cursor(ui.CursorPointer).Center()
+	ink := t.Text
+	switch {
+	case primary:
+		btn.Background(t.Accent)
+		if btn.Hovered() {
+			btn.Background(t.Accent.Mix(t.Text, 0.12))
+		}
+		ink = t.AccentText
+	default:
+		btn.Background(t.SettingsGroup()).Border(1, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06))
+		if btn.Hovered() {
+			btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
+		}
+	}
+	btn.Children(func() { theme.Text(c, theme.Body, ink, text) })
+	return btn
 }

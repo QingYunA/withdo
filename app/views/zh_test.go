@@ -136,13 +136,19 @@ func TestChineseSettingsAndLanguageChoice(t *testing.T) {
 func TestChineseAssistantPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
+	r.setUp(t, "anthropic", "deepseek")
 	r.pane(t, "助手")
-	has(t, r.tt, "服务商", "模型", "API 密钥", "保存在钥匙串中", "还没有测试", "测试", "高级", "Base URL", "只有使用网关（例如 Magpie）时才需要改")
-	hasNot(t, r.tt, "Provider", "Not tested yet")
-	if err := r.tt.Click("claude-haiku-5-5"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, r.tt, "其他…")
+	has(t, r.tt, "更换", "用这个", "测试", "还没有测试", "claude-haiku-5-5")
+	hasFold(t, r.tt, "当前在用")
+	hasFold(t, r.tt, "也配好了")
+	hasNot(t, r.tt, "In use", "Not tested yet", "Change")
+	mustNil(t, r.tt.Click("测试"))
+	r.rec.drain(t)
+	r.tt.Frame()
+	has(t, r.tt, "已连接 · 640 ms")
+	mustNil(t, r.tt.Click("更换"))
+	mustNil(t, r.tt.Click("claude-haiku-5-5"))
+	has(t, r.tt, "其他…", "API 密钥", "保存并测试")
 }
 
 func TestChineseAgentsPane(t *testing.T) {
@@ -150,6 +156,8 @@ func TestChineseAgentsPane(t *testing.T) {
 	inChinese(r.tt)
 	r.pane(t, "Agent")
 	has(t, r.tt, "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "拷贝")
+	hasFold(t, r.tt, "接入的 Agent")
+	has(t, r.tt, "Claude Code")
 }
 
 func TestChineseConversation(t *testing.T) {

@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"slices"
 	"strings"
 	"testing"
@@ -19,8 +18,7 @@ type settingsRig struct {
 	rec *recorder
 	fm  *data.FakeModels
 
-	title  string
-	height float32
+	title string
 }
 
 func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
@@ -34,8 +32,9 @@ func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
 	}
 	r := &settingsRig{app: app, rec: rec, fm: fm}
 	r.s = NewSettings(app)
-	r.s.OnLayout = func(title string, h float32) { r.title, r.height = title, h }
-	r.tt = ui.NewTester(r.s.View, int(settingsWidth), 560)
+	r.s.OnTitle = func(title string) { r.title = title }
+	w, h := r.s.ContentSize()
+	r.tt = ui.NewTester(r.s.View, int(w), int(h))
 	r.tt.SetTitleBar(ui.TitleBar{Height: SettingsTitleBarHeight, Left: 78})
 	still(r.tt)
 	r.tt.Frame()
@@ -75,19 +74,7 @@ func TestSettingsShowSelectsAPane(t *testing.T) {
 	if r.title != "Assistant" {
 		t.Errorf("title %q", r.title)
 	}
-	has(t, r.tt, "Provider", "Model")
-}
-
-func TestSettingsReportsItsHeightToFitItsContent(t *testing.T) {
-	r := newSettingsRig(t)
-	general := r.height
-	if general < 200 {
-		t.Fatalf("height %v: not measured", general)
-	}
-	r.pane(t, "Assistant")
-	if r.height == general {
-		t.Errorf("the Assistant pane is as tall as General (%v)", general)
-	}
+	has(t, r.tt, "Pick a provider") // nothing is set up: the grid shows
 }
 
 func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
@@ -184,162 +171,6 @@ func TestAgentsPaneCopiesTheCommand(t *testing.T) {
 	has(t, r.tt, "Copied")
 }
 
-func TestAssistantPaneShowsProviderModelKeyStatusAndAdvanced(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	has(t, r.tt, "Provider", "Anthropic", "Model", "claude-haiku-5-5", "API key", "Kept in your Keychain", "Not tested yet", "Test", "Base URL")
-	hasFold(t, r.tt, "Advanced")
-	hasNot(t, r.tt, "OpenAI", "DeepSeek")
-}
-
-func TestChoosingAProviderMakesItTheActiveOne(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	if err := r.tt.Click("Anthropic"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, r.tt, "Magpie", "OpenAI", "DeepSeek", "Kimi", "OpenRouter", "Ollama", "Custom")
-	if err := r.tt.Click("OpenAI"); err != nil {
-		t.Fatal(err)
-	}
-	if activeID(r.fm) != "openai" {
-		t.Errorf("active = %q", activeID(r.fm))
-	}
-	r.tt.Frame()
-	has(t, r.tt, "gpt-4.1-mini")
-}
-
-func TestMagpieAndOllamaHaveNoKeyRow(t *testing.T) {
-	r := newSettingsRig(t)
-	mustNil(t, r.fm.SetActive("magpie"))
-	r.pane(t, "Assistant")
-	has(t, r.tt, "Uses your Magpie gateway at 127.0.0.1:3425")
-	hasNot(t, r.tt, "API key", "Kept in your Keychain")
-}
-
-func TestModelPopUpOffersTheSuggestionsAndOther(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	if err := r.tt.Click("claude-haiku-5-5"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, r.tt, "claude-sonnet-5-5", "claude-opus-5-5", "Other…")
-	if err := r.tt.Click("claude-sonnet-5-5"); err != nil {
-		t.Fatal(err)
-	}
-	if got := modelOf(r.fm, "anthropic"); got != "claude-sonnet-5-5" {
-		t.Errorf("model = %q", got)
-	}
-}
-
-func TestOtherTurnsTheModelRowIntoATextField(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	if err := r.tt.Click("claude-haiku-5-5"); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.tt.Click("Other…"); err != nil {
-		t.Fatal(err)
-	}
-	r.tt.Frame()
-	if !r.s.assist.fs.get("anthropic/model").editing {
-		t.Fatal("the field did not take the keyboard")
-	}
-	r.tt.Key(ui.Cmd, ui.KeyA)
-	r.tt.Type("claude-fable-9")
-	r.tt.Key(0, ui.KeyEnter)
-	r.tt.Frame()
-	if got := modelOf(r.fm, "anthropic"); got != "claude-fable-9" {
-		t.Errorf("model = %q", got)
-	}
-}
-
-func TestAProviderWithNoSuggestionsAsksForTheModelInAField(t *testing.T) {
-	r := newSettingsRig(t)
-	mustNil(t, r.fm.SetActive("custom"))
-	r.pane(t, "Assistant")
-	has(t, r.tt, "Protocol", "OpenAI-compatible", "Anthropic API")
-	if err := r.tt.Click("Anthropic API"); err != nil {
-		t.Fatal(err)
-	}
-	for _, p := range r.fm.Providers() {
-		if p.ID == "custom" && !p.Anthropic {
-			t.Error("the protocol did not change")
-		}
-	}
-}
-
-func TestSavingAKeyTestsItAtOnceAndNeverShowsIt(t *testing.T) {
-	r := newSettingsRig(t)
-	var got data.ProviderEdit
-	r.fm.TestFn = func(_ string, e data.ProviderEdit) (time.Duration, error) {
-		got = e
-		return 640 * time.Millisecond, nil
-	}
-	r.pane(t, "Assistant")
-	if err := r.tt.Click("Paste your API key"); err != nil {
-		t.Fatal(err)
-	}
-	r.tt.Type("sk-secret-value")
-	hasNot(t, r.tt, "sk-secret-value") // a secure field
-	r.tt.Key(0, ui.KeyEnter)
-	r.tt.Frame()
-	if !r.fm.KeySaved("anthropic") {
-		t.Fatal("the key was not stored")
-	}
-	has(t, r.tt, "Testing…")
-	r.rec.drain(t)
-	r.tt.Frame()
-	has(t, r.tt, "Works · 640 ms", "Test again")
-	if got.Model != "claude-haiku-5-5" {
-		t.Errorf("the test was sent %+v", got)
-	}
-	hasNot(t, r.tt, "Paste your API key", "sk-secret-value")
-}
-
-func TestTestLinkReportsTheFriendlyError(t *testing.T) {
-	r := newSettingsRig(t)
-	r.fm.TestFn = func(string, data.ProviderEdit) (time.Duration, error) {
-		return 0, errors.New("The provider didn't accept the API key.")
-	}
-	r.pane(t, "Assistant")
-	if err := r.tt.Click("Test"); err != nil {
-		t.Fatal(err)
-	}
-	r.rec.drain(t)
-	r.tt.Frame()
-	has(t, r.tt, "The provider didn't accept the API key.", "Test again")
-	hasNot(t, r.tt, "Not tested yet")
-}
-
-func TestTheTestResultBelongsToOneProvider(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	mustNil(t, r.tt.Click("Test"))
-	r.rec.drain(t)
-	r.tt.Frame()
-	has(t, r.tt, "Works · 640 ms")
-	mustNil(t, r.tt.Click("Anthropic"))
-	mustNil(t, r.tt.Click("OpenAI"))
-	r.tt.Frame()
-	hasNot(t, r.tt, "Works · 640 ms")
-	has(t, r.tt, "Not tested yet")
-}
-
-func TestBaseURLIsAnAdvancedFieldThatSavesOnEnter(t *testing.T) {
-	r := newSettingsRig(t)
-	r.pane(t, "Assistant")
-	has(t, r.tt, "Change only for a gateway such as Magpie", "https://api.anthropic.com")
-	mustNil(t, r.tt.Click("https://api.anthropic.com")) // the field's placeholder
-	r.tt.Type("https://gateway.example/v1")
-	r.tt.Key(0, ui.KeyEnter)
-	for _, p := range r.fm.Providers() {
-		if p.ID == "anthropic" && p.BaseURL != "https://gateway.example/v1" {
-			t.Errorf("base url = %q", p.BaseURL)
-		}
-	}
-}
-
 func TestGitHubPaneShowsTheStatusAndChecksNow(t *testing.T) {
 	r := newSettingsRig(t)
 	r.pane(t, "GitHub")
@@ -357,7 +188,7 @@ func TestSettingsWithoutPollerOrModelsStillHasEveryPane(t *testing.T) {
 	r.pane(t, "GitHub")
 	has(t, r.tt, "Following pull requests isn't available here.")
 	r.pane(t, "Assistant")
-	hasNot(t, r.tt, "Provider")
+	has(t, r.tt, "The assistant isn't available here.")
 }
 
 func modelOf(fm *data.FakeModels, id string) string {

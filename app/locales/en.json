@@ -932,16 +932,6 @@
   "@modelsTesting": {
     "description": "Test button while the request runs."
   },
-  "modelsWorks": "Works · {ms} ms",
-  "@modelsWorks": {
-    "description": "Result of a successful test, with the time it took.",
-    "placeholders": {
-      "ms": {
-        "type": "String",
-        "example": "640"
-      }
-    }
-  },
   "navInbox": "Inbox",
   "@navInbox": {
     "description": "Sidebar row and page title for tasks without a project. Also the name of the inbox in other sentences."
@@ -1545,6 +1535,94 @@
       "n": {
         "type": "int",
         "example": "2"
+      }
+    }
+  },
+  "settingsInUse": "In use",
+  "@settingsInUse": {
+    "description": "Group label above the provider the assistant uses now, in Settings > Assistant."
+  },
+  "settingsAlsoSetUp": "Also set up",
+  "@settingsAlsoSetUp": {
+    "description": "Group label above the other providers that already have a key, in Settings > Assistant."
+  },
+  "settingsChange": "Change",
+  "@settingsChange": {
+    "description": "Button on the provider in use that opens the grid of providers."
+  },
+  "settingsUse": "Use",
+  "@settingsUse": {
+    "description": "Link on a provider that is set up but not in use; it makes the provider the one in use."
+  },
+  "a11yUseProvider": "Use {name}",
+  "@a11yUseProvider": {
+    "description": "Accessibility label of the Use link of a provider.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "DeepSeek"
+      }
+    }
+  },
+  "settingsPickProvider": "Pick a provider",
+  "@settingsPickProvider": {
+    "description": "Label above the grid of providers."
+  },
+  "settingsDone": "Done",
+  "@settingsDone": {
+    "description": "Link that closes the grid of providers and goes back to the provider in use."
+  },
+  "settingsGetKey": "Get a key ↗",
+  "@settingsGetKey": {
+    "description": "Link that opens the page where the provider hands out API keys."
+  },
+  "settingsSaveAndTest": "Save and test",
+  "@settingsSaveAndTest": {
+    "description": "Button that stores the provider's key and model, tests them, and makes the provider the one in use."
+  },
+  "modelsKeyFor": "Paste your {provider} key",
+  "@modelsKeyFor": {
+    "description": "Placeholder of the API key field of a provider.",
+    "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "Kimi"
+      }
+    }
+  },
+  "settingsConnected": "Connected · {ms} ms",
+  "@settingsConnected": {
+    "description": "Result of a successful connection test, with the time it took.",
+    "placeholders": {
+      "ms": {
+        "type": "String",
+        "example": "312"
+      }
+    }
+  },
+  "settingsNeedsURL": "Enter the address of the endpoint.",
+  "@settingsNeedsURL": {
+    "description": "Shown when Save and test is pressed for the Custom provider with no base URL."
+  },
+  "settingsNeedsModel": "Choose or type a model.",
+  "@settingsNeedsModel": {
+    "description": "Shown when Save and test is pressed with no model."
+  },
+  "settingsAgentsConnected": "Agents that reported",
+  "@settingsAgentsConnected": {
+    "description": "Group label above the agents that have reported, in Settings > Agents."
+  },
+  "settingsAgentIdle": "No reports today",
+  "@settingsAgentIdle": {
+    "description": "Line under an agent that reported before but not today."
+  },
+  "settingsAgentReports": "{count, plural, one {# report today} other {# reports today}}",
+  "@settingsAgentReports": {
+    "description": "Line under an agent: how many times it reported today.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "14"
       }
     }
   }

@@ -181,23 +181,22 @@ func (s *shell) createMain() {
 	s.mu.Unlock()
 }
 
-// createSettings opens the Settings window: a fixed width, a height that follows what the pane
-// shows, and the title and the pane icons in one band under the traffic lights, drawn by the view
-// over a hidden title bar. The window's own title is still the open pane's name. Closing it
-// destroys it.
+// createSettings opens the Settings window: one fixed size for every pane (a pane that needs more
+// room scrolls), and the title and the pane icons in one band under the traffic lights, drawn by
+// the view over a hidden title bar. The window's own title is still the open pane's name. Closing
+// it destroys it.
 func (s *shell) createSettings() {
 	var win *mygo.Window
-	s.settings.OnLayout = func(title string, height float32) {
-		if win == nil {
-			return
+	s.settings.OnTitle = func(title string) {
+		if win != nil {
+			win.SetTitle(title)
 		}
-		win.SetTitle(title)
-		win.SetContentSize(int(theme.SettingsWidth), int(height))
 	}
+	w, h := s.settings.ContentSize()
 	win = mygo.NewWindow(mygo.WindowOptions{
 		Title:           locales.SettingsGeneral(),
-		Width:           int(theme.SettingsWidth),
-		Height:          settingsHeight,
+		Width:           int(w),
+		Height:          int(h),
 		UseContentSize:  true,
 		DisableResize:   true,
 		DisableMaximize: true,
@@ -214,9 +213,6 @@ func (s *shell) createSettings() {
 	s.settingsWin = win
 	s.mu.Unlock()
 }
-
-// settingsHeight is the Settings window's height until its first frame has measured the pane.
-const settingsHeight = 420
 
 // showMain brings the main window to the front.
 func (s *shell) showMain() {

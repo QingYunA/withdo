@@ -527,10 +527,15 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
 sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane
-asked for. 680 pt wide, as tall as its pane's content, not resizable. Reference: `v2.html` frame 5;
-screens `settings-general-*`, `settings-assistant-*`, `settings-agents-*`, `settings-github-*`.
+asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
+under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
+the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7; screens
+`settings-general-*`, `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
+`settings-change-*`, `settings-change-error-*`, `settings-custom-*`, `settings-agents-*`,
+`settings-github-*`.
 
-- **Toolbar panes**, as in System Settings: General, Assistant, Agents, GitHub, each an icon above a
+- **Toolbar panes**, as in System Settings: General (`IconGeneral`), Assistant (`IconStar`), Agents
+  (`IconTerminal`), GitHub (`IconOctocat`), each an icon above a
   label (`meta`), 78 pt wide; the open one gets a 6 % black (white in dark) 8 pt well and an `accent` icon.
   The window title is the open pane's name. The top of the window is **one band** (the toolbar
   fill, a hairline under it): the title bar is hidden, the traffic lights sit in the band's first
@@ -544,15 +549,40 @@ screens `settings-general-*`, `settings-assistant-*`, `settings-agents-*`, `sett
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
   link).
-- **Assistant**: **Provider** (a pop-up of the presets), **Model** (a pop-up of the preset's
-  suggestions plus `Other…`, which turns the row into a text field; a preset without suggestions shows
-  the field), **API key** (a secure field, `Kept in your Keychain` underneath, hidden for presets with a
-  fixed key: Magpie, Ollama), a **status row** (`● Works · 640 ms`, or the friendly error in
-  `text.secondary`, or `Not tested yet`) with a **Test** link; the group **Advanced** holds **Base
-  URL**. Choosing a provider activates it; saving a key tests it at once, so Test is rarely needed.
-  Models, base URLs and keys save on Enter or blur.
-- **Agents**: `Connect Claude Code`, one line on what agents report, the registration command in a
-  mono well with **Copy**.
+- **Assistant**, at rest (M5): the label **In use** and one card (a group): the provider's **logo
+  tile** (38 pt, a rounded square in the provider's color with a monogram, `theme.ProviderLogo`), its
+  name (`body` 500), then `model · ● Connected · 312 ms` in `meta` (the model in `text.secondary`, the
+  dot and words in the done green), and **Change** at the right. Before any test the line reads
+  `Not tested yet` with a **Test** link; a test that failed shows its friendly error in `meta` under
+  the line, in the blocked red, with **Test again**. Under the card, **Also set up**: a group with a
+  row per other configured provider (a 28 pt logo, name, model, and for Ollama and Magpie their
+  note), **Use** at the right; it makes that provider the one in use and tests it. A provider counts
+  as set up when it is in use, has a stored key, or (Ollama, Magpie, Custom without a key) was saved
+  once. With nothing set up the pane opens on the grid at once, without **Done**.
+- **Assistant > Change**: the label **Pick a provider** with **Done** at the right (back to rest), and
+  a grid of 12 tiles, 6 × 2, 76 pt tall, 8 pt apart: Anthropic, OpenAI, DeepSeek, Kimi, 智谱 GLM,
+  通义千问, Gemini, OpenRouter, 硅基流动, Ollama, Magpie, Custom. A tile is a 32 pt logo and the name
+  (`meta`); a 7 pt green dot at the top right when the provider is set up; a 2 pt `accent` ring when
+  picked (a 1 pt hairline ring otherwise). The provider in use is picked when Change opens. Under the
+  grid, in one group, only: **API key** (a secure field, placeholder `Paste your Kimi key`, a stored
+  key shows dots and an empty field keeps it; **Get a key ↗** at the right opens the provider's key
+  page), and **Model** (a pop-up as wide as the field, with **Save and test**, the accent button, at
+  its right). The model pop-up lists the preset's suggestions, then the models the provider says it
+  has (`GET {base}/models`, or Anthropic's `/v1/models`), up to 24, with `Other…` last, which turns it
+  into a text field; the list is asked in the background when a provider with a stored key (or none
+  needed) is picked, and again when a typed key is left; if it fails the suggestions stand in
+  silently. **Save and test** stores the key and the model, sends a 1-token request, and on success
+  makes the provider the one in use and returns to rest; on failure the friendly error shows under
+  the fields (the blocked red, `meta`) and the key stays stored, so a retry is one click. Enter in the
+  key or model field is the same as the button. **Custom** adds **Base URL** and **Protocol**
+  (OpenAI-compatible | Anthropic API) above the key, and its model is always typed. Magpie and Ollama
+  have no key row. A missing key, base URL or model is said under the fields without a request.
+- **Agents** (M5): **Agents that reported**: a row per agent that ever reported, the latest first:
+  its 36 pt pixel avatar (`theme.AvatarIcon(theme.AgentAvatar(name))`), its name (Claude Code, Codex,
+  Cursor, Gemini CLI, any other as it reported), `N reports today` (or `No reports today`) in `meta`,
+  and how long ago the last report was at the right (`2m`, `6m`, `1d`). The GitHub poller's reports
+  are not an agent and are left out. Under the list: `Connect Claude Code`, one line on what agents
+  report, the registration command in a mono well with **Copy**.
 - **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads
@@ -565,8 +595,8 @@ screens `settings-general-*`, `settings-assistant-*`, `settings-agents-*`, `sett
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
 - A report from an agent in an archived project's repository restores the project too.
-- **Test** sends a 1-token request with what is typed, saved or not, and says `Works · 640 ms` or the
-  error in the words of **Assistant** (`text.secondary`; the dot is the only color).
+- A test says `Connected · 640 ms` or the error in the words of **Assistant**; nothing is tested
+  unless the user asks (Test, Use, Save and test).
 - Keys live in the system keychain (service `adhd-todo`), never in the database, the provider file or
   the logs. The active provider and per-provider overrides are in `models.json` next to the database.
 
