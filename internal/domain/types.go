@@ -114,6 +114,12 @@ type Task struct {
 	CompletedAt *string  `json:"completed_at"`
 	// RemindedAt is when the reminder for the current RemindAt fired; nil until it does.
 	RemindedAt *string `json:"reminded_at"`
+	// What the GitHub poller last saw of PRURL; nil until the first check and after PRURL changes.
+	PRState        *PRState  `json:"pr_state"`
+	PRChecks       *PRChecks `json:"pr_checks"`
+	PRReview       *PRReview `json:"pr_review"`
+	PRCheckedAt    *string   `json:"pr_checked_at"`
+	PRClosedSeenAt *string   `json:"pr_closed_seen_at"` // the user dismissed the "closed" state
 }
 
 // Report is one progress note an agent filed against a task.
