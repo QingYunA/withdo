@@ -188,14 +188,20 @@ func (m *Main) searchScreen(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// searchGroup is a header, a hash and the project's name and count, and its rows.
+// searchGroup is a header, a hash (the Inbox's tray) and the project's name and count, and its rows.
 func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g searchGroup) {
 	name, key := g.name, g.name
 	if g.inbox {
 		name, key = m.say.NavInbox(), "inbox"
 	}
 	ui.Row(c.Key("search-group-"+key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-		ui.Box(c).Size(16, theme.Body.Line).Shrink(0).Center().Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "#") })
+		ui.Box(c).Size(16, theme.Body.Line).Shrink(0).Center().Children(func() {
+			if g.inbox {
+				ui.Icon(c, theme.IconInbox).Size(14, 14).TextColor(t.TextTertiary)
+				return
+			}
+			theme.Text(c, theme.Body, t.TextTertiary, "#")
+		})
 		theme.Text(c, theme.BodyStrong, t.Text, name)
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(g.tasks)))
 	})

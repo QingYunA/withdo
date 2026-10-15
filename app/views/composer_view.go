@@ -45,11 +45,7 @@ func (m *Main) composerCard(c *ui.Context, t *theme.Tokens) {
 			m.composerChip(c, t)
 			ui.Spacer(c)
 			if m.width >= hintShownAbove && !(m.convo.thinking && m.convo.owner == surfacePage) {
-				text := m.say.ComposerHintSend()
-				if cs.buf == "" && !focused {
-					text = m.say.ComposerHintIdle()
-				}
-				theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+				m.composerHint(c, t, focused, cs.buf != "")
 			}
 			m.sendButton(c, t, surfacePage)
 		})
@@ -57,6 +53,27 @@ func (m *Main) composerCard(c *ui.Context, t *theme.Tokens) {
 	if card.Clicked() {
 		cs.ref.Focus(c) // a click on the card, not on a control in it, is a click in the field
 	}
+}
+
+// composerHint is the keyboard hint at the right of the bar, as little as the moment needs: only
+// the ⌘K key cap while the field is not focused, "↵ to send" once it is, and the line break as well
+// when there is text to break.
+func (m *Main) composerHint(c *ui.Context, t *theme.Tokens, focused, typed bool) {
+	switch {
+	case !focused:
+		keyCap(c, t, m.say.ComposerHintIdle())
+	case typed:
+		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintTyped()).Shrink(1).MinWidth(0).Ellipsis("…")
+	default:
+		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintSend()).Shrink(1).MinWidth(0).Ellipsis("…")
+	}
+}
+
+// keyCap is a shortcut in a small outlined cap.
+func keyCap(c *ui.Context, t *theme.Tokens, text string) {
+	ui.Row(c).Shrink(0).Padding(1, 6).Radius(5).Border(1, t.Border).AlignItems(ui.Center).Children(func() {
+		theme.Text(c, theme.Meta, t.TextTertiary, text)
+	})
 }
 
 // composerField is the text area of a composer with its placeholder over it.
@@ -115,7 +132,7 @@ func (m *Main) composerChip(c *ui.Context, t *theme.Tokens) {
 		chip(c, t, "chip", func() { theme.Text(c, theme.Meta, t.TextSecondary, m.say.NavInbox()) })
 	}
 	if setUp {
-		if link(c, t, m.say.ComposerChipSetUp()).Shrink(0).Margin(0, 0, 0, 4).Clicked() {
+		if link(c, t, m.say.ComposerChipSetUp()).Shrink(0).Clicked() {
 			m.openSettings(PaneAssistant)
 		}
 	}
@@ -230,9 +247,13 @@ func (m *Main) inspectorComposer(c *ui.Context, t *theme.Tokens, task data.Task)
 		cs.task, cs.buf, cs.frames = task.ID, "", 0
 	}
 	focused := cs.ref.Focused(c)
-	ui.Column(c.Key("inspector-composer")).Shrink(0).Padding(0, 14, 14).Children(func() {
+	hairline(c, t) // the properties scroll above it; this stack stays where it is
+	ui.Column(c.Key("inspector-composer")).Shrink(0).Padding(12, 14, 14).Children(func() {
 		if m.replyIn(surfaceInspector, task.ID) {
-			ui.Scroll(c.Key("inspector-reply")).MaxHeight(inspectorReplyMax).Margin(0, 0, 10).Children(func() { m.convoSheet(c, t, true) })
+			// The words line up with the properties above (24 pt); a receipt's well reaches out to the card's edge.
+			ui.Scroll(c.Key("inspector-reply")).MaxHeight(inspectorReplyMax).Margin(0, 0, 10).Children(func() {
+				ui.Column(c).Padding(0, 10).Children(func() { m.convoSheet(c, t, true) })
+			})
 		}
 		row := ui.Row(c.Key("inspector-card")).Shrink(0).Padding(10, 10, 10, 14).Gap(10).AlignItems(ui.Center).
 			Radius(theme.ComposerRadius).Background(t.Bg)

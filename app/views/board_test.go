@@ -31,7 +31,7 @@ func TestBoardShowsOnlyNonEmptyColumnsPlusToDo(t *testing.T) {
 	if len(got) != 2 || !got[data.Todo] || !got[data.Doing] {
 		t.Errorf("columns %v, want to do and doing", got)
 	}
-	for _, gone := range []string{"Blocked", "Review", "Done"} {
+	for _, gone := range []string{"Blocked", "In review", "Done"} {
 		if tt.HasText(gone) {
 			t.Errorf("empty column %q is drawn", gone)
 		}
@@ -79,19 +79,65 @@ func TestBoardHasNoCollapsedStrips(t *testing.T) {
 	if len(m.boardColumns()) != 6 {
 		t.Fatalf("columns %d, want all six that hold tasks", len(m.boardColumns()))
 	}
-	for _, want := range []string{"Backlog", "To do", "Doing", "Blocked", "Review", "Done"} {
+	for _, want := range []string{"Backlog", "To do", "Doing", "Blocked", "In review", "Done"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing column %q", want)
 		}
 	}
-	if w := columnWidth(900, 6); w != 192 {
-		t.Errorf("six columns in 900 pt: width %v, want the 192 minimum (the board scrolls)", w)
+}
+
+// The header and the composer are one block, and the columns fill exactly that block, centered;
+// only when the narrowest columns do not fit does the board scroll under a full-width header.
+func TestBoardColumnsFillTheBlockOfTheHeaderAndTheComposer(t *testing.T) {
+	const list = 684 // the lists' column: 780 less 2 x 48
+	for _, tc := range []struct {
+		avail  float32
+		n      int
+		scroll bool
+	}{{883, 4, false}, {1500, 4, false}, {1500, 3, false}, {1500, 2, false}, {900, 6, true}, {1500, 1, false}} {
+		got := boardMetricsFor(tc.avail, list, tc.n)
+		gaps := float32(tc.n-1) * 12
+		if tc.scroll {
+			if got.col != 192 || got.head != tc.avail-48 {
+				t.Errorf("%+v: %+v, want the narrowest columns under a full-width header", tc, got)
+			}
+			continue
+		}
+		if got.col < 192 || got.col*float32(tc.n)+gaps != got.head || 2*got.edge+got.head != tc.avail {
+			t.Errorf("%+v: %+v, columns do not fill a centered block", tc, got)
+		}
+		if got.edge < 24 {
+			t.Errorf("%+v: %+v, closer than 24 pt to the window", tc, got)
+		}
 	}
-	if w := columnWidth(883, 4); w < 192 {
-		t.Errorf("four columns in the 1100 window: width %v, they must fit without scrolling", w)
+	if got := boardMetricsFor(1500, list, 3); got.col != 264 {
+		t.Errorf("three columns in a wide window: %v wide, want the 264 maximum", got.col)
 	}
-	if w := columnWidth(900, 2); w != 264 {
-		t.Errorf("two columns: width %v, want the 264 maximum", w)
+}
+
+func TestBoardHeaderComposerAndColumnsShareTheirEdges(t *testing.T) {
+	for _, width := range []int{1100, 1840} {
+		app, _, _ := newTestApp(t)
+		tt, _ := boardTester(t, app, 1, width)
+		lay := boardMetricsFor(float32(width)-217, 684, 4) // the sidebar and its hairline are 217 pt
+		left := 217 + lay.edge
+		right := left + lay.head
+		toggle, _ := tt.Find("Board view")
+		send, _ := tt.Find("Send")
+		chip, _ := tt.Find("# adhd-todo")
+		first, _ := tt.Find("To do")
+		near := func(what string, got, want float32) {
+			t.Helper()
+			if got < want-1.5 || got > want+1.5 {
+				t.Errorf("%d pt window: %s at %.1f, want %.1f", width, what, got, want)
+			}
+		}
+		// The offsets are the padding inside each: the card's 16 and border, the chip's 8, the
+		// toggle's 2, the column's 8, 6, the glyph and its gap.
+		near("composer left", chip.X-8-16-1, left)
+		near("composer right", send.X+send.W+16+1, right)
+		near("toggle right", toggle.X+toggle.W+2, right)
+		near("first column left", first.X-6-8-18-8, left)
 	}
 }
 
@@ -125,10 +171,10 @@ func TestDraggingRevealsDropTargetsForHiddenStatuses(t *testing.T) {
 	if m.dragging == 0 {
 		t.Fatal("no drag in progress")
 	}
-	if !tt.HasText("Blocked") || !tt.HasText("Review") || !tt.HasText("Done") {
+	if !tt.HasText("Blocked") || !tt.HasText("In review") || !tt.HasText("Done") {
 		t.Fatalf("hidden statuses are not offered: %q", tt.Texts())
 	}
-	to, _ := tt.Find("Review")
+	to, _ := tt.Find("In review")
 	tx, ty := center(to)
 	tt.Move(tx, ty)
 	tt.Release(tx, ty)

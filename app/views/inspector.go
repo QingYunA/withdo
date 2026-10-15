@@ -112,7 +112,7 @@ func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	notes, ok := textField(c, t, m.inspector.fields, fieldSpec{
 		name: "Notes", label: m.say.FieldNotes(), value: task.Notes, style: theme.Body, color: t.Text, placeholder: m.say.NotesPlaceholder(),
-		multiline: true, escReverts: true, minLines: 3, maxLines: 12,
+		multiline: true, escReverts: true, minLines: 2, maxLines: 12,
 	})
 	if ok {
 		_ = m.app.Update(task.ID, data.Patch{Notes: &notes})

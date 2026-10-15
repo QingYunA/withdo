@@ -80,7 +80,7 @@ func TestChineseProjectList(t *testing.T) {
 	tt.SetSize(1100, 1600) // room for the Done group
 	tt.Frame()
 	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成", "显示全部 5 项 →", "待规划 2", "— 显示", "停滞3天",
-		"adhd-todo 里接下来做什么？比如“修复登录重定向死循环，p1，周五”", "⌘K 聚焦 · ↵ 发送 · ⇧↵ 换行")
+		"adhd-todo 里接下来做什么？比如“修复登录重定向死循环，p1，周五”")
 	if err := tt.Click("显示待规划 2"); err != nil {
 		t.Fatal(err)
 	}

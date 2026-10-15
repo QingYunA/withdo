@@ -526,13 +526,13 @@ func (msgs Messages) ChangeDue(when string) string {
 	return Catalog.Format(msgs.locale, "changeDue", map[string]any{"when": when})
 }
 
-// ChangeDueCleared says "due cleared"
+// ChangeDueCleared says "Due cleared"
 // in the language the app shows.
 //
 // A part of an update: the due date was removed.
 func ChangeDueCleared() string { return In(i18n.Locale()).ChangeDueCleared() }
 
-// ChangeDueCleared says "due cleared"
+// ChangeDueCleared says "Due cleared"
 // in the language of msgs.
 //
 // A part of an update: the due date was removed.
@@ -540,13 +540,13 @@ func (msgs Messages) ChangeDueCleared() string {
 	return Catalog.Format(msgs.locale, "changeDueCleared", nil)
 }
 
-// ChangeNotes says "notes"
+// ChangeNotes says "Notes updated"
 // in the language the app shows.
 //
 // A part of an update: the notes changed.
 func ChangeNotes() string { return In(i18n.Locale()).ChangeNotes() }
 
-// ChangeNotes says "notes"
+// ChangeNotes says "Notes updated"
 // in the language of msgs.
 //
 // A part of an update: the notes changed.
@@ -554,13 +554,13 @@ func (msgs Messages) ChangeNotes() string {
 	return Catalog.Format(msgs.locale, "changeNotes", nil)
 }
 
-// ChangeProject says "in {project}"
+// ChangeProject says "Moved to {project}"
 // in the language the app shows.
 //
 // A part of an update: the task moved to a project.
 func ChangeProject(project string) string { return In(i18n.Locale()).ChangeProject(project) }
 
-// ChangeProject says "in {project}"
+// ChangeProject says "Moved to {project}"
 // in the language of msgs.
 //
 // A part of an update: the task moved to a project.
@@ -568,27 +568,13 @@ func (msgs Messages) ChangeProject(project string) string {
 	return Catalog.Format(msgs.locale, "changeProject", map[string]any{"project": project})
 }
 
-// ChangeReminder says "reminder {when}"
-// in the language the app shows.
-//
-// A part of an update: the reminder was set.
-func ChangeReminder(when string) string { return In(i18n.Locale()).ChangeReminder(when) }
-
-// ChangeReminder says "reminder {when}"
-// in the language of msgs.
-//
-// A part of an update: the reminder was set.
-func (msgs Messages) ChangeReminder(when string) string {
-	return Catalog.Format(msgs.locale, "changeReminder", map[string]any{"when": when})
-}
-
-// ChangeReminderCleared says "reminder cleared"
+// ChangeReminderCleared says "Reminder cleared"
 // in the language the app shows.
 //
 // A part of an update: the reminder was removed.
 func ChangeReminderCleared() string { return In(i18n.Locale()).ChangeReminderCleared() }
 
-// ChangeReminderCleared says "reminder cleared"
+// ChangeReminderCleared says "Reminder cleared"
 // in the language of msgs.
 //
 // A part of an update: the reminder was removed.
@@ -596,18 +582,32 @@ func (msgs Messages) ChangeReminderCleared() string {
 	return Catalog.Format(msgs.locale, "changeReminderCleared", nil)
 }
 
-// ChangeRenamed says "renamed"
+// ChangeRenamed says "Renamed"
 // in the language the app shows.
 //
 // A part of an update: the title changed.
 func ChangeRenamed() string { return In(i18n.Locale()).ChangeRenamed() }
 
-// ChangeRenamed says "renamed"
+// ChangeRenamed says "Renamed"
 // in the language of msgs.
 //
 // A part of an update: the title changed.
 func (msgs Messages) ChangeRenamed() string {
 	return Catalog.Format(msgs.locale, "changeRenamed", nil)
+}
+
+// ChangeStatus says "Set to {status}"
+// in the language the app shows.
+//
+// A part of an update: the status changed to something other than Done.
+func ChangeStatus(status string) string { return In(i18n.Locale()).ChangeStatus(status) }
+
+// ChangeStatus says "Set to {status}"
+// in the language of msgs.
+//
+// A part of an update: the status changed to something other than Done.
+func (msgs Messages) ChangeStatus(status string) string {
+	return Catalog.Format(msgs.locale, "changeStatus", map[string]any{"status": status})
 }
 
 // ConvoRetry says "Retry"
@@ -850,20 +850,6 @@ func (msgs Messages) DetailReminder(when string) string {
 	return Catalog.Format(msgs.locale, "detailReminder", map[string]any{"when": when})
 }
 
-// DetailUpdated says "Updated · {changes}"
-// in the language the app shows.
-//
-// Detail of a change that edited a task; changes lists what.
-func DetailUpdated(changes string) string { return In(i18n.Locale()).DetailUpdated(changes) }
-
-// DetailUpdated says "Updated · {changes}"
-// in the language of msgs.
-//
-// Detail of a change that edited a task; changes lists what.
-func (msgs Messages) DetailUpdated(changes string) string {
-	return Catalog.Format(msgs.locale, "detailUpdated", map[string]any{"changes": changes})
-}
-
 // ErrNoStore says "Couldn't reach the data store. Retrying…"
 // in the language the app shows.
 //
@@ -1006,62 +992,6 @@ func (msgs Messages) FoldShowShort() string {
 	return Catalog.Format(msgs.locale, "foldShowShort", nil)
 }
 
-// GroupBlocked says "Blocked"
-// in the language the app shows.
-//
-// Header of the blocked group in a project list.
-func GroupBlocked() string { return In(i18n.Locale()).GroupBlocked() }
-
-// GroupBlocked says "Blocked"
-// in the language of msgs.
-//
-// Header of the blocked group in a project list.
-func (msgs Messages) GroupBlocked() string {
-	return Catalog.Format(msgs.locale, "groupBlocked", nil)
-}
-
-// GroupDoing says "Doing"
-// in the language the app shows.
-//
-// Header of the doing group in a project list.
-func GroupDoing() string { return In(i18n.Locale()).GroupDoing() }
-
-// GroupDoing says "Doing"
-// in the language of msgs.
-//
-// Header of the doing group in a project list.
-func (msgs Messages) GroupDoing() string {
-	return Catalog.Format(msgs.locale, "groupDoing", nil)
-}
-
-// GroupReview says "In review"
-// in the language the app shows.
-//
-// Header of the review group in a project list.
-func GroupReview() string { return In(i18n.Locale()).GroupReview() }
-
-// GroupReview says "In review"
-// in the language of msgs.
-//
-// Header of the review group in a project list.
-func (msgs Messages) GroupReview() string {
-	return Catalog.Format(msgs.locale, "groupReview", nil)
-}
-
-// GroupTodo says "To do"
-// in the language the app shows.
-//
-// Header of the to do group in a project list and column of the board.
-func GroupTodo() string { return In(i18n.Locale()).GroupTodo() }
-
-// GroupTodo says "To do"
-// in the language of msgs.
-//
-// Header of the to do group in a project list and column of the board.
-func (msgs Messages) GroupTodo() string {
-	return Catalog.Format(msgs.locale, "groupTodo", nil)
-}
-
 // InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press ⌘K."
 // in the language the app shows.
 //
@@ -1186,20 +1116,6 @@ func ListEmptyTitle() string { return In(i18n.Locale()).ListEmptyTitle() }
 // Title of an empty project list.
 func (msgs Messages) ListEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "listEmptyTitle", nil)
-}
-
-// ListSeparator says ", "
-// in the language the app shows.
-//
-// Separates the parts of an update.
-func ListSeparator() string { return In(i18n.Locale()).ListSeparator() }
-
-// ListSeparator says ", "
-// in the language of msgs.
-//
-// Separates the parts of an update.
-func (msgs Messages) ListSeparator() string {
-	return Catalog.Format(msgs.locale, "listSeparator", nil)
 }
 
 // ListShowAllDone says "Show all {n} →"
@@ -3584,13 +3500,13 @@ func (msgs Messages) StatusDone() string {
 	return Catalog.Format(msgs.locale, "statusDone", nil)
 }
 
-// StatusReview says "Review"
+// StatusReview says "In review"
 // in the language the app shows.
 //
 // Task status: waits for a look.
 func StatusReview() string { return In(i18n.Locale()).StatusReview() }
 
-// StatusReview says "Review"
+// StatusReview says "In review"
 // in the language of msgs.
 //
 // Task status: waits for a look.
@@ -3598,13 +3514,13 @@ func (msgs Messages) StatusReview() string {
 	return Catalog.Format(msgs.locale, "statusReview", nil)
 }
 
-// StatusTodo says "Todo"
+// StatusTodo says "To do"
 // in the language the app shows.
 //
 // Task status: planned, not started.
 func StatusTodo() string { return In(i18n.Locale()).StatusTodo() }
 
-// StatusTodo says "Todo"
+// StatusTodo says "To do"
 // in the language of msgs.
 //
 // Task status: planned, not started.
@@ -3918,18 +3834,18 @@ func (msgs Messages) ComposerChipSetUp() string {
 	return Catalog.Format(msgs.locale, "composerChipSetUp", nil)
 }
 
-// ComposerHintIdle says "⌘K to focus · ↵ to send · ⇧↵ new line"
+// ComposerHintIdle says "⌘K"
 // in the language the app shows.
 //
-// Keyboard hint at the right of the composer's bar while it is empty and
-// not focused.
+// Key cap at the right of the composer's bar while it is not focused: the
+// shortcut that focuses it.
 func ComposerHintIdle() string { return In(i18n.Locale()).ComposerHintIdle() }
 
-// ComposerHintIdle says "⌘K to focus · ↵ to send · ⇧↵ new line"
+// ComposerHintIdle says "⌘K"
 // in the language of msgs.
 //
-// Keyboard hint at the right of the composer's bar while it is empty and
-// not focused.
+// Key cap at the right of the composer's bar while it is not focused: the
+// shortcut that focuses it.
 func (msgs Messages) ComposerHintIdle() string {
 	return Catalog.Format(msgs.locale, "composerHintIdle", nil)
 }
@@ -3937,17 +3853,33 @@ func (msgs Messages) ComposerHintIdle() string {
 // ComposerHintSend says "↵ to send"
 // in the language the app shows.
 //
-// Keyboard hint at the right of the composer's bar while it is focused or
-// has text.
+// Keyboard hint at the right of the composer's bar while it is focused and
+// empty.
 func ComposerHintSend() string { return In(i18n.Locale()).ComposerHintSend() }
 
 // ComposerHintSend says "↵ to send"
 // in the language of msgs.
 //
-// Keyboard hint at the right of the composer's bar while it is focused or
-// has text.
+// Keyboard hint at the right of the composer's bar while it is focused and
+// empty.
 func (msgs Messages) ComposerHintSend() string {
 	return Catalog.Format(msgs.locale, "composerHintSend", nil)
+}
+
+// ComposerHintTyped says "↵ send · ⇧↵ new line"
+// in the language the app shows.
+//
+// Keyboard hints at the right of the composer's bar while it is focused and
+// has text.
+func ComposerHintTyped() string { return In(i18n.Locale()).ComposerHintTyped() }
+
+// ComposerHintTyped says "↵ send · ⇧↵ new line"
+// in the language of msgs.
+//
+// Keyboard hints at the right of the composer's bar while it is focused and
+// has text.
+func (msgs Messages) ComposerHintTyped() string {
+	return Catalog.Format(msgs.locale, "composerHintTyped", nil)
 }
 
 // ComposerLabel says "Ask the assistant"

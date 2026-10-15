@@ -153,7 +153,7 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 	if ot.Stale && task.Status.Active() {
 		hours := ot.HoursSinceActivity
 		return func(c *ui.Context, t *theme.Tokens) {
-			theme.Text(c, theme.Meta, t.Stale, "! "+m.clock.Stale(hours)).Shrink(0)
+			theme.Text(c, theme.Meta, t.Stale, m.clock.Stale(hours)).Shrink(0)
 		}
 	}
 	since := task.UpdatedAt
