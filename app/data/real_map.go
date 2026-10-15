@@ -127,6 +127,14 @@ func nullableText(s *string) domain.Nullable[string] {
 	return domain.Set(*s)
 }
 
+func formatTimePtr(t *time.Time) *string {
+	if t == nil || t.IsZero() {
+		return nil
+	}
+	s := domain.FormatTime(*t)
+	return &s
+}
+
 func nullableTime(t *time.Time) domain.Nullable[string] {
 	switch {
 	case t == nil:

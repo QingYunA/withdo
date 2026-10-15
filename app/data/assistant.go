@@ -12,10 +12,11 @@ import (
 type PlaceKind int
 
 const (
-	PlaceNow     PlaceKind = iota // the Now page: no place of its own
-	PlaceProject                  // a project's page
-	PlaceInbox                    // the Inbox page
-	PlaceTask                     // the inspector of one task
+	PlaceNow      PlaceKind = iota // the Now page: no place of its own
+	PlaceProject                   // a project's page
+	PlaceInbox                     // the Inbox page
+	PlaceTask                      // the inspector of one task
+	PlaceCalendar                  // the Calendar page, with a day selected
 )
 
 // Place is where a request was typed. The assistant puts new tasks there and takes "this" and
@@ -24,6 +25,8 @@ type Place struct {
 	Kind      PlaceKind
 	ProjectID int // PlaceProject
 	TaskID    int // PlaceTask
+	// Day is the selected day of the Calendar page as "2006-01-02" (PlaceCalendar).
+	Day string
 }
 
 // Assistant is the built-in agent behind the composer, as the UI sees it.

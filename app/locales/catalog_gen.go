@@ -498,6 +498,184 @@ func (msgs Messages) BoardShowAll(n int) string {
 	return Catalog.Format(msgs.locale, "boardShowAll", map[string]any{"n": n})
 }
 
+// A11yCalendarDay says "{day}"
+// in the language the app shows.
+//
+// Accessibility label of a day cell of the calendar; day is the day in
+// words.
+func A11yCalendarDay(day string) string { return In(i18n.Locale()).A11yCalendarDay(day) }
+
+// A11yCalendarDay says "{day}"
+// in the language of msgs.
+//
+// Accessibility label of a day cell of the calendar; day is the day in
+// words.
+func (msgs Messages) A11yCalendarDay(day string) string {
+	return Catalog.Format(msgs.locale, "a11yCalendarDay", map[string]any{"day": day})
+}
+
+// CalendarMonthShort says "{n, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{}}"
+// in the language the app shows.
+//
+// The short name of a month, n as 1 to 12, in a day's label. In Chinese the
+// number with its unit.
+func CalendarMonthShort(n string) string { return In(i18n.Locale()).CalendarMonthShort(n) }
+
+// CalendarMonthShort says "{n, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{}}"
+// in the language of msgs.
+//
+// The short name of a month, n as 1 to 12, in a day's label. In Chinese the
+// number with its unit.
+func (msgs Messages) CalendarMonthShort(n string) string {
+	return Catalog.Format(msgs.locale, "calendarMonthShort", map[string]any{"n": n})
+}
+
+// CalendarMonthFull says "{n, select, 1{January} 2{February} 3{March} 4{April} 5{May} 6{June} 7{July} 8{August} 9{September} 10{October} 11{Nov…"
+// in the language the app shows.
+//
+// The full name of a month, n as 1 to 12, for the calendar's title. In
+// Chinese the number with its unit.
+func CalendarMonthFull(n string) string { return In(i18n.Locale()).CalendarMonthFull(n) }
+
+// CalendarMonthFull says "{n, select, 1{January} 2{February} 3{March} 4{April} 5{May} 6{June} 7{July} 8{August} 9{September} 10{October} 11{Nov…"
+// in the language of msgs.
+//
+// The full name of a month, n as 1 to 12, for the calendar's title. In
+// Chinese the number with its unit.
+func (msgs Messages) CalendarMonthFull(n string) string {
+	return Catalog.Format(msgs.locale, "calendarMonthFull", map[string]any{"n": n})
+}
+
+// CalendarPlaceholder says "Add to {day}, or ask me anything"
+// in the language the app shows.
+//
+// Placeholder of the composer on the calendar page; day is the selected
+// day, as in "Fri, Oct 16".
+func CalendarPlaceholder(day string) string { return In(i18n.Locale()).CalendarPlaceholder(day) }
+
+// CalendarPlaceholder says "Add to {day}, or ask me anything"
+// in the language of msgs.
+//
+// Placeholder of the composer on the calendar page; day is the selected
+// day, as in "Fri, Oct 16".
+func (msgs Messages) CalendarPlaceholder(day string) string {
+	return Catalog.Format(msgs.locale, "calendarPlaceholder", map[string]any{"day": day})
+}
+
+// CalendarMonthDay says "{month} {day}"
+// in the language the app shows.
+//
+// Label of the first day of a month in the calendar grid; month is
+// calendarMonthShort.
+func CalendarMonthDay(month string, day string) string {
+	return In(i18n.Locale()).CalendarMonthDay(month, day)
+}
+
+// CalendarMonthDay says "{month} {day}"
+// in the language of msgs.
+//
+// Label of the first day of a month in the calendar grid; month is
+// calendarMonthShort.
+func (msgs Messages) CalendarMonthDay(month string, day string) string {
+	return Catalog.Format(msgs.locale, "calendarMonthDay", map[string]any{"month": month, "day": day})
+}
+
+// CalendarDayLabel says "{weekday}, {month} {day}"
+// in the language the app shows.
+//
+// A calendar day in the composer's placeholder: the short weekday, the
+// month as calendarMonthShort says, and the day number.
+func CalendarDayLabel(weekday string, month string, day string) string {
+	return In(i18n.Locale()).CalendarDayLabel(weekday, month, day)
+}
+
+// CalendarDayLabel says "{weekday}, {month} {day}"
+// in the language of msgs.
+//
+// A calendar day in the composer's placeholder: the short weekday, the
+// month as calendarMonthShort says, and the day number.
+func (msgs Messages) CalendarDayLabel(weekday string, month string, day string) string {
+	return Catalog.Format(msgs.locale, "calendarDayLabel", map[string]any{"weekday": weekday, "month": month, "day": day})
+}
+
+// CalendarMonthTitle says "{month} {year}"
+// in the language the app shows.
+//
+// Title of the calendar page: the month shown. month is calendarMonthFull,
+// year is the year.
+func CalendarMonthTitle(month string, year string) string {
+	return In(i18n.Locale()).CalendarMonthTitle(month, year)
+}
+
+// CalendarMonthTitle says "{month} {year}"
+// in the language of msgs.
+//
+// Title of the calendar page: the month shown. month is calendarMonthFull,
+// year is the year.
+func (msgs Messages) CalendarMonthTitle(month string, year string) string {
+	return Catalog.Format(msgs.locale, "calendarMonthTitle", map[string]any{"month": month, "year": year})
+}
+
+// CalendarMore says "{n} more"
+// in the language the app shows.
+//
+// Last line of a calendar day with more items than fit; n is how many are
+// hidden.
+func CalendarMore(n int) string { return In(i18n.Locale()).CalendarMore(n) }
+
+// CalendarMore says "{n} more"
+// in the language of msgs.
+//
+// Last line of a calendar day with more items than fit; n is how many are
+// hidden.
+func (msgs Messages) CalendarMore(n int) string {
+	return Catalog.Format(msgs.locale, "calendarMore", map[string]any{"n": n})
+}
+
+// CalendarNext says "Next month"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the calendar's next month button.
+func CalendarNext() string { return In(i18n.Locale()).CalendarNext() }
+
+// CalendarNext says "Next month"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the calendar's next month button.
+func (msgs Messages) CalendarNext() string {
+	return Catalog.Format(msgs.locale, "calendarNext", nil)
+}
+
+// CalendarPrevious says "Previous month"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the calendar's previous month button.
+func CalendarPrevious() string { return In(i18n.Locale()).CalendarPrevious() }
+
+// CalendarPrevious says "Previous month"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the calendar's previous month button.
+func (msgs Messages) CalendarPrevious() string {
+	return Catalog.Format(msgs.locale, "calendarPrevious", nil)
+}
+
+// CalendarToday says "Today"
+// in the language the app shows.
+//
+// Button of the calendar header that returns to the current month and
+// selects today.
+func CalendarToday() string { return In(i18n.Locale()).CalendarToday() }
+
+// CalendarToday says "Today"
+// in the language of msgs.
+//
+// Button of the calendar header that returns to the current month and
+// selects today.
+func (msgs Messages) CalendarToday() string {
+	return Catalog.Format(msgs.locale, "calendarToday", nil)
+}
+
 // ChangeDue says "due {when}"
 // in the language the app shows.
 //
@@ -2312,6 +2490,22 @@ func NavInbox() string { return In(i18n.Locale()).NavInbox() }
 // the inbox in other sentences.
 func (msgs Messages) NavInbox() string {
 	return Catalog.Format(msgs.locale, "navInbox", nil)
+}
+
+// NavCalendar says "Calendar"
+// in the language the app shows.
+//
+// Sidebar row and page of the calendar: a month of tasks by the day they
+// are due, reminded or finished.
+func NavCalendar() string { return In(i18n.Locale()).NavCalendar() }
+
+// NavCalendar says "Calendar"
+// in the language of msgs.
+//
+// Sidebar row and page of the calendar: a month of tasks by the day they
+// are due, reminded or finished.
+func (msgs Messages) NavCalendar() string {
+	return Catalog.Format(msgs.locale, "navCalendar", nil)
 }
 
 // NavNoProjects says "Projects appear when an agent reports from a repository."

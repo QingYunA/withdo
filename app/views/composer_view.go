@@ -92,6 +92,8 @@ func (m *Main) placeholder(s surface) string {
 		return m.say.AskAnswerHint()
 	}
 	switch m.placeOf(s).Kind {
+	case data.PlaceCalendar:
+		return m.say.CalendarPlaceholder(m.clock.CalendarDay(m.calendarDay()))
 	case data.PlaceProject, data.PlaceInbox:
 		return m.say.ComposerPlaceholderAdd()
 	case data.PlaceTask:

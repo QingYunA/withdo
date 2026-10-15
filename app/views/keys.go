@@ -15,6 +15,8 @@ func (m *Main) rowIDs(now data.Now) []int {
 		return now.IDs()
 	case m.nav.screen == screenCompleted:
 		return m.completedIDs()
+	case m.nav.screen == screenCalendar:
+		return nil // the arrows walk the days, not rows
 	case m.boardActive():
 		var ids []int
 		for _, col := range m.boardColumns() {
@@ -70,12 +72,17 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenInbox})
 	case c.Shortcut(ui.Cmd, ui.Key3):
 		m.goTo(nav{screen: screenCompleted})
+	case c.Shortcut(ui.Cmd, ui.Key4):
+		m.goTo(nav{screen: screenCalendar})
 	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
 		m.undoLast()
 	}
 	typing := m.typing(c)
 	m.taskKeys(c, typing)
 	if typing || m.pop.open { // a key of the selected row may have opened the task menu
+		return
+	}
+	if m.nav.screen == screenCalendar && !m.searching() && m.calendarKey(c) {
 		return
 	}
 	switch {

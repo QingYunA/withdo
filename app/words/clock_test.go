@@ -127,3 +127,36 @@ func TestDayHeadsTheLogbook(t *testing.T) {
 	check(t, "Chinese yesterday", zh.Day(at(-1, 9, 0), now), "昨天")
 	check(t, "Chinese date", zh.Day(at(-2, 9, 0), now), "10月12日")
 }
+
+func TestCalendarWordsInEnglish(t *testing.T) {
+	k := New("en", i18n.Region{})
+	check(t, "MonthTitle", k.MonthTitle(now), "October 2026")
+	check(t, "CalendarDay", k.CalendarDay(at(2, 0, 0)), "Fri, Oct 16")
+	check(t, "MonthDay", k.MonthDay(time.Date(2026, 11, 1, 0, 0, 0, 0, time.Local)), "Nov 1")
+	check(t, "Weekday", k.Weekday(time.Date(2026, 10, 12, 0, 0, 0, 0, time.Local)), "Mon")
+}
+
+func TestCalendarWordsInChinese(t *testing.T) {
+	k := New("zh-Hans", i18n.Region{})
+	check(t, "MonthTitle", k.MonthTitle(now), "2026 年 10 月")
+	check(t, "CalendarDay", k.CalendarDay(at(2, 0, 0)), "10 月 16 日周五")
+	check(t, "MonthDay", k.MonthDay(time.Date(2026, 11, 1, 0, 0, 0, 0, time.Local)), "11 月 1 日")
+	check(t, "Weekday", k.Weekday(time.Date(2026, 10, 12, 0, 0, 0, 0, time.Local)), "周一")
+}
+
+func TestWeeksStartOnMondayInChineseAndSundayInEnglishUnlessTheSystemSaysOtherwise(t *testing.T) {
+	for _, tc := range []struct {
+		lang   string
+		region i18n.Region
+		want   time.Weekday
+	}{
+		{"en", i18n.Region{}, time.Sunday},
+		{"zh-Hans", i18n.Region{}, time.Monday},
+		{"en", i18n.Region{Locale: "en-GB", FirstWeekday: time.Monday}, time.Monday},
+		{"zh-Hans", i18n.Region{Locale: "zh-CN", FirstWeekday: time.Sunday}, time.Sunday},
+	} {
+		if got := FirstWeekday(tc.lang, tc.region); got != tc.want {
+			t.Errorf("FirstWeekday(%q, %+v) = %v, want %v", tc.lang, tc.region, got, tc.want)
+		}
+	}
+}

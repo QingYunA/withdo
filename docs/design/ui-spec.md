@@ -482,6 +482,51 @@ name, and at the right who finished it (`Claude Code`, `You`) and the time of da
 - 100 tasks are listed; `Show older` at the end loads 100 more.
 - The same keys as any list: `↑ ↓ ↵ Space Esc`, `⌘3` opens it.
 
+### Calendar
+
+The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
+Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the day that matters.
+
+- **Header**: the month as the page title (`October 2026`, `2026 年 10 月`, written by `app/words`),
+  and at the right a quiet segmented control `‹ Today ›` in the well of the list and board toggle
+  (`bg.subtle`, 8 pt radius, 26 pt segments), Today raised. `‹ ›` show the previous and next month and
+  move the selected day along (the same day number, the last day of a shorter month); Today returns
+  to this month and selects today. Under it the composer, then the grid.
+- **Grid**: 7 columns, the weeks the month needs (four to six), weeks starting on the system's first
+  weekday (Monday for zh-Hans, Sunday for en when the system names none). Weekday names in `meta`,
+  `text.tertiary`, over the grid. Cells are separated by 1 pt hairlines (`border`) inside an
+  `RadiusCard` frame; Saturday and Sunday on a faint fill (`CalendarWeekend`); days of other months
+  in `text.tertiary`; the first of a month reads `Nov 1` / `11 月 1 日`. Today's number sits in an
+  accent pill (`accent`, `accent.text`); the selected day has a 2 pt ring in `accent` at 60 %. The
+  grid is at most `CalendarMax` (1240 pt) wide and takes the window's remaining height, never less
+  than `CalendarMinCell` (76 pt) a cell; below that the page scrolls.
+- **Items** (`meta`, 20 pt, 2 pt apart, ellipsized): a task starts with its author's 12 pt avatar
+  (`theme.You` for what I wrote, the assistant included; `theme.AgentAvatar(name)` for what an agent
+  wrote, by its latest report, `agent` when it has none). A task *due* that day shows its title; a
+  *reminder* shows its time in `text.tertiary` first (a small clock instead in a cell too narrow for
+  both, and nothing in a narrower one); a task *finished* that day shows its title in `text.tertiary`
+  struck through; a *milestone* due that day is an accent-tinted chip with `IconFlag`. A task due and
+  reminded the same day shows once, as the reminder. An open task whose due time has passed has its
+  title in the blocked red. Cancelled tasks and closed milestones are not shown. Order within a day:
+  milestones, open items by time, finished items.
+- **More**: a cell lists at most three items; when there are more (or fewer lines fit the cell's
+  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line.
+- **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
+  month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
+  16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):
+  a task with no time words is due that day at 18:00 local, and a day named in the words wins. With
+  no model connected a plain task is added to the Inbox with that day at 18:00 as its due date.
+- **Items**: a click opens the task in the inspector (it does not select the day); a right click opens
+  the task menu. Drag an item onto another day: a due item moves its due date there and a reminder
+  item its reminder, both keeping their time of day; the target day tints with the accent while the
+  item is over it. Finished items do not drag.
+- **Keyboard** (no text input focused): `← →` the previous and next day, `↑ ↓` the same day a week
+  earlier or later (leaving the grid turns the page), `⌘←` `⌘→` the previous and next month,
+  `⌘4` opens the page, `⌘K` the composer. Items have no keyboard focus of their own: the task menu
+  and `↵` act on the highlighted task of other pages only.
+- **Data**: the snapshot holds every task including all finished ones, so no range query is needed;
+  `data.BuildCalendar` places them (see `app/data/calendar.go`).
+
 ### Sheets and confirmations
 
 Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padding) but 400 pt wide.
@@ -505,7 +550,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed.
+inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed, `⌘4` Calendar.
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant

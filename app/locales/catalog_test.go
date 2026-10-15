@@ -35,7 +35,9 @@ func messages(t *testing.T, file string) map[string]string {
 	return out
 }
 
-var placeholder = regexp.MustCompile(`\{(\w+)`)
+// A placeholder is a name after a brace; the branches of a select (`1{January}`) are text, and a word
+// character before their brace tells them apart.
+var placeholder = regexp.MustCompile(`(?:^|[^\w])\{(\w+)`)
 
 func placeholders(msg string) []string {
 	var names []string

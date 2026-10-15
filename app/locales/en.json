@@ -250,6 +250,114 @@
       }
     }
   },
+  "a11yCalendarDay": "{day}",
+  "@a11yCalendarDay": {
+    "description": "Accessibility label of a day cell of the calendar; day is the day in words.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Fri, Oct 16"
+      }
+    }
+  },
+  "calendarMonthShort": "{n, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{}}",
+  "@calendarMonthShort": {
+    "description": "The short name of a month, n as 1 to 12, in a day's label. In Chinese the number with its unit.",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "10"
+      }
+    }
+  },
+  "calendarMonthFull": "{n, select, 1{January} 2{February} 3{March} 4{April} 5{May} 6{June} 7{July} 8{August} 9{September} 10{October} 11{November} 12{December} other{}}",
+  "@calendarMonthFull": {
+    "description": "The full name of a month, n as 1 to 12, for the calendar's title. In Chinese the number with its unit.",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "10"
+      }
+    }
+  },
+  "calendarPlaceholder": "Add to {day}, or ask me anything",
+  "@calendarPlaceholder": {
+    "description": "Placeholder of the composer on the calendar page; day is the selected day, as in \"Fri, Oct 16\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Fri, Oct 16"
+      }
+    }
+  },
+  "calendarMonthDay": "{month} {day}",
+  "@calendarMonthDay": {
+    "description": "Label of the first day of a month in the calendar grid; month is calendarMonthShort.",
+    "placeholders": {
+      "month": {
+        "type": "String",
+        "example": "Nov"
+      },
+      "day": {
+        "type": "String",
+        "example": "1"
+      }
+    }
+  },
+  "calendarDayLabel": "{weekday}, {month} {day}",
+  "@calendarDayLabel": {
+    "description": "A calendar day in the composer's placeholder: the short weekday, the month as calendarMonthShort says, and the day number.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Fri"
+      },
+      "month": {
+        "type": "String",
+        "example": "Oct"
+      },
+      "day": {
+        "type": "String",
+        "example": "16"
+      }
+    }
+  },
+  "calendarMonthTitle": "{month} {year}",
+  "@calendarMonthTitle": {
+    "description": "Title of the calendar page: the month shown. month is calendarMonthFull, year is the year.",
+    "placeholders": {
+      "month": {
+        "type": "String",
+        "example": "October"
+      },
+      "year": {
+        "type": "String",
+        "example": "2026"
+      }
+    }
+  },
+  "calendarMore": "{n} more",
+  "@calendarMore": {
+    "description": "Last line of a calendar day with more items than fit; n is how many are hidden.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "calendarNext": "Next month",
+  "@calendarNext": {
+    "description": "Tooltip and accessibility label of the calendar's next month button."
+  },
+  "calendarPrevious": "Previous month",
+  "@calendarPrevious": {
+    "description": "Tooltip and accessibility label of the calendar's previous month button."
+  },
+  "calendarToday": "Today",
+  "@calendarToday": {
+    "description": "Button of the calendar header that returns to the current month and selects today."
+  },
   "changeDue": "due {when}",
   "@changeDue": {
     "description": "A part of an update: the due date was set.",
@@ -935,6 +1043,10 @@
   "navInbox": "Inbox",
   "@navInbox": {
     "description": "Sidebar row and page title for tasks without a project. Also the name of the inbox in other sentences."
+  },
+  "navCalendar": "Calendar",
+  "@navCalendar": {
+    "description": "Sidebar row and page of the calendar: a month of tasks by the day they are due, reminded or finished."
   },
   "navNoProjects": "Projects appear when an agent reports from a repository.",
   "@navNoProjects": {
