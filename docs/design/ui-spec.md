@@ -138,8 +138,18 @@ Then up to three sections. **A section with nothing in it is not drawn at all.**
      action **Open** (opens the inspector);
    - review tasks with a PR: `PR #12 is ready for your review`, action **Open PR** (browser);
    - stale agent tasks (no report for `stale_hours`): `No update for 3d`, action **Open**;
-   - reminders that are due: `You asked to be reminded at 4:00 PM`, action **Done**.
-   Order: blocked, due reminders, review, stale. Each row: glyph (reminders use a bell in
+   - reminders that are due: `You asked to be reminded at 4:00 PM`, action **Done**;
+   - a pull request closed without merging (M4a): `PR #12 was closed without merging`, actions
+     **Cancel task** (status cancelled) and **Keep** (the row goes away for good, until the pull
+     request changes state again);
+   - a pull request whose checks are failing: `Checks are failing on PR #12`, action **Open PR**;
+   - a pull request where changes were requested: `Changes were requested on PR #12`, action
+     **Open PR**.
+   The three pull request rows come from the GitHub poller (see **GitHub** under Settings) and
+   apply to any task with a pull request that is not done or cancelled; failing checks and
+   requested changes only while the pull request is open (not a draft).
+   Order: blocked, due reminders, closed pull requests, failing checks, requested changes, review,
+   stale. A task shows once, under the first reason it has. Each row: glyph (reminders use a bell in
    `accent`), title, project name in `text.tertiary`, one summary line, age, and the action as
    a small tinted button (`bg.selected`, accent text). This container is the only box on the
    screen.
@@ -260,8 +270,21 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 A 640 pt sheet with a `General | Models` switch (the quiet segmented well of the List | Board
 toggle) beside Done.
 
-**General**: "Connect Claude Code" with the copyable registration command, data folder path,
-About. Nothing else.
+**General**: "Connect Claude Code" with the copyable registration command, **GitHub**, data
+folder path, Language, About. Nothing else.
+
+**GitHub** (M4a, screens `settings-github-*`): the pull request poller's state, from the `gh` CLI
+the user is already signed in to (the app owns no token). One bold title and one line:
+- *Connected*: `Connected as QingYunA · checked 2 min ago` in `meta` / `text.secondary`, and a
+  **Check now** link at the right of the line. While a check runs the link reads `Checking…` and
+  is inert; before the first check ends the line says `Checking GitHub…`.
+- *No `gh`*: `The GitHub CLI isn't installed. Install it to follow your pull requests.` and the
+  command `brew install gh` in the mono well of "Connect Claude Code".
+- *Signed out*: `You're not signed in to GitHub. Sign in to follow your pull requests.` and
+  `gh auth login` in the mono well.
+- *Offline*: `Can't reach GitHub. Trying again soon.` Never red; polling retries on its own.
+Polling runs at launch, every 5 minutes, and when the window comes back to the front if the last
+check is older than a minute; at most 4 `gh` calls at once.
 
 **Models** (screens `settings-models`, `settings-models-edit`): the provider list at the left,
 the open provider's fields at the right.
