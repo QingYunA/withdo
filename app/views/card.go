@@ -89,12 +89,18 @@ func boolTo(b bool) float32 {
 }
 
 // cardMeta is the card's one line: the blocked mark, a P0 or P1 badge, the branch, and at the
-// right the due label or the age (or the stale label). It is not drawn when there is nothing to say.
+// right the due label or the age (or the stale label). A lane is narrow, so the branch shows only
+// when no mark or badge competes with it: cut down to "fix…" it says nothing. The line is not drawn
+// when there is nothing to say.
 func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task) {
 	right := m.metaRight(task)
 	badge := theme.ShowsPriority(task.Priority) && !task.Status.Terminal()
 	blocked := task.Status == data.Blocked
-	if !badge && !blocked && task.Branch == "" && right == nil {
+	branch := task.Branch
+	if badge || blocked {
+		branch = ""
+	}
+	if !badge && !blocked && branch == "" && right == nil {
 		return
 	}
 	ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(func() {
@@ -104,8 +110,8 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if badge {
 			theme.PriorityBadge(c, t, task.Priority)
 		}
-		if task.Branch != "" {
-			theme.Text(c, theme.Mono, t.TextSecondary, task.Branch).Shrink(4).MinWidth(0).Ellipsis("…")
+		if branch != "" {
+			theme.Text(c, theme.Mono, t.TextSecondary, branch).Shrink(4).MinWidth(0).Ellipsis("…")
 		}
 		ui.Spacer(c)
 		if right != nil {

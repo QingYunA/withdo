@@ -129,6 +129,14 @@ func TestCardsAreTitleAndOneMetaLineWithNoStatusGlyph(t *testing.T) {
 	has(t, tt, "feat/watch", "5h", "Fri")
 }
 
+// A narrow card cannot hold a badge and a branch: the branch would be cut down to "fix…".
+func TestCardsDropTheBranchWhenAMarkOrBadgeIsThere(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, _ := boardTester(t, app, 1, 1100)
+	has(t, tt, "feat/watch")                  // no badge: the branch shows
+	hasNot(t, tt, "fix/tray", "feat/go-core") // blocked with P0, and P1
+}
+
 // The header and the composer are one block, and the lanes fill exactly that block, centered;
 // only when the narrowest lanes do not fit does the board scroll under a full-width header.
 func TestBoardLanesFillTheBlockOfTheHeaderAndTheComposer(t *testing.T) {
