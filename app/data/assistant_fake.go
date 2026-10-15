@@ -18,6 +18,7 @@ type FakeAssistant struct {
 
 	mu     sync.Mutex
 	asked  []string
+	places []Place
 	undone []int
 	resets int
 }
@@ -28,9 +29,9 @@ var _ Assistant = (*FakeAssistant)(nil)
 func (f *FakeAssistant) Configured() bool { return f.Ready }
 
 // Ask implements Assistant.
-func (f *FakeAssistant) Ask(ctx context.Context, text string) (Reply, error) {
+func (f *FakeAssistant) Ask(ctx context.Context, text string, place Place) (Reply, error) {
 	f.mu.Lock()
-	f.asked = append(f.asked, text)
+	f.asked, f.places = append(f.asked, text), append(f.places, place)
 	block, script := f.Block, f.Script
 	f.mu.Unlock()
 	if block != nil {
@@ -66,6 +67,13 @@ func (f *FakeAssistant) Asked() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return append([]string(nil), f.asked...)
+}
+
+// Places is the place of every text the UI sent, in order.
+func (f *FakeAssistant) Places() []Place {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]Place(nil), f.places...)
 }
 
 // Undone is every receipt id the UI asked to undo.

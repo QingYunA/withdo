@@ -11,7 +11,7 @@ import (
 func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
 	loc := loadZone(t, "Asia/Shanghai")
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, loc)
-	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}, {ID: 4, Name: "picpocket"}})
+	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}, {ID: 4, Name: "picpocket"}}, Scope{}, nil)
 	for _, want := range []string{
 		"Wednesday, 2026-10-14 14:30",
 		"Asia/Shanghai",
@@ -32,14 +32,14 @@ func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
 }
 
 func TestPromptWithoutProjects(t *testing.T) {
-	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil)
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
 	contains(t, "prompt", p, "none yet")
 	contains(t, "prompt", p, "UTC+00:00")
 }
 
 func TestPromptSkipsArchivedProjects(t *testing.T) {
 	arch := "2026-01-01T00:00:00.000Z"
-	p := BuildPrompt(time.Now(), []domain.Project{{ID: 1, Name: "live"}, {ID: 2, Name: "gone", ArchivedAt: &arch}})
+	p := BuildPrompt(time.Now(), []domain.Project{{ID: 1, Name: "live"}, {ID: 2, Name: "gone", ArchivedAt: &arch}}, Scope{}, nil)
 	contains(t, "prompt", p, "live")
 	if strings.Contains(p, "gone") {
 		t.Error("archived project listed")
@@ -49,7 +49,7 @@ func TestPromptSkipsArchivedProjects(t *testing.T) {
 func TestPromptSpellsOutDaylightSavingChange(t *testing.T) {
 	loc := loadZone(t, "America/New_York")
 	now := time.Date(2026, 3, 7, 20, 0, 0, 0, loc) // the evening before the clocks go forward
-	p := BuildPrompt(now, nil)
+	p := BuildPrompt(now, nil, Scope{}, nil)
 	contains(t, "prompt", p, "-05:00 today and changes")
 	contains(t, "prompt", p, "-04:00 from 2026-03-08")
 	contains(t, "prompt", p, "Sun 2026-03-08")

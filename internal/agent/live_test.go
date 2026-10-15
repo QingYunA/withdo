@@ -34,7 +34,7 @@ func TestLiveModel(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	res, err := ag.Ask(ctx, "明天九点提醒我开会")
+	res, err := ag.Ask(ctx, "明天九点提醒我开会", agent.Scope{})
 	if err != nil {
 		t.Fatalf("Ask: %v", err)
 	}

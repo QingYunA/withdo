@@ -8,14 +8,32 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/agent"
 )
 
-// Assistant is the built-in agent behind the ask field, as the UI sees it.
+// PlaceKind says where a request to the assistant was typed.
+type PlaceKind int
+
+const (
+	PlaceNow     PlaceKind = iota // the Now page: no place of its own
+	PlaceProject                  // a project's page
+	PlaceInbox                    // the Inbox page
+	PlaceTask                     // the inspector of one task
+)
+
+// Place is where a request was typed. The assistant puts new tasks there and takes "this" and
+// "it" to mean the task of a task place.
+type Place struct {
+	Kind      PlaceKind
+	ProjectID int // PlaceProject
+	TaskID    int // PlaceTask
+}
+
+// Assistant is the built-in agent behind the composer, as the UI sees it.
 type Assistant interface {
-	// Configured reports whether a model is ready. Until it is, the ask field adds Inbox tasks.
+	// Configured reports whether a model is ready. Until it is, the composer adds plain tasks.
 	Configured() bool
-	// Ask runs one turn of the current conversation. It blocks, so the UI calls it off its
-	// thread; cancelling ctx stops it. On error the Reply still lists the changes made before the
-	// turn stopped. The error's text is fit to show.
-	Ask(ctx context.Context, text string) (Reply, error)
+	// Ask runs one turn of the current conversation, typed in place. It blocks, so the UI calls
+	// it off its thread; cancelling ctx stops it. On error the Reply still lists the changes made
+	// before the turn stopped. The error's text is fit to show.
+	Ask(ctx context.Context, text string, place Place) (Reply, error)
 	// Undo reverts the one change a receipt describes.
 	Undo(receiptID int) error
 	// Reset forgets the conversation.

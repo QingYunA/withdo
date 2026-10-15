@@ -72,7 +72,7 @@ func TestAgentAssistantMapsReceiptsAndWritesThroughTheStore(t *testing.T) {
 	if a.Configured() {
 		t.Error("configured with no provider")
 	}
-	reply, err := a.Ask(bg, "明天九点提醒我开会")
+	reply, err := a.Ask(bg, "明天九点提醒我开会", Place{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestAgentAssistantMapsReceiptsAndWritesThroughTheStore(t *testing.T) {
 
 func TestAgentAssistantMapsQuestions(t *testing.T) {
 	a, _ := newAssistant(t, toolCall("ask_user", `{"question":"Which?","options":["a","b"]}`))
-	reply, err := a.Ask(bg, "x")
+	reply, err := a.Ask(bg, "x", Place{})
 	if err != nil || reply.Question == nil || reply.Question.Text != "Which?" || len(reply.Question.Options) != 2 {
 		t.Errorf("reply %+v, %v", reply, err)
 	}
@@ -108,7 +108,7 @@ func TestAgentAssistantErrorsAreInPlainWords(t *testing.T) {
 	a, _ := newAssistant(t, func(context.Context) (*schema.Message, error) {
 		return nil, errors.New("401 invalid x-api-key sk-secret")
 	})
-	_, err := a.Ask(bg, "x")
+	_, err := a.Ask(bg, "x", Place{})
 	if p := (*ProblemError)(nil); !errors.As(err, &p) || p.Problem != ProblemKeyRejected || p.Text != "The provider didn't accept the API key." {
 		t.Errorf("err = %v", err)
 	}
@@ -126,9 +126,9 @@ func TestAgentAssistantKeepsCancelAndBusyRecognizable(t *testing.T) {
 	})
 	ctx, cancel := context.WithCancel(bg)
 	done := make(chan error, 1)
-	go func() { _, err := a.Ask(ctx, "x"); done <- err }()
+	go func() { _, err := a.Ask(ctx, "x", Place{}); done <- err }()
 	<-started
-	if _, err := a.Ask(bg, "y"); !errors.Is(err, agent.ErrBusy) {
+	if _, err := a.Ask(bg, "y", Place{}); !errors.Is(err, agent.ErrBusy) {
 		t.Errorf("second Ask = %v", err)
 	}
 	cancel()
@@ -230,11 +230,11 @@ func TestFakeAssistantAndModels(t *testing.T) {
 	f := &FakeAssistant{Ready: true, Block: block, Script: func(s string) (Reply, error) { return Reply{Text: "re: " + s}, nil }}
 	ctx, cancel := context.WithCancel(bg)
 	cancel()
-	if _, err := f.Ask(ctx, "x"); !errors.Is(err, context.Canceled) {
+	if _, err := f.Ask(ctx, "x", Place{}); !errors.Is(err, context.Canceled) {
 		t.Errorf("blocked Ask = %v", err)
 	}
 	close(block)
-	if r, _ := f.Ask(bg, "hi"); r.Text != "re: hi" {
+	if r, _ := f.Ask(bg, "hi", Place{Kind: PlaceInbox}); r.Text != "re: hi" {
 		t.Errorf("reply %+v", r)
 	}
 	_ = f.Undo(3)
@@ -242,7 +242,10 @@ func TestFakeAssistantAndModels(t *testing.T) {
 	if !f.Configured() || len(f.Asked()) != 2 || f.Undone()[0] != 3 || f.Resets() != 1 {
 		t.Error("fake bookkeeping")
 	}
-	if r, err := (&FakeAssistant{}).Ask(bg, "x"); err != nil || r.Text != "" {
+	if got := f.Places(); len(got) != 2 || got[0] != (Place{}) || got[1] != (Place{Kind: PlaceInbox}) {
+		t.Errorf("places %+v", got)
+	}
+	if r, err := (&FakeAssistant{}).Ask(bg, "x", Place{}); err != nil || r.Text != "" {
 		t.Errorf("no script: %+v %v", r, err)
 	}
 	fm := &FakeModels{}
@@ -253,4 +256,47 @@ func TestFakeAssistantAndModels(t *testing.T) {
 	if _, err := fm.Test(bg, "a", ProviderEdit{}); err == nil {
 		t.Error("TestFn ignored")
 	}
+}
+
+func TestAgentAssistantPassesThePlaceToTheAgent(t *testing.T) {
+	a, r := newAssistant(t,
+		toolCall("create_task", `{"title":"Fix the login redirect loop","priority":"P1"}`),
+		func(context.Context) (*schema.Message, error) { return schema.AssistantMessage("ok", nil), nil },
+		toolCall("update_task", `{"task_id":1,"priority":"P0"}`),
+		func(context.Context) (*schema.Message, error) { return schema.AssistantMessage("ok", nil), nil })
+	p, err := r.CreateProject(NewProject{Name: "adhd-todo"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reply, err := a.Ask(bg, "fix the login redirect loop, p1", Place{Kind: PlaceProject, ProjectID: p.ID})
+	if err != nil || len(reply.Receipts) != 1 {
+		t.Fatalf("reply %+v, %v", reply, err)
+	}
+	task, ok := findTask(r, reply.Receipts[0].TaskID)
+	if !ok || task.ProjectID == nil || *task.ProjectID != p.ID {
+		t.Fatalf("the task did not land in the project: %+v", task)
+	}
+	if reply.Receipts[0].Detail.Priority != "P1" {
+		t.Errorf("the receipt does not say P1: %+v", reply.Receipts[0].Detail)
+	}
+	if _, err := a.Ask(bg, "make it urgent", Place{Kind: PlaceTask, TaskID: task.ID}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAgentAssistantTaskPlaceOfAMissingTaskFails(t *testing.T) {
+	a, _ := newAssistant(t)
+	if _, err := a.Ask(bg, "x", Place{Kind: PlaceTask, TaskID: 404}); err == nil {
+		t.Error("a task that is gone must be an error")
+	}
+}
+
+func findTask(r *Real, id int) (Task, bool) {
+	ts, _ := r.ListTasks(Filter{})
+	for _, t := range ts {
+		if t.ID == id {
+			return t, true
+		}
+	}
+	return Task{}, false
 }

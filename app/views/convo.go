@@ -51,7 +51,7 @@ func (m *Main) sendToAssistant(text string) {
 	cv.turns = cv.turns[max(0, len(cv.turns)-maxTurnsShown):]
 	asst, post := m.app.Assistant, m.app.Act.Post
 	go func() {
-		reply, err := asst.Ask(ctx, text)
+		reply, err := asst.Ask(ctx, text, data.Place{})
 		post(func() { m.answered(text, reply, err) })
 	}()
 }

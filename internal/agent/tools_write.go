@@ -11,7 +11,7 @@ import (
 
 type createArgs struct {
 	Title     string  `json:"title" jsonschema:"description=Short task title. For a reminder the thing to remember."`
-	ProjectID *int64  `json:"project_id,omitempty" jsonschema:"description=Project id from list_projects. Omit for the Inbox."`
+	ProjectID *int64  `json:"project_id,omitempty" jsonschema:"description=Project id from list_projects. Omit for the place the request came from (see the prompt); 0 means the Inbox."`
 	Notes     *string `json:"notes,omitempty"`
 	Priority  string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3,description=P0 is urgent and P2 the default."`
 	DueAt     string  `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
@@ -21,7 +21,7 @@ type createArgs struct {
 func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	now := tb.now()
 	in := domain.CreateTaskInput{
-		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: a.ProjectID,
+		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: tb.projectFor(a.ProjectID),
 		Notes: a.Notes, Priority: domain.Priority(a.Priority),
 	}
 	var err error
@@ -43,6 +43,18 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	return reply{OK: true, Task: &v}, nil
 }
 
+// projectFor is the project a new task goes to: the one the model named, the Inbox for 0, and
+// where the request came from when it named none.
+func (tb *toolbox) projectFor(named *int64) *int64 {
+	switch {
+	case named == nil:
+		return tb.defaultProject
+	case *named == 0:
+		return nil
+	}
+	return named
+}
+
 func optWhen(field, s string, now time.Time, future bool) (*string, error) {
 	if strings.TrimSpace(s) == "" {
 		return nil, nil
@@ -54,15 +66,24 @@ func optWhen(field, s string, now time.Time, future bool) (*string, error) {
 	return &stored, nil
 }
 
+// createDetail is what a receipt says about a new task: its date and the priority when the words
+// set one, so what was inferred shows.
 func (tb *toolbox) createDetail(t domain.Task) Detail {
 	now := tb.now()
+	d := Detail{Kind: DetailAdded, Project: tb.projectLabel(t.ProjectID)}
 	switch {
 	case t.RemindAt != nil:
-		return Detail{Kind: DetailReminder, At: storedTime(*t.RemindAt, now)}
+		d.Kind, d.At = DetailReminder, storedTime(*t.RemindAt, now)
+		if t.DueAt != nil {
+			d.Due = storedTime(*t.DueAt, now)
+		}
 	case t.DueAt != nil:
-		return Detail{Kind: DetailDue, At: storedTime(*t.DueAt, now)}
+		d.Kind, d.At = DetailDue, storedTime(*t.DueAt, now)
 	}
-	return Detail{Kind: DetailAdded, Project: tb.projectLabel(t.ProjectID)}
+	if t.Priority != domain.P2 {
+		d.Priority = string(t.Priority)
+	}
+	return d
 }
 
 type updateArgs struct {
