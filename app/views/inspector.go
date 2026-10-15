@@ -88,7 +88,7 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if btn.Hovered() {
 			btn.Background(t.BgHover)
 		}
-		btn.Children(func() { ui.Icon(c, theme.IconClose).Size(14, 14) })
+		btn.Children(func() { ui.Icon(c, theme.IconClose).Size(theme.IconRow, theme.IconRow) })
 		if btn.Clicked() {
 			m.openID = 0
 		}

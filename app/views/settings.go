@@ -126,7 +126,7 @@ func (s *Settings) tab(c *ui.Context, t *theme.Tokens, p Pane) {
 		if on {
 			ink, label = t.Accent, t.Text
 		}
-		ui.Icon(c, paneIcons[p]).Size(20, 20).TextColor(ink)
+		ui.Icon(c, paneIcons[p]).Size(theme.IconBar, theme.IconBar).TextColor(ink)
 		theme.Text(c, theme.Meta, label, name)
 	})
 	if btn.Clicked() {

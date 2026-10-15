@@ -27,7 +27,7 @@ func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	}
 	ui.Row(c.Key("pop-filter")).Height(popRowH).Shrink(0).Margin(0, 0, 4).Padding(0, 10).Gap(8).Radius(7).
 		Background(t.BgSubtle).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, theme.IconSearch).Size(14, 14).TextColor(t.TextTertiary).Shrink(0)
+		ui.Icon(c, theme.IconSearch).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary).Shrink(0)
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
 			theme.Compact.Apply(ui.TextInputBase(c.Key("pop-filter-input"), &pm.filter)).TextColor(t.Text).
@@ -162,7 +162,7 @@ func (m *Main) menuTitle(c *ui.Context, t *theme.Tokens, title string) {
 			if back.Hovered() {
 				back.Background(t.BgHover)
 			}
-			back.Children(func() { ui.Icon(c, theme.IconBack).Size(14, 14) })
+			back.Children(func() { ui.Icon(c, theme.IconBack).Size(theme.IconRow, theme.IconRow) })
 			if back.Clicked() {
 				m.menuBack()
 			}

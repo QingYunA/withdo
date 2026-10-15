@@ -173,7 +173,7 @@ func (m *Main) sendButton(c *ui.Context, t *theme.Tokens, s surface) {
 		btn.Background(t.SendIdle())
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	btn.Children(func() { ui.Icon(c, theme.IconSend).Size(16, 16).TextColor(t.AccentText) })
+	btn.Children(func() { ui.Icon(c, theme.IconSend).Size(theme.IconRow, theme.IconRow).TextColor(t.AccentText) })
 	if btn.Clicked() && can {
 		m.submit(s)
 	}
@@ -211,7 +211,7 @@ func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	}
 	ui.Row(c.Key("notice")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).Gap(6).
 		Opacity(opacity).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
+		ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done)).Shrink(0)
 		theme.Text(c, theme.Compact, t.TextSecondary, cs.noticeText)
 	})
 }

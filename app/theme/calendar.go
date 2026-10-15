@@ -2,9 +2,6 @@ package theme
 
 import "github.com/egoist/mygo/ui"
 
-// IconForward is the chevron pointing right, the pair of IconBack.
-var IconForward = icon(`<path d="M6 3.5 10.5 8 6 12.5"/>`)
-
 // The calendar's metrics, in points.
 const (
 	CalendarMax      float32 = 1240 // the month grid at its widest, centered

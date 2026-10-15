@@ -195,7 +195,7 @@ func (m *Main) attachButton(c *ui.Context, t *theme.Tokens, s surface) ui.Elemen
 	if full {
 		ink = t.TextTertiary
 	}
-	btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(16, 16).TextColor(ink) })
+	btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
 	if btn.Clicked() && !full {
 		m.choosePictures(s)
 	}
@@ -227,7 +227,7 @@ func (m *Main) thumbnail(c *ui.Context, t *theme.Tokens, s surface, i int, p pic
 		if x.Hovered() {
 			x.Background(t.Text)
 		}
-		x.Children(func() { ui.Icon(c, theme.IconClose).Size(10, 10).TextColor(t.Bg) })
+		x.Children(func() { ui.Icon(c, theme.IconClose).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Bg) })
 		if x.Clicked() {
 			m.removePicture(s, i)
 		}

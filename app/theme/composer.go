@@ -13,10 +13,10 @@ const (
 
 // Icons of the composer and the Settings toolbar. Like the others they take the color of the text.
 var (
-	IconSend   = icon(`<path d="M8 13V3.2M3.6 7.4 8 3l4.4 4.4"/>`)
-	IconAgents = icon(`<path d="m3 4.5 3.5 3.5L3 11.5M8 12h5"/>`)
-	IconGitHub = icon(`<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="2.4" fill="currentColor" stroke="none"/>`)
-	IconFolder = icon(`<path d="M2.5 4.8a1.3 1.3 0 0 1 1.3-1.3h2.3l1.4 1.6h4.7a1.3 1.3 0 0 1 1.3 1.3v5a1.3 1.3 0 0 1-1.3 1.3H3.8a1.3 1.3 0 0 1-1.3-1.3z"/>`)
+	IconSend   = pixelIcon("arrow-up")
+	IconAgents = pixelIcon("terminal")
+	IconGitHub = pixelIcon("github")
+	IconFolder = pixelIcon("folder")
 )
 
 // ComposerBorder is the outline of a settings control: stronger than a hairline.

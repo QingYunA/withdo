@@ -141,7 +141,7 @@ func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, 
 		switch {
 		case installed:
 			ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, theme.IconCheck).Size(13, 13).TextColor(t.Status(data.Done))
+				ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done))
 				theme.Text(c, theme.Meta, t.Status(data.Done), s.say.SettingsAgentInstalled())
 			})
 		case s.setup.busy == a.ID:
@@ -246,11 +246,11 @@ func (s *Settings) copyButton(c *ui.Context, t *theme.Tokens, key, text string) 
 	}
 	btn.Children(func() {
 		if copied {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.TextSecondary)
+			ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextSecondary)
 			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsCopied())
 			return
 		}
-		ui.Icon(c, theme.IconCopy).Size(14, 14)
+		ui.Icon(c, theme.IconCopy).Size(theme.IconSmall, theme.IconSmall)
 		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsCopy())
 	})
 	if btn.Clicked() {
