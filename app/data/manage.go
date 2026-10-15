@@ -21,6 +21,11 @@ type Manager interface {
 	DeleteProject(id int) (Removed, error)
 	// DeleteTask removes a task and its reports.
 	DeleteTask(id int) error
+	// SnapshotTask reads a task with its reports, so RestoreTask can put it back after DeleteTask:
+	// the Undo of deleting a task. RestoreTask keeps the id and every field; a task whose project is
+	// gone returns to the Inbox. It fails when the id is taken again.
+	SnapshotTask(id int) (TaskSnapshot, error)
+	RestoreTask(TaskSnapshot) (Task, error)
 
 	CreateMilestone(projectID int, title string, dueAt *time.Time) (Milestone, error)
 	UpdateMilestone(id int, p MilestonePatch) (Milestone, error)
@@ -31,6 +36,13 @@ type Manager interface {
 	SearchTasks(query string, limit int) ([]Task, error)
 	// Logbook lists the done and cancelled tasks, newest completion first, at most limit.
 	Logbook(limit int) ([]Task, error)
+}
+
+// TaskSnapshot is a task with its reports as they were; only the store that made it can restore it.
+type TaskSnapshot struct {
+	Task    Task
+	Reports []Report // newest first
+	raw     any      // the store's own form
 }
 
 // NewProject is what the New project sheet sends.
