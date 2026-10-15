@@ -107,7 +107,7 @@ func TestCompletedRowsReopenOpenAndHaveTheTaskMenu(t *testing.T) {
 	}
 	first := m.completedTasks()[0].ID
 	click(t, tt, "Status: Done") // the first glyph: a finished task's glyph opens the menu
-	click(t, tt, "Set status to Todo")
+	click(t, tt, "Set status to To do")
 	if got, _ := app.Task(first); got.Status != data.Todo {
 		t.Errorf("status %v, want reopened", got.Status)
 	}
