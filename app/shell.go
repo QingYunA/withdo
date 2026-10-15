@@ -20,6 +20,8 @@ import (
 type shell struct {
 	app  *views.App
 	main *views.Main
+	// github is the pull request poller; nil when there is none.
+	github data.GitHub
 
 	mu      sync.Mutex
 	mainWin *mygo.Window
@@ -124,6 +126,12 @@ func (s *shell) createMain() {
 	})
 	// What was set once says the new language when it changes.
 	mygo.App.OnLocaleChanged(func(string) { win.SetTitle(locales.WindowTitle()) })
+	// Coming back to the front checks the pull requests again when the last check is old.
+	win.OnFocus(func() {
+		if s.github != nil {
+			s.github.Activate()
+		}
+	})
 	win.OnClose(func(e *mygo.CloseEvent) {
 		if !s.quitting.Load() {
 			e.PreventDefault()
@@ -159,6 +167,10 @@ func (s *shell) storeChanged() {
 	}
 	win.Update(s.app.Refresh)
 }
+
+// githubChanged runs on any goroutine when the poller's status changed: redraw, so that Settings
+// shows it. The tasks it changed arrive through storeChanged.
+func (s *shell) githubChanged() { s.Post(func() {}) }
 
 // notifyReminder shows a system notification for a due reminder. The first one asks the user for
 // permission and blocks until they answer, so it must not run on the main thread.

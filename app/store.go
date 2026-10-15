@@ -9,9 +9,13 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/agent"
+	"github.com/QingYunA/adhd-todo/internal/ghpoll"
 	"github.com/QingYunA/adhd-todo/internal/paths"
 	"github.com/QingYunA/adhd-todo/internal/providers"
 )
+
+// ghRunner runs the gh CLI for the pull request poller. Tests replace it: they never reach GitHub.
+var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 
 // backend is the store the app runs on, with what only the real or the fake one needs.
 type backend struct {
@@ -25,6 +29,8 @@ type backend struct {
 	// has no assistant, so its ask field adds Inbox tasks.
 	assistant data.Assistant
 	models    data.ModelSettings
+	// github is the pull request poller behind Settings > GitHub.
+	github data.GitHub
 }
 
 // openBackend returns the fake (with seed data, or empty) when asked for, otherwise the shared
@@ -54,13 +60,15 @@ func openReal(path string) (*backend, error) {
 	ag := agent.New(agent.Config{
 		Core: r.Core(), Model: mgr.Model, Now: func() time.Time { return time.Now().In(loc) },
 	})
+	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core()})
 	return &backend{
 		store:      r,
 		dataFolder: dir,
-		start:      func(<-chan struct{}) { r.Start() },
-		close:      r.Close,
+		start:      func(<-chan struct{}) { r.Start(); poller.Start() },
+		close:      func() error { poller.Stop(); return r.Close() },
 		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr},
 		models:     &data.ProviderSettings{Provider: mgr},
+		github:     data.PollerGitHub{Poller: poller},
 	}, nil
 }
 
@@ -76,6 +84,7 @@ func openFake(empty bool) *backend {
 		dataFolder: "(in-memory demo data)",
 		start:      func(stop <-chan struct{}) { go tickFake(f, stop) },
 		models:     demoModels(),
+		github:     data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: time.Now()}),
 	}
 }
 

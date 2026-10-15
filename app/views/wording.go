@@ -187,6 +187,12 @@ func (m *Main) needSummary(it data.NowItem) string {
 		return m.say.NeedAgentWaitingFor(it.Words)
 	case data.NeedReminder:
 		return m.clock.Reminder(*it.RemindAt, now)
+	case data.NeedPRClosed:
+		return m.say.NeedPRClosed(itoa(it.PRNumber))
+	case data.NeedPRFailing:
+		return m.say.NeedPRChecksFailing(itoa(it.PRNumber))
+	case data.NeedPRChanges:
+		return m.say.NeedPRChangesRequested(itoa(it.PRNumber))
 	case data.NeedReview:
 		if it.PRNumber > 0 {
 			return m.say.NeedReviewPR(itoa(it.PRNumber))

@@ -34,6 +34,22 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// A11yCancelTask says "Cancel task: {title}"
+// in the language the app shows.
+//
+// Accessibility label of the Cancel task button on the Needs you row of a
+// closed pull request.
+func A11yCancelTask(title string) string { return In(i18n.Locale()).A11yCancelTask(title) }
+
+// A11yCancelTask says "Cancel task: {title}"
+// in the language of msgs.
+//
+// Accessibility label of the Cancel task button on the Needs you row of a
+// closed pull request.
+func (msgs Messages) A11yCancelTask(title string) string {
+	return Catalog.Format(msgs.locale, "a11yCancelTask", map[string]any{"title": title})
+}
+
 // A11yCopyCommand says "Copy command"
 // in the language the app shows.
 //
@@ -60,6 +76,22 @@ func A11yDate(label string, value string) string { return In(i18n.Locale()).A11y
 // Accessibility label of a due or reminder value in the inspector.
 func (msgs Messages) A11yDate(label string, value string) string {
 	return Catalog.Format(msgs.locale, "a11yDate", map[string]any{"label": label, "value": value})
+}
+
+// A11yKeepTask says "Keep task: {title}"
+// in the language the app shows.
+//
+// Accessibility label of the Keep button on the Needs you row of a closed
+// pull request.
+func A11yKeepTask(title string) string { return In(i18n.Locale()).A11yKeepTask(title) }
+
+// A11yKeepTask says "Keep task: {title}"
+// in the language of msgs.
+//
+// Accessibility label of the Keep button on the Needs you row of a closed
+// pull request.
+func (msgs Messages) A11yKeepTask(title string) string {
+	return Catalog.Format(msgs.locale, "a11yKeepTask", map[string]any{"title": title})
 }
 
 // A11yMarkDone says "Mark done: {title}"
@@ -216,6 +248,22 @@ func (msgs Messages) A11yViewList() string {
 	return Catalog.Format(msgs.locale, "a11yViewList", nil)
 }
 
+// ActionCancelTask says "Cancel task"
+// in the language the app shows.
+//
+// Button on the Needs you row of a task whose pull request was closed
+// without merging: sets the task to cancelled.
+func ActionCancelTask() string { return In(i18n.Locale()).ActionCancelTask() }
+
+// ActionCancelTask says "Cancel task"
+// in the language of msgs.
+//
+// Button on the Needs you row of a task whose pull request was closed
+// without merging: sets the task to cancelled.
+func (msgs Messages) ActionCancelTask() string {
+	return Catalog.Format(msgs.locale, "actionCancelTask", nil)
+}
+
 // ActionDone says "Done"
 // in the language the app shows.
 //
@@ -228,6 +276,22 @@ func ActionDone() string { return In(i18n.Locale()).ActionDone() }
 // Small button on a reminder row: mark the task done.
 func (msgs Messages) ActionDone() string {
 	return Catalog.Format(msgs.locale, "actionDone", nil)
+}
+
+// ActionKeep says "Keep"
+// in the language the app shows.
+//
+// Button on the Needs you row of a task whose pull request was closed
+// without merging: dismisses the row and keeps the task as it is.
+func ActionKeep() string { return In(i18n.Locale()).ActionKeep() }
+
+// ActionKeep says "Keep"
+// in the language of msgs.
+//
+// Button on the Needs you row of a task whose pull request was closed
+// without merging: dismisses the row and keeps the task as it is.
+func (msgs Messages) ActionKeep() string {
+	return Catalog.Format(msgs.locale, "actionKeep", nil)
 }
 
 // ActionOpen says "Open"
@@ -1632,6 +1696,56 @@ func (msgs Messages) NeedNoUpdate(span string) string {
 	return Catalog.Format(msgs.locale, "needNoUpdate", map[string]any{"span": span})
 }
 
+// NeedPRChangesRequested says "Changes were requested on PR #{number}"
+// in the language the app shows.
+//
+// Second line of a Needs you row: a reviewer asked for changes on the
+// task's pull request.
+func NeedPRChangesRequested(number string) string {
+	return In(i18n.Locale()).NeedPRChangesRequested(number)
+}
+
+// NeedPRChangesRequested says "Changes were requested on PR #{number}"
+// in the language of msgs.
+//
+// Second line of a Needs you row: a reviewer asked for changes on the
+// task's pull request.
+func (msgs Messages) NeedPRChangesRequested(number string) string {
+	return Catalog.Format(msgs.locale, "needPRChangesRequested", map[string]any{"number": number})
+}
+
+// NeedPRChecksFailing says "Checks are failing on PR #{number}"
+// in the language the app shows.
+//
+// Second line of a Needs you row: the CI checks of the task's pull request
+// fail.
+func NeedPRChecksFailing(number string) string { return In(i18n.Locale()).NeedPRChecksFailing(number) }
+
+// NeedPRChecksFailing says "Checks are failing on PR #{number}"
+// in the language of msgs.
+//
+// Second line of a Needs you row: the CI checks of the task's pull request
+// fail.
+func (msgs Messages) NeedPRChecksFailing(number string) string {
+	return Catalog.Format(msgs.locale, "needPRChecksFailing", map[string]any{"number": number})
+}
+
+// NeedPRClosed says "PR #{number} was closed without merging"
+// in the language the app shows.
+//
+// Second line of a Needs you row: the task's pull request was closed
+// without being merged.
+func NeedPRClosed(number string) string { return In(i18n.Locale()).NeedPRClosed(number) }
+
+// NeedPRClosed says "PR #{number} was closed without merging"
+// in the language of msgs.
+//
+// Second line of a Needs you row: the task's pull request was closed
+// without being merged.
+func (msgs Messages) NeedPRClosed(number string) string {
+	return Catalog.Format(msgs.locale, "needPRClosed", map[string]any{"number": number})
+}
+
 // NeedReminderOn says "You asked to be reminded on {day} at {time}"
 // in the language the app shows.
 //
@@ -2316,6 +2430,176 @@ func SettingsGeneral() string { return In(i18n.Locale()).SettingsGeneral() }
 // Tab of the settings sheet.
 func (msgs Messages) SettingsGeneral() string {
 	return Catalog.Format(msgs.locale, "settingsGeneral", nil)
+}
+
+// SettingsGitHub says "GitHub"
+// in the language the app shows.
+//
+// Header of the GitHub block in Settings.
+func SettingsGitHub() string { return In(i18n.Locale()).SettingsGitHub() }
+
+// SettingsGitHub says "GitHub"
+// in the language of msgs.
+//
+// Header of the GitHub block in Settings.
+func (msgs Messages) SettingsGitHub() string {
+	return Catalog.Format(msgs.locale, "settingsGitHub", nil)
+}
+
+// SettingsGitHubCheckNow says "Check now"
+// in the language the app shows.
+//
+// Link in the GitHub block of Settings: look at the pull requests again
+// right away.
+func SettingsGitHubCheckNow() string { return In(i18n.Locale()).SettingsGitHubCheckNow() }
+
+// SettingsGitHubCheckNow says "Check now"
+// in the language of msgs.
+//
+// Link in the GitHub block of Settings: look at the pull requests again
+// right away.
+func (msgs Messages) SettingsGitHubCheckNow() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubCheckNow", nil)
+}
+
+// SettingsGitHubChecked says "checked {age} ago"
+// in the language the app shows.
+//
+// When the pull requests were last looked at, in the GitHub block of
+// Settings. The age is such as 2m or 3h.
+func SettingsGitHubChecked(age string) string { return In(i18n.Locale()).SettingsGitHubChecked(age) }
+
+// SettingsGitHubChecked says "checked {age} ago"
+// in the language of msgs.
+//
+// When the pull requests were last looked at, in the GitHub block of
+// Settings. The age is such as 2m or 3h.
+func (msgs Messages) SettingsGitHubChecked(age string) string {
+	return Catalog.Format(msgs.locale, "settingsGitHubChecked", map[string]any{"age": age})
+}
+
+// SettingsGitHubCheckedNow says "checked just now"
+// in the language the app shows.
+//
+// When the pull requests were last looked at, if that was under a minute
+// ago.
+func SettingsGitHubCheckedNow() string { return In(i18n.Locale()).SettingsGitHubCheckedNow() }
+
+// SettingsGitHubCheckedNow says "checked just now"
+// in the language of msgs.
+//
+// When the pull requests were last looked at, if that was under a minute
+// ago.
+func (msgs Messages) SettingsGitHubCheckedNow() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubCheckedNow", nil)
+}
+
+// SettingsGitHubChecking says "Checking…"
+// in the language the app shows.
+//
+// Replaces the Check now link while a check runs.
+func SettingsGitHubChecking() string { return In(i18n.Locale()).SettingsGitHubChecking() }
+
+// SettingsGitHubChecking says "Checking…"
+// in the language of msgs.
+//
+// Replaces the Check now link while a check runs.
+func (msgs Messages) SettingsGitHubChecking() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubChecking", nil)
+}
+
+// SettingsGitHubCheckingFirst says "Checking GitHub…"
+// in the language the app shows.
+//
+// The GitHub block of Settings before the first check has ended.
+func SettingsGitHubCheckingFirst() string { return In(i18n.Locale()).SettingsGitHubCheckingFirst() }
+
+// SettingsGitHubCheckingFirst says "Checking GitHub…"
+// in the language of msgs.
+//
+// The GitHub block of Settings before the first check has ended.
+func (msgs Messages) SettingsGitHubCheckingFirst() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubCheckingFirst", nil)
+}
+
+// SettingsGitHubConnected says "Connected as {account} · {checked}"
+// in the language the app shows.
+//
+// Status line of the GitHub block: the account gh is signed in to, and when
+// it was last checked (see settingsGitHubChecked).
+func SettingsGitHubConnected(account string, checked string) string {
+	return In(i18n.Locale()).SettingsGitHubConnected(account, checked)
+}
+
+// SettingsGitHubConnected says "Connected as {account} · {checked}"
+// in the language of msgs.
+//
+// Status line of the GitHub block: the account gh is signed in to, and when
+// it was last checked (see settingsGitHubChecked).
+func (msgs Messages) SettingsGitHubConnected(account string, checked string) string {
+	return Catalog.Format(msgs.locale, "settingsGitHubConnected", map[string]any{"account": account, "checked": checked})
+}
+
+// SettingsGitHubConnectedAnon says "Connected to GitHub · {checked}"
+// in the language the app shows.
+//
+// Status line of the GitHub block when gh does not say the account's name.
+func SettingsGitHubConnectedAnon(checked string) string {
+	return In(i18n.Locale()).SettingsGitHubConnectedAnon(checked)
+}
+
+// SettingsGitHubConnectedAnon says "Connected to GitHub · {checked}"
+// in the language of msgs.
+//
+// Status line of the GitHub block when gh does not say the account's name.
+func (msgs Messages) SettingsGitHubConnectedAnon(checked string) string {
+	return Catalog.Format(msgs.locale, "settingsGitHubConnectedAnon", map[string]any{"checked": checked})
+}
+
+// SettingsGitHubMissing says "The GitHub CLI isn't installed. Install it to follow your pull requests."
+// in the language the app shows.
+//
+// The GitHub block when there is no gh. The command to install it is shown
+// under it.
+func SettingsGitHubMissing() string { return In(i18n.Locale()).SettingsGitHubMissing() }
+
+// SettingsGitHubMissing says "The GitHub CLI isn't installed. Install it to follow your pull requests."
+// in the language of msgs.
+//
+// The GitHub block when there is no gh. The command to install it is shown
+// under it.
+func (msgs Messages) SettingsGitHubMissing() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubMissing", nil)
+}
+
+// SettingsGitHubOffline says "Can't reach GitHub. Trying again soon."
+// in the language the app shows.
+//
+// The GitHub block when GitHub could not be reached.
+func SettingsGitHubOffline() string { return In(i18n.Locale()).SettingsGitHubOffline() }
+
+// SettingsGitHubOffline says "Can't reach GitHub. Trying again soon."
+// in the language of msgs.
+//
+// The GitHub block when GitHub could not be reached.
+func (msgs Messages) SettingsGitHubOffline() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubOffline", nil)
+}
+
+// SettingsGitHubSignedOut says "You're not signed in to GitHub. Sign in to follow your pull requests."
+// in the language the app shows.
+//
+// The GitHub block when gh has no login. The command to sign in is shown
+// under it.
+func SettingsGitHubSignedOut() string { return In(i18n.Locale()).SettingsGitHubSignedOut() }
+
+// SettingsGitHubSignedOut says "You're not signed in to GitHub. Sign in to follow your pull requests."
+// in the language of msgs.
+//
+// The GitHub block when gh has no login. The command to sign in is shown
+// under it.
+func (msgs Messages) SettingsGitHubSignedOut() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubSignedOut", nil)
 }
 
 // SettingsLanguage says "Language"

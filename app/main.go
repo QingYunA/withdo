@@ -31,8 +31,8 @@ func main() {
 		DataFolder:     be.dataFolder,
 		Version:        version,
 	})
-	app.Assistant, app.Models = be.assistant, be.models
-	s := &shell{app: app, main: views.NewMain(app)}
+	app.Assistant, app.Models, app.GitHub = be.assistant, be.models, be.github
+	s := &shell{app: app, main: views.NewMain(app), github: be.github}
 	app.Act = s
 
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
@@ -57,6 +57,9 @@ func main() {
 		s.createMain()
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go notifyReminder(r) })
+		if be.github != nil {
+			be.github.Subscribe(s.githubChanged)
+		}
 		be.start(stop)
 	})
 	if err := mygo.App.Run(); err != nil {

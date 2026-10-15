@@ -43,6 +43,8 @@ type App struct {
 	// tasks. Models is Settings > Models; nil hides that tab.
 	Assistant data.Assistant
 	Models    data.ModelSettings
+	// GitHub is the pull request poller behind Settings > GitHub; nil leaves the section out.
+	GitHub data.GitHub
 
 	snap       snapshot
 	completing map[int]completion
@@ -115,6 +117,15 @@ func (a *App) SetStatus(t data.Task, s data.Status) {
 	_ = a.Update(t.ID, data.Patch{Status: data.StatusPtr(s)})
 }
 
+// KeepClosedPR dismisses the Needs you row of a task whose pull request was closed, and refreshes.
+func (a *App) KeepClosedPR(id int) {
+	if err := a.Store.KeepClosedPR(id); err != nil {
+		a.snap.err = err
+		return
+	}
+	a.Refresh()
+}
+
 // AddToInbox creates a task without a project.
 func (a *App) AddToInbox(title string) error {
 	return a.AddTask(data.CreateTaskInput{Title: title, Source: data.SourceUser})
@@ -176,10 +187,18 @@ func byPriorityThenRecent(ts []data.Task) {
 	})
 }
 
-// latestReport is a task's newest report in the snapshot, or nil.
-func (a *App) latestReport(id int) *data.Report {
-	if d, ok := a.snap.details[id]; ok && len(d.Reports) > 0 {
-		return &d.Reports[0]
+// latestReport is the newest report an agent filed against a task, or nil. GitHub's own reports
+// are not the agent speaking, so they do not count as its last word.
+func (a *App) latestReport(id int) *data.Report { return a.firstReport(id, false) }
+
+// githubReport is the newest report GitHub filed against a task, or nil.
+func (a *App) githubReport(id int) *data.Report { return a.firstReport(id, true) }
+
+func (a *App) firstReport(id int, github bool) *data.Report {
+	for _, r := range a.snap.details[id].Reports { // newest first
+		if (r.Agent == data.GitHubAgent) == github {
+			return &r
+		}
 	}
 	return nil
 }
@@ -190,6 +209,6 @@ func (a *App) buildNow() data.Now {
 	tasks := a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
 	return data.BuildNow(data.NowInput{
 		Now: a.Now(), Tasks: tasks, StaleHours: a.snap.overview.StaleHours,
-		Latest: a.latestReport, ProjectName: a.projectName,
+		Latest: a.latestReport, Event: a.githubReport, ProjectName: a.projectName,
 	})
 }

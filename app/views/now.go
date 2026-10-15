@@ -91,9 +91,10 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 			if m.width >= dropPillsBelow { // beside the inspector the title needs the room more
 				m.ageLabel(c, t, it)
 			}
-			text, label := m.actionFor(it)
-			if actionButton(c, t, it.ID, text, label).Clicked() {
-				m.act(it)
+			for i, a := range m.actionsFor(it) {
+				if actionButtonKeyed(c, t, "action-"+itoa(i)+"-"+itoa(it.ID), a.text, a.label).Clicked() {
+					a.run()
+				}
 			}
 		})
 	})
@@ -102,27 +103,28 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	}
 }
 
-// actionFor names the button of a Needs you row, and what it says to assistive technology.
-func (m *Main) actionFor(it data.NowItem) (text, label string) {
-	switch {
-	case it.Kind == data.NeedReminder:
-		return m.say.ActionDone(), m.say.A11yMarkDone(it.Title)
-	case it.Kind == data.NeedReview && it.PRURL != "":
-		return m.say.ActionOpenPR(), m.say.A11yOpenPR(itoa(it.PRNumber))
-	}
-	return m.say.ActionOpen(), m.say.A11yOpenTask(it.Title)
+// rowAction is a button of a Needs you row: its text, what it says to assistive technology, and
+// what it does.
+type rowAction struct {
+	text, label string
+	run         func()
 }
 
-// act runs the button of a Needs you row.
-func (m *Main) act(it data.NowItem) {
+// actionsFor names the buttons of a Needs you row, left to right. Most rows have one.
+func (m *Main) actionsFor(it data.NowItem) []rowAction {
+	openPR := rowAction{m.say.ActionOpenPR(), m.say.A11yOpenPR(itoa(it.PRNumber)), func() { m.app.Act.OpenURL(it.PRURL) }}
 	switch {
 	case it.Kind == data.NeedReminder:
-		m.app.SetStatus(it.Task, data.Done)
-	case it.Kind == data.NeedReview && it.PRURL != "":
-		m.app.Act.OpenURL(it.PRURL)
-	default:
-		m.openRow(it.ID)
+		return []rowAction{{m.say.ActionDone(), m.say.A11yMarkDone(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}}
+	case it.Kind == data.NeedPRClosed:
+		return []rowAction{
+			{m.say.ActionCancelTask(), m.say.A11yCancelTask(it.Title), func() { m.app.SetStatus(it.Task, data.Cancelled) }},
+			{m.say.ActionKeep(), m.say.A11yKeepTask(it.Title), func() { m.app.KeepClosedPR(it.ID) }},
+		}
+	case it.Kind == data.NeedPRFailing || it.Kind == data.NeedPRChanges, it.Kind == data.NeedReview && it.PRURL != "":
+		return []rowAction{openPR}
 	}
+	return []rowAction{{m.say.ActionOpen(), m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
 }
 
 // agentsSection is what agents are doing now, newest report first, across projects.

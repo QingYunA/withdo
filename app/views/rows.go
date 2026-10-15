@@ -109,7 +109,12 @@ func liveDot(c *ui.Context, t *theme.Tokens) {
 
 // actionButton is the small tinted button at the right of a Needs you row.
 func actionButton(c *ui.Context, t *theme.Tokens, key int, text, label string) ui.Element {
-	btn := ui.ButtonBase(c.Key("action-"+itoa(key))).Padding(3, 9).Radius(theme.RadiusControl).Shrink(0).
+	return actionButtonKeyed(c, t, "action-"+itoa(key), text, label)
+}
+
+// actionButtonKeyed is actionButton for a row with several: each takes its own key.
+func actionButtonKeyed(c *ui.Context, t *theme.Tokens, key, text, label string) ui.Element {
+	btn := ui.ButtonBase(c.Key(key)).Padding(3, 9).Radius(theme.RadiusControl).Shrink(0).
 		Background(t.BgSelected).Label(label).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.Accent.Alpha(0.2))

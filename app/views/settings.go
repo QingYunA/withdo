@@ -27,6 +27,7 @@ func (m *Main) settingsSheet(c *ui.Context, t *theme.Tokens) {
 				return
 			}
 			m.connectBlock(c, t)
+			m.githubBlock(c, t)
 			m.dataBlock(c, t)
 			m.languageBlock(c, t)
 			hairline(c, t)

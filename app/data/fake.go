@@ -440,3 +440,28 @@ func (f *Fake) KeepClosedPR(id int) error {
 	f.notify()
 	return nil
 }
+
+// AddTask adds a task as given, with a new id when it has none, for demos and screens that need a
+// shape CreateTask does not make (a pull request, an age).
+func (f *Fake) AddTask(t Task) Task {
+	f.mu.Lock()
+	if t.ID == 0 {
+		t.ID = f.newID()
+	}
+	now := f.Now()
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = now
+	}
+	if t.UpdatedAt.IsZero() {
+		t.UpdatedAt = now
+	}
+	f.tasks = append(f.tasks, orDefaults(t))
+	f.mu.Unlock()
+	f.notify()
+	return t
+}
+
+func orDefaults(t Task) Task {
+	t.Status, t.Priority, t.Source = orStatus(t.Status, Todo), orPriority(t.Priority, P2), orSource(t.Source, SourceUser)
+	return t
+}

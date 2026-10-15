@@ -11,9 +11,8 @@ import (
 func (a *App) overviewTask(t data.Task) data.OverviewTask {
 	ot := data.OverviewTask{Task: t}
 	since := t.UpdatedAt
-	if d, ok := a.snap.details[t.ID]; ok && len(d.Reports) > 0 {
-		r := d.Reports[0]
-		ot.LatestReport = &r
+	if r := a.latestReport(t.ID); r != nil {
+		ot.LatestReport = r
 		since = r.CreatedAt
 	}
 	ot.HoursSinceActivity = int(a.Now().Sub(since) / time.Hour)

@@ -1,5 +1,15 @@
 {
   "@@locale": "en",
+  "a11yCancelTask": "Cancel task: {title}",
+  "@a11yCancelTask": {
+    "description": "Accessibility label of the Cancel task button on the Needs you row of a closed pull request.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yCopyCommand": "Copy command",
   "@a11yCopyCommand": {
     "description": "Accessibility label of the copy button."
@@ -15,6 +25,16 @@
       "value": {
         "type": "String",
         "example": "Tomorrow"
+      }
+    }
+  },
+  "a11yKeepTask": "Keep task: {title}",
+  "@a11yKeepTask": {
+    "description": "Accessibility label of the Keep button on the Needs you row of a closed pull request.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
       }
     }
   },
@@ -110,9 +130,17 @@
   "@a11yViewList": {
     "description": "Accessibility label of the List segment."
   },
+  "actionCancelTask": "Cancel task",
+  "@actionCancelTask": {
+    "description": "Button on the Needs you row of a task whose pull request was closed without merging: sets the task to cancelled."
+  },
   "actionDone": "Done",
   "@actionDone": {
     "description": "Small button on a reminder row: mark the task done."
+  },
+  "actionKeep": "Keep",
+  "@actionKeep": {
+    "description": "Button on the Needs you row of a task whose pull request was closed without merging: dismisses the row and keeps the task as it is."
   },
   "actionOpen": "Open",
   "@actionOpen": {
@@ -690,6 +718,36 @@
       }
     }
   },
+  "needPRChangesRequested": "Changes were requested on PR #{number}",
+  "@needPRChangesRequested": {
+    "description": "Second line of a Needs you row: a reviewer asked for changes on the task's pull request.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "needPRChecksFailing": "Checks are failing on PR #{number}",
+  "@needPRChecksFailing": {
+    "description": "Second line of a Needs you row: the CI checks of the task's pull request fail.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "needPRClosed": "PR #{number} was closed without merging",
+  "@needPRClosed": {
+    "description": "Second line of a Needs you row: the task's pull request was closed without being merged.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
   "needReminderOn": "You asked to be reminded on {day} at {time}",
   "@needReminderOn": {
     "description": "Second line of a due reminder from an earlier day. The day is a date such as Oct 12.",
@@ -921,6 +979,72 @@
   "settingsGeneral": "General",
   "@settingsGeneral": {
     "description": "Tab of the settings sheet."
+  },
+  "settingsGitHub": "GitHub",
+  "@settingsGitHub": {
+    "description": "Header of the GitHub block in Settings."
+  },
+  "settingsGitHubCheckNow": "Check now",
+  "@settingsGitHubCheckNow": {
+    "description": "Link in the GitHub block of Settings: look at the pull requests again right away."
+  },
+  "settingsGitHubChecked": "checked {age} ago",
+  "@settingsGitHubChecked": {
+    "description": "When the pull requests were last looked at, in the GitHub block of Settings. The age is such as 2m or 3h.",
+    "placeholders": {
+      "age": {
+        "type": "String",
+        "example": "2m"
+      }
+    }
+  },
+  "settingsGitHubCheckedNow": "checked just now",
+  "@settingsGitHubCheckedNow": {
+    "description": "When the pull requests were last looked at, if that was under a minute ago."
+  },
+  "settingsGitHubChecking": "Checking…",
+  "@settingsGitHubChecking": {
+    "description": "Replaces the Check now link while a check runs."
+  },
+  "settingsGitHubCheckingFirst": "Checking GitHub…",
+  "@settingsGitHubCheckingFirst": {
+    "description": "The GitHub block of Settings before the first check has ended."
+  },
+  "settingsGitHubConnected": "Connected as {account} · {checked}",
+  "@settingsGitHubConnected": {
+    "description": "Status line of the GitHub block: the account gh is signed in to, and when it was last checked (see settingsGitHubChecked).",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "QingYunA"
+      },
+      "checked": {
+        "type": "String",
+        "example": "checked 2m ago"
+      }
+    }
+  },
+  "settingsGitHubConnectedAnon": "Connected to GitHub · {checked}",
+  "@settingsGitHubConnectedAnon": {
+    "description": "Status line of the GitHub block when gh does not say the account's name.",
+    "placeholders": {
+      "checked": {
+        "type": "String",
+        "example": "checked 2m ago"
+      }
+    }
+  },
+  "settingsGitHubMissing": "The GitHub CLI isn't installed. Install it to follow your pull requests.",
+  "@settingsGitHubMissing": {
+    "description": "The GitHub block when there is no gh. The command to install it is shown under it."
+  },
+  "settingsGitHubOffline": "Can't reach GitHub. Trying again soon.",
+  "@settingsGitHubOffline": {
+    "description": "The GitHub block when GitHub could not be reached."
+  },
+  "settingsGitHubSignedOut": "You're not signed in to GitHub. Sign in to follow your pull requests.",
+  "@settingsGitHubSignedOut": {
+    "description": "The GitHub block when gh has no login. The command to sign in is shown under it."
   },
   "settingsLanguage": "Language",
   "@settingsLanguage": {
