@@ -9,9 +9,9 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// listIndent is where a row's text starts: under the group header's name, past its 16 pt glyph and
-// the 8 pt gap.
-const listIndent float32 = 24
+// listIndent is where a row's text starts: under the group header's name, past its glyph and the
+// 8 pt gap.
+const listIndent = theme.GlyphSize + 8
 
 // listGroup is one status of a list: a header and its rows.
 type listGroup struct {
@@ -97,12 +97,12 @@ func sortForList(ts []data.Task) {
 	})
 }
 
-// shownDone is the Done rows drawn: the recent ten, or all.
+// shownDone is the Done rows drawn: the newest three, or all once "Show all" was clicked.
 func (m *Main) shownDone(lm listModel) []data.Task {
-	if m.allDone[m.nav] || len(lm.done) <= theme.DoneRecentLimit {
+	if m.allDone[m.nav] || len(lm.done) <= theme.DoneListRows {
 		return lm.done
 	}
-	return lm.done[:theme.DoneRecentLimit]
+	return lm.done[:theme.DoneListRows]
 }
 
 // listIDs is the task ids of the rows the list draws, for the arrow keys.
@@ -117,8 +117,8 @@ func (m *Main) listIDs() []int {
 	for _, g := range lm.groups {
 		add(g.tasks)
 	}
+	add(m.shownDone(lm))
 	if m.expanded[m.nav] {
-		add(m.shownDone(lm))
 		add(lm.backlog)
 	}
 	return ids
@@ -139,7 +139,7 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 		m.group(c, t, g.status, g.tasks)
 	}
 	m.addTaskRow(c, t, listIndent)
-	m.foldedGroups(c, t, lm)
+	m.doneAndBacklog(c, t, lm)
 }
 
 // group is a header, glyph and name and count, and its rows indented under the name.
@@ -157,11 +157,15 @@ func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data
 // listRow is one task: title, branch and pull request, a summary line for agent work, and on the
 // right when it is due, how long ago it moved, or that it went stale.
 func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
+	if task.Status == data.Done {
+		m.finishedRow(c, t, task, finishedOpts{when: m.clock.Day(doneAt(task), m.app.Now())})
+		return
+	}
 	_, opacity, _ := m.app.completionPhase(c, task.ID)
 	ot := m.app.overviewTask(task)
 	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
 	row.Children(func() {
-		ui.Box(c).Width(12).Shrink(0) // the glyph's column, and the gap after it, make 24
+		ui.Box(c).Width(listIndent - 12).Shrink(0) // the glyph's column, and the gap after it
 		body(c, func() {
 			m.titleLine(c, t, task, "", true)
 			summaryLine(c, t, listSummary(task, ot))
@@ -284,30 +288,28 @@ func (m *Main) submitAdding() {
 	}
 }
 
-// foldedGroups is the last line: "Done 4 · Backlog 2 — show". Clicking opens both groups, and the
-// line then reads "hide".
-func (m *Main) foldedGroups(c *ui.Context, t *theme.Tokens, lm listModel) {
-	if len(lm.done) == 0 && len(lm.backlog) == 0 {
+// doneAndBacklog closes a list: the Done group, expanded, with its newest three rows; then Backlog
+// folded into the last line, "Backlog 2 — show", which opens it.
+func (m *Main) doneAndBacklog(c *ui.Context, t *theme.Tokens, lm listModel) {
+	if len(lm.done) > 0 {
+		m.group(c, t, data.Done, m.shownDone(lm))
+		m.showAllDone(c, t, lm)
+	}
+	if len(lm.backlog) == 0 {
 		return
 	}
 	open := m.expanded[m.nav]
 	if open {
-		if len(lm.backlog) > 0 {
-			m.group(c, t, data.Backlog, lm.backlog)
-		}
-		if len(lm.done) > 0 {
-			m.group(c, t, data.Done, m.shownDone(lm))
-			m.showAllDone(c, t, lm)
-		}
+		m.group(c, t, data.Backlog, lm.backlog)
 	}
-	m.foldLine(c, t, lm, open, 16)
+	m.foldLine(c, t, lm, open, 16, false)
 }
 
 func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
-	if m.allDone[m.nav] || len(lm.done) <= theme.DoneRecentLimit {
+	if m.allDone[m.nav] || len(lm.done) <= theme.DoneListRows {
 		return
 	}
-	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, 24).Clicked() {
+	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, listIndent).Clicked() {
 		m.allDone[m.nav] = true
 	}
 }
@@ -320,9 +322,10 @@ func (m *Main) foldParts(parts []string) string {
 	return strings.Join(parts, "")
 }
 
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32) {
+// foldLine is the line that folds Backlog, and on the board Done as well (doneToo): "Backlog 2 — show".
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32, doneToo bool) {
 	var parts []string
-	if len(lm.done) > 0 {
+	if doneToo && len(lm.done) > 0 {
 		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Done), len(lm.done)))
 	}
 	if len(lm.backlog) > 0 {

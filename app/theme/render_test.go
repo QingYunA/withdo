@@ -62,13 +62,13 @@ func TestPriorityClockAndDotDraw(t *testing.T) {
 	}
 }
 
-func TestTextStylesRenderAndSectionsAreUppercase(t *testing.T) {
+func TestTextStylesRenderAndSectionsAreSentenceCase(t *testing.T) {
 	tt := render(t, false, func(c *ui.Context, tk *Tokens) {
 		Text(c, Section, tk.Text, "agents")
 		Paragraph(c, Body, tk.Text, "a long title that wraps", 2)
 		Text(c, Mono, tk.Text, "feat/x")
 	})
-	if !tt.HasText("AGENTS") || !tt.HasText("feat/x") {
+	if !tt.HasText("agents") || tt.HasText("AGENTS") || !tt.HasText("feat/x") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }

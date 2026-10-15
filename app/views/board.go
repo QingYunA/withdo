@@ -98,7 +98,7 @@ func (m *Main) boardFold(c *ui.Context, t *theme.Tokens, pad float32) {
 	}
 	ui.Column(c).FillWidth().Shrink(0).AlignItems(ui.Center).Children(func() {
 		ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad).Children(func() {
-			m.foldLine(c, t, lm, m.expanded[m.nav], 4)
+			m.foldLine(c, t, lm, m.expanded[m.nav], 4, true)
 		})
 	})
 }

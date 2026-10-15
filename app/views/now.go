@@ -18,11 +18,11 @@ func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
 	}
 	if now.Empty() {
 		m.allClear(c, t)
-		return
 	}
 	m.needsSection(c, t, now.Needs)
 	m.agentsSection(c, t, now.Agents)
 	m.yoursSection(c, t, now)
+	m.doneTodaySection(c, t, now)
 }
 
 // pageHeader is the title with a quiet companion, and whatever controls sit at the right.
@@ -39,7 +39,7 @@ func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, con
 	})
 }
 
-// sectionHeader is an uppercase title with its count.
+// sectionHeader is a section's title in sentence case, with its count.
 func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 	ui.Row(c).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, title)
@@ -91,7 +91,7 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 		if it.Kind == data.NeedReminder {
 			ui.Icon(c, theme.IconBell).Size(16, 16).TextColor(t.Accent).Shrink(0).Margin(1, 0, 0)
 		} else {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlot(c, t, it.Task, fill)
 		}
 		body(c, func() {
 			m.titleLine(c, t, it.Task, it.Project, false)
@@ -152,7 +152,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity)
 		row.Children(func() {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlot(c, t, it.Task, fill)
 			body(c, func() {
 				m.titleLine(c, t, it.Task, it.Project, true)
 				summaryLine(c, t, m.agentSummary(it))
@@ -180,7 +180,7 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlot(c, t, it.Task, fill)
 			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
 			if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
 				theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)

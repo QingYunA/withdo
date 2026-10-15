@@ -24,15 +24,20 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 	slot.Children(func() {
 		card := ui.Column(c.Key("card")).Padding(9, 12, 12, 8).Radius(theme.RadiusCard).Cursor(ui.CursorPointer)
 		card.Drag(dragCard{id: task.ID})
-		card.ContextMenu(func(mn *ui.Menu) { m.taskMenu(mn, task) })
 		dragging = card.Dragging()
+		if m.sel == task.ID {
+			m.selRect = card.Bounds()
+		}
 		m.styleCard(c, t, card, task, dragging, opacity)
 		card.Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Start).Children(func() {
-				m.app.glyphButton(c, t, task, fill)
+				m.glyphButton(c, t, task, fill)
 				m.cardText(c, t, task)
 			})
 		})
+		if card.RightClicked() {
+			m.openMenuAtPointer(card, task.ID)
+		}
 		if card.Clicked() {
 			m.openID = task.ID
 			m.inspector.reset()
@@ -49,7 +54,7 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	switch {
 	case dragging:
 		border = t.TextTertiary
-	case m.openID == task.ID || m.sel == task.ID:
+	case m.openID == task.ID || m.sel == task.ID || (m.pop.open && m.pop.task == task.ID):
 		bg, border = t.Bg.Mix(t.Accent, 0.07), t.Accent.Alpha(0.6)
 	case card.Hovered():
 		border = t.TextTertiary

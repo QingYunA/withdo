@@ -105,7 +105,7 @@ func TestKeepDismissesTheClosedRowAndLeavesTheTask(t *testing.T) {
 	hasNot(t, tt, "PR #14 was closed without merging", "Cancel task", "Keep")
 	// The task did not disappear: it is agent work again.
 	has(t, tt, "Rework the sync engine")
-	if !above(t, tt, "AGENTS AT WORK", "Rework the sync engine") {
+	if !above(t, tt, "Agents at work", "Rework the sync engine") {
 		t.Error("a kept task should be under Agents at work")
 	}
 }
@@ -140,7 +140,7 @@ func TestClickingAPullRequestRowOpensTheInspector(t *testing.T) {
 	if err := tt.Click("Add dark mode icons"); err != nil {
 		t.Fatal(err)
 	}
-	if m.openID != 102 || !tt.HasText("ACTIVITY") {
+	if m.openID != 102 || !tt.HasText("Activity") {
 		t.Errorf("open %d, texts %q", m.openID, tt.Texts())
 	}
 	// GitHub's own report shows in the activity timeline under its name.

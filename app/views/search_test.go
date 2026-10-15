@@ -180,13 +180,12 @@ func TestSearchRowsOpenTheInspectorAndHaveTheTaskMenu(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
 	searchFor(t, tt, "dentist")
-	if err := tt.RightClick("Book dentist"); err != nil {
-		t.Fatal(err)
+	rightClick(t, tt, "Book dentist")
+	if !m.pop.open || m.pop.task != 8 || !tt.HasText("Move to…") {
+		t.Errorf("menu open %v for %d", m.pop.open, m.pop.task)
 	}
-	if got := tt.Menu(); len(got) != 5 || got[0] != "Status" {
-		t.Errorf("menu %q", got)
-	}
-	tt.CloseMenu()
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
 	if err := tt.Click("Book dentist"); err != nil {
 		t.Fatal(err)
 	}

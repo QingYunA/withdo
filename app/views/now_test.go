@@ -9,12 +9,12 @@ import (
 
 func TestNowShowsAllThreeSectionsInOrder(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Now", "Wednesday, Oct 14", "NEEDS YOU", "AGENTS AT WORK", "YOURS", "Port core to Go", "Book dentist"} {
+	for _, want := range []string{"Now", "Wednesday, Oct 14", "Needs you", "Agents at work", "Yours", "Port core to Go", "Book dentist"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "NEEDS YOU", "AGENTS AT WORK") || !above(t, tt, "AGENTS AT WORK", "YOURS") {
+	if !above(t, tt, "Needs you", "Agents at work") || !above(t, tt, "Agents at work", "Yours") {
 		t.Error("sections are out of order")
 	}
 }
@@ -25,10 +25,10 @@ func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, _, _ := newTesterFor(app, 1100)
-	if !tt.HasText("YOURS") || !tt.HasText("Only mine") {
+	if !tt.HasText("Yours") || !tt.HasText("Only mine") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
-	for _, gone := range []string{"NEEDS YOU", "AGENTS AT WORK", "All clear."} {
+	for _, gone := range []string{"Needs you", "Agents at work", "All clear."} {
 		if tt.HasText(gone) {
 			t.Errorf("%q is drawn with nothing in it", gone)
 		}
@@ -43,7 +43,7 @@ func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	for _, gone := range []string{"NEEDS YOU", "AGENTS AT WORK", "YOURS"} {
+	for _, gone := range []string{"Needs you", "Agents at work", "Yours"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q in the All clear state", gone)
 		}
@@ -99,7 +99,7 @@ func TestNeedsYouOpenOpensTheInspector(t *testing.T) {
 	if err := tt.Click("Open Fix tray race on launch"); err != nil {
 		t.Fatal(err)
 	}
-	if m.openID != 3 || !tt.HasText("ACTIVITY") {
+	if m.openID != 3 || !tt.HasText("Activity") {
 		t.Errorf("open %d, texts %q", m.openID, tt.Texts())
 	}
 }
@@ -131,8 +131,8 @@ func TestNeedsYouDoneMarksTheReminderDone(t *testing.T) {
 	}
 	app.completing = map[int]completion{} // let the row go
 	tt.Frame()
-	if tt.HasText("Reply to design feedback") {
-		t.Error("the done reminder is still on Now")
+	if !tt.HasText("Done today") || !above(t, tt, "Done today", "Reply to design feedback") {
+		t.Error("the done reminder should have moved from Needs you to Done today")
 	}
 }
 
@@ -141,7 +141,7 @@ func TestClickingARowOpensTheInspectorAndEscCloses(t *testing.T) {
 	if err := tt.Click("Port core to Go"); err != nil {
 		t.Fatal(err)
 	}
-	if m.openID != 1 || !tt.HasText("ACTIVITY") {
+	if m.openID != 1 || !tt.HasText("Activity") {
 		t.Fatalf("open %d, texts %q", m.openID, tt.Texts())
 	}
 	tt.Key(0, ui.KeyEscape)

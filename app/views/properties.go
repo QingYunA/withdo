@@ -31,7 +31,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // propRow lays out a label and a value on one 32 pt line.
 func propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
-	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
+	ui.Row(c.Key("prop-" + key)).MinHeight(34).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, label).Width(labelWidth).Shrink(0)
 		value()
 	})
@@ -50,16 +50,12 @@ func valueButton(c *ui.Context, t *theme.Tokens, key string) ui.Element {
 func (m *Main) statusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	propRow(c, t, "status", m.say.PropStatus(), func() {
 		btn := valueButton(c, t, "status").Label(m.say.A11yStatus(statusLabel(m.say, task.Status)))
-		btn.Menu(func(mn *ui.Menu) {
-			for _, s := range data.Statuses {
-				if mn.Item(statusLabel(m.say, s)).Checked(task.Status == s).Chosen() {
-					m.app.SetStatus(task, s)
-				}
-			}
-		})
+		if btn.Clicked() {
+			m.openMenuBelow(btn, task.ID, pageStatus)
+		}
 		btn.Children(func() {
 			theme.StatusGlyph(c, t, task.Status, 0)
-			theme.Text(c, theme.Body, t.Text, statusLabel(m.say, task.Status))
+			theme.Text(c, theme.Compact, t.Text, statusLabel(m.say, task.Status))
 		})
 	})
 }
@@ -68,16 +64,12 @@ func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	propRow(c, t, "priority", m.say.PropPriority(), func() {
 		label := priorityLabel(m.say, task.Priority)
 		btn := valueButton(c, t, "priority").Label(m.say.A11yPriority(label))
-		btn.Menu(func(mn *ui.Menu) {
-			for _, p := range data.Priorities {
-				if mn.Item(priorityLabel(m.say, p)).Checked(task.Priority == p).Chosen() {
-					_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})
-				}
-			}
-		})
+		if btn.Clicked() {
+			m.openMenuBelow(btn, task.ID, pagePriority)
+		}
 		btn.Children(func() {
 			theme.PriorityBars(c, t, task.Priority)
-			theme.Text(c, theme.Body, t.Text, label)
+			theme.Text(c, theme.Compact, t.Text, label)
 		})
 	})
 }
@@ -106,7 +98,7 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 				}
 			}
 		})
-		btn.Children(func() { theme.Text(c, theme.Body, color, label) })
+		btn.Children(func() { theme.Text(c, theme.Compact, color, label) })
 	})
 }
 
@@ -149,9 +141,15 @@ func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, key, label string, curren
 		}
 		btn := valueButton(c, t, "date-"+key).Label(m.say.A11yDate(label, text))
 		btn.Children(func() {
-			theme.Text(c, theme.Body, color, text)
+			theme.Text(c, theme.Compact, color, text)
 		})
-		if btn.Clicked() {
+		switch {
+		case key == "remind": // the reminders are the task menu's presets
+			if btn.Clicked() {
+				m.openMenuBelow(btn, task.ID, pageRemind)
+			}
+			return
+		case btn.Clicked():
 			*open = !*open
 			m.inspector.when = startingMoment(current, m.app.Now(), withTime)
 		}

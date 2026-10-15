@@ -22,7 +22,7 @@ const (
 	screenNow screen = iota
 	screenInbox
 	screenProject
-	screenLogbook
+	screenCompleted
 )
 
 // nav says what the sidebar selected: Now, the Inbox, or a project. It is comparable, so it keys
@@ -61,7 +61,7 @@ type Main struct {
 	dragging  int // task being dragged this frame, so the hidden statuses show as drop targets
 	wasDrag   int // the one dragged in the frame before: the targets live a frame past the drop
 
-	manage    manageState // the sheets, renaming, search and the Logbook
+	manage    manageState // the sheets, renaming, search and Completed
 	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle   // the input that renames a project in the sidebar
 
@@ -72,6 +72,12 @@ type Main struct {
 	addRef  ui.Handle // the inline add input
 	listRef ui.Handle // the page, so the arrow keys and Space reach it
 	queue   queued    // what a text input's last key asked of the next frame
+
+	pop     popMenu // the task menu
+	selRect ui.Rect // where the selected row or card is, for the menu the S, P, M and R keys open
+	// focusInspectorComposer asks the inspector's composer for the keyboard: "Ask about this task"
+	// sets it after opening the task, and the composer clears it when it has the focus.
+	focusInspectorComposer bool
 
 	scroll    ui.ScrollState
 	inspector inspector
@@ -131,6 +137,7 @@ func (m *Main) View(c *ui.Context) {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 	}
 	m.wasDrag, m.dragging = m.dragging, 0
+	m.popTick()
 	m.width = m.contentWidth(c)
 	now := m.app.buildNow()
 	ids := m.rowIDs(now)
@@ -145,6 +152,7 @@ func (m *Main) View(c *ui.Context) {
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
+	m.taskMenuView(c, t)
 }
 
 // content is the screen the sidebar chose.
@@ -157,8 +165,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 			m.page(c, t, func() { m.searchScreen(c, t) })
 		case m.nav.screen == screenNow:
 			m.page(c, t, func() { m.nowScreen(c, t, now) })
-		case m.nav.screen == screenLogbook:
-			m.page(c, t, func() { m.logbookScreen(c, t) })
+		case m.nav.screen == screenCompleted:
+			m.page(c, t, func() { m.completedScreen(c, t) })
 		case m.boardActive():
 			m.boardScreen(c, t)
 		default:

@@ -5,31 +5,20 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-type confirmKind int
-
-const (
-	confirmProject confirmKind = iota
-	confirmTask
-)
-
-// confirmation is the question before something is deleted: a project with its tasks, or a task.
+// confirmation is the question before a project is deleted with its tasks. A task is deleted at
+// once, with an Undo toast, and needs none.
 type confirmation struct {
 	open bool
-	kind confirmKind
 	id   int
 }
 
 func (m *Main) askDeleteProject(id int) {
-	m.manage.confirm = confirmation{open: true, kind: confirmProject, id: id}
-}
-
-func (m *Main) askDeleteTask(id int) {
-	m.manage.confirm = confirmation{open: true, kind: confirmTask, id: id}
+	m.manage.confirm = confirmation{open: true, id: id}
 }
 
 // sheetOpen reports whether a sheet or the confirmation floats over the window, taking the keys.
 func (m *Main) sheetOpen() bool {
-	return m.settings || m.manage.project.open || m.manage.milestone.open || m.manage.confirm.open
+	return m.settings || m.manage.project.open || m.manage.milestone.open || m.manage.confirm.open || m.pop.open
 }
 
 // confirmSheet asks before a delete. Cancel has the focus, so Enter does not delete; Esc cancels.
@@ -60,10 +49,6 @@ func (m *Main) confirmSheet(c *ui.Context, t *theme.Tokens) {
 // confirmWords are the title and body of the question, and false when its subject no longer exists.
 func (m *Main) confirmWords() (title, body string, ok bool) {
 	cf := m.manage.confirm
-	if cf.kind == confirmTask {
-		task, found := m.app.Task(cf.id)
-		return m.say.ManageDeleteTaskTitle(task.Title), m.say.ManageDeleteTaskBody(), found
-	}
 	p, found := m.app.Project(cf.id)
 	if n := m.app.taskCount(cf.id); n > 0 {
 		return m.say.ManageDeleteProjectTitle(p.Name), m.say.ManageDeleteProjectBody(n), found
@@ -71,14 +56,8 @@ func (m *Main) confirmWords() (title, body string, ok bool) {
 	return m.say.ManageDeleteProjectTitle(p.Name), m.say.ManageDeleteProjectEmpty(), found
 }
 
-// deleteConfirmed does what the question asked, and leaves the screen the deleted thing was on.
+// deleteConfirmed does what the question asked, and leaves the screen the deleted project was on.
 func (m *Main) deleteConfirmed(cf confirmation) {
-	if cf.kind == confirmTask {
-		if m.app.DeleteTask(cf.id) == nil && m.openID == cf.id {
-			m.openID, m.sel = 0, 0
-		}
-		return
-	}
 	if m.app.DeleteProject(cf.id) == nil {
 		m.leaveProject(cf.id)
 	}

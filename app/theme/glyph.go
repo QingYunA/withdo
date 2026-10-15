@@ -10,7 +10,7 @@ const (
 	kappa     float32 = 0.5522847498 // cubic Bézier circle constant
 )
 
-// StatusGlyph draws a status as a 16 pt vector glyph. The shape carries the meaning, the color
+// StatusGlyph draws a status as a vector glyph, GlyphSize points square. The shape carries the meaning, the color
 // repeats it. complete runs from 0 to 1 while a task is being marked done: the ring fills and the
 // check draws itself.
 func StatusGlyph(c *ui.Context, t *Tokens, s data.Status, complete float32) ui.Element {
@@ -25,28 +25,29 @@ func drawStatus(p *ui.Painter, r ui.Rect, t *Tokens, s data.Status, complete flo
 		return
 	}
 	col := t.Status(s)
-	ring := ui.Rect{X: r.X + 1, Y: r.Y + 1, W: r.W - 2, H: r.H - 2}
+	u := r.W / 16 // the shapes are drawn on a 16 unit grid and scaled to the glyph
+	ring := ui.Rect{X: r.X + u, Y: r.Y + u, W: r.W - 2*u, H: r.H - 2*u}
 	switch s {
 	case data.Backlog:
-		p.StrokeDashed(ring, col, ring.W/2, ringWidth)
+		p.StrokeDashed(ring, col, ring.W/2, ringWidth*u)
 	case data.Todo:
-		p.Stroke(ring, col, ring.W/2, ringWidth)
+		p.Stroke(ring, col, ring.W/2, ringWidth*u)
 	case data.Doing:
-		p.Stroke(ring, col, ring.W/2, ringWidth)
-		fillRightHalf(p, r, 4.2, col)
+		p.Stroke(ring, col, ring.W/2, ringWidth*u)
+		fillRightHalf(p, r, 4.2*u, col)
 	case data.Blocked:
 		p.Fill(ring, col, ring.W/2)
 		drawBang(p, r, ui.Hex("#FFFFFF"))
 	case data.Review:
-		p.Stroke(ring, col, ring.W/2, ringWidth)
-		p.Fill(dotRect(r, 2.6), col, 2.6)
+		p.Stroke(ring, col, ring.W/2, ringWidth*u)
+		p.Fill(dotRect(r, 2.6*u), col, 2.6*u)
 	case data.Done:
 		p.Fill(ring, col, ring.W/2)
 		drawCheck(p, r, ui.Hex("#FFFFFF"), 1)
 	case data.Cancelled:
-		p.Stroke(ring, col, ring.W/2, ringWidth)
-		slash := (&ui.Path{}).MoveTo(r.X+5, r.Y+11).LineTo(r.X+11, r.Y+5)
-		p.StrokePath(slash, ringWidth, col)
+		p.Stroke(ring, col, ring.W/2, ringWidth*u)
+		slash := (&ui.Path{}).MoveTo(r.X+5*u, r.Y+11*u).LineTo(r.X+11*u, r.Y+5*u)
+		p.StrokePath(slash, ringWidth*u, col)
 	}
 }
 
@@ -54,8 +55,9 @@ func drawStatus(p *ui.Painter, r ui.Rect, t *Tokens, s data.Status, complete flo
 // check draws itself.
 func drawCompleting(p *ui.Painter, r ui.Rect, t *Tokens, from data.Status, k float32) {
 	done := t.Status(data.Done)
-	ring := ui.Rect{X: r.X + 1, Y: r.Y + 1, W: r.W - 2, H: r.H - 2}
-	p.Stroke(ring, t.Status(from).Mix(done, k), ring.W/2, ringWidth)
+	u := r.W / 16
+	ring := ui.Rect{X: r.X + u, Y: r.Y + u, W: r.W - 2*u, H: r.H - 2*u}
+	p.Stroke(ring, t.Status(from).Mix(done, k), ring.W/2, ringWidth*u)
 	fill := min(k*1.6, 1)
 	rad := ring.W / 2 * fill
 	p.Fill(dotRect(r, rad), done, rad)
@@ -80,15 +82,17 @@ func fillRightHalf(p *ui.Painter, r ui.Rect, radius float32, col ui.Color) {
 }
 
 func drawBang(p *ui.Painter, r ui.Rect, col ui.Color) {
+	u := r.W / 16
 	cx := r.X + r.W/2
-	stem := (&ui.Path{}).MoveTo(cx, r.Y+4.4).LineTo(cx, r.Y+8.6)
-	p.StrokePath(stem, 1.7, col)
-	p.Fill(dotRect(ui.Rect{X: cx - 4, Y: r.Y + 11.3 - 4, W: 8, H: 8}, 0.95), col, 0.95)
+	stem := (&ui.Path{}).MoveTo(cx, r.Y+4.4*u).LineTo(cx, r.Y+8.6*u)
+	p.StrokePath(stem, 1.7*u, col)
+	p.Fill(dotRect(ui.Rect{X: cx - 4*u, Y: r.Y + 11.3*u - 4*u, W: 8 * u, H: 8 * u}, 0.95*u), col, 0.95*u)
 }
 
 func drawCheck(p *ui.Painter, r ui.Rect, col ui.Color, progress float32) {
-	check := (&ui.Path{}).MoveTo(r.X+4.8, r.Y+8.3).LineTo(r.X+7.1, r.Y+10.6).LineTo(r.X+11.4, r.Y+5.7)
-	p.StrokePath(check.Trim(0, progress), 1.7, col)
+	u := r.W / 16
+	check := (&ui.Path{}).MoveTo(r.X+4.8*u, r.Y+8.3*u).LineTo(r.X+7.1*u, r.Y+10.6*u).LineTo(r.X+11.4*u, r.Y+5.7*u)
+	p.StrokePath(check.Trim(0, progress), 1.7*u, col)
 }
 
 // PriorityBars draws three ascending bars. P0 is red, P1 three bars, P2 two, P3 one; bars beyond

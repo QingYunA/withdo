@@ -48,6 +48,36 @@
       }
     }
   },
+  "a11yMenuPriority": "Set priority to {name}",
+  "@a11yMenuPriority": {
+    "description": "Accessibility label and tooltip of a priority button in the task menu.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "High"
+      }
+    }
+  },
+  "a11yMenuMoveTo": "Move to {name}",
+  "@a11yMenuMoveTo": {
+    "description": "Accessibility label of a project (or the Inbox) on the Move to page of the task menu.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "picpocket"
+      }
+    }
+  },
+  "a11yMenuStatus": "Set status to {name}",
+  "@a11yMenuStatus": {
+    "description": "Accessibility label and tooltip of a status glyph button in the task menu.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Doing"
+      }
+    }
+  },
   "a11yMilestone": "Milestone: {name}",
   "@a11yMilestone": {
     "description": "Accessibility label of the milestone menu.",
@@ -566,9 +596,9 @@
   "@listSeparator": {
     "description": "Separates the parts of an update."
   },
-  "listShowAllDone": "Show all {n} done",
+  "listShowAllDone": "Show all {n} →",
   "@listShowAllDone": {
-    "description": "Link under the recent done tasks of a list.",
+    "description": "Link under the first Done rows of a project or the Inbox; expands the group in place. n is how many tasks are done.",
     "placeholders": {
       "n": {
         "type": "int",
@@ -656,20 +686,6 @@
   "@manageDeleteTask": {
     "description": "Quiet button at the bottom of the inspector; it asks before it deletes the task."
   },
-  "manageDeleteTaskBody": "Its progress reports go with it. It can't be undone.",
-  "@manageDeleteTaskBody": {
-    "description": "Body of the confirmation before a task is deleted."
-  },
-  "manageDeleteTaskTitle": "Delete “{title}”?",
-  "@manageDeleteTaskTitle": {
-    "description": "Title of the confirmation before a task is deleted.",
-    "placeholders": {
-      "title": {
-        "type": "String",
-        "example": "Book dentist"
-      }
-    }
-  },
   "manageFieldName": "Name",
   "@manageFieldName": {
     "description": "Label of the name field in the new project sheet."
@@ -678,21 +694,21 @@
   "@manageFieldRepo": {
     "description": "Label of the optional repository field in the new project sheet."
   },
-  "manageLogbookEmptyBody": "Tasks you mark done or cancel collect here, newest first.",
-  "@manageLogbookEmptyBody": {
-    "description": "Body of the empty Logbook; says what appears there."
+  "manageCompletedEmptyBody": "Tasks you mark done or cancel collect here, newest first.",
+  "@manageCompletedEmptyBody": {
+    "description": "Body of the empty Completed page; says what appears there."
   },
-  "manageLogbookEmptyTitle": "Nothing finished yet",
-  "@manageLogbookEmptyTitle": {
-    "description": "Title of the empty Logbook."
+  "manageCompletedEmptyTitle": "Nothing finished yet",
+  "@manageCompletedEmptyTitle": {
+    "description": "Title of the empty Completed page."
   },
-  "manageLogbookOlder": "Show older",
-  "@manageLogbookOlder": {
-    "description": "Link at the end of the Logbook that loads older finished tasks."
+  "manageCompletedOlder": "Show older",
+  "@manageCompletedOlder": {
+    "description": "Link at the end of the Completed page that loads older finished tasks."
   },
-  "manageLogbookSubtitle": "Done and cancelled, newest first",
-  "@manageLogbookSubtitle": {
-    "description": "Subtitle of the Logbook page."
+  "manageCompletedSubtitle": "Done and cancelled, newest first",
+  "@manageCompletedSubtitle": {
+    "description": "Subtitle of the Completed page."
   },
   "manageMilestoneClose": "Close milestone",
   "@manageMilestoneClose": {
@@ -750,12 +766,112 @@
   "@manageMilestoneReopen": {
     "description": "Item of the submenu of a closed milestone."
   },
-  "manageMoveTo": "Move to",
-  "@manageMoveTo": {
-    "description": "Item of a task context menu that opens the list of projects (and the Inbox) to move the task to."
+  "a11yTaskMenu": "Task menu",
+  "@a11yTaskMenu": {
+    "description": "Accessibility label of the popover menu of a task (status, priority, move, remind, delete)."
   },
-  "manageNavLogbook": "Logbook",
-  "@manageNavLogbook": {
+  "doneByAgent": "{agent} · {summary}",
+  "@doneByAgent": {
+    "description": "Right side of a Done today row: the agent that finished the task and what its latest report said, kept to one line.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "summary": {
+        "type": "String",
+        "example": "PR #245 merged"
+      }
+    }
+  },
+  "doneByYou": "You",
+  "@doneByYou": {
+    "description": "Who finished a task, on a Done today row and in the Done group, when it was the user and not an agent."
+  },
+  "menuAsk": "Ask about this task…",
+  "@menuAsk": {
+    "description": "Item of the task menu: opens the inspector with its assistant composer focused."
+  },
+  "menuBack": "Back",
+  "@menuBack": {
+    "description": "Accessibility label of the back button on a page of the task menu (Move to, Remind me)."
+  },
+  "menuCustom": "Custom…",
+  "@menuCustom": {
+    "description": "Last reminder choice of the task menu: opens a calendar and a time of day."
+  },
+  "menuDelete": "Delete",
+  "@menuDelete": {
+    "description": "Item of the task menu that deletes the task at once; an Undo toast follows."
+  },
+  "menuDeleted": "Deleted “{title}”",
+  "@menuDeleted": {
+    "description": "Toast after a task was deleted; its Undo button puts the task back.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Book dentist"
+      }
+    }
+  },
+  "menuFindProject": "Find a project",
+  "@menuFindProject": {
+    "description": "Placeholder of the filter field on the Move to page of the task menu."
+  },
+  "menuLaterToday": "Later today",
+  "@menuLaterToday": {
+    "description": "Reminder choice of the task menu: today at 6:00 PM, shown while that is still over half an hour away."
+  },
+  "menuMoveTo": "Move to…",
+  "@menuMoveTo": {
+    "description": "Item of the task menu: replaces the menu with a filter field and the list of projects and the Inbox."
+  },
+  "menuNextMonday": "Next Monday",
+  "@menuNextMonday": {
+    "description": "Reminder choice of the task menu: next Monday at 9:00 AM."
+  },
+  "menuNoProjectMatch": "No project matches",
+  "@menuNoProjectMatch": {
+    "description": "Shown on the Move to page of the task menu when the filter matches no project."
+  },
+  "menuNoReminder": "No reminder",
+  "@menuNoReminder": {
+    "description": "Reminder choice of the task menu that clears the reminder."
+  },
+  "menuRemindMe": "Remind me…",
+  "@menuRemindMe": {
+    "description": "Item of the task menu: replaces the menu with reminder choices."
+  },
+  "menuRemindTitle": "Remind me",
+  "@menuRemindTitle": {
+    "description": "Title of the reminder page of the task menu."
+  },
+  "menuSetReminder": "Set reminder",
+  "@menuSetReminder": {
+    "description": "Primary button of the Custom reminder page of the task menu: saves the day and time chosen."
+  },
+  "menuThisWeekend": "This weekend",
+  "@menuThisWeekend": {
+    "description": "Reminder choice of the task menu: Saturday at 10:00 AM."
+  },
+  "menuTomorrow": "Tomorrow",
+  "@menuTomorrow": {
+    "description": "Reminder choice of the task menu: tomorrow at 9:00 AM."
+  },
+  "menuUndo": "Undo",
+  "@menuUndo": {
+    "description": "Button of the toast after a task was deleted."
+  },
+  "nowShowAllInCompleted": "Show all in Completed",
+  "@nowShowAllInCompleted": {
+    "description": "Link under the Done today section of Now when more than five tasks were finished today; opens the Completed page."
+  },
+  "sectionDoneToday": "Done today",
+  "@sectionDoneToday": {
+    "description": "Section of Now with what agents and the user finished since midnight."
+  },
+  "manageNavCompleted": "Completed",
+  "@manageNavCompleted": {
     "description": "Sidebar row and page title for finished tasks (done and cancelled), newest first."
   },
   "manageNewProjectTip": "New project",

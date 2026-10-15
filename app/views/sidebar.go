@@ -19,7 +19,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
-		m.navRow(c, t, "logbook", nav{screen: screenLogbook}, theme.IconLogbook, m.say.ManageNavLogbook(), 0)
+		m.navRow(c, t, "completed", nav{screen: screenCompleted}, theme.IconCheck, m.say.ManageNavCompleted(), 0)
 		m.projectsHeader(c, t)
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
@@ -67,7 +67,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
 		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
-			theme.Text(c, theme.Body, t.TextTertiary, "#")
+			theme.Text(c, theme.Compact, t.TextTertiary, "#")
 		})
 		if renaming {
 			m.renameInput(c, t)
@@ -130,9 +130,9 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// sidebarRow is a 30 pt row inset 8 pt, highlighted by selection or hover.
+// sidebarRow is a 32 pt row inset 10 pt, highlighted by selection or hover.
 func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Element {
-	row := ui.Row(c.Key(key)).Height(30).Shrink(0).Margin(0, 10).Padding(0, 10).Gap(10).
+	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, 10).Gap(10).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case selected:
@@ -144,9 +144,9 @@ func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Eleme
 }
 
 func sidebarLabel(c *ui.Context, t *theme.Tokens, text string, selected bool) {
-	style := theme.Body
+	style := theme.Compact
 	if selected {
-		style = theme.BodyStrong
+		style = theme.CompactStrong
 	}
 	theme.Text(c, style, t.Text, text).Grow(1).MinWidth(0).Ellipsis("…")
 }
