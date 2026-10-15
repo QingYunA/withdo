@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
@@ -29,6 +30,7 @@ type CreateMilestoneInput struct {
 
 // CreateMilestone adds an open milestone to an existing project.
 func (c *Core) CreateMilestone(ctx context.Context, in CreateMilestoneInput) (*Milestone, error) {
+	in.Title = strings.TrimSpace(in.Title)
 	if in.Title == "" {
 		return nil, invalid("title", "must not be empty")
 	}

@@ -9,8 +9,12 @@ import (
 // the arrow keys walk.
 func (m *Main) rowIDs(now data.Now) []int {
 	switch {
+	case m.searching():
+		return m.searchIDs()
 	case m.nav.screen == screenNow:
 		return now.IDs()
+	case m.nav.screen == screenLogbook:
+		return m.logbookIDs()
 	case m.boardActive():
 		var ids []int
 		for _, col := range m.boardColumns() {
@@ -35,23 +39,27 @@ func moveSelection(cur, dir, n int) int {
 // typing reports whether a text input has the keyboard. Its keys are the input's own
 // (Element.OnTextKey), so the window leaves Esc, the arrows, Enter and Space alone meanwhile.
 func (m *Main) typing(c *ui.Context) bool {
-	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.inspector.editing()
+	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.searchRef.Focused(c) || m.renameRef.Focused(c) || m.inspector.editing()
 }
 
 // keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
-	if m.settings {
+	if m.sheetOpen() {
 		return
 	}
 	m.runQueued(c, ids)
 	switch {
 	case c.Shortcut(ui.Cmd, ui.KeyK):
 		m.focusAsk(c)
+	case c.Shortcut(ui.Cmd, ui.KeyF):
+		m.searchRef.Focus(c)
 	case c.Shortcut(ui.Cmd, ui.Key1):
 		m.goTo(nav{})
 	case c.Shortcut(ui.Cmd, ui.Key2):
 		m.goTo(nav{screen: screenInbox})
+	case c.Shortcut(ui.Cmd, ui.Key3):
+		m.goTo(nav{screen: screenLogbook})
 	}
 	if m.typing(c) {
 		return
@@ -105,6 +113,8 @@ func (m *Main) escape() {
 		m.openID = 0
 	case m.sel != 0:
 		m.sel = 0
+	case m.searching():
+		m.clearSearch()
 	case m.convo.live:
 		m.forgetConversation()
 	}

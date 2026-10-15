@@ -155,3 +155,7 @@ func (k Clock) Reminder(at, now time.Time) string {
 	}
 	return k.Say.NeedReminderOn(k.Date(at, now), k.Time(at))
 }
+
+// Day names the calendar day of t as a heading: "Today", "Yesterday", the weekday inside the next
+// six days, otherwise a date.
+func (k Clock) Day(t, now time.Time) string { return k.day(t, now, false) }

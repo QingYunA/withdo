@@ -135,9 +135,14 @@ func (r *Real) ListTasks(f Filter) ([]Task, error) {
 	if err != nil {
 		return nil, err
 	}
+	hidden, err := r.archivedIDs()
+	if err != nil {
+		return nil, err
+	}
 	var out []Task
 	for _, t := range ts {
-		if f.Source == "" || Source(t.Source) == f.Source {
+		inArchived := t.ProjectID != nil && hidden[int(*t.ProjectID)]
+		if !inArchived && (f.Source == "" || Source(t.Source) == f.Source) {
 			out = append(out, fromTask(t))
 		}
 	}

@@ -33,6 +33,9 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opa
 	if opacity < 1 {
 		row.Opacity(opacity)
 	}
+	if task, ok := m.app.Task(id); ok {
+		row.ContextMenu(func(mn *ui.Menu) { m.taskMenu(mn, task) })
+	}
 	return row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 }
 

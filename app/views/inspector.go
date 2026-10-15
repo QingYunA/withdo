@@ -71,6 +71,7 @@ func (m *Main) inspectorPane(c *ui.Context, t *theme.Tokens) {
 					m.properties(c, t, task)
 					m.notesField(c, t, task)
 					m.activity(c, t, task)
+					m.deleteTaskButton(c, t, task)
 				})
 			})
 		})

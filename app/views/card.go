@@ -24,6 +24,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 	slot.Children(func() {
 		card := ui.Column(c.Key("card")).Padding(9, 12, 12, 8).Radius(theme.RadiusCard).Cursor(ui.CursorPointer)
 		card.Drag(dragCard{id: task.ID})
+		card.ContextMenu(func(mn *ui.Menu) { m.taskMenu(mn, task) })
 		dragging = card.Dragging()
 		m.styleCard(c, t, card, task, dragging, opacity)
 		card.Children(func() {

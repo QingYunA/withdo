@@ -47,6 +47,7 @@ type App struct {
 	GitHub data.GitHub
 
 	snap       snapshot
+	rev        int // counts the snapshots, so a search or the Logbook knows its answer is old
 	completing map[int]completion
 }
 
@@ -55,6 +56,7 @@ type snapshot struct {
 	loaded     bool
 	err        error
 	projects   []data.Project
+	archived   []data.Project
 	tasks      []data.Task
 	overview   data.Overview
 	milestones map[int][]data.Milestone
@@ -78,6 +80,9 @@ func (a *App) Refresh() {
 			s.overview, err = a.Store.Overview()
 		}
 	}
+	if err == nil {
+		s.archived, err = a.Store.ListArchivedProjects()
+	}
 	for _, p := range s.projects {
 		if ms, merr := a.Store.ListMilestones(p.ID); merr == nil {
 			s.milestones[p.ID] = ms
@@ -97,6 +102,7 @@ func (a *App) Refresh() {
 		return
 	}
 	a.snap = s
+	a.rev++
 }
 
 // Update patches a task and refreshes. An error leaves the snapshot as it was.

@@ -29,6 +29,7 @@ func (m *Main) settingsSheet(c *ui.Context, t *theme.Tokens) {
 			m.connectBlock(c, t)
 			m.githubBlock(c, t)
 			m.dataBlock(c, t)
+			m.archivedBlock(c, t)
 			m.languageBlock(c, t)
 			hairline(c, t)
 			theme.Text(c, theme.Meta, t.TextSecondary, m.say.SettingsAbout(m.app.Config.Version))

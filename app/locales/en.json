@@ -580,6 +580,280 @@
   "@listTaskTitle": {
     "description": "Placeholder of the input that names a new task."
   },
+  "manageA11yProject": "Project: {name}",
+  "@manageA11yProject": {
+    "description": "Accessibility label of the project value button in the inspector.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "manageA11yRestore": "Restore {name}",
+  "@manageA11yRestore": {
+    "description": "Accessibility label of the Restore button of an archived project.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "manageArchive": "Archive",
+  "@manageArchive": {
+    "description": "Item of a project context menu: hide the project and its tasks. They can be restored in Settings."
+  },
+  "manageArchivedNone": "No archived projects. Archive one from its menu in the sidebar.",
+  "@manageArchivedNone": {
+    "description": "Shown in Settings when no project is archived; says how to archive one."
+  },
+  "manageArchivedTitle": "Archived projects",
+  "@manageArchivedTitle": {
+    "description": "Header of the block of Settings that lists archived projects."
+  },
+  "manageCancel": "Cancel",
+  "@manageCancel": {
+    "description": "Button that closes a sheet or a confirmation without doing anything."
+  },
+  "manageCreate": "Create",
+  "@manageCreate": {
+    "description": "Primary button of the new project and new milestone sheets."
+  },
+  "manageDelete": "Delete…",
+  "@manageDelete": {
+    "description": "Item of a context menu that asks before it deletes a project or a task. The ellipsis says a question follows."
+  },
+  "manageDeleteConfirm": "Delete",
+  "@manageDeleteConfirm": {
+    "description": "Button that confirms a deletion."
+  },
+  "manageDeleteProjectBody": "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project's milestones. It can't be undone. To keep the work, archive the project instead.",
+  "@manageDeleteProjectBody": {
+    "description": "Body of the confirmation before a project that has tasks is deleted.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "14"
+      }
+    }
+  },
+  "manageDeleteProjectEmpty": "This removes the project and its milestones. It can't be undone.",
+  "@manageDeleteProjectEmpty": {
+    "description": "Body of the confirmation before a project without tasks is deleted."
+  },
+  "manageDeleteProjectTitle": "Delete “{name}”?",
+  "@manageDeleteProjectTitle": {
+    "description": "Title of the confirmation before a project is deleted.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "manageDeleteTask": "Delete task…",
+  "@manageDeleteTask": {
+    "description": "Quiet button at the bottom of the inspector; it asks before it deletes the task."
+  },
+  "manageDeleteTaskBody": "Its progress reports go with it. It can't be undone.",
+  "@manageDeleteTaskBody": {
+    "description": "Body of the confirmation before a task is deleted."
+  },
+  "manageDeleteTaskTitle": "Delete “{title}”?",
+  "@manageDeleteTaskTitle": {
+    "description": "Title of the confirmation before a task is deleted.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Book dentist"
+      }
+    }
+  },
+  "manageFieldName": "Name",
+  "@manageFieldName": {
+    "description": "Label of the name field in the new project sheet."
+  },
+  "manageFieldRepo": "GitHub repository",
+  "@manageFieldRepo": {
+    "description": "Label of the optional repository field in the new project sheet."
+  },
+  "manageLogbookEmptyBody": "Tasks you mark done or cancel collect here, newest first.",
+  "@manageLogbookEmptyBody": {
+    "description": "Body of the empty Logbook; says what appears there."
+  },
+  "manageLogbookEmptyTitle": "Nothing finished yet",
+  "@manageLogbookEmptyTitle": {
+    "description": "Title of the empty Logbook."
+  },
+  "manageLogbookOlder": "Show older",
+  "@manageLogbookOlder": {
+    "description": "Link at the end of the Logbook that loads older finished tasks."
+  },
+  "manageLogbookSubtitle": "Done and cancelled, newest first",
+  "@manageLogbookSubtitle": {
+    "description": "Subtitle of the Logbook page."
+  },
+  "manageMilestoneClose": "Close milestone",
+  "@manageMilestoneClose": {
+    "description": "Item of a milestone submenu: marks the milestone as closed."
+  },
+  "manageMilestoneDue": "Due date…",
+  "@manageMilestoneDue": {
+    "description": "Item of a milestone submenu: opens the due date sheet."
+  },
+  "manageMilestoneDueTitle": "Due date of “{title}”",
+  "@manageMilestoneDueTitle": {
+    "description": "Title of the sheet that sets the due date of a milestone.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "v0.2"
+      }
+    }
+  },
+  "manageMilestoneEdit": "Edit “{title}”",
+  "@manageMilestoneEdit": {
+    "description": "Item of the milestone menu that opens a submenu for one milestone.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "v0.2"
+      }
+    }
+  },
+  "manageMilestoneNew": "New milestone…",
+  "@manageMilestoneNew": {
+    "description": "Item of the milestone menu that opens the new milestone sheet."
+  },
+  "manageMilestoneNewTitle": "New milestone",
+  "@manageMilestoneNewTitle": {
+    "description": "Title of the new milestone sheet."
+  },
+  "manageMilestoneNoDue": "No due date",
+  "@manageMilestoneNoDue": {
+    "description": "Shown in the milestone sheet when no due date is set."
+  },
+  "manageMilestonePlaceholder": "Milestone name",
+  "@manageMilestonePlaceholder": {
+    "description": "Placeholder of the title field of the milestone sheet."
+  },
+  "manageMilestoneRename": "Rename…",
+  "@manageMilestoneRename": {
+    "description": "Item of a milestone submenu: opens the rename sheet."
+  },
+  "manageMilestoneRenameTitle": "Rename milestone",
+  "@manageMilestoneRenameTitle": {
+    "description": "Title of the rename milestone sheet."
+  },
+  "manageMilestoneReopen": "Reopen milestone",
+  "@manageMilestoneReopen": {
+    "description": "Item of the submenu of a closed milestone."
+  },
+  "manageMoveTo": "Move to",
+  "@manageMoveTo": {
+    "description": "Item of a task context menu that opens the list of projects (and the Inbox) to move the task to."
+  },
+  "manageNavLogbook": "Logbook",
+  "@manageNavLogbook": {
+    "description": "Sidebar row and page title for finished tasks (done and cancelled), newest first."
+  },
+  "manageNewProjectTip": "New project",
+  "@manageNewProjectTip": {
+    "description": "Tooltip and accessibility label of the plus button on the PROJECTS header of the sidebar, and the title of the new project sheet."
+  },
+  "managePropProject": "Project",
+  "@managePropProject": {
+    "description": "Label of the project row of the inspector."
+  },
+  "manageRename": "Rename",
+  "@manageRename": {
+    "description": "Item of a project context menu: edit its name in the sidebar."
+  },
+  "manageRenameLabel": "Project name",
+  "@manageRenameLabel": {
+    "description": "Accessibility label of the name field while a project is renamed in the sidebar."
+  },
+  "manageRepoHelp": "Agent reports from this repository land in the project.",
+  "@manageRepoHelp": {
+    "description": "Help line under the repository field of the new project sheet."
+  },
+  "manageRepoInvalid": "Use the form owner/repo, like QingYunA/adhd-todo.",
+  "@manageRepoInvalid": {
+    "description": "Shown under the repository field when what was typed is not a repository name."
+  },
+  "manageRepoPlaceholder": "owner/repo",
+  "@manageRepoPlaceholder": {
+    "description": "Placeholder of the repository field: the form of a GitHub repository name. Keep the form owner/repo."
+  },
+  "manageRepoTaken": "“{project}” already uses this repository.",
+  "@manageRepoTaken": {
+    "description": "Shown under the repository field when another project has the repository.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "manageRestore": "Restore",
+  "@manageRestore": {
+    "description": "Button that brings an archived project back."
+  },
+  "manageSave": "Save",
+  "@manageSave": {
+    "description": "Primary button of the rename and due date milestone sheets."
+  },
+  "manageSearch": "Search",
+  "@manageSearch": {
+    "description": "Placeholder and name of the search field at the top of the sidebar, and the title of the search results page."
+  },
+  "manageSearchClear": "Clear search",
+  "@manageSearchClear": {
+    "description": "Accessibility label of the button that clears the search field of the sidebar."
+  },
+  "manageSearchCount": "{count, plural, one {# result} other {# results}} for “{query}”",
+  "@manageSearchCount": {
+    "description": "Subtitle of the search results page.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      },
+      "query": {
+        "type": "String",
+        "example": "login"
+      }
+    }
+  },
+  "manageSearchLabel": "Search tasks",
+  "@manageSearchLabel": {
+    "description": "Accessibility label of the sidebar search field."
+  },
+  "manageSearchMore": "Showing the first {count}. Narrow the search to see the rest.",
+  "@manageSearchMore": {
+    "description": "Last line of a search that found more results than are shown.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "100"
+      }
+    }
+  },
+  "manageSearchNone": "No tasks match “{query}”",
+  "@manageSearchNone": {
+    "description": "Title of the search page when nothing was found.",
+    "placeholders": {
+      "query": {
+        "type": "String",
+        "example": "login"
+      }
+    }
+  },
+  "manageSearchNoneBody": "Search looks in titles, notes, branches and pull request numbers, in every project.",
+  "@manageSearchNoneBody": {
+    "description": "Body of the search page when nothing was found; says where the search looks."
+  },
   "milestoneAll": "All milestones",
   "@milestoneAll": {
     "description": "Milestone menu entry that shows every task."

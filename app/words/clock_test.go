@@ -114,3 +114,14 @@ func TestRegionsHourCycle(t *testing.T) {
 	check(t, "Chinese 24 hours", New("zh-Hans", i18n.Region{Locale: "zh-CN", HourCycle: 24}).Time(at(0, 16, 0)), "16:00")
 	check(t, "Chinese 12 hours", New("zh-Hans", i18n.Region{Locale: "zh-CN", HourCycle: 12}).Time(at(0, 16, 0)), "下午4:00")
 }
+
+func TestDayHeadsTheLogbook(t *testing.T) {
+	en, zh := New("en", i18n.Region{}), New("zh-Hans", i18n.Region{})
+	check(t, "today", en.Day(at(0, 9, 0), now), "Today")
+	check(t, "yesterday", en.Day(at(-1, 23, 0), now), "Yesterday")
+	check(t, "two days ago", en.Day(at(-2, 9, 0), now), "Oct 12")
+	check(t, "another year", en.Day(time.Date(2025, 12, 31, 9, 0, 0, 0, time.Local), now), "Dec 31, 2025")
+	check(t, "Chinese today", zh.Day(at(0, 9, 0), now), "今天")
+	check(t, "Chinese yesterday", zh.Day(at(-1, 9, 0), now), "昨天")
+	check(t, "Chinese date", zh.Day(at(-2, 9, 0), now), "10月12日")
+}

@@ -11,6 +11,8 @@ type FieldError struct {
 	Field    string
 	Msg      string
 	NotFound bool
+	// Conflict says the value is fine but already taken.
+	Conflict bool
 }
 
 func (e *FieldError) Error() string {
@@ -32,4 +34,14 @@ func notFound(field, what string, id int64) error {
 func IsNotFound(err error) bool {
 	var fe *FieldError
 	return errors.As(err, &fe) && fe.NotFound
+}
+
+func conflict(field, format string, args ...any) error {
+	return &FieldError{Field: field, Msg: fmt.Sprintf(format, args...), Conflict: true}
+}
+
+// IsConflict reports whether err says a value is already used by another row.
+func IsConflict(err error) bool {
+	var fe *FieldError
+	return errors.As(err, &fe) && fe.Conflict
 }

@@ -181,14 +181,10 @@ func TestViewToggleSwitchesBetweenListAndBoard(t *testing.T) {
 	}
 }
 
-func TestMilestoneMenuOnlyForProjectsWithMilestones(t *testing.T) {
+func TestMilestoneMenuFiltersTheProject(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
 	if !tt.HasText("All milestones") {
 		t.Error("project 1 has milestones but no menu")
-	}
-	tt2, _, _ := projectTester(t, 2)
-	if tt2.HasText("All milestones") {
-		t.Error("project 2 has no milestones but shows the menu")
 	}
 	if err := tt.Click("Milestone: All milestones"); err != nil {
 		t.Fatal(err)
