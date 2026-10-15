@@ -140,7 +140,7 @@ func (f *Fake) CreateTask(in CreateTaskInput) (Task, error) {
 	f.mu.Lock()
 	now := f.Now()
 	t := Task{
-		ID: f.newID(), ProjectID: in.ProjectID, Title: in.Title, Status: orStatus(in.Status, Todo),
+		ID: f.newID(), ParentID: in.ParentID, ProjectID: in.ProjectID, Title: in.Title, Status: orStatus(in.Status, Todo),
 		Priority: orPriority(in.Priority, P2), Source: orSource(in.Source, SourceUser),
 		CreatedAt: now, UpdatedAt: now, DueAt: in.DueAt,
 	}

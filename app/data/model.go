@@ -77,6 +77,7 @@ type Milestone struct {
 // Task is one unit of work, written by the user or reported by an agent.
 type Task struct {
 	ID          int
+	ParentID    *int // a subtask's parent: the task of the agent that started the subagent
 	ProjectID   *int
 	MilestoneID *int
 	Title       string
@@ -100,6 +101,20 @@ type Task struct {
 	PRReview       PRReview
 	PRCheckedAt    *time.Time
 	PRClosedSeenAt *time.Time // the user dismissed the closed pull request
+}
+
+// IsSubtask reports whether the task belongs to another task.
+func (t Task) IsSubtask() bool { return t.ParentID != nil }
+
+// Subtasks returns the tasks among tasks whose parent is id, in the order given.
+func Subtasks(tasks []Task, id int) []Task {
+	var out []Task
+	for _, t := range tasks {
+		if t.ParentID != nil && *t.ParentID == id {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // Report is one progress note an agent filed against a task.
@@ -154,6 +169,7 @@ type Filter struct {
 
 // CreateTaskInput is what the UI sends to create a task.
 type CreateTaskInput struct {
+	ParentID  *int
 	Title     string
 	Source    Source
 	ProjectID *int
