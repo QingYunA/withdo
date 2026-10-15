@@ -41,7 +41,7 @@ func (m *Main) navButton(c *ui.Context, t *theme.Tokens, key string, icon *ui.SV
 	if seg.Hovered() {
 		ink = t.TextSecondary
 	}
-	seg.Children(func() { ui.Icon(c, icon).Size(14, 14).TextColor(ink) })
+	seg.Children(func() { ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
 	if seg.Clicked() {
 		do()
 	}
@@ -146,7 +146,7 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 	if it.Kind == data.CalMilestone {
 		ui.Row(c.Key("milestone-"+itoa(it.Milestone.ID))).Height(theme.CalendarChip).Shrink(0).Padding(0, 6).Gap(5).Radius(5).
 			Background(t.BgSelected).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, theme.IconFlag).Size(12, 12).TextColor(t.Accent).Shrink(0)
+			ui.Icon(c, theme.IconFlag).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent).Shrink(0)
 			theme.Text(c, theme.MetaStrong, t.Accent, it.Milestone.Title).Shrink(1).MinWidth(0).Ellipsis("…")
 		})
 		return

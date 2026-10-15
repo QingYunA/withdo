@@ -1,49 +1,74 @@
 package theme
 
-import "github.com/egoist/mygo/ui"
+import (
+	"embed"
 
-func icon(shapes string) *ui.SVG {
-	return ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">` + shapes + `</svg>`))
-}
-
-// Line icons in the color of the surrounding text.
-var (
-	IconInbox     = icon(`<path d="M2.5 9.5 4.4 3.9a1 1 0 0 1 .95-.65h5.3a1 1 0 0 1 .95.65L13.5 9.5v2.6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><path d="M2.5 9.5h3.2l.6 1.4h3.4l.6-1.4h3.2"/>`)
-	IconGear      = icon(`<circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.5M8 12.6v1.5M13.4 5l-1.3.75M3.9 10.25 2.6 11M13.4 11l-1.3-.75M3.9 5.75 2.6 5"/>`)
-	IconChevron   = icon(`<path d="m4.5 6.5 3.5 3.5 3.5-3.5"/>`)
-	IconArrowOut  = icon(`<path d="M6 3.5H3.8a1.3 1.3 0 0 0-1.3 1.3v7.4a1.3 1.3 0 0 0 1.3 1.3h7.4a1.3 1.3 0 0 0 1.3-1.3V10M9 2.5h4.5V7M13.2 2.8 7.4 8.6"/>`)
-	IconCalendar  = icon(`<rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 6.8h11M5.5 2v2.4M10.5 2v2.4"/>`)
-	IconCheck     = icon(`<path d="m3.5 8.4 3 3 6-6.6"/>`)
-	IconCopy      = icon(`<rect x="5.5" y="5.5" width="8" height="8" rx="1.8"/><path d="M10.5 5.5V4.3a1.8 1.8 0 0 0-1.8-1.8H4.3a1.8 1.8 0 0 0-1.8 1.8v4.4a1.8 1.8 0 0 0 1.8 1.8h1.2"/>`)
-	IconMilestone = icon(`<path d="M4 13.5v-11M4 3h7.5l-1.8 2.8 1.8 2.8H4"/>`)
-	IconPlus      = icon(`<path d="M8 3.5v9M3.5 8h9"/>`)
-	IconSparkle   = icon(`<path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z" fill="currentColor" stroke-width="1"/>`)
-	IconBell      = icon(`<path d="M8 2.5a3.6 3.6 0 0 0-3.6 3.6v2.6L3.2 10.6h9.6l-1.2-1.9V6.1A3.6 3.6 0 0 0 8 2.5zM6.6 12.2a1.4 1.4 0 0 0 2.8 0"/>`)
-	IconNow       = icon(`<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.9" fill="currentColor" stroke="none"/>`)
-	IconClose     = icon(`<path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/>`)
-	IconSearch    = icon(`<circle cx="7" cy="7" r="4.2"/><path d="m10.2 10.2 3.3 3.3"/>`)
-	IconMove      = icon(`<path d="M3 8h10M9 4l4 4-4 4"/>`)
-	IconClock     = icon(`<circle cx="8" cy="8" r="5.6"/><path d="M8 4.8V8l2.2 1.4"/>`)
-	IconTrash     = icon(`<path d="M3 4.5h10M6.4 4.5V3h3.2v1.5M4.4 4.5l.6 8.2h6l.6-8.2M6.9 7v3.6M9.1 7v3.6"/>`)
-	IconList      = icon(`<path d="M3 4.5h10M3 8h10M3 11.5h10"/>`)
-	IconBoard     = icon(`<rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.2 3v10M9.8 3v10"/>`)
-	IconBack      = icon(`<path d="M10 3.5 5.5 8l4.5 4.5"/>`)
+	"github.com/egoist/mygo/ui"
 )
 
-// Icons of the v4 round (docs/design/mockups/v4.html): the sidebar, the inspector's properties
-// and the Settings toolbar.
+// The interface icons are pixelarticons (MIT, pixelarticons@2.4.2; docs/design/ui-spec.md, Icons):
+// a 24-unit viewBox drawn in 2-unit pixels, a 12 x 12 pixel grid like the avatars. They fill with
+// currentColor, so ui.Icon tints them with the color of the surrounding text. Draw them at whole
+// multiples of 12 pt (IconSmall, IconRow, IconBar, IconLarge) to keep every pixel on the device grid.
+//
+//go:embed pixel-icons/*.svg
+var pixelIcons embed.FS
+
+// Icon sizes, in points: 1, 1.5, 2 and 3 points a pixel of the grid.
+const (
+	IconSmall float32 = 12 // meta lines, chevrons, clear buttons
+	IconRow   float32 = 18 // sidebar and menu rows, buttons, inspector properties
+	IconBar   float32 = 24 // the Settings toolbar
+	IconLarge float32 = 36
+)
+
+// pixelIcon parses one of the embedded SVGs by its pixelarticons name.
+func pixelIcon(name string) *ui.SVG {
+	data, err := pixelIcons.ReadFile("pixel-icons/" + name + ".svg")
+	if err != nil {
+		panic("theme: " + err.Error())
+	}
+	return ui.MustParseSVG(data)
+}
+
+// Icons in the color of the surrounding text.
 var (
-	IconDone     = icon(`<circle cx="8" cy="8" r="5.6"/><path d="m5.6 8.2 1.7 1.7 3.2-3.4"/>`)
-	IconStatus   = icon(`<circle cx="8" cy="8" r="5.6"/><path d="M8 2.4a5.6 5.6 0 0 1 0 11.2z" fill="currentColor" stroke="none"/>`)
-	IconAgent    = icon(`<rect x="3" y="4.5" width="10" height="8" rx="2"/><path d="M8 2.2v2.3M6 8.2v.6M10 8.2v.6"/>`)
-	IconBranch   = icon(`<circle cx="5" cy="3.8" r="1.4"/><circle cx="5" cy="12.2" r="1.4"/><circle cx="11" cy="5.8" r="1.4"/><path d="M5 5.2v5.6M11 7.2c0 2.4-2 3-6 3.4"/>`)
-	IconGeneral  = icon(`<path d="M3 4.5h6M11.5 4.5H13M3 11.5h1.5M7 11.5h6M3 8h10"/><circle cx="10.2" cy="4.5" r="1.4"/><circle cx="5.8" cy="11.5" r="1.4"/>`)
-	IconTerminal = icon(`<rect x="2" y="3" width="12" height="10" rx="2"/><path d="m4.8 6.5 2 1.8-2 1.8M8.6 10.3h2.6"/>`)
-	IconStar     = icon(`<path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z"/>`)
-	IconOctocat  = icon(`<path d="M8 2.2a5.8 5.8 0 0 0-1.8 11.3c.3 0 .4-.1.4-.3v-1c-1.6.3-2-.7-2-.7-.3-.7-.7-.9-.7-.9-.5-.4 0-.4 0-.4.6 0 .9.6.9.6.5.9 1.4.7 1.8.5 0-.4.2-.7.4-.8-1.3-.2-2.6-.7-2.6-2.9 0-.6.2-1.2.6-1.6-.1-.1-.3-.7 0-1.6 0 0 .5-.1 1.6.6a5.4 5.4 0 0 1 2.8 0c1.1-.7 1.6-.6 1.6-.6.3.9.1 1.5 0 1.6.4.4.6 1 .6 1.6 0 2.2-1.3 2.7-2.6 2.9.2.2.4.5.4 1v1.6c0 .2.1.3.4.3A5.8 5.8 0 0 0 8 2.2z"/>`)
+	IconInbox     = pixelIcon("inbox")
+	IconGear      = pixelIcon("gear")
+	IconChevron   = pixelIcon("chevron-down")
+	IconArrowOut  = pixelIcon("external-link")
+	IconCalendar  = pixelIcon("calendar")
+	IconCheck     = pixelIcon("check")
+	IconCopy      = pixelIcon("copy")
+	IconMilestone = pixelIcon("flag")
+	IconPlus      = pixelIcon("plus")
+	IconSparkle   = pixelIcon("sparkle")
+	IconBell      = pixelIcon("bell")
+	IconNow       = pixelIcon("circle")
+	IconClose     = pixelIcon("close")
+	IconSearch    = pixelIcon("search")
+	IconMove      = pixelIcon("arrow-right")
+	IconClock     = pixelIcon("clock")
+	IconTrash     = pixelIcon("trash")
+	IconList      = pixelIcon("bulletlist")
+	IconBoard     = pixelIcon("grid-3x2")
+	IconBack      = pixelIcon("chevron-left")
+	IconForward   = pixelIcon("chevron-right")
+)
+
+// The sidebar, the inspector's properties and the Settings toolbar.
+var (
+	IconDone     = pixelIcon("checkbox-on")
+	IconStatus   = pixelIcon("invert")
+	IconAgent    = pixelIcon("robot")
+	IconBranch   = pixelIcon("git-branch")
+	IconGeneral  = pixelIcon("sliders")
+	IconTerminal = pixelIcon("terminal")
+	IconStar     = pixelIcon("sparkle")
+	IconOctocat  = pixelIcon("github")
 	IconFlag     = IconMilestone
-	IconDiamond  = icon(`<path d="M8 2.6 13.4 8 8 13.4 2.6 8z"/>`)
-	IconPR       = icon(`<circle cx="4.5" cy="3.8" r="1.4"/><circle cx="4.5" cy="12.2" r="1.4"/><circle cx="11.5" cy="12.2" r="1.4"/><path d="M4.5 5.2v5.6M11.5 10.8V7a1.6 1.6 0 0 0-1.6-1.6H8.4M9.9 3.8 8.4 5.4l1.5 1.6"/>`)
+	IconDiamond  = pixelIcon("diamond-gem")
+	IconPR       = pixelIcon("git-pull-request")
 )
 
 // ProjectColors tint a project's folder; the color follows the project's name.

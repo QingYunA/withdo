@@ -104,7 +104,7 @@ func (m *Main) viewToggle(c *ui.Context, t *theme.Tokens) {
 			case seg.Hovered():
 				ink = t.TextSecondary
 			}
-			seg.Children(func() { ui.Icon(c, side.icon).Size(16, 16).TextColor(ink) })
+			seg.Children(func() { ui.Icon(c, side.icon).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
 			if seg.Clicked() && !on {
 				m.board[pid] = side.board
 			}

@@ -106,7 +106,7 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 	}
 	row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	row.Children(func() {
-		ui.Icon(c, theme.IconSearch).Size(14, 14).TextColor(t.TextTertiary).Shrink(0)
+		ui.Icon(c, theme.IconSearch).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary).Shrink(0)
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
 			theme.Compact.Apply(ui.TextInputBase(c.Key("search-input"), &s.query)).TextColor(t.Text).
@@ -119,7 +119,7 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 		case s.query != "":
 			clear := ui.ButtonBase(c.Key("search-clear")).Size(theme.HitTarget, theme.HitTarget).Margin(-4).Shrink(0).Center().
 				Radius(theme.RadiusControl).TextColor(t.TextTertiary).Label(m.say.ManageSearchClear()).Cursor(ui.CursorPointer)
-			clear.Children(func() { ui.Icon(c, theme.IconClose).Size(12, 12) })
+			clear.Children(func() { ui.Icon(c, theme.IconClose).Size(theme.IconSmall, theme.IconSmall) })
 			if clear.Clicked() {
 				m.clearSearch()
 			}
@@ -194,7 +194,7 @@ func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g searchGroup) {
 	ui.Row(c.Key("search-group-"+key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		ui.Box(c).Size(16, theme.Body.Line).Shrink(0).Center().Children(func() {
 			if g.inbox {
-				ui.Icon(c, theme.IconInbox).Size(14, 14).TextColor(t.TextTertiary)
+				ui.Icon(c, theme.IconInbox).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary)
 				return
 			}
 			theme.Text(c, theme.Body, t.TextTertiary, "#")

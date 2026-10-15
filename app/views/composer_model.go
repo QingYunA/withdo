@@ -104,7 +104,7 @@ func (m *Main) modelRow(c *ui.Context, t *theme.Tokens, s surface, p data.Provid
 		theme.Text(c, theme.Compact, t.Text, p.Name).Shrink(0)
 		theme.Text(c, theme.Meta, t.TextTertiary, p.Model).Grow(1).MinWidth(0).Ellipsis("…").TextAlign(ui.End)
 		if p.Active {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Accent).Shrink(0)
+			ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent).Shrink(0)
 		}
 	})
 	if row.Clicked() {

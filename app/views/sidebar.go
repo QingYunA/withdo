@@ -88,10 +88,9 @@ func (m *Main) agentsRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// avatarSlot is an avatar in the place of a row's 16 pt icon: 18 pt wide, so it takes a point of the
-// row's gap on each side and the labels stay in line.
+// avatarSlot is an avatar in the place of a row's 18 pt icon, so the labels stay in line.
 func avatarSlot(c *ui.Context, who theme.Who) {
-	theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarRow).Margin(0, -1)
+	theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarRow)
 }
 
 // unseenBadge is the red count of what agents handed over since the user last looked.
@@ -108,7 +107,7 @@ func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *
 	selected := m.nav == to && !m.searching()
 	row := sidebarRow(c, t, key, selected)
 	row.Children(func() {
-		ui.Icon(c, icon).Size(16, 16).TextColor(t.TextSecondary)
+		ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary)
 		sidebarLabel(c, t, label, selected)
 		sidebarCount(c, t, count)
 	})
@@ -124,7 +123,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row := sidebarRow(c, t, p.ID, selected)
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
-		ui.Icon(c, theme.IconFolder).Size(16, 16).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
+		ui.Icon(c, theme.IconFolder).Size(theme.IconRow, theme.IconRow).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
 		if renaming {
 			m.renameInput(c, t)
 		} else {
@@ -177,7 +176,7 @@ func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
 		if btn.Hovered() {
 			btn.Background(t.BgHover).TextColor(t.TextSecondary)
 		}
-		btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(14, 14) })
+		btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(theme.IconSmall, theme.IconSmall) })
 		if btn.Clicked() {
 			m.openNewProject()
 		}
@@ -187,7 +186,7 @@ func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
 func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	row := sidebarRow(c, t, "settings", false)
 	row.Children(func() {
-		ui.Icon(c, theme.IconGear).Size(16, 16).TextColor(t.TextSecondary)
+		ui.Icon(c, theme.IconGear).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary)
 		sidebarLabel(c, t, m.say.NavSettings(), false)
 		theme.Text(c, theme.Meta, t.TextTertiary, "⌘,").Shrink(0)
 	})

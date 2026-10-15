@@ -51,7 +51,7 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 func (m *Main) reportAvatar(c *ui.Context, t *theme.Tokens, r data.Report) {
 	if r.Agent == data.GitHubAgent {
 		ui.Box(c).Size(theme.AvatarRow, theme.AvatarRow).Shrink(0).Center().Children(func() {
-			ui.Icon(c, theme.IconOctocat).Size(theme.AvatarRow-2, theme.AvatarRow-2).TextColor(t.TextSecondary)
+			ui.Icon(c, theme.IconOctocat).Size(theme.AvatarRow, theme.AvatarRow).TextColor(t.TextSecondary)
 		})
 		return
 	}

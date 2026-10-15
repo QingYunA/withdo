@@ -104,7 +104,7 @@ func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTit
 	row := ui.Row(c.Key("receipt-" + itoa(r.ID))).Height(answerLineHeight).Shrink(0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer)
 	row.Children(func() {
-		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
+		ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done)).Shrink(0)
 		if verb != "" {
 			theme.Text(c, theme.Compact, quiet, verb).Shrink(0)
 		}

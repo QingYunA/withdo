@@ -52,7 +52,7 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 		theme.Text(c, theme.Compact, ink, s.label).Grow(1).MinWidth(0).Ellipsis("…")
 		switch {
 		case s.checked:
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(ink).Shrink(0)
+			ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(ink).Shrink(0)
 		case s.hint != "":
 			theme.Text(c, theme.Meta, quiet, s.hint).Shrink(0)
 		}

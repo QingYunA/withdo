@@ -144,7 +144,7 @@ func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		btn := valueButton(c, t, "pr").Label(m.say.A11yOpenPR(itoa(task.PRNumber))).Tooltip(task.PRURL)
 		btn.Children(func() {
 			theme.Text(c, theme.Mono, t.Accent, "#"+itoa(task.PRNumber))
-			ui.Icon(c, theme.IconArrowOut).Size(13, 13).TextColor(t.Accent)
+			ui.Icon(c, theme.IconArrowOut).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent)
 		})
 		if btn.Clicked() {
 			m.app.Act.OpenURL(task.PRURL)
