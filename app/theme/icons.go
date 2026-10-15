@@ -29,3 +29,32 @@ var (
 	IconBoard     = icon(`<rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.2 3v10M9.8 3v10"/>`)
 	IconBack      = icon(`<path d="M10 3.5 5.5 8l4.5 4.5"/>`)
 )
+
+// Icons of the v4 round (docs/design/mockups/v4.html): the sidebar, the inspector's properties
+// and the Settings toolbar.
+var (
+	IconDone     = icon(`<circle cx="8" cy="8" r="5.6"/><path d="m5.6 8.2 1.7 1.7 3.2-3.4"/>`)
+	IconStatus   = icon(`<circle cx="8" cy="8" r="5.6"/><path d="M8 2.4a5.6 5.6 0 0 1 0 11.2z" fill="currentColor" stroke="none"/>`)
+	IconAgent    = icon(`<rect x="3" y="4.5" width="10" height="8" rx="2"/><path d="M8 2.2v2.3M6 8.2v.6M10 8.2v.6"/>`)
+	IconBranch   = icon(`<circle cx="5" cy="3.8" r="1.4"/><circle cx="5" cy="12.2" r="1.4"/><circle cx="11" cy="5.8" r="1.4"/><path d="M5 5.2v5.6M11 7.2c0 2.4-2 3-6 3.4"/>`)
+	IconGeneral  = icon(`<path d="M3 4.5h6M11.5 4.5H13M3 11.5h1.5M7 11.5h6M3 8h10"/><circle cx="10.2" cy="4.5" r="1.4"/><circle cx="5.8" cy="11.5" r="1.4"/>`)
+	IconTerminal = icon(`<rect x="2" y="3" width="12" height="10" rx="2"/><path d="m4.8 6.5 2 1.8-2 1.8M8.6 10.3h2.6"/>`)
+	IconStar     = icon(`<path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z"/>`)
+	IconOctocat  = icon(`<path d="M8 2.2a5.8 5.8 0 0 0-1.8 11.3c.3 0 .4-.1.4-.3v-1c-1.6.3-2-.7-2-.7-.3-.7-.7-.9-.7-.9-.5-.4 0-.4 0-.4.6 0 .9.6.9.6.5.9 1.4.7 1.8.5 0-.4.2-.7.4-.8-1.3-.2-2.6-.7-2.6-2.9 0-.6.2-1.2.6-1.6-.1-.1-.3-.7 0-1.6 0 0 .5-.1 1.6.6a5.4 5.4 0 0 1 2.8 0c1.1-.7 1.6-.6 1.6-.6.3.9.1 1.5 0 1.6.4.4.6 1 .6 1.6 0 2.2-1.3 2.7-2.6 2.9.2.2.4.5.4 1v1.6c0 .2.1.3.4.3A5.8 5.8 0 0 0 8 2.2z"/>`)
+	IconFlag     = IconMilestone
+)
+
+// ProjectColors tint a project's folder; the color follows the project's name.
+var ProjectColors = []ui.Color{
+	ui.Hex("#5B5BD6"), ui.Hex("#E0A800"), ui.Hex("#30A46C"), ui.Hex("#E5484D"),
+	ui.Hex("#3B82F6"), ui.Hex("#D9488B"), ui.Hex("#0EA5A4"), ui.Hex("#E08A1E"),
+}
+
+// ProjectColor is the color of a project's folder in the sidebar.
+func ProjectColor(name string) ui.Color {
+	var h uint32 = 2166136261
+	for _, b := range []byte(name) {
+		h = (h ^ uint32(b)) * 16777619
+	}
+	return ProjectColors[h%uint32(len(ProjectColors))]
+}

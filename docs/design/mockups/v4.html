@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v4 — 日历、像素头像、图标、设置</title>
+<style>
+  :root {
+    --bg: #ffffff; --sidebar: #f4f4f6; --subtle: #f4f4f6; --hover: rgba(0,0,0,.035);
+    --selected: rgba(91,91,214,.10); --border: rgba(0,0,0,.08);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #a1a1a6;
+    --accent: #5b5bd6; --doing: #3b82f6; --blocked: #e5484d; --review: #e0a800; --done: #30a46c; --stale: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 12px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: var(--text2); max-width: 1100px; margin: -28px 4px 56px; }
+  .window { width: 1100px; height: 680px; background: var(--bg); border-radius: 12px; overflow: hidden; display: flex; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 24px 60px rgba(0,0,0,.16); margin-bottom: 44px; position: relative; }
+  .sidebar { width: 224px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 14px 10px; display: flex; flex-direction: column; flex: none; }
+  .lights { display: flex; gap: 8px; padding: 2px 6px 18px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .search { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: rgba(0,0,0,.045); color: var(--text3); font-size: 14px; margin-bottom: 10px; }
+  .nav { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: 8px; font-size: 14px; white-space: nowrap; }
+  .nav.sel { background: var(--selected); font-weight: 500; }
+  .nav svg.li { width: 16px; height: 16px; color: var(--text2); flex: none; }
+  .nav.sel svg.li { color: var(--accent); }
+  .nav .n { margin-left: auto; color: var(--text3); font-size: 13px; }
+  .nav .fd { width: 16px; height: 16px; flex: none; }
+  .group { display: flex; font: 600 12px/16px -apple-system, "PingFang SC"; color: var(--text3); padding: 18px 10px 6px; }
+  .group .plus { margin-left: auto; font-weight: 400; font-size: 16px; }
+  .foot { margin-top: auto; }
+  .main { flex: 1; min-width: 0; overflow: hidden; display: flex; }
+  .content { padding: 30px 48px 0; max-width: 760px; margin: 0 auto; flex: 1; min-width: 0; }
+  .content.wide { max-width: 980px; }
+  .head { display: flex; align-items: center; height: 34px; gap: 8px; }
+  h1 { font: 700 26px/32px -apple-system, "PingFang SC"; margin: 0; letter-spacing: -.2px; }
+  .views { margin-left: auto; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--subtle); }
+  .views span { width: 30px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--text3); font-size: 13px; }
+  .views span.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .views span.txt { width: auto; padding: 0 10px; }
+  .input { margin: 18px 0 8px; height: 50px; border-radius: 12px; background: var(--subtle); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 14px; }
+  .input .ph { color: var(--text3); font-size: 16px; flex: 1; }
+  .input kbd { font: 12px -apple-system; color: var(--text3); }
+  .gh { display: flex; align-items: center; gap: 9px; margin: 22px 0 2px; font-weight: 600; font-size: 15px; }
+  .gh .c { color: var(--text3); font-weight: 400; font-size: 13px; }
+  .g { width: 18px; height: 18px; flex: none; }
+  .row { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 10px 7px 10px; margin: 0 -10px; border-radius: 9px; }
+  .row.two { align-items: flex-start; }
+  .row.two .av { margin-top: 2px; }
+  .row.sel { background: var(--selected); }
+  .row .body { flex: 1; min-width: 0; }
+  .row .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 13px; line-height: 18px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .r { font-size: 13px; color: var(--text3); white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+  .row.done .t { color: var(--text2); }
+  .p1 { font: 600 11.5px/16px -apple-system; color: var(--text2); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; }
+  .p0 { font: 600 11.5px/16px -apple-system; color: var(--blocked); border: 1px solid rgba(229,72,77,.35); border-radius: 5px; padding: 0 5px; }
+  .live { width: 7px; height: 7px; border-radius: 50%; background: var(--doing); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+  .mono { font: 12.5px/18px "SF Mono", ui-monospace, monospace; color: var(--text2); }
+  .av { flex: none; display: inline-block; image-rendering: pixelated; }
+  .av svg { display: block; }
+
+  /* calendar */
+  .cal { margin-top: 14px; border-top: 1px solid var(--border); }
+  .dow { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 12px; color: var(--text3); padding: 8px 0 6px; }
+  .dow span { padding-left: 8px; }
+  .weeks { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 116px; border-left: 1px solid var(--border); }
+  .day { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 5px 5px 0; overflow: hidden; position: relative; }
+  .weeks .day:nth-child(-n+7) { border-top: 1px solid var(--border); }
+  .day.out .dn { color: var(--text3); }
+  .day.we { background: #fbfbfc; }
+  .dn { font-size: 12.5px; line-height: 20px; height: 20px; color: var(--text2); padding: 0 4px; display: inline-block; border-radius: 10px; }
+  .day.today .dn { background: var(--accent); color: #fff; font-weight: 600; min-width: 20px; text-align: center; padding: 0 6px; }
+  .day.pick { box-shadow: inset 0 0 0 2px rgba(91,91,214,.55); }
+  .chip { display: flex; align-items: center; gap: 5px; font-size: 12px; line-height: 18px; height: 20px; padding: 0 4px; border-radius: 5px; margin-top: 2px; white-space: nowrap; overflow: hidden; }
+  .chip .x { overflow: hidden; text-overflow: ellipsis; }
+  .chip .tm { color: var(--text3); font-variant-numeric: tabular-nums; }
+  .chip.done .x { color: var(--text3); text-decoration: line-through; }
+  .chip.over .x { color: var(--blocked); }
+  .chip.ms { color: var(--accent); background: var(--selected); font-weight: 500; }
+  .chip.hl { background: var(--hover); }
+  .chip.more { color: var(--text3); padding-left: 6px; }
+  .chip svg.li { width: 12px; height: 12px; flex: none; }
+
+  /* inspector */
+  .insp { width: 360px; border-left: 1px solid var(--border); padding: 26px 22px; flex: none; }
+  .insp h2 { font: 600 19px/26px -apple-system, "PingFang SC"; margin: 0 0 4px; }
+  .insp .top { font-size: 12.5px; color: var(--text3); }
+  .prop { display: flex; font-size: 13.5px; line-height: 30px; }
+  .prop .k { width: 84px; color: var(--text2); display: flex; align-items: center; gap: 7px; }
+  .prop .k svg { width: 14px; height: 14px; }
+  .sec { font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--text2); margin: 22px 0 8px; }
+  .ev { display: flex; gap: 10px; padding: 6px 0; }
+  .ev .w { flex: 1; min-width: 0; font-size: 13.5px; line-height: 20px; }
+  .ev .w .m { font-size: 12px; color: var(--text3); }
+  .ev .rail { display: flex; flex-direction: column; align-items: center; }
+  .ev .rail i { width: 1px; flex: 1; background: var(--border); margin-top: 4px; }
+
+  /* avatars sheet */
+  .sheet { display: flex; flex-wrap: wrap; gap: 26px 34px; padding: 36px 44px; }
+  .who { width: 112px; text-align: center; }
+  .who .nm { font-size: 13.5px; font-weight: 500; margin-top: 10px; }
+  .who .ds { font-size: 12px; color: var(--text3); line-height: 17px; }
+  .tile { width: 96px; height: 96px; border-radius: 22px; background: var(--subtle); display: grid; place-items: center; margin: 0 auto; }
+
+  /* menu */
+  .menu { position: absolute; width: 232px; background: rgba(255,255,255,.97); border-radius: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 10px 32px rgba(0,0,0,.16); padding: 5px; font-size: 13.5px; }
+  .mi { display: flex; align-items: center; gap: 9px; height: 28px; padding: 0 9px; border-radius: 6px; }
+  .mi svg { width: 15px; height: 15px; color: var(--text2); flex: none; }
+  .mi .sh { margin-left: auto; color: var(--text3); font-size: 12px; }
+  .mi.on { background: var(--accent); color: #fff; }
+  .mi.on svg, .mi.on .sh { color: #fff; }
+  .mi.red, .mi.red svg { color: var(--blocked); }
+  .sep { height: 1px; background: var(--border); margin: 4px 8px; }
+
+  .empty { text-align: center; padding-top: 70px; }
+  .empty .t1 { font-weight: 600; font-size: 16px; margin-top: 18px; }
+  .empty .t2 { font-size: 13.5px; color: var(--text2); margin-top: 4px; }
+
+  /* settings */
+  .sw { width: 680px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 24px 60px rgba(0,0,0,.16); overflow: hidden; margin-bottom: 44px; }
+  .sbar { height: 86px; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); background: #fafafb; }
+  .sbar .lights { padding: 14px 16px 0; }
+  .tabs { display: flex; justify-content: center; gap: 4px; margin-top: -8px; }
+  .tab { width: 78px; height: 52px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: var(--text2); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { background: rgba(0,0,0,.055); color: var(--accent); }
+  .sbody { padding: 22px 36px; height: 434px; }
+  .lbl { font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 10px; }
+  .cur { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; background: var(--subtle); }
+  .cur .nm { font-weight: 600; }
+  .cur .sub { font-size: 13px; color: var(--text2); }
+  .ok { color: var(--done); font-size: 13px; }
+  .btn { margin-left: auto; font-size: 13px; padding: 5px 13px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px var(--border), 0 1px 1px rgba(0,0,0,.04); }
+  .btn.pri { background: var(--accent); color: #fff; box-shadow: none; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #fff; font: 700 15px/1 -apple-system; flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .pv { height: 76px; border-radius: 11px; box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text); position: relative; }
+  .pv .logo { width: 32px; height: 32px; font-size: 13px; border-radius: 9px; }
+  .pv.on { box-shadow: 0 0 0 2px var(--accent); background: rgba(91,91,214,.04); }
+  .pv .cm { position: absolute; top: 5px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--done); }
+  .form { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--subtle); }
+  .fr { display: flex; align-items: center; gap: 12px; font-size: 13.5px; margin-bottom: 10px; }
+  .fr .k { width: 56px; color: var(--text2); }
+  .field { flex: 1; height: 32px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px var(--border); display: flex; align-items: center; padding: 0 10px; font-size: 13.5px; }
+  .field.ph { color: var(--text3); }
+  .field .chev { margin-left: auto; color: var(--text3); }
+  .link { color: var(--accent); font-size: 13px; white-space: nowrap; }
+  .arow { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+  .arow .nm { font-weight: 500; }
+  .arow .sub { font-size: 12.5px; color: var(--text3); }
+  .arow .r { margin-left: auto; font-size: 12.5px; color: var(--text2); text-align: right; }
+  .tag { font-size: 12px; color: var(--text2); background: var(--subtle); border-radius: 6px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="todo" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#8e8e93" stroke-width="1.5"/></symbol>
+  <symbol id="doing" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#3b82f6" stroke-width="1.5"/><path d="M9 4.2a4.8 4.8 0 0 1 0 9.6z" fill="#3b82f6"/></symbol>
+  <symbol id="review" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#e0a800" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="#e0a800"/></symbol>
+  <symbol id="done" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="#30a46c"/><path d="M5.6 9.2l2.3 2.3 4.5-4.7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <!-- line icons, 16 viewBox, 1.4 stroke: the app's own set plus the new ones -->
+  <g id="i-defs"></g>
+</defs></svg>
+
+<!-- 1. calendar -->
+<div class="caption">1 · 日历：一个月一屏，人和 Agent 的事都在格子里，用头像区分</div>
+<div class="window" style="height:820px">
+  <div class="sidebar" data-sb="cal"></div>
+  <div class="main"><div class="content wide">
+    <div class="head"><h1>2026 年 10 月</h1><span class="views"><span class="txt">‹</span><span class="txt on">今天</span><span class="txt">›</span></span></div>
+    <div class="input"><span class="av" data-a="buddy" data-s="2"></span><span class="ph">添加到 10 月 16 日周五，或者问我任何事</span><kbd>⌘K</kbd></div>
+    <div class="cal">
+      <div class="dow"><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span></div>
+      <div class="weeks" id="weeks"></div>
+    </div>
+  </div></div>
+</div>
+<p class="note">侧边栏多一个“日历”。格子里放有日子的任务：截止（标题）、提醒（带时间）、完成（划掉，记在完成那天），里程碑是一条紫色标签。每条前面一个小像素头像：你写的、助手帮你记的、Claude Code / Codex 做完的，一眼分得清。点一天选中它，上面的输入框就“添加到这一天”；点一条打开检查器；把一条拖到别的日子就改它的日期。超过 3 条显示“还有 2 项”。顶栏只有月份和 ‹ 今天 ›。</p>
+
+<!-- 2. list + inspector with avatars and reports -->
+<div class="caption">2 · 列表和检查器：每行前面是作者头像；Agent 的汇报更勤、用你的语言</div>
+<div class="window" style="height:640px">
+  <div class="sidebar" data-sb="proj"></div>
+  <div class="main">
+    <div class="content" style="padding-right:32px">
+      <div class="head"><h1>adhd-todo</h1><span class="views"><span class="on"><svg width="15" height="15"><use href="#i-list"/></svg></span><span><svg width="15" height="15"><use href="#i-board"/></svg></span></span></div>
+      <div class="input"><span class="av" data-a="buddy" data-s="2"></span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+      <div class="gh"><svg class="g"><use href="#doing"/></svg>进行中 <span class="c">2</span></div>
+      <div class="row two sel"><span class="av" data-a="claude" data-s="2"></span><div class="body"><div class="t">M5：日历、像素头像、设置重做</div><div class="s">Claude Code · main · 设计稿 v4 画好了，等你确认</div></div><div class="r"><span class="live"></span>刚刚</div></div>
+      <div class="row two"><span class="av" data-a="codex" data-s="2"></span><div class="body"><div class="t">补 reply parser 的边界测试</div><div class="s">Codex · test/parser · 38 个用例跑完，修了 2 个</div></div><div class="r">6 分钟前</div></div>
+      <div class="gh"><svg class="g"><use href="#todo"/></svg>待办 <span class="c">2</span></div>
+      <div class="row"><span class="av" data-a="you" data-s="2"></span><div class="body"><div class="t">修登录跳转死循环</div></div><div class="r"><span class="p1">P1</span>周五</div></div>
+      <div class="row"><span class="av" data-a="you" data-s="2"></span><div class="body"><div class="t">把 v0.3 的发布说明写完</div></div><div class="r">10 月 20 日</div></div>
+      <div class="gh"><svg class="g"><use href="#done"/></svg>已完成 <span class="c">1</span></div>
+      <div class="row done"><span class="av" data-a="claude" data-s="2"></span><div class="body"><div class="t">界面收敛：一行标题、一个输入框、一份列表</div></div><div class="r">今天</div></div>
+    </div>
+    <div class="insp">
+      <div class="top">adhd-todo · main</div>
+      <h2>M5：日历、像素头像、设置重做</h2>
+      <div class="prop" style="margin-top:10px"><span class="k"><svg><use href="#i-status"/></svg>状态</span><span>进行中</span></div>
+      <div class="prop"><span class="k"><svg><use href="#i-agent"/></svg>来自</span><span style="display:flex;align-items:center;gap:6px"><span class="av" data-a="claude" data-s="1"></span>Claude Code</span></div>
+      <div class="prop"><span class="k"><svg><use href="#i-branch"/></svg>分支</span><span class="mono" style="line-height:30px">main</span></div>
+      <div class="sec">动态</div>
+      <div class="ev"><div class="rail"><span class="av" data-a="claude" data-s="1"></span><i></i></div><div class="w">设计稿 v4 画好了，等你确认<div class="m">11:05 · 下一步：按你的意见改，然后分给子代理实现</div></div></div>
+      <div class="ev"><div class="rail"><span class="av" data-a="claude" data-s="1"></span><i></i></div><div class="w">找到设置页闪烁的原因：切页时窗口高度改了两次<div class="m">10:52</div></div></div>
+      <div class="ev"><div class="rail"><span class="av" data-a="claude" data-s="1"></span><i></i></div><div class="w">调研 cc-switch 和 magpie 添加供应商的做法<div class="m">10:47</div></div></div>
+      <div class="ev"><div class="rail"><span class="av" data-a="claude" data-s="1"></span></div><div class="w">开始：日历、Agent 汇报、像素图标、设置重做<div class="m">10:44</div></div></div>
+    </div>
+  </div>
+</div>
+<p class="note">任务行前面一个 18 pt 的像素头像：你自己写的（或者让助手帮你记的）是“你”，Agent 建的是它自己的头像，看板卡片、日历、检查器动态里用同一套。Agent 汇报改成每做完一步就报一次（开始、查清楚了、做完一块、卡住、开 PR、完成），并且用你和它对话的语言写，所以这里全是中文。</p>
+
+<!-- 3. avatars -->
+<div class="caption">3 · 像素头像一套（12 × 12 格，放大看）</div>
+<div class="window" style="height:auto;display:block">
+  <div class="sheet">
+    <div class="who"><div class="tile"><span class="av" data-a="you" data-s="6"></span></div><div class="nm">你</div><div class="ds">你写的，或让助手帮你记的</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="buddy" data-s="6"></span></div><div class="nm">助手</div><div class="ds">App 里的助手，在输入框和回答里</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="claude" data-s="6"></span></div><div class="nm">Claude Code</div><div class="ds">clientInfo 名字含 claude</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="codex" data-s="6"></span></div><div class="nm">Codex</div><div class="ds">含 codex</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="cursor" data-s="6"></span></div><div class="nm">Cursor</div><div class="ds">含 cursor</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="gemini" data-s="6"></span></div><div class="nm">Gemini CLI</div><div class="ds">含 gemini</div></div>
+    <div class="who"><div class="tile"><span class="av" data-a="bot" data-s="6"></span></div><div class="nm">其他 Agent</div><div class="ds">认不出名字时，颜色按名字定</div></div>
+  </div>
+</div>
+<p class="note">头像是像素风，界面图标仍是细线条：头像是“角色”，图标是“工具”，两套不混。“你”和“助手”是这个产品自己的两个角色，常一起出现在空状态里。Agent 头像靠 MCP 握手时的 clientInfo 名字认，认不出就用灰色小机器人，颜色由名字决定，不同的未知 Agent 也能分开。大小只用三档：12（日历）、18（列表、动态）、72（空状态），都是整数倍放大，边缘不糊。</p>
+
+<!-- 4. menu + empty -->
+<div class="caption">4 · 更多图标：侧边栏、右键菜单、检查器属性；空状态用像素插画</div>
+<div class="window" style="height:560px">
+  <div class="sidebar" data-sb="now"></div>
+  <div class="main">
+    <div class="content" style="position:relative">
+      <div class="head"><h1>现在</h1><span style="margin-left:10px;color:var(--text3);font-size:15px;font-weight:400">10 月 15 日 周四</span></div>
+      <div class="input"><span class="av" data-a="buddy" data-s="2"></span><span class="ph">告诉我任何事，我来变成任务</span><kbd>⌘K</kbd></div>
+      <div class="empty">
+        <span class="av" data-a="duo" data-s="5"></span>
+        <div class="t1">现在没有要你处理的事</div>
+        <div class="t2">Agent 们在干活，有动静会出现在这里</div>
+      </div>
+    </div>
+    <div style="width:380px;border-left:1px solid var(--border);position:relative;padding:30px 24px">
+      <div class="gh" style="margin-top:0"><svg class="g"><use href="#todo"/></svg>待办 <span class="c">2</span></div>
+      <div class="row sel"><span class="av" data-a="you" data-s="2"></span><div class="body"><div class="t">修登录跳转死循环</div></div><div class="r"><span class="p1">P1</span>周五</div></div>
+      <div class="row"><span class="av" data-a="you" data-s="2"></span><div class="body"><div class="t">把 v0.3 的发布说明写完</div></div></div>
+      <div class="menu" style="left:110px;top:118px">
+        <div class="mi"><svg><use href="#i-check"/></svg>标记完成<span class="sh">⌘↵</span></div>
+        <div class="mi on"><svg><use href="#i-bell"/></svg>提醒我…</div>
+        <div class="mi"><svg><use href="#i-cal"/></svg>截止日期…</div>
+        <div class="mi"><svg><use href="#i-flag"/></svg>优先级<span class="sh">›</span></div>
+        <div class="mi"><svg><use href="#i-move"/></svg>移到…<span class="sh">›</span></div>
+        <div class="sep"></div>
+        <div class="mi"><svg><use href="#i-copy"/></svg>复制标题</div>
+        <div class="mi red"><svg><use href="#i-trash"/></svg>删除<span class="sh">⌫</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="note">侧边栏每项都有图标；项目用一个带颜色的小文件夹（颜色按项目名自动给，不用你选）。右键菜单每项前面一个线条图标，危险操作是红色。空页面不再只有一句灰字：“你”和“助手”两个像素小人站在一起，提醒这是你们俩共用的清单。</p>
+
+<!-- 5. settings -->
+<div class="caption">5 · 设置 · 助手：平时只有一行“当前在用”</div>
+<div class="sw">
+  <div class="sbar"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="tabs" data-tabs="1"></div></div>
+  <div class="sbody">
+    <div class="lbl">当前在用</div>
+    <div class="cur"><span class="logo" style="background:#4d6bfe">DS</span><div><div class="nm">DeepSeek</div><div class="sub">deepseek-chat · <span class="ok">● 已连接 · 312 ms</span></div></div><span class="btn">更换</span></div>
+    <div class="lbl" style="margin-top:26px">也配好了</div>
+    <div class="arow"><span class="logo" style="width:28px;height:28px;font-size:12px;border-radius:8px;background:#d97757">A</span><div><div class="nm" style="font-size:14px">Anthropic</div><div class="sub">claude-haiku-5-5</div></div><span class="r link">用这个</span></div>
+    <div class="arow" style="border:0"><span class="logo" style="width:28px;height:28px;font-size:12px;border-radius:8px;background:#222">◉</span><div><div class="nm" style="font-size:14px">Ollama</div><div class="sub">qwen3:8b · 本机，不需要 key</div></div><span class="r link">用这个</span></div>
+  </div>
+</div>
+<p class="note">设置窗口固定大小（680 × 520），切页不再改窗口高度，闪烁就没了。助手页平时只有“当前在用”一行：厂商、模型、连通状态，加一个“更换”。以前配过的厂商列在下面，点“用这个”直接切。没有 Base URL、协议这些字段。</p>
+
+<div class="caption">6 · 设置 · 助手 · 更换：点一个厂商，贴 key，就好了</div>
+<div class="sw">
+  <div class="sbar"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="tabs" data-tabs="1"></div></div>
+  <div class="sbody">
+    <div class="lbl" style="display:flex">选一个厂商<span style="margin-left:auto;font-weight:400" class="link">完成</span></div>
+    <div class="grid" id="presets"></div>
+    <div class="form">
+      <div class="fr"><span class="k">API Key</span><span class="field ph">粘贴 Kimi 的 key</span><span class="link">去拿 key ↗</span></div>
+      <div class="fr" style="margin-bottom:0"><span class="k">模型</span><span class="field">kimi-k2-turbo-preview<span class="chev">⌄</span></span><span class="btn pri" style="margin-left:0">保存并测试</span></div>
+    </div>
+  </div>
+</div>
+<p class="note">学 magpie：一屏 12 个厂商图块（Anthropic、OpenAI、DeepSeek、Kimi、智谱、通义千问、Gemini、OpenRouter、硅基流动、Ollama、Magpie、自定义），绿点表示已配好。点一个，下面只出现 key 和模型两项；模型列表保存 key 后从厂商拉，拉不到就用内置推荐。“保存并测试”真的发一条请求，成功就直接设为当前在用，没有单独的“启用”。选“自定义”才多出名称、地址、OpenAI / Anthropic 兼容三项。</p>
+
+<div class="caption">7 · 设置 · Agent：谁接进来了，最近一次汇报在什么时候</div>
+<div class="sw">
+  <div class="sbar"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="tabs" data-tabs="2"></div></div>
+  <div class="sbody">
+    <div class="lbl">接入的 Agent</div>
+    <div class="arow"><span class="av" data-a="claude" data-s="3"></span><div><div class="nm">Claude Code</div><div class="sub">今天汇报 14 次</div></div><span class="r">2 分钟前</span></div>
+    <div class="arow"><span class="av" data-a="codex" data-s="3"></span><div><div class="nm">Codex</div><div class="sub">今天汇报 6 次</div></div><span class="r">6 分钟前</span></div>
+    <div class="arow" style="border:0"><span class="av" data-a="bot" data-s="3" data-c="#0ea5a4"></span><div><div class="nm">opencode</div><div class="sub">还没汇报过</div></div><span class="r">—</span></div>
+    <div class="lbl" style="margin-top:22px">接入新的 Agent</div>
+    <div class="cur" style="font-size:13px;display:block"><div class="mono" style="color:var(--text)">claude mcp add adhd-todo -- ~/.local/bin/adhd-core mcp</div><div style="margin-top:8px;display:flex;gap:8px"><span class="tag">Claude Code</span><span class="tag">Codex</span><span class="tag">Cursor</span><span class="tag">Gemini CLI</span><span class="link" style="margin-left:auto">复制</span></div></div>
+  </div>
+</div>
+<p class="note">Agent 页列出接入过的 Agent（头像、今天汇报几次、最近一次），下面是接入命令，点标签切换不同 Agent 的写法。汇报语言不用设置：MCP 说明里要求 Agent 用你和它对话的语言写，认不出时用 App 的界面语言。</p>
+
+<script>
+// ---------- pixel avatars: 12 x 12 grids ----------
+const P = {
+  you: { pal: { h: '#3a3550', s: '#f3c7a0', e: '#2b2838', b: '#5b5bd6', d: '#4646b8', c: '#e88b8b' }, g: [
+    '...hhhhhh...',
+    '..hhhhhhhh..',
+    '.hhhhhhhhhh.',
+    '.hhssssssh..',
+    '.hsesssses..',
+    '..ssssssss..',
+    '..scsssscs..',
+    '...ssssss...',
+    '..bbbbbbbb..',
+    '.bbbbddbbbb.',
+    '.bbbbddbbbb.',
+    '.bbbbbbbbbb.' ] },
+  buddy: { pal: { a: '#f5c542', p: '#7c6cf0', d: '#5b4fd0', w: '#ffffff', e: '#231f3a', k: '#f0a3c0' }, g: [
+    '.....a......',
+    '....aaa.....',
+    '.....a......',
+    '...pppppp...',
+    '..pppppppp..',
+    '.pppwwppwwp.',
+    '.pppweppwep.',
+    '.pkpppppppk.',
+    '.pppppddppp.',
+    '.pppppppppp.',
+    '.pp.pp.pp.p.',
+    '.p..p..p..p.' ] },
+  claude: { pal: { o: '#d97757', d: '#b85c3e', e: '#2b1d17' }, g: [
+    '............',
+    '............',
+    '..oooooooo..',
+    '..oooooooo..',
+    '..oeooooeo..',
+    'oooeooooeooo',
+    'oooooooooooo',
+    '..oooooooo..',
+    '..oooooooo..',
+    '..d.d..d.d..',
+    '..d.d..d.d..',
+    '............' ] },
+  codex: { pal: { b: '#5b7cfa', d: '#4a5ee0', w: '#ffffff' }, g: [
+    '............',
+    '...bbb.bbb..',
+    '..bbbbbbbbb.',
+    '.bbbbbbbbbbb',
+    '.bwbbbbbbbbb',
+    'bbbwbbbbbbbb',
+    'bbbbwbbbbbbb',
+    'bbbwbbbbbbbb',
+    'bbwbbbwwwbbb',
+    '.ddddddddddd',
+    '..dddd.dddd.',
+    '............' ] },
+  cursor: { pal: { k: '#26262b', w: '#ffffff' }, g: [
+    '.k..........',
+    '.kk.........',
+    '.kwk........',
+    '.kwwk.......',
+    '.kwwwk......',
+    '.kwwwwk.....',
+    '.kwwwwwk....',
+    '.kwwwwwwk...',
+    '.kwwwkkkk...',
+    '.kwkwk......',
+    '.kk.kwk.....',
+    '.....kk.....' ] },
+  gemini: { pal: { b: '#4f8ef7', v: '#9b6cf0', l: '#8fc4ff' }, g: [
+    '.....b......',
+    '.....b......',
+    '....bbb.....',
+    '....bbb.....',
+    '..lbbbbbv...',
+    'lllbbbbbvvv.',
+    '..lbbbbbv...',
+    '....vvv.....',
+    '....vvv.....',
+    '.....v......',
+    '.....v......',
+    '............' ] },
+  bot: { pal: { m: '#8e8e99', d: '#6b6b76', w: '#ffffff', e: '#2a2a33', a: '#c9c9d1' }, g: [
+    '.....a......',
+    '.....m......',
+    '..mmmmmmmm..',
+    '..mmmmmmmm..',
+    '.dmwwmmwwmd.',
+    '.dmwemmwemd.',
+    '.dmmmmmmmmd.',
+    '..mmeeeemm..',
+    '..mmmmmmmm..',
+    '...dddddd...',
+    '..dd....dd..',
+    '............' ] },
+};
+// the empty-state pair: you and the assistant side by side
+P.duo = { pal: Object.assign({}, P.you.pal, P.buddy.pal), g: P.you.g.map((r, i) => r + '..' + P.buddy.g[i]) };
+
+function pixel(name, s, tint) {
+  const a = P[name]; const w = a.g[0].length, h = a.g.length;
+  const pal = Object.assign({}, a.pal);
+  if (tint) { pal.m = tint; pal.d = tint; }
+  let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
+  return `<svg width="${w * s * (name==='duo'?1:1)}" height="${h * s}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">${r}</svg>`;
+}
+document.querySelectorAll('.av').forEach(el => {
+  const s = +el.dataset.s; const size = s === 1 ? 1.5 : s;
+  el.innerHTML = pixel(el.dataset.a, size, el.dataset.c);
+});
+
+// ---------- line icons ----------
+const I = {
+  now: '<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.9" fill="currentColor" stroke="none"/>',
+  inbox: '<path d="M2.5 9.5 4.4 3.9a1 1 0 0 1 .95-.65h5.3a1 1 0 0 1 .95.65L13.5 9.5v2.6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><path d="M2.5 9.5h3.2l.6 1.4h3.4l.6-1.4h3.2"/>',
+  cal: '<rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 6.8h11M5.5 2v2.4M10.5 2v2.4"/>',
+  done: '<circle cx="8" cy="8" r="5.6"/><path d="m5.6 8.2 1.7 1.7 3.2-3.4"/>',
+  gear: '<circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.5M8 12.6v1.5M13.4 5l-1.3.75M3.9 10.25 2.6 11M13.4 11l-1.3-.75M3.9 5.75 2.6 5"/>',
+  search: '<circle cx="7" cy="7" r="4.2"/><path d="m10.2 10.2 3.3 3.3"/>',
+  list: '<path d="M3 4.5h10M3 8h10M3 11.5h10"/>',
+  board: '<rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.2 3v10M9.8 3v10"/>',
+  check: '<path d="m3.5 8.4 3 3 6-6.6"/>',
+  bell: '<path d="M8 2.5a3.6 3.6 0 0 0-3.6 3.6v2.6L3.2 10.6h9.6l-1.2-1.9V6.1A3.6 3.6 0 0 0 8 2.5zM6.6 12.2a1.4 1.4 0 0 0 2.8 0"/>',
+  flag: '<path d="M4 13.5v-11M4 3h7.5l-1.8 2.8 1.8 2.8H4"/>',
+  move: '<path d="M3 8h10M9 4l4 4-4 4"/>',
+  copy: '<rect x="5.5" y="5.5" width="8" height="8" rx="1.8"/><path d="M10.5 5.5V4.3a1.8 1.8 0 0 0-1.8-1.8H4.3a1.8 1.8 0 0 0-1.8 1.8v4.4a1.8 1.8 0 0 0 1.8 1.8h1.2"/>',
+  trash: '<path d="M3 4.5h10M6.4 4.5V3h3.2v1.5M4.4 4.5l.6 8.2h6l.6-8.2M6.9 7v3.6M9.1 7v3.6"/>',
+  status: '<circle cx="8" cy="8" r="5.6"/><path d="M8 2.4a5.6 5.6 0 0 1 0 11.2z" fill="currentColor" stroke="none"/>',
+  agent: '<rect x="3" y="4.5" width="10" height="8" rx="2"/><path d="M8 2.2v2.3M6 8.2v.6M10 8.2v.6"/>',
+  branch: '<circle cx="5" cy="3.8" r="1.4"/><circle cx="5" cy="12.2" r="1.4"/><circle cx="11" cy="5.8" r="1.4"/><path d="M5 5.2v5.6M11 7.2c0 2.4-2 3-6 3.4"/>',
+  folder: '<path d="M2.5 5a1.5 1.5 0 0 1 1.5-1.5h2.4l1.4 1.5H12a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 13H4a1.5 1.5 0 0 1-1.5-1.5z"/>',
+  general: '<path d="M3 4.5h6M11.5 4.5H13M3 11.5h1.5M7 11.5h6"/><circle cx="10.2" cy="4.5" r="1.4"/><circle cx="5.8" cy="11.5" r="1.4"/><path d="M3 8h10"/>',
+  assistant: '<path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z"/>',
+  terminal: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="m4.8 6.5 2 1.8-2 1.8M8.6 10.3h2.6"/>',
+  github: '<path d="M8 2.2a5.8 5.8 0 0 0-1.8 11.3c.3 0 .4-.1.4-.3v-1c-1.6.3-2-.7-2-.7-.3-.7-.7-.9-.7-.9-.5-.4 0-.4 0-.4.6 0 .9.6.9.6.5.9 1.4.7 1.8.5 0-.4.2-.7.4-.8-1.3-.2-2.6-.7-2.6-2.9 0-.6.2-1.2.6-1.6-.1-.1-.3-.7 0-1.6 0 0 .5-.1 1.6.6a5.4 5.4 0 0 1 2.8 0c1.1-.7 1.6-.6 1.6-.6.3.9.1 1.5 0 1.6.4.4.6 1 .6 1.6 0 2.2-1.3 2.7-2.6 2.9.2.2.4.5.4 1v1.6c0 .2.1.3.4.3A5.8 5.8 0 0 0 8 2.2z"/>',
+};
+const defs = document.querySelector('defs');
+defs.insertAdjacentHTML('beforeend', Object.entries(I).map(([k, v]) =>
+  `<symbol id="i-${k}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${v}</symbol>`).join(''));
+const ic = (k, cls = 'li', style = '') => `<svg class="${cls}" style="${style}"><use href="#i-${k}"/></svg>`;
+
+// ---------- sidebars ----------
+const projColor = { 'adhd-todo': '#5b5bd6', 'answer-me-with-html': '#e0a800', 'mygo': '#30a46c' };
+function sidebar(sel) {
+  const nav = (k, icon, label, n) => `<div class="nav${sel === k ? ' sel' : ''}">${ic(icon)}${label}${n ? `<span class="n">${n}</span>` : ''}</div>`;
+  const proj = (name, n) => `<div class="nav${sel === 'proj' && name === 'adhd-todo' ? ' sel' : ''}"><svg class="fd" style="color:${projColor[name]}"><use href="#i-folder"/></svg>${name}${n ? `<span class="n">${n}</span>` : ''}</div>`;
+  return `<div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">${ic('search', 'li', 'width:14px;height:14px')}搜索</div>
+    ${nav('now', 'now', '现在', 3)}${nav('inbox', 'inbox', '收件箱', 2)}${nav('cal', 'cal', '日历')}${nav('done', 'done', '已完成')}
+    <div class="group">项目<span class="plus">+</span></div>
+    ${proj('adhd-todo', 4)}${proj('answer-me-with-html')}${proj('mygo')}
+    <div class="nav foot">${ic('gear')}设置</div>`;
+}
+document.querySelectorAll('[data-sb]').forEach(el => el.innerHTML = sidebar(el.dataset.sb));
+
+// ---------- settings tabs ----------
+document.querySelectorAll('[data-tabs]').forEach(el => {
+  const on = +el.dataset.tabs;
+  el.innerHTML = [['general', '通用'], ['assistant', '助手'], ['terminal', 'Agent'], ['github', 'GitHub']]
+    .map(([k, l], i) => `<div class="tab${i === on ? ' on' : ''}">${ic(k, '', 'width:20px;height:20px')}${l}</div>`).join('');
+});
+
+// ---------- presets ----------
+const pv = [['Anthropic', 'A', '#d97757', 1], ['OpenAI', '◎', '#111', 0], ['DeepSeek', 'DS', '#4d6bfe', 1], ['Kimi', 'K', '#1a1a1a', 0, 1], ['智谱', 'Z', '#3859ff', 0], ['通义千问', 'Q', '#615ced', 0],
+  ['Gemini', '✦', 'linear-gradient(135deg,#4f8ef7,#9b6cf0)', 0], ['OpenRouter', 'OR', '#6466f1', 0], ['硅基流动', 'SF', '#7c3aed', 0], ['Ollama', '◉', '#222', 1], ['Magpie', 'M', '#0f766e', 0], ['自定义', '+', '#a1a1a6', 0]];
+document.getElementById('presets').innerHTML = pv.map(([n, l, c, ok, on]) =>
+  `<div class="pv${on ? ' on' : ''}">${ok ? '<span class="cm"></span>' : ''}<span class="logo" style="background:${c}">${l}</span>${n}</div>`).join('');
+
+// ---------- calendar ----------
+const ch = (a, text, cls = '', tm = '') => `<div class="chip ${cls}"><span class="av">${pixel(a, 1)}</span>${tm ? `<span class="tm">${tm}</span>` : ''}<span class="x">${text}</span></div>`;
+const ms = text => `<div class="chip ms">${ic('flag', 'li')}<span class="x">${text}</span></div>`;
+const items = {
+  '9-30': [ch('you', '交水电费', 'done')],
+  '10-2': [ch('claude', 'M2 助手上线', 'done')],
+  '10-8': [ch('claude', 'M3 设置窗口', 'done'), ch('you', '体检报告', 'done')],
+  '10-9': [ch('you', '给房东回消息', 'over')],
+  '10-12': [ch('codex', '补 store 迁移测试', 'done')],
+  '10-13': [ch('claude', 'M4 GitHub 轮询', 'done'), ch('you', '交房租', 'done')],
+  '10-14': [ch('claude', '界面收敛 v3', 'done')],
+  '10-15': [ch('claude', 'M5 日历与头像'), ch('you', '牙医复诊', '', '14:00'), ch('codex', 'parser 边界测试'), `<div class="chip more">还有 2 项</div>`],
+  '10-16': [ch('you', '修登录跳转死循环', 'hl'), ch('you', 'Review PR 12', '', '09:00')],
+  '10-17': [ch('you', '跑步', '', '10:00')],
+  '10-20': [ch('you', '写 v0.3 发布说明')],
+  '10-22': [ch('buddy', '续费域名', '', '20:00')],
+  '10-23': [ms('v0.3 发布')],
+  '10-27': [ch('you', '季度复盘')],
+  '10-28': [ms('v0.2 native')],
+};
+let html = '';
+const start = new Date(2026, 8, 28);
+for (let i = 0; i < 35; i++) {
+  const d = new Date(start); d.setDate(start.getDate() + i);
+  const m = d.getMonth() + 1, day = d.getDate(), key = `${m}-${day}`;
+  const cls = ['day', m !== 10 ? 'out' : '', i % 7 >= 5 ? 'we' : '', key === '10-15' ? 'today' : '', key === '10-16' ? 'pick' : ''].join(' ');
+  const label = day === 1 ? `${m} 月 1 日` : day;
+  html += `<div class="${cls}"><span class="dn">${label}</span>${(items[key] || []).join('')}</div>`;
+}
+document.getElementById('weeks').innerHTML = html;
+</script>
+</body>
+</html>

@@ -123,7 +123,8 @@ func TestInitializeAdvertisesNameAndInstructions(t *testing.T) {
 	if init.ServerInfo.Name != "adhd-todo" {
 		t.Errorf("server name = %q", init.ServerInfo.Name)
 	}
-	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd"} {
+	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd",
+		"after each step", "in the language the user writes to you in"} {
 		if !strings.Contains(init.Instructions, w) {
 			t.Errorf("instructions lack %q", w)
 		}

@@ -18,13 +18,15 @@ import (
 // call report_progress.
 var Instructions = strings.Join([]string{
 	"adhd-todo tracks what coding agents are doing across repos, branches and pull requests, so the user can see everything in one place.",
-	"Call report_progress:",
+	"The user watches these reports while you work, so report often. Call report_progress:",
 	"- when you start a task (summary = the goal; status \"doing\"),",
+	"- after each step: you understood the problem, finished a part, ran the tests, changed your plan,",
 	"- when you get blocked (status \"blocked\"; say in next_step what you need),",
 	"- when you open a PR (pr_url, status \"review\"),",
 	"- when you finish (status \"done\").",
+	"Write summary, next_step and title in the language the user writes to you in (Chinese if they write Chinese), however the code and the repo are written.",
 	"Always pass cwd: your current working directory. The server process may run in a different directory, and in a git worktree cwd decides the branch.",
-	"Calls from the same repo and branch update one task, so keep each report short. Pass task_id if you have it.",
+	"Calls from the same repo and branch update one task, so keep each report to one or two short sentences. Pass task_id if you have it.",
 	"Do not report trivial questions or read-only exploration.",
 }, "\n")
 
