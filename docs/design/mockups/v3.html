@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v3 — one title, one input, one list</title>
+<style>
+  :root {
+    --bg: #ffffff; --sidebar: #f4f4f6; --subtle: #f4f4f6; --hover: rgba(0,0,0,.035);
+    --selected: rgba(91,91,214,.10); --border: rgba(0,0,0,.08);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #a1a1a6;
+    --accent: #5b5bd6; --doing: #3b82f6; --blocked: #e5484d; --review: #e0a800; --done: #30a46c; --stale: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 12px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: var(--text2); max-width: 1100px; margin: -28px 4px 56px; }
+  .window { width: 1100px; height: 680px; background: var(--bg); border-radius: 12px; overflow: hidden; display: flex; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 24px 60px rgba(0,0,0,.16); margin-bottom: 44px; position: relative; }
+  .sidebar { width: 224px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 14px 10px; display: flex; flex-direction: column; flex: none; }
+  .lights { display: flex; gap: 8px; padding: 2px 6px 18px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .search { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: rgba(0,0,0,.045); color: var(--text3); font-size: 14px; margin-bottom: 10px; }
+  .nav { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: 8px; font-size: 14px; white-space: nowrap; }
+  .nav.sel { background: var(--selected); font-weight: 500; }
+  .nav .ic { width: 18px; color: var(--text2); text-align: center; }
+  .nav .n { margin-left: auto; color: var(--text3); font-size: 13px; }
+  .group { display: flex; font: 600 12px/16px -apple-system, "PingFang SC"; color: var(--text3); padding: 18px 10px 6px; }
+  .group .plus { margin-left: auto; font-weight: 400; font-size: 16px; }
+  .foot { margin-top: auto; }
+  .main { flex: 1; min-width: 0; overflow: hidden; }
+  .content { padding: 30px 48px 0; max-width: 760px; margin: 0 auto; }
+  .content.wide { max-width: 980px; }
+
+  /* header: one title, one quiet control */
+  .head { display: flex; align-items: center; height: 34px; }
+  h1 { font: 700 26px/32px -apple-system, "PingFang SC"; margin: 0; letter-spacing: -.2px; }
+  .views { margin-left: auto; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--subtle); }
+  .views span { width: 30px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--text3); font-size: 14px; }
+  .views span.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .ms { margin-left: auto; margin-right: 10px; font-size: 13px; color: var(--text2); }
+
+  /* the input: one quiet line at rest */
+  .input { margin: 18px 0 8px; height: 50px; border-radius: 12px; background: var(--subtle); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 16px; }
+  .input .sp { color: var(--accent); font-size: 15px; }
+  .input .ph { color: var(--text3); font-size: 16px; flex: 1; }
+  .input kbd { font: 12px -apple-system; color: var(--text3); }
+  .input.focus { background: #fff; box-shadow: 0 0 0 1px rgba(91,91,214,.5), 0 0 0 4px rgba(91,91,214,.10); height: auto; min-height: 50px; padding: 13px 10px 13px 16px; align-items: flex-end; }
+  .input.focus .tx { flex: 1; font-size: 16px; line-height: 24px; align-self: center; }
+  .send { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 700; flex: none; }
+
+  /* the answer: one line that goes away */
+  .result { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 4px; font-size: 14px; color: var(--text2); }
+  .result .ok { color: var(--done); }
+  .result b { color: var(--text); font-weight: 500; }
+  .result .undo { margin-left: auto; color: var(--accent); font-size: 13px; }
+  .q { margin: 2px 4px 6px; font-size: 14px; }
+  .opts { display: flex; gap: 8px; margin: 8px 0 4px; }
+  .opts span { font-size: 13px; padding: 4px 12px; border-radius: 8px; background: var(--selected); color: var(--accent); }
+
+  /* list */
+  .gh { display: flex; align-items: center; gap: 9px; margin: 22px 0 2px; font-weight: 600; font-size: 15px; }
+  .gh .c { color: var(--text3); font-weight: 400; font-size: 13px; }
+  .g { width: 18px; height: 18px; flex: none; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 7px 10px 7px 37px; margin: 0 -10px; border-radius: 9px; }
+  .row.two { align-items: flex-start; }
+  .row.hover { background: var(--hover); }
+  .row .body { flex: 1; min-width: 0; }
+  .row .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 13px; line-height: 18px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .r { font-size: 13px; color: var(--text3); white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+  .row.done .t { color: var(--text2); }
+  .p1 { font: 600 11.5px/16px -apple-system; color: var(--text2); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; }
+  .p0 { font: 600 11.5px/16px -apple-system; color: var(--blocked); border: 1px solid rgba(229,72,77,.35); border-radius: 5px; padding: 0 5px; }
+  .live { width: 7px; height: 7px; border-radius: 50%; background: var(--doing); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+  .more { font-size: 13px; color: var(--text3); padding: 8px 0 0 27px; }
+
+  /* board: lanes without boxes */
+  .lanes { display: flex; gap: 20px; margin-top: 18px; }
+  .lane { flex: 1; min-width: 0; }
+  .lane .lh { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; height: 30px; padding: 0 2px; }
+  .lane .lh .c { color: var(--text3); font-weight: 400; font-size: 13px; }
+  .card { border-radius: 10px; background: #fff; box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0,0,0,.04); padding: 11px 13px; margin-top: 8px; }
+  .card .t { font-weight: 500; }
+  .card .m { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--text3); margin-top: 6px; }
+  .card .m .r { margin-left: auto; }
+  .mono { font: 12.5px/18px "SF Mono", ui-monospace, monospace; color: var(--text2); }
+  .addcard { margin-top: 8px; font-size: 13px; color: var(--text3); padding: 6px 2px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="todo" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#8e8e93" stroke-width="1.5"/></symbol>
+  <symbol id="doing" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#3b82f6" stroke-width="1.5"/><path d="M9 4.2a4.8 4.8 0 0 1 0 9.6z" fill="#3b82f6"/></symbol>
+  <symbol id="blocked" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="#e5484d"/><rect x="8.1" y="4.6" width="1.8" height="5.6" rx=".9" fill="#fff"/><circle cx="9" cy="12.6" r="1.05" fill="#fff"/></symbol>
+  <symbol id="review" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.25" fill="none" stroke="#e0a800" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="#e0a800"/></symbol>
+  <symbol id="done" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="#30a46c"/><path d="M5.6 9.2l2.3 2.3 4.5-4.7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<!-- sidebar used by every frame -->
+<template id="sb"></template>
+
+<!-- 1. project, list, at rest -->
+<div class="caption">1 · 项目页（列表）：一行标题、一个输入框、一份列表</div>
+<div class="window">
+  <div class="sidebar">
+    <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">⌕ 搜索</div>
+    <div class="nav"><span class="ic">◎</span>现在<span class="n">5</span></div>
+    <div class="nav"><span class="ic">▭</span>收件箱<span class="n">3</span></div>
+    <div class="nav"><span class="ic">✓</span>已完成</div>
+    <div class="group">项目<span class="plus">+</span></div>
+    <div class="nav sel"><span class="ic">#</span>adhd-todo<span class="n">2</span></div>
+    <div class="nav"><span class="ic">#</span>answer-me-with-html</div>
+    <div class="nav foot"><span class="ic">⚙</span>设置</div>
+  </div>
+  <div class="main"><div class="content">
+    <div class="head"><h1>adhd-todo</h1><span class="views"><span class="on">☰</span><span>▥</span></span></div>
+    <div class="input"><span class="sp">✦</span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+    <div class="gh"><svg class="g"><use href="#review"/></svg>待审查 <span class="c">1</span></div>
+    <div class="row two"><div class="body"><div class="t">App polish: type, menus, agent-first add, settings</div><div class="s">Claude Code · main · M4c merged on local main, waiting for you to try it</div></div><div class="r">17 分钟前</div></div>
+    <div class="gh"><svg class="g"><use href="#todo"/></svg>待办 <span class="c">1</span></div>
+    <div class="row hover"><div class="body"><div class="t">修登录跳转死循环</div></div><div class="r"><span class="p1">P1</span>周五</div></div>
+    <div class="gh"><svg class="g"><use href="#done"/></svg>已完成 <span class="c">1</span></div>
+    <div class="row done"><div class="body"><div class="t">Upgrade mygo to v0.5.1</div></div><div class="r">今天</div></div>
+  </div></div>
+</div>
+<p class="note">顶栏只剩项目名和“列表 / 看板”两个图标。仓库名、里程碑筛选、完成计数都拿掉：仓库名在项目右键菜单和检查器里，里程碑筛选只在项目有里程碑时出现，完成的任务就在列表里。输入框平时是一行安静的灰条（没有边框、阴影、标签），说明它在哪个项目由标题负责。优先级只显示 P0 / P1 一个小字标，P2 / P3 不显示。</p>
+
+<!-- 2. typing -->
+<div class="caption">2 · 输入时：只是这一行变亮、能换行，多出一个发送按钮</div>
+<div class="window" style="height:360px">
+  <div class="sidebar">
+    <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">⌕ 搜索</div>
+    <div class="nav sel"><span class="ic">#</span>adhd-todo<span class="n">2</span></div>
+  </div>
+  <div class="main"><div class="content">
+    <div class="head"><h1>adhd-todo</h1><span class="views"><span class="on">☰</span><span>▥</span></span></div>
+    <div class="input focus"><span class="tx">修登录跳转死循环，紧急，周五</span><span class="send">↑</span></div>
+    <div class="gh"><svg class="g"><use href="#review"/></svg>待审查 <span class="c">1</span></div>
+    <div class="row two"><div class="body"><div class="t">App polish: type, menus, agent-first add, settings</div><div class="s">Claude Code · main</div></div><div class="r">17 分钟前</div></div>
+  </div></div>
+</div>
+<p class="note">没有“↵ 发送 · ⇧↵ 换行”之类的提示：发送按钮本身就是提示。</p>
+
+<!-- 3. after sending -->
+<div class="caption">3 · 发送后：一行结果，几秒后自己消失；新任务直接出现在列表里</div>
+<div class="window" style="height:420px">
+  <div class="sidebar">
+    <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">⌕ 搜索</div>
+    <div class="nav sel"><span class="ic">#</span>adhd-todo<span class="n">2</span></div>
+  </div>
+  <div class="main"><div class="content">
+    <div class="head"><h1>adhd-todo</h1><span class="views"><span class="on">☰</span><span>▥</span></span></div>
+    <div class="input"><span class="sp">✦</span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+    <div class="result"><span class="ok">✓</span>已添加 <b>修登录跳转死循环</b> · 周五 · P1<span class="undo">撤销</span></div>
+    <div class="gh"><svg class="g"><use href="#todo"/></svg>待办 <span class="c">1</span></div>
+    <div class="row hover"><div class="body"><div class="t">修登录跳转死循环</div></div><div class="r"><span class="p1">P1</span>周五</div></div>
+    <div class="result" style="margin-top:28px"><span style="color:var(--text3)">✦</span>这条已经在 adhd-todo 里了，没有重复添加。</div>
+    <div class="q">要我提醒你哪一个？</div>
+    <div class="opts"><span>Review PR 12</span><span>Review PR 14</span><span>都提醒</span></div>
+  </div></div>
+</div>
+<p class="note">不再重复显示你刚说的话，也不再有分隔线。改了东西：一行“✓ 已添加 X · 周五 · P1 · 撤销”，6 秒后淡出（撤销在列表里的右键菜单里随时都有）。没改东西：一句灰字说明，同样会淡出。只有 Agent 需要你选的时候，才出现问题和几个选项，并一直留着直到你回答。</p>
+
+<!-- 4. board -->
+<div class="caption">4 · 看板：没有灰底列，没有重复的状态图标</div>
+<div class="window">
+  <div class="sidebar">
+    <div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">⌕ 搜索</div>
+    <div class="nav"><span class="ic">◎</span>现在<span class="n">5</span></div>
+    <div class="nav"><span class="ic">▭</span>收件箱<span class="n">3</span></div>
+    <div class="nav"><span class="ic">✓</span>已完成</div>
+    <div class="group">项目<span class="plus">+</span></div>
+    <div class="nav sel"><span class="ic">#</span>adhd-todo<span class="n">2</span></div>
+    <div class="nav"><span class="ic">#</span>answer-me-with-html</div>
+    <div class="nav foot"><span class="ic">⚙</span>设置</div>
+  </div>
+  <div class="main"><div class="content wide">
+    <div class="head"><h1>adhd-todo</h1><span class="views"><span>☰</span><span class="on">▥</span></span></div>
+    <div class="input"><span class="sp">✦</span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+    <div class="lanes">
+      <div class="lane"><div class="lh"><svg class="g"><use href="#todo"/></svg>待办 <span class="c">1</span></div>
+        <div class="card"><div class="t">修登录跳转死循环</div><div class="m"><span class="p1">P1</span><span class="r">周五</span></div></div>
+      </div>
+      <div class="lane"><div class="lh"><svg class="g"><use href="#doing"/></svg>进行中 <span class="c">0</span></div>
+        <div class="addcard">拖到这里开始做</div>
+      </div>
+      <div class="lane"><div class="lh"><svg class="g"><use href="#review"/></svg>待审查 <span class="c">1</span></div>
+        <div class="card"><div class="t">App polish: type, menus, agent-first add, settings</div><div class="m"><span class="mono">main</span><span class="r">17 分钟前</span></div></div>
+      </div>
+      <div class="lane"><div class="lh"><svg class="g"><use href="#done"/></svg>已完成 <span class="c">1</span></div>
+        <div class="card" style="box-shadow:none;background:var(--subtle)"><div class="t" style="color:var(--text2);font-weight:400">Upgrade mygo to v0.5.1</div><div class="m"><span class="r">今天</span></div></div>
+      </div>
+    </div>
+  </div></div>
+</div>
+<p class="note">看板固定四列：待办、进行中、待审查、已完成（阻塞的卡片放在进行中里，用红色图标标出来）。列没有灰色底，只靠列头和间距分开；卡片里不再画状态图标（列头已经说了），一行标题加一行信息。没有“+”：要加任务就用上面的输入框。</p>
+
+</body>
+</html>
