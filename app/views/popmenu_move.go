@@ -67,7 +67,7 @@ func (m *Main) moveChoices(task data.Task) []popSpec {
 	for _, p := range m.app.snap.projects {
 		if hit(p.Name) {
 			on := task.ProjectID != nil && *task.ProjectID == p.ID
-			out = append(out, popSpec{key: "move-" + itoa(p.ID), mark: "#", label: p.Name, a11y: m.say.A11yMenuMoveTo(p.Name), checked: on, run: move(p.ID)})
+			out = append(out, popSpec{key: "move-" + itoa(p.ID), icon: theme.IconFolder, tint: theme.ProjectColor(p.Name), label: p.Name, a11y: m.say.A11yMenuMoveTo(p.Name), checked: on, run: move(p.ID)})
 		}
 	}
 	return out
@@ -107,9 +107,10 @@ func (m *Main) remindPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	}
 	for _, p := range remindPresets(now) {
 		var label string
+		icon := theme.IconCalendar
 		switch p.kind {
 		case remindLater:
-			label = m.say.MenuLaterToday()
+			label, icon = m.say.MenuLaterToday(), theme.IconClock
 		case remindTomorrow:
 			label = m.say.MenuTomorrow()
 		case remindMonday:
@@ -121,11 +122,11 @@ func (m *Main) remindPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if p.kind == remindLater || p.kind == remindTomorrow {
 			hint = m.clock.Time(p.at)
 		}
-		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.kind)), label: label, hint: hint, run: set(p.at)})
+		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.kind)), icon: icon, label: label, hint: hint, run: set(p.at)})
 	}
 	menuRule(c, t)
-	m.popRow(c, t, popSpec{key: "remind-none", label: m.say.MenuNoReminder(), run: set(time.Time{})})
-	m.popRow(c, t, popSpec{key: "remind-custom", label: m.say.MenuCustom(), run: func() {
+	m.popRow(c, t, popSpec{key: "remind-none", icon: theme.IconClose, label: m.say.MenuNoReminder(), run: set(time.Time{})})
+	m.popRow(c, t, popSpec{key: "remind-custom", icon: theme.IconPlus, label: m.say.MenuCustom(), run: func() {
 		pm.when = startingMoment(task.RemindAt, now, true)
 		pm.page, pm.hl = pageCalendar, -1
 	}})

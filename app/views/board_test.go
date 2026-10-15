@@ -177,7 +177,7 @@ func TestBoardHeaderComposerAndLanesShareTheirEdges(t *testing.T) {
 			}
 		}
 		// The offsets are the glyph and its gap (18 + 8), and the control's own padding.
-		near("composer left", composer.X-1-16-26, left) // the border, the padding, the sparkle and its gap
+		near("composer left", composer.X-1-16-(theme.AvatarRow+10), left) // the border, the padding, the avatar and its gap
 		near("toggle right", toggle.X+toggle.W+2, right)
 		near("first lane left", first.X-18-8, left)
 		near("last lane left", last.X-18-8, left+3*(lay.col+theme.ColumnGap))

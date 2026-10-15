@@ -174,10 +174,7 @@ func (m *Main) searchScreen(c *ui.Context, t *theme.Tokens) {
 	}
 	m.pageHeader(c, t, m.say.ManageSearch(), sub, nil)
 	if model.total == 0 {
-		ui.Column(c).Padding(32, 0, 0).Gap(4).Shrink(0).Children(func() {
-			theme.Paragraph(c, theme.BodyStrong, t.Text, m.say.ManageSearchNone(strings.TrimSpace(m.manage.search.query)), 0)
-			theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.ManageSearchNoneBody(), 0)
-		})
+		emptyState(c, t, m.say.ManageSearchNone(strings.TrimSpace(m.manage.search.query)), m.say.ManageSearchNoneBody(), 56, nil)
 		return
 	}
 	for _, g := range model.groups {

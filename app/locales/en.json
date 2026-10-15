@@ -1082,13 +1082,13 @@
       }
     }
   },
-  "nowAllClear": "All clear.",
+  "nowAllClear": "Nothing needs you right now",
   "@nowAllClear": {
-    "description": "Title of the calm Now screen when nothing needs attention."
+    "description": "Title of the calm Now screen when nothing needs attention, under the two pixel avatars (you and the assistant)."
   },
-  "nowAllClearBody": "Agents report here through the adhd-todo MCP server.",
+  "nowAllClearBody": "Your agents are at work. Whatever happens shows up here.",
   "@nowAllClearBody": {
-    "description": "Second line of the calm Now screen. MCP is a product name."
+    "description": "Second line of the calm Now screen."
   },
   "nowShowAllInInbox": "Show all in Inbox",
   "@nowShowAllInInbox": {
@@ -1165,6 +1165,10 @@
   "propDue": "Due",
   "@propDue": {
     "description": "Label of the due date in the inspector."
+  },
+  "propFrom": "From",
+  "@propFrom": {
+    "description": "Label of the inspector row that says who wrote the task: you, or the agent that created it."
   },
   "propMilestone": "Milestone",
   "@propMilestone": {

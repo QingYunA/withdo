@@ -56,9 +56,7 @@ func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 
 // allClear is the calm state: nothing needs me, nothing is running, nothing is mine.
 func (m *Main) allClear(c *ui.Context, t *theme.Tokens) {
-	ui.Column(c).Padding(96, 0, 0).Gap(6).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Input, t.Text, m.say.NowAllClear())
-		theme.Text(c, theme.Body, t.TextSecondary, m.say.NowAllClearBody())
+	emptyState(c, t, m.say.NowAllClear(), m.say.NowAllClearBody(), 72, func() {
 		if link(c, t, m.say.LinkHowToConnect()).Margin(6, 0, 0).Clicked() {
 			m.openSettings(PaneAgents)
 		}

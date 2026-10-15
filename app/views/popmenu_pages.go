@@ -11,9 +11,10 @@ import (
 // popSpec describes one line of the menu.
 type popSpec struct {
 	key, label, hint string
-	a11y             string  // what assistive technology and the tests call it, when the label is not enough
-	icon             *ui.SVG // in the 18 pt slot at the left
-	mark             string  // text in that slot instead of an icon
+	a11y             string   // what assistive technology and the tests call it, when the label is not enough
+	icon             *ui.SVG  // in the 18 pt slot at the left, drawn 15 pt
+	tint             ui.Color // the icon's color at rest, when it is not the text's (a project's folder)
+	mark             string   // text in that slot instead of an icon
 	checked, danger  bool
 	run              func()
 }
@@ -38,7 +39,11 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 		if s.icon != nil || s.mark != "" {
 			ui.Box(c).Size(18, 18).Shrink(0).Center().Children(func() {
 				if s.icon != nil {
-					ui.Icon(c, s.icon).Size(16, 16).TextColor(ink)
+					color := ink
+					if s.tint != (ui.Color{}) && ink == t.Text {
+						color = s.tint
+					}
+					ui.Icon(c, s.icon).Size(theme.IconMenu, theme.IconMenu).TextColor(color)
 				} else {
 					theme.Text(c, theme.Compact, quiet, s.mark)
 				}

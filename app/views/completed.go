@@ -80,10 +80,7 @@ func (m *Main) completedScreen(c *ui.Context, t *theme.Tokens) {
 	}
 	days := m.completedDays()
 	if len(days) == 0 {
-		ui.Column(c).Padding(32, 0, 0).Gap(4).Shrink(0).Children(func() {
-			theme.Text(c, theme.BodyStrong, t.Text, m.say.ManageCompletedEmptyTitle())
-			theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.ManageCompletedEmptyBody(), 0)
-		})
+		emptyState(c, t, m.say.ManageCompletedEmptyTitle(), m.say.ManageCompletedEmptyBody(), 56, nil)
 		return
 	}
 	for _, d := range days {

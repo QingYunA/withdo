@@ -10,6 +10,9 @@ import (
 // amount, so the text stays on the column's left edge.
 type rowStyle struct{ vert, horz float32 }
 
+// rowGap is the space between the columns of a row: glyph or avatar, body, right end.
+const rowGap float32 = 12
+
 var (
 	plainRow = rowStyle{9, 10}
 	needRow  = rowStyle{10, 8} // inside the Needs you container
@@ -18,7 +21,7 @@ var (
 // rowShell is a row of the Now screen or a list: hover, the keyboard highlight, and the fade of a
 // task that was just marked done. The caller fills it and reports clicks.
 func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
-	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(12).
+	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(rowGap).
 		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
 	switch {
 	case m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):

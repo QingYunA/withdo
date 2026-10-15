@@ -168,7 +168,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ot := m.app.overviewTask(task)
 	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
 	row.Children(func() {
-		ui.Box(c).Width(listIndent - 12).Shrink(0) // the glyph's column, and the gap after it
+		m.authorSlot(c, task) // in the glyph's column
 		body(c, func() {
 			m.titleLine(c, t, task, "", false)
 			summaryLine(c, t, listMeta(task, ot))
@@ -290,9 +290,7 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	if m.nav.screen == screenInbox {
 		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody()
 	}
-	ui.Column(c).Padding(32, 0, 0).Gap(4).Shrink(0).Children(func() {
-		theme.Text(c, theme.BodyStrong, t.Text, title)
-		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0)
+	emptyState(c, t, title, body, 56, func() {
 		if m.nav.screen == screenProject {
 			if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
 				m.openSettings(PaneAgents)

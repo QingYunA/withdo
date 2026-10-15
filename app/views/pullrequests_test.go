@@ -144,7 +144,7 @@ func TestClickingAPullRequestRowOpensTheInspector(t *testing.T) {
 		t.Errorf("open %d, texts %q", m.openID, tt.Texts())
 	}
 	// GitHub's own report shows in the activity timeline under its name.
-	has(t, tt, "github", "Checks are failing on PR #15")
+	has(t, tt, "GitHub", "Checks are failing on PR #15")
 }
 
 func TestAgentWordsIgnoreGitHubReports(t *testing.T) {

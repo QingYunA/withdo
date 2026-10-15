@@ -60,7 +60,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 	app, _ := newEmptyApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
 	inChinese(tt)
-	has(t, tt, "全部处理完了。", "Agent 会通过 adhd-todo 的 MCP 服务器在这里汇报进度。", "如何连接",
+	has(t, tt, "现在没有要你处理的事", "Agent 们在干活，有动静会出现在这里", "如何连接",
 		"告诉我任何事，我来变成任务", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
 }
 

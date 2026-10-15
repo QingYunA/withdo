@@ -181,6 +181,8 @@ const (
 // Layout metrics shared by several surfaces.
 const (
 	GlyphSize      float32 = 18
+	IconProp       float32 = 14 // the line icon before a property's label in the inspector
+	IconMenu       float32 = 15 // the line icon before an item of the drawn task menu
 	HitTarget      float32 = 24
 	RowOneLine     float32 = 32
 	SidebarWidth   float32 = 216

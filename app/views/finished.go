@@ -27,8 +27,16 @@ func (a *App) completedBy(t data.Task) (by, said string) {
 // agentName is an agent as people write it: the ids agents report under become their product's name.
 func agentName(agent string) string {
 	switch strings.ToLower(agent) {
-	case "claude-code", "claude_code", "claude code":
+	case "claude-code", "claude_code", "claude code", "claude":
 		return "Claude Code"
+	case "codex", "codex-mcp-client", "openai-codex":
+		return "Codex"
+	case "cursor", "cursor-vscode":
+		return "Cursor"
+	case "gemini-cli", "gemini_cli", "gemini cli", "gemini":
+		return "Gemini CLI"
+	case "", unnamedAgent:
+		return "Agent"
 	case data.GitHubAgent:
 		return "GitHub"
 	}
@@ -57,7 +65,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 		if o.glyph {
 			m.glyphSlot(c, t, task, fill)
 		} else {
-			ui.Box(c).Width(listIndent - 12).Shrink(0) // the glyph's column, as under a group header
+			m.authorSlot(c, task) // in the glyph's column, as under a group header
 		}
 		body(c, func() {
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {
