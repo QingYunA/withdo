@@ -19,9 +19,9 @@ import (
 //
 //	ADHD_TODO_LIVE_MODEL=1 go test ./internal/agent -run TestLiveModel -v
 //
-// The provider is the active one of the app's models.json and its Keychain key. To use a preset
-// without touching either, set ADHD_TODO_LIVE_PRESET (for example "magpie") and, if it needs
-// one, ADHD_TODO_LIVE_KEY; ADHD_TODO_LIVE_MODEL_NAME overrides the model. Tasks go to a throwaway
+// The provider is the active one of the app's models.json, with the key in ADHD_TODO_LIVE_KEY (the
+// app's Keychain item is never read from tests). To use a preset without the file, set
+// ADHD_TODO_LIVE_PRESET (for example "magpie"); ADHD_TODO_LIVE_MODEL_NAME overrides the model. Tasks go to a throwaway
 // database, never the real one.
 func TestLiveModel(t *testing.T) {
 	if os.Getenv("ADHD_TODO_LIVE_MODEL") != "1" {
@@ -71,7 +71,13 @@ func liveModel(t *testing.T) agent.ModelFunc {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mgr, err := providers.NewManager(providers.NewStore(filepath.Join(filepath.Dir(db), providers.ConfigFile)), providers.NewKeychain(), nil)
+	store := providers.NewStore(filepath.Join(filepath.Dir(db), providers.ConfigFile))
+	keys := providers.NewMemoryKeyring()
+	if key := os.Getenv("ADHD_TODO_LIVE_KEY"); key != "" {
+		cfg, _ := store.Load()
+		_ = keys.Set(cfg.Active, key)
+	}
+	mgr, err := providers.NewManager(store, keys, nil)
 	if err != nil || !mgr.Configured() {
 		t.Skipf("no model configured in the app (%v)", err)
 	}

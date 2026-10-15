@@ -14,7 +14,6 @@ import (
 
 	"github.com/cloudwego/eino-ext/components/model/claude"
 	"github.com/cloudwego/eino-ext/components/model/openai"
-	"github.com/zalando/go-keyring"
 )
 
 // seen is what a fake provider server received.
@@ -317,29 +316,6 @@ func TestFriendly(t *testing.T) {
 	}
 	if got := Friendly(errors.New(strings.Repeat("x", 300))); len(got) > 170 {
 		t.Errorf("long error not shortened: %d", len(got))
-	}
-}
-
-func TestKeychainOverAMockKeyring(t *testing.T) {
-	keyring.MockInit() // never the real Keychain
-	k := Keychain{Service: "adhd-todo-test-only"}
-	if _, err := k.Get("openai"); !errors.Is(err, ErrNoKey) {
-		t.Fatalf("Get missing = %v", err)
-	}
-	if err := k.Set("openai", "sk-1"); err != nil {
-		t.Fatal(err)
-	}
-	if v, err := k.Get("openai"); err != nil || v != "sk-1" {
-		t.Fatalf("Get = %q, %v", v, err)
-	}
-	if err := k.Delete("openai"); err != nil {
-		t.Fatal(err)
-	}
-	if err := k.Delete("openai"); err != nil {
-		t.Errorf("deleting a missing key = %v", err)
-	}
-	if NewKeychain().Service != KeychainService {
-		t.Error("wrong default service")
 	}
 }
 

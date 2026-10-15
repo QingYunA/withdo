@@ -46,7 +46,7 @@ func openReal(path string) (*backend, error) {
 		return nil, err
 	}
 	dir := filepath.Dir(path)
-	mgr, err := providers.NewManager(providers.NewStore(filepath.Join(dir, providers.ConfigFile)), providers.NewKeychain(), nil)
+	mgr, err := providers.NewManager(providers.NewStore(filepath.Join(dir, providers.ConfigFile)), newSecretKeyring(), nil)
 	if err != nil {
 		log.Printf("model settings: %v", err) // the app still runs, with no model connected
 	}

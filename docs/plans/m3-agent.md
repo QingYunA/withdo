@@ -13,7 +13,7 @@ an Undo. The user never has to install Claude Code or Codex.
 | Model protocols | Anthropic Messages (`eino-ext/components/model/claude`, `BaseURL` supported) and OpenAI-compatible (`eino-ext/components/model/openai`, `BaseURL`) | These two cover nearly every provider and gateway. |
 | Presets | Anthropic · Magpie (`http://127.0.0.1:3425`, key `magpie`, Anthropic protocol) · OpenAI · DeepSeek · Kimi · OpenRouter · Ollama (local) · Custom | Magpie gives access to the user's Claude/ChatGPT subscriptions without us touching OAuth. |
 | Subscription login | Not in M3. Through Magpie. | Anthropic forbids third-party apps using Claude.ai login. |
-| API keys | macOS Keychain via `github.com/zalando/go-keyring` (no cgo); never in the DB or logs | |
+| API keys | macOS Keychain via `mygo.Secrets` (was `go-keyring` until M3b); never in the DB or logs | |
 | Act or confirm | Act immediately, show a receipt with **Undo** | Lowest friction; ADHD-friendly. |
 | Data sent to the model | Only what the tools return for this request, plus project names | |
 
