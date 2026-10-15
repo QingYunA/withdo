@@ -19,6 +19,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
+		m.navRow(c, t, "logbook", nav{screen: screenLogbook}, theme.IconLogbook, m.say.ManageNavLogbook(), 0)
 		m.projectsHeader(c, t)
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })

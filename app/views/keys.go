@@ -13,6 +13,8 @@ func (m *Main) rowIDs(now data.Now) []int {
 		return m.searchIDs()
 	case m.nav.screen == screenNow:
 		return now.IDs()
+	case m.nav.screen == screenLogbook:
+		return m.logbookIDs()
 	case m.boardActive():
 		var ids []int
 		for _, col := range m.boardColumns() {
@@ -56,6 +58,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{})
 	case c.Shortcut(ui.Cmd, ui.Key2):
 		m.goTo(nav{screen: screenInbox})
+	case c.Shortcut(ui.Cmd, ui.Key3):
+		m.goTo(nav{screen: screenLogbook})
 	}
 	if m.typing(c) {
 		return

@@ -156,6 +156,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 			m.page(c, t, func() { m.searchScreen(c, t) })
 		case m.nav.screen == screenNow:
 			m.page(c, t, func() { m.nowScreen(c, t, now) })
+		case m.nav.screen == screenLogbook:
+			m.page(c, t, func() { m.logbookScreen(c, t) })
 		case m.boardActive():
 			m.boardScreen(c, t)
 		default:

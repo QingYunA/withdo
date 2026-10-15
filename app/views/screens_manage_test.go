@@ -115,3 +115,24 @@ func TestScreensManageSearch(t *testing.T) {
 		}
 	}
 }
+
+func TestScreensManageLogbook(t *testing.T) {
+	for _, a := range appearances() {
+		for _, l := range languages {
+			suffix := l.suffix + "-" + a.suffix + ".png"
+			app, store, _ := newTestApp(t)
+			_, _ = store.UpdateTask(19, data.Patch{Status: data.StatusPtr(data.Cancelled)})
+			_, _ = store.UpdateTask(8, data.Patch{Status: data.StatusPtr(data.Done)})
+			app.Refresh()
+			manageShot(t, "logbook"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenLogbook})
+				return nil
+			})
+			empty, _ := newEmptyApp(t)
+			manageShot(t, "logbook-empty"+suffix, empty, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenLogbook})
+				return nil
+			})
+		}
+	}
+}
