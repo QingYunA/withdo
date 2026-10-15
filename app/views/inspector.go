@@ -28,6 +28,16 @@ func (i *inspector) editing() bool {
 	return false
 }
 
+// reverted reports, once, that Esc sent a field back to its stored text: the keys then go to the
+// page, so the next Esc closes the pane.
+func (i *inspector) reverted() bool {
+	any := false
+	for _, f := range i.fields {
+		any, f.revert = any || f.revert, false
+	}
+	return any
+}
+
 func (i *inspector) reset() {
 	i.fields = fields{}
 	i.dueOpen, i.remOpen = false, false
@@ -90,7 +100,7 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	title, ok := textField(c, t, m.inspector.fields, fieldSpec{
 		name: "Title", value: task.Title, style: theme.Title, color: t.Text,
-		multiline: true, enterSaves: true, minLines: 1, maxLines: 4,
+		multiline: true, enterSaves: true, escReverts: true, minLines: 1, maxLines: 4,
 	})
 	if ok && title != "" {
 		_ = m.app.Update(task.ID, data.Patch{Title: &title})
@@ -100,7 +110,7 @@ func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	notes, ok := textField(c, t, m.inspector.fields, fieldSpec{
 		name: "Notes", value: task.Notes, style: theme.Body, color: t.Text, placeholder: "Add notes…",
-		multiline: true, minLines: 3, maxLines: 12,
+		multiline: true, escReverts: true, minLines: 3, maxLines: 12,
 	})
 	if ok {
 		_ = m.app.Update(task.ID, data.Patch{Notes: &notes})

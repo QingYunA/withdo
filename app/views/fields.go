@@ -1,8 +1,6 @@
 package views
 
 import (
-	"strings"
-
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -12,7 +10,8 @@ import (
 type field struct {
 	buf     string
 	editing bool
-	enter   bool
+	enter   bool // Enter was pressed in the field
+	revert  bool // Esc was pressed in the field: its text went back and the page takes the keys
 }
 
 // fields keeps a field per name, for the task in the inspector.
@@ -34,9 +33,30 @@ type fieldSpec struct {
 	placeholder string
 	multiline   bool // a text area; Enter saves a single-line title but breaks a line in notes
 	enterSaves  bool // Enter saves instead of breaking the line
+	escReverts  bool // Esc puts the stored text back and leaves the field
 	secret      bool // a password field: the text is hidden
 	minLines    int
 	maxLines    int
+}
+
+// key is the keyboard of the field: Enter saves, except where it breaks a line, and Esc reverts
+// where the field asks for it. Anything else is typing.
+func (f *field) key(s fieldSpec) func(ui.TextKey) bool {
+	return func(k ui.TextKey) bool {
+		if k.Mods != 0 {
+			return false
+		}
+		switch {
+		case k.Key == ui.KeyEnter && (!s.multiline || s.enterSaves):
+			f.buf, f.enter = k.Text(), true
+		case k.Key == ui.KeyEscape && s.escReverts:
+			k.SetText(s.value)
+			f.buf, f.revert = s.value, true
+		default:
+			return false
+		}
+		return true
+	}
 }
 
 // textField draws an editable text and reports the new text when the user saved it. The field is
@@ -51,17 +71,10 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 	box.Children(func() {
 		if s.multiline {
 			el = ui.TextAreaBase(c.Key(s.name), &f.buf).Lines(max(s.minLines, 1), max(s.maxLines, 1))
-			if s.enterSaves && strings.Contains(f.buf, "\n") {
-				// This mygo has no OnEnter: Enter arrives as a newline, which a title never holds.
-				f.buf, f.enter = strings.ReplaceAll(f.buf, "\n", ""), true
-			}
 		} else {
 			el = ui.TextInputBase(c.Key(s.name), &f.buf)
-			if el.Submitted() {
-				f.enter = true
-			}
 		}
-		s.style.Apply(el).TextColor(s.color).Label(s.name)
+		s.style.Apply(el).TextColor(s.color).Label(s.name).OnTextKey(f.key(s))
 		if s.secret && !s.multiline {
 			el.Password()
 		}

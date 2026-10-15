@@ -170,11 +170,8 @@ func (m *Main) boardAdd(c *ui.Context, t *theme.Tokens) {
 		ui.Row(c.Key("board-add-input")).Padding(8, 12).Radius(theme.RadiusCard).Background(t.Bg).Border(1, t.Accent.Alpha(0.6)).Children(func() {
 			box := ui.Box(c).Grow(1).MinWidth(0)
 			box.Children(func() {
-				in := theme.BodyStrong.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-					Label("New task title").AutoFocus()
-				if in.Submitted() {
-					m.submitAdding()
-				}
+				theme.BodyStrong.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
+					Label("New task title").AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
 				if m.addBuf == "" {
 					theme.Text(c, theme.BodyStrong, t.TextTertiary, "Task title").Absolute().Left(0).Top(0).PassThrough()
 				}

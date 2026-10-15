@@ -237,16 +237,34 @@ func (m *Main) addInput(c *ui.Context, t *theme.Tokens, indent float32) {
 	ui.Row(c.Key("add-input-row")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0).Padding(0, 0, 0, indent).AlignItems(ui.Center).Children(func() {
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
-			in := theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-				Label("New task title").AutoFocus()
-			if in.Submitted() {
-				m.submitAdding()
-			}
+			theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
+				Label("New task title").AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
 			if m.addBuf == "" {
 				theme.Text(c, theme.Body, t.TextTertiary, "Task title").Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 	})
+}
+
+// addKey is the keyboard of the inline add input: Enter adds and keeps the input open and empty,
+// Esc closes it.
+func (m *Main) addKey(k ui.TextKey) bool {
+	if k.Mods != 0 {
+		return false
+	}
+	switch k.Key {
+	case ui.KeyEnter:
+		m.addBuf = k.Text()
+		m.submitAdding()
+		if m.addBuf != k.Text() {
+			k.SetText(m.addBuf)
+		}
+	case ui.KeyEscape:
+		m.cancelAdding()
+	default:
+		return false
+	}
+	return true
 }
 
 func (m *Main) cancelAdding() { m.adding, m.addBuf = false, "" }

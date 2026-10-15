@@ -116,7 +116,7 @@ func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		box := ui.Box(c).Grow(1).MinWidth(0).Height(28).Justify(ui.Center)
 		box.Children(func() {
 			branch, ok := textField(c, t, m.inspector.fields, fieldSpec{
-				name: "Branch", value: task.Branch, style: theme.Mono, color: t.Text, placeholder: "None",
+				name: "Branch", value: task.Branch, style: theme.Mono, color: t.Text, placeholder: "None", escReverts: true,
 			})
 			if ok {
 				_ = m.app.Update(task.ID, data.Patch{Branch: &branch})

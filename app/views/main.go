@@ -57,7 +57,9 @@ type Main struct {
 	convo   convo     // the conversation sheet under the ask field
 	hintOn  bool      // the "Connect a model" line is showing under the field
 	askRef  ui.Handle // the ask field, for Cmd+K
+	addRef  ui.Handle // the inline add input
 	listRef ui.Handle // the page, so the arrow keys and Space reach it
+	queue   queued    // what a text input's last key asked of the next frame
 
 	scroll    ui.ScrollState
 	inspector inspector

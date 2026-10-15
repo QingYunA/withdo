@@ -45,12 +45,9 @@ func (m *Main) askField(c *ui.Context, t *theme.Tokens) {
 		m.sparkle(c, t)
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
-			in := theme.Input.Apply(ui.TextInputBase(c.Key("ask-input"), &m.ask.buf)).TextColor(t.Text).
-				Label("Ask").Bind(&m.askRef)
+			theme.Input.Apply(ui.TextInputBase(c.Key("ask-input"), &m.ask.buf)).TextColor(t.Text).
+				Label("Ask").Bind(&m.askRef).OnTextKey(m.askKey)
 			m.takeFocus(c)
-			if in.Submitted() {
-				m.submitAsk()
-			}
 			if m.ask.buf == "" {
 				theme.Text(c, theme.Input, t.TextTertiary, m.placeholder()).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
 			}
@@ -59,6 +56,29 @@ func (m *Main) askField(c *ui.Context, t *theme.Tokens) {
 	})
 	m.notice(c, t)
 	m.noModelHint(c, t, focused)
+}
+
+// askKey is the keyboard of the ask field: Enter sends, Esc cancels a running request or closes
+// the sheet (what Esc does anywhere), Down walks into the rows.
+func (m *Main) askKey(k ui.TextKey) bool {
+	if k.Mods != 0 {
+		return false
+	}
+	switch k.Key {
+	case ui.KeyEnter:
+		m.ask.buf = k.Text()
+		m.submitAsk()
+		if m.ask.buf != k.Text() {
+			k.SetText(m.ask.buf) // what was sent leaves the field
+		}
+	case ui.KeyEscape:
+		m.escape()
+	case ui.KeyDown:
+		m.queue.move = 1
+	default:
+		return false
+	}
+	return true
 }
 
 // placeholder is what the empty field says: the invitation, or that the assistant is working, or

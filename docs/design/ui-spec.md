@@ -245,6 +245,16 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection · `⌘1` Now, `⌘2` Inbox.
 
+While a text input has the keyboard its keys are its own (`Element.OnTextKey`), and the window's
+arrows, `↵`, `Space` and `Esc` stay out of the way:
+
+| Input | `↵` | `Esc` | `↓` |
+|---|---|---|---|
+| Ask field | sends; on an empty field opens the highlighted row | cancels a running request, else closes the sheet | moves into the rows |
+| Inline "Add a task" | adds and stays open and empty | closes | |
+| Inspector title, branch | saves | puts the stored text back and leaves the field | |
+| Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
+
 ### Settings
 
 A 640 pt sheet with a `General | Models` switch (the quiet segmented well of the List | Board
