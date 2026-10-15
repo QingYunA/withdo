@@ -42,37 +42,29 @@ func (a *AgentAssistant) Ask(ctx context.Context, text string) (Reply, error) {
 	return out, nil
 }
 
-// problemFor turns a failure of the model into one the views can word. providers.Friendly writes
-// the English sentence; the problem is found by what Friendly says to a sample of each kind, so
-// this follows its rules without repeating them.
+// problemFor turns a failure of the model into one the views can word, by the kind
+// providers.Classify gives it; the English text is providers.Friendly's.
 func problemFor(err error) error {
 	if errors.Is(err, agent.ErrBusy) {
 		return &ProblemError{Problem: ProblemBusy, Text: err.Error(), Err: err}
 	}
 	text := providers.Friendly(err)
-	if p, ok := friendlyProblems()[text]; ok {
+	if p, ok := problemKinds[providers.Classify(err)]; ok {
 		return &ProblemError{Problem: p, Text: text, Err: err}
 	}
 	return errors.New(text)
 }
 
-var friendlyProblems = sync.OnceValue(func() map[string]Problem {
-	samples := map[Problem]error{
-		ProblemNotConfigured: providers.ErrNotConfigured,
-		ProblemNoKey:         providers.ErrNoKey,
-		ProblemCancelled:     context.Canceled,
-		ProblemTimeout:       context.DeadlineExceeded,
-		ProblemUnreachable:   errors.New("dial tcp 127.0.0.1:1: connection refused"),
-		ProblemKeyRejected:   errors.New("401 unauthorized"),
-		ProblemUnknownModel:  errors.New("404 not_found"),
-		ProblemRateLimited:   errors.New("429 rate limit"),
-	}
-	out := make(map[string]Problem, len(samples))
-	for p, err := range samples {
-		out[providers.Friendly(err)] = p
-	}
-	return out
-})
+var problemKinds = map[providers.Kind]Problem{
+	providers.KindNotConfigured: ProblemNotConfigured,
+	providers.KindNoKey:         ProblemNoKey,
+	providers.KindCancelled:     ProblemCancelled,
+	providers.KindTimeout:       ProblemTimeout,
+	providers.KindUnreachable:   ProblemUnreachable,
+	providers.KindKeyRejected:   ProblemKeyRejected,
+	providers.KindUnknownModel:  ProblemUnknownModel,
+	providers.KindRateLimited:   ProblemRateLimited,
+}
 
 // Undo implements Assistant.
 func (a *AgentAssistant) Undo(id int) error { return a.Agent.Undo(context.Background(), id) }
