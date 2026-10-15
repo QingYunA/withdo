@@ -22,6 +22,8 @@ const (
 const (
 	LiveWithin      = 10 * time.Minute // an agent report this fresh draws the live dot
 	MaxUndated      = 7                // undated tasks of mine shown before "Show all in Inbox"
+	MaxDoneToday    = 5                // rows of Done today before "Show all in Completed"
+	finishWindow    = 5 * time.Second  // a report this close to a completion is what closed the task
 	YoursHorizonDay = 7                // dated tasks of mine appear when due within this many days
 )
 
@@ -37,6 +39,7 @@ type NowItem struct {
 	Stale    bool      // no report for the stale threshold
 	Hours    int       // hours since Since
 	Live     bool      // an agent task whose last report is under LiveWithin old
+	By       string    // a Done today row: the agent that finished it, empty for me
 }
 
 // Now is what the home screen shows. A section with no items is not drawn.
@@ -46,9 +49,14 @@ type Now struct {
 	Yours  []NowItem // Yours
 	// MoreUndated counts undated tasks of mine that did not fit; the screen links to the Inbox.
 	MoreUndated int
+	// Done is what was finished since local midnight, by agents and by me, newest first, at most
+	// MaxDoneToday; MoreDone counts the rest. Since is when it was finished, Summary what the
+	// report that closed it said. It is no part of Count or Empty: it is a record, not a to-do.
+	Done     []NowItem
+	MoreDone int
 }
 
-// Count is the number of rows the screen draws.
+// Count is the number of rows of the three sections that ask for attention; the sidebar shows it.
 func (n Now) Count() int { return len(n.Needs) + len(n.Agents) + len(n.Yours) }
 
 // Empty reports whether the screen shows "All clear".
@@ -56,8 +64,8 @@ func (n Now) Empty() bool { return n.Count() == 0 }
 
 // IDs lists the task ids in the order the rows are drawn.
 func (n Now) IDs() []int {
-	ids := make([]int, 0, n.Count())
-	for _, section := range [][]NowItem{n.Needs, n.Agents, n.Yours} {
+	ids := make([]int, 0, n.Count()+len(n.Done))
+	for _, section := range [][]NowItem{n.Needs, n.Agents, n.Yours, n.Done} {
 		for _, it := range section {
 			ids = append(ids, it.ID)
 		}
@@ -100,6 +108,7 @@ func BuildNow(in NowInput) Now {
 	sortNeeds(out.Needs)
 	sort.SliceStable(out.Agents, func(i, j int) bool { return out.Agents[i].Since.After(out.Agents[j].Since) })
 	out.Yours, out.MoreUndated = b.yours(mine)
+	out.Done, out.MoreDone = b.doneToday(in.Tasks)
 	return out
 }
 
@@ -239,4 +248,60 @@ func (b nowBuilder) yours(tasks []Task) (rows []NowItem, more int) {
 		more, undated = len(undated)-MaxUndated, undated[:MaxUndated]
 	}
 	return append(dated, undated...), more
+}
+
+// doneToday lists the tasks finished since local midnight, newest first, as many as the screen
+// shows, and how many more there are.
+func (b nowBuilder) doneToday(tasks []Task) (rows []NowItem, more int) {
+	y, m, d := b.Now.Date()
+	midnight := time.Date(y, m, d, 0, 0, 0, 0, b.Now.Location())
+	for _, t := range tasks {
+		if t.Status != Done || t.CompletedAt == nil || t.CompletedAt.Before(midnight) {
+			continue
+		}
+		it := b.item(t)
+		it.Since = *t.CompletedAt
+		it.By, it.Summary = b.completedBy(t)
+		rows = append(rows, it)
+	}
+	sort.SliceStable(rows, func(i, j int) bool {
+		if !rows[i].Since.Equal(rows[j].Since) {
+			return rows[i].Since.After(rows[j].Since)
+		}
+		return rows[i].ID > rows[j].ID
+	})
+	if len(rows) > MaxDoneToday {
+		more, rows = len(rows)-MaxDoneToday, rows[:MaxDoneToday]
+	}
+	return rows, more
+}
+
+func (b nowBuilder) completedBy(t Task) (by, summary string) {
+	var event *Report
+	if b.Event != nil {
+		event = b.Event(t.ID)
+	}
+	return CompletedBy(t, b.Latest(t.ID), event)
+}
+
+// CompletedBy says who finished a done task and what was said when it was. agent is the newest
+// report of an agent and github the newest GitHub filed, either may be nil. When one of them was
+// filed as the task closed (within five seconds of it, or later) the report is the finish: by is
+// the agent's name (GitHub's when only GitHub spoke, as for a merge) and summary what the newest of
+// them says. Otherwise it was me: by is empty and summary too.
+func CompletedBy(t Task, agent, github *Report) (by, summary string) {
+	if t.CompletedAt == nil {
+		return "", ""
+	}
+	closing := agent
+	if github != nil && (closing == nil || github.CreatedAt.After(closing.CreatedAt)) {
+		closing = github
+	}
+	if closing == nil || closing.CreatedAt.Before(t.CompletedAt.Add(-finishWindow)) {
+		return "", ""
+	}
+	if agent != nil {
+		return agent.Agent, closing.Summary
+	}
+	return closing.Agent, closing.Summary
 }

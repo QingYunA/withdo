@@ -73,6 +73,8 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		done(agent(mk(12, p1, nil, "Map worktrees to the main repo", Done, P1, SourceAgent, ago(5*day)), "fix/worktree", 1), ago(5*day)),
 		done(mk(13, p1, nil, "Draft the UI spec", Done, P2, SourceUser, ago(day)), ago(day)),
 		done(mk(14, p1, nil, "Pick a UI toolkit", Done, P2, SourceUser, ago(6*day)), ago(6*day)),
+		done(agent(mk(20, p1, m1, "Port the MCP server", Done, P2, SourceAgent, ago(40*time.Minute)), "feat/mcp", 14), ago(40*time.Minute)),
+		done(mk(21, nil, nil, "Send the packaging answer", Done, P2, SourceUser, ago(3*time.Hour)), ago(3*time.Hour)),
 		agent(mk(15, p2, nil, "Issue #218 adaptation", Doing, P2, SourceAgent, ago(14*time.Minute)), "claude/issue-218", 0),
 		mk(16, p2, nil, "Cover the reply parser edge cases", Backlog, P3, SourceUser, ago(8*day)),
 		mk(17, p3, nil, "Export thumbnails to HEIC", Backlog, P2, SourceUser, ago(9*day)),
@@ -103,6 +105,8 @@ func (f *Fake) seedReports(ago timeAgo) {
 		rep(10, "claude-code", Todo, 5*time.Hour, "Planned the watcher around PRAGMA data_version", "Wait for the store port"),
 		rep(11, "claude-code", Done, 2*day, "Spike merged; the shell replaces Tauri", ""),
 		rep(12, "claude-code", Done, 5*day, "Worktrees of a remote-less repo map to the main project", ""),
+		rep(20, "claude-code", Review, 3*time.Hour, "Eight tools ported with their tests", "Open the pull request"),
+		rep(20, GitHubAgent, Done, 40*time.Minute, "PR #14 merged", ""),
 		rep(15, "claude-code", Doing, 14*time.Minute, "Writing tests for the reply parser", ""),
 		rep(15, "claude-code", Doing, 52*time.Minute, "Read the issue and mapped it to the parser", "Write the tests first"),
 	)
