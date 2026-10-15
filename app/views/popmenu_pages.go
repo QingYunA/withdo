@@ -65,9 +65,9 @@ func menuRule(c *ui.Context, t *theme.Tokens) {
 // mainPage is the whole menu: the strips, then what else can be done with the task.
 func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	pm := &m.pop
-	m.menuLabel(c, t, m.say.PropStatus())
+	m.stripLabel(c, t, "status", m.say.PropStatus(), statusLabel(m.say, task.Status))
 	m.statusStrip(c, t, task, false)
-	m.menuLabel(c, t, m.say.PropPriority())
+	m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 	m.priorityStrip(c, t, task, false)
 	menuRule(c, t)
 	m.popRow(c, t, popSpec{key: "move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
@@ -94,8 +94,9 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 // stripButton is one choice of a strip: a tinted square that shows the current one, tints under
-// the pointer and names itself in a tooltip. keyboard lists it for the arrow keys.
-func (m *Main) stripButton(c *ui.Context, t *theme.Tokens, key, label, tip string, on, keyboard bool, run func(), draw func()) {
+// the pointer and has the label above the strip name it (tip). keyboard lists it for the arrow
+// keys.
+func (m *Main) stripButton(c *ui.Context, t *theme.Tokens, strip, key, label, tip string, on, keyboard bool, run func(), draw func()) {
 	pm := &m.pop
 	idx := -1
 	if keyboard {
@@ -103,8 +104,11 @@ func (m *Main) stripButton(c *ui.Context, t *theme.Tokens, key, label, tip strin
 		pm.items = append(pm.items, run)
 	}
 	btn := ui.ButtonBase(c.Key(key)).Grow(1).MinWidth(0).Height(popStrip).Radius(8).Center().
-		Label(label).Tooltip(tip).Cursor(ui.CursorPointer)
+		Label(label).Cursor(ui.CursorPointer)
 	hot := btn.Hovered() || (idx >= 0 && pm.hl == idx)
+	if hot {
+		pm.tipNext = popTip{strip, tip}
+	}
 	switch {
 	case on && hot:
 		btn.Background(t.Accent.Alpha(0.2))
@@ -124,7 +128,7 @@ func (m *Main) statusStrip(c *ui.Context, t *theme.Tokens, task data.Task, keybo
 	ui.Row(c.Key("pop-status")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
 		for _, s := range data.Statuses {
 			name := statusLabel(m.say, s)
-			m.stripButton(c, t, "pop-status-"+string(s), m.say.A11yMenuStatus(name), name, task.Status == s, keyboard,
+			m.stripButton(c, t, "status", "pop-status-"+string(s), m.say.A11yMenuStatus(name), name, task.Status == s, keyboard,
 				func() {
 					m.closeMenu()
 					m.app.SetStatus(task, s)
@@ -143,7 +147,7 @@ func (m *Main) priorityStrip(c *ui.Context, t *theme.Tokens, task data.Task, key
 			if p == data.P0 {
 				ink = t.Blocked()
 			}
-			m.stripButton(c, t, "pop-priority-"+string(p), m.say.A11yMenuPriority(name), name, task.Priority == p, keyboard,
+			m.stripButton(c, t, "priority", "pop-priority-"+string(p), m.say.A11yMenuPriority(name), m.priorityText(p), task.Priority == p, keyboard,
 				func() {
 					m.closeMenu()
 					_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})

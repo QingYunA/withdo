@@ -2,7 +2,6 @@ package views
 
 import (
 	"testing"
-	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
@@ -34,15 +33,14 @@ func TestScreensMenu(t *testing.T) {
 				menuAt(tt, "Write the release notes", 120)
 				g, _ := tt.Find(m.say.A11yMenuStatus(statusLabel(m.say, data.Doing)))
 				tt.Move(g.X+g.W/2, g.Y+g.H/2)
-				time.Sleep(700 * time.Millisecond) // the tooltip shows after a short rest
+				tt.Frame() // the label above the strip names the choice under the pointer
+				tt.Frame()
 				return nil
 			})
 			manageShot(t, "task-menu-move"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				inProject(tt, m)
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.MenuMoveTo())
-				tt.Frame()
-				tt.Type("p")
 				return nil
 			})
 			manageShot(t, "task-menu-remind"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {

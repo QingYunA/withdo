@@ -12,6 +12,12 @@ import (
 // maxMoveRows is how many projects the Move to list shows before it scrolls.
 const maxMoveRows = 8
 
+// moveFullHeight is the height of the Move to panel for n choices: its padding and border, the
+// filter field and the list.
+func moveFullHeight(n int) float32 {
+	return 2*popPad + 2 + popRowH + 4 + float32(min(n, maxMoveRows))*popRowH
+}
+
 // movePage replaces the menu with a filter field and the Inbox and the projects, the task's own
 // checked. Typing narrows the list, the arrows walk it and Enter moves the task.
 func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {

@@ -31,6 +31,7 @@ const (
 	popPad   float32 = 6
 	popRowH  float32 = 32
 	popStrip float32 = 34
+	popEdge  float32 = 8 // the room the menu keeps from the window's edge
 )
 
 // popMenu is the state of the task menu: whose it is, where it hangs, which piece it shows.
@@ -45,12 +46,17 @@ type popMenu struct {
 	seen   string  // the filter the highlight was last set for
 	when   time.Time
 
+	tip, tipNext popTip // the choice under the pointer or the arrows, as the label shows it
+
 	frame int      // counts frames, so the press that opened the menu does not close it
 	at    int      // the frame it opened in
 	items []func() // the choices of the page this frame, in order, for the arrow keys
 	enter bool     // Enter was pressed in the filter
 	esc   bool     // Esc was pressed in the filter
 }
+
+// popTip is the name of the strip choice that is hovered or highlighted, and which strip it is in.
+type popTip struct{ strip, name string }
 
 // openMenu shows the menu for a task, hanging from the point (x, y) of the window.
 func (m *Main) openMenu(id int, page menuPage, x, y float32, back bool) {
@@ -97,13 +103,17 @@ func (m *Main) taskMenuView(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	ui.Overlay(c, func() {
-		anchor := ui.Box(c.Key("pop-anchor")).Absolute().Left(pm.x).Top(pm.y).Size(1, 1)
+		anchor := ui.Box(c.Key("pop-anchor")).Absolute().Left(pm.x).Top(m.menuTop(c)).Size(1, 1)
 		panel := ui.Column(c.Key("pop-panel")).Width(popWidth).Padding(popPad).Radius(theme.RadiusPanel).
 			Background(t.Bg).Border(1, t.Border).Role(ui.RoleDialog).Label(m.say.A11yTaskMenu()).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.25)).Shadow(0, 12, 36, 0, t.Shadow.Alpha(0.6))
 		panel.AttachTo(anchor, ui.AnchorBottomLeft, ui.AnchorTopLeft)
 		pm.items = pm.items[:0]
+		pm.tip, pm.tipNext = pm.tipNext, popTip{}
 		panel.Children(func() { m.pageBody(c, t, task) })
+		if pm.tip != pm.tipNext {
+			c.After(time.Millisecond) // the label above a strip names the choice from the frame before
+		}
 		m.menuKeys(c, panel)
 		if panel.PressedOutside() && pm.frame != pm.at {
 			m.closeMenu()
@@ -111,14 +121,34 @@ func (m *Main) taskMenuView(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
+// menuTop is where the menu hangs. The pages that do not change their height let the panel flip
+// above the point when there is no room below. The Move to page shrinks as the filter narrows it,
+// so it would flip back and forth while typing; it is placed once, by the room its whole list
+// needs: below the point, else above it, else as low as the window allows.
+func (m *Main) menuTop(c *ui.Context) float32 {
+	pm := &m.pop
+	if pm.page != pageMove {
+		return pm.y
+	}
+	_, window := c.Size()
+	full := moveFullHeight(len(m.app.snap.projects) + 1)
+	switch {
+	case pm.y+full+popEdge <= window:
+		return pm.y
+	case pm.y-full-popEdge >= 0:
+		return pm.y - full - 1
+	}
+	return max(popEdge, window-full-popEdge)
+}
+
 // pageBody builds the page the menu is on.
 func (m *Main) pageBody(c *ui.Context, t *theme.Tokens, task data.Task) {
 	switch m.pop.page {
 	case pageStatus:
-		m.menuLabel(c, t, m.say.PropStatus())
+		m.stripLabel(c, t, "status", m.say.PropStatus(), statusLabel(m.say, task.Status))
 		m.statusStrip(c, t, task, true)
 	case pagePriority:
-		m.menuLabel(c, t, m.say.PropPriority())
+		m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 		m.priorityStrip(c, t, task, true)
 	case pageMove:
 		m.movePage(c, t, task)
@@ -209,7 +239,19 @@ func (m *Main) menuBack() {
 	m.closeMenu()
 }
 
-// menuLabel is the quiet name above a strip or a list.
-func (m *Main) menuLabel(c *ui.Context, t *theme.Tokens, text string) {
-	theme.Text(c, theme.Section, t.TextTertiary, text).Padding(6, 8, 4)
+// stripLabel is the name above a strip and, after a dot, the name of the choice under the pointer
+// or the arrows, or else of the current one: "Status · Doing". It is in the label row because a
+// tooltip would cover the label.
+func (m *Main) stripLabel(c *ui.Context, t *theme.Tokens, strip, text, current string) {
+	name := current
+	if m.pop.tip.strip == strip {
+		name = m.pop.tip.name
+	}
+	ui.Row(c).Shrink(0).Padding(6, 8, 4).Gap(5).AlignItems(ui.Center).Children(func() {
+		theme.Text(c, theme.Section, t.TextSecondary, text)
+		theme.Text(c, theme.Meta, t.TextTertiary, "· "+name)
+	})
 }
+
+// priorityText is "P1 High": the code and its name.
+func (m *Main) priorityText(p data.Priority) string { return string(p) + " " + priorityName(m.say, p) }
