@@ -18,6 +18,7 @@ const (
 // convoTurn is one exchange: what I typed (kept for Retry, never shown) and what came back.
 type convoTurn struct {
 	user     string
+	pics     []picture  // what went with it, for Retry and for the field when I stop the request
 	place    data.Place // where it was typed: a retry and an answer go out from the same place
 	reply    string
 	receipts []data.Receipt
@@ -52,7 +53,7 @@ func (m *Main) assistReady() bool {
 
 // sendToAssistant sends text, typed in place into the composer on s, to the assistant, off the UI
 // thread. The answer comes back through Actions.Post.
-func (m *Main) sendToAssistant(text string, place data.Place, s surface) {
+func (m *Main) sendToAssistant(text string, place data.Place, s surface, pics ...picture) {
 	cv := &m.convo
 	if cv.thinking {
 		return
@@ -63,11 +64,11 @@ func (m *Main) sendToAssistant(text string, place data.Place, s surface) {
 		cv.turns = nil // another composer, page or task: a new sheet
 	}
 	cv.owner, cv.nav, cv.place = s, m.nav, place
-	cv.turns = append(cv.turns, convoTurn{user: text, place: place})
+	cv.turns = append(cv.turns, convoTurn{user: text, pics: pics, place: place})
 	cv.turns = cv.turns[max(0, len(cv.turns)-maxTurnsShown):]
 	asst, post := m.app.Assistant, m.app.Act.Post
 	go func() {
-		reply, err := asst.Ask(ctx, text, place)
+		reply, err := asst.Ask(ctx, text, place, attachments(pics)...)
 		post(func() { m.answered(text, reply, err) })
 	}()
 }
@@ -92,6 +93,9 @@ func (m *Main) answered(text string, reply data.Reply, err error) {
 	switch {
 	case errors.Is(err, context.Canceled):
 		m.stopped(text, i)
+	case data.ProblemOf(err) == data.ProblemNoImages:
+		turn.err = m.say.ProblemNoImages(m.modelName())
+		m.cmp[cv.owner].modelOpen = true // to pick a model that can read them; Retry sends them again
 	case err != nil:
 		turn.err = problemText(m.say, err)
 	default:
@@ -108,6 +112,7 @@ func (m *Main) stopped(text string, i int) {
 		cv.turns[i].stopped = true
 		return
 	}
+	m.cmp[cv.owner].pics = cv.turns[i].pics
 	cv.turns = cv.turns[:i]
 	m.cmp[cv.owner].buf = text
 	m.closeSheet()
@@ -154,7 +159,7 @@ func (m *Main) retry() {
 	}
 	last := cv.turns[len(cv.turns)-1]
 	cv.turns = cv.turns[:len(cv.turns)-1]
-	m.sendToAssistant(last.user, last.place, cv.owner)
+	m.sendToAssistant(last.user, last.place, cv.owner, last.pics...)
 }
 
 // undo reverts one receipt. Its line stays, struck through, so it is clear what happened.

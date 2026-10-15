@@ -302,5 +302,18 @@
   "settingsNeedsModel": "选一个模型，或者直接输入。",
   "settingsAgentsConnected": "接入的 Agent",
   "settingsAgentIdle": "今天还没汇报",
-  "settingsAgentReports": "今天汇报 {count} 次"
+  "settingsAgentReports": "今天汇报 {count} 次",
+  "composerModelLabel": "模型：{model}",
+  "composerModelTitle": "换个模型",
+  "composerModelNone": "还没有连接模型。",
+  "composerAttach": "添加图片",
+  "composerAttachTitle": "选择图片",
+  "composerPictureRemove": "移除 {name}",
+  "composerPicture": "图片 {name}",
+  "composerPictureLimit": "一次最多 4 张图片。",
+  "composerPictureFormat": "这个文件不是 PNG、JPEG、GIF 或 WebP 图片。",
+  "composerPictureSize": "这张图片太大了，缩小后也超限。",
+  "composerPictureUnreadable": "读不了这个文件。",
+  "composerPictureDrop": "松手即可添加图片",
+  "problemNoImages": "{model} 看不了图片。"
 }

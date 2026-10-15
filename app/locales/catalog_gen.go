@@ -4463,3 +4463,199 @@ func SettingsAgentReports(count int) string { return In(i18n.Locale()).SettingsA
 func (msgs Messages) SettingsAgentReports(count int) string {
 	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
 }
+
+// ComposerModelLabel says "Model: {model}"
+// in the language the app shows.
+//
+// Accessibility label of the model chip at the bottom right of the
+// composer: the model in use.
+func ComposerModelLabel(model string) string { return In(i18n.Locale()).ComposerModelLabel(model) }
+
+// ComposerModelLabel says "Model: {model}"
+// in the language of msgs.
+//
+// Accessibility label of the model chip at the bottom right of the
+// composer: the model in use.
+func (msgs Messages) ComposerModelLabel(model string) string {
+	return Catalog.Format(msgs.locale, "composerModelLabel", map[string]any{"model": model})
+}
+
+// ComposerModelTitle says "Switch model"
+// in the language the app shows.
+//
+// Heading of the popover that lists the configured models, opened from the
+// model chip.
+func ComposerModelTitle() string { return In(i18n.Locale()).ComposerModelTitle() }
+
+// ComposerModelTitle says "Switch model"
+// in the language of msgs.
+//
+// Heading of the popover that lists the configured models, opened from the
+// model chip.
+func (msgs Messages) ComposerModelTitle() string {
+	return Catalog.Format(msgs.locale, "composerModelTitle", nil)
+}
+
+// ComposerModelNone says "No model is connected yet."
+// in the language the app shows.
+//
+// Line of the model popover when no provider is configured (it is not
+// normally reachable).
+func ComposerModelNone() string { return In(i18n.Locale()).ComposerModelNone() }
+
+// ComposerModelNone says "No model is connected yet."
+// in the language of msgs.
+//
+// Line of the model popover when no provider is configured (it is not
+// normally reachable).
+func (msgs Messages) ComposerModelNone() string {
+	return Catalog.Format(msgs.locale, "composerModelNone", nil)
+}
+
+// ComposerAttach says "Add images"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the + button of the composer, which
+// opens a file panel for images.
+func ComposerAttach() string { return In(i18n.Locale()).ComposerAttach() }
+
+// ComposerAttach says "Add images"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the + button of the composer, which
+// opens a file panel for images.
+func (msgs Messages) ComposerAttach() string {
+	return Catalog.Format(msgs.locale, "composerAttach", nil)
+}
+
+// ComposerAttachTitle says "Choose images"
+// in the language the app shows.
+//
+// Title of the file panel that opens from the + button of the composer.
+func ComposerAttachTitle() string { return In(i18n.Locale()).ComposerAttachTitle() }
+
+// ComposerAttachTitle says "Choose images"
+// in the language of msgs.
+//
+// Title of the file panel that opens from the + button of the composer.
+func (msgs Messages) ComposerAttachTitle() string {
+	return Catalog.Format(msgs.locale, "composerAttachTitle", nil)
+}
+
+// ComposerPictureRemove says "Remove {name}"
+// in the language the app shows.
+//
+// Accessibility label of the x on the thumbnail of an attached image.
+func ComposerPictureRemove(name string) string { return In(i18n.Locale()).ComposerPictureRemove(name) }
+
+// ComposerPictureRemove says "Remove {name}"
+// in the language of msgs.
+//
+// Accessibility label of the x on the thumbnail of an attached image.
+func (msgs Messages) ComposerPictureRemove(name string) string {
+	return Catalog.Format(msgs.locale, "composerPictureRemove", map[string]any{"name": name})
+}
+
+// ComposerPicture says "Image {name}"
+// in the language the app shows.
+//
+// Accessibility label of the thumbnail of an attached image.
+func ComposerPicture(name string) string { return In(i18n.Locale()).ComposerPicture(name) }
+
+// ComposerPicture says "Image {name}"
+// in the language of msgs.
+//
+// Accessibility label of the thumbnail of an attached image.
+func (msgs Messages) ComposerPicture(name string) string {
+	return Catalog.Format(msgs.locale, "composerPicture", map[string]any{"name": name})
+}
+
+// ComposerPictureLimit says "At most 4 images at a time."
+// in the language the app shows.
+//
+// Quiet line under the composer when a fifth image is added.
+func ComposerPictureLimit() string { return In(i18n.Locale()).ComposerPictureLimit() }
+
+// ComposerPictureLimit says "At most 4 images at a time."
+// in the language of msgs.
+//
+// Quiet line under the composer when a fifth image is added.
+func (msgs Messages) ComposerPictureLimit() string {
+	return Catalog.Format(msgs.locale, "composerPictureLimit", nil)
+}
+
+// ComposerPictureFormat says "That file isn't a PNG, JPEG, GIF or WebP image."
+// in the language the app shows.
+//
+// Quiet line under the composer when a dropped, pasted or chosen file
+// cannot be read as an image (a HEIC photo, a PDF).
+func ComposerPictureFormat() string { return In(i18n.Locale()).ComposerPictureFormat() }
+
+// ComposerPictureFormat says "That file isn't a PNG, JPEG, GIF or WebP image."
+// in the language of msgs.
+//
+// Quiet line under the composer when a dropped, pasted or chosen file
+// cannot be read as an image (a HEIC photo, a PDF).
+func (msgs Messages) ComposerPictureFormat() string {
+	return Catalog.Format(msgs.locale, "composerPictureFormat", nil)
+}
+
+// ComposerPictureSize says "That image is too large, even shrunk."
+// in the language the app shows.
+//
+// Quiet line under the composer when an image is still over 5 MB after it
+// was shrunk.
+func ComposerPictureSize() string { return In(i18n.Locale()).ComposerPictureSize() }
+
+// ComposerPictureSize says "That image is too large, even shrunk."
+// in the language of msgs.
+//
+// Quiet line under the composer when an image is still over 5 MB after it
+// was shrunk.
+func (msgs Messages) ComposerPictureSize() string {
+	return Catalog.Format(msgs.locale, "composerPictureSize", nil)
+}
+
+// ComposerPictureUnreadable says "Couldn't read that file."
+// in the language the app shows.
+//
+// Quiet line under the composer when a dropped file cannot be opened.
+func ComposerPictureUnreadable() string { return In(i18n.Locale()).ComposerPictureUnreadable() }
+
+// ComposerPictureUnreadable says "Couldn't read that file."
+// in the language of msgs.
+//
+// Quiet line under the composer when a dropped file cannot be opened.
+func (msgs Messages) ComposerPictureUnreadable() string {
+	return Catalog.Format(msgs.locale, "composerPictureUnreadable", nil)
+}
+
+// ComposerPictureDrop says "Drop images to attach"
+// in the language the app shows.
+//
+// Hint inside the composer while image files are dragged over it.
+func ComposerPictureDrop() string { return In(i18n.Locale()).ComposerPictureDrop() }
+
+// ComposerPictureDrop says "Drop images to attach"
+// in the language of msgs.
+//
+// Hint inside the composer while image files are dragged over it.
+func (msgs Messages) ComposerPictureDrop() string {
+	return Catalog.Format(msgs.locale, "composerPictureDrop", nil)
+}
+
+// ProblemNoImages says "{model} cannot read images."
+// in the language the app shows.
+//
+// Assistant error: pictures were sent to a model that does not take them.
+// The model chip opens next, to pick another.
+func ProblemNoImages(model string) string { return In(i18n.Locale()).ProblemNoImages(model) }
+
+// ProblemNoImages says "{model} cannot read images."
+// in the language of msgs.
+//
+// Assistant error: pictures were sent to a model that does not take them.
+// The model chip opens next, to pick another.
+func (msgs Messages) ProblemNoImages(model string) string {
+	return Catalog.Format(msgs.locale, "problemNoImages", map[string]any{"model": model})
+}

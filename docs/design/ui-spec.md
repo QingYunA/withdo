@@ -262,10 +262,41 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
   ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the avatar and `⌘K` give
   way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text, absent while
-  the field is empty; neutral while the assistant is still working on the last request). The box
-  keeps its 50 pt from rest to one line of text, so focusing it moves nothing. Empty and focused it
-  shows only the cursor and the placeholder. No `↵ to send` or `⇧↵ new line` text: the button is the
+  the field is empty; neutral while the assistant is still working on the last request). Without a
+  model the box keeps its 50 pt from rest to one line of text; with one, the second row below adds
+  its height once there is text. Focusing it moves nothing either way. Empty and focused it
+  shows only the cursor and the placeholder (and a `+`, below). No `↵ to send` or `⇧↵ new line` text: the button is the
   hint.
+- **Second row (M6, with a model connected).** Once the box holds text or an image, a 28 pt row shows
+  under the text: `+` (16 pt plus icon, `text.secondary`, round hover well) at the left, then the
+  **model chip**, then the send button, which moves down into this row. Focusing an *empty* box still
+  moves nothing: it shows only the cursor and the placeholder, with the `+` in the avatar's place so
+  images can be added at once. (A box that grows when it is focused would shift the page under a
+  press that blurs it, and the click would be lost; the second row appears with text, and stays
+  while there is text, focused or not.) Without a model there is no second row, no `+` and no chip.
+- **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's logo (16), `Provider · model`
+  in `meta` `text.secondary`, a 12 pt chevron; ellipsized when the box is narrow (the inspector's).
+  Hidden when no model is connected. A click opens a drawn **popover** (a native menu cannot show
+  logos), 270 pt wide, hanging from the chip's right edge (above it where there is no room below):
+  the heading `Switch model` in `meta` `text.tertiary`, then one 32 pt row per provider that is set up
+  (logo, name in `compact`, its model in `meta` `text.tertiary` at the right), the one in use on
+  `bg.selected` with an accent check. Choosing a row makes it the provider in use, exactly as Settings >
+  Assistant does, closes the popover and puts the cursor back in the field. `Esc` or a press outside
+  closes it. The logo is drawn by one function, `providerMark` in `composer_model.go`.
+- **Images.** Pasted with `⌘V` (the pasteboard holds an image or image files), dropped on the box (it
+  takes an accent ring and a faint accent tint while files are dragged over it), or chosen with `+`
+  (the system's file panel). A paste of text is untouched. Each image shows as a 64 x 48 thumbnail
+  (8 pt radius, hairline border, cover-fit) in a row above the text, with an 18 pt round `x` at its
+  top-right corner that removes it. At most 4; a fifth, a file that is not a PNG, JPEG, GIF or
+  WebP image (a HEIC photo, a PDF), one still over 5 MB after shrinking, or an unreadable file
+  shows a quiet `compact` `text.secondary` line under the box for 4 s and is not taken. Images are
+  shrunk to at most 1600 px on the long side and re-encoded (a JPEG stays a JPEG, the rest PNG; a
+  noisy PNG over 5 MB goes out as JPEG), off the UI thread. They are sent with the text (`↵` or the
+  send button; images alone can be sent too) and live in memory only: never in the database, never on
+  disk. A turn that fails keeps its images for **Retry**, and a stopped turn puts them back in the box.
+- **A model that cannot read images.** The provider's refusal is classified (`providers.KindNoImages`)
+  and the error line says `<model> cannot read images.` with the model chip open, to pick another;
+  **Retry** then sends the same text and images to it.
 - **Keys.** `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the answer,
   else leaves the field. `↓` on a page walks into the rows. `↵` on an empty field opens the highlighted
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
