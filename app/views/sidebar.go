@@ -18,9 +18,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
-		ui.Row(c).Padding(18, 18, 6).Shrink(0).Children(func() {
-			theme.Text(c, theme.Section, t.TextTertiary, m.say.NavProjects())
-		})
+		m.projectsHeader(c, t)
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
 			m.projectRow(c, t, p, n, blocked)
@@ -62,21 +60,61 @@ func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *
 func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool) {
 	to := nav{screen: screenProject, projectID: p.ID}
 	selected := m.nav == to
+	renaming := m.manage.rename.id == p.ID
 	row := sidebarRow(c, t, p.ID, selected)
+	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
 		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
 			theme.Text(c, theme.Body, t.TextTertiary, "#")
 		})
-		sidebarLabel(c, t, p.Name, selected)
+		if renaming {
+			m.renameInput(c, t)
+		} else {
+			sidebarLabel(c, t, p.Name, selected)
+		}
 		if blocked {
 			theme.Dot(c, t.Blocked(), 6).Shrink(0).Margin(0, 2, 0, 0)
 		} else {
 			sidebarCount(c, t, n)
 		}
 	})
-	if row.Clicked() {
+	if row.Clicked() && !renaming {
 		m.goTo(to)
 	}
+}
+
+// projectMenu is the context menu of a project row.
+func (m *Main) projectMenu(mn *ui.Menu, p data.Project) {
+	if mn.Item(m.say.ManageRename()).Chosen() {
+		m.startRename(p.ID, p.Name)
+	}
+	if mn.Item(m.say.ManageArchive()).Chosen() {
+		if m.app.ArchiveProject(p.ID) == nil {
+			m.leaveProject(p.ID)
+		}
+	}
+	mn.Separator()
+	if mn.Item(m.say.ManageDelete()).Chosen() {
+		m.askDeleteProject(p.ID)
+	}
+}
+
+// projectsHeader is PROJECTS with a quiet plus that opens the New project sheet.
+func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
+	ui.Row(c).Padding(12, 12, 2, 18).Shrink(0).AlignItems(ui.Center).Children(func() {
+		theme.Text(c, theme.Section, t.TextTertiary, m.say.NavProjects())
+		ui.Spacer(c)
+		tip := m.say.ManageNewProjectTip()
+		btn := ui.ButtonBase(c.Key("new-project")).Size(theme.HitTarget, theme.HitTarget).Shrink(0).Center().
+			Radius(theme.RadiusControl).Label(tip).Tooltip(tip).TextColor(t.TextTertiary).Cursor(ui.CursorPointer)
+		if btn.Hovered() {
+			btn.Background(t.BgHover).TextColor(t.TextSecondary)
+		}
+		btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(14, 14) })
+		if btn.Clicked() {
+			m.openNewProject()
+		}
+	})
 }
 
 func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {

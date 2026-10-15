@@ -1262,6 +1262,738 @@ func (msgs Messages) ListTaskTitle() string {
 	return Catalog.Format(msgs.locale, "listTaskTitle", nil)
 }
 
+// ManageA11yProject says "Project: {name}"
+// in the language the app shows.
+//
+// Accessibility label of the project value button in the inspector.
+func ManageA11yProject(name string) string { return In(i18n.Locale()).ManageA11yProject(name) }
+
+// ManageA11yProject says "Project: {name}"
+// in the language of msgs.
+//
+// Accessibility label of the project value button in the inspector.
+func (msgs Messages) ManageA11yProject(name string) string {
+	return Catalog.Format(msgs.locale, "manageA11yProject", map[string]any{"name": name})
+}
+
+// ManageA11yRestore says "Restore {name}"
+// in the language the app shows.
+//
+// Accessibility label of the Restore button of an archived project.
+func ManageA11yRestore(name string) string { return In(i18n.Locale()).ManageA11yRestore(name) }
+
+// ManageA11yRestore says "Restore {name}"
+// in the language of msgs.
+//
+// Accessibility label of the Restore button of an archived project.
+func (msgs Messages) ManageA11yRestore(name string) string {
+	return Catalog.Format(msgs.locale, "manageA11yRestore", map[string]any{"name": name})
+}
+
+// ManageArchive says "Archive"
+// in the language the app shows.
+//
+// Item of a project context menu: hide the project and its tasks. They can
+// be restored in Settings.
+func ManageArchive() string { return In(i18n.Locale()).ManageArchive() }
+
+// ManageArchive says "Archive"
+// in the language of msgs.
+//
+// Item of a project context menu: hide the project and its tasks. They can
+// be restored in Settings.
+func (msgs Messages) ManageArchive() string {
+	return Catalog.Format(msgs.locale, "manageArchive", nil)
+}
+
+// ManageArchivedNone says "No archived projects. Archive one from its menu in the sidebar."
+// in the language the app shows.
+//
+// Shown in Settings when no project is archived; says how to archive one.
+func ManageArchivedNone() string { return In(i18n.Locale()).ManageArchivedNone() }
+
+// ManageArchivedNone says "No archived projects. Archive one from its menu in the sidebar."
+// in the language of msgs.
+//
+// Shown in Settings when no project is archived; says how to archive one.
+func (msgs Messages) ManageArchivedNone() string {
+	return Catalog.Format(msgs.locale, "manageArchivedNone", nil)
+}
+
+// ManageArchivedTitle says "Archived projects"
+// in the language the app shows.
+//
+// Header of the block of Settings that lists archived projects.
+func ManageArchivedTitle() string { return In(i18n.Locale()).ManageArchivedTitle() }
+
+// ManageArchivedTitle says "Archived projects"
+// in the language of msgs.
+//
+// Header of the block of Settings that lists archived projects.
+func (msgs Messages) ManageArchivedTitle() string {
+	return Catalog.Format(msgs.locale, "manageArchivedTitle", nil)
+}
+
+// ManageCancel says "Cancel"
+// in the language the app shows.
+//
+// Button that closes a sheet or a confirmation without doing anything.
+func ManageCancel() string { return In(i18n.Locale()).ManageCancel() }
+
+// ManageCancel says "Cancel"
+// in the language of msgs.
+//
+// Button that closes a sheet or a confirmation without doing anything.
+func (msgs Messages) ManageCancel() string {
+	return Catalog.Format(msgs.locale, "manageCancel", nil)
+}
+
+// ManageCreate says "Create"
+// in the language the app shows.
+//
+// Primary button of the new project and new milestone sheets.
+func ManageCreate() string { return In(i18n.Locale()).ManageCreate() }
+
+// ManageCreate says "Create"
+// in the language of msgs.
+//
+// Primary button of the new project and new milestone sheets.
+func (msgs Messages) ManageCreate() string {
+	return Catalog.Format(msgs.locale, "manageCreate", nil)
+}
+
+// ManageDelete says "Delete…"
+// in the language the app shows.
+//
+// Item of a context menu that asks before it deletes a project or a task.
+// The ellipsis says a question follows.
+func ManageDelete() string { return In(i18n.Locale()).ManageDelete() }
+
+// ManageDelete says "Delete…"
+// in the language of msgs.
+//
+// Item of a context menu that asks before it deletes a project or a task.
+// The ellipsis says a question follows.
+func (msgs Messages) ManageDelete() string {
+	return Catalog.Format(msgs.locale, "manageDelete", nil)
+}
+
+// ManageDeleteConfirm says "Delete"
+// in the language the app shows.
+//
+// Button that confirms a deletion.
+func ManageDeleteConfirm() string { return In(i18n.Locale()).ManageDeleteConfirm() }
+
+// ManageDeleteConfirm says "Delete"
+// in the language of msgs.
+//
+// Button that confirms a deletion.
+func (msgs Messages) ManageDeleteConfirm() string {
+	return Catalog.Format(msgs.locale, "manageDeleteConfirm", nil)
+}
+
+// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project’s milestones. It can’t …"
+// in the language the app shows.
+//
+// Body of the confirmation before a project that has tasks is deleted.
+func ManageDeleteProjectBody(count int) string {
+	return In(i18n.Locale()).ManageDeleteProjectBody(count)
+}
+
+// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project’s milestones. It can’t …"
+// in the language of msgs.
+//
+// Body of the confirmation before a project that has tasks is deleted.
+func (msgs Messages) ManageDeleteProjectBody(count int) string {
+	return Catalog.Format(msgs.locale, "manageDeleteProjectBody", map[string]any{"count": count})
+}
+
+// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can’t be undone."
+// in the language the app shows.
+//
+// Body of the confirmation before a project without tasks is deleted.
+func ManageDeleteProjectEmpty() string { return In(i18n.Locale()).ManageDeleteProjectEmpty() }
+
+// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can’t be undone."
+// in the language of msgs.
+//
+// Body of the confirmation before a project without tasks is deleted.
+func (msgs Messages) ManageDeleteProjectEmpty() string {
+	return Catalog.Format(msgs.locale, "manageDeleteProjectEmpty", nil)
+}
+
+// ManageDeleteProjectTitle says "Delete “{name}”?"
+// in the language the app shows.
+//
+// Title of the confirmation before a project is deleted.
+func ManageDeleteProjectTitle(name string) string {
+	return In(i18n.Locale()).ManageDeleteProjectTitle(name)
+}
+
+// ManageDeleteProjectTitle says "Delete “{name}”?"
+// in the language of msgs.
+//
+// Title of the confirmation before a project is deleted.
+func (msgs Messages) ManageDeleteProjectTitle(name string) string {
+	return Catalog.Format(msgs.locale, "manageDeleteProjectTitle", map[string]any{"name": name})
+}
+
+// ManageDeleteTask says "Delete task…"
+// in the language the app shows.
+//
+// Quiet button at the bottom of the inspector; it asks before it deletes
+// the task.
+func ManageDeleteTask() string { return In(i18n.Locale()).ManageDeleteTask() }
+
+// ManageDeleteTask says "Delete task…"
+// in the language of msgs.
+//
+// Quiet button at the bottom of the inspector; it asks before it deletes
+// the task.
+func (msgs Messages) ManageDeleteTask() string {
+	return Catalog.Format(msgs.locale, "manageDeleteTask", nil)
+}
+
+// ManageDeleteTaskBody says "Its progress reports go with it. It can’t be undone."
+// in the language the app shows.
+//
+// Body of the confirmation before a task is deleted.
+func ManageDeleteTaskBody() string { return In(i18n.Locale()).ManageDeleteTaskBody() }
+
+// ManageDeleteTaskBody says "Its progress reports go with it. It can’t be undone."
+// in the language of msgs.
+//
+// Body of the confirmation before a task is deleted.
+func (msgs Messages) ManageDeleteTaskBody() string {
+	return Catalog.Format(msgs.locale, "manageDeleteTaskBody", nil)
+}
+
+// ManageDeleteTaskTitle says "Delete “{title}”?"
+// in the language the app shows.
+//
+// Title of the confirmation before a task is deleted.
+func ManageDeleteTaskTitle(title string) string {
+	return In(i18n.Locale()).ManageDeleteTaskTitle(title)
+}
+
+// ManageDeleteTaskTitle says "Delete “{title}”?"
+// in the language of msgs.
+//
+// Title of the confirmation before a task is deleted.
+func (msgs Messages) ManageDeleteTaskTitle(title string) string {
+	return Catalog.Format(msgs.locale, "manageDeleteTaskTitle", map[string]any{"title": title})
+}
+
+// ManageFieldName says "Name"
+// in the language the app shows.
+//
+// Label of the name field in the new project sheet.
+func ManageFieldName() string { return In(i18n.Locale()).ManageFieldName() }
+
+// ManageFieldName says "Name"
+// in the language of msgs.
+//
+// Label of the name field in the new project sheet.
+func (msgs Messages) ManageFieldName() string {
+	return Catalog.Format(msgs.locale, "manageFieldName", nil)
+}
+
+// ManageFieldRepo says "GitHub repository"
+// in the language the app shows.
+//
+// Label of the optional repository field in the new project sheet.
+func ManageFieldRepo() string { return In(i18n.Locale()).ManageFieldRepo() }
+
+// ManageFieldRepo says "GitHub repository"
+// in the language of msgs.
+//
+// Label of the optional repository field in the new project sheet.
+func (msgs Messages) ManageFieldRepo() string {
+	return Catalog.Format(msgs.locale, "manageFieldRepo", nil)
+}
+
+// ManageLogbookEmptyBody says "Tasks you mark done or cancel collect here, newest first."
+// in the language the app shows.
+//
+// Body of the empty Logbook; says what appears there.
+func ManageLogbookEmptyBody() string { return In(i18n.Locale()).ManageLogbookEmptyBody() }
+
+// ManageLogbookEmptyBody says "Tasks you mark done or cancel collect here, newest first."
+// in the language of msgs.
+//
+// Body of the empty Logbook; says what appears there.
+func (msgs Messages) ManageLogbookEmptyBody() string {
+	return Catalog.Format(msgs.locale, "manageLogbookEmptyBody", nil)
+}
+
+// ManageLogbookEmptyTitle says "Nothing finished yet"
+// in the language the app shows.
+//
+// Title of the empty Logbook.
+func ManageLogbookEmptyTitle() string { return In(i18n.Locale()).ManageLogbookEmptyTitle() }
+
+// ManageLogbookEmptyTitle says "Nothing finished yet"
+// in the language of msgs.
+//
+// Title of the empty Logbook.
+func (msgs Messages) ManageLogbookEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "manageLogbookEmptyTitle", nil)
+}
+
+// ManageLogbookOlder says "Show older"
+// in the language the app shows.
+//
+// Link at the end of the Logbook that loads older finished tasks.
+func ManageLogbookOlder() string { return In(i18n.Locale()).ManageLogbookOlder() }
+
+// ManageLogbookOlder says "Show older"
+// in the language of msgs.
+//
+// Link at the end of the Logbook that loads older finished tasks.
+func (msgs Messages) ManageLogbookOlder() string {
+	return Catalog.Format(msgs.locale, "manageLogbookOlder", nil)
+}
+
+// ManageLogbookSubtitle says "Done and cancelled, newest first"
+// in the language the app shows.
+//
+// Subtitle of the Logbook page.
+func ManageLogbookSubtitle() string { return In(i18n.Locale()).ManageLogbookSubtitle() }
+
+// ManageLogbookSubtitle says "Done and cancelled, newest first"
+// in the language of msgs.
+//
+// Subtitle of the Logbook page.
+func (msgs Messages) ManageLogbookSubtitle() string {
+	return Catalog.Format(msgs.locale, "manageLogbookSubtitle", nil)
+}
+
+// ManageMilestoneClose says "Close milestone"
+// in the language the app shows.
+//
+// Item of a milestone submenu: marks the milestone as closed.
+func ManageMilestoneClose() string { return In(i18n.Locale()).ManageMilestoneClose() }
+
+// ManageMilestoneClose says "Close milestone"
+// in the language of msgs.
+//
+// Item of a milestone submenu: marks the milestone as closed.
+func (msgs Messages) ManageMilestoneClose() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneClose", nil)
+}
+
+// ManageMilestoneDue says "Due date…"
+// in the language the app shows.
+//
+// Item of a milestone submenu: opens the due date sheet.
+func ManageMilestoneDue() string { return In(i18n.Locale()).ManageMilestoneDue() }
+
+// ManageMilestoneDue says "Due date…"
+// in the language of msgs.
+//
+// Item of a milestone submenu: opens the due date sheet.
+func (msgs Messages) ManageMilestoneDue() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneDue", nil)
+}
+
+// ManageMilestoneDueTitle says "Due date of “{title}”"
+// in the language the app shows.
+//
+// Title of the sheet that sets the due date of a milestone.
+func ManageMilestoneDueTitle(title string) string {
+	return In(i18n.Locale()).ManageMilestoneDueTitle(title)
+}
+
+// ManageMilestoneDueTitle says "Due date of “{title}”"
+// in the language of msgs.
+//
+// Title of the sheet that sets the due date of a milestone.
+func (msgs Messages) ManageMilestoneDueTitle(title string) string {
+	return Catalog.Format(msgs.locale, "manageMilestoneDueTitle", map[string]any{"title": title})
+}
+
+// ManageMilestoneEdit says "Edit “{title}”"
+// in the language the app shows.
+//
+// Item of the milestone menu that opens a submenu for one milestone.
+func ManageMilestoneEdit(title string) string { return In(i18n.Locale()).ManageMilestoneEdit(title) }
+
+// ManageMilestoneEdit says "Edit “{title}”"
+// in the language of msgs.
+//
+// Item of the milestone menu that opens a submenu for one milestone.
+func (msgs Messages) ManageMilestoneEdit(title string) string {
+	return Catalog.Format(msgs.locale, "manageMilestoneEdit", map[string]any{"title": title})
+}
+
+// ManageMilestoneNew says "New milestone…"
+// in the language the app shows.
+//
+// Item of the milestone menu that opens the new milestone sheet.
+func ManageMilestoneNew() string { return In(i18n.Locale()).ManageMilestoneNew() }
+
+// ManageMilestoneNew says "New milestone…"
+// in the language of msgs.
+//
+// Item of the milestone menu that opens the new milestone sheet.
+func (msgs Messages) ManageMilestoneNew() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneNew", nil)
+}
+
+// ManageMilestoneNewTitle says "New milestone"
+// in the language the app shows.
+//
+// Title of the new milestone sheet.
+func ManageMilestoneNewTitle() string { return In(i18n.Locale()).ManageMilestoneNewTitle() }
+
+// ManageMilestoneNewTitle says "New milestone"
+// in the language of msgs.
+//
+// Title of the new milestone sheet.
+func (msgs Messages) ManageMilestoneNewTitle() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneNewTitle", nil)
+}
+
+// ManageMilestoneNoDue says "No due date"
+// in the language the app shows.
+//
+// Shown in the milestone sheet when no due date is set.
+func ManageMilestoneNoDue() string { return In(i18n.Locale()).ManageMilestoneNoDue() }
+
+// ManageMilestoneNoDue says "No due date"
+// in the language of msgs.
+//
+// Shown in the milestone sheet when no due date is set.
+func (msgs Messages) ManageMilestoneNoDue() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneNoDue", nil)
+}
+
+// ManageMilestonePlaceholder says "Milestone name"
+// in the language the app shows.
+//
+// Placeholder of the title field of the milestone sheet.
+func ManageMilestonePlaceholder() string { return In(i18n.Locale()).ManageMilestonePlaceholder() }
+
+// ManageMilestonePlaceholder says "Milestone name"
+// in the language of msgs.
+//
+// Placeholder of the title field of the milestone sheet.
+func (msgs Messages) ManageMilestonePlaceholder() string {
+	return Catalog.Format(msgs.locale, "manageMilestonePlaceholder", nil)
+}
+
+// ManageMilestoneRename says "Rename…"
+// in the language the app shows.
+//
+// Item of a milestone submenu: opens the rename sheet.
+func ManageMilestoneRename() string { return In(i18n.Locale()).ManageMilestoneRename() }
+
+// ManageMilestoneRename says "Rename…"
+// in the language of msgs.
+//
+// Item of a milestone submenu: opens the rename sheet.
+func (msgs Messages) ManageMilestoneRename() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneRename", nil)
+}
+
+// ManageMilestoneRenameTitle says "Rename milestone"
+// in the language the app shows.
+//
+// Title of the rename milestone sheet.
+func ManageMilestoneRenameTitle() string { return In(i18n.Locale()).ManageMilestoneRenameTitle() }
+
+// ManageMilestoneRenameTitle says "Rename milestone"
+// in the language of msgs.
+//
+// Title of the rename milestone sheet.
+func (msgs Messages) ManageMilestoneRenameTitle() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneRenameTitle", nil)
+}
+
+// ManageMilestoneReopen says "Reopen milestone"
+// in the language the app shows.
+//
+// Item of the submenu of a closed milestone.
+func ManageMilestoneReopen() string { return In(i18n.Locale()).ManageMilestoneReopen() }
+
+// ManageMilestoneReopen says "Reopen milestone"
+// in the language of msgs.
+//
+// Item of the submenu of a closed milestone.
+func (msgs Messages) ManageMilestoneReopen() string {
+	return Catalog.Format(msgs.locale, "manageMilestoneReopen", nil)
+}
+
+// ManageMoveTo says "Move to"
+// in the language the app shows.
+//
+// Item of a task context menu that opens the list of projects (and the
+// Inbox) to move the task to.
+func ManageMoveTo() string { return In(i18n.Locale()).ManageMoveTo() }
+
+// ManageMoveTo says "Move to"
+// in the language of msgs.
+//
+// Item of a task context menu that opens the list of projects (and the
+// Inbox) to move the task to.
+func (msgs Messages) ManageMoveTo() string {
+	return Catalog.Format(msgs.locale, "manageMoveTo", nil)
+}
+
+// ManageNavLogbook says "Logbook"
+// in the language the app shows.
+//
+// Sidebar row and page title for finished tasks (done and cancelled),
+// newest first.
+func ManageNavLogbook() string { return In(i18n.Locale()).ManageNavLogbook() }
+
+// ManageNavLogbook says "Logbook"
+// in the language of msgs.
+//
+// Sidebar row and page title for finished tasks (done and cancelled),
+// newest first.
+func (msgs Messages) ManageNavLogbook() string {
+	return Catalog.Format(msgs.locale, "manageNavLogbook", nil)
+}
+
+// ManageNewProjectTip says "New project"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the plus button on the PROJECTS header
+// of the sidebar, and the title of the new project sheet.
+func ManageNewProjectTip() string { return In(i18n.Locale()).ManageNewProjectTip() }
+
+// ManageNewProjectTip says "New project"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the plus button on the PROJECTS header
+// of the sidebar, and the title of the new project sheet.
+func (msgs Messages) ManageNewProjectTip() string {
+	return Catalog.Format(msgs.locale, "manageNewProjectTip", nil)
+}
+
+// ManagePropProject says "Project"
+// in the language the app shows.
+//
+// Label of the project row of the inspector.
+func ManagePropProject() string { return In(i18n.Locale()).ManagePropProject() }
+
+// ManagePropProject says "Project"
+// in the language of msgs.
+//
+// Label of the project row of the inspector.
+func (msgs Messages) ManagePropProject() string {
+	return Catalog.Format(msgs.locale, "managePropProject", nil)
+}
+
+// ManageRename says "Rename"
+// in the language the app shows.
+//
+// Item of a project context menu: edit its name in the sidebar.
+func ManageRename() string { return In(i18n.Locale()).ManageRename() }
+
+// ManageRename says "Rename"
+// in the language of msgs.
+//
+// Item of a project context menu: edit its name in the sidebar.
+func (msgs Messages) ManageRename() string {
+	return Catalog.Format(msgs.locale, "manageRename", nil)
+}
+
+// ManageRenameLabel says "Project name"
+// in the language the app shows.
+//
+// Accessibility label of the name field while a project is renamed in the
+// sidebar.
+func ManageRenameLabel() string { return In(i18n.Locale()).ManageRenameLabel() }
+
+// ManageRenameLabel says "Project name"
+// in the language of msgs.
+//
+// Accessibility label of the name field while a project is renamed in the
+// sidebar.
+func (msgs Messages) ManageRenameLabel() string {
+	return Catalog.Format(msgs.locale, "manageRenameLabel", nil)
+}
+
+// ManageRepoHelp says "Agent reports from this repository land in the project."
+// in the language the app shows.
+//
+// Help line under the repository field of the new project sheet.
+func ManageRepoHelp() string { return In(i18n.Locale()).ManageRepoHelp() }
+
+// ManageRepoHelp says "Agent reports from this repository land in the project."
+// in the language of msgs.
+//
+// Help line under the repository field of the new project sheet.
+func (msgs Messages) ManageRepoHelp() string {
+	return Catalog.Format(msgs.locale, "manageRepoHelp", nil)
+}
+
+// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/adhd-todo."
+// in the language the app shows.
+//
+// Shown under the repository field when what was typed is not a repository
+// name.
+func ManageRepoInvalid() string { return In(i18n.Locale()).ManageRepoInvalid() }
+
+// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/adhd-todo."
+// in the language of msgs.
+//
+// Shown under the repository field when what was typed is not a repository
+// name.
+func (msgs Messages) ManageRepoInvalid() string {
+	return Catalog.Format(msgs.locale, "manageRepoInvalid", nil)
+}
+
+// ManageRepoPlaceholder says "owner/repo"
+// in the language the app shows.
+//
+// Placeholder of the repository field: the form of a GitHub repository
+// name. Keep the form owner/repo.
+func ManageRepoPlaceholder() string { return In(i18n.Locale()).ManageRepoPlaceholder() }
+
+// ManageRepoPlaceholder says "owner/repo"
+// in the language of msgs.
+//
+// Placeholder of the repository field: the form of a GitHub repository
+// name. Keep the form owner/repo.
+func (msgs Messages) ManageRepoPlaceholder() string {
+	return Catalog.Format(msgs.locale, "manageRepoPlaceholder", nil)
+}
+
+// ManageRepoTaken says "“{project}” already uses this repository."
+// in the language the app shows.
+//
+// Shown under the repository field when another project has the repository.
+func ManageRepoTaken(project string) string { return In(i18n.Locale()).ManageRepoTaken(project) }
+
+// ManageRepoTaken says "“{project}” already uses this repository."
+// in the language of msgs.
+//
+// Shown under the repository field when another project has the repository.
+func (msgs Messages) ManageRepoTaken(project string) string {
+	return Catalog.Format(msgs.locale, "manageRepoTaken", map[string]any{"project": project})
+}
+
+// ManageRestore says "Restore"
+// in the language the app shows.
+//
+// Button that brings an archived project back.
+func ManageRestore() string { return In(i18n.Locale()).ManageRestore() }
+
+// ManageRestore says "Restore"
+// in the language of msgs.
+//
+// Button that brings an archived project back.
+func (msgs Messages) ManageRestore() string {
+	return Catalog.Format(msgs.locale, "manageRestore", nil)
+}
+
+// ManageSave says "Save"
+// in the language the app shows.
+//
+// Primary button of the rename and due date milestone sheets.
+func ManageSave() string { return In(i18n.Locale()).ManageSave() }
+
+// ManageSave says "Save"
+// in the language of msgs.
+//
+// Primary button of the rename and due date milestone sheets.
+func (msgs Messages) ManageSave() string {
+	return Catalog.Format(msgs.locale, "manageSave", nil)
+}
+
+// ManageSearch says "Search"
+// in the language the app shows.
+//
+// Placeholder and name of the search field at the top of the sidebar, and
+// the title of the search results page.
+func ManageSearch() string { return In(i18n.Locale()).ManageSearch() }
+
+// ManageSearch says "Search"
+// in the language of msgs.
+//
+// Placeholder and name of the search field at the top of the sidebar, and
+// the title of the search results page.
+func (msgs Messages) ManageSearch() string {
+	return Catalog.Format(msgs.locale, "manageSearch", nil)
+}
+
+// ManageSearchCount says "{count, plural, one {# result} other {# results}} for “{query}”"
+// in the language the app shows.
+//
+// Subtitle of the search results page.
+func ManageSearchCount(count int, query string) string {
+	return In(i18n.Locale()).ManageSearchCount(count, query)
+}
+
+// ManageSearchCount says "{count, plural, one {# result} other {# results}} for “{query}”"
+// in the language of msgs.
+//
+// Subtitle of the search results page.
+func (msgs Messages) ManageSearchCount(count int, query string) string {
+	return Catalog.Format(msgs.locale, "manageSearchCount", map[string]any{"count": count, "query": query})
+}
+
+// ManageSearchLabel says "Search tasks"
+// in the language the app shows.
+//
+// Accessibility label of the sidebar search field.
+func ManageSearchLabel() string { return In(i18n.Locale()).ManageSearchLabel() }
+
+// ManageSearchLabel says "Search tasks"
+// in the language of msgs.
+//
+// Accessibility label of the sidebar search field.
+func (msgs Messages) ManageSearchLabel() string {
+	return Catalog.Format(msgs.locale, "manageSearchLabel", nil)
+}
+
+// ManageSearchMore says "Showing the first {count}. Narrow the search to see the rest."
+// in the language the app shows.
+//
+// Last line of a search that found more results than are shown.
+func ManageSearchMore(count int) string { return In(i18n.Locale()).ManageSearchMore(count) }
+
+// ManageSearchMore says "Showing the first {count}. Narrow the search to see the rest."
+// in the language of msgs.
+//
+// Last line of a search that found more results than are shown.
+func (msgs Messages) ManageSearchMore(count int) string {
+	return Catalog.Format(msgs.locale, "manageSearchMore", map[string]any{"count": count})
+}
+
+// ManageSearchNone says "No tasks match “{query}”"
+// in the language the app shows.
+//
+// Title of the search page when nothing was found.
+func ManageSearchNone(query string) string { return In(i18n.Locale()).ManageSearchNone(query) }
+
+// ManageSearchNone says "No tasks match “{query}”"
+// in the language of msgs.
+//
+// Title of the search page when nothing was found.
+func (msgs Messages) ManageSearchNone(query string) string {
+	return Catalog.Format(msgs.locale, "manageSearchNone", map[string]any{"query": query})
+}
+
+// ManageSearchNoneBody says "Search looks in titles, notes, branches and pull request numbers, in every project."
+// in the language the app shows.
+//
+// Body of the search page when nothing was found; says where the search
+// looks.
+func ManageSearchNoneBody() string { return In(i18n.Locale()).ManageSearchNoneBody() }
+
+// ManageSearchNoneBody says "Search looks in titles, notes, branches and pull request numbers, in every project."
+// in the language of msgs.
+//
+// Body of the search page when nothing was found; says where the search
+// looks.
+func (msgs Messages) ManageSearchNoneBody() string {
+	return Catalog.Format(msgs.locale, "manageSearchNoneBody", nil)
+}
+
 // MilestoneAll says "All milestones"
 // in the language the app shows.
 //

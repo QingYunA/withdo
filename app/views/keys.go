@@ -35,13 +35,13 @@ func moveSelection(cur, dir, n int) int {
 // typing reports whether a text input has the keyboard. Its keys are the input's own
 // (Element.OnTextKey), so the window leaves Esc, the arrows, Enter and Space alone meanwhile.
 func (m *Main) typing(c *ui.Context) bool {
-	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.inspector.editing()
+	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.searchRef.Focused(c) || m.renameRef.Focused(c) || m.inspector.editing()
 }
 
 // keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
-	if m.settings {
+	if m.sheetOpen() {
 		return
 	}
 	m.runQueued(c, ids)

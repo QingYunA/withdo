@@ -22,6 +22,7 @@ const (
 	screenNow screen = iota
 	screenInbox
 	screenProject
+	screenLogbook
 )
 
 // nav says what the sidebar selected: Now, the Inbox, or a project. It is comparable, so it keys
@@ -59,6 +60,10 @@ type Main struct {
 	addBuf    string
 	dragging  int // task being dragged this frame, so the hidden statuses show as drop targets
 	wasDrag   int // the one dragged in the frame before: the targets live a frame past the drop
+
+	manage    manageState // the sheets, renaming, search and the Logbook
+	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
+	renameRef ui.Handle   // the input that renames a project in the sidebar
 
 	ask     askState
 	convo   convo     // the conversation sheet under the ask field
@@ -100,6 +105,7 @@ func (m *Main) openModels() {
 }
 
 func (m *Main) goTo(n nav) {
+	m.clearSearch()
 	if m.nav != n {
 		m.nav, m.openID, m.sel, m.askFrames, m.hintOn = n, 0, 0, 0, false
 		m.cancelAdding()
@@ -118,6 +124,9 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Task(m.openID); !ok {
 		m.openID = 0
 	}
+	if _, ok := m.app.Project(m.nav.projectID); m.nav.screen == screenProject && !ok {
+		m.goTo(nav{}) // archived or deleted, here or by another process
+	}
 	m.wasDrag, m.dragging = m.dragging, 0
 	m.width = m.contentWidth(c)
 	now := m.app.buildNow()
@@ -130,6 +139,8 @@ func (m *Main) View(c *ui.Context) {
 		m.inspectorPane(c, t)
 	})
 	m.settingsSheet(c, t)
+	m.newProjectSheet(c, t)
+	m.confirmSheet(c, t)
 }
 
 // content is the screen the sidebar chose.

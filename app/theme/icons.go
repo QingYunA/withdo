@@ -21,4 +21,6 @@ var (
 	IconBell      = icon(`<path d="M8 2.5a3.6 3.6 0 0 0-3.6 3.6v2.6L3.2 10.6h9.6l-1.2-1.9V6.1A3.6 3.6 0 0 0 8 2.5zM6.6 12.2a1.4 1.4 0 0 0 2.8 0"/>`)
 	IconNow       = icon(`<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.9" fill="currentColor" stroke="none"/>`)
 	IconClose     = icon(`<path d="m4.5 4.5 7 7M11.5 4.5l-7 7"/>`)
+	IconSearch    = icon(`<circle cx="7" cy="7" r="4.2"/><path d="m10.2 10.2 3.3 3.3"/>`)
+	IconLogbook   = icon(`<path d="M3.5 13.4V3.6A1.6 1.6 0 0 1 5.1 2h7.4v10.6H5.1a1.6 1.6 0 0 0-1.6 1.6"/><path d="M6.6 5.2h3.8"/>`)
 )
