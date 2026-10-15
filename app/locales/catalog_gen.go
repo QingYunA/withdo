@@ -2522,20 +2522,6 @@ func (msgs Messages) NavNoProjects() string {
 	return Catalog.Format(msgs.locale, "navNoProjects", nil)
 }
 
-// NavNow says "Now"
-// in the language the app shows.
-//
-// Sidebar row and page title of the home screen.
-func NavNow() string { return In(i18n.Locale()).NavNow() }
-
-// NavNow says "Now"
-// in the language of msgs.
-//
-// Sidebar row and page title of the home screen.
-func (msgs Messages) NavNow() string {
-	return Catalog.Format(msgs.locale, "navNow", nil)
-}
-
 // NavProjects says "Projects"
 // in the language the app shows.
 //
@@ -2562,50 +2548,6 @@ func NavSettings() string { return In(i18n.Locale()).NavSettings() }
 // Sidebar row that opens the settings sheet.
 func (msgs Messages) NavSettings() string {
 	return Catalog.Format(msgs.locale, "navSettings", nil)
-}
-
-// NeedAgentWaiting says "Agent is waiting"
-// in the language the app shows.
-//
-// Second line of a blocked agent task with nothing more to say.
-func NeedAgentWaiting() string { return In(i18n.Locale()).NeedAgentWaiting() }
-
-// NeedAgentWaiting says "Agent is waiting"
-// in the language of msgs.
-//
-// Second line of a blocked agent task with nothing more to say.
-func (msgs Messages) NeedAgentWaiting() string {
-	return Catalog.Format(msgs.locale, "needAgentWaiting", nil)
-}
-
-// NeedAgentWaitingFor says "Agent is waiting: “{words}”"
-// in the language the app shows.
-//
-// Second line of a blocked agent task; words is what the agent said it
-// needs.
-func NeedAgentWaitingFor(words string) string { return In(i18n.Locale()).NeedAgentWaitingFor(words) }
-
-// NeedAgentWaitingFor says "Agent is waiting: “{words}”"
-// in the language of msgs.
-//
-// Second line of a blocked agent task; words is what the agent said it
-// needs.
-func (msgs Messages) NeedAgentWaitingFor(words string) string {
-	return Catalog.Format(msgs.locale, "needAgentWaitingFor", map[string]any{"words": words})
-}
-
-// NeedBlockedByMe says "Marked as blocked"
-// in the language the app shows.
-//
-// Second line of a blocked task the user created.
-func NeedBlockedByMe() string { return In(i18n.Locale()).NeedBlockedByMe() }
-
-// NeedBlockedByMe says "Marked as blocked"
-// in the language of msgs.
-//
-// Second line of a blocked task the user created.
-func (msgs Messages) NeedBlockedByMe() string {
-	return Catalog.Format(msgs.locale, "needBlockedByMe", nil)
 }
 
 // NeedNoUpdate says "No update for {span}"
@@ -2718,20 +2660,6 @@ func NeedReminderYesterday(time_ string) string {
 // Second line of a due reminder, for a time yesterday.
 func (msgs Messages) NeedReminderYesterday(time_ string) string {
 	return Catalog.Format(msgs.locale, "needReminderYesterday", map[string]any{"time": time_})
-}
-
-// NeedReview says "Ready for your review"
-// in the language the app shows.
-//
-// Second line of an agent task waiting for review, without a pull request.
-func NeedReview() string { return In(i18n.Locale()).NeedReview() }
-
-// NeedReview says "Ready for your review"
-// in the language of msgs.
-//
-// Second line of an agent task waiting for review, without a pull request.
-func (msgs Messages) NeedReview() string {
-	return Catalog.Format(msgs.locale, "needReview", nil)
 }
 
 // NeedReviewPR says "PR #{number} is ready for your review"
@@ -3214,54 +3142,6 @@ func ProviderNoteOllama() string { return In(i18n.Locale()).ProviderNoteOllama()
 // Note of the Ollama provider.
 func (msgs Messages) ProviderNoteOllama() string {
 	return Catalog.Format(msgs.locale, "providerNoteOllama", nil)
-}
-
-// SectionAgents says "Agents at work"
-// in the language the app shows.
-//
-// Section header on Now: agent tasks in progress. English is shown in
-// capitals.
-func SectionAgents() string { return In(i18n.Locale()).SectionAgents() }
-
-// SectionAgents says "Agents at work"
-// in the language of msgs.
-//
-// Section header on Now: agent tasks in progress. English is shown in
-// capitals.
-func (msgs Messages) SectionAgents() string {
-	return Catalog.Format(msgs.locale, "sectionAgents", nil)
-}
-
-// SectionNeeds says "Needs you"
-// in the language the app shows.
-//
-// Section header on Now: what waits on the user. English is shown in
-// capitals.
-func SectionNeeds() string { return In(i18n.Locale()).SectionNeeds() }
-
-// SectionNeeds says "Needs you"
-// in the language of msgs.
-//
-// Section header on Now: what waits on the user. English is shown in
-// capitals.
-func (msgs Messages) SectionNeeds() string {
-	return Catalog.Format(msgs.locale, "sectionNeeds", nil)
-}
-
-// SectionYours says "Yours"
-// in the language the app shows.
-//
-// Section header on Now: the user's own tasks. English is shown in
-// capitals.
-func SectionYours() string { return In(i18n.Locale()).SectionYours() }
-
-// SectionYours says "Yours"
-// in the language of msgs.
-//
-// Section header on Now: the user's own tasks. English is shown in
-// capitals.
-func (msgs Messages) SectionYours() string {
-	return Catalog.Format(msgs.locale, "sectionYours", nil)
 }
 
 // SettingsCopied says "Copied"
@@ -4868,4 +4748,328 @@ func ProblemNoImages(model string) string { return In(i18n.Locale()).ProblemNoIm
 // The model chip opens next, to pick another.
 func (msgs Messages) ProblemNoImages(model string) string {
 	return Catalog.Format(msgs.locale, "problemNoImages", map[string]any{"model": model})
+}
+
+// NavMine says "Mine"
+// in the language the app shows.
+//
+// Sidebar row and page title of the home screen: what is mine to do, and
+// what agents handed over.
+func NavMine() string { return In(i18n.Locale()).NavMine() }
+
+// NavMine says "Mine"
+// in the language of msgs.
+//
+// Sidebar row and page title of the home screen: what is mine to do, and
+// what agents handed over.
+func (msgs Messages) NavMine() string {
+	return Catalog.Format(msgs.locale, "navMine", nil)
+}
+
+// NavAgents says "Agents"
+// in the language the app shows.
+//
+// Sidebar row and page title of the screen that shows what agents are
+// doing.
+func NavAgents() string { return In(i18n.Locale()).NavAgents() }
+
+// NavAgents says "Agents"
+// in the language of msgs.
+//
+// Sidebar row and page title of the screen that shows what agents are
+// doing.
+func (msgs Messages) NavAgents() string {
+	return Catalog.Format(msgs.locale, "navAgents", nil)
+}
+
+// SectionFromAgents says "From your agents"
+// in the language the app shows.
+//
+// Section of Mine: what agents handed over to the user.
+func SectionFromAgents() string { return In(i18n.Locale()).SectionFromAgents() }
+
+// SectionFromAgents says "From your agents"
+// in the language of msgs.
+//
+// Section of Mine: what agents handed over to the user.
+func (msgs Messages) SectionFromAgents() string {
+	return Catalog.Format(msgs.locale, "sectionFromAgents", nil)
+}
+
+// SectionToday says "Today"
+// in the language the app shows.
+//
+// Section of Mine: the user's tasks due or reminded today, and the ones in
+// progress.
+func SectionToday() string { return In(i18n.Locale()).SectionToday() }
+
+// SectionToday says "Today"
+// in the language of msgs.
+//
+// Section of Mine: the user's tasks due or reminded today, and the ones in
+// progress.
+func (msgs Messages) SectionToday() string {
+	return Catalog.Format(msgs.locale, "sectionToday", nil)
+}
+
+// SectionLater says "Later"
+// in the language the app shows.
+//
+// Section of Mine: the user's tasks of the next days, then the ones with no
+// date.
+func SectionLater() string { return In(i18n.Locale()).SectionLater() }
+
+// SectionLater says "Later"
+// in the language of msgs.
+//
+// Section of Mine: the user's tasks of the next days, then the ones with no
+// date.
+func (msgs Messages) SectionLater() string {
+	return Catalog.Format(msgs.locale, "sectionLater", nil)
+}
+
+// SectionWorking says "Working"
+// in the language the app shows.
+//
+// Section of Agents: tasks the agents are working on.
+func SectionWorking() string { return In(i18n.Locale()).SectionWorking() }
+
+// SectionWorking says "Working"
+// in the language of msgs.
+//
+// Section of Agents: tasks the agents are working on.
+func (msgs Messages) SectionWorking() string {
+	return Catalog.Format(msgs.locale, "sectionWorking", nil)
+}
+
+// AgentsWorking says "{count} working"
+// in the language the app shows.
+//
+// Quiet text beside the title of Agents: how many tasks are being worked
+// on.
+func AgentsWorking(count int) string { return In(i18n.Locale()).AgentsWorking(count) }
+
+// AgentsWorking says "{count} working"
+// in the language of msgs.
+//
+// Quiet text beside the title of Agents: how many tasks are being worked
+// on.
+func (msgs Messages) AgentsWorking(count int) string {
+	return Catalog.Format(msgs.locale, "agentsWorking", map[string]any{"count": count})
+}
+
+// SubtasksCount says "{count, plural, one {# subtask} other {# subtasks}}"
+// in the language the app shows.
+//
+// Quiet text of a finished task on Agents: how many subtasks it had.
+func SubtasksCount(count int) string { return In(i18n.Locale()).SubtasksCount(count) }
+
+// SubtasksCount says "{count, plural, one {# subtask} other {# subtasks}}"
+// in the language of msgs.
+//
+// Quiet text of a finished task on Agents: how many subtasks it had.
+func (msgs Messages) SubtasksCount(count int) string {
+	return Catalog.Format(msgs.locale, "subtasksCount", map[string]any{"count": count})
+}
+
+// PillDone says "Done"
+// in the language the app shows.
+//
+// Pill of a subtask that is finished.
+func PillDone() string { return In(i18n.Locale()).PillDone() }
+
+// PillDone says "Done"
+// in the language of msgs.
+//
+// Pill of a subtask that is finished.
+func (msgs Messages) PillDone() string {
+	return Catalog.Format(msgs.locale, "pillDone", nil)
+}
+
+// PillDoing says "Doing"
+// in the language the app shows.
+//
+// Pill of a subtask that is being worked on.
+func PillDoing() string { return In(i18n.Locale()).PillDoing() }
+
+// PillDoing says "Doing"
+// in the language of msgs.
+//
+// Pill of a subtask that is being worked on.
+func (msgs Messages) PillDoing() string {
+	return Catalog.Format(msgs.locale, "pillDoing", nil)
+}
+
+// PillHandedBack says "Handed back"
+// in the language the app shows.
+//
+// Pill of a subtask whose agent handed its work back to the main agent for
+// review.
+func PillHandedBack() string { return In(i18n.Locale()).PillHandedBack() }
+
+// PillHandedBack says "Handed back"
+// in the language of msgs.
+//
+// Pill of a subtask whose agent handed its work back to the main agent for
+// review.
+func (msgs Messages) PillHandedBack() string {
+	return Catalog.Format(msgs.locale, "pillHandedBack", nil)
+}
+
+// NeedAgentDone says "{agent} finished and is waiting for you"
+// in the language the app shows.
+//
+// Second line of an agent task that is done and waits for the user.
+func NeedAgentDone(agent string) string { return In(i18n.Locale()).NeedAgentDone(agent) }
+
+// NeedAgentDone says "{agent} finished and is waiting for you"
+// in the language of msgs.
+//
+// Second line of an agent task that is done and waits for the user.
+func (msgs Messages) NeedAgentDone(agent string) string {
+	return Catalog.Format(msgs.locale, "needAgentDone", map[string]any{"agent": agent})
+}
+
+// NeedAgentStuck says "{agent} is stuck: “{words}”"
+// in the language the app shows.
+//
+// Second line of a blocked agent task; words is what the agent said it
+// needs.
+func NeedAgentStuck(agent string, words string) string {
+	return In(i18n.Locale()).NeedAgentStuck(agent, words)
+}
+
+// NeedAgentStuck says "{agent} is stuck: “{words}”"
+// in the language of msgs.
+//
+// Second line of a blocked agent task; words is what the agent said it
+// needs.
+func (msgs Messages) NeedAgentStuck(agent string, words string) string {
+	return Catalog.Format(msgs.locale, "needAgentStuck", map[string]any{"agent": agent, "words": words})
+}
+
+// NeedAgentStuckPlain says "{agent} is stuck and waits for you"
+// in the language the app shows.
+//
+// Second line of a blocked agent task with nothing more to say.
+func NeedAgentStuckPlain(agent string) string { return In(i18n.Locale()).NeedAgentStuckPlain(agent) }
+
+// NeedAgentStuckPlain says "{agent} is stuck and waits for you"
+// in the language of msgs.
+//
+// Second line of a blocked agent task with nothing more to say.
+func (msgs Messages) NeedAgentStuckPlain(agent string) string {
+	return Catalog.Format(msgs.locale, "needAgentStuckPlain", map[string]any{"agent": agent})
+}
+
+// ActionAnswer says "Answer"
+// in the language the app shows.
+//
+// Button of a row where an agent waits for an answer.
+func ActionAnswer() string { return In(i18n.Locale()).ActionAnswer() }
+
+// ActionAnswer says "Answer"
+// in the language of msgs.
+//
+// Button of a row where an agent waits for an answer.
+func (msgs Messages) ActionAnswer() string {
+	return Catalog.Format(msgs.locale, "actionAnswer", nil)
+}
+
+// ActionReview says "Review"
+// in the language the app shows.
+//
+// Button of a row where an agent finished and waits for a look.
+func ActionReview() string { return In(i18n.Locale()).ActionReview() }
+
+// ActionReview says "Review"
+// in the language of msgs.
+//
+// Button of a row where an agent finished and waits for a look.
+func (msgs Messages) ActionReview() string {
+	return Catalog.Format(msgs.locale, "actionReview", nil)
+}
+
+// PropParent says "Parent"
+// in the language the app shows.
+//
+// Label of the inspector row of a subtask: the task it belongs to.
+func PropParent() string { return In(i18n.Locale()).PropParent() }
+
+// PropParent says "Parent"
+// in the language of msgs.
+//
+// Label of the inspector row of a subtask: the task it belongs to.
+func (msgs Messages) PropParent() string {
+	return Catalog.Format(msgs.locale, "propParent", nil)
+}
+
+// InspectorSubtasks says "Subtasks"
+// in the language the app shows.
+//
+// Header of the list of subtasks in the inspector of a task.
+func InspectorSubtasks() string { return In(i18n.Locale()).InspectorSubtasks() }
+
+// InspectorSubtasks says "Subtasks"
+// in the language of msgs.
+//
+// Header of the list of subtasks in the inspector of a task.
+func (msgs Messages) InspectorSubtasks() string {
+	return Catalog.Format(msgs.locale, "inspectorSubtasks", nil)
+}
+
+// A11yMineUnseen says "{count, plural, one {# new from your agents} other {# new from your agents}}"
+// in the language the app shows.
+//
+// Accessibility label of the red badge beside Mine in the sidebar.
+func A11yMineUnseen(count int) string { return In(i18n.Locale()).A11yMineUnseen(count) }
+
+// A11yMineUnseen says "{count, plural, one {# new from your agents} other {# new from your agents}}"
+// in the language of msgs.
+//
+// Accessibility label of the red badge beside Mine in the sidebar.
+func (msgs Messages) A11yMineUnseen(count int) string {
+	return Catalog.Format(msgs.locale, "a11yMineUnseen", map[string]any{"count": count})
+}
+
+// ComposerPlaceholderAgents says "Ask what your agents are doing"
+// in the language the app shows.
+//
+// Placeholder of the composer on Agents.
+func ComposerPlaceholderAgents() string { return In(i18n.Locale()).ComposerPlaceholderAgents() }
+
+// ComposerPlaceholderAgents says "Ask what your agents are doing"
+// in the language of msgs.
+//
+// Placeholder of the composer on Agents.
+func (msgs Messages) ComposerPlaceholderAgents() string {
+	return Catalog.Format(msgs.locale, "composerPlaceholderAgents", nil)
+}
+
+// AgentsEmpty says "No agents at work"
+// in the language the app shows.
+//
+// Title of the Agents screen when nothing is being worked on.
+func AgentsEmpty() string { return In(i18n.Locale()).AgentsEmpty() }
+
+// AgentsEmpty says "No agents at work"
+// in the language of msgs.
+//
+// Title of the Agents screen when nothing is being worked on.
+func (msgs Messages) AgentsEmpty() string {
+	return Catalog.Format(msgs.locale, "agentsEmpty", nil)
+}
+
+// AgentsEmptyBody says "When an agent reports its progress, it shows up here."
+// in the language the app shows.
+//
+// Quiet line under the title of the empty Agents screen.
+func AgentsEmptyBody() string { return In(i18n.Locale()).AgentsEmptyBody() }
+
+// AgentsEmptyBody says "When an agent reports its progress, it shows up here."
+// in the language of msgs.
+//
+// Quiet line under the title of the empty Agents screen.
+func (msgs Messages) AgentsEmptyBody() string {
+	return Catalog.Format(msgs.locale, "agentsEmptyBody", nil)
 }

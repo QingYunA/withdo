@@ -40,6 +40,8 @@ type listModel struct {
 func (m *Main) selectionTasks() []data.Task {
 	in := func(t data.Task) bool {
 		switch {
+		case t.IsSubtask(): // it lives under its parent
+			return false
 		case m.nav.screen == screenInbox:
 			return t.ProjectID == nil
 		case t.ProjectID == nil || *t.ProjectID != m.nav.projectID:

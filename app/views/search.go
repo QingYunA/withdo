@@ -214,10 +214,19 @@ func (m *Main) searchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
 	row.Children(func() {
 		m.glyphSlot(c, t, task, fill)
-		body(c, func() { m.titleLine(c, t, task, "", true) })
+		body(c, func() { m.titleLine(c, t, task, m.parentTitle(task), true) })
 		right(c, func() { plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now())) })
 	})
 	if row.Clicked() {
 		m.openRow(task.ID)
 	}
+}
+
+// parentTitle is what a result says about where it belongs when it is a subtask: its parent's title,
+// in the place a title keeps its project name. Any other task has none.
+func (m *Main) parentTitle(task data.Task) string {
+	if parent, ok := m.app.parentOf(task); ok {
+		return parent.Title
+	}
+	return ""
 }

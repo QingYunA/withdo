@@ -7,12 +7,14 @@ import (
 
 // rowIDs lists the task ids of the current screen in the order they are drawn, which is the order
 // the arrow keys walk.
-func (m *Main) rowIDs(now data.Now) []int {
+func (m *Main) rowIDs() []int {
 	switch {
 	case m.searching():
 		return m.searchIDs()
-	case m.nav.screen == screenNow:
-		return now.IDs()
+	case m.nav.screen == screenMine:
+		return m.mine.IDs()
+	case m.nav.screen == screenAgents:
+		return m.agents.IDs()
 	case m.nav.screen == screenCompleted:
 		return m.completedIDs()
 	case m.nav.screen == screenCalendar:
@@ -54,7 +56,7 @@ func (m *Main) undoKeyFree(c *ui.Context) bool {
 	return !m.typing(c) || empty(surfacePage) || empty(surfaceInspector)
 }
 
-// keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
+// keys handles the keyboard for one frame: Cmd+K, and Cmd+1 to Cmd+5 for the sidebar's rows, anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
 	if m.sheetOpen() {
@@ -69,11 +71,13 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	case c.Shortcut(ui.Cmd, ui.Key1):
 		m.goTo(nav{})
 	case c.Shortcut(ui.Cmd, ui.Key2):
-		m.goTo(nav{screen: screenInbox})
+		m.goTo(nav{screen: screenAgents})
 	case c.Shortcut(ui.Cmd, ui.Key3):
-		m.goTo(nav{screen: screenCompleted})
+		m.goTo(nav{screen: screenInbox})
 	case c.Shortcut(ui.Cmd, ui.Key4):
 		m.goTo(nav{screen: screenCalendar})
+	case c.Shortcut(ui.Cmd, ui.Key5):
+		m.goTo(nav{screen: screenCompleted})
 	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
 		m.undoLast()
 	}

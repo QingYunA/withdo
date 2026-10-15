@@ -8,7 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-func TestNowShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
+func TestMineShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	for _, want := range []string{"Done today", "Port the MCP server", "Claude Code · PR #14 merged", "1:50 PM",
 		"Send the packaging answer", "You", "11:30 AM"} {
@@ -16,15 +16,15 @@ func TestNowShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "Yours", "Done today") || !above(t, tt, "Done today", "Port the MCP server") ||
+	if !above(t, tt, "Later", "Done today") || !above(t, tt, "Done today", "Port the MCP server") ||
 		!above(t, tt, "Port the MCP server", "Send the packaging answer") {
 		t.Error("Done today comes last, newest first")
 	}
 	if tt.HasText("Draft the UI spec") {
 		t.Error("yesterday's task is in Done today")
 	}
-	if !tt.HasText("9") { // the sidebar's Now badge counts what needs attention, not what is done
-		t.Errorf("badge missing in %q", tt.Texts())
+	if !tt.HasText("4") { // the sidebar's Mine count is what needs attention, not what is done
+		t.Errorf("count missing in %q", tt.Texts())
 	}
 }
 
@@ -49,7 +49,7 @@ func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
 		t.Errorf("%d rows, texts %q", rows, tt.Texts())
 	}
 	if tt.HasText("Nothing needs you right now") != true {
-		t.Error("Done today alone leaves Now clear: nothing needs me")
+		t.Error("Done today alone leaves Mine clear: nothing needs me")
 	}
 	if err := tt.Click("Show all in Completed"); err != nil {
 		t.Fatal(err)

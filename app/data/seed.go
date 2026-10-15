@@ -50,6 +50,13 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		return t
 	}
 	done := func(t Task, at time.Time) Task { t.CompletedAt = &at; return t }
+	sub := func(parent int, t Task, finished time.Time) Task {
+		t.ParentID = IntPtr(parent)
+		if !finished.IsZero() {
+			t.CompletedAt = &finished
+		}
+		return t
+	}
 
 	t5 := mk(5, p1, m1, "Write the release notes", Todo, P2, SourceUser, ago(day))
 	t5.DueAt = daysAhead(2, 10)
@@ -80,6 +87,11 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		mk(17, p3, nil, "Export thumbnails to HEIC", Backlog, P2, SourceUser, ago(9*day)),
 		mk(18, nil, nil, "Look into Liquid Glass for the sidebar", Todo, P2, SourceUser, ago(4*time.Hour)),
 		mk(19, nil, nil, "Renew passport", Backlog, P2, SourceUser, ago(12*day)),
+		// Subtasks: what the subagents of "Port core to Go" and "Port the MCP server" are doing.
+		sub(1, mk(22, p1, nil, "Port the store and migrations", Done, P2, SourceAgent, ago(8*time.Minute)), ago(8*time.Minute)),
+		sub(1, mk(23, p1, nil, "Port the MCP tools", Doing, P2, SourceAgent, ago(2*time.Minute)), time.Time{}),
+		sub(1, mk(24, p1, nil, "Watch the database for changes", Doing, P2, SourceAgent, ago(time.Minute)), time.Time{}),
+		sub(20, mk(25, p1, nil, "Cover the tools with tests", Done, P2, SourceAgent, ago(50*time.Minute)), ago(50*time.Minute)),
 	}
 }
 
@@ -109,6 +121,10 @@ func (f *Fake) seedReports(ago timeAgo) {
 		rep(20, GitHubAgent, Done, 40*time.Minute, "PR #14 merged", ""),
 		rep(15, "claude-code", Doing, 14*time.Minute, "Writing tests for the reply parser", ""),
 		rep(15, "claude-code", Doing, 52*time.Minute, "Read the issue and mapped it to the parser", "Write the tests first"),
+		rep(22, "claude-code", Done, 8*time.Minute, "Store and migrations ported", ""),
+		rep(23, "claude-code", Doing, 2*time.Minute, "Eight of twelve tools ported", "Port the remaining tools"),
+		rep(24, "claude-code", Doing, time.Minute, "Watching PRAGMA data_version", ""),
+		rep(25, "claude-code", Done, 50*time.Minute, "Tests added", ""),
 	)
 }
 

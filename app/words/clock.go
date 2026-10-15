@@ -173,7 +173,7 @@ func (k Clock) Moment(t, now time.Time, withTime bool) string {
 	return day
 }
 
-// Reminder says that a reminder came due at `at`, for the second line of a Needs you row.
+// Reminder says that a reminder came due at `at`, for the second line of a Today row.
 func (k Clock) Reminder(at, now time.Time) string {
 	at = at.In(now.Location())
 	switch data.DaysFrom(at, now) {

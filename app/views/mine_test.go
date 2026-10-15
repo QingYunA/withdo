@@ -1,41 +1,47 @@
 package views
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
 )
 
-func TestNowShowsAllThreeSectionsInOrder(t *testing.T) {
+func TestMineShowsItsSectionsInOrder(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Now", "Wednesday, Oct 14", "Needs you", "Agents at work", "Yours", "Port core to Go", "Book dentist"} {
+	for _, want := range []string{"Mine", "Wednesday, Oct 14", "From your agents", "Today", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "Needs you", "Agents at work") || !above(t, tt, "Agents at work", "Yours") {
+	if !above(t, tt, "From your agents", "Today") || !above(t, tt, "Today", "Later") || !above(t, tt, "Later", "Done today") {
 		t.Error("sections are out of order")
+	}
+	for _, gone := range []string{"Port core to Go", "Port the MCP tools", "Needs you", "Now"} {
+		if tt.HasText(gone) {
+			t.Errorf("%q is on Mine: agents' work in progress and their subtasks are on Agents", gone)
+		}
 	}
 }
 
-func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
+func TestMineEmptySectionsAreNotDrawn(t *testing.T) {
 	f := data.NewEmptyFake(fixedNow)
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Only mine"})
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, _, _ := newTesterFor(app, 1100)
-	if !tt.HasText("Yours") || !tt.HasText("Only mine") {
+	if !tt.HasText("Later") || !tt.HasText("Only mine") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
-	for _, gone := range []string{"Needs you", "Agents at work", "Nothing needs you right now"} {
+	for _, gone := range []string{"From your agents", "Today", "Nothing needs you right now"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q is drawn with nothing in it", gone)
 		}
 	}
 }
 
-func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
+func TestMineAllClearWhenNothingIsHappening(t *testing.T) {
 	app, rec := newEmptyApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
 	for _, want := range []string{"Nothing needs you right now", "Your agents are at work. Whatever happens shows up here.", "How to connect"} {
@@ -43,7 +49,7 @@ func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	for _, gone := range []string{"Needs you", "Agents at work", "Yours"} {
+	for _, gone := range []string{"From your agents", "Today", "Later"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q in the All clear state", gone)
 		}
@@ -56,15 +62,15 @@ func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 	}
 }
 
-func TestNeedsYouOrderIsBlockedReminderReview(t *testing.T) {
+func TestFromYourAgentsOrderIsBlockedThenReview(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	if !above(t, tt, "Fix tray race on launch", "Reply to design feedback") || !above(t, tt, "Reply to design feedback", "Native UI with mygo") {
+	if !above(t, tt, "Fix tray race on launch", "Native UI with mygo") {
 		t.Errorf("order wrong in %q", tt.Texts())
 	}
 	for _, want := range []string{
-		"Agent is waiting: “Needs a decision on the activation policy”",
-		"You asked to be reminded at 2:30 PM",
-		"PR #12 is ready for your review",
+		"Claude Code is stuck: “Needs a decision on the activation policy” · adhd-todo",
+		"PR #12 is ready for your review · adhd-todo",
+		"Answer", "Open PR",
 	} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q", want)
@@ -72,29 +78,34 @@ func TestNeedsYouOrderIsBlockedReminderReview(t *testing.T) {
 	}
 }
 
-func TestNeedsYouRowsLeaveTheBranchToTheSummary(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
+func TestMineRowsLeaveTheBranchOutAndAgentsShowsIt(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
 	if tt.HasText("fix/tray") || tt.HasText("feat/native-ui") {
-		t.Errorf("a Needs you row shows a branch: %q", tt.Texts())
+		t.Errorf("a handed-over row shows a branch: %q", tt.Texts())
 	}
-	if !tt.HasText("feat/go-core") {
-		t.Error("an Agents at work row lost its branch")
+	m.goTo(nav{screen: screenAgents})
+	tt.Frame()
+	if !tt.HasText("Claude Code · feat/go-core · Ported the store and migrations; next: port the MCP server") {
+		t.Errorf("a Working row lost its branch: %q", tt.Texts())
 	}
 }
 
 func TestTightRowsDropTheirCompanions(t *testing.T) {
 	tt, m, _ := newMainTester(t, 860)
-	m.OpenTask(2)
+	m.goTo(nav{screen: screenAgents})
+	m.openRow(2)
 	tt.Frame()
-	if tt.HasText("feat/go-core") || tt.HasText("claude/issue-218") {
-		t.Errorf("a tight row keeps its companions: %q", tt.Texts())
+	for _, s := range tt.Texts() {
+		if strings.Contains(s, "feat/go-core") || strings.Contains(s, "claude/issue-218") {
+			t.Errorf("a tight row keeps its companions: %q", s)
+		}
 	}
 	if !tt.HasText("Port core to Go") {
 		t.Error("a tight row lost its title")
 	}
 }
 
-func TestNeedsYouOpenOpensTheInspector(t *testing.T) {
+func TestHandedOverOpenOpensTheInspector(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	if err := tt.Click("Open Fix tray race on launch"); err != nil {
 		t.Fatal(err)
@@ -104,7 +115,7 @@ func TestNeedsYouOpenOpensTheInspector(t *testing.T) {
 	}
 }
 
-func TestNeedsYouOpenPRCallsOpenURL(t *testing.T) {
+func TestHandedOverOpenPRCallsOpenURL(t *testing.T) {
 	app, _, rec := newTestApp(t)
 	tt, m, _ := newTesterFor(app, 1100)
 	if err := tt.Click("Open pull request #12"); err != nil {
@@ -118,7 +129,7 @@ func TestNeedsYouOpenPRCallsOpenURL(t *testing.T) {
 	}
 }
 
-func TestNeedsYouDoneMarksTheReminderDone(t *testing.T) {
+func TestTheGlyphOfMyDueReminderMarksItDone(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	if err := tt.Click("Mark done: Reply to design feedback"); err != nil {
 		t.Fatal(err)
@@ -132,12 +143,14 @@ func TestNeedsYouDoneMarksTheReminderDone(t *testing.T) {
 	app.completing = map[int]completion{} // let the row go
 	tt.Frame()
 	if !tt.HasText("Done today") || !above(t, tt, "Done today", "Reply to design feedback") {
-		t.Error("the done reminder should have moved from Needs you to Done today")
+		t.Error("the done reminder should have moved from Today to Done today")
 	}
 }
 
 func TestClickingARowOpensTheInspectorAndEscCloses(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
+	m.goTo(nav{screen: screenAgents})
+	tt.Frame()
 	if err := tt.Click("Port core to Go"); err != nil {
 		t.Fatal(err)
 	}
@@ -205,8 +218,8 @@ func TestArrowsSelectEnterOpensSpaceToggles(t *testing.T) {
 		t.Fatalf("selected %d after one Down, want the blocked task 3", m.sel)
 	}
 	tt.Key(0, ui.KeyDown)
-	if m.sel != 7 {
-		t.Fatalf("selected %d after two Down, want the reminder 7", m.sel)
+	if m.sel != 2 {
+		t.Fatalf("selected %d after two Down, want the review task 2", m.sel)
 	}
 	tt.Key(0, ui.KeyUp)
 	tt.Key(0, ui.KeySpace) // an agent's task: Space leaves it alone
@@ -218,6 +231,10 @@ func TestArrowsSelectEnterOpensSpaceToggles(t *testing.T) {
 		t.Errorf("Enter opened %d, want 3", m.openID)
 	}
 	tt.Key(0, ui.KeyDown)
+	tt.Key(0, ui.KeyDown)
+	if m.sel != 7 {
+		t.Fatalf("selected %d, want the reminder 7", m.sel)
+	}
 	tt.Key(0, ui.KeySpace)
 	if task, _ := app.Task(7); task.Status != data.Done {
 		t.Errorf("Space left my task %v, want done", task.Status)
@@ -252,16 +269,20 @@ func TestSpaceInTheAskFieldIsASpace(t *testing.T) {
 func TestCmdNumbersSwitchScreens(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.Key2)
-	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") || tt.HasText("Tasks without a project") {
+	if m.nav.screen != screenAgents {
 		t.Errorf("Cmd+2 gave %+v", m.nav)
 	}
+	tt.Key(ui.Cmd, ui.Key3)
+	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") || tt.HasText("Tasks without a project") {
+		t.Errorf("Cmd+3 gave %+v", m.nav)
+	}
 	tt.Key(ui.Cmd, ui.Key1)
-	if m.nav.screen != screenNow {
+	if m.nav.screen != screenMine {
 		t.Errorf("Cmd+1 gave %+v", m.nav)
 	}
 }
 
-func TestNowCountsAndLinkToInbox(t *testing.T) {
+func TestMineLinksToTheInboxWhenUndatedTasksDoNotFit(t *testing.T) {
 	f := data.NewEmptyFake(fixedNow)
 	for i := 0; i < 9; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Idea " + itoa(i)})

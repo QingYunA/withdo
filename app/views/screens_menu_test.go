@@ -67,7 +67,7 @@ func TestScreensMenu(t *testing.T) {
 				_ = tt.Click(m.say.A11yPriority(priorityLabel(m.say, data.P2)))
 				return nil
 			})
-			manageShot(t, "now-done-today"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "mine-done-today"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				tt.SetSize(1100, 1000)
 				return nil
 			})

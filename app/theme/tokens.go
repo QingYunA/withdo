@@ -159,7 +159,7 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 const (
 	RadiusControl float32 = 6  // pills, inputs
 	RadiusCard    float32 = 9  // cards, rows
-	RadiusPanel   float32 = 12 // composer, Needs you container, popovers, sheets
+	RadiusPanel   float32 = 12 // composer, From your agents container, popovers, sheets
 	RadiusTile    float32 = 10 // board cards
 )
 
@@ -181,6 +181,7 @@ const (
 // Layout metrics shared by several surfaces.
 const (
 	GlyphSize      float32 = 18
+	BadgeSize      float32 = 18 // the red count beside Mine
 	IconProp       float32 = 14 // the line icon before a property's label in the inspector
 	IconMenu       float32 = 15 // the line icon before an item of the drawn task menu
 	HitTarget      float32 = 24

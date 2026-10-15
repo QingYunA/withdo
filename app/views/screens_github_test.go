@@ -32,8 +32,8 @@ func githubStates() []struct {
 func TestScreensGitHub(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := prApp(t)
-		mainShot(t, "now-pull-requests-"+a.suffix+".png", app, a.dark, nil)
-		mainShot(t, "now-pull-requests-narrow-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+		mainShot(t, "mine-pull-requests-"+a.suffix+".png", app, a.dark, nil)
+		mainShot(t, "mine-pull-requests-narrow-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.SetSize(860, 600)
 			m.OpenTask(1)
 		})
@@ -43,8 +43,8 @@ func TestScreensGitHub(t *testing.T) {
 func TestScreensGitHubChinese(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := prApp(t)
-		zhShot(t, "now-pull-requests-zh-"+a.suffix+".png", app, a.dark, nil)
-		zhShot(t, "now-pull-requests-narrow-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+		zhShot(t, "mine-pull-requests-zh-"+a.suffix+".png", app, a.dark, nil)
+		zhShot(t, "mine-pull-requests-narrow-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.SetSize(860, 600)
 			m.OpenTask(1)
 		})

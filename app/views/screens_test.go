@@ -51,7 +51,7 @@ func toProject(id int) func(*ui.Tester, *Main) {
 func TestScreensSeed(t *testing.T) {
 	for _, a := range appearances() {
 		app, _, _ := newTestApp(t)
-		mainShot(t, "now-"+a.suffix+".png", app, a.dark, nil)
+		mainShot(t, "mine-"+a.suffix+".png", app, a.dark, nil)
 		mainShot(t, "project-list-"+a.suffix+".png", app, a.dark, toProject(1))
 		mainShot(t, "project-board-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			toProject(1)(tt, m)
@@ -63,12 +63,12 @@ func TestScreensSeed(t *testing.T) {
 			tt.SetSize(860, 540)
 			m.OpenTask(2)
 		})
-		mainShot(t, "now-selection-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+		mainShot(t, "mine-selection-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.Key(0, ui.KeyDown)
 			tt.Key(0, ui.KeyDown)
 		})
 		asking, _, _ := newTestApp(t) // adding a task changes the data, so not the shared store
-		mainShot(t, "now-asking-"+a.suffix+".png", asking, a.dark, func(tt *ui.Tester, m *Main) {
+		mainShot(t, "mine-asking-"+a.suffix+".png", asking, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.Key(ui.Cmd, ui.KeyK)
 			tt.Type("Water the plants")
 			tt.Key(0, ui.KeyEnter) // no model: the text became a plain task, and the card says so
@@ -84,7 +84,7 @@ func TestScreensSeed(t *testing.T) {
 func TestScreensEmpty(t *testing.T) {
 	for _, a := range appearances() {
 		empty, _ := newEmptyApp(t)
-		mainShot(t, "now-empty-"+a.suffix+".png", empty, a.dark, nil)
+		mainShot(t, "mine-empty-"+a.suffix+".png", empty, a.dark, nil)
 		withProject, p := emptyProjectApp(t)
 		mainShot(t, "project-empty-"+a.suffix+".png", withProject, a.dark, toProject(p.ID))
 	}
@@ -127,7 +127,7 @@ func TestScreensRealShape(t *testing.T) {
 		}
 		app := NewApp(r, &recorder{}, testConfig())
 		app.Now = func() time.Time { return now }
-		mainShot(t, "now-real-"+a.suffix+".png", app, a.dark, nil)
+		mainShot(t, "mine-real-"+a.suffix+".png", app, a.dark, nil)
 		ps, _ := r.ListProjects()
 		for _, p := range ps {
 			if p.RepoSlug != "" {

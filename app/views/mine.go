@@ -6,23 +6,27 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// nowScreen is the home screen: the date, the composer, and up to three sections. A section with
-// nothing in it is not drawn; with nothing in any of them the screen says All clear.
-func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
-	m.pageHeader(c, t, m.say.NavNow(), m.clock.Heading(m.app.Now()), nil)
+// mineScreen is the home screen: the date, the composer, and what is mine: what agents handed over,
+// then today, then later. A section with nothing in it is not drawn; with nothing in any of them the
+// screen says All clear. What was finished today closes the page.
+func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
+	m.pageHeader(c, t, m.say.NavMine(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
 	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
 	m.belowComposer(c, func() {
-		if now.Empty() {
+		if m.mine.Empty() {
 			m.allClear(c, t)
 		}
-		m.needsSection(c, t, now.Needs)
-		m.agentsSection(c, t, now.Agents)
-		m.yoursSection(c, t, now)
-		m.doneTodaySection(c, t, now)
+		m.fromAgentsSection(c, t, m.mine.FromAgents)
+		m.mineSection(c, t, m.say.SectionToday(), m.mine.Today)
+		m.mineSection(c, t, m.say.SectionLater(), m.mine.Later)
+		if m.mine.MoreLater > 0 && link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
+			m.goTo(nav{screen: screenInbox})
+		}
+		m.doneTodaySection(c, t, m.mine.Done, m.mine.MoreDone)
 	})
 }
 
@@ -54,7 +58,7 @@ func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 	})
 }
 
-// allClear is the calm state: nothing needs me, nothing is running, nothing is mine.
+// allClear is the calm state: nothing is handed over, nothing is mine.
 func (m *Main) allClear(c *ui.Context, t *theme.Tokens) {
 	emptyState(c, t, m.say.NowAllClear(), m.say.NowAllClearBody(), 72, func() {
 		if link(c, t, m.say.LinkHowToConnect()).Margin(6, 0, 0).Clicked() {
@@ -63,24 +67,25 @@ func (m *Main) allClear(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// needsSection is the one boxed thing on the screen: what waits on me, blocked first.
-func (m *Main) needsSection(c *ui.Context, t *theme.Tokens, items []data.NowItem) {
+// fromAgentsSection is the one boxed thing on the screen: what agents handed over, blocked first.
+// Each row has the agent's avatar, why it is here in one line, and a button that does the next thing.
+func (m *Main) fromAgentsSection(c *ui.Context, t *theme.Tokens, items []data.Item) {
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionNeeds(), len(items))
+	sectionHeader(c, t, m.say.SectionFromAgents(), len(items))
 	ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
 		for i, it := range items {
 			if i > 0 {
 				ui.Box(c.Key("rule-"+itoa(it.ID))).Height(1).Shrink(0).Margin(0, -needRow.horz).Background(t.Border)
 			}
-			m.needRow(c, t, it)
+			m.handedRow(c, t, it)
 		}
 	})
 }
 
-func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
-	fill, opacity, _ := m.app.completionPhase(c, it.ID)
+func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item) {
+	_, opacity, _ := m.app.completionPhase(c, it.ID)
 	row := m.rowShell(c, t, it.ID, needRow, opacity)
 	actions := m.actionsFor(it)
 	// Two buttons beside a title in a narrow row leave it no room: they go under the summary, and
@@ -94,14 +99,10 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 		}
 	}
 	row.Children(func() {
-		if it.Kind == data.NeedReminder {
-			ui.Icon(c, theme.IconBell).Size(theme.GlyphSize, theme.GlyphSize).TextColor(t.Accent).Shrink(0).Margin(2, 0, 0)
-		} else {
-			m.glyphSlotTop(c, t, it.Task, fill)
-		}
+		theme.AvatarIcon(c.Key("author"), m.app.taskWho(it.Task), theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
-			m.titleLine(c, t, it.Task, it.Project, false)
-			summaryLine(c, t, m.needSummary(it))
+			m.titleLine(c, t, it.Task, "", false)
+			summaryLine(c, t, m.handedSummary(it))
 			if stacked {
 				ui.Row(c).Shrink(0).Gap(8).Margin(8, 0, 0).Children(buttons)
 			}
@@ -120,6 +121,15 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	}
 }
 
+// handedSummary is the second line of a handed-over row: why it is here, and the project it is in.
+func (m *Main) handedSummary(it data.Item) string {
+	reason := m.needSummary(it)
+	if it.Project != "" && m.width >= dropProjectBelow {
+		return reason + " · " + it.Project
+	}
+	return reason
+}
+
 // stackActionsBelow is the content width under which a row with two buttons puts them under its
 // summary.
 const stackActionsBelow float32 = 560
@@ -127,16 +137,19 @@ const stackActionsBelow float32 = 560
 // stackAllActionsBelow is the content width under which every row puts its button under the summary.
 const stackAllActionsBelow float32 = 420
 
-// rowAction is a button of a Needs you row: its text, what it says to assistive technology, and
+// rowAction is a button of a handed-over row: its text, what it says to assistive technology, and
 // what it does.
 type rowAction struct {
 	text, label string
 	run         func()
 }
 
-// actionsFor names the buttons of a Needs you row, left to right. Most rows have one.
-func (m *Main) actionsFor(it data.NowItem) []rowAction {
+// actionsFor names the buttons of a handed-over row, left to right. Most rows have one.
+func (m *Main) actionsFor(it data.Item) []rowAction {
 	openPR := rowAction{m.say.ActionOpenPR(), m.say.A11yOpenPR(itoa(it.PRNumber)), func() { m.app.Act.OpenURL(it.PRURL) }}
+	open := func(text string) []rowAction {
+		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
+	}
 	switch {
 	case it.Kind == data.NeedReminder:
 		return []rowAction{{m.say.ActionDone(), m.say.A11yMarkDone(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}}
@@ -147,61 +160,38 @@ func (m *Main) actionsFor(it data.NowItem) []rowAction {
 		}
 	case it.Kind == data.NeedPRFailing || it.Kind == data.NeedPRChanges, it.Kind == data.NeedReview && it.PRURL != "":
 		return []rowAction{openPR}
+	case it.Kind == data.NeedBlocked:
+		return open(m.say.ActionAnswer())
+	case it.Kind == data.NeedReview:
+		return open(m.say.ActionReview())
 	}
-	return []rowAction{{m.say.ActionOpen(), m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
+	return open(m.say.ActionOpen())
 }
 
-// agentsSection is what agents are doing now, newest report first, across projects.
-func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowItem) {
+// mineSection is a plain section of my own tasks: Today or Later. Each row has the status glyph,
+// which ticks the task off, its title, and at the right how pressing it is and when it is due.
+func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items []data.Item) {
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionAgents(), len(items))
+	sectionHeader(c, t, title, len(items))
 	for _, it := range items {
-		fill, opacity, _ := m.app.completionPhase(c, it.ID)
-		row := m.rowShell(c, t, it.ID, plainRow, opacity)
-		row.Children(func() {
-			m.glyphSlotTop(c, t, it.Task, fill)
-			body(c, func() {
-				m.titleLine(c, t, it.Task, it.Project, true)
-				summaryLine(c, t, m.agentSummary(it))
-			})
-			right(c, func() {
-				if it.Live {
-					liveDot(c, t)
-				}
-				m.ageLabel(c, t, it)
-			})
-		})
-		if row.Clicked() {
-			m.openRow(it.ID)
-		}
-	}
-}
-
-// yoursSection is my own work: due today and overdue first, then the week, then undated.
-func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
-	if len(now.Yours) == 0 {
-		return
-	}
-	sectionHeader(c, t, m.say.SectionYours(), len(now.Yours))
-	for _, it := range now.Yours {
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
 			m.glyphSlot(c, t, it.Task, fill)
 			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
-			if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
-				theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
-			}
+			right(c, func() {
+				if theme.ShowsPriority(it.Priority) {
+					theme.PriorityBadge(c, t, it.Priority)
+				}
+				if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
+					theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
+				}
+			})
 		})
 		if row.Clicked() {
 			m.openRow(it.ID)
-		}
-	}
-	if now.MoreUndated > 0 {
-		if link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
-			m.goTo(nav{screen: screenInbox})
 		}
 	}
 }

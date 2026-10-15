@@ -26,32 +26,32 @@ func newChineseTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 	return tt, m, app
 }
 
-func TestChineseNowScreen(t *testing.T) {
+func TestChineseMineScreen(t *testing.T) {
 	tt, _, _ := newChineseTester(t, 1100)
 	has(t, tt,
-		"现在", "10月14日星期三",
-		"需要你处理", "Agent 进行中", "你的任务",
-		"Agent 在等待：“Needs a decision on the activation policy”",
-		"你设置了下午2:30的提醒", "PR #12 等你审查",
-		"打开 PR", "完成", "打开",
-		"3天前", "2分钟前",
-		"今天", "明天", "周五",
+		"我的", "10月14日星期三",
+		"Agent 交过来的", "今天", "之后",
+		"Claude Code 卡住了：“Needs a decision on the activation policy”",
+		"下午2:30", "PR #12 等你审查",
+		"打开 PR", "回答",
+		"3天前", "25分钟前",
+		"明天", "周五",
 		"收件箱", "项目", "设置",
 	)
-	if !above(t, tt, "需要你处理", "Agent 进行中") || !above(t, tt, "Agent 进行中", "你的任务") {
+	if !above(t, tt, "Agent 交过来的", "今天") || !above(t, tt, "今天", "之后") {
 		t.Error("sections are out of order")
 	}
-	hasNot(t, tt, "Needs you", "Settings", "Inbox")
+	hasNot(t, tt, "From your agents", "Settings", "Inbox")
 }
 
 func TestChineseSectionHeadersAreNotSpacedOrCapitalized(t *testing.T) {
 	tt, _, _ := newChineseTester(t, 1100)
-	r, ok := tt.Find("需要你处理")
+	r, ok := tt.Find("之后")
 	if !ok {
 		t.Fatalf("no header in %q", tt.Texts())
 	}
-	// Letter spacing on each of 5 characters would add to the 13 pt glyphs' width.
-	if w := r.W; w > 5*13+0.5 {
+	// Letter spacing on each of 2 characters would add to the 13 pt glyphs' width.
+	if w := r.W; w > 2*13+0.5 {
 		t.Errorf("the header is %v pt wide: Han characters were spaced", w)
 	}
 }
@@ -66,12 +66,12 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	has(t, tt, "Needs you")
+	has(t, tt, "From your agents")
 	inChinese(tt)
-	has(t, tt, "需要你处理")
-	hasNot(t, tt, "Needs you")
+	has(t, tt, "Agent 交过来的")
+	hasNot(t, tt, "From your agents")
 	tt.SetLocale("en")
-	has(t, tt, "Needs you")
+	has(t, tt, "From your agents")
 }
 
 func TestChineseProjectList(t *testing.T) {

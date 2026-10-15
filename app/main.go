@@ -1,4 +1,4 @@
-// Command adhd-todo is the desktop app: one window with the Now screen and a list per project,
+// Command adhd-todo is the desktop app: one window with the Mine and Agents screens and a list per project,
 // drawn with mygo native UI. It reads and writes the same SQLite database as the adhd-core MCP
 // server, so what agents report shows up live.
 package main
@@ -36,7 +36,7 @@ func main() {
 		Version:        version,
 		AgentSetup:     agentsetup.New(home),
 	})
-	app.Assistant, app.Models, app.GitHub = be.assistant, be.models, be.github
+	app.Assistant, app.Models, app.GitHub, app.Seen = be.assistant, be.models, be.github, be.seen
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
 

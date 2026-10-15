@@ -31,25 +31,28 @@ func prApp(t *testing.T) (*App, *data.Fake, *recorder) {
 	return app, store, rec
 }
 
-func TestNeedsYouListsPullRequestsInThePlannedOrder(t *testing.T) {
+func TestFromYourAgentsListsPullRequestsInThePlannedOrder(t *testing.T) {
 	app, _, _ := prApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
 	has(t, tt, "PR #14 was closed without merging", "Checks are failing on PR #15", "Changes were requested on PR #16")
 	order := []string{
-		"Fix tray race on launch",  // blocked
-		"Reply to design feedback", // a reminder that came due
-		"Rework the sync engine",   // closed pull request
-		"Add dark mode icons",      // failing checks
-		"Fix the export crash",     // changes requested
-		"Native UI with mygo",      // ready for review
+		"Fix tray race on launch", // blocked
+		"Rework the sync engine",  // closed pull request
+		"Add dark mode icons",     // failing checks
+		"Fix the export crash",    // changes requested
+		"Native UI with mygo",     // ready for review
+	}
+	// A reminder of mine is not handed over: it is Today.
+	if !above(t, tt, "Native UI with mygo", "Today") || !above(t, tt, "Today", "Reply to design feedback") {
+		t.Errorf("the reminder should be under Today, below what agents handed over: %q", tt.Texts())
 	}
 	for i := 1; i < len(order); i++ {
 		if !above(t, tt, order[i-1], order[i]) {
 			t.Errorf("%q should be above %q in %q", order[i-1], order[i], tt.Texts())
 		}
 	}
-	// Each task shows once: the rows that were agent work are not repeated under Agents at work.
-	for _, title := range order[2:5] {
+	// Each task shows once on the screen.
+	for _, title := range order[1:4] {
 		if n := countText(tt, title); n != 1 {
 			t.Errorf("%q is drawn %d times", title, n)
 		}
@@ -93,7 +96,7 @@ func TestCancelTaskCancelsTheTaskOfAClosedPullRequest(t *testing.T) {
 
 func TestKeepDismissesTheClosedRowAndLeavesTheTask(t *testing.T) {
 	app, _, _ := prApp(t)
-	tt, _, _ := newTesterFor(app, 1100)
+	tt, m, _ := newTesterFor(app, 1100)
 	if err := tt.Click("Keep task: Rework the sync engine"); err != nil {
 		t.Fatal(err)
 	}
@@ -103,10 +106,12 @@ func TestKeepDismissesTheClosedRowAndLeavesTheTask(t *testing.T) {
 	}
 	tt.Frame()
 	hasNot(t, tt, "PR #14 was closed without merging", "Cancel task", "Keep")
-	// The task did not disappear: it is agent work again.
+	// The task did not disappear: it is agent work again, on the Agents screen.
+	m.goTo(nav{screen: screenAgents})
+	tt.Frame()
 	has(t, tt, "Rework the sync engine")
-	if !above(t, tt, "Agents at work", "Rework the sync engine") {
-		t.Error("a kept task should be under Agents at work")
+	if !above(t, tt, "Working", "Rework the sync engine") {
+		t.Error("a kept task should be under Working")
 	}
 }
 
@@ -156,7 +161,7 @@ func TestAgentWordsIgnoreGitHubReports(t *testing.T) {
 	store.AddReport(data.Report{TaskID: 3, Agent: data.GitHubAgent, Summary: "PR #14 was closed without merging", CreatedAt: fixedNow()})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
-	has(t, tt, "Agent is waiting: “Needs a decision on the activation policy”")
+	has(t, tt, "Claude Code is stuck: “Needs a decision on the activation policy”")
 	hasNot(t, tt, "PR #14 was closed without merging")
 }
 

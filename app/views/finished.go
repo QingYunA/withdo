@@ -8,7 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// Finished rows are the done tasks of Now (Done today), of the Done group of a list and of
+// Finished rows are the done tasks of Mine (Done today), of the Done group of a list and of
 // Completed: the same row everywhere, the title quiet, and at the right who finished it and when.
 
 // finishedOpts say what a place wants of a finished row.
@@ -17,6 +17,10 @@ type finishedOpts struct {
 	project string // the project's name beside the title
 	when    string // the day or the time of day it was finished
 	summary bool   // what the closing report said, after the agent's name
+	// quiet leaves out who finished it, which the avatar already says (the Agents screen), and note,
+	// when it is not empty, goes before the time: "3 subtasks".
+	quiet bool
+	note  string
 }
 
 // completedBy says who finished a done task and what was said as it was: see data.CompletedBy.
@@ -79,6 +83,8 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 	row.Children(func() {
 		if o.glyph {
 			m.glyphSlot(c, t, task, fill)
+		} else if o.quiet {
+			theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow) // as in the Working rows above
 		} else {
 			m.authorSlot(c, task) // in the glyph's column, as under a group header
 		}
@@ -91,7 +97,10 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 			})
 		})
 		right(c, func() {
-			if m.width >= dropPillsBelow {
+			if o.note != "" && m.width >= dropPillsBelow {
+				theme.Text(c, theme.Meta, t.TextTertiary, o.note).Shrink(0)
+			}
+			if m.width >= dropPillsBelow && !o.quiet {
 				who := m.whoFinished(task, o.summary && m.width >= dropProjectBelow)
 				theme.Text(c, theme.Meta, t.TextTertiary, who).MaxWidth(300).Shrink(2).MinWidth(0).Ellipsis("…")
 			}
@@ -103,17 +112,17 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 	}
 }
 
-// doneTodaySection is the last section of Now: what was finished since midnight, by agents and by
+// doneTodaySection is the last section of Mine: what was finished since midnight, by agents and by
 // me, newest first, five rows and then a link to Completed.
-func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, now data.Now) {
-	if len(now.Done) == 0 {
+func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, items []data.Item, more int) {
+	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionDoneToday(), len(now.Done)+now.MoreDone)
-	for _, it := range now.Done {
+	sectionHeader(c, t, m.say.SectionDoneToday(), len(items)+more)
+	for _, it := range items {
 		m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), summary: true})
 	}
-	if now.MoreDone > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
+	if more > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
 		m.goTo(nav{screen: screenCompleted})
 	}
 }

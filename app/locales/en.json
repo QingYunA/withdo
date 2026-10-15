@@ -1052,10 +1052,6 @@
   "@navNoProjects": {
     "description": "Hint in the sidebar while there are no projects."
   },
-  "navNow": "Now",
-  "@navNow": {
-    "description": "Sidebar row and page title of the home screen."
-  },
   "navProjects": "Projects",
   "@navProjects": {
     "description": "Header of the list of projects in the sidebar."
@@ -1063,24 +1059,6 @@
   "navSettings": "Settings",
   "@navSettings": {
     "description": "Sidebar row that opens the settings sheet."
-  },
-  "needAgentWaiting": "Agent is waiting",
-  "@needAgentWaiting": {
-    "description": "Second line of a blocked agent task with nothing more to say."
-  },
-  "needAgentWaitingFor": "Agent is waiting: “{words}”",
-  "@needAgentWaitingFor": {
-    "description": "Second line of a blocked agent task; words is what the agent said it needs.",
-    "placeholders": {
-      "words": {
-        "type": "String",
-        "example": "Which branch should I use?"
-      }
-    }
-  },
-  "needBlockedByMe": "Marked as blocked",
-  "@needBlockedByMe": {
-    "description": "Second line of a blocked task the user created."
   },
   "needNoUpdate": "No update for {span}",
   "@needNoUpdate": {
@@ -1155,10 +1133,6 @@
         "example": "4:00 PM"
       }
     }
-  },
-  "needReview": "Ready for your review",
-  "@needReview": {
-    "description": "Second line of an agent task waiting for review, without a pull request."
   },
   "needReviewPR": "PR #{number} is ready for your review",
   "@needReviewPR": {
@@ -1307,18 +1281,6 @@
   "providerNoteOllama": "Runs on this Mac. No key needed.",
   "@providerNoteOllama": {
     "description": "Note of the Ollama provider."
-  },
-  "sectionAgents": "Agents at work",
-  "@sectionAgents": {
-    "description": "Section header on Now: agent tasks in progress. English is shown in capitals."
-  },
-  "sectionNeeds": "Needs you",
-  "@sectionNeeds": {
-    "description": "Section header on Now: what waits on the user. English is shown in capitals."
-  },
-  "sectionYours": "Yours",
-  "@sectionYours": {
-    "description": "Section header on Now: the user's own tasks. English is shown in capitals."
   },
   "settingsCopied": "Copied",
   "@settingsCopied": {
@@ -1931,5 +1893,133 @@
         "example": "deepseek-chat"
       }
     }
+  },
+  "navMine": "Mine",
+  "@navMine": {
+    "description": "Sidebar row and page title of the home screen: what is mine to do, and what agents handed over."
+  },
+  "navAgents": "Agents",
+  "@navAgents": {
+    "description": "Sidebar row and page title of the screen that shows what agents are doing."
+  },
+  "sectionFromAgents": "From your agents",
+  "@sectionFromAgents": {
+    "description": "Section of Mine: what agents handed over to the user."
+  },
+  "sectionToday": "Today",
+  "@sectionToday": {
+    "description": "Section of Mine: the user's tasks due or reminded today, and the ones in progress."
+  },
+  "sectionLater": "Later",
+  "@sectionLater": {
+    "description": "Section of Mine: the user's tasks of the next days, then the ones with no date."
+  },
+  "sectionWorking": "Working",
+  "@sectionWorking": {
+    "description": "Section of Agents: tasks the agents are working on."
+  },
+  "agentsWorking": "{count} working",
+  "@agentsWorking": {
+    "description": "Quiet text beside the title of Agents: how many tasks are being worked on.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "subtasksCount": "{count, plural, one {# subtask} other {# subtasks}}",
+  "@subtasksCount": {
+    "description": "Quiet text of a finished task on Agents: how many subtasks it had.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "pillDone": "Done",
+  "@pillDone": {
+    "description": "Pill of a subtask that is finished."
+  },
+  "pillDoing": "Doing",
+  "@pillDoing": {
+    "description": "Pill of a subtask that is being worked on."
+  },
+  "pillHandedBack": "Handed back",
+  "@pillHandedBack": {
+    "description": "Pill of a subtask whose agent handed its work back to the main agent for review."
+  },
+  "needAgentDone": "{agent} finished and is waiting for you",
+  "@needAgentDone": {
+    "description": "Second line of an agent task that is done and waits for the user.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "needAgentStuck": "{agent} is stuck: “{words}”",
+  "@needAgentStuck": {
+    "description": "Second line of a blocked agent task; words is what the agent said it needs.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      },
+      "words": {
+        "type": "String",
+        "example": "Which branch should I use?"
+      }
+    }
+  },
+  "needAgentStuckPlain": "{agent} is stuck and waits for you",
+  "@needAgentStuckPlain": {
+    "description": "Second line of a blocked agent task with nothing more to say.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Codex"
+      }
+    }
+  },
+  "actionAnswer": "Answer",
+  "@actionAnswer": {
+    "description": "Button of a row where an agent waits for an answer."
+  },
+  "actionReview": "Review",
+  "@actionReview": {
+    "description": "Button of a row where an agent finished and waits for a look."
+  },
+  "propParent": "Parent",
+  "@propParent": {
+    "description": "Label of the inspector row of a subtask: the task it belongs to."
+  },
+  "inspectorSubtasks": "Subtasks",
+  "@inspectorSubtasks": {
+    "description": "Header of the list of subtasks in the inspector of a task."
+  },
+  "a11yMineUnseen": "{count, plural, one {# new from your agents} other {# new from your agents}}",
+  "@a11yMineUnseen": {
+    "description": "Accessibility label of the red badge beside Mine in the sidebar.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "composerPlaceholderAgents": "Ask what your agents are doing",
+  "@composerPlaceholderAgents": {
+    "description": "Placeholder of the composer on Agents."
+  },
+  "agentsEmpty": "No agents at work",
+  "@agentsEmpty": {
+    "description": "Title of the Agents screen when nothing is being worked on."
+  },
+  "agentsEmptyBody": "When an agent reports its progress, it shows up here.",
+  "@agentsEmptyBody": {
+    "description": "Quiet line under the title of the empty Agents screen."
   }
 }

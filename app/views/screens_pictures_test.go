@@ -92,9 +92,9 @@ func TestScreensComposerPictures(t *testing.T) {
 				mainShot(t, name+sfx, app, a.dark, setup)
 			}
 			app, setup := attached(false)
-			shotOf("now-composer-pictures", app, setup)
+			shotOf("mine-composer-pictures", app, setup)
 			app, setup = attached(true)
-			shotOf("now-composer-model", app, setup)
+			shotOf("mine-composer-model", app, setup)
 			inspector, _ := modelsApp(t)
 			shotOf("inspector-composer-model", inspector, func(tt *ui.Tester, m *Main) {
 				m.OpenTask(5)
@@ -105,7 +105,7 @@ func TestScreensComposerPictures(t *testing.T) {
 				tt.Type("move it to friday afternoon")
 			})
 			empty, _ := modelsApp(t)
-			shotOf("now-composer-plus", empty, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) })
+			shotOf("mine-composer-plus", empty, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) })
 		}
 	}
 }
