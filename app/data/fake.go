@@ -398,3 +398,45 @@ func nilIfZeroTime(t time.Time) *time.Time {
 	}
 	return &t
 }
+
+// SetPullRequest sets what the poller would have found about a task's pull request, for demos and
+// screens.
+func (f *Fake) SetPullRequest(id int, state PRState, checks PRChecks, review PRReview) error {
+	f.mu.Lock()
+	t, ok := f.find(id)
+	if !ok {
+		f.mu.Unlock()
+		return fmt.Errorf("task %d not found", id)
+	}
+	now := f.Now()
+	t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt = state, checks, review, &now, nil
+	f.mu.Unlock()
+	f.notify()
+	return nil
+}
+
+// AddReport files a report against a task, for demos and screens.
+func (f *Fake) AddReport(r Report) {
+	f.mu.Lock()
+	r.ID = f.newID()
+	f.reports = append(f.reports, r)
+	f.mu.Unlock()
+	f.notify()
+}
+
+// KeepClosedPR implements Store.
+func (f *Fake) KeepClosedPR(id int) error {
+	f.mu.Lock()
+	t, ok := f.find(id)
+	if !ok {
+		f.mu.Unlock()
+		return fmt.Errorf("task %d not found", id)
+	}
+	if t.PRState == PRClosed {
+		now := f.Now()
+		t.PRClosedSeenAt = &now
+	}
+	f.mu.Unlock()
+	f.notify()
+	return nil
+}

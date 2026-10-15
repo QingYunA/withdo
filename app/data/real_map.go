@@ -72,6 +72,8 @@ func fromTask(t domain.Task) Task {
 	if t.PRNumber != nil {
 		out.PRNumber = int(*t.PRNumber)
 	}
+	out.PRState, out.PRChecks, out.PRReview = pullRequestOf(t)
+	out.PRCheckedAt, out.PRClosedSeenAt = parseTimePtr(t.PRCheckedAt), parseTimePtr(t.PRClosedSeenAt)
 	return out
 }
 
@@ -156,4 +158,9 @@ func toPatch(p Patch) domain.TaskPatch {
 		}
 	}
 	return out
+}
+
+func pullRequestOf(t domain.Task) (PRState, PRChecks, PRReview) {
+	snap := t.PullRequest()
+	return PRState(snap.State), PRChecks(snap.Checks), PRReview(snap.Review)
 }

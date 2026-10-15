@@ -182,6 +182,11 @@ func (r *Real) UpdateTask(id int, p Patch) (Task, error) {
 	return fromTask(*t), nil
 }
 
+// KeepClosedPR implements Store.
+func (r *Real) KeepClosedPR(id int) error {
+	return r.core.DismissClosedPR(r.ctx(), int64(id))
+}
+
 func (r *Real) Overview() (Overview, error) {
 	o, err := r.core.GetOverview(r.ctx(), domain.OverviewOptions{})
 	if err != nil {

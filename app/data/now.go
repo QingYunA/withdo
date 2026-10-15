@@ -9,10 +9,13 @@ import (
 type NeedKind int
 
 const (
-	NeedBlocked  NeedKind = iota // something is stuck
-	NeedReminder                 // a reminder came due
-	NeedReview                   // an agent finished and waits for a look
-	NeedStale                    // an agent went quiet
+	NeedBlocked   NeedKind = iota // something is stuck
+	NeedReminder                  // a reminder came due
+	NeedPRClosed                  // the pull request was closed without merging
+	NeedPRFailing                 // the checks of the pull request are failing
+	NeedPRChanges                 // changes were requested on the pull request
+	NeedReview                    // an agent finished and waits for a look
+	NeedStale                     // an agent went quiet
 )
 
 // Limits of the Now screen.
@@ -64,9 +67,12 @@ func (n Now) IDs() []int {
 
 // NowInput is what BuildNow reads. Latest returns a task's newest report, or nil.
 type NowInput struct {
-	Now         time.Time
-	Tasks       []Task
-	Latest      func(taskID int) *Report
+	Now    time.Time
+	Tasks  []Task
+	Latest func(taskID int) *Report
+	// Event returns the newest report GitHub filed against a task, or nil; it dates the pull
+	// request rows. Latest should leave GitHub's reports out: they are not the agent speaking.
+	Event       func(taskID int) *Report
 	StaleHours  int // DefaultStaleHours when 0
 	ProjectName func(*int) string
 }
@@ -118,6 +124,12 @@ func (b nowBuilder) need(t Task, out *Now) bool {
 		kind = NeedBlocked
 	case DueReminder(t, b.Now):
 		kind = NeedReminder
+	case t.PRClosedUnseen():
+		kind = NeedPRClosed
+	case t.PRChecksFailing():
+		kind = NeedPRFailing
+	case t.PRChangesRequested():
+		kind = NeedPRChanges
 	case t.Source == SourceAgent && t.Status == Review:
 		kind = NeedReview
 	case t.Source == SourceAgent && t.Status == Doing && b.item(t).Stale:
@@ -131,11 +143,27 @@ func (b nowBuilder) need(t Task, out *Now) bool {
 		it.Since = *t.RemindAt
 		it.Hours = int(b.Now.Sub(it.Since) / time.Hour)
 	}
+	if kind >= NeedPRClosed && kind <= NeedPRChanges {
+		b.dateByEvent(&it)
+	}
 	if kind == NeedBlocked && t.Source == SourceAgent {
 		it.Words = blockedWords(b.Latest(t.ID))
 	}
 	out.Needs = append(out.Needs, it)
 	return true
+}
+
+// dateByEvent ages a pull request row from the report GitHub filed about it, not from the agent's
+// last word: what it waits on is the pull request.
+func (b nowBuilder) dateByEvent(it *NowItem) {
+	it.Stale = false
+	if b.Event == nil {
+		return
+	}
+	if r := b.Event(it.ID); r != nil {
+		it.Since = r.CreatedAt
+		it.Hours = int(b.Now.Sub(it.Since) / time.Hour)
+	}
 }
 
 // blockedWords is what a blocked agent task said it waits for: the next step of its latest

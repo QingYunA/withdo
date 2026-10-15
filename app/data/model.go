@@ -93,6 +93,13 @@ type Task struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	CompletedAt *time.Time
+
+	// What the GitHub poller last saw of PRURL; empty before the first check.
+	PRState        PRState
+	PRChecks       PRChecks
+	PRReview       PRReview
+	PRCheckedAt    *time.Time
+	PRClosedSeenAt *time.Time // the user dismissed the closed pull request
 }
 
 // Report is one progress note an agent filed against a task.
@@ -189,6 +196,10 @@ type Store interface {
 	Subscribe(fn func()) (cancel func())
 	// SubscribeReminders calls fn for every reminder that comes due, once.
 	SubscribeReminders(fn func(Reminder)) (cancel func())
+
+	// KeepClosedPR dismisses the Needs you row of a task whose pull request was closed without
+	// merging; the task stays as it is.
+	KeepClosedPR(id int) error
 }
 
 // IntPtr returns a pointer to v.
