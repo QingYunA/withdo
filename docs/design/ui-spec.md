@@ -65,25 +65,28 @@ System font (SF Pro), SF Mono for branches and PR numbers. Use at most three siz
 
 | Token | Size / line | Weight | Use |
 |---|---|---|---|
-| `title` | 20 / 26 | 600 | main window project title |
-| `input` | 15 / 20 | 400 | ask field |
-| `body` | 13 / 18 | 400 | rows, cards, fields |
-| `body.strong` | 13 / 18 | 500 | task titles |
-| `meta` | 12 / 16 | 400 | summaries, ages, field labels |
-| `section` | 11 / 14 | 600, tracking +0.4, uppercase | section headers |
-| `mono` | 11.5 / 16 | 400 | branch, `#42` |
+| `title` | 26 / 32 | 700 | main window project title |
+| `input` | 17 / 25 | 400 | the composer |
+| `body` | 15 / 22 | 400 | rows, cards, fields, menus |
+| `body.strong` | 15 / 22 | 500 | task titles |
+| `meta` | 13 / 18 | 400 | summaries, ages, field labels |
+| `section` | 13 / 18 | 600, `text.secondary`, sentence case, no tracking | section headers |
+| `mono` | 12.5 / 18 | 400 | branch, `#42` |
+
+M4c made type one step larger everywhere (2026-10-15): the first version read small on a retina
+display. Views keep using the tokens; no literal sizes.
 
 ### Space, shape, motion
 
 - 4 pt grid. Common gaps 4, 8, 12, 16, 24.
-- Radii: 6 (pills, inputs), 8 (cards, rows), 12 (ask field, Needs you container, popovers).
+- Radii: 6 (pills, inputs), 9 (cards, rows), 12 (composer, Needs you container, popovers).
 - Shadows only on floating things: drag ghost, popovers, the window.
 - Motion 160 ms ease-out for hover, selection and drawer; 220 ms spring for a card
   appearing and a card settling after a drop. Respect Reduce Motion: fade only.
 
 ## Glyphs
 
-16 pt, drawn as vector icons. Shape carries meaning; color repeats it.
+18 pt, drawn as vector icons. Shape carries meaning; color repeats it.
 
 | Status | Glyph |
 |---|---|
@@ -99,8 +102,10 @@ Priority: three ascending bars. P0 = three bars in `status.blocked` color, P1 = 
 P2 = two bars, P3 = one bar, in `text.secondary`. P2 is the default and shows **nothing** on
 cards and rows, so only deliberate priorities draw the eye.
 
-Clicking the status glyph on a row or card opens a small status menu. Marking done plays a
-220 ms fill-and-check animation, then the item fades from active lists.
+Clicking the status glyph of **my own** task marks it done at once (one click, no menu); marking
+done plays a 220 ms fill-and-check animation (a plain fill with Reduce Motion), then the item moves
+to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
+(below), so an agent's work is never completed by accident and a finished task can be reopened.
 
 ## Surfaces
 
@@ -112,16 +117,18 @@ window hides it; Quit quits. The high-fidelity reference for this section is
 ### Window (1100 x 720, min 860 x 540)
 
 Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only when a task
-is open). Content is a centered column, max 820 pt wide, 56 pt side padding, so lists read
+is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
 like a document, not a spreadsheet.
 
 **Sidebar.** A search field first (see **Search**), then `Now` (count = items in Needs you + Agents
-at work + Yours), `Inbox` (count) and `Logbook` (no count: it only grows), then `PROJECTS` with a
-quiet `+` at the right of its header: one row per project, name only; a 6 pt red dot at the right when
+at work + Yours), `Inbox` (count) and `Completed` (no count: it only grows), then `Projects` (sentence
+case, `section` style) with a quiet `+` at the right of its header: one row per project, name only,
+**on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
-task shows no count. Settings is a gear button at the bottom. Selected row: `bg.selected`, 7 pt radius.
+task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
+(the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
 
-- **`+` on PROJECTS** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
+- **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
 - **Right-click a project**: `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
@@ -140,7 +147,7 @@ Header: `Now` in `title` + the date in `text.tertiary`.
 assistant (see **Assistant** below). With none, Enter creates an Inbox task and shows an inline
 "Added to Inbox" confirmation under the field for 1.5 s.
 
-Then up to three sections. **A section with nothing in it is not drawn at all.**
+Then up to four sections. **A section with nothing in it is not drawn at all.**
 
 1. **Needs you** — inside one bordered container (12 pt radius, rows split by hairlines):
    - blocked tasks (any source): summary line `Agent is waiting: "<next_step or summary>"`,
@@ -174,7 +181,17 @@ its room beside the inspector. Each row: glyph (reminders use a bell in
    next 7 days, then undated (at most 7 undated; a "Show all in Inbox" link after). Row: glyph,
    title, project name, due label on the right ("Today", "Tomorrow", "Fri", "Oct 20").
 
-**All clear.** When all three sections are empty: a centered calm message under the ask field —
+4. **Done today** — what was finished since local midnight, by anyone: agents and me, newest first,
+   so the day shows what got done and not only what is left. The same row as the others with the
+   `done` glyph, the title in `text.secondary` at weight 400, and at the right who did it, then
+   the time of day: `Claude Code · PR #245 merged` (the agent's name, then what its latest report
+   says, cut to one line) or `You`, then `2:05 PM`. At most five; past them a `Show all in
+   Completed` link opens Completed. The section does not count toward the sidebar's Now badge and
+   never makes Now "not clear": **All clear.** looks at the first three. Who finished a task:
+   the agent that filed a report at the moment it closed (a report within five seconds of the
+   completion, or later), else me.
+
+**All clear.** When the first three sections are empty (Done today may still show below it): a centered calm message under the ask field —
 "All clear." and in secondary "Agents report here through the adhd-todo MCP server." with a
 "How to connect" link (opens Settings).
 
@@ -236,8 +253,11 @@ at once. A project that has no milestone shows the menu with `All milestones` an
 name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
 per row; the group says the status). Row: title, branch pill, `#PR`, summary line for agent
 tasks, age or due label on the right, stale label when stale. **Empty groups are not drawn.**
-After To do: a quiet "+ Add a task" row (inline input; Enter creates a todo in this project).
-Last line: `Done 4 · Backlog 2 — show` in `text.tertiary`; clicking expands those two groups.
+After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
+its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
+Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in `accent` that expands
+the group in place. Last line: `Backlog 2 — show` in `text.tertiary` (folded: Backlog stays out of
+the way); clicking it opens the group. With no backlog the line is not drawn.
 
 **Board view.** Kept for people who like columns, but it shows only columns that have tasks,
 plus To do (always, as the place to add). No collapsed strips, no zero-count columns. Cards as
@@ -273,27 +293,54 @@ Unchanged from the previous spec: large editable title; property list (Status, P
 Milestone, Due, Remind, Branch, Pull request) with left labels in `meta` secondary and values
 editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
-- **Project** is a value button like Status. Its menu is the same as the task menu's `Move to`:
-  `Inbox`, a separator, then the projects, the current one checked. Moving a task to another project
-  clears its milestone (milestones belong to one project); the Milestone row follows the project.
-- At the bottom, below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It asks
-  first (**Delete confirmation**) and closes the pane after.
+- The **Status**, **Priority**, **Project** and **Remind** values open the pieces of the **Task
+  menu** (below) under the value, not a system menu: the status strip, the priority strip, the
+  `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+  Moving a task to another project clears its milestone (milestones belong to one project); the
+  Milestone row follows the project.
+- At the bottom, below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
+  at once like the menu's Delete (with the Undo toast) and closes the pane.
 
-### Context menus
+### Task menu
 
-Native menus (right-click or the menu key on a focused row), the same on every surface that shows the
-task: list rows, Now rows, search and logbook rows, and board cards.
+Our own popover, not the system's, so it can show the status glyphs and priority as one-click
+strips. The same menu on every surface that shows the task (list rows, Now rows, search and
+Completed rows, board cards), opened by:
 
-| Item | Contents |
-|---|---|
-| `Status ▸` | the seven statuses, the current one checked |
-| `Priority ▸` | P0 Urgent … P3 Low, the current one checked |
-| `Move to ▸` | `Inbox`, a separator, the projects; the current one checked |
-| `Open PR` | only when the task has a pull request; opens it in the browser |
-| separator | |
-| `Delete…` | asks first |
+- a **right-click** on a row or card (at the pointer);
+- a click on the **status glyph** of an agent's task, or of a finished task (at the glyph);
+- **S**, **P**, **M**, **R** on the selected row (below the row), and `⌘J`, `⌘⌫` (see Keyboard).
 
-A project's menu is in the Sidebar. Menus never carry a destructive default and never use color.
+It is 268 pt wide, 12 pt radius, `bg` at 96 %, a 1 pt `border` and a soft shadow; it moves into the
+window when it would leave it. `Esc` or a press outside closes it (the press goes on to what is
+under it, so a right-click on another row moves the menu there). Reference: frame 3 of
+`docs/design/mockups/v2.html`.
+
+Main page, top to bottom (10 pt padding):
+
+1. `Status` label in `section` style and a **strip** of the status glyphs: backlog, to do, doing,
+   blocked, review, done, cancelled. One click sets the status and closes the menu. Hover
+   tints a button (`bg.hover`) and shows its name as a tooltip; the current status is tinted `bg.selected`.
+   (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
+2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted).
+3. a hairline;
+4. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
+   projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
+   `Esc` goes back to the main page;
+5. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right: `Later
+   today` (6:00 PM, only while that is over half an hour away), `Tomorrow` (9:00 AM), `Next
+   Monday` (9:00 AM), `This weekend` (Saturday 10:00 AM, not on Saturday after 10:00 or on
+   Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day and Done;
+6. `Open PR`, only when the task has a pull request;
+7. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
+8. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
+
+**Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
+seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
+holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
+Priority the priority strip, Project the `Move to…` list, Remind the presets.
+
+A project's menu is in the Sidebar and stays a system menu.
 
 ### Search
 
@@ -320,14 +367,15 @@ the last change. Done and cancelled rows keep their glyph (a button, so a finish
   highlight, then the search. Clicking a sidebar item or `⌘1` `⌘2` `⌘3` ends the search.
 - At most 100 results are shown; a quiet last line says when there are more.
 
-### Logbook
+### Completed
 
-The `Logbook` sidebar item, under Inbox: the done and cancelled tasks of every active project and the
-Inbox, newest first by completion, grouped by day. Page title `Logbook`, subtitle `Done and cancelled,
-newest first`. Day header in `body.strong` with the count in `text.tertiary`: `Today`, `Yesterday`,
+The `Completed` sidebar item (`已完成`, was Logbook), under Inbox: the done and cancelled tasks of every
+active project and the Inbox, newest first by completion, grouped by day. Page title `Completed`,
+subtitle `Done and cancelled, newest first`. Now's `Show all in Completed` and a list's
+`Show all` lead the eye here. Day header in `body.strong` with the count in `text.tertiary`: `Today`, `Yesterday`,
 then a date (`Oct 12`, `Oct 12, 2025` in another year), written by `app/words`. Row: the status glyph
 (done check or cancelled slash, a button: choosing another status reopens the task), title, project
-name, and at the right the time of day it was finished.
+name, and at the right who finished it (`Claude Code`, `You`) and the time of day.
 
 - **Empty**: `Nothing finished yet` and `Tasks you mark done or cancel collect here, newest first.`
 - 100 tasks are listed; `Show older` at the end loads 100 more.
@@ -356,7 +404,11 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 `⌘K` ask field · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Logbook.
+inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed.
+
+With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
+that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
+about the task (opens the inspector with its composer focused); `⌘⌫` deletes it, with Undo.
 
 While a text input has the keyboard its keys are its own (`Element.OnTextKey`), and the window's
 arrows, `↵`, `Space` and `Esc` stay out of the way:
@@ -428,11 +480,10 @@ the open provider's fields at the right.
   "您", full-width punctuation (，。：“”), a space between a number and Latin text but none
   before a unit ("3天前", "2分钟前"). `⌘K`, PR, MCP, Claude Code and branch names stay as they are.
   Examples: "需要你处理", "Agent 进行中", "你的任务", "全部处理完了。", "已添加到收件箱".
-  Management words: "新建项目", "重命名", "归档", "删除…", "移到" (Move to), "搜索", "已完成" for the
-  Logbook (as macOS Reminders names it; the page's subtitle says it holds cancelled tasks too, and
+  Management words: "新建项目", "重命名", "归档", "删除…", "移到" (Move to), "搜索", "已完成" for
+  Completed (as macOS Reminders names it; the page's subtitle says it holds cancelled tasks too, and
   "日志" would read as log files to a developer).
-- Section headers are uppercase with tracking in English only: a text with Han characters gets
-  neither (`theme.Text`).
+- Section headers are sentence case, `section` style, not tracked capitals, in both languages.
 - Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12"); in Chinese "刚刚", "2分钟前",
   "3小时前", "2天前", then "10月12日". Due labels: "Today", "Tomorrow", "Fri", "Oct 20", the time of
   day for a reminder today ("4:00 PM", "下午4:00"). Dates and hours follow the user's regional
