@@ -6,11 +6,14 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// convoSheet is the conversation under the ask field. It is part of the page, not a window or a
+// convoSheet is the reply under the composer. It is part of the page, not a window or a
 // chat: no bubbles, no avatars. My line in secondary text, the reply in body text, one row per
 // change in the list-row style, and a question with its options as small tinted buttons. The
-// sections below move down to make room, and a hairline marks where it ends.
-func (m *Main) convoSheet(c *ui.Context, t *theme.Tokens) {
+// sections below move down to make room, and a hairline marks where it ends. In the inspector,
+// compact is set: a receipt stacks its detail under its title, and there is no hairline.
+func (m *Main) convoSheet(c *ui.Context, t *theme.Tokens, compact bool) {
+	m.compactReply = compact
+	defer func() { m.compactReply = false }()
 	cv := &m.convo
 	if !cv.open || len(cv.turns) == 0 {
 		return
@@ -23,7 +26,9 @@ func (m *Main) convoSheet(c *ui.Context, t *theme.Tokens) {
 		for i, turn := range cv.turns {
 			m.turnView(c, t, i, turn, i == len(cv.turns)-1)
 		}
-		ui.Box(c.Key("convo-rule")).Height(1).Shrink(0).Margin(14, 0, 0).Background(t.Border)
+		if !compact {
+			ui.Box(c.Key("convo-rule")).Height(1).Shrink(0).Margin(14, 0, 0).Background(t.Border)
+		}
 	})
 }
 
@@ -48,7 +53,7 @@ func (m *Main) turnView(c *ui.Context, t *theme.Tokens, i int, turn convoTurn, l
 		theme.Paragraph(c, theme.Body, t.TextSecondary, turn.user, 0)
 		switch {
 		case m.convo.thinking && last && turn.reply == "":
-			// The ask field already says Thinking…; the sheet only shows what was asked.
+			// The composer already says Thinking…; the sheet only shows what was asked.
 		case turn.reply != "":
 			theme.Paragraph(c, theme.Body, t.Text, turn.reply, 0).Margin(6, 0, 0)
 		}
@@ -77,10 +82,10 @@ func sheetTurnGap(i int) float32 {
 // receiptRow is one change, shaped like a list row: glyph, title, a quiet detail, and Undo.
 func (m *Main) receiptRow(c *ui.Context, t *theme.Tokens, r data.Receipt) {
 	undone := m.convo.undone[r.ID]
-	row := ui.Row(c.Key("receipt-"+itoa(r.ID))).Shrink(0).Margin(4, -plainRow.horz, 0).Padding(7, plainRow.horz).Gap(12).
-		AlignItems(ui.Center).Radius(theme.RadiusCard).Cursor(ui.CursorPointer)
+	row := ui.Row(c.Key("receipt-"+itoa(r.ID))).Shrink(0).Margin(6, -plainRow.horz, 0).Padding(7, plainRow.horz).Gap(12).
+		AlignItems(ui.Center).Radius(theme.RadiusCard).Cursor(ui.CursorPointer).Background(t.BgSubtle)
 	if row.Hovered() {
-		row.Background(t.BgHover)
+		row.Background(t.BgSelected)
 	}
 	row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	row.Children(func() {
@@ -93,12 +98,20 @@ func (m *Main) receiptRow(c *ui.Context, t *theme.Tokens, r data.Receipt) {
 		if undone {
 			ink = t.TextTertiary
 		}
-		title := theme.Text(c, theme.BodyStrong, ink, r.Title).Shrink(1).MinWidth(0).Ellipsis("…")
-		if undone {
-			title.Strikethrough()
+		words := func() {
+			title := theme.Text(c, theme.BodyStrong, ink, r.Title).Shrink(1).MinWidth(0).Ellipsis("…")
+			if undone {
+				title.Strikethrough()
+			}
+			theme.Text(c, theme.Meta, t.TextTertiary, m.detailText(r.Detail)).Shrink(2).MinWidth(0).Ellipsis("…")
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, m.detailText(r.Detail)).Shrink(2).MinWidth(0).Ellipsis("…")
-		ui.Spacer(c)
+		if m.compactReply {
+			// The inspector is narrow: the detail goes under the title.
+			ui.Column(c).Grow(1).MinWidth(0).Children(words)
+		} else {
+			words()
+			ui.Spacer(c)
+		}
 		if undone {
 			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoUndone()).Shrink(0)
 		} else if m.undoButton(c, t, r).Clicked() {
@@ -125,7 +138,7 @@ func (m *Main) undoButton(c *ui.Context, t *theme.Tokens, r data.Receipt) ui.Ele
 }
 
 // questionView is a question in body text with its options as the small tinted buttons of the
-// Needs you rows. Typing a free answer into the ask field works too.
+// Needs you rows. Typing a free answer into the composer works too.
 func (m *Main) questionView(c *ui.Context, t *theme.Tokens, turn int, q data.Question, live bool) {
 	theme.Paragraph(c, theme.Body, t.Text, q.Text, 0).Margin(6, 0, 0)
 	if len(q.Options) == 0 || !live {

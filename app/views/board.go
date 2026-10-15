@@ -69,7 +69,11 @@ func (m *Main) boardActive() bool { return m.showsBoard() && len(m.selectionTask
 func (m *Main) boardScreen(c *ui.Context, t *theme.Tokens) {
 	pad := m.sidePad(c)
 	ui.Column(c).FillWidth().Shrink(0).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad).Children(func() { m.listHeader(c, t) })
+		ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad).Children(func() {
+			m.listHeader(c, t)
+			ui.Box(c).Height(18).Shrink(0)
+			m.pageComposer(c, t)
+		})
 	})
 	cols := m.boardColumns()
 	hidden := hiddenStatuses(cols)
@@ -128,6 +132,10 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width flo
 			theme.StatusGlyph(c, t, col.status, 0)
 			theme.Text(c, theme.BodyStrong, t.Text, boardName(m.say, col.status))
 			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(col.tasks)))
+			if col.status == data.Todo {
+				ui.Spacer(c)
+				m.boardPlus(c, t)
+			}
 		})
 		m.columnBody(c, t, col)
 	})
@@ -141,10 +149,7 @@ func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
 	}
 	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
 		ui.Column(c).Gap(8).Padding(0, 0, 12).Children(func() {
-			if col.status == data.Todo {
-				m.boardAdd(c, t)
-			}
-			if len(tasks) == 0 && col.status == data.Todo && !m.adding {
+			if len(tasks) == 0 && col.status == data.Todo {
 				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.BoardEmpty(), 3).Padding(2, 6, 0)
 			}
 			for _, task := range tasks {
@@ -155,32 +160,6 @@ func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
 			}
 		})
 	})
-}
-
-// boardAdd is "+ Add a task" at the top of To do, and the input it opens.
-func (m *Main) boardAdd(c *ui.Context, t *theme.Tokens) {
-	if m.adding && m.addNav == m.nav {
-		ui.Row(c.Key("board-add-input")).Padding(8, 12).Radius(theme.RadiusCard).Background(t.Bg).Border(1, t.Accent.Alpha(0.6)).Children(func() {
-			box := ui.Box(c).Grow(1).MinWidth(0)
-			box.Children(func() {
-				theme.BodyStrong.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-					Label(m.say.ListNewTaskTitle()).AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
-				if m.addBuf == "" {
-					theme.Text(c, theme.BodyStrong, t.TextTertiary, m.say.ListTaskTitle()).Absolute().Left(0).Top(0).PassThrough()
-				}
-			})
-		})
-		return
-	}
-	row := ui.Row(c.Key("board-add")).Height(theme.RowOneLine).Padding(0, 6).Radius(theme.RadiusCard).
-		AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ListAddTask())
-	if row.Hovered() {
-		row.Background(t.BgHover)
-	}
-	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, m.say.ListAddTaskRow()) })
-	if row.Clicked() {
-		m.adding, m.addNav, m.addBuf = true, m.nav, ""
-	}
 }
 
 // dropTargets are thin targets for the statuses that have no column. They appear while a card is
@@ -206,6 +185,20 @@ func (m *Main) dropTargets(c *ui.Context, t *theme.Tokens, hidden []data.Status)
 			})
 		}
 	})
+}
+
+// boardPlus is the + in the To do column's header: it puts the cursor in the composer.
+func (m *Main) boardPlus(c *ui.Context, t *theme.Tokens) {
+	tip := m.say.BoardAdd()
+	btn := ui.ButtonBase(c.Key("board-plus")).Size(theme.HitTarget, theme.HitTarget).Shrink(0).Center().Radius(theme.RadiusControl).
+		Label(tip).Tooltip(tip).TextColor(t.TextTertiary).Cursor(ui.CursorPointer)
+	if btn.Hovered() {
+		btn.Background(t.BgHover).TextColor(t.TextSecondary)
+	}
+	btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(14, 14) })
+	if btn.Clicked() {
+		m.focusPageComposer(c)
+	}
 }
 
 func (m *Main) dropCard(id int, to data.Status) {

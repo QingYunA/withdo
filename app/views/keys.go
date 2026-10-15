@@ -39,7 +39,7 @@ func moveSelection(cur, dir, n int) int {
 // typing reports whether a text input has the keyboard. Its keys are the input's own
 // (Element.OnTextKey), so the window leaves Esc, the arrows, Enter and Space alone meanwhile.
 func (m *Main) typing(c *ui.Context) bool {
-	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.searchRef.Focused(c) || m.renameRef.Focused(c) || m.inspector.editing()
+	return m.cmp[surfacePage].ref.Focused(c) || m.cmp[surfaceInspector].ref.Focused(c) || m.searchRef.Focused(c) || m.renameRef.Focused(c) || m.inspector.editing()
 }
 
 // keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
@@ -51,7 +51,7 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	m.runQueued(c, ids)
 	switch {
 	case c.Shortcut(ui.Cmd, ui.KeyK):
-		m.focusAsk(c)
+		m.focusPageComposer(c)
 	case c.Shortcut(ui.Cmd, ui.KeyF):
 		m.searchRef.Focus(c)
 	case c.Shortcut(ui.Cmd, ui.Key1):
@@ -100,8 +100,8 @@ func (m *Main) runQueued(c *ui.Context, ids []int) {
 	}
 }
 
-// escape cancels a running request, then closes the conversation sheet, the inline input and the
-// inspector, then clears the selection; with nothing left to close a further Esc makes the
+// escape cancels a running request, then closes the reply sheet and the inspector, then clears
+// the selection; with nothing left to close a further Esc makes the
 // assistant forget the conversation.
 func (m *Main) escape() {
 	switch {
@@ -109,8 +109,6 @@ func (m *Main) escape() {
 		m.cancelAsk()
 	case m.convo.open:
 		m.closeSheet()
-	case m.adding:
-		m.cancelAdding()
 	case m.openID != 0:
 		m.openID = 0
 	case m.sel != 0:
@@ -132,13 +130,13 @@ func (m *Main) move(c *ui.Context, ids []int, dir int) {
 	next := moveSelection(cur, dir, len(ids))
 	if next < 0 {
 		m.sel = 0
-		if m.nav.screen == screenNow {
-			m.focusAsk(c)
+		if m.pageHasComposer() {
+			m.focusPageComposer(c)
 		}
 		return
 	}
 	m.sel, m.moved = ids[next], true
-	m.listRef.Focus(c) // takes the keys from the ask field
+	m.listRef.Focus(c) // takes the keys from the composer
 }
 
 func (m *Main) openSelected() {

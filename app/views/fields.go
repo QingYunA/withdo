@@ -36,6 +36,7 @@ type fieldSpec struct {
 	enterSaves  bool // Enter saves instead of breaking the line
 	escReverts  bool // Esc puts the stored text back and leaves the field
 	secret      bool // a password field: the text is hidden
+	focus       bool // the field takes the keyboard as it appears
 	minLines    int
 	maxLines    int
 }
@@ -78,6 +79,9 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 		s.style.Apply(el).TextColor(s.color).Label(s.label).OnTextKey(f.key(s))
 		if s.secret && !s.multiline {
 			el.Password()
+		}
+		if s.focus {
+			el.AutoFocus()
 		}
 		if f.buf == "" && s.placeholder != "" {
 			theme.Text(c, s.style, t.TextTertiary, s.placeholder).Absolute().Left(0).Top(0).PassThrough()

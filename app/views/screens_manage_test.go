@@ -47,13 +47,6 @@ func TestScreensManageProjects(t *testing.T) {
 				m.askDeleteProject(1)
 				return nil
 			})
-			archived, _, _ := newTestApp(t)
-			_ = archived.Store.ArchiveProject(3)
-			archived.Refresh()
-			manageShot(t, "settings-archived"+suffix, archived, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				m.OpenSettings()
-				return nil
-			})
 		}
 	}
 }

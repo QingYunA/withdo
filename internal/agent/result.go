@@ -49,8 +49,12 @@ type Change struct {
 type Detail struct {
 	Kind    DetailKind
 	At      time.Time // DetailReminder, DetailDue
+	Due     time.Time // DetailReminder: the task also has this deadline; zero when it has none
 	Project string    // DetailAdded: the project's name, empty for the Inbox
-	Changes []Change  // DetailUpdated
+	// Priority is set on a new task when it is not the default P2, so the receipt shows what the
+	// words made of it.
+	Priority string
+	Changes  []Change // DetailUpdated
 }
 
 // Question is what ask_user asked: a short question and 2 to 4 answers to pick from.

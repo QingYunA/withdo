@@ -9,7 +9,7 @@ import (
 // taskProjectRow is the Project row of the inspector: the task's project, and under it the Move to
 // list of the task menu.
 func (m *Main) taskProjectRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "project", m.say.ManagePropProject(), func() {
+	m.propRow(c, t, "project", m.say.ManagePropProject(), func() {
 		name, color := m.app.projectName(task.ProjectID), t.Text
 		if task.ProjectID == nil {
 			name, color = m.say.NavInbox(), t.TextTertiary

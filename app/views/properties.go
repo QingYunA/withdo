@@ -30,10 +30,11 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 // propRow lays out a label and a value on one 32 pt line.
-func propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
-	ui.Row(c.Key("prop-" + key)).MinHeight(34).AlignItems(ui.Center).Children(func() {
+func (m *Main) propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
+	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, label).Width(labelWidth).Shrink(0)
 		value()
+		m.assistMark(c, t, key)
 	})
 }
 
@@ -48,7 +49,7 @@ func valueButton(c *ui.Context, t *theme.Tokens, key string) ui.Element {
 }
 
 func (m *Main) statusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "status", m.say.PropStatus(), func() {
+	m.propRow(c, t, "status", m.say.PropStatus(), func() {
 		btn := valueButton(c, t, "status").Label(m.say.A11yStatus(statusLabel(m.say, task.Status)))
 		if btn.Clicked() {
 			m.openMenuBelow(btn, task.ID, pageStatus)
@@ -61,7 +62,7 @@ func (m *Main) statusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "priority", m.say.PropPriority(), func() {
+	m.propRow(c, t, "priority", m.say.PropPriority(), func() {
 		label := priorityLabel(m.say, task.Priority)
 		btn := valueButton(c, t, "priority").Label(m.say.A11yPriority(label))
 		if btn.Clicked() {
@@ -79,7 +80,7 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		return
 	}
 	ms := m.app.snap.milestones[*task.ProjectID]
-	propRow(c, t, "milestone", m.say.PropMilestone(), func() {
+	m.propRow(c, t, "milestone", m.say.PropMilestone(), func() {
 		label, color := m.say.ValueNone(), t.TextTertiary
 		for _, x := range ms {
 			if task.MilestoneID != nil && x.ID == *task.MilestoneID {
@@ -103,7 +104,7 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "branch", m.say.FieldBranch(), func() {
+	m.propRow(c, t, "branch", m.say.FieldBranch(), func() {
 		box := ui.Box(c).Grow(1).MinWidth(0).Height(28).Justify(ui.Center)
 		box.Children(func() {
 			branch, ok := textField(c, t, m.inspector.fields, fieldSpec{
@@ -118,7 +119,7 @@ func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "pr", m.say.PropPullRequest(), func() {
+	m.propRow(c, t, "pr", m.say.PropPullRequest(), func() {
 		btn := valueButton(c, t, "pr").Label(m.say.A11yOpenPR(itoa(task.PRNumber))).Tooltip(task.PRURL)
 		btn.Children(func() {
 			theme.Text(c, theme.Mono, t.Accent, "#"+itoa(task.PRNumber))
@@ -134,7 +135,7 @@ func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 // popover and saves as soon as a day or time is picked.
 func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, key, label string, current *time.Time, open *bool, patch func(time.Time) data.Patch, withTime bool) {
 	task, _ := m.app.Task(m.inspector.lastOpen)
-	propRow(c, t, key, label, func() {
+	m.propRow(c, t, key, label, func() {
 		text, color := m.say.ValueNone(), t.TextTertiary
 		if current != nil {
 			text, color = m.clock.Moment(*current, m.app.Now(), withTime), t.Text

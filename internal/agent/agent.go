@@ -68,16 +68,17 @@ func (a *Agent) Reset() {
 // Undo reverts the one change a receipt describes.
 func (a *Agent) Undo(ctx context.Context, receiptID int) error { return a.journal.run(ctx, receiptID) }
 
-// Ask runs one turn: the user's text, as a continuation of the current conversation. It blocks
-// until the model has answered, so call it off the UI thread; cancelling ctx stops it. On error
-// the Result still lists the changes made before the turn stopped.
-func (a *Agent) Ask(ctx context.Context, text string) (Result, error) {
+// Ask runs one turn: the user's text, as a continuation of the current conversation, typed in
+// the place scope names. It blocks until the model has answered, so call it off the UI thread;
+// cancelling ctx stops it. On error the Result still lists the changes made before the turn
+// stopped.
+func (a *Agent) Ask(ctx context.Context, text string, scope Scope) (Result, error) {
 	msgs, err := a.begin(text)
 	if err != nil {
 		return Result{}, err
 	}
 	defer a.finish()
-	tb, runner, err := a.prepare(ctx)
+	tb, runner, err := a.prepare(ctx, scope)
 	if err != nil {
 		return Result{}, err
 	}
@@ -127,7 +128,7 @@ func (a *Agent) remember(msgs []*schema.Message) {
 
 // prepare builds this turn's tools and the Eino runner. The agent is cheap, so it is rebuilt per
 // turn with a fresh prompt: the clock and the project list change between turns.
-func (a *Agent) prepare(ctx context.Context) (*toolbox, *adk.Runner, error) {
+func (a *Agent) prepare(ctx context.Context, scope Scope) (*toolbox, *adk.Runner, error) {
 	m, err := a.cfg.Model(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -136,12 +137,19 @@ func (a *Agent) prepare(ctx context.Context) (*toolbox, *adk.Runner, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("list projects: %w", err)
 	}
+	focus, err := a.focusOf(ctx, scope)
+	if err != nil {
+		return nil, nil, err
+	}
 	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects}
+	if p, ok := activeProject(projects, scope.ProjectID); ok && scope.Kind == ScopeProject {
+		tb.defaultProject = &p.ID
+	}
 	tools, direct, err := tb.tools()
 	if err != nil {
 		return nil, nil, err
 	}
-	prompt := BuildPrompt(a.cfg.Now(), projects)
+	prompt := BuildPrompt(a.cfg.Now(), projects, scope, focus)
 	ag, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
 		Name: "adhd-todo", Description: "Turns requests into task changes.",
 		Instruction: prompt, Model: m, MaxIterations: maxIterations,
@@ -155,6 +163,22 @@ func (a *Agent) prepare(ctx context.Context) (*toolbox, *adk.Runner, error) {
 		return nil, nil, fmt.Errorf("build agent: %w", err)
 	}
 	return tb, adk.NewRunner(ctx, adk.RunnerConfig{Agent: ag}), nil
+}
+
+// focusOf is the task of a task scope. A task that was deleted since the inspector opened is an
+// error the user can read, not a request about nothing.
+func (a *Agent) focusOf(ctx context.Context, scope Scope) (*domain.Task, error) {
+	if scope.Kind != ScopeTask {
+		return nil, nil
+	}
+	t, err := a.cfg.Core.GetTask(ctx, scope.TaskID)
+	if err != nil && !domain.IsNotFound(err) {
+		return nil, fmt.Errorf("get task: %w", err)
+	}
+	if t == nil || err != nil {
+		return nil, errors.New("that task no longer exists")
+	}
+	return t, nil
 }
 
 // collect drains the event stream into the messages the turn produced (assistant tool calls,

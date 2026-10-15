@@ -36,8 +36,8 @@ func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
 }
 
 func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
-	app, _ := newEmptyApp(t)
-	tt, m, _ := newTesterFor(app, 1100)
+	app, rec := newEmptyApp(t)
+	tt, _, _ := newTesterFor(app, 1100)
 	for _, want := range []string{"All clear.", "Agents report here through the adhd-todo MCP server.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
@@ -51,8 +51,8 @@ func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 	if err := tt.Click("How to connect"); err != nil {
 		t.Fatal(err)
 	}
-	if !m.settings {
-		t.Error("How to connect did not open Settings")
+	if len(rec.panes) != 1 || rec.panes[0] != PaneAgents {
+		t.Errorf("How to connect asked for %v, want the Agents pane", rec.panes)
 	}
 }
 
@@ -198,23 +198,6 @@ func TestAskFieldEmptyEnterAddsNothing(t *testing.T) {
 	}
 }
 
-func TestCmdKFocusesTheAskFieldFromAnywhere(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenProject, projectID: 1})
-	tt.Frame()
-	tt.Key(ui.Cmd, ui.KeyK)
-	tt.Frame() // the field takes the focus a few frames after it appears
-	tt.Frame()
-	tt.Frame()
-	if m.nav != (nav{}) {
-		t.Fatalf("Cmd+K left us on %+v", m.nav)
-	}
-	tt.Type("remind me")
-	if m.ask.buf != "remind me" {
-		t.Errorf("typing went elsewhere: ask %q, texts %q", m.ask.buf, tt.Texts())
-	}
-}
-
 func TestArrowsSelectEnterOpensSpaceToggles(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	tt.Key(0, ui.KeyDown)
@@ -249,8 +232,8 @@ func TestUpFromTheFirstRowReturnsToTheAskField(t *testing.T) {
 		t.Errorf("selected %d, want none", m.sel)
 	}
 	tt.Type("typed")
-	if m.ask.buf != "typed" {
-		t.Errorf("the ask field did not take the focus: %q", m.ask.buf)
+	if m.cmp[surfacePage].buf != "typed" {
+		t.Errorf("the ask field did not take the focus: %q", m.cmp[surfacePage].buf)
 	}
 }
 
@@ -258,8 +241,8 @@ func TestSpaceInTheAskFieldIsASpace(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("a b")
-	if m.ask.buf != "a b" {
-		t.Errorf("buffer %q", m.ask.buf)
+	if m.cmp[surfacePage].buf != "a b" {
+		t.Errorf("buffer %q", m.cmp[surfacePage].buf)
 	}
 	if task, _ := app.Task(7); task.Status == data.Done {
 		t.Error("Space toggled a task while typing")

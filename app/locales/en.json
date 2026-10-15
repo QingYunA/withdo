@@ -118,10 +118,6 @@
       }
     }
   },
-  "a11ySettingsClose": "Close settings",
-  "@a11ySettingsClose": {
-    "description": "Accessibility label of the Done button of the settings sheet."
-  },
   "a11yStatus": "Status: {status}",
   "@a11yStatus": {
     "description": "Accessibility label of a status glyph button.",
@@ -139,16 +135,6 @@
       "title": {
         "type": "String",
         "example": "Team meeting"
-      }
-    }
-  },
-  "a11yUseModel": "Use model {name}",
-  "@a11yUseModel": {
-    "description": "Accessibility label of a model suggestion chip.",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "example": "claude-haiku-5-5"
       }
     }
   },
@@ -246,29 +232,9 @@
       }
     }
   },
-  "askAdded": "Added to Inbox",
-  "@askAdded": {
-    "description": "Confirmation under the ask field after a task was added."
-  },
   "askAnswerHint": "Type an answer, or pick one below",
   "@askAnswerHint": {
     "description": "Placeholder of the ask field while the assistant waits for an answer."
-  },
-  "askHint": "Tell me what to remember — \"remind me to review PR #12 at 4pm\"",
-  "@askHint": {
-    "description": "Placeholder of the ask field. The example is something the user could type."
-  },
-  "askLabel": "Ask",
-  "@askLabel": {
-    "description": "Accessibility label of the ask field."
-  },
-  "askNoModel": "Connect a model to let me understand you —",
-  "@askNoModel": {
-    "description": "Hint under the ask field while no model is connected; a link follows."
-  },
-  "askSetUp": "Set up",
-  "@askSetUp": {
-    "description": "Link after the no model hint that opens Settings > Models."
   },
   "askThinking": "Thinking…",
   "@askThinking": {
@@ -544,7 +510,7 @@
   "@groupTodo": {
     "description": "Header of the to do group in a project list and column of the board."
   },
-  "inboxEmptyBody": "Tasks without a project land here. Add one below, or press ⌘K on Now.",
+  "inboxEmptyBody": "Tasks without a project land here. Write one in the box above, or press ⌘K.",
   "@inboxEmptyBody": {
     "description": "Body of an empty Inbox. ⌘K is the shortcut of the ask field."
   },
@@ -572,14 +538,6 @@
   "@linkHowToConnect": {
     "description": "Link that opens Settings on how to connect Claude Code."
   },
-  "listAddTask": "Add a task",
-  "@listAddTask": {
-    "description": "Accessibility label of the add row in a list and on the board."
-  },
-  "listAddTaskRow": "+ Add a task",
-  "@listAddTaskRow": {
-    "description": "The quiet add row in a list and on the board."
-  },
   "listEmptyBody": "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself.",
   "@listEmptyBody": {
     "description": "Body of an empty project list."
@@ -587,10 +545,6 @@
   "listEmptyTitle": "No tasks yet.",
   "@listEmptyTitle": {
     "description": "Title of an empty project list."
-  },
-  "listNewTaskTitle": "New task title",
-  "@listNewTaskTitle": {
-    "description": "Accessibility label of the input that names a new task."
   },
   "listSeparator": ", ",
   "@listSeparator": {
@@ -605,10 +559,6 @@
         "example": "12"
       }
     }
-  },
-  "listTaskTitle": "Task title",
-  "@listTaskTitle": {
-    "description": "Placeholder of the input that names a new task."
   },
   "manageA11yProject": "Project: {name}",
   "@manageA11yProject": {
@@ -1006,17 +956,9 @@
   "@modelsBaseURL": {
     "description": "Label of the address field of a model provider."
   },
-  "modelsInUse": "In use",
-  "@modelsInUse": {
-    "description": "Shown on the provider the assistant uses."
-  },
   "modelsKeyPlaceholder": "Paste your API key",
   "@modelsKeyPlaceholder": {
     "description": "Placeholder of the empty key field."
-  },
-  "modelsKeySaved": "Saved in your Keychain — paste a new one to replace it",
-  "@modelsKeySaved": {
-    "description": "Placeholder of the key field once a key is stored. Keychain is the macOS Keychain."
   },
   "modelsModel": "Model",
   "@modelsModel": {
@@ -1038,17 +980,9 @@
   "@modelsTest": {
     "description": "Test button of a provider."
   },
-  "modelsTestConnection": "Test connection",
-  "@modelsTestConnection": {
-    "description": "Accessibility label of the Test button."
-  },
   "modelsTesting": "Testing…",
   "@modelsTesting": {
     "description": "Test button while the request runs."
-  },
-  "modelsUseThis": "Use this one",
-  "@modelsUseThis": {
-    "description": "Button that makes a provider the one in use."
   },
   "modelsWorks": "Works · {ms} ms",
   "@modelsWorks": {
@@ -1332,16 +1266,6 @@
   "@sectionYours": {
     "description": "Section header on Now: the user's own tasks. English is shown in capitals."
   },
-  "settingsAbout": "adhd-todo {version}  ·  Open source, MIT license",
-  "@settingsAbout": {
-    "description": "About line at the bottom of the settings sheet.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "0.2.0"
-      }
-    }
-  },
   "settingsConnectBody": "Run this once in a terminal. Agents then report their progress here.",
   "@settingsConnectBody": {
     "description": "Explains the command shown below it."
@@ -1361,10 +1285,6 @@
   "settingsDataFolder": "Data folder",
   "@settingsDataFolder": {
     "description": "Header of the block that shows where the data lives."
-  },
-  "settingsDone": "Done",
-  "@settingsDone": {
-    "description": "Button that closes the settings sheet."
   },
   "settingsGeneral": "General",
   "@settingsGeneral": {
@@ -1440,14 +1360,6 @@
   "@settingsLanguage": {
     "description": "Header of the language block in Settings."
   },
-  "settingsModels": "Models",
-  "@settingsModels": {
-    "description": "Tab of the settings sheet."
-  },
-  "settingsTitle": "Settings",
-  "@settingsTitle": {
-    "description": "Title of the settings sheet."
-  },
   "spanDays": "{n}d",
   "@spanDays": {
     "description": "A span of days, short.",
@@ -1515,6 +1427,154 @@
   "statusTodo": "Todo",
   "@statusTodo": {
     "description": "Task status: planned, not started."
+  },
+  "a11yPane": "{name} settings",
+  "@a11yPane": {
+    "description": "Accessibility label of a toolbar pane of the Settings window.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Assistant"
+      }
+    }
+  },
+  "menuSettings": "Settings…",
+  "@menuSettings": {
+    "description": "Item of the app menu that opens the Settings window (⌘,)."
+  },
+  "modelsBaseURLHelp": "Change only for a gateway such as Magpie",
+  "@modelsBaseURLHelp": {
+    "description": "Line under the Base URL label in Settings > Assistant."
+  },
+  "modelsKeyHelp": "Kept in your Keychain",
+  "@modelsKeyHelp": {
+    "description": "Line under the API key label in Settings > Assistant."
+  },
+  "modelsOther": "Other…",
+  "@modelsOther": {
+    "description": "Last item of the model pop-up: type a model name that is not in the list."
+  },
+  "modelsProtocol": "Protocol",
+  "@modelsProtocol": {
+    "description": "Label of the row that picks the API a custom endpoint speaks."
+  },
+  "modelsStatusNone": "Not tested yet",
+  "@modelsStatusNone": {
+    "description": "Status row of Settings > Assistant before the connection was tested."
+  },
+  "modelsTestAgain": "Test again",
+  "@modelsTestAgain": {
+    "description": "Link of the status row of Settings > Assistant after a test."
+  },
+  "settingsAboutLicense": "Open source, MIT license",
+  "@settingsAboutLicense": {
+    "description": "Second line of the About row of Settings > General."
+  },
+  "settingsAboutLink": "GitHub ↗",
+  "@settingsAboutLink": {
+    "description": "Link of the About row of Settings > General that opens the project on GitHub."
+  },
+  "settingsAboutName": "adhd-todo {version}",
+  "@settingsAboutName": {
+    "description": "Name and version row of Settings > General.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.3.0"
+      }
+    }
+  },
+  "settingsAdvanced": "Advanced",
+  "@settingsAdvanced": {
+    "description": "Group label in Settings > Assistant for the settings most people leave alone."
+  },
+  "settingsGitHubNone": "Following pull requests isn't available here.",
+  "@settingsGitHubNone": {
+    "description": "Line of Settings > GitHub when the app has no pull request poller."
+  },
+  "settingsPaneAgents": "Agents",
+  "@settingsPaneAgents": {
+    "description": "Toolbar pane of the Settings window (and the window's title) about coding agents reporting here."
+  },
+  "settingsPaneAssistant": "Assistant",
+  "@settingsPaneAssistant": {
+    "description": "Toolbar pane of the Settings window (and the window's title) for the built-in assistant's model."
+  },
+  "settingsProvider": "Provider",
+  "@settingsProvider": {
+    "description": "Label of the row that picks the assistant's model provider."
+  },
+  "settingsShowInFinder": "Show in Finder",
+  "@settingsShowInFinder": {
+    "description": "Link in Settings > General that reveals the data folder in Finder."
+  },
+  "settingsAssistantNone": "The assistant isn't available here.",
+  "@settingsAssistantNone": {
+    "description": "Line of Settings > Assistant when the app has no assistant."
+  },
+  "composerChipAssistant": "Assistant · {model}",
+  "@composerChipAssistant": {
+    "description": "Chip at the left of the composer's bar on Now when a model is connected.",
+    "placeholders": {
+      "model": {
+        "type": "String",
+        "example": "Haiku 5.5"
+      }
+    }
+  },
+  "composerChipAssistantBare": "Assistant",
+  "@composerChipAssistantBare": {
+    "description": "Chip of the composer on Now when the model's name is not known."
+  },
+  "composerChipSetUp": "Set up the assistant",
+  "@composerChipSetUp": {
+    "description": "Chip of the composer, and a link, while no model is connected. It opens Settings > Assistant."
+  },
+  "composerHintIdle": "⌘K to focus · ↵ to send · ⇧↵ new line",
+  "@composerHintIdle": {
+    "description": "Keyboard hint at the right of the composer's bar while it is empty and not focused."
+  },
+  "composerHintSend": "↵ to send",
+  "@composerHintSend": {
+    "description": "Keyboard hint at the right of the composer's bar while it is focused or has text."
+  },
+  "composerLabel": "Ask the assistant",
+  "@composerLabel": {
+    "description": "Accessibility label of the composer's text area on a page."
+  },
+  "composerLabelTask": "Change this task",
+  "@composerLabelTask": {
+    "description": "Accessibility label of the composer's text area in the inspector."
+  },
+  "composerPlaceholder": "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”",
+  "@composerPlaceholder": {
+    "description": "Placeholder of the composer on Now and in the Inbox. The quoted example is something a user could type."
+  },
+  "composerPlaceholderProject": "What's next in {project}? “fix the login redirect loop, p1, friday”",
+  "@composerPlaceholderProject": {
+    "description": "Placeholder of the composer on a project's page. The quoted example is something a user could type.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "composerPlaceholderTask": "Change anything — “move it to friday afternoon”",
+  "@composerPlaceholderTask": {
+    "description": "Placeholder of the composer at the bottom of the inspector. The quoted example is something a user could type."
+  },
+  "composerSend": "Send",
+  "@composerSend": {
+    "description": "Accessibility label of the round send button of the composer."
+  },
+  "markAssistant": "Set by the assistant",
+  "@markAssistant": {
+    "description": "Tooltip of the small sparkle after a value in the inspector that the assistant just set."
+  },
+  "boardAdd": "Add a task",
+  "@boardAdd": {
+    "description": "Tooltip and accessibility label of the + in the To do column's header on the board; it puts the cursor in the composer."
   },
   "valueNone": "None",
   "@valueNone": {

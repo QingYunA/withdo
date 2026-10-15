@@ -32,7 +32,7 @@ type nav struct {
 	projectID int
 }
 
-// Main is the window: sidebar, one screen, the inspector, and the settings sheet.
+// Main is the window: sidebar, one screen and the inspector, with the sheets that float over them.
 type Main struct {
 	app *App
 
@@ -41,43 +41,36 @@ type Main struct {
 	say   locales.Messages
 	clock words.Clock
 
-	nav       nav
-	openID    int // task open in the inspector, 0 for none
-	sel       int // task the keyboard highlights, 0 for none
-	moved     bool
-	width     float32 // the room the screen has this frame
-	wantAsk   bool    // Cmd+K was pressed: the ask field takes the focus once it is drawn
-	askFrames int     // how many frames the ask field has been drawn since the screen changed
-	settings  bool
-	models    modelsState // Settings > Models
+	nav    nav
+	openID int // task open in the inspector, 0 for none
+	sel    int // task the keyboard highlights, 0 for none
+	moved  bool
+	width  float32 // the room the screen has this frame
+	// focusComposer is set by Cmd+K: the page's composer takes the focus once it is drawn.
+	// focusInspectorComposer is set by "Ask about this task…": the inspector's does.
+	focusComposer          bool
+	focusInspectorComposer bool
 
 	milestone map[int]int  // milestone filter per project, 0 for all
 	board     map[int]bool // projects shown as a board
 	expanded  map[nav]bool // Done and Backlog opened under a list
 	allDone   map[nav]bool // every Done task, not the recent ten
-	adding    bool         // the inline "Add a task" input is open
-	addNav    nav          // the screen it belongs to
-	addBuf    string
-	dragging  int // task being dragged this frame, so the hidden statuses show as drop targets
-	wasDrag   int // the one dragged in the frame before: the targets live a frame past the drop
+	dragging  int          // task being dragged this frame, so the hidden statuses show as drop targets
+	wasDrag   int          // the one dragged in the frame before: the targets live a frame past the drop
 
 	manage    manageState // the sheets, renaming, search and Completed
 	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle   // the input that renames a project in the sidebar
 
-	ask     askState
-	convo   convo     // the conversation sheet under the ask field
-	hintOn  bool      // the "Connect a model" line is showing under the field
-	askRef  ui.Handle // the ask field, for Cmd+K
-	addRef  ui.Handle // the inline add input
-	listRef ui.Handle // the page, so the arrow keys and Space reach it
-	queue   queued    // what a text input's last key asked of the next frame
+	compactReply bool                         // the reply sheet is being drawn in the inspector
+	cmp          [2]composer                  // the composer of the page and the inspector's, by surface
+	convo        convo                        // the reply sheet under the composer that sent the last request
+	marks        map[int]map[string]time.Time // fields the assistant set, by task and row key
+	listRef      ui.Handle                    // the page, so the arrow keys and Space reach it
+	queue        queued                       // what a text input's last key asked of the next frame
 
 	pop     popMenu // the task menu
 	selRect ui.Rect // where the selected row or card is, for the menu the S, P, M and R keys open
-	// focusInspectorComposer asks the inspector's composer for the keyboard: "Ask about this task"
-	// sets it after opening the task, and the composer clears it when it has the focus.
-	focusInspectorComposer bool
 
 	scroll    ui.ScrollState
 	inspector inspector
@@ -102,19 +95,14 @@ func (m *Main) OpenTask(id int) {
 	m.inspector.reset()
 }
 
-// OpenSettings shows the settings sheet.
-func (m *Main) OpenSettings() { m.settings = true }
-
-// openModels shows the settings sheet on its Models tab.
-func (m *Main) openModels() {
-	m.settings, m.models.tab = true, tabModels
-}
+// openSettings asks the shell for the Settings window, on a pane.
+func (m *Main) openSettings(p Pane) { m.app.Act.OpenSettings(p) }
 
 func (m *Main) goTo(n nav) {
 	m.clearSearch()
 	if m.nav != n {
-		m.nav, m.openID, m.sel, m.askFrames, m.hintOn = n, 0, 0, 0, false
-		m.cancelAdding()
+		m.cmp[surfacePage].keepDraft(m.nav, n)
+		m.nav, m.openID, m.sel = n, 0, 0
 		m.scroll = ui.ScrollState{}
 	}
 }
@@ -136,6 +124,7 @@ func (m *Main) View(c *ui.Context) {
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 	}
+	m.dropStaleReply()
 	m.wasDrag, m.dragging = m.dragging, 0
 	m.popTick()
 	m.width = m.contentWidth(c)
@@ -148,7 +137,6 @@ func (m *Main) View(c *ui.Context) {
 		m.content(c, t, now)
 		m.inspectorPane(c, t)
 	})
-	m.settingsSheet(c, t)
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
@@ -216,7 +204,7 @@ func (m *Main) page(c *ui.Context, t *theme.Tokens, body func()) {
 	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
 			col := ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad, 48).Focusable().FocusRing(false)
-			if !m.wantAsk && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
+			if !m.focusComposer && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
 				col.AutoFocus()
 			}
 			col.Bind(&m.listRef).Children(body)

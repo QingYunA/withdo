@@ -37,11 +37,6 @@ func TestScreensGitHub(t *testing.T) {
 			tt.SetSize(860, 600)
 			m.OpenTask(1)
 		})
-		for _, s := range githubStates() {
-			sapp, _, _ := newTestApp(t)
-			sapp.GitHub = data.NewFakeGitHub(s.st)
-			mainShot(t, "settings-github"+s.name+"-"+a.suffix+".png", sapp, a.dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
-		}
 	}
 }
 
@@ -53,10 +48,5 @@ func TestScreensGitHubChinese(t *testing.T) {
 			tt.SetSize(860, 600)
 			m.OpenTask(1)
 		})
-		for _, s := range githubStates() {
-			sapp, _, _ := newTestApp(t)
-			sapp.GitHub = data.NewFakeGitHub(s.st)
-			zhShot(t, "settings-github"+s.name+"-zh-"+a.suffix+".png", sapp, a.dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
-		}
 	}
 }

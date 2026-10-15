@@ -74,6 +74,7 @@ func (m *Main) inspectorPane(c *ui.Context, t *theme.Tokens) {
 					m.deleteTaskButton(c, t, task)
 				})
 			})
+			m.inspectorComposer(c, t, task)
 		})
 	})
 }

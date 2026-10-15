@@ -63,7 +63,6 @@ func TestScreensSeed(t *testing.T) {
 			tt.SetSize(860, 540)
 			m.OpenTask(2)
 		})
-		mainShot(t, "settings-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
 		mainShot(t, "now-selection-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.Key(0, ui.KeyDown)
 			tt.Key(0, ui.KeyDown)
@@ -72,7 +71,7 @@ func TestScreensSeed(t *testing.T) {
 		mainShot(t, "now-asking-"+a.suffix+".png", asking, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.Key(ui.Cmd, ui.KeyK)
 			tt.Type("Water the plants")
-			tt.Key(0, ui.KeyEnter)
+			tt.Key(0, ui.KeyEnter) // no model: the text became a plain task, and the card says so
 		})
 		mainShot(t, "project-list-expanded-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			toProject(1)(tt, m)

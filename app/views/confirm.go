@@ -18,7 +18,7 @@ func (m *Main) askDeleteProject(id int) {
 
 // sheetOpen reports whether a sheet or the confirmation floats over the window, taking the keys.
 func (m *Main) sheetOpen() bool {
-	return m.settings || m.manage.project.open || m.manage.milestone.open || m.manage.confirm.open || m.pop.open
+	return m.manage.project.open || m.manage.milestone.open || m.manage.confirm.open || m.pop.open
 }
 
 // confirmSheet asks before a delete. Cancel has the focus, so Enter does not delete; Esc cancels.

@@ -20,11 +20,16 @@ import (
 type shell struct {
 	app  *views.App
 	main *views.Main
+	// settings is the content of the Settings window, kept between openings so that it comes back
+	// on the pane it was on.
+	settings *views.Settings
 	// github is the pull request poller; nil when there is none.
 	github data.GitHub
 
 	mu      sync.Mutex
 	mainWin *mygo.Window
+	// settingsWin is the Settings window while it is open: there is one.
+	settingsWin *mygo.Window
 	// choice is the language picked in Settings during this run; chosen tells that one was.
 	choice string
 	chosen bool
@@ -41,10 +46,30 @@ func (s *shell) OpenTask(id int) {
 	s.invalidateMain()
 }
 
-func (s *shell) OpenSettings() {
-	s.showMain()
-	s.main.OpenSettings()
-	s.invalidateMain()
+// OpenSettings implements views.Actions: it shows the Settings window on a pane, opening it when
+// it is not, and bringing the one that is to the front.
+func (s *shell) OpenSettings(p views.Pane) {
+	s.settings.Show(p)
+	s.mu.Lock()
+	win := s.settingsWin
+	s.mu.Unlock()
+	if win == nil {
+		s.createSettings()
+		return
+	}
+	if win.IsMinimized() {
+		win.Restore()
+	}
+	win.Show()
+	win.Focus()
+	win.Invalidate()
+}
+
+// ShowInFinder implements views.Actions.
+func (s *shell) ShowInFinder(path string) {
+	if err := mygo.Shell.OpenPath(path); err != nil {
+		log.Printf("show %s: %v", path, err)
+	}
 }
 
 func (s *shell) OpenURL(url string) {
@@ -90,10 +115,23 @@ func systemLanguage() string {
 	return langs[0]
 }
 
-// Post runs fn on the main thread and redraws; the assistant answers through it.
+// Post runs fn on the main thread and redraws; the assistant and the connection test answer
+// through it, so the Settings window redraws too.
 func (s *shell) Post(fn func()) {
 	if w := s.window(); w != nil {
-		w.Update(fn)
+		w.Update(func() {
+			fn()
+			s.invalidateSettings()
+		})
+	}
+}
+
+func (s *shell) invalidateSettings() {
+	s.mu.Lock()
+	win := s.settingsWin
+	s.mu.Unlock()
+	if win != nil {
+		win.Invalidate()
 	}
 }
 
@@ -143,6 +181,39 @@ func (s *shell) createMain() {
 	s.mu.Unlock()
 }
 
+// createSettings opens the Settings window: a fixed width, a title that is the open pane's name,
+// and a height that follows what the pane shows. Closing it destroys it.
+func (s *shell) createSettings() {
+	var win *mygo.Window
+	s.settings.OnLayout = func(title string, height float32) {
+		if win == nil {
+			return
+		}
+		win.SetTitle(title)
+		win.SetContentSize(int(theme.SettingsWidth), int(height))
+	}
+	win = mygo.NewWindow(mygo.WindowOptions{
+		Title:           locales.SettingsGeneral(),
+		Width:           int(theme.SettingsWidth),
+		Height:          settingsHeight,
+		UseContentSize:  true,
+		DisableResize:   true,
+		DisableMaximize: true,
+		Content:         ui.View(s.settings.View),
+	})
+	win.OnClosed(func() {
+		s.mu.Lock()
+		s.settingsWin = nil
+		s.mu.Unlock()
+	})
+	s.mu.Lock()
+	s.settingsWin = win
+	s.mu.Unlock()
+}
+
+// settingsHeight is the Settings window's height until its first frame has measured the pane.
+const settingsHeight = 420
+
 // showMain brings the main window to the front.
 func (s *shell) showMain() {
 	win := s.window()
@@ -165,7 +236,10 @@ func (s *shell) storeChanged() {
 	if win == nil {
 		return
 	}
-	win.Update(s.app.Refresh)
+	win.Update(func() {
+		s.app.Refresh()
+		s.invalidateSettings()
+	})
 }
 
 // githubChanged runs on any goroutine when the poller's status changed: redraw, so that Settings

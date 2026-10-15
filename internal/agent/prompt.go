@@ -13,8 +13,9 @@ import (
 const lookaheadDays = 14
 
 // BuildPrompt is the system prompt for one turn. The clock, weekday, time zone and project list
-// are part of it because relative times ("明天九点", "tonight") are meaningless without them.
-func BuildPrompt(now time.Time, projects []domain.Project) string {
+// are part of it because relative times ("明天九点", "tonight") are meaningless without them; the
+// scope says where the request was typed, and focus is the task of a task scope.
+func BuildPrompt(now time.Time, projects []domain.Project, sc Scope, focus *domain.Task) string {
 	var b strings.Builder
 	b.WriteString(preamble)
 	fmt.Fprintf(&b, "\nNow: %s (%s, UTC%s). RFC 3339: %s\n",
@@ -22,6 +23,7 @@ func BuildPrompt(now time.Time, projects []domain.Project) string {
 	b.WriteString(upcomingDays(now))
 	b.WriteString(offsetNote(now))
 	b.WriteString("\n" + projectList(projects))
+	b.WriteString("\n" + scopeSection(now, projects, sc, focus))
 	b.WriteString(rules)
 	return b.String()
 }
@@ -32,12 +34,14 @@ const preamble = `You are the assistant inside adhd-todo, a todo app for a softw
 const rules = `
 Rules:
 - Prefer acting. Do not ask for confirmation; the user sees a receipt with Undo.
-- Resolve relative times against Now and write absolute RFC 3339 times with a UTC offset in tool calls. "after lunch" is 13:30, "tonight" is 20:00, "morning" is 09:00, "end of day" is 18:00. A time without an offset is rejected.
-- A reminder request creates a task with remind_at: "提醒我开会" becomes the title "开会". A deadline is due_at.
+- Resolve relative times against Now and write absolute RFC 3339 times with a UTC offset in tool calls. A time without an offset is rejected.
+- Default times: morning is 09:00, afternoon 14:00, evening 19:00, "tonight" 20:00, "after lunch" 13:30. A bare day ("tomorrow", "Friday") is 09:00 for a reminder and end of day, 18:00, for a deadline.
+- Reminder or deadline: "remind me", "提醒我" make a task with remind_at ("提醒我开会" becomes the title "开会"); "by Friday", "due", "deadline", "before standup" make due_at. Use both when the words give both.
+- Priority comes from the words. "urgent", "asap" or "blocker" is P1; "when I get to it", "someday" or "whenever" is P3; P0 only for "drop everything" or "production is down". A priority the user writes ("p1", "P2") is taken as written. Otherwise leave it out: P2 is the default.
 - Look tasks up with find_tasks before you change one. Never invent task ids.
 - Ask only when acting would be wrong without the answer, for example two tasks match, or a reminder has no time. Ask with ask_user, offering 2 to 4 short options, and stop: do not write anything else in that turn.
-- Projects are optional. Leave a task in the Inbox (no project_id) unless the user names a project or it is obvious.
-- Reply in the language the user wrote in, in one short sentence stating what you did. No markdown.
+- Projects are optional. A new task goes where the scope above says; project_id 0 means the Inbox.
+- Reply in the language the user wrote in, in one short sentence stating what you did and what you inferred, for example "Added it to adhd-todo, due Friday, P1." No markdown.
 `
 
 func offsetLabel(t time.Time) string {

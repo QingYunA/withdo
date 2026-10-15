@@ -89,8 +89,8 @@ func hasNot(t *testing.T, tt *ui.Tester, texts ...string) {
 func TestTurnShowsReplyAndReceiptWithUndo(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	r.ask("明天九点提醒我开会")
-	if r.m.ask.buf != "" {
-		t.Errorf("the field still holds %q", r.m.ask.buf)
+	if r.pageBuf() != "" {
+		t.Errorf("the field still holds %q", r.pageBuf())
 	}
 	has(t, r.tt, "明天九点提醒我开会", "Thinking…")
 	r.answer(t)
@@ -227,8 +227,8 @@ func TestEscCancelsARequestAndGivesTheTextBack(t *testing.T) {
 	if r.m.convo.open {
 		t.Error("the sheet stayed open after a cancelled request that changed nothing")
 	}
-	if r.m.ask.buf != "a slow one" {
-		t.Errorf("the field holds %q, want the text back", r.m.ask.buf)
+	if r.pageBuf() != "a slow one" {
+		t.Errorf("the field holds %q, want the text back", r.pageBuf())
 	}
 }
 
@@ -241,8 +241,8 @@ func TestEnterWhileThinkingKeepsWhatIsTyped(t *testing.T) {
 	if got := fa.Asked(); len(got) != 1 {
 		t.Errorf("a second request went out: %v", got)
 	}
-	if r.m.ask.buf != "second" {
-		t.Errorf("buffer %q", r.m.ask.buf)
+	if r.pageBuf() != "second" {
+		t.Errorf("buffer %q", r.pageBuf())
 	}
 	close(fa.Block)
 	r.answer(t)
@@ -288,20 +288,6 @@ func TestSheetPushesTheSectionsDown(t *testing.T) {
 	}
 }
 
-func TestNoModelHintAppearsOnFocusAndOpensSettingsOnModels(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
-	hasNot(t, r.tt, "Set up")
-	r.tt.Key(ui.Cmd, ui.KeyK)
-	has(t, r.tt, "Connect a model to let me understand you —", "Set up")
-	if err := r.tt.Click("Set up"); err != nil {
-		t.Fatal(err)
-	}
-	if !r.m.settings || r.m.models.tab != tabModels {
-		t.Fatalf("settings %v tab %v", r.m.settings, r.m.models.tab)
-	}
-	has(t, r.tt, "Base URL", "Anthropic", "Magpie")
-}
-
 func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	before := len(r.app.snap.tasks)
@@ -314,27 +300,13 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 	}
 }
 
-func TestHintYieldsToTheAddedToInboxNotice(t *testing.T) {
+func TestTheAddedToInboxNoticeFadesAfterOneAndAHalfSeconds(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	r.ask("Water the plants")
 	has(t, r.tt, "Added to Inbox")
-	hasNot(t, r.tt, "Set up")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	has(t, r.tt, "Set up")
 	hasNot(t, r.tt, "Added to Inbox")
-}
-
-func TestNoHintWithoutAnAssistantAtAll(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
-	tt.Key(ui.Cmd, ui.KeyK)
-	hasNot(t, tt, "Set up")
-}
-
-func TestNoHintOnceAModelIsConnected(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
-	r.tt.Key(ui.Cmd, ui.KeyK)
-	hasNot(t, r.tt, "Set up", "Connect a model to let me understand you —")
 }
 
 func TestAnswerRefreshesTheLists(t *testing.T) {

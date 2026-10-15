@@ -10,14 +10,14 @@ import (
 // These tests press real keys in a focused input: the input's OnTextKey takes Enter, Esc and
 // Down, the window shortcuts stay out of its way.
 
-func TestDownFromTheAskFieldWalksIntoTheRows(t *testing.T) {
+func TestDownFromTheComposerWalksIntoTheRows(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Frame()
 	tt.Key(0, ui.KeyDown)
 	first := m.sel
 	if first == 0 {
-		t.Fatal("Down in the ask field did not select a row")
+		t.Fatal("Down in the composer did not select a row")
 	}
 	tt.Key(0, ui.KeyDown)
 	if m.sel == first {
@@ -30,23 +30,23 @@ func TestDownFromTheAskFieldWalksIntoTheRows(t *testing.T) {
 	}
 }
 
-func TestTypingSpaceInTheAskFieldStaysInTheField(t *testing.T) {
+func TestTypingSpaceInTheComposerStaysInTheField(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyK)
 	m.sel = 5 // a highlighted user task: Space on the page would complete it
 	tt.Type("a b")
-	if m.ask.buf != "a b" {
-		t.Errorf("field holds %q", m.ask.buf)
+	if m.cmp[surfacePage].buf != "a b" {
+		t.Errorf("field holds %q", m.cmp[surfacePage].buf)
 	}
 }
 
-func TestEnterInTheAskFieldSendsAndEmptiesIt(t *testing.T) {
+func TestEnterInTheComposerSendsAndEmptiesIt(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	r.tt.Key(ui.Cmd, ui.KeyK)
 	r.tt.Type("Water the plants")
 	r.tt.Key(0, ui.KeyEnter)
-	if r.m.ask.buf != "" || r.m.openID != 0 {
-		t.Errorf("field %q, opened %d", r.m.ask.buf, r.m.openID)
+	if r.pageBuf() != "" || r.m.openID != 0 {
+		t.Errorf("field %q, opened %d", r.pageBuf(), r.m.openID)
 	}
 	r.tt.Type("Feed the cat")
 	r.tt.Key(0, ui.KeyEnter)
@@ -56,39 +56,6 @@ func TestEnterInTheAskFieldSendsAndEmptiesIt(t *testing.T) {
 	}
 	if !titles["Water the plants"] || !titles["Feed the cat"] {
 		t.Errorf("tasks %v: the second line was not typed into an empty field", titles)
-	}
-}
-
-func TestInlineAddKeepsTheInputOpenAndEmptyAfterEnter(t *testing.T) {
-	tt, m, app := projectTester(t, 1)
-	if err := tt.Click("Add a task"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Type("First thought")
-	tt.Key(0, ui.KeyEnter)
-	tt.Type("Second thought")
-	tt.Key(0, ui.KeyEnter)
-	if !m.adding || m.addBuf != "" {
-		t.Errorf("adding %v, buffer %q", m.adding, m.addBuf)
-	}
-	titles := map[string]bool{}
-	for _, task := range app.snap.tasks {
-		titles[task.Title] = true
-	}
-	if !titles["First thought"] || !titles["Second thought"] {
-		t.Errorf("tasks %v", titles)
-	}
-}
-
-func TestEscClosesTheInlineAddInputAndKeepsTheSheetStateAlone(t *testing.T) {
-	tt, m, _ := projectTester(t, 1)
-	if err := tt.Click("Add a task"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Type("Half a thou")
-	tt.Key(0, ui.KeyEscape)
-	if m.adding || m.addBuf != "" {
-		t.Errorf("adding %v, buffer %q after Esc", m.adding, m.addBuf)
 	}
 }
 

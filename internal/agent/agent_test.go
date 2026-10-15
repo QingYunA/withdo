@@ -178,7 +178,7 @@ func TestCancelMidRequestKeepsReceipts(t *testing.T) {
 	done := make(chan struct{})
 	var res Result
 	var err error
-	go func() { res, err = r.agent.Ask(ctx, "add kept and then think"); close(done) }()
+	go func() { res, err = r.agent.Ask(ctx, "add kept and then think", Scope{}); close(done) }()
 	<-started
 	cancel()
 	select {
@@ -202,7 +202,7 @@ func TestCancelMidRequestKeepsReceipts(t *testing.T) {
 
 func TestProviderErrorSurfaces(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14, fail401, say("fine"))
-	_, err := r.agent.Ask(context.Background(), "hi")
+	_, err := r.agent.Ask(context.Background(), "hi", Scope{})
 	if err == nil {
 		t.Fatal("want an error")
 	}
@@ -219,7 +219,7 @@ func TestModelUnavailable(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14)
 	boom := errors.New("no provider configured")
 	r.agent.cfg.Model = func(context.Context) (model.ToolCallingChatModel, error) { return nil, boom }
-	if _, err := r.agent.Ask(context.Background(), "hi"); !errors.Is(err, boom) {
+	if _, err := r.agent.Ask(context.Background(), "hi", Scope{}); !errors.Is(err, boom) {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -232,9 +232,9 @@ func TestSecondRequestWhileBusy(t *testing.T) {
 		return schema.AssistantMessage("ok", nil), nil
 	})
 	done := make(chan struct{})
-	go func() { _, _ = r.agent.Ask(context.Background(), "one"); close(done) }()
+	go func() { _, _ = r.agent.Ask(context.Background(), "one", Scope{}); close(done) }()
 	<-started
-	if _, err := r.agent.Ask(context.Background(), "two"); !errors.Is(err, ErrBusy) {
+	if _, err := r.agent.Ask(context.Background(), "two", Scope{}); !errors.Is(err, ErrBusy) {
 		t.Errorf("err = %v, want ErrBusy", err)
 	}
 	close(release)

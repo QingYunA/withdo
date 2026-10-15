@@ -33,6 +33,9 @@ type toolbox struct {
 	now      func() time.Time
 	journal  *journal
 	projects []domain.Project
+	// defaultProject is where create_task puts a task whose project the model did not name: the
+	// project whose page the request came from.
+	defaultProject *int64
 
 	mu       sync.Mutex
 	receipts []Receipt
@@ -91,7 +94,7 @@ func (tb *toolbox) tools() ([]tool.BaseTool, map[string]bool, error) {
 		}
 	}
 	build(utils.InferTool(toolFind, "Search tasks by text, status, project or source. Returns ids. Open tasks only unless statuses are given.", tb.find))
-	build(utils.InferTool(toolCreate, "Create a task for the user. For a reminder set remind_at.", tb.create))
+	build(utils.InferTool(toolCreate, "Create a task for the user. For a reminder set remind_at, for a deadline due_at.", tb.create))
 	build(utils.InferTool(toolUpdate, "Change fields of one task by id. Use clear to empty a field.", tb.update))
 	build(utils.InferTool(toolComplete, "Mark one task done by id.", tb.complete))
 	build(utils.InferTool(toolProjects, "List the projects with their ids.", tb.listProjects))

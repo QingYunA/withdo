@@ -61,7 +61,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	inChinese(tt)
 	has(t, tt, "全部处理完了。", "Agent 会通过 adhd-todo 的 MCP 服务器在这里汇报进度。", "如何连接",
-		"告诉我要记住什么，比如“下午4点提醒我审查 PR #12”", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
+		"要我记住什么？像平时说话那样写就行，比如“站会前审查 PR 12，很急”", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
 }
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
@@ -79,12 +79,8 @@ func TestChineseProjectList(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.SetSize(1100, 1600) // room for the Done group
 	tt.Frame()
-	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "+ 添加任务", "已完成", "显示全部 5 项 →", "待规划 2", "— 显示", "停滞3天")
-	if err := tt.Click("+ 添加任务"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, tt, "任务标题")
-	tt.Key(0, ui.KeyEscape)
+	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成", "显示全部 5 项 →", "待规划 2", "— 显示", "停滞3天",
+		"adhd-todo 里接下来做什么？比如“修复登录重定向死循环，p1，周五”", "⌘K 聚焦 · ↵ 发送 · ⇧↵ 换行")
 	if err := tt.Click("显示待规划 2"); err != nil {
 		t.Fatal(err)
 	}
@@ -117,38 +113,42 @@ func TestChineseInspector(t *testing.T) {
 }
 
 func TestChineseSettingsAndLanguageChoice(t *testing.T) {
-	app, _, rec := newTestApp(t)
-	tt, m, _ := newTesterFor(app, 1100)
-	inChinese(tt)
-	m.OpenSettings()
-	tt.Frame()
-	has(t, tt, "设置", "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "数据文件夹", "语言",
-		"跟随系统", "English", "简体中文", "adhd-todo 0.2.0  ·  开源，MIT 许可证", "完成")
-	if err := tt.Click("English"); err != nil {
+	r := newSettingsRig(t)
+	inChinese(r.tt)
+	r.tt.Frame()
+	has(t, r.tt, "通用", "助手", "Agent", "GitHub", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
+		"数据文件夹", "在访达中显示", "adhd-todo 0.2.0", "开源，MIT 许可证")
+	if r.title != "通用" {
+		t.Errorf("title %q", r.title)
+	}
+	if err := r.tt.Click("跟随系统"); err != nil {
 		t.Fatal(err)
 	}
-	if rec.language != "en" {
-		t.Errorf("chose %q", rec.language)
-	}
-	if err := tt.Click("跟随系统"); err != nil {
+	if err := r.tt.Click("English"); err != nil {
 		t.Fatal(err)
 	}
-	if rec.language != "" {
-		t.Errorf("chose %q after System", rec.language)
+	if r.rec.language != "en" {
+		t.Errorf("chose %q", r.rec.language)
 	}
 }
 
-func TestChineseModelsTab(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+func TestChineseAssistantPane(t *testing.T) {
+	r := newSettingsRig(t)
 	inChinese(r.tt)
-	r.m.openModels()
-	r.tt.Frame()
-	has(t, r.tt, "通用", "模型", "Base URL", "API 密钥", "需要 API 密钥", "使用这个", "测试连接", "自定义")
-	hasNot(t, r.tt, "Custom")
-	if err := r.tt.Click("Magpie"); err != nil {
+	r.pane(t, "助手")
+	has(t, r.tt, "服务商", "模型", "API 密钥", "保存在钥匙串中", "还没有测试", "测试", "高级", "Base URL", "只有使用网关（例如 Magpie）时才需要改")
+	hasNot(t, r.tt, "Provider", "Not tested yet")
+	if err := r.tt.Click("claude-haiku-5-5"); err != nil {
 		t.Fatal(err)
 	}
-	has(t, r.tt, "使用本机的 Magpie 网关 127.0.0.1:3425")
+	has(t, r.tt, "其他…")
+}
+
+func TestChineseAgentsPane(t *testing.T) {
+	r := newSettingsRig(t)
+	inChinese(r.tt)
+	r.pane(t, "Agent")
+	has(t, r.tt, "连接 Claude Code", "在终端里运行一次，之后 Agent 的进度就会汇报到这里。", "拷贝")
 }
 
 func TestChineseConversation(t *testing.T) {
@@ -183,12 +183,23 @@ func TestChineseQuestionAndErrors(t *testing.T) {
 	hasNot(t, bad.tt, "Couldn't reach the model.")
 }
 
-func TestChineseNoModelHintAndInboxNotice(t *testing.T) {
+func TestChineseNoModelChipAndInboxNotice(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	inChinese(r.tt)
+	has(t, r.tt, "设置助手")
 	r.ask("浇花")
 	has(t, r.tt, "已添加到收件箱")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	has(t, r.tt, "连接模型后，我才能听懂你的话 —", "去设置")
+	hasNot(t, r.tt, "已添加到收件箱")
+}
+
+func TestChineseComposerChipsAndInspectorPlaceholder(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	inChinese(r.tt)
+	mustNil(t, r.app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-x"}))
+	mustNil(t, r.app.Models.SetActive("anthropic"))
+	r.m.OpenTask(5)
+	r.tt.Frame()
+	has(t, r.tt, "助手 · Haiku 5.5", "想改什么都行，比如“挪到周五下午”")
 }

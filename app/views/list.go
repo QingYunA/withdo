@@ -127,6 +127,8 @@ func (m *Main) listIDs() []int {
 // listScreen is a project or the Inbox as a list grouped by status.
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
+	ui.Box(c).Height(18).Shrink(0)
+	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
@@ -138,7 +140,6 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	for _, g := range lm.groups {
 		m.group(c, t, g.status, g.tasks)
 	}
-	m.addTaskRow(c, t, listIndent)
 	m.doneAndBacklog(c, t, lm)
 }
 
@@ -218,76 +219,6 @@ func plainText(c *ui.Context, t *theme.Tokens, text string) {
 	theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
 }
 
-// addTaskRow is the quiet "+ Add a task" under To do; clicking it opens an inline input, and Enter
-// creates a task in this project, or in the Inbox.
-func (m *Main) addTaskRow(c *ui.Context, t *theme.Tokens, indent float32) {
-	if m.adding && m.addNav == m.nav {
-		m.addInput(c, t, indent)
-		return
-	}
-	row := ui.Row(c.Key("add-task")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0, -6).Padding(0, 6, 0, indent+6).
-		Radius(theme.RadiusCard).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ListAddTask())
-	if row.Hovered() {
-		row.Background(t.BgHover)
-	}
-	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, m.say.ListAddTaskRow()) })
-	if row.Clicked() {
-		m.adding, m.addNav, m.addBuf = true, m.nav, ""
-	}
-}
-
-func (m *Main) addInput(c *ui.Context, t *theme.Tokens, indent float32) {
-	ui.Row(c.Key("add-input-row")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0).Padding(0, 0, 0, indent).AlignItems(ui.Center).Children(func() {
-		box := ui.Box(c).Grow(1).MinWidth(0)
-		box.Children(func() {
-			theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-				Label(m.say.ListNewTaskTitle()).AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
-			if m.addBuf == "" {
-				theme.Text(c, theme.Body, t.TextTertiary, m.say.ListTaskTitle()).Absolute().Left(0).Top(0).PassThrough()
-			}
-		})
-	})
-}
-
-// addKey is the keyboard of the inline add input: Enter adds and keeps the input open and empty,
-// Esc closes it.
-func (m *Main) addKey(k ui.TextKey) bool {
-	if k.Mods != 0 {
-		return false
-	}
-	switch k.Key {
-	case ui.KeyEnter:
-		m.addBuf = k.Text()
-		m.submitAdding()
-		if m.addBuf != k.Text() {
-			k.SetText(m.addBuf)
-		}
-	case ui.KeyEscape:
-		m.cancelAdding()
-	default:
-		return false
-	}
-	return true
-}
-
-func (m *Main) cancelAdding() { m.adding, m.addBuf = false, "" }
-
-// submitAdding creates a todo in the current project (or the Inbox) and keeps the input open and
-// empty, so several thoughts can be caught in a row.
-func (m *Main) submitAdding() {
-	title := strings.TrimSpace(m.addBuf)
-	if title == "" {
-		return
-	}
-	var project *int
-	if m.nav.screen == screenProject {
-		project = data.IntPtr(m.nav.projectID)
-	}
-	if err := m.app.AddTask(data.CreateTaskInput{Title: title, Source: data.SourceUser, ProjectID: project, Status: data.Todo}); err == nil {
-		m.addBuf = ""
-	}
-}
-
 // doneAndBacklog closes a list: the Done group, expanded, with its newest three rows; then Backlog
 // folded into the last line, "Backlog 2 — show", which opens it.
 func (m *Main) doneAndBacklog(c *ui.Context, t *theme.Tokens, lm listModel) {
@@ -351,7 +282,7 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool,
 }
 
 // emptyList is a project or the Inbox with no task at all. It says what will appear and how to
-// make it appear, and offers the input.
+// make it appear; the composer above is where to write one.
 func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	title, body := m.say.ListEmptyTitle(), m.say.ListEmptyBody()
 	if m.nav.screen == screenInbox {
@@ -362,11 +293,10 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0)
 		if m.nav.screen == screenProject {
 			if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
-				m.settings = true
+				m.openSettings(PaneAgents)
 			}
 		}
 	})
-	m.addTaskRow(c, t, 0)
 }
 
 // listHeader is the project's name and repository (or Inbox), the milestone menu, and the

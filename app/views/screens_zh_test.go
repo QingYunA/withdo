@@ -46,7 +46,6 @@ func TestScreensChineseSeed(t *testing.T) {
 			m.board[1] = true
 		})
 		zhShot(t, "inspector-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
-		zhShot(t, "settings-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenSettings() })
 		empty, _ := newEmptyApp(t)
 		zhShot(t, "now-empty-zh-"+a.suffix+".png", empty, a.dark, nil)
 	}
@@ -77,15 +76,6 @@ func TestScreensChineseConversation(t *testing.T) {
 		}}, nil)}
 		qapp, _, qrec := assistApp(t, q)
 		zhShot(t, "now-question-zh-"+a.suffix+".png", qapp, a.dark, sendAnd(t, qrec, "发布说明写完了", true))
-	}
-}
-
-func TestScreensChineseSettingsModels(t *testing.T) {
-	for _, a := range appearances() {
-		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: true})
-		mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
-		mustNil(t, app.Models.SetActive("anthropic"))
-		zhShot(t, "settings-models-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.openModels() })
 	}
 }
 

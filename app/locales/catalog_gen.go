@@ -210,20 +210,6 @@ func (msgs Messages) A11yPriority(priority string) string {
 	return Catalog.Format(msgs.locale, "a11yPriority", map[string]any{"priority": priority})
 }
 
-// A11ySettingsClose says "Close settings"
-// in the language the app shows.
-//
-// Accessibility label of the Done button of the settings sheet.
-func A11ySettingsClose() string { return In(i18n.Locale()).A11ySettingsClose() }
-
-// A11ySettingsClose says "Close settings"
-// in the language of msgs.
-//
-// Accessibility label of the Done button of the settings sheet.
-func (msgs Messages) A11ySettingsClose() string {
-	return Catalog.Format(msgs.locale, "a11ySettingsClose", nil)
-}
-
 // A11yStatus says "Status: {status}"
 // in the language the app shows.
 //
@@ -250,20 +236,6 @@ func A11yUndo(title string) string { return In(i18n.Locale()).A11yUndo(title) }
 // Accessibility label of the Undo button.
 func (msgs Messages) A11yUndo(title string) string {
 	return Catalog.Format(msgs.locale, "a11yUndo", map[string]any{"title": title})
-}
-
-// A11yUseModel says "Use model {name}"
-// in the language the app shows.
-//
-// Accessibility label of a model suggestion chip.
-func A11yUseModel(name string) string { return In(i18n.Locale()).A11yUseModel(name) }
-
-// A11yUseModel says "Use model {name}"
-// in the language of msgs.
-//
-// Accessibility label of a model suggestion chip.
-func (msgs Messages) A11yUseModel(name string) string {
-	return Catalog.Format(msgs.locale, "a11yUseModel", map[string]any{"name": name})
 }
 
 // A11yViewBoard says "Board view"
@@ -484,20 +456,6 @@ func (msgs Messages) AgentSummaryNext(summary string, step string) string {
 	return Catalog.Format(msgs.locale, "agentSummaryNext", map[string]any{"summary": summary, "step": step})
 }
 
-// AskAdded says "Added to Inbox"
-// in the language the app shows.
-//
-// Confirmation under the ask field after a task was added.
-func AskAdded() string { return In(i18n.Locale()).AskAdded() }
-
-// AskAdded says "Added to Inbox"
-// in the language of msgs.
-//
-// Confirmation under the ask field after a task was added.
-func (msgs Messages) AskAdded() string {
-	return Catalog.Format(msgs.locale, "askAdded", nil)
-}
-
 // AskAnswerHint says "Type an answer, or pick one below"
 // in the language the app shows.
 //
@@ -510,64 +468,6 @@ func AskAnswerHint() string { return In(i18n.Locale()).AskAnswerHint() }
 // Placeholder of the ask field while the assistant waits for an answer.
 func (msgs Messages) AskAnswerHint() string {
 	return Catalog.Format(msgs.locale, "askAnswerHint", nil)
-}
-
-// AskHint says "Tell me what to remember — \"remind me to review PR #12 at 4pm\""
-// in the language the app shows.
-//
-// Placeholder of the ask field. The example is something the user could
-// type.
-func AskHint() string { return In(i18n.Locale()).AskHint() }
-
-// AskHint says "Tell me what to remember — \"remind me to review PR #12 at 4pm\""
-// in the language of msgs.
-//
-// Placeholder of the ask field. The example is something the user could
-// type.
-func (msgs Messages) AskHint() string {
-	return Catalog.Format(msgs.locale, "askHint", nil)
-}
-
-// AskLabel says "Ask"
-// in the language the app shows.
-//
-// Accessibility label of the ask field.
-func AskLabel() string { return In(i18n.Locale()).AskLabel() }
-
-// AskLabel says "Ask"
-// in the language of msgs.
-//
-// Accessibility label of the ask field.
-func (msgs Messages) AskLabel() string {
-	return Catalog.Format(msgs.locale, "askLabel", nil)
-}
-
-// AskNoModel says "Connect a model to let me understand you —"
-// in the language the app shows.
-//
-// Hint under the ask field while no model is connected; a link follows.
-func AskNoModel() string { return In(i18n.Locale()).AskNoModel() }
-
-// AskNoModel says "Connect a model to let me understand you —"
-// in the language of msgs.
-//
-// Hint under the ask field while no model is connected; a link follows.
-func (msgs Messages) AskNoModel() string {
-	return Catalog.Format(msgs.locale, "askNoModel", nil)
-}
-
-// AskSetUp says "Set up"
-// in the language the app shows.
-//
-// Link after the no model hint that opens Settings > Models.
-func AskSetUp() string { return In(i18n.Locale()).AskSetUp() }
-
-// AskSetUp says "Set up"
-// in the language of msgs.
-//
-// Link after the no model hint that opens Settings > Models.
-func (msgs Messages) AskSetUp() string {
-	return Catalog.Format(msgs.locale, "askSetUp", nil)
 }
 
 // AskThinking says "Thinking…"
@@ -1162,13 +1062,13 @@ func (msgs Messages) GroupTodo() string {
 	return Catalog.Format(msgs.locale, "groupTodo", nil)
 }
 
-// InboxEmptyBody says "Tasks without a project land here. Add one below, or press ⌘K on Now."
+// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press ⌘K."
 // in the language the app shows.
 //
 // Body of an empty Inbox. ⌘K is the shortcut of the ask field.
 func InboxEmptyBody() string { return In(i18n.Locale()).InboxEmptyBody() }
 
-// InboxEmptyBody says "Tasks without a project land here. Add one below, or press ⌘K on Now."
+// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press ⌘K."
 // in the language of msgs.
 //
 // Body of an empty Inbox. ⌘K is the shortcut of the ask field.
@@ -1260,34 +1160,6 @@ func (msgs Messages) LinkHowToConnect() string {
 	return Catalog.Format(msgs.locale, "linkHowToConnect", nil)
 }
 
-// ListAddTask says "Add a task"
-// in the language the app shows.
-//
-// Accessibility label of the add row in a list and on the board.
-func ListAddTask() string { return In(i18n.Locale()).ListAddTask() }
-
-// ListAddTask says "Add a task"
-// in the language of msgs.
-//
-// Accessibility label of the add row in a list and on the board.
-func (msgs Messages) ListAddTask() string {
-	return Catalog.Format(msgs.locale, "listAddTask", nil)
-}
-
-// ListAddTaskRow says "+ Add a task"
-// in the language the app shows.
-//
-// The quiet add row in a list and on the board.
-func ListAddTaskRow() string { return In(i18n.Locale()).ListAddTaskRow() }
-
-// ListAddTaskRow says "+ Add a task"
-// in the language of msgs.
-//
-// The quiet add row in a list and on the board.
-func (msgs Messages) ListAddTaskRow() string {
-	return Catalog.Format(msgs.locale, "listAddTaskRow", nil)
-}
-
 // ListEmptyBody says "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself."
 // in the language the app shows.
 //
@@ -1314,20 +1186,6 @@ func ListEmptyTitle() string { return In(i18n.Locale()).ListEmptyTitle() }
 // Title of an empty project list.
 func (msgs Messages) ListEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "listEmptyTitle", nil)
-}
-
-// ListNewTaskTitle says "New task title"
-// in the language the app shows.
-//
-// Accessibility label of the input that names a new task.
-func ListNewTaskTitle() string { return In(i18n.Locale()).ListNewTaskTitle() }
-
-// ListNewTaskTitle says "New task title"
-// in the language of msgs.
-//
-// Accessibility label of the input that names a new task.
-func (msgs Messages) ListNewTaskTitle() string {
-	return Catalog.Format(msgs.locale, "listNewTaskTitle", nil)
 }
 
 // ListSeparator says ", "
@@ -1358,20 +1216,6 @@ func ListShowAllDone(n int) string { return In(i18n.Locale()).ListShowAllDone(n)
 // group in place. n is how many tasks are done.
 func (msgs Messages) ListShowAllDone(n int) string {
 	return Catalog.Format(msgs.locale, "listShowAllDone", map[string]any{"n": n})
-}
-
-// ListTaskTitle says "Task title"
-// in the language the app shows.
-//
-// Placeholder of the input that names a new task.
-func ListTaskTitle() string { return In(i18n.Locale()).ListTaskTitle() }
-
-// ListTaskTitle says "Task title"
-// in the language of msgs.
-//
-// Placeholder of the input that names a new task.
-func (msgs Messages) ListTaskTitle() string {
-	return Catalog.Format(msgs.locale, "listTaskTitle", nil)
 }
 
 // ManageA11yProject says "Project: {name}"
@@ -2480,20 +2324,6 @@ func (msgs Messages) ModelsBaseURL() string {
 	return Catalog.Format(msgs.locale, "modelsBaseURL", nil)
 }
 
-// ModelsInUse says "In use"
-// in the language the app shows.
-//
-// Shown on the provider the assistant uses.
-func ModelsInUse() string { return In(i18n.Locale()).ModelsInUse() }
-
-// ModelsInUse says "In use"
-// in the language of msgs.
-//
-// Shown on the provider the assistant uses.
-func (msgs Messages) ModelsInUse() string {
-	return Catalog.Format(msgs.locale, "modelsInUse", nil)
-}
-
 // ModelsKeyPlaceholder says "Paste your API key"
 // in the language the app shows.
 //
@@ -2506,22 +2336,6 @@ func ModelsKeyPlaceholder() string { return In(i18n.Locale()).ModelsKeyPlacehold
 // Placeholder of the empty key field.
 func (msgs Messages) ModelsKeyPlaceholder() string {
 	return Catalog.Format(msgs.locale, "modelsKeyPlaceholder", nil)
-}
-
-// ModelsKeySaved says "Saved in your Keychain — paste a new one to replace it"
-// in the language the app shows.
-//
-// Placeholder of the key field once a key is stored. Keychain is the macOS
-// Keychain.
-func ModelsKeySaved() string { return In(i18n.Locale()).ModelsKeySaved() }
-
-// ModelsKeySaved says "Saved in your Keychain — paste a new one to replace it"
-// in the language of msgs.
-//
-// Placeholder of the key field once a key is stored. Keychain is the macOS
-// Keychain.
-func (msgs Messages) ModelsKeySaved() string {
-	return Catalog.Format(msgs.locale, "modelsKeySaved", nil)
 }
 
 // ModelsModel says "Model"
@@ -2594,20 +2408,6 @@ func (msgs Messages) ModelsTest() string {
 	return Catalog.Format(msgs.locale, "modelsTest", nil)
 }
 
-// ModelsTestConnection says "Test connection"
-// in the language the app shows.
-//
-// Accessibility label of the Test button.
-func ModelsTestConnection() string { return In(i18n.Locale()).ModelsTestConnection() }
-
-// ModelsTestConnection says "Test connection"
-// in the language of msgs.
-//
-// Accessibility label of the Test button.
-func (msgs Messages) ModelsTestConnection() string {
-	return Catalog.Format(msgs.locale, "modelsTestConnection", nil)
-}
-
 // ModelsTesting says "Testing…"
 // in the language the app shows.
 //
@@ -2620,20 +2420,6 @@ func ModelsTesting() string { return In(i18n.Locale()).ModelsTesting() }
 // Test button while the request runs.
 func (msgs Messages) ModelsTesting() string {
 	return Catalog.Format(msgs.locale, "modelsTesting", nil)
-}
-
-// ModelsUseThis says "Use this one"
-// in the language the app shows.
-//
-// Button that makes a provider the one in use.
-func ModelsUseThis() string { return In(i18n.Locale()).ModelsUseThis() }
-
-// ModelsUseThis says "Use this one"
-// in the language of msgs.
-//
-// Button that makes a provider the one in use.
-func (msgs Messages) ModelsUseThis() string {
-	return Catalog.Format(msgs.locale, "modelsUseThis", nil)
 }
 
 // ModelsWorks says "Works · {ms} ms"
@@ -3404,20 +3190,6 @@ func (msgs Messages) SectionYours() string {
 	return Catalog.Format(msgs.locale, "sectionYours", nil)
 }
 
-// SettingsAbout says "adhd-todo {version}  ·  Open source, MIT license"
-// in the language the app shows.
-//
-// About line at the bottom of the settings sheet.
-func SettingsAbout(version string) string { return In(i18n.Locale()).SettingsAbout(version) }
-
-// SettingsAbout says "adhd-todo {version}  ·  Open source, MIT license"
-// in the language of msgs.
-//
-// About line at the bottom of the settings sheet.
-func (msgs Messages) SettingsAbout(version string) string {
-	return Catalog.Format(msgs.locale, "settingsAbout", map[string]any{"version": version})
-}
-
 // SettingsConnectBody says "Run this once in a terminal. Agents then report their progress here."
 // in the language the app shows.
 //
@@ -3486,20 +3258,6 @@ func SettingsDataFolder() string { return In(i18n.Locale()).SettingsDataFolder()
 // Header of the block that shows where the data lives.
 func (msgs Messages) SettingsDataFolder() string {
 	return Catalog.Format(msgs.locale, "settingsDataFolder", nil)
-}
-
-// SettingsDone says "Done"
-// in the language the app shows.
-//
-// Button that closes the settings sheet.
-func SettingsDone() string { return In(i18n.Locale()).SettingsDone() }
-
-// SettingsDone says "Done"
-// in the language of msgs.
-//
-// Button that closes the settings sheet.
-func (msgs Messages) SettingsDone() string {
-	return Catalog.Format(msgs.locale, "settingsDone", nil)
 }
 
 // SettingsGeneral says "General"
@@ -3700,34 +3458,6 @@ func (msgs Messages) SettingsLanguage() string {
 	return Catalog.Format(msgs.locale, "settingsLanguage", nil)
 }
 
-// SettingsModels says "Models"
-// in the language the app shows.
-//
-// Tab of the settings sheet.
-func SettingsModels() string { return In(i18n.Locale()).SettingsModels() }
-
-// SettingsModels says "Models"
-// in the language of msgs.
-//
-// Tab of the settings sheet.
-func (msgs Messages) SettingsModels() string {
-	return Catalog.Format(msgs.locale, "settingsModels", nil)
-}
-
-// SettingsTitle says "Settings"
-// in the language the app shows.
-//
-// Title of the settings sheet.
-func SettingsTitle() string { return In(i18n.Locale()).SettingsTitle() }
-
-// SettingsTitle says "Settings"
-// in the language of msgs.
-//
-// Title of the settings sheet.
-func (msgs Messages) SettingsTitle() string {
-	return Catalog.Format(msgs.locale, "settingsTitle", nil)
-}
-
 // SpanDays says "{n}d"
 // in the language the app shows.
 //
@@ -3880,6 +3610,468 @@ func StatusTodo() string { return In(i18n.Locale()).StatusTodo() }
 // Task status: planned, not started.
 func (msgs Messages) StatusTodo() string {
 	return Catalog.Format(msgs.locale, "statusTodo", nil)
+}
+
+// A11yPane says "{name} settings"
+// in the language the app shows.
+//
+// Accessibility label of a toolbar pane of the Settings window.
+func A11yPane(name string) string { return In(i18n.Locale()).A11yPane(name) }
+
+// A11yPane says "{name} settings"
+// in the language of msgs.
+//
+// Accessibility label of a toolbar pane of the Settings window.
+func (msgs Messages) A11yPane(name string) string {
+	return Catalog.Format(msgs.locale, "a11yPane", map[string]any{"name": name})
+}
+
+// MenuSettings says "Settings…"
+// in the language the app shows.
+//
+// Item of the app menu that opens the Settings window (⌘,).
+func MenuSettings() string { return In(i18n.Locale()).MenuSettings() }
+
+// MenuSettings says "Settings…"
+// in the language of msgs.
+//
+// Item of the app menu that opens the Settings window (⌘,).
+func (msgs Messages) MenuSettings() string {
+	return Catalog.Format(msgs.locale, "menuSettings", nil)
+}
+
+// ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
+// in the language the app shows.
+//
+// Line under the Base URL label in Settings > Assistant.
+func ModelsBaseURLHelp() string { return In(i18n.Locale()).ModelsBaseURLHelp() }
+
+// ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
+// in the language of msgs.
+//
+// Line under the Base URL label in Settings > Assistant.
+func (msgs Messages) ModelsBaseURLHelp() string {
+	return Catalog.Format(msgs.locale, "modelsBaseURLHelp", nil)
+}
+
+// ModelsKeyHelp says "Kept in your Keychain"
+// in the language the app shows.
+//
+// Line under the API key label in Settings > Assistant.
+func ModelsKeyHelp() string { return In(i18n.Locale()).ModelsKeyHelp() }
+
+// ModelsKeyHelp says "Kept in your Keychain"
+// in the language of msgs.
+//
+// Line under the API key label in Settings > Assistant.
+func (msgs Messages) ModelsKeyHelp() string {
+	return Catalog.Format(msgs.locale, "modelsKeyHelp", nil)
+}
+
+// ModelsOther says "Other…"
+// in the language the app shows.
+//
+// Last item of the model pop-up: type a model name that is not in the list.
+func ModelsOther() string { return In(i18n.Locale()).ModelsOther() }
+
+// ModelsOther says "Other…"
+// in the language of msgs.
+//
+// Last item of the model pop-up: type a model name that is not in the list.
+func (msgs Messages) ModelsOther() string {
+	return Catalog.Format(msgs.locale, "modelsOther", nil)
+}
+
+// ModelsProtocol says "Protocol"
+// in the language the app shows.
+//
+// Label of the row that picks the API a custom endpoint speaks.
+func ModelsProtocol() string { return In(i18n.Locale()).ModelsProtocol() }
+
+// ModelsProtocol says "Protocol"
+// in the language of msgs.
+//
+// Label of the row that picks the API a custom endpoint speaks.
+func (msgs Messages) ModelsProtocol() string {
+	return Catalog.Format(msgs.locale, "modelsProtocol", nil)
+}
+
+// ModelsStatusNone says "Not tested yet"
+// in the language the app shows.
+//
+// Status row of Settings > Assistant before the connection was tested.
+func ModelsStatusNone() string { return In(i18n.Locale()).ModelsStatusNone() }
+
+// ModelsStatusNone says "Not tested yet"
+// in the language of msgs.
+//
+// Status row of Settings > Assistant before the connection was tested.
+func (msgs Messages) ModelsStatusNone() string {
+	return Catalog.Format(msgs.locale, "modelsStatusNone", nil)
+}
+
+// ModelsTestAgain says "Test again"
+// in the language the app shows.
+//
+// Link of the status row of Settings > Assistant after a test.
+func ModelsTestAgain() string { return In(i18n.Locale()).ModelsTestAgain() }
+
+// ModelsTestAgain says "Test again"
+// in the language of msgs.
+//
+// Link of the status row of Settings > Assistant after a test.
+func (msgs Messages) ModelsTestAgain() string {
+	return Catalog.Format(msgs.locale, "modelsTestAgain", nil)
+}
+
+// SettingsAboutLicense says "Open source, MIT license"
+// in the language the app shows.
+//
+// Second line of the About row of Settings > General.
+func SettingsAboutLicense() string { return In(i18n.Locale()).SettingsAboutLicense() }
+
+// SettingsAboutLicense says "Open source, MIT license"
+// in the language of msgs.
+//
+// Second line of the About row of Settings > General.
+func (msgs Messages) SettingsAboutLicense() string {
+	return Catalog.Format(msgs.locale, "settingsAboutLicense", nil)
+}
+
+// SettingsAboutLink says "GitHub ↗"
+// in the language the app shows.
+//
+// Link of the About row of Settings > General that opens the project on
+// GitHub.
+func SettingsAboutLink() string { return In(i18n.Locale()).SettingsAboutLink() }
+
+// SettingsAboutLink says "GitHub ↗"
+// in the language of msgs.
+//
+// Link of the About row of Settings > General that opens the project on
+// GitHub.
+func (msgs Messages) SettingsAboutLink() string {
+	return Catalog.Format(msgs.locale, "settingsAboutLink", nil)
+}
+
+// SettingsAboutName says "adhd-todo {version}"
+// in the language the app shows.
+//
+// Name and version row of Settings > General.
+func SettingsAboutName(version string) string { return In(i18n.Locale()).SettingsAboutName(version) }
+
+// SettingsAboutName says "adhd-todo {version}"
+// in the language of msgs.
+//
+// Name and version row of Settings > General.
+func (msgs Messages) SettingsAboutName(version string) string {
+	return Catalog.Format(msgs.locale, "settingsAboutName", map[string]any{"version": version})
+}
+
+// SettingsAdvanced says "Advanced"
+// in the language the app shows.
+//
+// Group label in Settings > Assistant for the settings most people leave
+// alone.
+func SettingsAdvanced() string { return In(i18n.Locale()).SettingsAdvanced() }
+
+// SettingsAdvanced says "Advanced"
+// in the language of msgs.
+//
+// Group label in Settings > Assistant for the settings most people leave
+// alone.
+func (msgs Messages) SettingsAdvanced() string {
+	return Catalog.Format(msgs.locale, "settingsAdvanced", nil)
+}
+
+// SettingsGitHubNone says "Following pull requests isn't available here."
+// in the language the app shows.
+//
+// Line of Settings > GitHub when the app has no pull request poller.
+func SettingsGitHubNone() string { return In(i18n.Locale()).SettingsGitHubNone() }
+
+// SettingsGitHubNone says "Following pull requests isn't available here."
+// in the language of msgs.
+//
+// Line of Settings > GitHub when the app has no pull request poller.
+func (msgs Messages) SettingsGitHubNone() string {
+	return Catalog.Format(msgs.locale, "settingsGitHubNone", nil)
+}
+
+// SettingsPaneAgents says "Agents"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) about coding
+// agents reporting here.
+func SettingsPaneAgents() string { return In(i18n.Locale()).SettingsPaneAgents() }
+
+// SettingsPaneAgents says "Agents"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) about coding
+// agents reporting here.
+func (msgs Messages) SettingsPaneAgents() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAgents", nil)
+}
+
+// SettingsPaneAssistant says "Assistant"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) for the
+// built-in assistant's model.
+func SettingsPaneAssistant() string { return In(i18n.Locale()).SettingsPaneAssistant() }
+
+// SettingsPaneAssistant says "Assistant"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) for the
+// built-in assistant's model.
+func (msgs Messages) SettingsPaneAssistant() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAssistant", nil)
+}
+
+// SettingsProvider says "Provider"
+// in the language the app shows.
+//
+// Label of the row that picks the assistant's model provider.
+func SettingsProvider() string { return In(i18n.Locale()).SettingsProvider() }
+
+// SettingsProvider says "Provider"
+// in the language of msgs.
+//
+// Label of the row that picks the assistant's model provider.
+func (msgs Messages) SettingsProvider() string {
+	return Catalog.Format(msgs.locale, "settingsProvider", nil)
+}
+
+// SettingsShowInFinder says "Show in Finder"
+// in the language the app shows.
+//
+// Link in Settings > General that reveals the data folder in Finder.
+func SettingsShowInFinder() string { return In(i18n.Locale()).SettingsShowInFinder() }
+
+// SettingsShowInFinder says "Show in Finder"
+// in the language of msgs.
+//
+// Link in Settings > General that reveals the data folder in Finder.
+func (msgs Messages) SettingsShowInFinder() string {
+	return Catalog.Format(msgs.locale, "settingsShowInFinder", nil)
+}
+
+// SettingsAssistantNone says "The assistant isn't available here."
+// in the language the app shows.
+//
+// Line of Settings > Assistant when the app has no assistant.
+func SettingsAssistantNone() string { return In(i18n.Locale()).SettingsAssistantNone() }
+
+// SettingsAssistantNone says "The assistant isn't available here."
+// in the language of msgs.
+//
+// Line of Settings > Assistant when the app has no assistant.
+func (msgs Messages) SettingsAssistantNone() string {
+	return Catalog.Format(msgs.locale, "settingsAssistantNone", nil)
+}
+
+// ComposerChipAssistant says "Assistant · {model}"
+// in the language the app shows.
+//
+// Chip at the left of the composer's bar on Now when a model is connected.
+func ComposerChipAssistant(model string) string {
+	return In(i18n.Locale()).ComposerChipAssistant(model)
+}
+
+// ComposerChipAssistant says "Assistant · {model}"
+// in the language of msgs.
+//
+// Chip at the left of the composer's bar on Now when a model is connected.
+func (msgs Messages) ComposerChipAssistant(model string) string {
+	return Catalog.Format(msgs.locale, "composerChipAssistant", map[string]any{"model": model})
+}
+
+// ComposerChipAssistantBare says "Assistant"
+// in the language the app shows.
+//
+// Chip of the composer on Now when the model's name is not known.
+func ComposerChipAssistantBare() string { return In(i18n.Locale()).ComposerChipAssistantBare() }
+
+// ComposerChipAssistantBare says "Assistant"
+// in the language of msgs.
+//
+// Chip of the composer on Now when the model's name is not known.
+func (msgs Messages) ComposerChipAssistantBare() string {
+	return Catalog.Format(msgs.locale, "composerChipAssistantBare", nil)
+}
+
+// ComposerChipSetUp says "Set up the assistant"
+// in the language the app shows.
+//
+// Chip of the composer, and a link, while no model is connected. It opens
+// Settings > Assistant.
+func ComposerChipSetUp() string { return In(i18n.Locale()).ComposerChipSetUp() }
+
+// ComposerChipSetUp says "Set up the assistant"
+// in the language of msgs.
+//
+// Chip of the composer, and a link, while no model is connected. It opens
+// Settings > Assistant.
+func (msgs Messages) ComposerChipSetUp() string {
+	return Catalog.Format(msgs.locale, "composerChipSetUp", nil)
+}
+
+// ComposerHintIdle says "⌘K to focus · ↵ to send · ⇧↵ new line"
+// in the language the app shows.
+//
+// Keyboard hint at the right of the composer's bar while it is empty and
+// not focused.
+func ComposerHintIdle() string { return In(i18n.Locale()).ComposerHintIdle() }
+
+// ComposerHintIdle says "⌘K to focus · ↵ to send · ⇧↵ new line"
+// in the language of msgs.
+//
+// Keyboard hint at the right of the composer's bar while it is empty and
+// not focused.
+func (msgs Messages) ComposerHintIdle() string {
+	return Catalog.Format(msgs.locale, "composerHintIdle", nil)
+}
+
+// ComposerHintSend says "↵ to send"
+// in the language the app shows.
+//
+// Keyboard hint at the right of the composer's bar while it is focused or
+// has text.
+func ComposerHintSend() string { return In(i18n.Locale()).ComposerHintSend() }
+
+// ComposerHintSend says "↵ to send"
+// in the language of msgs.
+//
+// Keyboard hint at the right of the composer's bar while it is focused or
+// has text.
+func (msgs Messages) ComposerHintSend() string {
+	return Catalog.Format(msgs.locale, "composerHintSend", nil)
+}
+
+// ComposerLabel says "Ask the assistant"
+// in the language the app shows.
+//
+// Accessibility label of the composer's text area on a page.
+func ComposerLabel() string { return In(i18n.Locale()).ComposerLabel() }
+
+// ComposerLabel says "Ask the assistant"
+// in the language of msgs.
+//
+// Accessibility label of the composer's text area on a page.
+func (msgs Messages) ComposerLabel() string {
+	return Catalog.Format(msgs.locale, "composerLabel", nil)
+}
+
+// ComposerLabelTask says "Change this task"
+// in the language the app shows.
+//
+// Accessibility label of the composer's text area in the inspector.
+func ComposerLabelTask() string { return In(i18n.Locale()).ComposerLabelTask() }
+
+// ComposerLabelTask says "Change this task"
+// in the language of msgs.
+//
+// Accessibility label of the composer's text area in the inspector.
+func (msgs Messages) ComposerLabelTask() string {
+	return Catalog.Format(msgs.locale, "composerLabelTask", nil)
+}
+
+// ComposerPlaceholder says "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”"
+// in the language the app shows.
+//
+// Placeholder of the composer on Now and in the Inbox. The quoted example
+// is something a user could type.
+func ComposerPlaceholder() string { return In(i18n.Locale()).ComposerPlaceholder() }
+
+// ComposerPlaceholder says "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”"
+// in the language of msgs.
+//
+// Placeholder of the composer on Now and in the Inbox. The quoted example
+// is something a user could type.
+func (msgs Messages) ComposerPlaceholder() string {
+	return Catalog.Format(msgs.locale, "composerPlaceholder", nil)
+}
+
+// ComposerPlaceholderProject says "What's next in {project}? “fix the login redirect loop, p1, friday”"
+// in the language the app shows.
+//
+// Placeholder of the composer on a project's page. The quoted example is
+// something a user could type.
+func ComposerPlaceholderProject(project string) string {
+	return In(i18n.Locale()).ComposerPlaceholderProject(project)
+}
+
+// ComposerPlaceholderProject says "What's next in {project}? “fix the login redirect loop, p1, friday”"
+// in the language of msgs.
+//
+// Placeholder of the composer on a project's page. The quoted example is
+// something a user could type.
+func (msgs Messages) ComposerPlaceholderProject(project string) string {
+	return Catalog.Format(msgs.locale, "composerPlaceholderProject", map[string]any{"project": project})
+}
+
+// ComposerPlaceholderTask says "Change anything — “move it to friday afternoon”"
+// in the language the app shows.
+//
+// Placeholder of the composer at the bottom of the inspector. The quoted
+// example is something a user could type.
+func ComposerPlaceholderTask() string { return In(i18n.Locale()).ComposerPlaceholderTask() }
+
+// ComposerPlaceholderTask says "Change anything — “move it to friday afternoon”"
+// in the language of msgs.
+//
+// Placeholder of the composer at the bottom of the inspector. The quoted
+// example is something a user could type.
+func (msgs Messages) ComposerPlaceholderTask() string {
+	return Catalog.Format(msgs.locale, "composerPlaceholderTask", nil)
+}
+
+// ComposerSend says "Send"
+// in the language the app shows.
+//
+// Accessibility label of the round send button of the composer.
+func ComposerSend() string { return In(i18n.Locale()).ComposerSend() }
+
+// ComposerSend says "Send"
+// in the language of msgs.
+//
+// Accessibility label of the round send button of the composer.
+func (msgs Messages) ComposerSend() string {
+	return Catalog.Format(msgs.locale, "composerSend", nil)
+}
+
+// MarkAssistant says "Set by the assistant"
+// in the language the app shows.
+//
+// Tooltip of the small sparkle after a value in the inspector that the
+// assistant just set.
+func MarkAssistant() string { return In(i18n.Locale()).MarkAssistant() }
+
+// MarkAssistant says "Set by the assistant"
+// in the language of msgs.
+//
+// Tooltip of the small sparkle after a value in the inspector that the
+// assistant just set.
+func (msgs Messages) MarkAssistant() string {
+	return Catalog.Format(msgs.locale, "markAssistant", nil)
+}
+
+// BoardAdd says "Add a task"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the + in the To do column's header on
+// the board; it puts the cursor in the composer.
+func BoardAdd() string { return In(i18n.Locale()).BoardAdd() }
+
+// BoardAdd says "Add a task"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the + in the To do column's header on
+// the board; it puts the cursor in the composer.
+func (msgs Messages) BoardAdd() string {
+	return Catalog.Format(msgs.locale, "boardAdd", nil)
 }
 
 // ValueNone says "None"

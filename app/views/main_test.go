@@ -62,27 +62,6 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	}
 }
 
-func TestSettingsSheetCopiesTheCommand(t *testing.T) {
-	tt, m, app := newMainTester(t, 1100)
-	m.OpenSettings()
-	tt.Frame()
-	if !tt.HasText("Connect Claude Code") || !tt.HasText(app.Config.DataFolder) {
-		t.Fatalf("sheet texts %q", tt.Texts())
-	}
-	if err := tt.Click("Copy command"); err != nil {
-		t.Fatal(err)
-	}
-	if tt.Clipboard() != app.Config.ConnectCommand {
-		t.Errorf("clipboard %q", tt.Clipboard())
-	}
-	if err := tt.Click("Close settings"); err != nil {
-		t.Fatal(err)
-	}
-	if m.settings {
-		t.Error("sheet still open")
-	}
-}
-
 func TestSidebarListsNowInboxAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	for _, want := range []string{"Now", "Inbox", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
@@ -165,14 +144,14 @@ func TestMainEmptyProjectAndInbox(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "+ Add a task", "How to connect"} {
+	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("empty project is missing %q in %q", want, tt.Texts())
 		}
 	}
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	for _, want := range []string{"Your inbox is clear.", "+ Add a task"} {
+	for _, want := range []string{"Your inbox is clear.", "Tasks without a project land here. Write one in the box above, or press ⌘K."} {
 		if !tt.HasText(want) {
 			t.Errorf("empty inbox is missing %q in %q", want, tt.Texts())
 		}

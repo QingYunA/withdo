@@ -28,7 +28,7 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 4. **Agents and me are different.** Agent work shows its latest report and its age. My work
    shows when it is due or when I asked to be reminded.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
-6. **Fast is a feature.** The ask field is one keystroke away (⌘K). No spinner for local data.
+6. **Fast is a feature.** The composer is one keystroke away (⌘K). No spinner for local data.
 
 ## Tokens
 
@@ -141,11 +141,10 @@ task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tal
 
 Header: `Now` in `title` + the date in `text.tertiary`.
 
-**Ask field.** 46 pt tall, 12 pt radius, `bg.subtle`, a small accent sparkle, placeholder
-`Tell me what to remember — "remind me to review PR #12 at 4pm"`, a `⌘K` key cap at the right.
+**Composer.** The ask field is now the **Composer** (see **Composer** below), the first thing on the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
-assistant (see **Assistant** below). With none, Enter creates an Inbox task and shows an inline
-"Added to Inbox" confirmation under the field for 1.5 s.
+assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Now) and
+shows an inline "Added to Inbox" confirmation under the card for 1.5 s.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.**
 
@@ -191,21 +190,55 @@ its room beside the inspector. Each row: glyph (reminders use a bell in
    the agent that filed a report at the moment it closed (a report within five seconds of the
    completion, or later), else me.
 
-**All clear.** When the first three sections are empty (Done today may still show below it): a centered calm message under the ask field —
+**All clear.** When the first three sections are empty (Done today may still show below it): a centered calm message under the composer —
 "All clear." and in secondary "Agents report here through the adhd-todo MCP server." with a
 "How to connect" link (opens Settings).
 
+### Composer
+
+One component, four places: the top of **Now**, the top of **every project** (under the header, above
+the list or the board), the top of the **Inbox**, and the bottom of the **inspector**. It replaces the
+old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
+none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`.
+
+- **Card.** `bg`, 1 pt `border` (stronger than a hairline: `border` at full strength), 14 pt radius,
+  a soft shadow (0 1 2 and 0 4 16 at 4 %). Focus: the border becomes `accent` at 55 % and a 3 pt
+  `accent` ring at 12 % sits around it.
+- **Text area.** `input` type (17 / 25), 2 lines tall when empty, growing with the text to 6 lines,
+  then it scrolls. `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the
+  reply, else leaves the field. `↓` on Now walks into the rows. `↵` on an empty field opens the
+  highlighted row. The placeholder says the place:
+  Now `What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's
+  urgent”`; a project `What's next in adhd-todo? “fix the login redirect loop, p1, friday”`; the
+  Inbox the Now one; the inspector `Change anything — “move it to friday afternoon”`.
+- **Bar** inside the card, under the text: a **context chip** at the left (`meta`, `bg.subtle`, 7 pt
+  radius): `✦ Assistant · <model>` on Now and in the Inbox, `# <project>` in a project; when no model
+  is connected it reads `Set up the assistant` and opens Settings > Assistant. A hint in
+  `text.tertiary` at the right (`⌘K to focus · ↵ to send · ⇧↵ new line`, just `↵ to send` while
+  focused or typed; dropped under 560 pt), and a 28 pt round **send** button: `accent` with text,
+  neutral without; the sparkle in the chip pulses while the assistant works.
+- **The inspector's composer** is a compact variant: no chip and no hint, a sparkle, the text area
+  (1 to 6 lines) and the send button; shown only when a model is connected.
+- **Scope.** The composer tells the assistant where it is. On Now: nothing (new tasks go to the
+  Inbox unless the words name a project). In a project: that project, so new tasks go there unless
+  the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”
+  mean it. Without a model the text becomes a plain task in the place (project, Inbox; Now → Inbox).
+- **Reply.** The assistant's sentence, the receipts with Undo and a question with its options show
+  directly under the composer that sent them (above the inspector's composer, which sits at the
+  bottom). Behavior as in **Assistant**.
+- The board's `+` on its To do column focuses the composer.
+
 ### Assistant (M3)
 
-The ask field is the entry to a small built-in agent (Eino, `internal/agent`). It acts at once and
+The composer is the entry to a small built-in agent (Eino, `internal/agent`). It acts at once and
 reports what it did with an Undo; it asks only when an action would be wrong without the answer.
-Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (light and dark).
+Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (light and dark), `now-composer-*`.
 
-- **Working.** The sparkle pulses (a plain accent sparkle with Reduce Motion), the empty field's
+- **Working.** The chip's sparkle pulses (a plain accent sparkle with Reduce Motion), the empty field's
   placeholder reads `Thinking…`, and the typed text has moved into the sheet. One request at a
   time: Enter while it works keeps what is typed. **Esc cancels** the request (its context is
   cancelled); with nothing changed yet the sheet closes and the text returns to the field.
-- **Conversation sheet.** Opens directly under the ask field, inside the content column, and
+- **Conversation sheet.** Opens directly under the composer, inside the content column, and
   pushes the sections down; a hairline marks where it ends. It is part of the page, not a chat:
   no bubbles, no avatars, no timestamps, everything on the column's left edge. It holds this
   conversation only (the last three exchanges), never stored.
@@ -226,10 +259,8 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (li
   - After a turn that asked nothing and failed nothing the sheet **closes itself after 4 s**
     (Undo restarts the 4 s), or at once on **Esc**. A second **Esc** with nothing else to close
     makes the assistant forget the conversation (it also forgets after 10 minutes idle).
-- **No model connected.** Focusing the ask field shows one line under it, `Connect a model to
-  let me understand you — Set up` (`meta`, `Set up` is a link), which opens Settings > Models.
-  It stays until you leave the screen so the click still finds it. Enter keeps adding Inbox
-  tasks (the M2 behavior).
+- **No model connected.** The composer's chip reads `Set up the assistant` and opens Settings >
+  Assistant. Enter keeps adding plain tasks, to the place the composer is in.
 - Times in receipts follow the Now screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`).
 
@@ -253,6 +284,7 @@ at once. A project that has no milestone shows the menu with `All milestones` an
 name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
 per row; the group says the status). Row: title, branch pill, `#PR`, summary line for agent
 tasks, age or due label on the right, stale label when stale. **Empty groups are not drawn.**
+The composer sits above the groups (see **Composer**): it is how a task is added here.
 After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
 its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
 Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in `accent` that expands
@@ -260,7 +292,7 @@ the group in place. Last line: `Backlog 2 — show` in `text.tertiary` (folded: 
 the way); clicking it opens the group. With no backlog the line is not drawn.
 
 **Board view.** Kept for people who like columns, but it shows only columns that have tasks,
-plus To do (always, as the place to add). No collapsed strips, no zero-count columns. Cards as
+plus To do (always; its `+` focuses the composer). No collapsed strips, no zero-count columns. Cards as
 before; drag between visible columns changes status. Dragging also reveals thin drop targets
 for hidden statuses at the right edge.
 
@@ -301,7 +333,8 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
   `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
-- At the bottom, below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
+- The inspector's **composer** is pinned at its bottom (see **Composer**); `Ask about this task…` (⌘J) focuses it. Values the assistant set in the last 10 s carry a small accent `✦` after the value.
+- Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
 
 ### Task menu
@@ -408,7 +441,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 ### Keyboard
 
-`⌘K` ask field · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌘K` the page's composer · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed.
 
@@ -421,8 +454,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 
 | Input | `↵` | `Esc` | `↓` |
 |---|---|---|---|
-| Ask field | sends; on an empty field opens the highlighted row | cancels a running request, else closes the sheet | moves into the rows |
-| Inline "Add a task" | adds and stays open and empty | closes | |
+| Composer | sends (`⇧↵` breaks the line); on an empty field opens the highlighted row | cancels a running request, else closes the reply, else leaves the field | moves into the rows (Now) |
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
@@ -431,50 +463,47 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 
 ### Settings
 
-A 640 pt sheet with a `General | Models` switch (the quiet segmented well of the List | Board
-toggle) beside Done.
+A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
+sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane
+asked for. 680 pt wide, as tall as its pane's content, not resizable. Reference: `v2.html` frame 5;
+screens `settings-general-*`, `settings-assistant-*`, `settings-agents-*`, `settings-github-*`.
 
-**General**: "Connect Claude Code" with the copyable registration command, **GitHub**, data
-folder path, **Archived projects**, Language, About. Nothing else.
-
-**GitHub** (M4a, screens `settings-github-*`): the pull request poller's state, from the `gh` CLI
-the user is already signed in to (the app owns no token). One bold title and one line:
-- *Connected*: `Connected as QingYunA · checked 2 min ago` in `meta` / `text.secondary`, and a
-  **Check now** link at the right of the line. While a check runs the link reads `Checking…` and
-  is inert; before the first check ends the line says `Checking GitHub…`.
-- *No `gh`*: `The GitHub CLI isn't installed. Install it to follow your pull requests.` and the
-  command `brew install gh` in the mono well of "Connect Claude Code".
-- *Signed out*: `You're not signed in to GitHub. Sign in to follow your pull requests.` and
-  `gh auth login` in the mono well.
-- *Offline*: `Can't reach GitHub. Trying again soon.` Never red; polling retries on its own.
-Polling runs at launch, every 5 minutes, and when the window comes back to the front if the last
-check is older than a minute; at most 4 `gh` calls at once.
-
-*Archived projects**, Language, About. Nothing else.
-
-*Archived projects* is a block under the data folder: one 32 pt row per archived project (name in
-`body`, repository in `text.tertiary`, a tinted **Restore** button at the right). With none it says
-`No archived projects. Archive one from its menu in the sidebar.` At most five rows show; the list
-scrolls beyond. A report from an agent in an archived project's repository restores it too.
-
-**Models** (screens `settings-models`, `settings-models-edit`): the provider list at the left,
-the open provider's fields at the right.
-- *List*: one 32 pt row per preset: Anthropic, Magpie, OpenAI, DeepSeek, Kimi, OpenRouter,
-  Ollama, Custom. A radio at the left marks the one in use (`accent`); the row being viewed gets
-  `bg.selected`. Clicking a row opens its fields; it does not switch the provider.
-- *Fields* (30 pt wells on `bg.subtle`, label above in `meta`): **Base URL** (the preset's value,
-  its default shown as the placeholder), **Model** (with the preset's suggestions as small mono
-  chips under it; a click fills it), **API key** (a secure field; once stored the placeholder
-  says "Saved in your Keychain — paste a new one to replace it"; the key is never shown again).
-  Fields save on Enter or blur. Magpie and Ollama have no key field; Magpie says "Uses your
-  Magpie gateway at 127.0.0.1:3425". Custom adds an `OpenAI-compatible | Anthropic API` switch.
-- *Header of the fields*: provider name, a note (or "Needs an API key"), and at the right `In
-  use` with a check, or a tinted **Use this one** button.
-- **Test** sends a 1-token request with what is typed, saved or not, and says `Works · 640 ms`
-  or the error in the words above (`text.secondary`; no green, no red).
-- Keys live in the system keychain (service `adhd-todo`), never in the database, the provider
-  file or the logs. The active provider and per-provider overrides are in `models.json` next to
-  the database.
+- **Toolbar panes**, as in System Settings: General, Assistant, Agents, GitHub, each an icon above a
+  label (`meta`), 78 pt wide; the open one gets a 6 % black (white in dark) 8 pt well and an `accent` icon.
+  The window title is the open pane's name.
+- **Grouped lists.** Pane background `#F5F5F7` (dark `#1C1C1E`); groups are white (dark `#2C2C2E`)
+  rounded 10 pt blocks with a 0.5 pt hairline; rows are at least 44 pt, the label (`body`) and an
+  optional `meta` line left, the control right; hairlines between rows; an optional group label
+  above the block in `section` style (13 / 18, 600, `text.secondary`).
+- **General**: Language (a pop-up: System / English / 简体中文); **Archived projects** (a row per
+  archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`,
+  **Show in Finder** at the right); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
+  link).
+- **Assistant**: **Provider** (a pop-up of the presets), **Model** (a pop-up of the preset's
+  suggestions plus `Other…`, which turns the row into a text field; a preset without suggestions shows
+  the field), **API key** (a secure field, `Kept in your Keychain` underneath, hidden for presets with a
+  fixed key: Magpie, Ollama), a **status row** (`● Works · 640 ms`, or the friendly error in
+  `text.secondary`, or `Not tested yet`) with a **Test** link; the group **Advanced** holds **Base
+  URL**. Choosing a provider activates it; saving a key tests it at once, so Test is rarely needed.
+  Models, base URLs and keys save on Enter or blur.
+- **Agents**: `Connect Claude Code`, one line on what agents report, the registration command in a
+  mono well with **Copy**.
+- **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
+  to (the app owns no token). One line and a **Check now** link:
+  - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads
+    `Checking…` and is inert; before the first check ends the line says `Checking GitHub…`.
+  - *No `gh`*: `The GitHub CLI isn't installed. Install it to follow your pull requests.` and the
+    command `brew install gh` in a mono well.
+  - *Signed out*: `You're not signed in to GitHub. Sign in to follow your pull requests.` and
+    `gh auth login` in the mono well.
+  - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
+  Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
+  last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
+- A report from an agent in an archived project's repository restores the project too.
+- **Test** sends a 1-token request with what is typed, saved or not, and says `Works · 640 ms` or the
+  error in the words of **Assistant** (`text.secondary`; the dot is the only color).
+- Keys live in the system keychain (service `adhd-todo`), never in the database, the provider file or
+  the logs. The active provider and per-provider overrides are in `models.json` next to the database.
 
 ## Writing
 

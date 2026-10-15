@@ -150,7 +150,7 @@ func (r *rig) task(id int64) *domain.Task {
 
 func (r *rig) ask(text string) Result {
 	r.t.Helper()
-	res, err := r.agent.Ask(context.Background(), text)
+	res, err := r.agent.Ask(context.Background(), text, Scope{})
 	if err != nil {
 		r.t.Fatalf("Ask(%q): %v", text, err)
 	}

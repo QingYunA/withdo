@@ -124,9 +124,10 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	row.Children(func() {
 		ui.Icon(c, theme.IconGear).Size(16, 16).TextColor(t.TextSecondary)
 		sidebarLabel(c, t, m.say.NavSettings(), false)
+		theme.Text(c, theme.Meta, t.TextTertiary, "⌘,").Shrink(0)
 	})
 	if row.Clicked() {
-		m.settings = true
+		m.openSettings(PaneGeneral)
 	}
 }
 
