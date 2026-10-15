@@ -92,17 +92,20 @@ display. Views keep using the tokens; no literal sizes.
 
 ## Glyphs
 
-18 pt, drawn as vector icons. Shape carries meaning; color repeats it.
+18 pt (1.5 pt a pixel), drawn on a **12 x 12 pixel grid** like the avatars (`drawStatus`, grids in
+`app/theme/glyph.go`, copied from `docs/design/mockups/v6.html`): stepped pixel circles, the check
+and the bang two pixels thick. Shape carries meaning; color repeats it. `StatusGlyphSized` draws
+them at 12 (the blocked mark of a card) or 24 as well, so every pixel stays on the device grid.
 
 | Status | Glyph |
 |---|---|
-| backlog | dashed circle |
+| backlog | dashed pixel ring (two pixels of every three) |
 | todo | empty circle |
-| doing | circle with the right half filled |
-| blocked | filled circle with a white `!` |
-| review | circle with an inner dot (waiting on someone) |
-| done | filled circle with a white check |
-| cancelled | circle with a slash, tertiary color |
+| doing | ring with the right half filled |
+| blocked | filled disc with a white `!` |
+| review | ring with an inner dot (waiting on someone) |
+| done | filled disc with a white check |
+| cancelled | ring with a one-pixel slash, tertiary color |
 
 Priority: a small outlined text badge, `P0` in `status.blocked` (1 pt ring at 35 %) and `P1` in
 `text.secondary` (`border` ring), 5 pt radius, `badge` type. **Only P0 and P1 are drawn**, on rows
@@ -111,15 +114,44 @@ show nothing and only deliberate priorities draw the eye. There is no bars glyph
 inspector and the task menu say all four levels as text (`P1  High`, the strip `P0 P1 P2 P3`).
 
 Clicking the status glyph of **my own** task marks it done at once (one click, no menu); marking
-done plays a 220 ms fill-and-check animation (a plain fill with Reduce Motion), then the item moves
-to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
+done plays a 220 ms animation in **two steps** (the disc fills, then at the halfway point the check
+appears; Reduce Motion goes straight to done), then the item moves to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
 (below), so an agent's work is never completed by accident and a finished task can be reopened.
 
 ## Avatars and icons (M5)
 
-Reference: `docs/design/mockups/v4.html` (frames 2 to 4). Pixel art is for **avatars and empty
-states** only; every other icon stays a 1.4 pt line icon in the color of its text. The sprites live
-in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay sharp at any size).
+Reference: `docs/design/mockups/v4.html` (frames 2 to 4) and `v6.html` (M6b, one pixel style).
+The avatars and empty-state art are sprites in `app/theme/pixel.go` (12 x 12 pixels each, drawn as
+rectangles, so they stay sharp at any size).
+
+**Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
+2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
+LICENSE and a README line, embedded with `go:embed` and tinted with the color of the surrounding
+text (`fill="currentColor"`, no strokes). Provider logos (lobe-icons) keep their own colors. Icons
+are drawn only at whole multiples of the pixel grid: `theme.IconSmall` 12 pt (meta lines, chevrons,
+checks, clear buttons, search fields, the plus of the section header), `IconRow` 18 pt (sidebar,
+menus, inspector properties, view toggle, calendar and menu back buttons, the close button, send,
+the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt (spare). The
+`Icon*` variables map to pixelarticons names:
+
+| Variable | pixelarticons | Variable | pixelarticons |
+|---|---|---|---|
+| `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
+| `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
+| `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
+| `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
+| `IconGear` | `gear` | `IconCheck` | `check` |
+| `IconSearch` | `search` | `IconClose` | `close` |
+| `IconBell` | `bell` | `IconPlus` | `plus` |
+| `IconFlag` / `IconMilestone` | `flag` | `IconSend` | `arrow-up` |
+| `IconMove` | `arrow-right` | `IconAgent` | `robot` |
+| `IconCopy` | `copy` | `IconStatus` | `invert` |
+| `IconTrash` | `trash` | `IconDiamond` | `diamond-gem` |
+| `IconClock` | `clock` | `IconPR` | `git-pull-request` |
+| `IconBranch` | `git-branch` | `IconArrowOut` | `external-link` |
+| `IconTerminal` / `IconAgents` | `terminal` | `IconSparkle` / `IconStar` | `sparkle` |
+| `IconOctocat` / `IconGitHub` | `github` | `IconGeneral` | `sliders` |
+| `IconNow` | `circle` | | |
 
 - **Who wrote a task.** `Source == user` is `theme.You`, the pixel person (a task the assistant wrote
   for me counts as mine). `Source == agent` is `theme.AgentAvatar(name)`, `name` being the agent of
@@ -134,7 +166,7 @@ in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay 
   branch and the age. The line is always drawn.
 - **Inspector**: a **From** row right under Status: the 18 pt avatar and the agent's name as people
   write it (`Claude Code`, `Codex`, `Cursor`, `Gemini CLI`, `GitHub`), or `You`. Every property label
-  has a 14 pt line icon in `text.tertiary` before it (Status `IconStatus`, From `IconAgent`, Priority
+  has an 18 pt pixel icon in `text.tertiary` before it (Status `IconStatus`, From `IconAgent`, Priority
   `IconFlag`, Project `IconFolder`, Milestone `IconDiamond`, Due `IconCalendar`, Remind `IconBell`,
   Branch `IconBranch`, Pull request `IconPR`); the label and its icon share the 96 pt label column.
 - **Activity**: each report starts with its agent's 18 pt avatar (GitHub's own events with its mark)
@@ -144,11 +176,11 @@ in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay 
   works, as the sparkle did); a one-line answer that changed nothing starts with its 12 pt avatar.
   Receipts keep their green check.
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
-  (`theme.AccentBot`), both 18 pt (a point of the row's gap on each side keeps the labels in line);
-  Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 16 pt in `text.secondary`;
+  (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
+  Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
   does not choose it).
-- **The drawn task menu** (and its Move to and reminder pages) puts a 15 pt line icon before each
+- **The drawn task menu** (and its Move to and reminder pages) puts an 18 pt pixel icon before each
   item: Move to `IconMove`, Remind me `IconClock`, Open PR `IconArrowOut`, Ask `IconSparkle`, the
   reminder presets `IconClock` / `IconCalendar`, No reminder `IconClose`, Custom `IconPlus`, a
   project `IconFolder` in its color (white on the highlighted row), Delete `IconTrash` in
@@ -330,7 +362,7 @@ page's title already says where a task goes, so the input has no label, no chip 
   shows only the cursor and the placeholder (and a `+`, below). No `↵ to send` or `⇧↵ new line` text: the button is the
   hint.
 - **Second row (M6, with a model connected).** Once the box holds text or an image, a 28 pt row shows
-  under the text: `+` (16 pt plus icon, `text.secondary`, round hover well) at the left, then the
+  under the text: `+` (18 pt plus icon, `text.secondary`, round hover well) at the left, then the
   **model chip**, then the send button, which moves down into this row. Focusing an *empty* box still
   moves nothing: it shows only the cursor and the placeholder, with the `+` in the avatar's place so
   images can be added at once. (A box that grows when it is focused would shift the page under a
@@ -470,7 +502,7 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
   review), `Nothing yet` (To do, Done).
 - **Cards**: `bg` with a 10 pt radius, a 1 pt `border` ring and a 1 pt soft shadow; 12 pt padding, 4 pt
   between the two lines. The title in `body.strong` (up to three lines), then **one meta line**
-  (13 / 18): the blocked mark (14 pt) for a blocked card, the `P0` / `P1` badge, the branch in
+  (13 / 18): the blocked mark (12 pt) for a blocked card, the `P0` / `P1` badge, the branch in
   `mono` (ellipsized), and at the right the due label, the age or the stale label. A card with
   nothing to say has no meta line. **No status glyph on a card**: its lane says it (so the way to finish
   your own task is the task menu, `Space`, or dragging it to Done). Done cards are flat `bg.subtle`
