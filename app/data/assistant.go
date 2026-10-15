@@ -101,6 +101,10 @@ type Provider struct {
 	PickProtocol   bool     // Custom: OpenAI-compatible or Anthropic
 	Anthropic      bool     // the protocol in use
 	Active         bool
+	KeyRequired    bool   // false for presets that work without a key (Ollama, Magpie, Custom)
+	Configured     bool   // in use, or with a key (or, for a preset that needs none, saved once)
+	KeyURL         string // the page that hands out API keys; empty when there is no key field
+	Monogram       string // the letters of the logo tile; the tile's color is the theme's
 }
 
 // ProviderEdit is what is typed into a provider's fields. Key is empty when unchanged.
@@ -120,6 +124,9 @@ type ModelSettings interface {
 	SetActive(id string) error
 	// Test sends a one-token request with what is typed, saved or not.
 	Test(ctx context.Context, id string, e ProviderEdit) (time.Duration, error)
+	// ListModels asks the provider which models it offers, with the stored key unless e has one.
+	// A failure is not shown to the user: the preset's suggestions stand in.
+	ListModels(ctx context.Context, id string, e ProviderEdit) ([]string, error)
 }
 
 // Problem says why a request to the model failed, so the views can word it in the user's

@@ -2298,20 +2298,6 @@ func (msgs Messages) ModelsTesting() string {
 	return Catalog.Format(msgs.locale, "modelsTesting", nil)
 }
 
-// ModelsWorks says "Works · {ms} ms"
-// in the language the app shows.
-//
-// Result of a successful test, with the time it took.
-func ModelsWorks(ms string) string { return In(i18n.Locale()).ModelsWorks(ms) }
-
-// ModelsWorks says "Works · {ms} ms"
-// in the language of msgs.
-//
-// Result of a successful test, with the time it took.
-func (msgs Messages) ModelsWorks(ms string) string {
-	return Catalog.Format(msgs.locale, "modelsWorks", map[string]any{"ms": ms})
-}
-
 // NavInbox says "Inbox"
 // in the language the app shows.
 //
@@ -4028,4 +4014,240 @@ func ResultMore(n int) string { return In(i18n.Locale()).ResultMore(n) }
 // in one turn.
 func (msgs Messages) ResultMore(n int) string {
 	return Catalog.Format(msgs.locale, "resultMore", map[string]any{"n": n})
+}
+
+// SettingsInUse says "In use"
+// in the language the app shows.
+//
+// Group label above the provider the assistant uses now, in Settings >
+// Assistant.
+func SettingsInUse() string { return In(i18n.Locale()).SettingsInUse() }
+
+// SettingsInUse says "In use"
+// in the language of msgs.
+//
+// Group label above the provider the assistant uses now, in Settings >
+// Assistant.
+func (msgs Messages) SettingsInUse() string {
+	return Catalog.Format(msgs.locale, "settingsInUse", nil)
+}
+
+// SettingsAlsoSetUp says "Also set up"
+// in the language the app shows.
+//
+// Group label above the other providers that already have a key, in
+// Settings > Assistant.
+func SettingsAlsoSetUp() string { return In(i18n.Locale()).SettingsAlsoSetUp() }
+
+// SettingsAlsoSetUp says "Also set up"
+// in the language of msgs.
+//
+// Group label above the other providers that already have a key, in
+// Settings > Assistant.
+func (msgs Messages) SettingsAlsoSetUp() string {
+	return Catalog.Format(msgs.locale, "settingsAlsoSetUp", nil)
+}
+
+// SettingsChange says "Change"
+// in the language the app shows.
+//
+// Button on the provider in use that opens the grid of providers.
+func SettingsChange() string { return In(i18n.Locale()).SettingsChange() }
+
+// SettingsChange says "Change"
+// in the language of msgs.
+//
+// Button on the provider in use that opens the grid of providers.
+func (msgs Messages) SettingsChange() string {
+	return Catalog.Format(msgs.locale, "settingsChange", nil)
+}
+
+// SettingsUse says "Use"
+// in the language the app shows.
+//
+// Link on a provider that is set up but not in use; it makes the provider
+// the one in use.
+func SettingsUse() string { return In(i18n.Locale()).SettingsUse() }
+
+// SettingsUse says "Use"
+// in the language of msgs.
+//
+// Link on a provider that is set up but not in use; it makes the provider
+// the one in use.
+func (msgs Messages) SettingsUse() string {
+	return Catalog.Format(msgs.locale, "settingsUse", nil)
+}
+
+// A11yUseProvider says "Use {name}"
+// in the language the app shows.
+//
+// Accessibility label of the Use link of a provider.
+func A11yUseProvider(name string) string { return In(i18n.Locale()).A11yUseProvider(name) }
+
+// A11yUseProvider says "Use {name}"
+// in the language of msgs.
+//
+// Accessibility label of the Use link of a provider.
+func (msgs Messages) A11yUseProvider(name string) string {
+	return Catalog.Format(msgs.locale, "a11yUseProvider", map[string]any{"name": name})
+}
+
+// SettingsPickProvider says "Pick a provider"
+// in the language the app shows.
+//
+// Label above the grid of providers.
+func SettingsPickProvider() string { return In(i18n.Locale()).SettingsPickProvider() }
+
+// SettingsPickProvider says "Pick a provider"
+// in the language of msgs.
+//
+// Label above the grid of providers.
+func (msgs Messages) SettingsPickProvider() string {
+	return Catalog.Format(msgs.locale, "settingsPickProvider", nil)
+}
+
+// SettingsDone says "Done"
+// in the language the app shows.
+//
+// Link that closes the grid of providers and goes back to the provider in
+// use.
+func SettingsDone() string { return In(i18n.Locale()).SettingsDone() }
+
+// SettingsDone says "Done"
+// in the language of msgs.
+//
+// Link that closes the grid of providers and goes back to the provider in
+// use.
+func (msgs Messages) SettingsDone() string {
+	return Catalog.Format(msgs.locale, "settingsDone", nil)
+}
+
+// SettingsGetKey says "Get a key ↗"
+// in the language the app shows.
+//
+// Link that opens the page where the provider hands out API keys.
+func SettingsGetKey() string { return In(i18n.Locale()).SettingsGetKey() }
+
+// SettingsGetKey says "Get a key ↗"
+// in the language of msgs.
+//
+// Link that opens the page where the provider hands out API keys.
+func (msgs Messages) SettingsGetKey() string {
+	return Catalog.Format(msgs.locale, "settingsGetKey", nil)
+}
+
+// SettingsSaveAndTest says "Save and test"
+// in the language the app shows.
+//
+// Button that stores the provider's key and model, tests them, and makes
+// the provider the one in use.
+func SettingsSaveAndTest() string { return In(i18n.Locale()).SettingsSaveAndTest() }
+
+// SettingsSaveAndTest says "Save and test"
+// in the language of msgs.
+//
+// Button that stores the provider's key and model, tests them, and makes
+// the provider the one in use.
+func (msgs Messages) SettingsSaveAndTest() string {
+	return Catalog.Format(msgs.locale, "settingsSaveAndTest", nil)
+}
+
+// ModelsKeyFor says "Paste your {provider} key"
+// in the language the app shows.
+//
+// Placeholder of the API key field of a provider.
+func ModelsKeyFor(provider string) string { return In(i18n.Locale()).ModelsKeyFor(provider) }
+
+// ModelsKeyFor says "Paste your {provider} key"
+// in the language of msgs.
+//
+// Placeholder of the API key field of a provider.
+func (msgs Messages) ModelsKeyFor(provider string) string {
+	return Catalog.Format(msgs.locale, "modelsKeyFor", map[string]any{"provider": provider})
+}
+
+// SettingsConnected says "Connected · {ms} ms"
+// in the language the app shows.
+//
+// Result of a successful connection test, with the time it took.
+func SettingsConnected(ms string) string { return In(i18n.Locale()).SettingsConnected(ms) }
+
+// SettingsConnected says "Connected · {ms} ms"
+// in the language of msgs.
+//
+// Result of a successful connection test, with the time it took.
+func (msgs Messages) SettingsConnected(ms string) string {
+	return Catalog.Format(msgs.locale, "settingsConnected", map[string]any{"ms": ms})
+}
+
+// SettingsNeedsURL says "Enter the address of the endpoint."
+// in the language the app shows.
+//
+// Shown when Save and test is pressed for the Custom provider with no base
+// URL.
+func SettingsNeedsURL() string { return In(i18n.Locale()).SettingsNeedsURL() }
+
+// SettingsNeedsURL says "Enter the address of the endpoint."
+// in the language of msgs.
+//
+// Shown when Save and test is pressed for the Custom provider with no base
+// URL.
+func (msgs Messages) SettingsNeedsURL() string {
+	return Catalog.Format(msgs.locale, "settingsNeedsURL", nil)
+}
+
+// SettingsNeedsModel says "Choose or type a model."
+// in the language the app shows.
+//
+// Shown when Save and test is pressed with no model.
+func SettingsNeedsModel() string { return In(i18n.Locale()).SettingsNeedsModel() }
+
+// SettingsNeedsModel says "Choose or type a model."
+// in the language of msgs.
+//
+// Shown when Save and test is pressed with no model.
+func (msgs Messages) SettingsNeedsModel() string {
+	return Catalog.Format(msgs.locale, "settingsNeedsModel", nil)
+}
+
+// SettingsAgentsConnected says "Agents that reported"
+// in the language the app shows.
+//
+// Group label above the agents that have reported, in Settings > Agents.
+func SettingsAgentsConnected() string { return In(i18n.Locale()).SettingsAgentsConnected() }
+
+// SettingsAgentsConnected says "Agents that reported"
+// in the language of msgs.
+//
+// Group label above the agents that have reported, in Settings > Agents.
+func (msgs Messages) SettingsAgentsConnected() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsConnected", nil)
+}
+
+// SettingsAgentIdle says "No reports today"
+// in the language the app shows.
+//
+// Line under an agent that reported before but not today.
+func SettingsAgentIdle() string { return In(i18n.Locale()).SettingsAgentIdle() }
+
+// SettingsAgentIdle says "No reports today"
+// in the language of msgs.
+//
+// Line under an agent that reported before but not today.
+func (msgs Messages) SettingsAgentIdle() string {
+	return Catalog.Format(msgs.locale, "settingsAgentIdle", nil)
+}
+
+// SettingsAgentReports says "{count, plural, one {# report today} other {# reports today}}"
+// in the language the app shows.
+//
+// Line under an agent: how many times it reported today.
+func SettingsAgentReports(count int) string { return In(i18n.Locale()).SettingsAgentReports(count) }
+
+// SettingsAgentReports says "{count, plural, one {# report today} other {# reports today}}"
+// in the language of msgs.
+//
+// Line under an agent: how many times it reported today.
+func (msgs Messages) SettingsAgentReports(count int) string {
+	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
 }

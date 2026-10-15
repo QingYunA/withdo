@@ -88,10 +88,13 @@ func (p *ProviderSettings) Providers() []Provider {
 	out := make([]Provider, 0, len(providers.Presets))
 	for _, pr := range providers.Presets {
 		r, _ := cfg.Resolve(pr.ID)
+		_, saved := cfg.Providers[pr.ID]
+		configured := cfg.Active == pr.ID || (pr.HasKeyField() && p.KeySaved(pr.ID)) || (!pr.NeedsKey() && saved)
 		out = append(out, Provider{
 			ID: pr.ID, Name: pr.Name, Note: pr.Note, BaseURL: r.BaseURL, DefaultBaseURL: pr.Display(),
 			Model: r.Model, Suggestions: pr.Models, HasKeyField: pr.HasKeyField(), PickProtocol: pr.PickProtocol,
-			Anthropic: r.Protocol == providers.Anthropic, Active: cfg.Active == pr.ID,
+			Anthropic: r.Protocol == providers.Anthropic, Active: cfg.Active == pr.ID, KeyURL: pr.KeyURL, Monogram: pr.Monogram,
+			KeyRequired: pr.NeedsKey(), Configured: configured,
 		})
 	}
 	return out
@@ -144,4 +147,9 @@ func (p *ProviderSettings) Test(ctx context.Context, id string, e ProviderEdit) 
 		return 0, problemFor(err)
 	}
 	return d, nil
+}
+
+// ListModels implements ModelSettings.
+func (p *ProviderSettings) ListModels(ctx context.Context, id string, e ProviderEdit) ([]string, error) {
+	return p.Provider.Models(ctx, id, entryOf(e), e.Key)
 }

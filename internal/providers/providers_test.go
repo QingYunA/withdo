@@ -51,14 +51,18 @@ func TestPresetDefaults(t *testing.T) {
 		proto Protocol
 		url   string
 	}{
-		"anthropic":  {Anthropic, ""},
-		"magpie":     {Anthropic, "http://127.0.0.1:3425"},
-		"openai":     {OpenAI, "https://api.openai.com/v1"},
-		"deepseek":   {OpenAI, "https://api.deepseek.com"},
-		"kimi":       {OpenAI, "https://api.moonshot.cn/v1"},
-		"openrouter": {OpenAI, "https://openrouter.ai/api/v1"},
-		"ollama":     {OpenAI, "http://127.0.0.1:11434/v1"},
-		"custom":     {OpenAI, ""},
+		"anthropic":   {Anthropic, ""},
+		"magpie":      {Anthropic, "http://127.0.0.1:3425"},
+		"openai":      {OpenAI, "https://api.openai.com/v1"},
+		"deepseek":    {OpenAI, "https://api.deepseek.com"},
+		"kimi":        {OpenAI, "https://api.moonshot.cn/v1"},
+		"zhipu":       {OpenAI, "https://open.bigmodel.cn/api/paas/v4"},
+		"qwen":        {OpenAI, "https://dashscope.aliyuncs.com/compatible-mode/v1"},
+		"gemini":      {OpenAI, "https://generativelanguage.googleapis.com/v1beta/openai"},
+		"siliconflow": {OpenAI, "https://api.siliconflow.cn/v1"},
+		"openrouter":  {OpenAI, "https://openrouter.ai/api/v1"},
+		"ollama":      {OpenAI, "http://127.0.0.1:11434/v1"},
+		"custom":      {OpenAI, ""},
 	}
 	if len(Presets) != len(want) {
 		t.Fatalf("%d presets, want %d", len(Presets), len(want))

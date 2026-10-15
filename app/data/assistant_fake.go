@@ -95,6 +95,8 @@ type FakeModels struct {
 	ProviderSettings
 	// TestFn answers the Test button; nil works in 640 ms.
 	TestFn func(id string, e ProviderEdit) (time.Duration, error)
+	// ListFn answers the model list; nil has no list, so the suggestions stand in.
+	ListFn func(id string, e ProviderEdit) ([]string, error)
 }
 
 var _ ModelSettings = (*FakeModels)(nil)
@@ -105,4 +107,12 @@ func (f *FakeModels) Test(_ context.Context, id string, e ProviderEdit) (time.Du
 		return 640 * time.Millisecond, nil
 	}
 	return f.TestFn(id, e)
+}
+
+// ListModels implements ModelSettings.
+func (f *FakeModels) ListModels(_ context.Context, id string, e ProviderEdit) ([]string, error) {
+	if f.ListFn == nil {
+		return nil, nil
+	}
+	return f.ListFn(id, e)
 }

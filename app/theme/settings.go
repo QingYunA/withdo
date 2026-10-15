@@ -6,7 +6,10 @@ import "github.com/egoist/mygo/ui"
 // pane (docs/design/ui-spec.md, Settings). Its three surfaces are one step apart in each
 // appearance.
 const (
-	SettingsWidth  float32 = 680
+	SettingsWidth float32 = 680
+	// SettingsHeight is the window's height. It never changes: a pane that needs more scrolls.
+	SettingsHeight float32 = 520
+	ProviderTileH  float32 = 76 // a tile of the provider grid
 	SettingsTab    float32 = 78 // a toolbar pane, icon over label
 	SettingsRowMin float32 = 44
 	SettingsRadius float32 = 10 // a group

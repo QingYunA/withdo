@@ -34,11 +34,18 @@ type Settings struct {
 	assist assistState
 	copied time.Time
 
-	// OnLayout is told the open pane's name, for the window's title, and the height the window's
-	// content needs, whenever either changes. The shell sets the title and the size.
-	OnLayout   func(title string, height float32)
-	lastTitle  string
-	lastHeight float32
+	// OnTitle is told the open pane's name, for the window's title, whenever it changes. The window
+	// itself never changes size: see ContentSize.
+	OnTitle   func(title string)
+	lastTitle string
+
+	agents agentsCache
+}
+
+// ContentSize is the size of the window's content: one size for every pane, so that changing the
+// pane never resizes the window. A pane that needs more room scrolls.
+func (s *Settings) ContentSize() (width, height float32) {
+	return theme.SettingsWidth, theme.SettingsHeight
 }
 
 // NewSettings opens on General.
@@ -47,34 +54,21 @@ func NewSettings(a *App) *Settings { return &Settings{app: a} }
 // Show opens a pane.
 func (s *Settings) Show(p Pane) { s.pane = p }
 
-// View builds the window for one frame.
+// View builds the window for one frame. The toolbar keeps its height; the pane under it fills the
+// rest and scrolls, and has a key of its own so that its scroll position is its own.
 func (s *Settings) View(c *ui.Context) {
 	t := theme.Resolve(c)
 	s.say, s.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
-	var toolbar, body ui.Element
 	ui.Column(c).Fill().Background(t.SettingsPane()).Children(func() {
-		toolbar = s.toolbar(c, t)
-		body = ui.Column(c.Key("pane")).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
+		s.toolbar(c, t)
+		ui.Scroll(c.Key("pane-" + itoa(int(s.pane)))).Grow(1).MinHeight(0).Children(func() {
+			ui.Column(c).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
+		})
 	})
-	s.layout(toolbar.Bounds().H + body.Bounds().H)
-}
-
-// layout tells the shell the title and the height, when they changed. The bounds are the previous
-// frame's, so the first frame reports nothing.
-func (s *Settings) layout(height float32) {
-	title := s.paneName(s.pane)
-	if s.OnLayout == nil || height == 0 || (title == s.lastTitle && abs(height-s.lastHeight) < 1) {
-		return
+	if title := s.paneName(s.pane); s.OnTitle != nil && title != s.lastTitle {
+		s.lastTitle = title
+		s.OnTitle(title)
 	}
-	s.lastTitle, s.lastHeight = title, height
-	s.OnLayout(title, height)
-}
-
-func abs(f float32) float32 {
-	if f < 0 {
-		return -f
-	}
-	return f
 }
 
 func (s *Settings) paneName(p Pane) string {
@@ -90,7 +84,7 @@ func (s *Settings) paneName(p Pane) string {
 }
 
 var paneIcons = map[Pane]*ui.SVG{
-	PaneGeneral: theme.IconGear, PaneAssistant: theme.IconSparkle, PaneAgents: theme.IconAgents, PaneGitHub: theme.IconGitHub,
+	PaneGeneral: theme.IconGeneral, PaneAssistant: theme.IconStar, PaneAgents: theme.IconTerminal, PaneGitHub: theme.IconOctocat,
 }
 
 // SettingsTitleBarHeight is the height of the band's title row: tall enough for the traffic

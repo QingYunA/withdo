@@ -1,15 +1,41 @@
 package views
 
 import (
+	"strings"
 	"time"
 
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
-// agentsPane is how to connect Claude Code: the command to run once, and a line on what agents
-// then do.
+// agentsRefreshEvery redraws the pane so that "2m" keeps up with the clock.
+const agentsRefreshEvery = 30 * time.Second
+
+// agentAvatarSize is the pixel avatar of an agent in the list.
+const agentAvatarSize float32 = 36
+
+// agentsCache is the agents that reported, read when the data changed or the day turned rather
+// than every frame.
+type agentsCache struct {
+	rev   int
+	day   string
+	list  []data.AgentActivity
+	valid bool
+}
+
+// agentsPane is the agents that ever reported, each with its avatar, how many times it reported
+// today and when it last did, then how to connect one.
 func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
+	c.After(agentsRefreshEvery)
+	if list := s.agentList(); len(list) > 0 {
+		groupLabel(c, t, s.say.SettingsAgentsConnected())
+		group(c, t, "agent-list", func() {
+			for i, a := range list {
+				s.agentRow(c, t, a, i == 0)
+			}
+		})
+	}
 	group(c, t, "agents", func() {
 		ui.Column(c).Shrink(0).Padding(12, 14, 14).Gap(8).Children(func() {
 			theme.Text(c, theme.BodyStrong, t.Text, s.say.SettingsConnectTitle())
@@ -17,6 +43,52 @@ func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 			commandWell(c, t, s.app.Config.ConnectCommand, func() { s.copyButton(c, t) })
 		})
 	})
+}
+
+// agentList is the agents, latest first, from the store when it can say; read again when the data
+// changed or a new day began.
+func (s *Settings) agentList() []data.AgentActivity {
+	src, ok := s.app.Store.(data.AgentSource)
+	if !ok {
+		return nil
+	}
+	now := s.app.Now()
+	day := now.Format("2006-01-02")
+	if !s.agents.valid || s.agents.rev != s.app.rev || s.agents.day != day {
+		start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		list, err := src.AgentActivity(start)
+		if err != nil {
+			list = nil
+		}
+		s.agents = agentsCache{rev: s.app.rev, day: day, list: list, valid: true}
+	}
+	return s.agents.list
+}
+
+func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a data.AgentActivity, first bool) {
+	sub := s.say.SettingsAgentIdle()
+	if a.Since > 0 {
+		sub = s.say.SettingsAgentReports(a.Since)
+	}
+	settingsRowLead(c, t, "agent-"+a.Agent, agentDisplayName(a.Agent), sub, first, func() {
+		theme.Text(c, theme.Meta, t.TextSecondary, s.clock.Age(a.Last, s.app.Now()))
+	}, func() { theme.AvatarIcon(c, theme.AgentAvatar(a.Agent), agentAvatarSize).Shrink(0) })
+}
+
+// agentDisplayName is how an agent is called: the ones the app knows by their product's name, any other
+// by the name it reported under.
+func agentDisplayName(raw string) string {
+	switch n := strings.ToLower(raw); {
+	case strings.Contains(n, "claude"):
+		return "Claude Code"
+	case strings.Contains(n, "codex"):
+		return "Codex"
+	case strings.Contains(n, "cursor"):
+		return "Cursor"
+	case strings.Contains(n, "gemini"):
+		return "Gemini CLI"
+	}
+	return raw
 }
 
 // commandWell is a command in the mono face on a quiet well, with what sits beside it.
