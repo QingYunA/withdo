@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudwego/eino-ext/components/model/claude"
+	"github.com/QingYunA/adhd-todo/internal/providers/anthropic"
 	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/schema"
@@ -32,19 +32,18 @@ func NewModel(ctx context.Context, r Resolved, key string, client *http.Client) 
 	}
 	switch r.Protocol {
 	case Anthropic:
-		return newClaude(ctx, r, key, client)
+		return newClaude(r, key, client)
 	case OpenAI:
 		return newOpenAI(ctx, r, key, client)
 	}
 	return nil, fmt.Errorf("%s: unknown protocol %q", r.Preset.Name, r.Protocol)
 }
 
-func newClaude(ctx context.Context, r Resolved, key string, client *http.Client) (model.ToolCallingChatModel, error) {
-	cfg := &claude.Config{APIKey: key, Model: r.Model, MaxTokens: maxTokens, HTTPClient: client, RequestTimeout: requestTimeout}
-	if u := strings.TrimRight(r.BaseURL, "/"); u != "" {
-		cfg.BaseURL = &u
-	}
-	m, err := claude.NewChatModel(ctx, cfg)
+func newClaude(r Resolved, key string, client *http.Client) (model.ToolCallingChatModel, error) {
+	m, err := anthropic.New(anthropic.Config{
+		APIKey: key, BaseURL: strings.TrimRight(r.BaseURL, "/"), Model: r.Model, MaxTokens: maxTokens,
+		HTTPClient: client, RequestTimeout: requestTimeout,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", r.Preset.Name, err)
 	}

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudwego/eino-ext/components/model/claude"
+	"github.com/QingYunA/adhd-todo/internal/providers/anthropic"
 	"github.com/cloudwego/eino-ext/components/model/openai"
 )
 
@@ -99,7 +99,7 @@ func TestEveryPresetBuildsTheRightModelAgainstItsBaseURL(t *testing.T) {
 			}
 			switch p.Protocol {
 			case Anthropic:
-				if _, ok := m.(*claude.ChatModel); !ok {
+				if _, ok := m.(*anthropic.ChatModel); !ok {
 					t.Errorf("built %T", m)
 				}
 				if got.Path != "/v1/messages" {
@@ -316,6 +316,53 @@ func TestFriendly(t *testing.T) {
 	}
 	if got := Friendly(errors.New(strings.Repeat("x", 300))); len(got) > 170 {
 		t.Errorf("long error not shortened: %d", len(got))
+	}
+}
+
+// An Anthropic-protocol failure, from the SDK through the model to Friendly, reads the same as
+// before the SDK's bedrock and vertex packages were dropped.
+func TestAnthropicFailuresAreFriendly(t *testing.T) {
+	reply := func(status int, kind string) *httptest.Server {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("x-should-retry", "false") // no SDK retry delay
+			w.WriteHeader(status)
+			_, _ = w.Write([]byte(`{"type":"error","error":{"type":"` + kind + `","message":"nope"}}`))
+		}))
+		t.Cleanup(srv.Close)
+		return srv
+	}
+	gone := httptest.NewServer(http.NotFoundHandler())
+	gone.Close() // nothing listens there any more
+
+	cases := map[string]struct {
+		url  string
+		want string
+	}{
+		"401":         {reply(401, "authentication_error").URL, "The provider didn't accept the API key."},
+		"403":         {reply(403, "permission_error").URL, "The provider didn't accept the API key."},
+		"404":         {reply(404, "not_found_error").URL, "The provider doesn't know this model or address."},
+		"429":         {reply(429, "rate_limit_error").URL, "The provider is busy or out of quota. Try again in a moment."},
+		"529":         {reply(529, "overloaded_error").URL, "The provider is busy or out of quota. Try again in a moment."},
+		"unreachable": {gone.URL, "Couldn't reach the model. Is the address right and the server running?"},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			r, _ := Config{}.With("magpie", Entry{BaseURL: c.url}).Resolve("magpie")
+			m, err := NewModel(context.Background(), r, "sk-secret", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = Probe(context.Background(), m)
+			if err == nil {
+				t.Fatal("want an error")
+			}
+			if got := Friendly(err); got != c.want {
+				t.Errorf("Friendly = %q, want %q (raw %v)", got, c.want, err)
+			}
+			if strings.Contains(err.Error(), "sk-secret") {
+				t.Error("the key is in the error")
+			}
+		})
 	}
 }
 
