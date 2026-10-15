@@ -1460,35 +1460,13 @@
   "@settingsAssistantNone": {
     "description": "Line of Settings > Assistant when the app has no assistant."
   },
-  "composerChipAssistant": "Assistant · {model}",
-  "@composerChipAssistant": {
-    "description": "Chip at the left of the composer's bar on Now when a model is connected.",
-    "placeholders": {
-      "model": {
-        "type": "String",
-        "example": "Haiku 5.5"
-      }
-    }
-  },
-  "composerChipAssistantBare": "Assistant",
-  "@composerChipAssistantBare": {
-    "description": "Chip of the composer on Now when the model's name is not known."
-  },
   "composerChipSetUp": "Set up the assistant",
   "@composerChipSetUp": {
-    "description": "Chip of the composer, and a link, while no model is connected. It opens Settings > Assistant."
+    "description": "Quiet link under the composer while it is focused and no model is connected. It opens Settings > Assistant."
   },
   "composerHintIdle": "⌘K",
   "@composerHintIdle": {
-    "description": "Key cap at the right of the composer's bar while it is not focused: the shortcut that focuses it."
-  },
-  "composerHintSend": "↵ to send",
-  "@composerHintSend": {
-    "description": "Keyboard hint at the right of the composer's bar while it is focused and empty."
-  },
-  "composerHintTyped": "↵ send · ⇧↵ new line",
-  "@composerHintTyped": {
-    "description": "Keyboard hints at the right of the composer's bar while it is focused and has text."
+    "description": "The shortcut that focuses the composer, at its right while it is not focused."
   },
   "composerLabel": "Ask the assistant",
   "@composerLabel": {
@@ -1498,23 +1476,13 @@
   "@composerLabelTask": {
     "description": "Accessibility label of the composer's text area in the inspector."
   },
-  "composerPlaceholder": "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”",
+  "composerPlaceholder": "Tell me anything — I'll turn it into tasks",
   "@composerPlaceholder": {
-    "description": "Placeholder of the composer on Now and in the Inbox. The quoted example is something a user could type."
+    "description": "Placeholder of the composer on Now, where no project says what a new task is for."
   },
-  "composerPlaceholderProject": "What's next in {project}? “fix the login redirect loop, p1, friday”",
-  "@composerPlaceholderProject": {
-    "description": "Placeholder of the composer on a project's page. The quoted example is something a user could type.",
-    "placeholders": {
-      "project": {
-        "type": "String",
-        "example": "adhd-todo"
-      }
-    }
-  },
-  "composerPlaceholderTask": "Change anything — “move it to friday afternoon”",
+  "composerPlaceholderTask": "Change anything about this task",
   "@composerPlaceholderTask": {
-    "description": "Placeholder of the composer at the bottom of the inspector. The quoted example is something a user could type."
+    "description": "Placeholder of the composer at the bottom of the inspector."
   },
   "composerSend": "Send",
   "@composerSend": {
@@ -1561,5 +1529,23 @@
   "boardEmptyNone": "Nothing yet",
   "@boardEmptyNone": {
     "description": "Quiet line in an empty To do or Done lane of the board."
+  },
+  "composerPlaceholderAdd": "Add a task, or ask me anything",
+  "@composerPlaceholderAdd": {
+    "description": "Placeholder of the composer in a project and in the Inbox; the page's title says where a task goes."
+  },
+  "resultAdded": "Added",
+  "@resultAdded": {
+    "description": "First word of the one-line answer after the assistant added a task: \"✓ Added Fix the login loop · Fri · P1\"."
+  },
+  "resultMore": "and {n} more",
+  "@resultMore": {
+    "description": "Last line of the answer when the assistant changed more than three tasks in one turn.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   }
 }

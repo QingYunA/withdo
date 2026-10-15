@@ -86,16 +86,17 @@ func hasNot(t *testing.T, tt *ui.Tester, texts ...string) {
 	}
 }
 
-func TestTurnShowsReplyAndReceiptWithUndo(t *testing.T) {
+func TestAReceiptIsOneLineWithUndoAndTheUsersWordsAreNotEchoed(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	r.ask("明天九点提醒我开会")
 	if r.pageBuf() != "" {
 		t.Errorf("the field still holds %q", r.pageBuf())
 	}
-	has(t, r.tt, "明天九点提醒我开会", "Thinking…")
+	has(t, r.tt, "Thinking…")
+	hasNot(t, r.tt, "明天九点提醒我开会")
 	r.answer(t)
-	has(t, r.tt, "明天九点提醒我开会", "Okay, I'll remind you tomorrow at 9.", "Team meeting", "Tomorrow 9:00 AM · reminder", "Undo")
-	hasNot(t, r.tt, "Thinking…")
+	has(t, r.tt, "Added", "Team meeting", "· Tomorrow 9:00 AM · reminder", "Undo")
+	hasNot(t, r.tt, "Thinking…", "明天九点提醒我开会", "Okay, I'll remind you tomorrow at 9.") // the line says it
 	if got := r.fa.Asked(); len(got) != 1 || got[0] != "明天九点提醒我开会" {
 		t.Errorf("asked %v", got)
 	}
@@ -111,6 +112,101 @@ func TestTurnShowsReplyAndReceiptWithUndo(t *testing.T) {
 	}
 }
 
+func receiptsOf(n int) data.Reply {
+	var out data.Reply
+	for i := 1; i <= n; i++ {
+		out.Receipts = append(out.Receipts, data.Receipt{
+			ID: 20 + i, TaskID: 5, Title: "Task " + itoa(i), Status: data.Todo,
+			Detail: data.Detail{Kind: data.DetailDue, At: fixedNow().Add(2*24*time.Hour + 3*time.Hour + 30*time.Minute), Priority: "P1"},
+		})
+	}
+	return out
+}
+
+func TestTheLineIsOnePerTaskAtMostThreeThenAndNMore(t *testing.T) {
+	for _, tc := range []struct {
+		n     int
+		lines int
+		more  string
+	}{{1, 1, ""}, {2, 2, ""}, {3, 3, ""}, {4, 3, "and 1 more"}, {5, 3, "and 2 more"}} {
+		r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(receiptsOf(tc.n), nil)})
+		r.ask("add things")
+		r.answer(t)
+		shown := 0
+		for i := 1; i <= tc.n; i++ {
+			if r.tt.HasText("Task " + itoa(i)) {
+				shown++
+			}
+		}
+		undos := 0
+		for _, s := range r.tt.Texts() {
+			if s == "Undo" {
+				undos++
+			}
+		}
+		if shown != tc.lines || undos != tc.lines {
+			t.Errorf("%d receipts: %d lines and %d Undo buttons, want %d each in %q", tc.n, shown, undos, tc.lines, r.tt.Texts())
+		}
+		if tc.more == "" {
+			hasNot(t, r.tt, "more")
+		} else {
+			has(t, r.tt, tc.more)
+		}
+		has(t, r.tt, "Added", "· Fri · P1") // a task with a due time and a priority: what the words made of it
+	}
+}
+
+func TestEachKindOfReceiptReadsAsOneLine(t *testing.T) {
+	now := fixedNow()
+	tests := []struct {
+		name string
+		r    data.Receipt
+		verb string
+		tail string
+	}{
+		{"added with nothing", data.Receipt{ID: 1, TaskID: 5, Title: "A", Detail: data.Detail{Kind: data.DetailAdded}}, "Added", ""},
+		{"added in a project", data.Receipt{ID: 2, TaskID: 5, Title: "B", Detail: data.Detail{Kind: data.DetailAdded, Project: "adhd-todo"}}, "Added", "· adhd-todo"},
+		{"done", data.Receipt{ID: 3, TaskID: 5, Title: "C", Detail: data.Detail{Kind: data.DetailDone}}, "Marked done", ""},
+		{"moved", data.Receipt{ID: 4, TaskID: 5, Title: "D", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}}}, "", "· Moved to adhd-todo"},
+		{"reminder cleared", data.Receipt{ID: 5, TaskID: 5, Title: "E", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeReminder}}}}, "", "· Reminder cleared"},
+		{"rescheduled", data.Receipt{ID: 6, TaskID: 5, Title: "F", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeDue, At: now.Add(26 * time.Hour)}}}}, "", "· Tomorrow 4:30 PM · due"},
+	}
+	for _, tc := range tests {
+		r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Receipts: []data.Receipt{tc.r}}, nil)})
+		r.ask("x")
+		r.answer(t)
+		has(t, r.tt, tc.r.Title)
+		if tc.verb != "" {
+			has(t, r.tt, tc.verb)
+		}
+		if tc.tail != "" {
+			has(t, r.tt, tc.tail)
+		}
+		hasNot(t, r.tt, "Updated")
+		if tc.name == "added with nothing" {
+			hasNot(t, r.tt, "· Inbox") // on Now a new task goes to the Inbox without saying so
+		}
+	}
+}
+
+func TestAReceiptNamesTheProjectOnlyWhenItIsNotThePageItWasTypedOn(t *testing.T) {
+	reply := data.Reply{Receipts: []data.Receipt{{ID: 1, TaskID: 5, Title: "Elsewhere", Detail: data.Detail{Kind: data.DetailAdded, Project: "picpocket"}}}}
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reply, nil)})
+	r.m.goTo(nav{screen: screenProject, projectID: 1})
+	r.tt.Frame()
+	r.ask("x")
+	r.answer(t)
+	has(t, r.tt, "· picpocket")
+	here := data.Reply{Receipts: []data.Receipt{{ID: 2, TaskID: 5, Title: "Here", Detail: data.Detail{Kind: data.DetailAdded, Project: "adhd-todo"}}}}
+	r2 := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(here, nil)})
+	r2.m.goTo(nav{screen: screenProject, projectID: 1})
+	r2.tt.Frame()
+	r2.ask("x")
+	r2.answer(t)
+	has(t, r2.tt, "Here")
+	hasNot(t, r2.tt, "· adhd-todo")
+}
+
 func TestReceiptRowOpensTheTask(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{
 		Text:     "Done.",
@@ -118,7 +214,7 @@ func TestReceiptRowOpensTheTask(t *testing.T) {
 	}, nil)})
 	r.ask("close the tray task")
 	r.answer(t)
-	// The same title is also a row of Needs you, so click the one inside the sheet, which is higher.
+	// The same title is also a row of Needs you, so click the one inside the line, which is higher.
 	rect, _ := r.tt.Find("Marked done")
 	x, y := center(rect)
 	r.tt.ClickAt(x, y)
@@ -127,19 +223,58 @@ func TestReceiptRowOpensTheTask(t *testing.T) {
 	}
 }
 
-func TestSheetClosesFourSecondsAfterATurnThatAskedNothing(t *testing.T) {
+func TestAChangeFreeTurnIsOneGreyLineWithTheSentence(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)})
+	r.ask("write the release notes")
+	r.answer(t)
+	has(t, r.tt, "That one is already in adhd-todo, so I didn't add it again.")
+	hasNot(t, r.tt, "Undo", "write the release notes")
+	r.now = r.now.Add(7 * time.Second)
+	r.tt.Frame()
+	hasNot(t, r.tt, "That one is already in adhd-todo, so I didn't add it again.")
+}
+
+func TestTheLineStaysSixSecondsFadesThenGoes(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	r.ask("remind me")
 	r.answer(t)
-	r.now = r.now.Add(3 * time.Second)
+	r.now = r.now.Add(5 * time.Second)
 	r.tt.Frame()
-	has(t, r.tt, "Okay, I'll remind you tomorrow at 9.")
-	r.now = r.now.Add(2 * time.Second)
+	has(t, r.tt, "Team meeting", "Undo")
+	r.now = r.now.Add(900 * time.Millisecond) // in the last 400 ms of the 6 s it fades
 	r.tt.Frame()
-	hasNot(t, r.tt, "Okay, I'll remind you tomorrow at 9.", "Undo")
+	has(t, r.tt, "Team meeting")
+	r.now = r.now.Add(200 * time.Millisecond)
+	r.tt.Frame()
+	hasNot(t, r.tt, "Team meeting", "Undo")
+	if r.m.convo.open {
+		t.Error("the answer is still open after its line went")
+	}
 }
 
-func TestUndoKeepsTheSheetOpenLonger(t *testing.T) {
+func TestTypingAgainEndsTheLineAtOnce(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
+	r.ask("remind me")
+	r.answer(t)
+	has(t, r.tt, "Team meeting")
+	r.tt.Type("n")
+	hasNot(t, r.tt, "Team meeting", "Undo")
+	r.tt.Key(0, ui.KeyBackspace)
+	hasNot(t, r.tt, "Team meeting") // emptying the field does not bring it back
+}
+
+func TestAFieldTypedDuringTheWaitKeepsTheLineUntilItChanges(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Block: make(chan struct{}), Script: scripted(reminderReply(), nil)})
+	r.ask("first")
+	r.tt.Type("second thought")
+	close(r.fa.Block)
+	r.answer(t)
+	has(t, r.tt, "Team meeting")
+	r.tt.Type("!")
+	hasNot(t, r.tt, "Team meeting")
+}
+
+func TestUndoKeepsTheLineLonger(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	r.ask("remind me")
 	r.answer(t)
@@ -153,7 +288,60 @@ func TestUndoKeepsTheSheetOpenLonger(t *testing.T) {
 	has(t, r.tt, "Undone")
 }
 
-func TestQuestionOffersOptionsAndAnswersContinueTheConversation(t *testing.T) {
+func TestCmdZUndoesTheLastChangeOfTheAssistantNewestFirst(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(receiptsOf(2), nil)})
+	r.ask("add two")
+	r.answer(t)
+	r.tt.Key(ui.Cmd, ui.KeyZ) // the field is focused and empty
+	if got := r.fa.Undone(); len(got) != 1 || got[0] != 22 {
+		t.Fatalf("undone %v, want the last receipt (22)", got)
+	}
+	has(t, r.tt, "Undone")
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	if got := r.fa.Undone(); len(got) != 2 || got[1] != 21 {
+		t.Errorf("undone %v, want 22 then 21", got)
+	}
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	if got := r.fa.Undone(); len(got) != 2 {
+		t.Errorf("a third Cmd+Z undid %v: there was nothing left", got)
+	}
+}
+
+func TestCmdZWorksWhileTheConversationIsLiveEvenAfterTheLineWent(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
+	r.ask("remind me")
+	r.answer(t)
+	r.now = r.now.Add(10 * time.Second)
+	r.tt.Frame()
+	hasNot(t, r.tt, "Team meeting")
+	r.tt.Key(0, ui.KeyDown) // into the rows: the keys are the page's
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	if got := r.fa.Undone(); len(got) != 1 || got[0] != 11 {
+		t.Fatalf("undone %v", got)
+	}
+	has(t, r.tt, "Undone") // the line comes back to say so
+}
+
+func TestCmdZIsTheFieldsOwnWhileTextIsBeingTyped(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
+	r.ask("remind me")
+	r.answer(t)
+	r.tt.Type("typing something new")
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	if got := r.fa.Undone(); len(got) != 0 {
+		t.Errorf("Cmd+Z undid the assistant's change %v while text was being typed", got)
+	}
+}
+
+func TestCmdZWithNothingToUndoDoesNothing(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	if got := r.fa.Undone(); len(got) != 0 {
+		t.Errorf("undone %v", got)
+	}
+}
+
+func TestAQuestionStaysUntilAnsweredAndOffersOptions(t *testing.T) {
 	replies := []data.Reply{
 		{Question: &data.Question{Text: "Which task?", Options: []string{"Review PR docs", "Review PR code"}}},
 		{Text: "Marked done."},
@@ -164,10 +352,11 @@ func TestQuestionOffersOptionsAndAnswersContinueTheConversation(t *testing.T) {
 	r.ask("PR 12 merged")
 	r.answer(t)
 	has(t, r.tt, "Which task?", "Review PR docs", "Review PR code", "Type an answer, or pick one below")
+	hasNot(t, r.tt, "PR 12 merged")
 	// A question never times out.
 	r.now = r.now.Add(time.Minute)
 	r.tt.Frame()
-	has(t, r.tt, "Which task?")
+	has(t, r.tt, "Which task?", "Review PR docs")
 	if err := r.tt.Click("Review PR code"); err != nil {
 		t.Fatal(err)
 	}
@@ -175,8 +364,8 @@ func TestQuestionOffersOptionsAndAnswersContinueTheConversation(t *testing.T) {
 	if got := fa.Asked(); len(got) != 2 || got[1] != "Review PR code" {
 		t.Errorf("asked %v", got)
 	}
-	has(t, r.tt, "PR 12 merged", "Review PR code", "Marked done.")
-	hasNot(t, r.tt, "Review PR docs") // the answered question's buttons are gone
+	has(t, r.tt, "Marked done.")
+	hasNot(t, r.tt, "Which task?", "Review PR docs", "Review PR code") // the answered question's buttons are gone
 }
 
 func TestTypedAnswerToAQuestion(t *testing.T) {
@@ -191,7 +380,7 @@ func TestTypedAnswerToAQuestion(t *testing.T) {
 	}
 }
 
-func TestErrorShowsNeutralWordsAndRetry(t *testing.T) {
+func TestAnErrorStaysWithNeutralWordsAndRetry(t *testing.T) {
 	calls := 0
 	fa := &data.FakeAssistant{Ready: true, Script: func(string) (data.Reply, error) {
 		calls++
@@ -203,7 +392,11 @@ func TestErrorShowsNeutralWordsAndRetry(t *testing.T) {
 	r := newAssistRig(t, fa)
 	r.ask("do it")
 	r.answer(t)
-	has(t, r.tt, "do it", "Couldn't reach the model. Is the address right and the server running?", "Retry")
+	has(t, r.tt, "Couldn't reach the model. Is the address right and the server running?", "Retry")
+	hasNot(t, r.tt, "do it")
+	r.now = r.now.Add(time.Minute)
+	r.tt.Frame()
+	has(t, r.tt, "Retry") // like a question, it does not fade
 	if err := r.tt.Click("Retry"); err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +456,7 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 	r.ask("remind me")
 	r.answer(t)
 	r.tt.Key(0, ui.KeyEscape)
-	hasNot(t, r.tt, "Okay, I'll remind you tomorrow at 9.")
+	hasNot(t, r.tt, "Team meeting")
 	if fa.Resets() != 0 {
 		t.Fatal("the first Esc reset the conversation")
 	}
@@ -277,7 +470,7 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 	}
 }
 
-func TestSheetPushesTheSectionsDown(t *testing.T) {
+func TestTheLinePushesTheSectionsDown(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	before, _ := r.tt.Find("Needs you")
 	r.ask("remind me")

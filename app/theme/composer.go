@@ -4,11 +4,11 @@ import "github.com/egoist/mygo/ui"
 
 // The composer's metrics (docs/design/ui-spec.md, Composer).
 const (
-	ComposerRadius  float32 = 14
-	ComposerMinRows         = 2 // lines tall while empty
-	ComposerMaxRows         = 6 // lines before the text scrolls
+	ComposerRadius  float32 = 12
+	ComposerHeight  float32 = 50 // at rest, and with one line of text
+	ComposerMinRows         = 1  // lines tall while empty
+	ComposerMaxRows         = 6  // lines before the text scrolls
 	SendSize        float32 = 28
-	ChipRadius      float32 = 7
 )
 
 // Icons of the composer and the Settings toolbar. Like the others they take the color of the text.
@@ -19,7 +19,7 @@ var (
 	IconFolder = icon(`<path d="M2.5 4.8a1.3 1.3 0 0 1 1.3-1.3h2.3l1.4 1.6h4.7a1.3 1.3 0 0 1 1.3 1.3v5a1.3 1.3 0 0 1-1.3 1.3H3.8a1.3 1.3 0 0 1-1.3-1.3z"/>`)
 )
 
-// ComposerBorder is the card's outline: stronger than a hairline.
+// ComposerBorder is the outline of a settings control: stronger than a hairline.
 func (t *Tokens) ComposerBorder() ui.Color { return t.Border.Alpha(0.2) }
 
 // SendIdle is the round send button while there is nothing to send.

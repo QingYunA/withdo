@@ -60,12 +60,11 @@ type Main struct {
 	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle   // the input that renames a project in the sidebar
 
-	compactReply bool                         // the reply sheet is being drawn in the inspector
-	cmp          [2]composer                  // the composer of the page and the inspector's, by surface
-	convo        convo                        // the reply sheet under the composer that sent the last request
-	marks        map[int]map[string]time.Time // fields the assistant set, by task and row key
-	listRef      ui.Handle                    // the page, so the arrow keys and Space reach it
-	queue        queued                       // what a text input's last key asked of the next frame
+	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
+	convo   convo                        // the answer under the composer that sent the last request
+	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
+	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
+	queue   queued                       // what a text input's last key asked of the next frame
 
 	pop     popMenu // the task menu
 	selRect ui.Rect // where the selected row or card is, for the menu the S, P, M and R keys open

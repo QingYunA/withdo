@@ -42,6 +42,16 @@ func (m *Main) typing(c *ui.Context) bool {
 	return m.cmp[surfacePage].ref.Focused(c) || m.cmp[surfaceInspector].ref.Focused(c) || m.searchRef.Focused(c) || m.renameRef.Focused(c) || m.inspector.editing()
 }
 
+// undoKeyFree reports whether Cmd+Z is the assistant's: it has a change to undo, and no text field
+// would take the key for its own undo (a composer with nothing typed has none).
+func (m *Main) undoKeyFree(c *ui.Context) bool {
+	if !m.convo.canUndo() {
+		return false
+	}
+	empty := func(s surface) bool { return m.cmp[s].ref.Focused(c) && m.cmp[s].buf == "" }
+	return !m.typing(c) || empty(surfacePage) || empty(surfaceInspector)
+}
+
 // keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
@@ -60,6 +70,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenInbox})
 	case c.Shortcut(ui.Cmd, ui.Key3):
 		m.goTo(nav{screen: screenCompleted})
+	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
+		m.undoLast()
 	}
 	typing := m.typing(c)
 	m.taskKeys(c, typing)

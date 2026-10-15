@@ -3748,48 +3748,18 @@ func (msgs Messages) SettingsAssistantNone() string {
 	return Catalog.Format(msgs.locale, "settingsAssistantNone", nil)
 }
 
-// ComposerChipAssistant says "Assistant · {model}"
-// in the language the app shows.
-//
-// Chip at the left of the composer's bar on Now when a model is connected.
-func ComposerChipAssistant(model string) string {
-	return In(i18n.Locale()).ComposerChipAssistant(model)
-}
-
-// ComposerChipAssistant says "Assistant · {model}"
-// in the language of msgs.
-//
-// Chip at the left of the composer's bar on Now when a model is connected.
-func (msgs Messages) ComposerChipAssistant(model string) string {
-	return Catalog.Format(msgs.locale, "composerChipAssistant", map[string]any{"model": model})
-}
-
-// ComposerChipAssistantBare says "Assistant"
-// in the language the app shows.
-//
-// Chip of the composer on Now when the model's name is not known.
-func ComposerChipAssistantBare() string { return In(i18n.Locale()).ComposerChipAssistantBare() }
-
-// ComposerChipAssistantBare says "Assistant"
-// in the language of msgs.
-//
-// Chip of the composer on Now when the model's name is not known.
-func (msgs Messages) ComposerChipAssistantBare() string {
-	return Catalog.Format(msgs.locale, "composerChipAssistantBare", nil)
-}
-
 // ComposerChipSetUp says "Set up the assistant"
 // in the language the app shows.
 //
-// Chip of the composer, and a link, while no model is connected. It opens
-// Settings > Assistant.
+// Quiet link under the composer while it is focused and no model is
+// connected. It opens Settings > Assistant.
 func ComposerChipSetUp() string { return In(i18n.Locale()).ComposerChipSetUp() }
 
 // ComposerChipSetUp says "Set up the assistant"
 // in the language of msgs.
 //
-// Chip of the composer, and a link, while no model is connected. It opens
-// Settings > Assistant.
+// Quiet link under the composer while it is focused and no model is
+// connected. It opens Settings > Assistant.
 func (msgs Messages) ComposerChipSetUp() string {
 	return Catalog.Format(msgs.locale, "composerChipSetUp", nil)
 }
@@ -3797,49 +3767,17 @@ func (msgs Messages) ComposerChipSetUp() string {
 // ComposerHintIdle says "⌘K"
 // in the language the app shows.
 //
-// Key cap at the right of the composer's bar while it is not focused: the
-// shortcut that focuses it.
+// The shortcut that focuses the composer, at its right while it is not
+// focused.
 func ComposerHintIdle() string { return In(i18n.Locale()).ComposerHintIdle() }
 
 // ComposerHintIdle says "⌘K"
 // in the language of msgs.
 //
-// Key cap at the right of the composer's bar while it is not focused: the
-// shortcut that focuses it.
+// The shortcut that focuses the composer, at its right while it is not
+// focused.
 func (msgs Messages) ComposerHintIdle() string {
 	return Catalog.Format(msgs.locale, "composerHintIdle", nil)
-}
-
-// ComposerHintSend says "↵ to send"
-// in the language the app shows.
-//
-// Keyboard hint at the right of the composer's bar while it is focused and
-// empty.
-func ComposerHintSend() string { return In(i18n.Locale()).ComposerHintSend() }
-
-// ComposerHintSend says "↵ to send"
-// in the language of msgs.
-//
-// Keyboard hint at the right of the composer's bar while it is focused and
-// empty.
-func (msgs Messages) ComposerHintSend() string {
-	return Catalog.Format(msgs.locale, "composerHintSend", nil)
-}
-
-// ComposerHintTyped says "↵ send · ⇧↵ new line"
-// in the language the app shows.
-//
-// Keyboard hints at the right of the composer's bar while it is focused and
-// has text.
-func ComposerHintTyped() string { return In(i18n.Locale()).ComposerHintTyped() }
-
-// ComposerHintTyped says "↵ send · ⇧↵ new line"
-// in the language of msgs.
-//
-// Keyboard hints at the right of the composer's bar while it is focused and
-// has text.
-func (msgs Messages) ComposerHintTyped() string {
-	return Catalog.Format(msgs.locale, "composerHintTyped", nil)
 }
 
 // ComposerLabel says "Ask the assistant"
@@ -3870,52 +3808,32 @@ func (msgs Messages) ComposerLabelTask() string {
 	return Catalog.Format(msgs.locale, "composerLabelTask", nil)
 }
 
-// ComposerPlaceholder says "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”"
+// ComposerPlaceholder says "Tell me anything — I'll turn it into tasks"
 // in the language the app shows.
 //
-// Placeholder of the composer on Now and in the Inbox. The quoted example
-// is something a user could type.
+// Placeholder of the composer on Now, where no project says what a new task
+// is for.
 func ComposerPlaceholder() string { return In(i18n.Locale()).ComposerPlaceholder() }
 
-// ComposerPlaceholder says "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”"
+// ComposerPlaceholder says "Tell me anything — I'll turn it into tasks"
 // in the language of msgs.
 //
-// Placeholder of the composer on Now and in the Inbox. The quoted example
-// is something a user could type.
+// Placeholder of the composer on Now, where no project says what a new task
+// is for.
 func (msgs Messages) ComposerPlaceholder() string {
 	return Catalog.Format(msgs.locale, "composerPlaceholder", nil)
 }
 
-// ComposerPlaceholderProject says "What's next in {project}? “fix the login redirect loop, p1, friday”"
+// ComposerPlaceholderTask says "Change anything about this task"
 // in the language the app shows.
 //
-// Placeholder of the composer on a project's page. The quoted example is
-// something a user could type.
-func ComposerPlaceholderProject(project string) string {
-	return In(i18n.Locale()).ComposerPlaceholderProject(project)
-}
-
-// ComposerPlaceholderProject says "What's next in {project}? “fix the login redirect loop, p1, friday”"
-// in the language of msgs.
-//
-// Placeholder of the composer on a project's page. The quoted example is
-// something a user could type.
-func (msgs Messages) ComposerPlaceholderProject(project string) string {
-	return Catalog.Format(msgs.locale, "composerPlaceholderProject", map[string]any{"project": project})
-}
-
-// ComposerPlaceholderTask says "Change anything — “move it to friday afternoon”"
-// in the language the app shows.
-//
-// Placeholder of the composer at the bottom of the inspector. The quoted
-// example is something a user could type.
+// Placeholder of the composer at the bottom of the inspector.
 func ComposerPlaceholderTask() string { return In(i18n.Locale()).ComposerPlaceholderTask() }
 
-// ComposerPlaceholderTask says "Change anything — “move it to friday afternoon”"
+// ComposerPlaceholderTask says "Change anything about this task"
 // in the language of msgs.
 //
-// Placeholder of the composer at the bottom of the inspector. The quoted
-// example is something a user could type.
+// Placeholder of the composer at the bottom of the inspector.
 func (msgs Messages) ComposerPlaceholderTask() string {
 	return Catalog.Format(msgs.locale, "composerPlaceholderTask", nil)
 }
@@ -4062,4 +3980,52 @@ func BoardEmptyNone() string { return In(i18n.Locale()).BoardEmptyNone() }
 // Quiet line in an empty To do or Done lane of the board.
 func (msgs Messages) BoardEmptyNone() string {
 	return Catalog.Format(msgs.locale, "boardEmptyNone", nil)
+}
+
+// ComposerPlaceholderAdd says "Add a task, or ask me anything"
+// in the language the app shows.
+//
+// Placeholder of the composer in a project and in the Inbox; the page's
+// title says where a task goes.
+func ComposerPlaceholderAdd() string { return In(i18n.Locale()).ComposerPlaceholderAdd() }
+
+// ComposerPlaceholderAdd says "Add a task, or ask me anything"
+// in the language of msgs.
+//
+// Placeholder of the composer in a project and in the Inbox; the page's
+// title says where a task goes.
+func (msgs Messages) ComposerPlaceholderAdd() string {
+	return Catalog.Format(msgs.locale, "composerPlaceholderAdd", nil)
+}
+
+// ResultAdded says "Added"
+// in the language the app shows.
+//
+// First word of the one-line answer after the assistant added a task: "✓
+// Added Fix the login loop · Fri · P1".
+func ResultAdded() string { return In(i18n.Locale()).ResultAdded() }
+
+// ResultAdded says "Added"
+// in the language of msgs.
+//
+// First word of the one-line answer after the assistant added a task: "✓
+// Added Fix the login loop · Fri · P1".
+func (msgs Messages) ResultAdded() string {
+	return Catalog.Format(msgs.locale, "resultAdded", nil)
+}
+
+// ResultMore says "and {n} more"
+// in the language the app shows.
+//
+// Last line of the answer when the assistant changed more than three tasks
+// in one turn.
+func ResultMore(n int) string { return In(i18n.Locale()).ResultMore(n) }
+
+// ResultMore says "and {n} more"
+// in the language of msgs.
+//
+// Last line of the answer when the assistant changed more than three tasks
+// in one turn.
+func (msgs Messages) ResultMore(n int) string {
+	return Catalog.Format(msgs.locale, "resultMore", map[string]any{"n": n})
 }

@@ -18,7 +18,7 @@ func projectTester(t *testing.T, project int) (*ui.Tester, *Main, *App) {
 
 func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	for _, want := range []string{"adhd-todo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "What's next in adhd-todo? “fix the login redirect loop, p1, friday”"} {
+	for _, want := range []string{"adhd-todo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "Add a task, or ask me anything"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}

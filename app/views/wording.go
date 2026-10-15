@@ -2,6 +2,7 @@ package views
 
 import (
 	"strings"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/locales"
@@ -96,37 +97,53 @@ func problemText(say locales.Messages, err error) string {
 	return err.Error()
 }
 
-// detailText is the quiet line of a receipt, worded from what the agent changed. What the words
-// made of a new task shows too, so it can be checked: the reminder and the deadline it set, and a
-// priority that is not the default.
-func (m *Main) detailText(d data.Detail) string {
-	text := m.detailMain(d)
-	if !d.Due.IsZero() {
-		text += " · " + m.say.ChangeDue(m.clock.When(d.Due, m.app.Now()))
-	}
-	if d.Priority != "" {
-		text += " · " + d.Priority
-	}
-	return text
-}
-
-func (m *Main) detailMain(d data.Detail) string {
-	now := m.app.Now()
+// receiptWords is a receipt as the one-line answer says it: a verb ("Added", "Marked done", none for
+// an edit), and the quiet rest after the title: what the words made of a task ("Fri · P1",
+// "Tomorrow 9:00 AM · reminder"), what an edit changed ("Moved to adhd-todo", "Set to Doing"), or
+// where a new task landed when that is not the page it was typed on.
+func (m *Main) receiptWords(r data.Receipt, here string) (verb, tail string) {
+	d, now := r.Detail, m.app.Now()
+	var parts []string
 	switch d.Kind {
-	case data.DetailReminder:
-		return m.say.DetailReminder(m.clock.When(d.At, now))
-	case data.DetailDue:
-		return m.say.DetailDue(m.clock.When(d.At, now))
 	case data.DetailDone:
-		return m.say.DetailDone()
+		return m.say.DetailDone(), ""
 	case data.DetailUpdated:
-		parts := make([]string, 0, len(d.Changes))
 		for _, c := range d.Changes {
 			parts = append(parts, m.changeText(c))
 		}
-		return strings.Join(parts, " · ")
+	case data.DetailReminder:
+		verb = m.say.ResultAdded()
+		parts = append(parts, m.say.DetailReminder(m.clock.When(d.At, now)))
+	case data.DetailDue:
+		verb = m.say.ResultAdded()
+		parts = append(parts, m.dueWords(d.At))
+	default:
+		verb = m.say.ResultAdded()
 	}
-	return m.say.DetailAdded(m.inboxOr(d.Project))
+	if !d.Due.IsZero() {
+		parts = append(parts, m.say.ChangeDue(m.dueWords(d.Due)))
+	}
+	if d.Priority != "" {
+		parts = append(parts, d.Priority)
+	}
+	if place := m.inboxOr(d.Project); verb != "" && place != here && !(here == "" && d.Project == "") {
+		parts = append(parts, place) // not where the composer is; on Now the Inbox goes without saying
+	}
+	return verb, strings.Join(parts, " · ")
+}
+
+// defaultDueHour is the time of day a deadline given as a bare day gets: the end of the working day
+// (the assistant's prompt says the same). A due time at it reads as the day alone.
+const defaultDueHour = 18
+
+// dueWords is a deadline as a receipt says it: "Fri" for the default end of day, "Fri 3:00 PM"
+// when the words named a time.
+func (m *Main) dueWords(at time.Time) string {
+	now := m.app.Now()
+	if l := at.In(now.Location()); l.Hour() == defaultDueHour && l.Minute() == 0 {
+		return m.clock.DayShort(at, now)
+	}
+	return m.clock.When(at, now)
 }
 
 // changeText words one change of an update the way a new task's detail reads: "Tomorrow 9:00 AM ·
@@ -143,7 +160,7 @@ func (m *Main) changeText(c data.Change) string {
 		if c.At.IsZero() {
 			return m.say.ChangeDueCleared()
 		}
-		return m.say.DetailDue(m.clock.When(c.At, now))
+		return m.say.DetailDue(m.dueWords(c.At))
 	case data.ChangeStatus:
 		if data.Status(c.Value) == data.Done {
 			return m.say.DetailDone()

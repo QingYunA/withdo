@@ -133,14 +133,16 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	lm := m.listModel()
-	if lm.total == 0 {
-		m.emptyList(c, t)
-		return
-	}
-	for _, g := range lm.groups {
-		m.group(c, t, g.status, g.tasks)
-	}
-	m.doneAndBacklog(c, t, lm)
+	m.belowComposer(c, func() {
+		if lm.total == 0 {
+			m.emptyList(c, t)
+			return
+		}
+		for _, g := range lm.groups {
+			m.group(c, t, g.status, g.tasks)
+		}
+		m.doneAndBacklog(c, t, lm)
+	})
 }
 
 // group is a header, glyph and name and count, and its rows indented under the name.

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/egoist/mygo/ui"
 )
 
 // M4d: one title, one input, one list. These are the surfaces that lost things: the header, the
@@ -69,4 +70,16 @@ func TestInspectorTopLineOfAProjectWithoutARepository(t *testing.T) {
 	tt.Frame()
 	has(t, tt, "local-only")
 	hasNot(t, tt, "local-only · ")
+}
+
+func TestTheInspectorsLineDoesNotRepeatTheTitleOfTheTaskItShows(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)}) // the receipt is task 5
+	r.inInspector(t, 5, "tomorrow at 9")
+	r.tt.Key(0, ui.KeyEnter)
+	r.answer(t)
+	has(t, r.tt, "Tomorrow 9:00 AM · reminder", "Undo")
+	if _, ok := r.tt.Find("Team meeting"); ok { // the Undo button's label has it; the line does not
+		t.Error("the line repeats the title of the task the inspector shows")
+	}
+	hasNot(t, r.tt, "Okay, I'll remind you tomorrow at 9.")
 }

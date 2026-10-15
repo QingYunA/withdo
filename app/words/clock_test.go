@@ -56,6 +56,8 @@ func TestEnglishWhenAndMoments(t *testing.T) {
 	} {
 		check(t, "When", k.When(c.in, now), c.want)
 	}
+	check(t, "DayShort", k.DayShort(at(2, 18, 0), now), "Fri")
+	check(t, "DayShort today", k.DayShort(at(0, 18, 0), now), "Today")
 	check(t, "Moment day", k.Moment(at(1, 0, 0), now, false), "Tomorrow")
 	check(t, "Moment reminder", k.Moment(at(2, 10, 0), now, true), "Friday, 10:00 AM")
 }

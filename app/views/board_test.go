@@ -169,7 +169,7 @@ func TestBoardHeaderComposerAndLanesShareTheirEdges(t *testing.T) {
 			}
 		}
 		// The offsets are the glyph and its gap (18 + 8), and the control's own padding.
-		near("composer left", composer.X-16-1, left) // the card's padding and border
+		near("composer left", composer.X-1-16-26, left) // the border, the padding, the sparkle and its gap
 		near("toggle right", toggle.X+toggle.W+2, right)
 		near("first lane left", first.X-18-8, left)
 		near("last lane left", last.X-18-8, left+3*(lay.col+theme.ColumnGap))
@@ -218,7 +218,7 @@ func TestBoardClickOpensTheInspectorAndTheComposerAddsTasks(t *testing.T) {
 	}
 	m.openID = 0
 	tt.Frame()
-	if tt.HasText("Add a task") {
+	if _, ok := tt.Find("Add a task"); ok {
 		t.Error("a lane header has a +")
 	}
 	tt.Key(ui.Cmd, ui.KeyK)

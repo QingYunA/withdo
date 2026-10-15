@@ -106,20 +106,20 @@ func TestShiftEnterBreaksTheLineAndSendsNothing(t *testing.T) {
 	}
 }
 
-func TestTheComposerGrowsFromTwoToSixLinesThenScrolls(t *testing.T) {
+func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
-	r.m.goTo(nav{screen: screenProject, projectID: 1})
-	r.tt.Frame()
-	chipY := func() float32 {
-		rect, ok := r.tt.Find("# adhd-todo")
+	// What sits under the composer moves with its height.
+	below := func() float32 {
+		rect, ok := r.tt.Find("Needs you")
 		if !ok {
-			t.Fatalf("no chip in %q", r.tt.Texts())
+			t.Fatalf("no Needs you in %q", r.tt.Texts())
 		}
 		return rect.Y
 	}
+	rest := below()
 	r.tt.Key(ui.Cmd, ui.KeyK)
-	empty := chipY()
-	lines := func(n int) {
+	focused := below()
+	lines := func(n int) float32 {
 		r.tt.Key(ui.Cmd, ui.KeyA)
 		r.tt.Key(0, ui.KeyBackspace)
 		for i := 1; i <= n; i++ {
@@ -128,20 +128,14 @@ func TestTheComposerGrowsFromTwoToSixLinesThenScrolls(t *testing.T) {
 				r.tt.Key(ui.Shift, ui.KeyEnter)
 			}
 		}
+		return below()
 	}
-	lines(2)
-	two := chipY()
-	lines(4)
-	four := chipY()
-	lines(6)
-	six := chipY()
-	lines(9)
-	nine := chipY()
-	if two != empty {
-		t.Errorf("two lines moved the bar: %v -> %v; the empty composer is two lines tall", empty, two)
+	one, two, four, six, nine := lines(1), lines(2), lines(4), lines(6), lines(9)
+	if focused != rest || one != rest {
+		t.Errorf("the box moved the page: rest %v, focused %v, one line %v; it is one 50 pt line in each", rest, focused, one)
 	}
-	if !(four > two && six > four) {
-		t.Errorf("the composer does not grow with its text: 2 lines %v, 4 lines %v, 6 lines %v", two, four, six)
+	if four-two != 50 || six-four != 50 {
+		t.Errorf("the box does not grow a line at a time: 1 line %v, 2 lines %v, 4 lines %v, 6 lines %v", one, two, four, six)
 	}
 	if nine != six {
 		t.Errorf("it kept growing past six lines: %v -> %v", six, nine)
@@ -216,35 +210,52 @@ func TestTheInspectorComposerIsHiddenWithoutAModel(t *testing.T) {
 		tt, m, _ := newTesterFor(app, 1100)
 		m.OpenTask(5)
 		tt.Frame()
-		hasNot(t, tt, "Change anything — “move it to friday afternoon”")
+		hasNot(t, tt, "Change anything about this task")
 	}
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	r.m.OpenTask(5)
 	r.tt.Frame()
-	has(t, r.tt, "Change anything — “move it to friday afternoon”")
+	has(t, r.tt, "Change anything about this task")
 }
 
-func TestThePlaceholderSaysWhereTheComposerIs(t *testing.T) {
+func TestThePlaceholderIsShortAndTheTitleNamesThePlace(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
-	has(t, r.tt, "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”")
+	has(t, r.tt, "Tell me anything — I'll turn it into tasks")
 	r.m.goTo(nav{screen: screenProject, projectID: 1})
 	r.tt.Frame()
-	has(t, r.tt, "What's next in adhd-todo? “fix the login redirect loop, p1, friday”", "# adhd-todo")
+	has(t, r.tt, "Add a task, or ask me anything")
+	hasNot(t, r.tt, "# adhd-todo", "What's next in adhd-todo?") // no chip, no project in the placeholder
 	r.m.goTo(nav{screen: screenInbox})
 	r.tt.Frame()
-	has(t, r.tt, "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”", "Inbox")
+	has(t, r.tt, "Add a task, or ask me anything")
+	r.m.OpenTask(5)
+	r.tt.Frame()
+	has(t, r.tt, "Change anything about this task")
 }
 
-func TestTheChipNamesTheModelOrOffersSetup(t *testing.T) {
+func TestTheComposerHasNoChipAndNoHintText(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	mustNil(t, r.app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-x"}))
 	mustNil(t, r.app.Models.SetActive("anthropic"))
 	r.tt.Frame()
-	has(t, r.tt, "Assistant · Haiku 5.5")
-	hasNot(t, r.tt, "Set up the assistant")
+	hasNot(t, r.tt, "Assistant · Haiku 5.5", "Set up the assistant", "↵")
+	r.tt.Key(ui.Cmd, ui.KeyK)
+	r.tt.Type("review PR 12")
+	hasNot(t, r.tt, "↵ send", "↵ to send", "⇧↵", "Assistant ·")
+}
 
+func TestWithoutAModelOnlyTheQuietSetUpLineIsExtraAndOnlyWhileFocusedAndEmpty(t *testing.T) {
 	off := newAssistRig(t, &data.FakeAssistant{Ready: false})
+	hasNot(t, off.tt, "Set up the assistant")
+	off.tt.Key(ui.Cmd, ui.KeyK)
 	has(t, off.tt, "Set up the assistant")
+	off.tt.Type("a")
+	hasNot(t, off.tt, "Set up the assistant")
+	off.tt.Key(ui.Cmd, ui.KeyA)
+	off.tt.Key(0, ui.KeyBackspace)
+	link, _ := off.tt.Find("Set up the assistant")
+	lx, ly := center(link)
+	off.tt.Move(lx, ly) // the pointer comes onto the line first, then presses: that takes the focus from the field
 	if err := off.tt.Click("Set up the assistant"); err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +310,7 @@ func TestCompletedAndSearchHaveNoComposer(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenCompleted})
 	tt.Frame()
-	hasNot(t, tt, "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”")
+	hasNot(t, tt, "Tell me anything — I'll turn it into tasks")
 }
 
 func TestEscClosesTheReplyThenLeavesTheComposer(t *testing.T) {
@@ -333,13 +344,13 @@ func TestTheReplyShowsUnderTheComposerThatSentItAndGoesWhenThePageDoes(t *testin
 	r.tt.Frame()
 	r.ask("remind me at 9")
 	r.answer(t)
-	has(t, r.tt, "Okay, I'll remind you tomorrow at 9.", "Team meeting")
-	if !above(t, r.tt, "# adhd-todo", "Okay, I'll remind you tomorrow at 9.") {
-		t.Error("the reply is not under the composer")
+	has(t, r.tt, "Team meeting")
+	if !above(t, r.tt, "Add a task, or ask me anything", "Team meeting") {
+		t.Error("the line is not under the composer")
 	}
 	r.m.goTo(nav{screen: screenInbox})
 	r.tt.Frame()
-	hasNot(t, r.tt, "Okay, I'll remind you tomorrow at 9.")
+	hasNot(t, r.tt, "Team meeting")
 }
 
 func TestTheInspectorReplyShowsInTheInspector(t *testing.T) {
@@ -405,27 +416,31 @@ func TestACancelledRequestPutsTheTextBackInTheComposerItCameFrom(t *testing.T) {
 	}
 }
 
-func TestComposerHintSaysOnlyWhatTheMomentNeeds(t *testing.T) {
+func TestTheShortcutAndTheSendButtonGiveWayToEachOther(t *testing.T) {
 	for _, l := range []struct {
-		zh                    bool
-		idle, empty, withText string
-	}{
-		{false, "⌘K", "↵ to send", "↵ send · ⇧↵ new line"},
-		{true, "⌘K", "↵ 发送", "↵ 发送 · ⇧↵ 换行"},
-	} {
+		zh   bool
+		send string
+	}{{false, "Send"}, {true, "发送"}} {
 		r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 		if l.zh {
 			inChinese(r.tt)
 		}
 		r.tt.Frame()
-		has(t, r.tt, l.idle)
-		hasNot(t, r.tt, l.empty, l.withText)
+		sends := func() bool { _, ok := r.tt.Find(l.send); return ok }
+		has(t, r.tt, "⌘K")
+		if sends() {
+			t.Error("a send button at rest")
+		}
 		r.tt.Key(ui.Cmd, ui.KeyK)
-		has(t, r.tt, l.empty)
-		hasNot(t, r.tt, l.idle, l.withText)
+		hasNot(t, r.tt, "⌘K") // focused and empty: only the cursor
+		if sends() {
+			t.Error("a send button with nothing to send")
+		}
 		r.tt.Type("review PR 12")
-		has(t, r.tt, l.withText)
-		hasNot(t, r.tt, l.idle)
+		if !sends() {
+			t.Error("no send button with text")
+		}
+		hasNot(t, r.tt, "⌘K")
 	}
 }
 
@@ -440,7 +455,7 @@ func TestInspectorBodyScrollsAboveThePinnedReply(t *testing.T) {
 	r.tt.Scroll(900, 200, 0, 3000)
 	r.tt.Frame()
 	del, ok := r.tt.Find("Delete task…")
-	reply, ok2 := r.tt.Find("Okay, I'll remind you tomorrow at 9.")
+	reply, ok2 := r.tt.Find("Team meeting")
 	if !ok || !ok2 {
 		t.Fatalf("delete %v, reply %v in %q", ok, ok2, r.tt.Texts())
 	}
