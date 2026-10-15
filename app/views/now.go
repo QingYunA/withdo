@@ -6,13 +6,12 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// nowScreen is the home screen: the date, the ask field, and up to three sections. A section with
+// nowScreen is the home screen: the date, the composer, and up to three sections. A section with
 // nothing in it is not drawn; with nothing in any of them the screen says All clear.
 func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
 	m.pageHeader(c, t, m.say.NavNow(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
-	m.askField(c, t)
-	m.convoSheet(c, t)
+	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

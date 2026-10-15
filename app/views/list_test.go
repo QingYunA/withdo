@@ -17,7 +17,7 @@ func projectTester(t *testing.T, project int) (*ui.Tester, *Main, *App) {
 
 func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	for _, want := range []string{"adhd-todo", "QingYunA/adhd-todo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "+ Add a task"} {
+	for _, want := range []string{"adhd-todo", "QingYunA/adhd-todo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "What's next in adhd-todo? “fix the login redirect loop, p1, friday”"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -80,11 +80,9 @@ func TestProjectListRowsCarryAgentSummaryAndLabels(t *testing.T) {
 	}
 }
 
-func TestAddATaskRowCreatesATodoInTheProject(t *testing.T) {
-	tt, m, app := projectTester(t, 2)
-	if err := tt.Click("Add a task"); err != nil {
-		t.Fatal(err)
-	}
+func TestTheComposerCreatesATodoInTheProjectWithoutAModel(t *testing.T) {
+	tt, _, app := projectTester(t, 2)
+	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("Handle empty replies")
 	tt.Key(0, ui.KeyEnter)
 	var added data.Task
@@ -99,13 +97,6 @@ func TestAddATaskRowCreatesATodoInTheProject(t *testing.T) {
 	if !tt.HasText("To do") || !tt.HasText("Handle empty replies") {
 		t.Errorf("not listed: %q", tt.Texts())
 	}
-	if !m.adding {
-		t.Error("the input closed after Enter; it stays open for the next thought")
-	}
-	tt.Key(0, ui.KeyEscape)
-	if m.adding {
-		t.Error("Esc did not close the input")
-	}
 }
 
 func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
@@ -115,9 +106,7 @@ func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
 	if !tt.HasText("Inbox") || !tt.HasText("Book dentist") || tt.HasText("Board view") {
 		t.Errorf("inbox: %q", tt.Texts())
 	}
-	if err := tt.Click("Add a task"); err != nil {
-		t.Fatal(err)
-	}
+	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("Call mum")
 	tt.Key(0, ui.KeyEnter)
 	for _, task := range app.snap.tasks {

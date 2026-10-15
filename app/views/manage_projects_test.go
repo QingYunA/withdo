@@ -58,7 +58,7 @@ func TestNewProjectNeedsANameAndOpensWhenCreated(t *testing.T) {
 	if m.nav.screen != screenProject || m.nav.projectID != garden.ID {
 		t.Errorf("nav = %+v, want the new project", m.nav)
 	}
-	if !tt.HasText("Tasks appear here") && !tt.HasText("Add a task") {
+	if !tt.HasText("No tasks yet.") || !tt.HasText("# Garden") {
 		t.Errorf("the empty project does not invite a task: %q", tt.Texts())
 	}
 }

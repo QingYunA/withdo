@@ -198,23 +198,6 @@ func TestAskFieldEmptyEnterAddsNothing(t *testing.T) {
 	}
 }
 
-func TestCmdKFocusesTheAskFieldFromAnywhere(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenProject, projectID: 1})
-	tt.Frame()
-	tt.Key(ui.Cmd, ui.KeyK)
-	tt.Frame() // the field takes the focus a few frames after it appears
-	tt.Frame()
-	tt.Frame()
-	if m.nav != (nav{}) {
-		t.Fatalf("Cmd+K left us on %+v", m.nav)
-	}
-	tt.Type("remind me")
-	if m.ask.buf != "remind me" {
-		t.Errorf("typing went elsewhere: ask %q, texts %q", m.ask.buf, tt.Texts())
-	}
-}
-
 func TestArrowsSelectEnterOpensSpaceToggles(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	tt.Key(0, ui.KeyDown)
@@ -249,8 +232,8 @@ func TestUpFromTheFirstRowReturnsToTheAskField(t *testing.T) {
 		t.Errorf("selected %d, want none", m.sel)
 	}
 	tt.Type("typed")
-	if m.ask.buf != "typed" {
-		t.Errorf("the ask field did not take the focus: %q", m.ask.buf)
+	if m.cmp[surfacePage].buf != "typed" {
+		t.Errorf("the ask field did not take the focus: %q", m.cmp[surfacePage].buf)
 	}
 }
 
@@ -258,8 +241,8 @@ func TestSpaceInTheAskFieldIsASpace(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("a b")
-	if m.ask.buf != "a b" {
-		t.Errorf("buffer %q", m.ask.buf)
+	if m.cmp[surfacePage].buf != "a b" {
+		t.Errorf("buffer %q", m.cmp[surfacePage].buf)
 	}
 	if task, _ := app.Task(7); task.Status == data.Done {
 		t.Error("Space toggled a task while typing")

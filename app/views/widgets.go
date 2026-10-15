@@ -84,16 +84,3 @@ func segmented(c *ui.Context, t *theme.Tokens, key string, labels []string, sele
 	})
 	return clicked
 }
-
-// radio is a 16 pt circle, filled when on.
-func radio(c *ui.Context, t *theme.Tokens, on bool) ui.Element {
-	return ui.Box(c).Size(16, 16).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
-		ring := ui.Rect{X: r.X + 1, Y: r.Y + 1, W: r.W - 2, H: r.H - 2}
-		if !on {
-			p.Stroke(ring, t.TextTertiary, ring.W/2, 1.5)
-			return
-		}
-		p.Stroke(ring, t.Accent, ring.W/2, 1.5)
-		p.Fill(ui.Rect{X: r.X + 4.5, Y: r.Y + 4.5, W: r.W - 9, H: r.H - 9}, t.Accent, (r.W-9)/2)
-	})
-}

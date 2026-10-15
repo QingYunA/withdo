@@ -103,7 +103,6 @@ func (m *Main) viewToggle(c *ui.Context, t *theme.Tokens) {
 			seg.Children(func() { theme.Text(c, theme.Meta, ink, side.name) })
 			if seg.Clicked() && !on {
 				m.board[pid] = side.board
-				m.cancelAdding()
 			}
 		}
 	})

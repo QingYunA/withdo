@@ -61,7 +61,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	inChinese(tt)
 	has(t, tt, "全部处理完了。", "Agent 会通过 adhd-todo 的 MCP 服务器在这里汇报进度。", "如何连接",
-		"告诉我要记住什么，比如“下午4点提醒我审查 PR #12”", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
+		"要我记住什么？像平时说话那样写就行，比如“站会前审查 PR 12，很急”", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
 }
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
@@ -78,12 +78,8 @@ func TestChineseProjectList(t *testing.T) {
 	tt, m, _ := newChineseTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.Frame()
-	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "+ 添加任务", "已完成 4 · 待规划 2", "— 显示", "停滞3天")
-	if err := tt.Click("+ 添加任务"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, tt, "任务标题")
-	tt.Key(0, ui.KeyEscape)
+	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成 4 · 待规划 2", "— 显示", "停滞3天",
+		"adhd-todo 里接下来做什么？比如“修复登录重定向死循环，p1，周五”", "⌘K 聚焦 · ↵ 发送 · ⇧↵ 换行")
 	if err := tt.Click("显示已完成 4 和 待规划 2"); err != nil {
 		t.Fatal(err)
 	}
@@ -186,12 +182,23 @@ func TestChineseQuestionAndErrors(t *testing.T) {
 	hasNot(t, bad.tt, "Couldn't reach the model.")
 }
 
-func TestChineseNoModelHintAndInboxNotice(t *testing.T) {
+func TestChineseNoModelChipAndInboxNotice(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	inChinese(r.tt)
+	has(t, r.tt, "设置助手")
 	r.ask("浇花")
 	has(t, r.tt, "已添加到收件箱")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	has(t, r.tt, "连接模型后，我才能听懂你的话 —", "去设置")
+	hasNot(t, r.tt, "已添加到收件箱")
+}
+
+func TestChineseComposerChipsAndInspectorPlaceholder(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	inChinese(r.tt)
+	mustNil(t, r.app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-x"}))
+	mustNil(t, r.app.Models.SetActive("anthropic"))
+	r.m.OpenTask(5)
+	r.tt.Frame()
+	has(t, r.tt, "助手 · Haiku 5.5", "想改什么都行，比如“挪到周五下午”")
 }

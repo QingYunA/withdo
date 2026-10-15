@@ -159,14 +159,14 @@ func TestMainEmptyProjectAndInbox(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "+ Add a task", "How to connect"} {
+	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("empty project is missing %q in %q", want, tt.Texts())
 		}
 	}
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	for _, want := range []string{"Your inbox is clear.", "+ Add a task"} {
+	for _, want := range []string{"Your inbox is clear.", "Tasks without a project land here. Write one in the box above, or press ⌘K."} {
 		if !tt.HasText(want) {
 			t.Errorf("empty inbox is missing %q in %q", want, tt.Texts())
 		}

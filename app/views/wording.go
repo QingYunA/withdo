@@ -120,8 +120,21 @@ func problemText(say locales.Messages, err error) string {
 	return err.Error()
 }
 
-// detailText is the quiet line of a receipt, worded from what the agent changed.
+// detailText is the quiet line of a receipt, worded from what the agent changed. What the words
+// made of a new task shows too, so it can be checked: the reminder and the deadline it set, and a
+// priority that is not the default.
 func (m *Main) detailText(d data.Detail) string {
+	text := m.detailMain(d)
+	if !d.Due.IsZero() {
+		text += " · " + m.say.ChangeDue(m.clock.When(d.Due, m.app.Now()))
+	}
+	if d.Priority != "" {
+		text += " · " + d.Priority
+	}
+	return text
+}
+
+func (m *Main) detailMain(d data.Detail) string {
 	now := m.app.Now()
 	switch d.Kind {
 	case data.DetailReminder:

@@ -15,6 +15,7 @@ const sheetClosesAfter = 4 * time.Second
 // convoTurn is one exchange in the sheet: what I typed and what came back.
 type convoTurn struct {
 	user     string
+	place    data.Place // where it was typed: a retry and an answer go out from the same place
 	reply    string
 	receipts []data.Receipt
 	question *data.Question
@@ -22,8 +23,12 @@ type convoTurn struct {
 	stopped  bool   // I pressed Esc after some changes were already made
 }
 
-// convo is the conversation sheet under the ask field: this conversation only, never stored.
+// convo is the reply sheet under the composer that sent the request: this conversation only,
+// never stored. It shows under that composer, on the page or the task it was sent from.
 type convo struct {
+	owner    surface    // the composer that sent the last request
+	nav      nav        // the screen it was sent from, for a page composer
+	place    data.Place // and the place, for the inspector's
 	turns    []convoTurn
 	open     bool
 	thinking bool
@@ -34,24 +39,29 @@ type convo struct {
 	live     bool         // the assistant remembers a conversation, so a second Esc forgets it
 }
 
-// assistReady reports whether a model is connected. Without one the ask field adds Inbox tasks.
+// assistReady reports whether a model is connected. Without one the composer adds plain tasks.
 func (m *Main) assistReady() bool {
 	return m.app.Assistant != nil && m.app.Assistant.Configured()
 }
 
-// sendToAssistant sends text to the assistant, off the UI thread. The answer comes back through Actions.Post.
-func (m *Main) sendToAssistant(text string) {
+// sendToAssistant sends text, typed in place into the composer on s, to the assistant, off the UI
+// thread. The answer comes back through Actions.Post.
+func (m *Main) sendToAssistant(text string, place data.Place, s surface) {
 	cv := &m.convo
 	if cv.thinking {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cv.cancel, cv.thinking, cv.stopping, cv.open = cancel, true, false, true
-	cv.turns = append(cv.turns, convoTurn{user: text})
+	if cv.owner != s || cv.nav != m.nav || cv.place != place {
+		cv.turns = nil // another composer, page or task: a new sheet
+	}
+	cv.owner, cv.nav, cv.place = s, m.nav, place
+	cv.turns = append(cv.turns, convoTurn{user: text, place: place})
 	cv.turns = cv.turns[max(0, len(cv.turns)-maxTurnsShown):]
 	asst, post := m.app.Assistant, m.app.Act.Post
 	go func() {
-		reply, err := asst.Ask(ctx, text, data.Place{})
+		reply, err := asst.Ask(ctx, text, place)
 		post(func() { m.answered(text, reply, err) })
 	}()
 }
@@ -70,6 +80,7 @@ func (m *Main) answered(text string, reply data.Reply, err error) {
 	}
 	turn := &cv.turns[i]
 	turn.reply, turn.receipts, turn.question = reply.Text, reply.Receipts, reply.Question
+	m.markReceipts(reply.Receipts)
 	switch {
 	case errors.Is(err, context.Canceled):
 		m.stopped(text, i)
@@ -90,7 +101,7 @@ func (m *Main) stopped(text string, i int) {
 		return
 	}
 	cv.turns = cv.turns[:i]
-	m.ask.buf = text
+	m.cmp[cv.owner].buf = text
 	m.closeSheet()
 }
 
@@ -119,7 +130,13 @@ func (m *Main) forgetConversation() {
 }
 
 // pick sends an option of a question as my answer.
-func (m *Main) pick(option string) { m.sendToAssistant(option) }
+func (m *Main) pick(option string) {
+	cv := &m.convo
+	if len(cv.turns) == 0 {
+		return
+	}
+	m.sendToAssistant(option, cv.turns[len(cv.turns)-1].place, cv.owner)
+}
 
 // retry sends the failed turn again.
 func (m *Main) retry() {
@@ -129,7 +146,7 @@ func (m *Main) retry() {
 	}
 	last := cv.turns[len(cv.turns)-1]
 	cv.turns = cv.turns[:len(cv.turns)-1]
-	m.sendToAssistant(last.user)
+	m.sendToAssistant(last.user, last.place, cv.owner)
 }
 
 // undo reverts one receipt. The row stays, struck through, so it is clear what happened.
@@ -145,6 +162,7 @@ func (m *Main) undo(r data.Receipt) {
 		cv.undone = map[int]bool{}
 	}
 	cv.undone[r.ID] = true
+	m.unmark(r.TaskID)
 	cv.doneAt = m.app.Now() // the sheet stays a little longer so the result can be seen
 	m.app.Refresh()
 }
@@ -156,4 +174,33 @@ func (cv *convo) sheetDone() bool {
 	}
 	last := cv.turns[len(cv.turns)-1]
 	return last.question == nil && last.err == "" && !last.stopped
+}
+
+// replyIn reports whether the reply sheet shows under the composer on s: it belongs to the
+// composer that sent the request, on the page or the task it was sent from.
+func (m *Main) replyIn(s surface, task int) bool {
+	cv := &m.convo
+	if !cv.open || len(cv.turns) == 0 || cv.owner != s {
+		return false
+	}
+	if s == surfaceInspector {
+		return cv.place.TaskID == task
+	}
+	return cv.nav == m.nav
+}
+
+// dropStaleReply closes a reply whose composer is gone from the screen: the page changed, or the
+// inspector closed or shows another task. A request still running keeps its sheet until it ends.
+func (m *Main) dropStaleReply() {
+	cv := &m.convo
+	if !cv.open || cv.thinking {
+		return
+	}
+	shown := cv.nav == m.nav && m.pageHasComposer()
+	if cv.owner == surfaceInspector {
+		shown = m.openID != 0 && cv.place.TaskID == m.openID && m.assistReady()
+	}
+	if !shown {
+		m.closeSheet()
+	}
 }

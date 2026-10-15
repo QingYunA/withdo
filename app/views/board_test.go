@@ -151,7 +151,8 @@ func TestBoardClickOpensTheInspectorAndAddsTasks(t *testing.T) {
 		t.Errorf("opened %d", m.openID)
 	}
 	m.openID = 0
-	if err := tt.Click("Add a task"); err != nil {
+	tt.Frame()                                     // the columns take the room the inspector gave back
+	if err := tt.Click("Add a task"); err != nil { // the + of the To do column puts the cursor in the composer
 		t.Fatal(err)
 	}
 	tt.Type("Board added")
