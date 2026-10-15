@@ -484,20 +484,6 @@ func (msgs Messages) AskThinking() string {
 	return Catalog.Format(msgs.locale, "askThinking", nil)
 }
 
-// BoardEmpty says "Nothing waiting. Drag a card here to plan it."
-// in the language the app shows.
-//
-// Hint in the empty To do column of the board.
-func BoardEmpty() string { return In(i18n.Locale()).BoardEmpty() }
-
-// BoardEmpty says "Nothing waiting. Drag a card here to plan it."
-// in the language of msgs.
-//
-// Hint in the empty To do column of the board.
-func (msgs Messages) BoardEmpty() string {
-	return Catalog.Format(msgs.locale, "boardEmpty", nil)
-}
-
 // BoardShowAll says "Show all {n}"
 // in the language the app shows.
 //
@@ -906,20 +892,6 @@ func (msgs Messages) FieldTitle() string {
 	return Catalog.Format(msgs.locale, "fieldTitle", nil)
 }
 
-// FoldAnd says "{first} and {second}"
-// in the language the app shows.
-//
-// Joins two counts in the accessibility label of the folded line.
-func FoldAnd(first string, second string) string { return In(i18n.Locale()).FoldAnd(first, second) }
-
-// FoldAnd says "{first} and {second}"
-// in the language of msgs.
-//
-// Joins two counts in the accessibility label of the folded line.
-func (msgs Messages) FoldAnd(first string, second string) string {
-	return Catalog.Format(msgs.locale, "foldAnd", map[string]any{"first": first, "second": second})
-}
-
 // FoldCount says "{name} {count}"
 // in the language the app shows.
 //
@@ -1018,20 +990,6 @@ func InboxEmptyTitle() string { return In(i18n.Locale()).InboxEmptyTitle() }
 // Title of an empty Inbox.
 func (msgs Messages) InboxEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "inboxEmptyTitle", nil)
-}
-
-// InboxSubtitle says "Tasks without a project"
-// in the language the app shows.
-//
-// Quiet line next to the Inbox title.
-func InboxSubtitle() string { return In(i18n.Locale()).InboxSubtitle() }
-
-// InboxSubtitle says "Tasks without a project"
-// in the language of msgs.
-//
-// Quiet line next to the Inbox title.
-func (msgs Messages) InboxSubtitle() string {
-	return Catalog.Format(msgs.locale, "inboxSubtitle", nil)
 }
 
 // InspectorClose says "Close"
@@ -1471,13 +1429,15 @@ func (msgs Messages) ManageMilestoneEdit(title string) string {
 // ManageMilestoneNew says "New milestone…"
 // in the language the app shows.
 //
-// Item of the milestone menu that opens the new milestone sheet.
+// Item of a project context menu in the sidebar, and of the milestone
+// filter menu: opens the new milestone sheet.
 func ManageMilestoneNew() string { return In(i18n.Locale()).ManageMilestoneNew() }
 
 // ManageMilestoneNew says "New milestone…"
 // in the language of msgs.
 //
-// Item of the milestone menu that opens the new milestone sheet.
+// Item of a project context menu in the sidebar, and of the milestone
+// filter menu: opens the new milestone sheet.
 func (msgs Messages) ManageMilestoneNew() string {
 	return Catalog.Format(msgs.locale, "manageMilestoneNew", nil)
 }
@@ -3990,22 +3950,6 @@ func (msgs Messages) MarkAssistant() string {
 	return Catalog.Format(msgs.locale, "markAssistant", nil)
 }
 
-// BoardAdd says "Add a task"
-// in the language the app shows.
-//
-// Tooltip and accessibility label of the + in the To do column's header on
-// the board; it puts the cursor in the composer.
-func BoardAdd() string { return In(i18n.Locale()).BoardAdd() }
-
-// BoardAdd says "Add a task"
-// in the language of msgs.
-//
-// Tooltip and accessibility label of the + in the To do column's header on
-// the board; it puts the cursor in the composer.
-func (msgs Messages) BoardAdd() string {
-	return Catalog.Format(msgs.locale, "boardAdd", nil)
-}
-
 // ValueNone says "None"
 // in the language the app shows.
 //
@@ -4060,4 +4004,62 @@ func WindowTitle() string { return In(i18n.Locale()).WindowTitle() }
 // Title of the main window.
 func (msgs Messages) WindowTitle() string {
 	return Catalog.Format(msgs.locale, "windowTitle", nil)
+}
+
+// ManageOpenRepo says "Open {repo} on GitHub ↗"
+// in the language the app shows.
+//
+// First item of a project context menu in the sidebar, shown only when the
+// project has a repository: opens it in the browser.
+func ManageOpenRepo(repo string) string { return In(i18n.Locale()).ManageOpenRepo(repo) }
+
+// ManageOpenRepo says "Open {repo} on GitHub ↗"
+// in the language of msgs.
+//
+// First item of a project context menu in the sidebar, shown only when the
+// project has a repository: opens it in the browser.
+func (msgs Messages) ManageOpenRepo(repo string) string {
+	return Catalog.Format(msgs.locale, "manageOpenRepo", map[string]any{"repo": repo})
+}
+
+// BoardEmptyDoing says "Drag here to start"
+// in the language the app shows.
+//
+// Quiet line in the empty Doing lane of the board.
+func BoardEmptyDoing() string { return In(i18n.Locale()).BoardEmptyDoing() }
+
+// BoardEmptyDoing says "Drag here to start"
+// in the language of msgs.
+//
+// Quiet line in the empty Doing lane of the board.
+func (msgs Messages) BoardEmptyDoing() string {
+	return Catalog.Format(msgs.locale, "boardEmptyDoing", nil)
+}
+
+// BoardEmptyReview says "Nothing to review"
+// in the language the app shows.
+//
+// Quiet line in the empty In review lane of the board.
+func BoardEmptyReview() string { return In(i18n.Locale()).BoardEmptyReview() }
+
+// BoardEmptyReview says "Nothing to review"
+// in the language of msgs.
+//
+// Quiet line in the empty In review lane of the board.
+func (msgs Messages) BoardEmptyReview() string {
+	return Catalog.Format(msgs.locale, "boardEmptyReview", nil)
+}
+
+// BoardEmptyNone says "Nothing yet"
+// in the language the app shows.
+//
+// Quiet line in an empty To do or Done lane of the board.
+func BoardEmptyNone() string { return In(i18n.Locale()).BoardEmptyNone() }
+
+// BoardEmptyNone says "Nothing yet"
+// in the language of msgs.
+//
+// Quiet line in an empty To do or Done lane of the board.
+func (msgs Messages) BoardEmptyNone() string {
+	return Catalog.Format(msgs.locale, "boardEmptyNone", nil)
 }

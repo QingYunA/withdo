@@ -32,7 +32,6 @@
   "agentSummaryNext": "{summary}；下一步：{step}",
   "askAnswerHint": "输入回答，或在下方选择",
   "askThinking": "思考中…",
-  "boardEmpty": "没有待办事项。把卡片拖到这里来安排。",
   "boardShowAll": "显示全部 {n} 项",
   "changeDue": "截止 {when}",
   "changeDueCleared": "已清除截止时间",
@@ -64,7 +63,6 @@
   "fieldBranch": "分支",
   "fieldNotes": "备注",
   "fieldTitle": "标题",
-  "foldAnd": "{first} 和 {second}",
   "foldCount": "{name} {count}",
   "foldHide": "隐藏{parts}",
   "foldHideShort": "— 隐藏",
@@ -72,7 +70,6 @@
   "foldShowShort": "— 显示",
   "inboxEmptyBody": "没有归属项目的任务会出现在这里。在上方的输入框里写一条，或按 ⌘K。",
   "inboxEmptyTitle": "收件箱是空的。",
-  "inboxSubtitle": "没有归属项目的任务",
   "inspectorClose": "关闭",
   "inspectorCloseTip": "关闭（esc）",
   "languageSystem": "跟随系统",
@@ -272,9 +269,12 @@
   "composerPlaceholderTask": "想改什么都行，比如“挪到周五下午”",
   "composerSend": "发送",
   "markAssistant": "由助手设置",
-  "boardAdd": "添加任务",
   "valueNone": "无",
   "viewBoard": "看板",
   "viewList": "列表",
-  "windowTitle": "ADHD Todo"
+  "windowTitle": "ADHD Todo",
+  "manageOpenRepo": "在 GitHub 上打开 {repo} ↗",
+  "boardEmptyDoing": "拖到这里开始做",
+  "boardEmptyReview": "没有要审查的",
+  "boardEmptyNone": "还没有"
 }

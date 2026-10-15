@@ -68,10 +68,7 @@ func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if btn.Clicked() {
 			m.openMenuBelow(btn, task.ID, pagePriority)
 		}
-		btn.Children(func() {
-			theme.PriorityBars(c, t, task.Priority)
-			theme.Text(c, theme.Compact, t.Text, label)
-		})
+		btn.Children(func() { theme.Text(c, theme.Compact, t.Text, label) })
 	})
 }
 

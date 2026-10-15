@@ -47,11 +47,16 @@ func TestEveryStatusGlyphDraws(t *testing.T) {
 	}
 }
 
-func TestPriorityClockAndDotDraw(t *testing.T) {
-	for _, pr := range data.Priorities {
-		tt := render(t, false, func(c *ui.Context, tk *Tokens) { PriorityBars(c, tk, pr) })
-		if !inked(tt) {
-			t.Errorf("%s bars drew nothing", pr)
+func TestPriorityBadgeClockAndDotDraw(t *testing.T) {
+	for _, pr := range []data.Priority{data.P0, data.P1} {
+		tt := render(t, false, func(c *ui.Context, tk *Tokens) { PriorityBadge(c, tk, pr) })
+		if !inked(tt) || !tt.HasText(string(pr)) {
+			t.Errorf("%s badge drew nothing", pr)
+		}
+	}
+	for pr, want := range map[data.Priority]bool{data.P0: true, data.P1: true, data.P2: false, data.P3: false} {
+		if ShowsPriority(pr) != want {
+			t.Errorf("ShowsPriority(%s) = %v, want %v", pr, !want, want)
 		}
 	}
 	if !inked(render(t, false, func(c *ui.Context, tk *Tokens) { ClockGlyph(c, tk.Text) })) {

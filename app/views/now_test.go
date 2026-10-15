@@ -252,7 +252,7 @@ func TestSpaceInTheAskFieldIsASpace(t *testing.T) {
 func TestCmdNumbersSwitchScreens(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.Key2)
-	if m.nav.screen != screenInbox || !tt.HasText("Tasks without a project") {
+	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") || tt.HasText("Tasks without a project") {
 		t.Errorf("Cmd+2 gave %+v", m.nav)
 	}
 	tt.Key(ui.Cmd, ui.Key1)

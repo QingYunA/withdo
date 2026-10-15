@@ -54,9 +54,7 @@ type Main struct {
 	milestone map[int]int  // milestone filter per project, 0 for all
 	board     map[int]bool // projects shown as a board
 	expanded  map[nav]bool // Done and Backlog opened under a list
-	allDone   map[nav]bool // every Done task, not the recent ten
-	dragging  int          // task being dragged this frame, so the hidden statuses show as drop targets
-	wasDrag   int          // the one dragged in the frame before: the targets live a frame past the drop
+	allDone   map[nav]bool // every Done task, not the recent three or five
 
 	manage    manageState // the sheets, renaming, search and Completed
 	searchRef ui.Handle   // the search field in the sidebar, for Cmd+F
@@ -125,7 +123,6 @@ func (m *Main) View(c *ui.Context) {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 	}
 	m.dropStaleReply()
-	m.wasDrag, m.dragging = m.dragging, 0
 	m.popTick()
 	m.width = m.contentWidth(c)
 	now := m.app.buildNow()

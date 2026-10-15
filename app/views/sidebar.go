@@ -87,6 +87,15 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 
 // projectMenu is the context menu of a project row.
 func (m *Main) projectMenu(mn *ui.Menu, p data.Project) {
+	if p.RepoSlug != "" {
+		if mn.Item(m.say.ManageOpenRepo(p.RepoSlug)).Chosen() {
+			m.app.Act.OpenURL("https://github.com/" + p.RepoSlug)
+		}
+	}
+	if mn.Item(m.say.ManageMilestoneNew()).Chosen() {
+		m.newMilestone(p.ID)
+	}
+	mn.Separator()
 	if mn.Item(m.say.ManageRename()).Chosen() {
 		m.startRename(p.ID, p.Name)
 	}

@@ -159,7 +159,8 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 const (
 	RadiusControl float32 = 6  // pills, inputs
 	RadiusCard    float32 = 9  // cards, rows
-	RadiusPanel   float32 = 12 // ask field, Needs you container, popovers, sheets
+	RadiusPanel   float32 = 12 // composer, Needs you container, popovers, sheets
+	RadiusTile    float32 = 10 // board cards
 )
 
 // Space on the 4 pt grid.
@@ -188,15 +189,14 @@ const (
 	ContentMax     float32 = 780 // the centered column of lists
 	ContentPad     float32 = 48  // its side padding when there is room
 	AskHeight      float32 = 46
-	ColumnWidth    float32 = 264 // a board column at its widest
-	MinColumnWidth float32 = 192 // and at its narrowest, before the board scrolls
-	BoardPadding   float32 = 24
-	ColumnGap      float32 = 12
+	BoardMax       float32 = 980 // the board's block (header, composer and lanes) at its widest
+	MinColumnWidth float32 = 176 // a board lane at its narrowest, before the board scrolls
+	ColumnGap      float32 = 20
 
 	WindowMinWidth  = 860
 	WindowMinHeight = 540
 	WindowWidth     = 1100
 	WindowHeight    = 720
-	DoneRecentLimit = 10 // Done cards a board column shows before "Show all"
-	DoneListRows    = 3  // Done rows a list shows before "Show all"
+	DoneRecentLimit = 5 // Done cards the board's Done lane shows before "Show all"
+	DoneListRows    = 3 // Done rows a list shows before "Show all"
 )

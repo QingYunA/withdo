@@ -1,9 +1,12 @@
 package views
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -16,128 +19,160 @@ func boardTester(t *testing.T, app *App, project, width int) (*ui.Tester, *Main)
 	return tt, m
 }
 
-func statusesOf(cols []boardColumn) map[data.Status]bool {
-	out := map[data.Status]bool{}
-	for _, c := range cols {
-		out[c.status] = true
-	}
-	return out
-}
-
-func TestBoardShowsOnlyNonEmptyColumnsPlusToDo(t *testing.T) {
-	app, _, _ := newTestApp(t)
-	tt, m := boardTester(t, app, 2, 1100) // answer-me-with-html: one doing, one backlog
-	got := statusesOf(m.boardColumns())
-	if len(got) != 2 || !got[data.Todo] || !got[data.Doing] {
-		t.Errorf("columns %v, want to do and doing", got)
-	}
-	for _, gone := range []string{"Blocked", "In review", "Done"} {
-		if tt.HasText(gone) {
-			t.Errorf("empty column %q is drawn", gone)
+func laneOfTitles(m *Main, lane data.Status) []string {
+	for _, col := range m.boardColumns() {
+		if col.status == lane {
+			var out []string
+			for _, t := range col.shown {
+				out = append(out, t.Title)
+			}
+			return out
 		}
 	}
-	if !tt.HasText("To do") || !tt.HasText("Nothing waiting. Drag a card here to plan it.") {
-		t.Errorf("To do is missing or has no hint: %q", tt.Texts())
-	}
+	return nil
 }
 
-func TestBoardKeepsBacklogAndDoneBehindTheFoldLine(t *testing.T) {
+func TestBoardHasFourFixedLanesWhateverTheProjectHolds(t *testing.T) {
 	app, _, _ := newTestApp(t)
-	tt, m := boardTester(t, app, 1, 1100)
-	if got := statusesOf(m.boardColumns()); len(got) != 4 || got[data.Backlog] || got[data.Done] {
-		t.Fatalf("columns %v, want to do, doing, blocked, review", got)
+	tt, m := boardTester(t, app, 2, 1100) // answer-me-with-html: one doing task, one backlog task
+	var got []data.Status
+	for _, col := range m.boardColumns() {
+		got = append(got, col.status)
 	}
-	if err := tt.Click("show Done 5 and Backlog 2"); err != nil {
-		t.Fatal(err)
+	if want := []data.Status{data.Todo, data.Doing, data.Review, data.Done}; !slices.Equal(got, want) {
+		t.Fatalf("lanes %v, want %v", got, want)
 	}
-	if got := statusesOf(m.boardColumns()); len(got) != 6 {
-		t.Errorf("after show: %v", got)
-	}
-	if !tt.HasText("Backlog") || !tt.HasText("Spike the mygo shell") {
-		t.Errorf("Backlog and Done are not drawn: %q", tt.Texts())
-	}
+	has(t, tt, "To do", "Doing", "In review", "Done", "Issue #218 adaptation")
+	hasNot(t, tt, "Blocked", "Backlog", "Cover the reply parser edge cases")
 }
 
-func TestBoardToDoIsThereOnAnEmptyColumnSet(t *testing.T) {
+func TestEmptyLanesSayWhatTheyAreFor(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, _ := boardTester(t, app, 2, 1100)
+	has(t, tt, "Nothing to review", "Nothing yet")
+	hasNot(t, tt, "Drag here to start") // Doing holds a card
 	f := data.NewEmptyFake(fixedNow)
 	p := f.AddProject("scratch", "me/scratch")
-	_, _ = f.CreateTask(data.CreateTaskInput{Title: "In flight", Status: data.Doing, ProjectID: data.IntPtr(p.ID)})
+	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Waiting", ProjectID: data.IntPtr(p.ID)})
+	empty := NewApp(f, &recorder{}, testConfig())
+	empty.Now = fixedNow
+	tt2, _ := boardTester(t, empty, p.ID, 1100)
+	has(t, tt2, "Drag here to start", "Nothing to review", "Nothing yet")
+}
+
+func TestBlockedCardsSitFirstInDoingAndBacklogIsNotOnTheBoard(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, m := boardTester(t, app, 1, 1100)
+	doing := laneOfTitles(m, data.Doing)
+	if want := []string{"Fix tray race on launch", "Port core to Go", "Decide on the activation policy"}; len(doing) != 3 || doing[0] != want[0] {
+		t.Fatalf("Doing lane %v, want the blocked task first among %v", doing, want)
+	}
+	if !above(t, tt, "Fix tray race on launch", "Port core to Go") {
+		t.Error("the blocked card is not above the others")
+	}
+	hasNot(t, tt, "Blocked", "Backlog", "Poll gh for PR status", "Add a Windows build")
+	if got := statusLaneCount(m, data.Doing); got != 3 {
+		t.Errorf("the Doing count is %d, want the blocked task counted", got)
+	}
+}
+
+func statusLaneCount(m *Main, lane data.Status) int {
+	for _, col := range m.boardColumns() {
+		if col.status == lane {
+			return len(col.tasks)
+		}
+	}
+	return -1
+}
+
+func TestDoneLaneShowsTheNewestFiveAndShowAll(t *testing.T) {
+	f := data.NewEmptyFake(fixedNow)
+	p := f.AddProject("scratch", "me/scratch")
+	for i := 0; i < 8; i++ {
+		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i), Status: data.Done, ProjectID: data.IntPtr(p.ID)})
+	}
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
-	_, m := boardTester(t, app, p.ID, 1100)
-	cols := m.boardColumns()
-	if len(cols) != 2 || cols[0].status != data.Todo || cols[1].status != data.Doing {
-		t.Errorf("columns %+v", cols)
-	}
-}
-
-func TestBoardHasNoCollapsedStrips(t *testing.T) {
-	app, _, _ := newTestApp(t)
-	tt, m := boardTester(t, app, 1, 1840)
-	m.expanded[m.nav] = true
-	tt.Frame()
-	if len(m.boardColumns()) != 6 {
-		t.Fatalf("columns %d, want all six that hold tasks", len(m.boardColumns()))
-	}
-	for _, want := range []string{"Backlog", "To do", "Doing", "Blocked", "In review", "Done"} {
-		if !tt.HasText(want) {
-			t.Errorf("missing column %q", want)
-		}
-	}
-}
-
-// The header and the composer are one block, and the columns fill exactly that block, centered;
-// only when the narrowest columns do not fit does the board scroll under a full-width header.
-func TestBoardColumnsFillTheBlockOfTheHeaderAndTheComposer(t *testing.T) {
-	const list = 684 // the lists' column: 780 less 2 x 48
-	for _, tc := range []struct {
-		avail  float32
-		n      int
-		scroll bool
-	}{{883, 4, false}, {1500, 4, false}, {1500, 3, false}, {1500, 2, false}, {900, 6, true}, {1500, 1, false}} {
-		got := boardMetricsFor(tc.avail, list, tc.n)
-		gaps := float32(tc.n-1) * 12
-		if tc.scroll {
-			if got.col != 192 || got.head != tc.avail-48 {
-				t.Errorf("%+v: %+v, want the narrowest columns under a full-width header", tc, got)
+	tt, m := boardTester(t, app, p.ID, 1100)
+	finished := func() (n int) {
+		for _, s := range tt.Texts() {
+			if strings.HasPrefix(s, "Finished ") {
+				n++
 			}
-			continue
 		}
-		if got.col < 192 || got.col*float32(tc.n)+gaps != got.head || 2*got.edge+got.head != tc.avail {
-			t.Errorf("%+v: %+v, columns do not fill a centered block", tc, got)
-		}
-		if got.edge < 24 {
-			t.Errorf("%+v: %+v, closer than 24 pt to the window", tc, got)
-		}
+		return n
 	}
-	if got := boardMetricsFor(1500, list, 3); got.col != 264 {
-		t.Errorf("three columns in a wide window: %v wide, want the 264 maximum", got.col)
+	if n := finished(); n != 5 || !tt.HasText("Show all 8") || statusLaneCount(m, data.Done) != 8 {
+		t.Fatalf("%d cards and no link in %q", n, tt.Texts())
+	}
+	if err := tt.Click("Show all 8"); err != nil {
+		t.Fatal(err)
+	}
+	if n := finished(); n != 8 || tt.HasText("Show all 8") {
+		t.Errorf("%d cards, or the link is still shown", n)
 	}
 }
 
-func TestBoardHeaderComposerAndColumnsShareTheirEdges(t *testing.T) {
+func TestCardsShowAPriorityBadgeOnlyForP0AndP1(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, _ := boardTester(t, app, 1, 1100)
+	has(t, tt, "P0", "P1") // Fix tray race (P0), Port core to Go and Decide on the activation policy (P1)
+	hasNot(t, tt, "P2", "P3")
+}
+
+func TestCardsAreTitleAndOneMetaLineWithNoStatusGlyph(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	tt, _ := boardTester(t, app, 1, 1100)
+	if err := tt.Click("Status: To do"); err == nil {
+		t.Error("a card has a status glyph button")
+	}
+	has(t, tt, "feat/watch", "5h", "Fri")
+}
+
+// The header and the composer are one block, and the lanes fill exactly that block, centered;
+// only when the narrowest lanes do not fit does the board scroll under a full-width header.
+func TestBoardLanesFillTheBlockOfTheHeaderAndTheComposer(t *testing.T) {
+	const pad = 48
+	for _, avail := range []float32{883, 1100, 1500} {
+		got := boardMetricsFor(avail, pad)
+		gaps := 3 * theme.ColumnGap
+		if got.col < theme.MinColumnWidth || got.col*4+gaps != got.head || 2*got.edge+got.head != avail {
+			t.Errorf("%v: %+v, lanes do not fill a centered block", avail, got)
+		}
+		if got.head > theme.BoardMax {
+			t.Errorf("%v: the block is %v, wider than %v", avail, got.head, theme.BoardMax)
+		}
+	}
+	if got := boardMetricsFor(1500, pad); got.head != theme.BoardMax {
+		t.Errorf("a wide window: the block is %v, want the %v maximum", got.head, theme.BoardMax)
+	}
+	if got := boardMetricsFor(523, 40); got.col != theme.MinColumnWidth || got.head != 443 || got.edge != 40 {
+		t.Errorf("beside the inspector: %+v, want the narrowest lanes under a full-width header", got)
+	}
+}
+
+func TestBoardHeaderComposerAndLanesShareTheirEdges(t *testing.T) {
 	for _, width := range []int{1100, 1840} {
 		app, _, _ := newTestApp(t)
 		tt, _ := boardTester(t, app, 1, width)
-		lay := boardMetricsFor(float32(width)-217, 684, 4) // the sidebar and its hairline are 217 pt
+		lay := boardMetricsFor(float32(width)-217, 48) // the sidebar and its hairline are 217 pt
 		left := 217 + lay.edge
 		right := left + lay.head
 		toggle, _ := tt.Find("Board view")
-		send, _ := tt.Find("Send")
-		chip, _ := tt.Find("# adhd-todo")
+		composer, _ := tt.Find("Ask the assistant")
 		first, _ := tt.Find("To do")
+		last, _ := tt.Find("Done")
 		near := func(what string, got, want float32) {
 			t.Helper()
 			if got < want-1.5 || got > want+1.5 {
 				t.Errorf("%d pt window: %s at %.1f, want %.1f", width, what, got, want)
 			}
 		}
-		// The offsets are the padding inside each: the card's 16 and border, the chip's 8, the
-		// toggle's 2, the column's 8, 6, the glyph and its gap.
-		near("composer left", chip.X-8-16-1, left)
-		near("composer right", send.X+send.W+16+1, right)
+		// The offsets are the glyph and its gap (18 + 8), and the control's own padding.
+		near("composer left", composer.X-16-1, left) // the card's padding and border
 		near("toggle right", toggle.X+toggle.W+2, right)
-		near("first column left", first.X-6-8-18-8, left)
+		near("first lane left", first.X-18-8, left)
+		near("last lane left", last.X-18-8, left+3*(lay.col+theme.ColumnGap))
 	}
 }
 
@@ -159,35 +194,20 @@ func TestDroppingOnTheSameColumnChangesNothing(t *testing.T) {
 	}
 }
 
-func TestDraggingRevealsDropTargetsForHiddenStatuses(t *testing.T) {
+func TestDroppingABlockedCardOnItsOwnLaneKeepsItBlocked(t *testing.T) {
 	app, _, _ := newTestApp(t)
-	tt, m := boardTester(t, app, 2, 1100)
-	from, _ := tt.Find("Issue #218 adaptation")
-	fx, fy := center(from)
-	tt.Press(fx, fy)
-	tt.Move(fx+8, fy+8)
-	tt.Move(fx+20, fy+30)
-	tt.Frame()
-	if m.dragging == 0 {
-		t.Fatal("no drag in progress")
+	tt, _ := boardTester(t, app, 1, 1840)
+	dragTo(t, tt, "Fix tray race on launch", "Doing")
+	if task, _ := app.Task(3); task.Status != data.Blocked {
+		t.Errorf("status %v after dropping a blocked card on Doing, want blocked", task.Status)
 	}
-	if !tt.HasText("Blocked") || !tt.HasText("In review") || !tt.HasText("Done") {
-		t.Fatalf("hidden statuses are not offered: %q", tt.Texts())
-	}
-	to, _ := tt.Find("In review")
-	tx, ty := center(to)
-	tt.Move(tx, ty)
-	tt.Release(tx, ty)
-	if task, _ := app.Task(15); task.Status != data.Review {
-		t.Errorf("status %v after dropping on the hidden Review target", task.Status)
-	}
-	tt.Frame()
-	if m.dragging != 0 {
-		t.Error("drag state lingers")
+	dragTo(t, tt, "Fix tray race on launch", "In review")
+	if task, _ := app.Task(3); task.Status != data.Review {
+		t.Errorf("status %v after dropping it on In review", task.Status)
 	}
 }
 
-func TestBoardClickOpensTheInspectorAndAddsTasks(t *testing.T) {
+func TestBoardClickOpensTheInspectorAndTheComposerAddsTasks(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m := boardTester(t, app, 2, 1100)
 	if err := tt.Click("Issue #218 adaptation"); err != nil {
@@ -197,10 +217,11 @@ func TestBoardClickOpensTheInspectorAndAddsTasks(t *testing.T) {
 		t.Errorf("opened %d", m.openID)
 	}
 	m.openID = 0
-	tt.Frame()                                     // the columns take the room the inspector gave back
-	if err := tt.Click("Add a task"); err != nil { // the + of the To do column puts the cursor in the composer
-		t.Fatal(err)
+	tt.Frame()
+	if tt.HasText("Add a task") {
+		t.Error("a lane header has a +")
 	}
+	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("Board added")
 	tt.Key(0, ui.KeyEnter)
 	found := false
@@ -208,7 +229,7 @@ func TestBoardClickOpensTheInspectorAndAddsTasks(t *testing.T) {
 		found = found || task.Title == "Board added" && task.Status == data.Todo
 	}
 	if !found {
-		t.Error("the To do column did not add a task")
+		t.Error("the composer above the board did not add a task")
 	}
 }
 
@@ -217,22 +238,24 @@ func TestViewToggleSwitchesBetweenListAndBoard(t *testing.T) {
 	if err := tt.Click("Board view"); err != nil {
 		t.Fatal(err)
 	}
-	if !m.board[1] || !tt.HasText("Nothing waiting") && !tt.HasText("Blocked") {
+	if !m.board[1] || !tt.HasText("In review") {
 		t.Errorf("not a board: %q", tt.Texts())
 	}
 	if err := tt.Click("List view"); err != nil {
 		t.Fatal(err)
 	}
-	if m.board[1] || tt.HasText("Nothing waiting. Drag a card here to plan it.") {
+	if m.board[1] || tt.HasText("Nothing to review") {
 		t.Error("not back on the list")
 	}
 }
 
-func TestMilestoneMenuFiltersTheProject(t *testing.T) {
-	tt, _, _ := projectTester(t, 1)
-	if !tt.HasText("All milestones") {
-		t.Error("project 1 has milestones but no menu")
+func TestMilestoneFilterIsHiddenUntilTheProjectHasAMilestone(t *testing.T) {
+	tt, _, _ := projectTester(t, 2)
+	if tt.HasText("All milestones") {
+		t.Error("a project without a milestone has the filter")
 	}
+	tt, _, _ = projectTester(t, 1)
+	has(t, tt, "All milestones")
 	if err := tt.Click("Milestone: All milestones"); err != nil {
 		t.Fatal(err)
 	}
@@ -242,4 +265,5 @@ func TestMilestoneMenuFiltersTheProject(t *testing.T) {
 	if tt.HasText("Decide on the activation policy") {
 		t.Error("the milestone filter left a task of no milestone")
 	}
+	has(t, tt, "v0.2 native")
 }
