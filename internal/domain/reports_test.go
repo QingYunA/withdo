@@ -28,7 +28,7 @@ func TestReportProgressCreatesDoingTaskFromCwd(t *testing.T) {
 	if !r.Created {
 		t.Error("first report should create the task")
 	}
-	eq(t, "title", r.Task.Title, "feat/login")
+	eq(t, "title is the first sentence, not the branch", r.Task.Title, "started")
 	eqPtr(t, "branch", r.Task.Branch, ptr("feat/login"))
 	eq(t, "status", r.Task.Status, domain.StatusDoing)
 	eq(t, "source", r.Task.Source, domain.SourceAgent)
@@ -127,8 +127,8 @@ func TestReportProgressOutsideGit(t *testing.T) {
 func TestReportProgressTitleFromSummary(t *testing.T) {
 	c, _ := newCore(t)
 	long := progress(t, c, domain.ProgressInput{Summary: strings.Repeat("é", 300)})
-	if n := len([]rune(long.Task.Title)); n != 80 {
-		t.Errorf("title has %d runes, want 80", n)
+	if n := len([]rune(long.Task.Title)); n != 60 {
+		t.Errorf("title has %d runes, want 60", n)
 	}
 	if !strings.HasSuffix(long.Task.Title, "…") {
 		t.Error("truncated title should end with an ellipsis")

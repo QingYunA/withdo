@@ -13,7 +13,7 @@ import (
 const (
 	taskCols = "id, project_id, milestone_id, title, notes, status, priority, due_at, remind_at, " +
 		"branch, pr_url, pr_number, source, created_at, updated_at, completed_at, reminded_at, " +
-		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at"
+		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id"
 	// DefaultTaskLimit is how many tasks ListTasks returns when no limit is given.
 	DefaultTaskLimit = 50
 )
@@ -42,11 +42,16 @@ func prNumber(url *string) *int64 {
 
 func scanTask(s scanner) (Task, error) {
 	var t Task
-	err := s.Scan(&t.ID, &t.ProjectID, &t.MilestoneID, &t.Title, &t.Notes, &t.Status, &t.Priority,
+	err := s.Scan(taskDest(&t)...)
+	return t, err
+}
+
+// taskDest lists the fields of t in taskCols order, for Scan.
+func taskDest(t *Task) []any {
+	return []any{&t.ID, &t.ProjectID, &t.MilestoneID, &t.Title, &t.Notes, &t.Status, &t.Priority,
 		&t.DueAt, &t.RemindAt, &t.Branch, &t.PRURL, &t.PRNumber, &t.Source,
 		&t.CreatedAt, &t.UpdatedAt, &t.CompletedAt, &t.RemindedAt,
-		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt)
-	return t, err
+		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt, &t.ParentID}
 }
 
 func getTask(ctx context.Context, q store.Querier, id int64) (*Task, error) {
@@ -77,6 +82,9 @@ type CreateTaskInput struct {
 	RemindAt    *string
 	Branch      *string
 	PRURL       *string
+	// ParentID makes the task a subtask. The parent must exist and be in the same project; a task
+	// without a project joins the parent's.
+	ParentID *int64
 }
 
 // CreateTask inserts a task. A milestone with no project assigns the
@@ -124,16 +132,21 @@ func (c *Core) insertTask(ctx context.Context, q store.Querier, in CreateTaskInp
 	if err != nil {
 		return nil, err
 	}
+	if in.ParentID != nil {
+		if projectID, err = checkParent(ctx, q, "parent_id", 0, *in.ParentID, projectID); err != nil {
+			return nil, err
+		}
+	}
 	ts := c.stamp()
 	var completed *string
 	if in.Status.Terminal() {
 		completed = &ts
 	}
 	res, err := q.ExecContext(ctx, `INSERT INTO tasks (project_id, milestone_id, title, notes, status, priority,
-		due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at, parent_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		projectID, in.MilestoneID, in.Title, in.Notes, in.Status, in.Priority,
-		in.DueAt, in.RemindAt, in.Branch, in.PRURL, prNumber(in.PRURL), in.Source, ts, ts, completed)
+		in.DueAt, in.RemindAt, in.Branch, in.PRURL, prNumber(in.PRURL), in.Source, ts, ts, completed, in.ParentID)
 	if err != nil {
 		return nil, fmt.Errorf("insert task: %w", err)
 	}
@@ -196,6 +209,7 @@ type TaskPatch struct {
 	RemindAt    Nullable[string]
 	Branch      Nullable[string]
 	PRURL       Nullable[string]
+	ParentID    Nullable[int64]
 }
 
 // UpdateTask patches a task in place. Moving to done/cancelled stamps
@@ -231,6 +245,11 @@ func (c *Core) updateTask(ctx context.Context, q store.Querier, id int64, patch 
 	if err != nil {
 		return nil, err
 	}
+	if next.ParentID != nil && !sameInt(cur.ParentID, next.ParentID) {
+		if projectID, err = checkParent(ctx, q, "parent_id", id, *next.ParentID, projectID); err != nil {
+			return nil, err
+		}
+	}
 	ts := c.stamp()
 	next.UpdatedAt = ts
 	next.CompletedAt = completedAt(*cur, next.Status, ts)
@@ -239,14 +258,19 @@ func (c *Core) updateTask(ctx context.Context, q store.Querier, id int64, patch 
 	}
 	_, err = q.ExecContext(ctx, `UPDATE tasks SET project_id = ?, milestone_id = ?, title = ?, notes = ?, status = ?,
 		priority = ?, due_at = ?, remind_at = ?, reminded_at = ?, branch = ?, pr_url = ?, pr_number = ?,
-		updated_at = ?, completed_at = ? WHERE id = ?`,
+		updated_at = ?, completed_at = ?, parent_id = ? WHERE id = ?`,
 		projectID, next.MilestoneID, next.Title, next.Notes, next.Status, next.Priority, next.DueAt,
-		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, id)
+		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, next.ParentID, id)
 	if err != nil {
 		return nil, fmt.Errorf("update task: %w", err)
 	}
 	if err := forgetPullRequest(ctx, q, *cur, next); err != nil {
 		return nil, err
+	}
+	if next.Status.Terminal() && !cur.Status.Terminal() {
+		if err := c.closeSubtasks(ctx, q, id, ClosedWithParentSummary); err != nil {
+			return nil, err
+		}
 	}
 	return getTask(ctx, q, id)
 }
@@ -279,6 +303,7 @@ func applyPatch(cur Task, p TaskPatch) (Task, error) {
 	next.RemindAt = p.RemindAt.apply(cur.RemindAt)
 	next.Branch = p.Branch.apply(cur.Branch)
 	next.PRURL = p.PRURL.apply(cur.PRURL)
+	next.ParentID = p.ParentID.apply(cur.ParentID)
 	return next, nil
 }
 
@@ -300,7 +325,8 @@ type TaskFilter struct {
 	Inbox       bool // only tasks without a project
 	Statuses    []Status
 	MilestoneID *int64
-	Limit       int // DefaultTaskLimit when 0
+	ParentID    *int64 // only the subtasks of this task
+	Limit       int    // DefaultTaskLimit when 0
 }
 
 // ListTasks returns matching tasks, newest first.
@@ -315,6 +341,9 @@ func (c *Core) ListTasks(ctx context.Context, f TaskFilter) ([]Task, error) {
 	}
 	if f.MilestoneID != nil {
 		where, args = append(where, "milestone_id = ?"), append(args, *f.MilestoneID)
+	}
+	if f.ParentID != nil {
+		where, args = append(where, "parent_id = ?"), append(args, *f.ParentID)
 	}
 	if len(f.Statuses) > 0 {
 		where = append(where, "status IN ("+strings.TrimSuffix(strings.Repeat("?,", len(f.Statuses)), ",")+")")

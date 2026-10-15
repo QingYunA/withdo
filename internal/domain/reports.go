@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
@@ -11,7 +12,7 @@ import (
 const (
 	reportCols = "id, task_id, agent, status, summary, next_step, created_at"
 	// maxTitleRunes bounds a title derived from a summary.
-	maxTitleRunes = 80
+	maxTitleRunes = 60
 )
 
 func scanReport(s scanner) (Report, error) {
@@ -92,6 +93,9 @@ type ProgressInput struct {
 	Cwd    string
 	Branch string
 	PRURL  string
+	// ParentTaskID makes the task a subtask of that task: given by an agent that was started by
+	// another one. Without it, a report from a subagent's worktree finds its parent by itself.
+	ParentTaskID *int64
 }
 
 // ProgressResult is the outcome of ReportProgress.
@@ -114,6 +118,8 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	}
 	var projectID *int64
 	branch := in.Branch
+	// mainBranch is where a subagent's parent lives; empty unless cwd is a subagent's worktree.
+	mainBranch := ""
 	if in.TaskID == nil && in.Cwd != "" {
 		resolved, err := c.ResolveProjectFromCwd(ctx, in.Cwd)
 		if err != nil {
@@ -124,12 +130,15 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 			if branch == "" {
 				branch = resolved.Git.Branch
 			}
+			if in.ParentTaskID == nil {
+				mainBranch = c.subagentMainBranch(ctx, resolved.Git)
+			}
 		}
 	}
 	var out *ProgressResult
 	err := c.write(ctx, func(q store.Querier) error {
 		var err error
-		out, err = c.recordProgress(ctx, q, in, projectID, branch)
+		out, err = c.recordProgress(ctx, q, in, projectID, branch, mainBranch)
 		return err
 	})
 	if err != nil {
@@ -138,8 +147,8 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	return out, nil
 }
 
-func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressInput, projectID *int64, branch string) (*ProgressResult, error) {
-	task, created, err := c.locateOrCreate(ctx, q, in, projectID, branch)
+func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressInput, projectID *int64, branch, mainBranch string) (*ProgressResult, error) {
+	task, created, err := c.locateOrCreate(ctx, q, in, projectID, branch, mainBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -158,6 +167,12 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 	}
 	if created {
 		patch = TaskPatch{}
+	} else if in.ParentTaskID != nil && !sameInt(task.ParentID, in.ParentTaskID) {
+		// An existing task reported with a parent becomes that parent's subtask.
+		if _, err := checkParent(ctx, q, "parent_task_id", task.ID, *in.ParentTaskID, task.ProjectID); err != nil {
+			return nil, err
+		}
+		patch.ParentID = Set(*in.ParentTaskID)
 	}
 	updated, err := c.updateTask(ctx, q, task.ID, patch)
 	if err != nil {
@@ -172,7 +187,7 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 	return &ProgressResult{Task: *updated, Report: *report, Created: created}, nil
 }
 
-func (c *Core) locateOrCreate(ctx context.Context, q store.Querier, in ProgressInput, projectID *int64, branch string) (*Task, bool, error) {
+func (c *Core) locateOrCreate(ctx context.Context, q store.Querier, in ProgressInput, projectID *int64, branch, mainBranch string) (*Task, bool, error) {
 	if in.TaskID != nil {
 		t, err := getTask(ctx, q, *in.TaskID)
 		if err != nil {
@@ -193,16 +208,39 @@ func (c *Core) locateOrCreate(ctx context.Context, q store.Querier, in ProgressI
 	if in.Status != nil {
 		status = *in.Status
 	}
+	parentID, projectID, err := c.parentForNewTask(ctx, q, in, projectID, mainBranch)
+	if err != nil {
+		return nil, false, err
+	}
 	task, err := c.insertTask(ctx, q, CreateTaskInput{
-		Title:     firstNonEmpty(in.Title, branch, truncateTitle(in.Summary)),
+		Title:     firstNonEmpty(in.Title, firstSentence(in.Summary), branch, truncateTitle(in.Summary)),
 		Source:    SourceAgent,
 		Status:    status,
 		Priority:  P2,
 		ProjectID: projectID,
 		Branch:    strPtr(branch),
 		PRURL:     strPtr(in.PRURL),
+		ParentID:  parentID,
 	})
 	return task, true, err
+}
+
+// parentForNewTask picks the parent of a task a report is about to create, and the project it goes
+// in: the given ParentTaskID (validated), else the subagent heuristic's, else none.
+func (c *Core) parentForNewTask(ctx context.Context, q store.Querier, in ProgressInput, projectID *int64, mainBranch string) (*int64, *int64, error) {
+	if in.ParentTaskID != nil {
+		project, err := checkParent(ctx, q, "parent_task_id", 0, *in.ParentTaskID, projectID)
+		return in.ParentTaskID, project, err
+	}
+	if mainBranch == "" {
+		return nil, projectID, nil
+	}
+	since := FormatTime(c.now().Add(-subagentParentWindow))
+	parent, err := findSubagentParent(ctx, q, projectID, mainBranch, in.Agent, since)
+	if err != nil || parent == nil {
+		return nil, projectID, err
+	}
+	return &parent.ID, projectID, nil
 }
 
 func strPtr(s string) *string {
@@ -221,9 +259,37 @@ func firstNonEmpty(vals ...string) string {
 	return ""
 }
 
+// firstSentence is the default title of a task: the first sentence of text, without its closing
+// full stop, cut to maxTitleRunes with an ellipsis. A sentence ends at a line break, at the CJK
+// 。！？, and at a ".", "!" or "?" followed by a space or the end ("foo.go" does not end one).
+func firstSentence(text string) string {
+	runes := []rune(strings.TrimSpace(text))
+	end := len(runes)
+	for i, r := range runes {
+		next := rune(0)
+		if i+1 < len(runes) {
+			next = runes[i+1]
+		}
+		stop := r == '\n' || r == '。' || r == '！' || r == '？' ||
+			(r == '.' || r == '!' || r == '?') && (next == 0 || unicode.IsSpace(next))
+		if stop {
+			end = i
+			if r != '.' && r != '。' && r != '\n' {
+				end = i + 1 // ! and ? stay in the title
+			}
+			break
+		}
+	}
+	return truncateRunes(strings.TrimSpace(string(runes[:end])))
+}
+
 // truncateTitle takes the first line of text, cut to maxTitleRunes with an ellipsis.
 func truncateTitle(text string) string {
 	line, _, _ := strings.Cut(strings.TrimSpace(text), "\n")
+	return truncateRunes(line)
+}
+
+func truncateRunes(line string) string {
 	runes := []rune(line)
 	if len(runes) <= maxTitleRunes {
 		return line

@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // ErrNotRepo means the directory is missing or not inside a git repository.
@@ -90,4 +92,34 @@ func git(ctx context.Context, dir string, args ...string) (string, error) {
 		return "", ErrNotRepo
 	}
 	return strings.TrimSpace(stdout.String()), nil
+}
+
+// BranchFinished reports whether work on branch in the repository at repo is over: the branch no
+// longer exists, or it is merged into repo's HEAD and its tip commit was made at or after began (a
+// branch cut from HEAD and not yet committed to is trivially an ancestor of it, and is not done).
+// It returns an error, and false, when git cannot read the repository.
+func BranchFinished(ctx context.Context, repo, branch string, began time.Time) (bool, error) {
+	if _, err := git(ctx, repo, "rev-parse", "--git-dir"); err != nil {
+		return false, err
+	}
+	// refs/heads/ keeps a branch name from being read as an option.
+	tip, err := git(ctx, repo, "rev-parse", "--verify", "--quiet", "refs/heads/"+branch+"^{commit}")
+	if err != nil || tip == "" {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+		return true, nil
+	}
+	if _, err := git(ctx, repo, "merge-base", "--is-ancestor", tip, "HEAD"); err != nil {
+		return false, ctx.Err()
+	}
+	secs, err := git(ctx, repo, "show", "-s", "--format=%ct", tip)
+	if err != nil {
+		return false, err
+	}
+	made, err := strconv.ParseInt(secs, 10, 64)
+	if err != nil {
+		return false, fmt.Errorf("read the date of %s: %w", tip, err)
+	}
+	return made >= began.Unix(), nil
 }
