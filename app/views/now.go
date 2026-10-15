@@ -18,11 +18,11 @@ func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
 	}
 	if now.Empty() {
 		m.allClear(c, t)
-		return
 	}
 	m.needsSection(c, t, now.Needs)
 	m.agentsSection(c, t, now.Agents)
 	m.yoursSection(c, t, now)
+	m.doneTodaySection(c, t, now)
 }
 
 // pageHeader is the title with a quiet companion, and whatever controls sit at the right.
@@ -39,7 +39,7 @@ func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, con
 	})
 }
 
-// sectionHeader is an uppercase title with its count.
+// sectionHeader is a section's title in sentence case, with its count.
 func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 	ui.Row(c).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, title)
@@ -78,8 +78,9 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	fill, opacity, _ := m.app.completionPhase(c, it.ID)
 	row := m.rowShell(c, t, it.ID, needRow, opacity)
 	actions := m.actionsFor(it)
-	// Two buttons beside a title in a narrow row leave it no room: they go under the summary.
-	stacked := len(actions) > 1 && m.width < stackActionsBelow
+	// Two buttons beside a title in a narrow row leave it no room: they go under the summary, and
+	// in a very narrow one so does a single button.
+	stacked := (len(actions) > 1 && m.width < stackActionsBelow) || m.width < stackAllActionsBelow
 	buttons := func() {
 		for i, a := range actions {
 			if actionButtonKeyed(c, t, "action-"+itoa(i)+"-"+itoa(it.ID), a.text, a.label).Clicked() {
@@ -89,9 +90,9 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	}
 	row.Children(func() {
 		if it.Kind == data.NeedReminder {
-			ui.Icon(c, theme.IconBell).Size(16, 16).TextColor(t.Accent).Shrink(0).Margin(1, 0, 0)
+			ui.Icon(c, theme.IconBell).Size(theme.GlyphSize, theme.GlyphSize).TextColor(t.Accent).Shrink(0).Margin(2, 0, 0)
 		} else {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlotTop(c, t, it.Task, fill)
 		}
 		body(c, func() {
 			m.titleLine(c, t, it.Task, it.Project, false)
@@ -117,6 +118,9 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 // stackActionsBelow is the content width under which a row with two buttons puts them under its
 // summary.
 const stackActionsBelow float32 = 560
+
+// stackAllActionsBelow is the content width under which every row puts its button under the summary.
+const stackAllActionsBelow float32 = 420
 
 // rowAction is a button of a Needs you row: its text, what it says to assistive technology, and
 // what it does.
@@ -152,7 +156,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity)
 		row.Children(func() {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlotTop(c, t, it.Task, fill)
 			body(c, func() {
 				m.titleLine(c, t, it.Task, it.Project, true)
 				summaryLine(c, t, m.agentSummary(it))
@@ -180,7 +184,7 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
-			m.app.glyphSlot(c, t, it.Task, fill)
+			m.glyphSlot(c, t, it.Task, fill)
 			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
 			if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
 				theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)

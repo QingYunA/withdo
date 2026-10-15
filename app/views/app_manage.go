@@ -54,6 +54,17 @@ func (a *App) DeleteTask(id int) error {
 	return a.fail(a.do(func() error { return a.Store.DeleteTask(id) }))
 }
 
+// SnapshotTask reads a task with its reports before it is deleted; RestoreTask puts it back.
+func (a *App) SnapshotTask(id int) (data.TaskSnapshot, error) {
+	snap, err := a.Store.SnapshotTask(id)
+	a.fail(err)
+	return snap, err
+}
+
+func (a *App) RestoreTask(s data.TaskSnapshot) error {
+	return a.fail(a.do(func() error { _, err := a.Store.RestoreTask(s); return err }))
+}
+
 // MoveTask moves a task to a project, or to the Inbox for project 0.
 func (a *App) MoveTask(t data.Task, project int) {
 	if (t.ProjectID == nil && project == 0) || (t.ProjectID != nil && *t.ProjectID == project) {

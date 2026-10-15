@@ -88,6 +88,30 @@ func (r *Real) DeleteProject(id int) (Removed, error) {
 
 func (r *Real) DeleteTask(id int) error { return r.core.DeleteTask(r.ctx(), int64(id)) }
 
+func (r *Real) SnapshotTask(id int) (TaskSnapshot, error) {
+	snap, err := r.core.SnapshotTask(r.ctx(), int64(id))
+	if err != nil {
+		return TaskSnapshot{}, err
+	}
+	out := TaskSnapshot{Task: fromTask(snap.Task), raw: *snap}
+	for i := len(snap.Reports) - 1; i >= 0; i-- { // newest first, as GetTask has them
+		out.Reports = append(out.Reports, fromReport(snap.Reports[i]))
+	}
+	return out, nil
+}
+
+func (r *Real) RestoreTask(s TaskSnapshot) (Task, error) {
+	raw, ok := s.raw.(domain.TaskSnapshot)
+	if !ok {
+		return Task{}, errors.New("snapshot was not taken by this store")
+	}
+	t, err := r.core.RestoreTask(r.ctx(), raw)
+	if err != nil {
+		return Task{}, err
+	}
+	return fromTask(*t), nil
+}
+
 func (r *Real) CreateMilestone(projectID int, title string, dueAt *time.Time) (Milestone, error) {
 	var due *string
 	if dueAt != nil && !dueAt.IsZero() {

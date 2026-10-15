@@ -39,3 +39,26 @@ func TestTokensFollowTheSpec(t *testing.T) {
 		}
 	}
 }
+
+// The M4c type scale: one step larger than the first version, section headers in sentence case.
+func TestTypeScaleIsTheM4cOne(t *testing.T) {
+	for name, c := range map[string]struct {
+		got        Style
+		size, line float32
+		weight     int
+	}{
+		"title": {Title, 26, 32, 700}, "input": {Input, 17, 25, 400},
+		"body": {Body, 15, 22, 400}, "body.strong": {BodyStrong, 15, 22, 500},
+		"meta": {Meta, 13, 18, 400}, "section": {Section, 13, 18, 600}, "mono": {Mono, 12.5, 18, 400},
+	} {
+		if c.got.Size != c.size || c.got.Line != c.line || c.got.Weight != c.weight {
+			t.Errorf("%s is %v/%v %d, want %v/%v %d", name, c.got.Size, c.got.Line, c.got.Weight, c.size, c.line, c.weight)
+		}
+	}
+	if Section.Upper || Section.Tracking != 0 {
+		t.Error("section headers are sentence case without tracking")
+	}
+	if GlyphSize != 18 || ContentMax != 780 || ContentPad != 48 || RadiusCard != 9 || SidebarRow != 32 {
+		t.Error("metrics differ from the spec")
+	}
+}

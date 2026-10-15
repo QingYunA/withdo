@@ -6,14 +6,14 @@ import (
 )
 
 // manageState is the state of managing things by hand: the sheets and the confirmation that float
-// over the window, the project being renamed in the sidebar, the search and the Logbook.
+// over the window, the project being renamed in the sidebar, the search and Completed.
 type manageState struct {
 	project   projectSheet
 	milestone milestoneSheet
 	confirm   confirmation
 	rename    renaming
 	search    searchState
-	log       logState
+	completed completedState
 }
 
 // managePanelWidth is the width of the small sheets.

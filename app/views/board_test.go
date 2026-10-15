@@ -47,7 +47,7 @@ func TestBoardKeepsBacklogAndDoneBehindTheFoldLine(t *testing.T) {
 	if got := statusesOf(m.boardColumns()); len(got) != 4 || got[data.Backlog] || got[data.Done] {
 		t.Fatalf("columns %v, want to do, doing, blocked, review", got)
 	}
-	if err := tt.Click("show Done 4 and Backlog 2"); err != nil {
+	if err := tt.Click("show Done 5 and Backlog 2"); err != nil {
 		t.Fatal(err)
 	}
 	if got := statusesOf(m.boardColumns()); len(got) != 6 {

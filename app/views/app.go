@@ -47,7 +47,7 @@ type App struct {
 	GitHub data.GitHub
 
 	snap       snapshot
-	rev        int // counts the snapshots, so a search or the Logbook knows its answer is old
+	rev        int // counts the snapshots, so a search or Completed knows its answer is old
 	completing map[int]completion
 }
 

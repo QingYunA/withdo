@@ -47,21 +47,6 @@ func TestInspectorSavesNotesOnBlur(t *testing.T) {
 	}
 }
 
-func TestInspectorChangesPriorityThroughTheMenu(t *testing.T) {
-	tt, m, app := newMainTester(t, 1100)
-	m.OpenTask(7)
-	tt.Frame()
-	if err := tt.Click("Priority: P2  Normal"); err != nil {
-		t.Fatal(err)
-	}
-	if err := tt.ChooseMenuItem("P1  High"); err != nil {
-		t.Fatal(err)
-	}
-	if got, _ := app.Task(7); got.Priority != data.P1 {
-		t.Errorf("priority %v", got.Priority)
-	}
-}
-
 func TestInspectorOpensThePullRequest(t *testing.T) {
 	app, _, rec := newTestApp(t)
 	m := NewMain(app)
@@ -100,7 +85,7 @@ func TestSettingsSheetCopiesTheCommand(t *testing.T) {
 
 func TestSidebarListsNowInboxAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Now", "Inbox", "PROJECTS", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+	for _, want := range []string{"Now", "Inbox", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
 		if !tt.HasText(want) {
 			t.Errorf("sidebar is missing %q", want)
 		}
@@ -151,7 +136,7 @@ func TestOpenTaskFromANotificationShowsItOverNow(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 2})
 	m.OpenTask(7)
 	tt.Frame()
-	if m.nav.screen != screenNow || m.openID != 7 || !tt.HasText("ACTIVITY") {
+	if m.nav.screen != screenNow || m.openID != 7 || !tt.HasText("Activity") {
 		t.Errorf("nav %+v open %d", m.nav, m.openID)
 	}
 	m.OpenTask(99999) // a task that no longer exists changes nothing

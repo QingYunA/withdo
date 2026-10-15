@@ -15,16 +15,20 @@ type Style struct {
 	Mono       bool
 }
 
-// The type scale. A view uses at most three of these.
+// The type scale (M4c: one step larger than the first version). A view uses at most three of
+// these.
 var (
-	Title      = Style{Size: 20, Line: 26, Weight: 600}
-	Input      = Style{Size: 15, Line: 20, Weight: 400}
-	Body       = Style{Size: 13, Line: 18, Weight: 400}
-	BodyStrong = Style{Size: 13, Line: 18, Weight: 500}
-	Meta       = Style{Size: 12, Line: 16, Weight: 400}
-	MetaStrong = Style{Size: 12, Line: 16, Weight: 500}
-	Section    = Style{Size: 11, Line: 14, Weight: 600, Tracking: 0.4, Upper: true}
-	Mono       = Style{Size: 11.5, Line: 16, Weight: 400, Mono: true}
+	Title         = Style{Size: 26, Line: 32, Weight: 700}
+	Heading       = Style{Size: 21, Line: 28, Weight: 700} // the title of the task in the inspector
+	Input         = Style{Size: 17, Line: 25, Weight: 400}
+	Body          = Style{Size: 15, Line: 22, Weight: 400}
+	BodyStrong    = Style{Size: 15, Line: 22, Weight: 500}
+	Compact       = Style{Size: 14, Line: 20, Weight: 400} // sidebar rows, menus, inspector values
+	CompactStrong = Style{Size: 14, Line: 20, Weight: 500}
+	Meta          = Style{Size: 13, Line: 18, Weight: 400}
+	MetaStrong    = Style{Size: 13, Line: 18, Weight: 500}
+	Section       = Style{Size: 13, Line: 18, Weight: 600} // sentence case; callers color it text.secondary
+	Mono          = Style{Size: 12.5, Line: 18, Weight: 400, Mono: true}
 )
 
 // MonoFamily is the font of branches and pull request numbers.
@@ -42,10 +46,10 @@ func (s Style) Apply(e ui.Element) ui.Element {
 	return e
 }
 
-// Text builds a single line of text in a style and color. Section styles are uppercased.
+// Text builds a single line of text in a style and color.
 //
-// Capitals and letter spacing suit Latin text, not Han characters: a text with any gets neither,
-// as "Agent 进行中" stays as it is written.
+// A style with capitals or letter spacing (none of the scale has them now) suits Latin text, not
+// Han characters: a text with any gets neither, as "Agent 进行中" stays as it is written.
 func Text(c *ui.Context, s Style, color ui.Color, text string) ui.Element {
 	if hasHan(text) {
 		s.Tracking, s.Upper = 0, false

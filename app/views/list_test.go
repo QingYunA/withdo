@@ -1,6 +1,7 @@
 package views
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -25,8 +26,11 @@ func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	if !above(t, tt, "Blocked", "In review") || !above(t, tt, "In review", "Doing") || !above(t, tt, "Doing", "To do") {
 		t.Error("groups are out of order")
 	}
-	if tt.HasText("Spike the mygo shell") || tt.HasText("Poll gh for PR status") {
-		t.Error("Done and Backlog tasks are drawn before they are shown")
+	if tt.HasText("Poll gh for PR status") {
+		t.Error("Backlog tasks are drawn before they are shown")
+	}
+	if !above(t, tt, "To do", "Done") || !tt.HasText("Spike the mygo shell") {
+		t.Errorf("the Done group follows To do, expanded: %q", tt.Texts())
 	}
 	// A project with a single doing task draws one group and nothing else.
 	tt2, _, _ := projectTester(t, 2)
@@ -35,17 +39,17 @@ func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	}
 }
 
-func TestProjectListFoldsDoneAndBacklogUntilShown(t *testing.T) {
+func TestProjectListShowsDoneExpandedAndFoldsBacklogUntilShown(t *testing.T) {
 	tt, m, _ := projectTester(t, 1)
 	tt.SetSize(1100, 1600) // room for the opened groups
 	tt.Frame()
-	if !tt.HasText("Done 4 · Backlog 2") || !tt.HasText("— show") {
-		t.Fatalf("no fold line in %q", tt.Texts())
+	if !tt.HasText("Backlog 2") || !tt.HasText("— show") || tt.HasText("Done 5") {
+		t.Fatalf("no fold line for Backlog alone in %q", tt.Texts())
 	}
-	if tt.HasText("Spike the mygo shell") {
-		t.Error("a done task is visible while folded")
+	if tt.HasText("Poll gh for PR status") {
+		t.Error("a backlog task is visible while folded")
 	}
-	if err := tt.Click("show Done 4 and Backlog 2"); err != nil {
+	if err := tt.Click("show Backlog 2"); err != nil {
 		t.Fatal(err)
 	}
 	for _, want := range []string{"Backlog", "Done", "Spike the mygo shell", "Poll gh for PR status", "— hide"} {
@@ -56,11 +60,11 @@ func TestProjectListFoldsDoneAndBacklogUntilShown(t *testing.T) {
 	if !m.expanded[m.nav] {
 		t.Error("state not kept")
 	}
-	if err := tt.Click("hide Done 4 and Backlog 2"); err != nil {
+	if err := tt.Click("hide Backlog 2"); err != nil {
 		t.Fatal(err)
 	}
-	if tt.HasText("Spike the mygo shell") {
-		t.Error("still shown after hide")
+	if tt.HasText("Poll gh for PR status") || !tt.HasText("Spike the mygo shell") {
+		t.Error("hiding Backlog should leave the Done group where it was")
 	}
 }
 
@@ -130,7 +134,7 @@ func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
 func TestListKeyboardWalksRowsInOrder(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	ids := m.listIDs()
-	if len(ids) != 6 || ids[0] != 3 || ids[1] != 2 {
+	if len(ids) != 9 || ids[0] != 3 || ids[1] != 2 { // blocked, review, doing, to do, then the newest three done
 		t.Fatalf("ids %v", ids)
 	}
 	tt.Key(0, ui.KeyDown)
@@ -166,7 +170,7 @@ func TestSpaceCompletesAUsersTaskInTheList(t *testing.T) {
 	}
 }
 
-func TestDoneGroupShowsTenAndShowAll(t *testing.T) {
+func TestDoneGroupShowsThreeAndShowAll(t *testing.T) {
 	f := data.NewEmptyFake(fixedNow)
 	p := f.AddProject("scratch", "me/scratch")
 	for i := 0; i < 12; i++ {
@@ -178,16 +182,21 @@ func TestDoneGroupShowsTenAndShowAll(t *testing.T) {
 	tt.SetSize(1100, 1600)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	if err := tt.Click("show Done 12"); err != nil {
+	finished := func() (n int) {
+		for _, s := range tt.Texts() {
+			if strings.HasPrefix(s, "Finished ") {
+				n++
+			}
+		}
+		return n
+	}
+	if n := finished(); n != 3 || !tt.HasText("Show all 12 →") {
+		t.Fatalf("%d rows and no link: %q", n, tt.Texts())
+	}
+	if err := tt.Click("Show all 12 →"); err != nil {
 		t.Fatal(err)
 	}
-	if !tt.HasText("Show all 12 done") {
-		t.Fatalf("no link: %q", tt.Texts())
-	}
-	if err := tt.Click("Show all 12 done"); err != nil {
-		t.Fatal(err)
-	}
-	if tt.HasText("Show all 12 done") {
-		t.Error("link still shown")
+	if n := finished(); n != 12 || tt.HasText("Show all 12 →") {
+		t.Errorf("%d rows, or the link is still shown", n)
 	}
 }

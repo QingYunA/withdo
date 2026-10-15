@@ -2,7 +2,6 @@ package views
 
 import (
 	"github.com/QingYunA/adhd-todo/app/data"
-	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -37,24 +36,30 @@ func link(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 	return l
 }
 
-// glyphButton is the status glyph with a 24 pt hit target; clicking it opens the status menu.
+// glyphButton is the status glyph with a 24 pt hit target. Clicking the glyph of my own open task
+// marks it done at once; the glyph of an agent's task, or of a finished one, opens the task menu
+// under it, so agent work is never completed by accident and a finished task can be reopened.
 // fill, when above 0, plays the completion animation.
-func (a *App) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) ui.Element {
-	say := locales.In(c.Locale())
-	name := statusLabel(say, task.Status)
+func (m *Main) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) ui.Element {
+	own := task.Source == data.SourceUser && !task.Status.Terminal()
+	name := statusLabel(m.say, task.Status)
+	label, tip := m.say.A11yStatus(name), name
+	if own {
+		label, tip = m.say.A11yMarkDone(task.Title), m.say.ActionDone()
+	}
 	btn := ui.ButtonBase(c.Key("glyph")).Size(theme.HitTarget, theme.HitTarget).Shrink(0).Center().Radius(theme.RadiusControl).
-		Label(say.A11yStatus(name)).Tooltip(name)
-	btn.Menu(func(m *ui.Menu) {
-		for _, s := range data.Statuses {
-			if m.Item(statusLabel(say, s)).Checked(task.Status == s).Chosen() {
-				a.SetStatus(task, s)
-			}
-		}
-	})
+		Label(label).Tooltip(tip).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)
 	}
 	btn.Children(func() { theme.StatusGlyph(c, t, task.Status, fill) })
+	if btn.Clicked() {
+		if own {
+			m.app.SetStatus(task, data.Done)
+		} else {
+			m.openMenuBelow(btn, task.ID, pageMain)
+		}
+	}
 	return btn
 }
 

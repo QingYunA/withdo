@@ -158,7 +158,7 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 // Radii in points.
 const (
 	RadiusControl float32 = 6  // pills, inputs
-	RadiusCard    float32 = 8  // cards, rows
+	RadiusCard    float32 = 9  // cards, rows
 	RadiusPanel   float32 = 12 // ask field, Needs you container, popovers, sheets
 )
 
@@ -179,13 +179,14 @@ const (
 
 // Layout metrics shared by several surfaces.
 const (
-	GlyphSize      float32 = 16
+	GlyphSize      float32 = 18
 	HitTarget      float32 = 24
 	RowOneLine     float32 = 32
 	SidebarWidth   float32 = 216
 	InspectorWidth float32 = 360
-	ContentMax     float32 = 820 // the centered column of lists
-	ContentPad     float32 = 56  // its side padding when there is room
+	SidebarRow     float32 = 32  // a row of the sidebar, in the 14 pt sidebar size
+	ContentMax     float32 = 780 // the centered column of lists
+	ContentPad     float32 = 48  // its side padding when there is room
 	AskHeight      float32 = 46
 	ColumnWidth    float32 = 264 // a board column at its widest
 	MinColumnWidth float32 = 192 // and at its narrowest, before the board scrolls
@@ -196,5 +197,6 @@ const (
 	WindowMinHeight = 540
 	WindowWidth     = 1100
 	WindowHeight    = 720
-	DoneRecentLimit = 10
+	DoneRecentLimit = 10 // Done cards a board column shows before "Show all"
+	DoneListRows    = 3  // Done rows a list shows before "Show all"
 )

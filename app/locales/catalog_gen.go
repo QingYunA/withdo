@@ -108,6 +108,52 @@ func (msgs Messages) A11yMarkDone(title string) string {
 	return Catalog.Format(msgs.locale, "a11yMarkDone", map[string]any{"title": title})
 }
 
+// A11yMenuPriority says "Set priority to {name}"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of a priority button in the task menu.
+func A11yMenuPriority(name string) string { return In(i18n.Locale()).A11yMenuPriority(name) }
+
+// A11yMenuPriority says "Set priority to {name}"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of a priority button in the task menu.
+func (msgs Messages) A11yMenuPriority(name string) string {
+	return Catalog.Format(msgs.locale, "a11yMenuPriority", map[string]any{"name": name})
+}
+
+// A11yMenuMoveTo says "Move to {name}"
+// in the language the app shows.
+//
+// Accessibility label of a project (or the Inbox) on the Move to page of
+// the task menu.
+func A11yMenuMoveTo(name string) string { return In(i18n.Locale()).A11yMenuMoveTo(name) }
+
+// A11yMenuMoveTo says "Move to {name}"
+// in the language of msgs.
+//
+// Accessibility label of a project (or the Inbox) on the Move to page of
+// the task menu.
+func (msgs Messages) A11yMenuMoveTo(name string) string {
+	return Catalog.Format(msgs.locale, "a11yMenuMoveTo", map[string]any{"name": name})
+}
+
+// A11yMenuStatus says "Set status to {name}"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of a status glyph button in the task
+// menu.
+func A11yMenuStatus(name string) string { return In(i18n.Locale()).A11yMenuStatus(name) }
+
+// A11yMenuStatus says "Set status to {name}"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of a status glyph button in the task
+// menu.
+func (msgs Messages) A11yMenuStatus(name string) string {
+	return Catalog.Format(msgs.locale, "a11yMenuStatus", map[string]any{"name": name})
+}
+
 // A11yMilestone says "Milestone: {name}"
 // in the language the app shows.
 //
@@ -1298,16 +1344,18 @@ func (msgs Messages) ListSeparator() string {
 	return Catalog.Format(msgs.locale, "listSeparator", nil)
 }
 
-// ListShowAllDone says "Show all {n} done"
+// ListShowAllDone says "Show all {n} →"
 // in the language the app shows.
 //
-// Link under the recent done tasks of a list.
+// Link under the first Done rows of a project or the Inbox; expands the
+// group in place. n is how many tasks are done.
 func ListShowAllDone(n int) string { return In(i18n.Locale()).ListShowAllDone(n) }
 
-// ListShowAllDone says "Show all {n} done"
+// ListShowAllDone says "Show all {n} →"
 // in the language of msgs.
 //
-// Link under the recent done tasks of a list.
+// Link under the first Done rows of a project or the Inbox; expands the
+// group in place. n is how many tasks are done.
 func (msgs Messages) ListShowAllDone(n int) string {
 	return Catalog.Format(msgs.locale, "listShowAllDone", map[string]any{"n": n})
 }
@@ -1518,36 +1566,6 @@ func (msgs Messages) ManageDeleteTask() string {
 	return Catalog.Format(msgs.locale, "manageDeleteTask", nil)
 }
 
-// ManageDeleteTaskBody says "Its progress reports go with it. It can't be undone."
-// in the language the app shows.
-//
-// Body of the confirmation before a task is deleted.
-func ManageDeleteTaskBody() string { return In(i18n.Locale()).ManageDeleteTaskBody() }
-
-// ManageDeleteTaskBody says "Its progress reports go with it. It can't be undone."
-// in the language of msgs.
-//
-// Body of the confirmation before a task is deleted.
-func (msgs Messages) ManageDeleteTaskBody() string {
-	return Catalog.Format(msgs.locale, "manageDeleteTaskBody", nil)
-}
-
-// ManageDeleteTaskTitle says "Delete “{title}”?"
-// in the language the app shows.
-//
-// Title of the confirmation before a task is deleted.
-func ManageDeleteTaskTitle(title string) string {
-	return In(i18n.Locale()).ManageDeleteTaskTitle(title)
-}
-
-// ManageDeleteTaskTitle says "Delete “{title}”?"
-// in the language of msgs.
-//
-// Title of the confirmation before a task is deleted.
-func (msgs Messages) ManageDeleteTaskTitle(title string) string {
-	return Catalog.Format(msgs.locale, "manageDeleteTaskTitle", map[string]any{"title": title})
-}
-
 // ManageFieldName says "Name"
 // in the language the app shows.
 //
@@ -1576,60 +1594,60 @@ func (msgs Messages) ManageFieldRepo() string {
 	return Catalog.Format(msgs.locale, "manageFieldRepo", nil)
 }
 
-// ManageLogbookEmptyBody says "Tasks you mark done or cancel collect here, newest first."
+// ManageCompletedEmptyBody says "Tasks you mark done or cancel collect here, newest first."
 // in the language the app shows.
 //
-// Body of the empty Logbook; says what appears there.
-func ManageLogbookEmptyBody() string { return In(i18n.Locale()).ManageLogbookEmptyBody() }
+// Body of the empty Completed page; says what appears there.
+func ManageCompletedEmptyBody() string { return In(i18n.Locale()).ManageCompletedEmptyBody() }
 
-// ManageLogbookEmptyBody says "Tasks you mark done or cancel collect here, newest first."
+// ManageCompletedEmptyBody says "Tasks you mark done or cancel collect here, newest first."
 // in the language of msgs.
 //
-// Body of the empty Logbook; says what appears there.
-func (msgs Messages) ManageLogbookEmptyBody() string {
-	return Catalog.Format(msgs.locale, "manageLogbookEmptyBody", nil)
+// Body of the empty Completed page; says what appears there.
+func (msgs Messages) ManageCompletedEmptyBody() string {
+	return Catalog.Format(msgs.locale, "manageCompletedEmptyBody", nil)
 }
 
-// ManageLogbookEmptyTitle says "Nothing finished yet"
+// ManageCompletedEmptyTitle says "Nothing finished yet"
 // in the language the app shows.
 //
-// Title of the empty Logbook.
-func ManageLogbookEmptyTitle() string { return In(i18n.Locale()).ManageLogbookEmptyTitle() }
+// Title of the empty Completed page.
+func ManageCompletedEmptyTitle() string { return In(i18n.Locale()).ManageCompletedEmptyTitle() }
 
-// ManageLogbookEmptyTitle says "Nothing finished yet"
+// ManageCompletedEmptyTitle says "Nothing finished yet"
 // in the language of msgs.
 //
-// Title of the empty Logbook.
-func (msgs Messages) ManageLogbookEmptyTitle() string {
-	return Catalog.Format(msgs.locale, "manageLogbookEmptyTitle", nil)
+// Title of the empty Completed page.
+func (msgs Messages) ManageCompletedEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "manageCompletedEmptyTitle", nil)
 }
 
-// ManageLogbookOlder says "Show older"
+// ManageCompletedOlder says "Show older"
 // in the language the app shows.
 //
-// Link at the end of the Logbook that loads older finished tasks.
-func ManageLogbookOlder() string { return In(i18n.Locale()).ManageLogbookOlder() }
+// Link at the end of the Completed page that loads older finished tasks.
+func ManageCompletedOlder() string { return In(i18n.Locale()).ManageCompletedOlder() }
 
-// ManageLogbookOlder says "Show older"
+// ManageCompletedOlder says "Show older"
 // in the language of msgs.
 //
-// Link at the end of the Logbook that loads older finished tasks.
-func (msgs Messages) ManageLogbookOlder() string {
-	return Catalog.Format(msgs.locale, "manageLogbookOlder", nil)
+// Link at the end of the Completed page that loads older finished tasks.
+func (msgs Messages) ManageCompletedOlder() string {
+	return Catalog.Format(msgs.locale, "manageCompletedOlder", nil)
 }
 
-// ManageLogbookSubtitle says "Done and cancelled, newest first"
+// ManageCompletedSubtitle says "Done and cancelled, newest first"
 // in the language the app shows.
 //
-// Subtitle of the Logbook page.
-func ManageLogbookSubtitle() string { return In(i18n.Locale()).ManageLogbookSubtitle() }
+// Subtitle of the Completed page.
+func ManageCompletedSubtitle() string { return In(i18n.Locale()).ManageCompletedSubtitle() }
 
-// ManageLogbookSubtitle says "Done and cancelled, newest first"
+// ManageCompletedSubtitle says "Done and cancelled, newest first"
 // in the language of msgs.
 //
-// Subtitle of the Logbook page.
-func (msgs Messages) ManageLogbookSubtitle() string {
-	return Catalog.Format(msgs.locale, "manageLogbookSubtitle", nil)
+// Subtitle of the Completed page.
+func (msgs Messages) ManageCompletedSubtitle() string {
+	return Catalog.Format(msgs.locale, "manageCompletedSubtitle", nil)
 }
 
 // ManageMilestoneClose says "Close milestone"
@@ -1788,36 +1806,354 @@ func (msgs Messages) ManageMilestoneReopen() string {
 	return Catalog.Format(msgs.locale, "manageMilestoneReopen", nil)
 }
 
-// ManageMoveTo says "Move to"
+// A11yTaskMenu says "Task menu"
 // in the language the app shows.
 //
-// Item of a task context menu that opens the list of projects (and the
-// Inbox) to move the task to.
-func ManageMoveTo() string { return In(i18n.Locale()).ManageMoveTo() }
+// Accessibility label of the popover menu of a task (status, priority,
+// move, remind, delete).
+func A11yTaskMenu() string { return In(i18n.Locale()).A11yTaskMenu() }
 
-// ManageMoveTo says "Move to"
+// A11yTaskMenu says "Task menu"
 // in the language of msgs.
 //
-// Item of a task context menu that opens the list of projects (and the
-// Inbox) to move the task to.
-func (msgs Messages) ManageMoveTo() string {
-	return Catalog.Format(msgs.locale, "manageMoveTo", nil)
+// Accessibility label of the popover menu of a task (status, priority,
+// move, remind, delete).
+func (msgs Messages) A11yTaskMenu() string {
+	return Catalog.Format(msgs.locale, "a11yTaskMenu", nil)
 }
 
-// ManageNavLogbook says "Logbook"
+// DoneByAgent says "{agent} · {summary}"
+// in the language the app shows.
+//
+// Right side of a Done today row: the agent that finished the task and what
+// its latest report said, kept to one line.
+func DoneByAgent(agent string, summary string) string {
+	return In(i18n.Locale()).DoneByAgent(agent, summary)
+}
+
+// DoneByAgent says "{agent} · {summary}"
+// in the language of msgs.
+//
+// Right side of a Done today row: the agent that finished the task and what
+// its latest report said, kept to one line.
+func (msgs Messages) DoneByAgent(agent string, summary string) string {
+	return Catalog.Format(msgs.locale, "doneByAgent", map[string]any{"agent": agent, "summary": summary})
+}
+
+// DoneByYou says "You"
+// in the language the app shows.
+//
+// Who finished a task, on a Done today row and in the Done group, when it
+// was the user and not an agent.
+func DoneByYou() string { return In(i18n.Locale()).DoneByYou() }
+
+// DoneByYou says "You"
+// in the language of msgs.
+//
+// Who finished a task, on a Done today row and in the Done group, when it
+// was the user and not an agent.
+func (msgs Messages) DoneByYou() string {
+	return Catalog.Format(msgs.locale, "doneByYou", nil)
+}
+
+// MenuAsk says "Ask about this task…"
+// in the language the app shows.
+//
+// Item of the task menu: opens the inspector with its assistant composer
+// focused.
+func MenuAsk() string { return In(i18n.Locale()).MenuAsk() }
+
+// MenuAsk says "Ask about this task…"
+// in the language of msgs.
+//
+// Item of the task menu: opens the inspector with its assistant composer
+// focused.
+func (msgs Messages) MenuAsk() string {
+	return Catalog.Format(msgs.locale, "menuAsk", nil)
+}
+
+// MenuBack says "Back"
+// in the language the app shows.
+//
+// Accessibility label of the back button on a page of the task menu (Move
+// to, Remind me).
+func MenuBack() string { return In(i18n.Locale()).MenuBack() }
+
+// MenuBack says "Back"
+// in the language of msgs.
+//
+// Accessibility label of the back button on a page of the task menu (Move
+// to, Remind me).
+func (msgs Messages) MenuBack() string {
+	return Catalog.Format(msgs.locale, "menuBack", nil)
+}
+
+// MenuCustom says "Custom…"
+// in the language the app shows.
+//
+// Last reminder choice of the task menu: opens a calendar and a time of
+// day.
+func MenuCustom() string { return In(i18n.Locale()).MenuCustom() }
+
+// MenuCustom says "Custom…"
+// in the language of msgs.
+//
+// Last reminder choice of the task menu: opens a calendar and a time of
+// day.
+func (msgs Messages) MenuCustom() string {
+	return Catalog.Format(msgs.locale, "menuCustom", nil)
+}
+
+// MenuDelete says "Delete"
+// in the language the app shows.
+//
+// Item of the task menu that deletes the task at once; an Undo toast
+// follows.
+func MenuDelete() string { return In(i18n.Locale()).MenuDelete() }
+
+// MenuDelete says "Delete"
+// in the language of msgs.
+//
+// Item of the task menu that deletes the task at once; an Undo toast
+// follows.
+func (msgs Messages) MenuDelete() string {
+	return Catalog.Format(msgs.locale, "menuDelete", nil)
+}
+
+// MenuDeleted says "Deleted “{title}”"
+// in the language the app shows.
+//
+// Toast after a task was deleted; its Undo button puts the task back.
+func MenuDeleted(title string) string { return In(i18n.Locale()).MenuDeleted(title) }
+
+// MenuDeleted says "Deleted “{title}”"
+// in the language of msgs.
+//
+// Toast after a task was deleted; its Undo button puts the task back.
+func (msgs Messages) MenuDeleted(title string) string {
+	return Catalog.Format(msgs.locale, "menuDeleted", map[string]any{"title": title})
+}
+
+// MenuFindProject says "Find a project"
+// in the language the app shows.
+//
+// Placeholder of the filter field on the Move to page of the task menu.
+func MenuFindProject() string { return In(i18n.Locale()).MenuFindProject() }
+
+// MenuFindProject says "Find a project"
+// in the language of msgs.
+//
+// Placeholder of the filter field on the Move to page of the task menu.
+func (msgs Messages) MenuFindProject() string {
+	return Catalog.Format(msgs.locale, "menuFindProject", nil)
+}
+
+// MenuLaterToday says "Later today"
+// in the language the app shows.
+//
+// Reminder choice of the task menu: today at 6:00 PM, shown while that is
+// still over half an hour away.
+func MenuLaterToday() string { return In(i18n.Locale()).MenuLaterToday() }
+
+// MenuLaterToday says "Later today"
+// in the language of msgs.
+//
+// Reminder choice of the task menu: today at 6:00 PM, shown while that is
+// still over half an hour away.
+func (msgs Messages) MenuLaterToday() string {
+	return Catalog.Format(msgs.locale, "menuLaterToday", nil)
+}
+
+// MenuMoveTo says "Move to…"
+// in the language the app shows.
+//
+// Item of the task menu: replaces the menu with a filter field and the list
+// of projects and the Inbox.
+func MenuMoveTo() string { return In(i18n.Locale()).MenuMoveTo() }
+
+// MenuMoveTo says "Move to…"
+// in the language of msgs.
+//
+// Item of the task menu: replaces the menu with a filter field and the list
+// of projects and the Inbox.
+func (msgs Messages) MenuMoveTo() string {
+	return Catalog.Format(msgs.locale, "menuMoveTo", nil)
+}
+
+// MenuNextMonday says "Next Monday"
+// in the language the app shows.
+//
+// Reminder choice of the task menu: next Monday at 9:00 AM.
+func MenuNextMonday() string { return In(i18n.Locale()).MenuNextMonday() }
+
+// MenuNextMonday says "Next Monday"
+// in the language of msgs.
+//
+// Reminder choice of the task menu: next Monday at 9:00 AM.
+func (msgs Messages) MenuNextMonday() string {
+	return Catalog.Format(msgs.locale, "menuNextMonday", nil)
+}
+
+// MenuNoProjectMatch says "No project matches"
+// in the language the app shows.
+//
+// Shown on the Move to page of the task menu when the filter matches no
+// project.
+func MenuNoProjectMatch() string { return In(i18n.Locale()).MenuNoProjectMatch() }
+
+// MenuNoProjectMatch says "No project matches"
+// in the language of msgs.
+//
+// Shown on the Move to page of the task menu when the filter matches no
+// project.
+func (msgs Messages) MenuNoProjectMatch() string {
+	return Catalog.Format(msgs.locale, "menuNoProjectMatch", nil)
+}
+
+// MenuNoReminder says "No reminder"
+// in the language the app shows.
+//
+// Reminder choice of the task menu that clears the reminder.
+func MenuNoReminder() string { return In(i18n.Locale()).MenuNoReminder() }
+
+// MenuNoReminder says "No reminder"
+// in the language of msgs.
+//
+// Reminder choice of the task menu that clears the reminder.
+func (msgs Messages) MenuNoReminder() string {
+	return Catalog.Format(msgs.locale, "menuNoReminder", nil)
+}
+
+// MenuRemindMe says "Remind me…"
+// in the language the app shows.
+//
+// Item of the task menu: replaces the menu with reminder choices.
+func MenuRemindMe() string { return In(i18n.Locale()).MenuRemindMe() }
+
+// MenuRemindMe says "Remind me…"
+// in the language of msgs.
+//
+// Item of the task menu: replaces the menu with reminder choices.
+func (msgs Messages) MenuRemindMe() string {
+	return Catalog.Format(msgs.locale, "menuRemindMe", nil)
+}
+
+// MenuRemindTitle says "Remind me"
+// in the language the app shows.
+//
+// Title of the reminder page of the task menu.
+func MenuRemindTitle() string { return In(i18n.Locale()).MenuRemindTitle() }
+
+// MenuRemindTitle says "Remind me"
+// in the language of msgs.
+//
+// Title of the reminder page of the task menu.
+func (msgs Messages) MenuRemindTitle() string {
+	return Catalog.Format(msgs.locale, "menuRemindTitle", nil)
+}
+
+// MenuSetReminder says "Set reminder"
+// in the language the app shows.
+//
+// Primary button of the Custom reminder page of the task menu: saves the
+// day and time chosen.
+func MenuSetReminder() string { return In(i18n.Locale()).MenuSetReminder() }
+
+// MenuSetReminder says "Set reminder"
+// in the language of msgs.
+//
+// Primary button of the Custom reminder page of the task menu: saves the
+// day and time chosen.
+func (msgs Messages) MenuSetReminder() string {
+	return Catalog.Format(msgs.locale, "menuSetReminder", nil)
+}
+
+// MenuThisWeekend says "This weekend"
+// in the language the app shows.
+//
+// Reminder choice of the task menu: Saturday at 10:00 AM.
+func MenuThisWeekend() string { return In(i18n.Locale()).MenuThisWeekend() }
+
+// MenuThisWeekend says "This weekend"
+// in the language of msgs.
+//
+// Reminder choice of the task menu: Saturday at 10:00 AM.
+func (msgs Messages) MenuThisWeekend() string {
+	return Catalog.Format(msgs.locale, "menuThisWeekend", nil)
+}
+
+// MenuTomorrow says "Tomorrow"
+// in the language the app shows.
+//
+// Reminder choice of the task menu: tomorrow at 9:00 AM.
+func MenuTomorrow() string { return In(i18n.Locale()).MenuTomorrow() }
+
+// MenuTomorrow says "Tomorrow"
+// in the language of msgs.
+//
+// Reminder choice of the task menu: tomorrow at 9:00 AM.
+func (msgs Messages) MenuTomorrow() string {
+	return Catalog.Format(msgs.locale, "menuTomorrow", nil)
+}
+
+// MenuUndo says "Undo"
+// in the language the app shows.
+//
+// Button of the toast after a task was deleted.
+func MenuUndo() string { return In(i18n.Locale()).MenuUndo() }
+
+// MenuUndo says "Undo"
+// in the language of msgs.
+//
+// Button of the toast after a task was deleted.
+func (msgs Messages) MenuUndo() string {
+	return Catalog.Format(msgs.locale, "menuUndo", nil)
+}
+
+// NowShowAllInCompleted says "Show all in Completed"
+// in the language the app shows.
+//
+// Link under the Done today section of Now when more than five tasks were
+// finished today; opens the Completed page.
+func NowShowAllInCompleted() string { return In(i18n.Locale()).NowShowAllInCompleted() }
+
+// NowShowAllInCompleted says "Show all in Completed"
+// in the language of msgs.
+//
+// Link under the Done today section of Now when more than five tasks were
+// finished today; opens the Completed page.
+func (msgs Messages) NowShowAllInCompleted() string {
+	return Catalog.Format(msgs.locale, "nowShowAllInCompleted", nil)
+}
+
+// SectionDoneToday says "Done today"
+// in the language the app shows.
+//
+// Section of Now with what agents and the user finished since midnight.
+func SectionDoneToday() string { return In(i18n.Locale()).SectionDoneToday() }
+
+// SectionDoneToday says "Done today"
+// in the language of msgs.
+//
+// Section of Now with what agents and the user finished since midnight.
+func (msgs Messages) SectionDoneToday() string {
+	return Catalog.Format(msgs.locale, "sectionDoneToday", nil)
+}
+
+// ManageNavCompleted says "Completed"
 // in the language the app shows.
 //
 // Sidebar row and page title for finished tasks (done and cancelled),
 // newest first.
-func ManageNavLogbook() string { return In(i18n.Locale()).ManageNavLogbook() }
+func ManageNavCompleted() string { return In(i18n.Locale()).ManageNavCompleted() }
 
-// ManageNavLogbook says "Logbook"
+// ManageNavCompleted says "Completed"
 // in the language of msgs.
 //
 // Sidebar row and page title for finished tasks (done and cancelled),
 // newest first.
-func (msgs Messages) ManageNavLogbook() string {
-	return Catalog.Format(msgs.locale, "manageNavLogbook", nil)
+func (msgs Messages) ManageNavCompleted() string {
+	return Catalog.Format(msgs.locale, "manageNavCompleted", nil)
 }
 
 // ManageNewProjectTip says "New project"

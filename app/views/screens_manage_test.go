@@ -67,21 +67,17 @@ func TestScreensManageTasks(t *testing.T) {
 				m.goTo(nav{screen: screenProject, projectID: 1})
 				tt.Frame()
 				r, _ := tt.Find("Fix tray race on launch")
-				x, y := r.X+40, r.Y+r.H/2
-				tt.RightClickAt(x, y)
-				var statuses []string
-				for _, s := range data.Statuses {
-					statuses = append(statuses, statusLabel(m.say, s))
-				}
-				return &menuSpec{
-					x: x, y: y, items: tt.Menu(),
-					subs:   map[string]bool{m.say.PropStatus(): true, m.say.PropPriority(): true, m.say.ManageMoveTo(): true},
-					flyout: &flyoutSpec{parent: m.say.PropStatus(), items: statuses, checked: map[string]bool{statusLabel(m.say, data.Blocked): true}},
-				}
+				tt.RightClickAt(r.X+r.W/2, r.Y+r.H/2)
+				return nil
 			})
-			manageShot(t, "task-delete"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-deleted"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.goTo(nav{screen: screenProject, projectID: 1})
-				m.askDeleteTask(3)
+				tt.Frame()
+				r, _ := tt.Find("Fix tray race on launch")
+				tt.RightClickAt(r.X+r.W/2, r.Y+r.H/2)
+				if err := tt.Click(m.say.MenuDelete()); err != nil {
+					t.Fatal(err)
+				}
 				return nil
 			})
 			manageShot(t, "inspector-project"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
@@ -116,7 +112,7 @@ func TestScreensManageSearch(t *testing.T) {
 	}
 }
 
-func TestScreensManageLogbook(t *testing.T) {
+func TestScreensManageCompleted(t *testing.T) {
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"
@@ -124,13 +120,13 @@ func TestScreensManageLogbook(t *testing.T) {
 			_, _ = store.UpdateTask(19, data.Patch{Status: data.StatusPtr(data.Cancelled)})
 			_, _ = store.UpdateTask(8, data.Patch{Status: data.StatusPtr(data.Done)})
 			app.Refresh()
-			manageShot(t, "logbook"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				m.goTo(nav{screen: screenLogbook})
+			manageShot(t, "completed"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenCompleted})
 				return nil
 			})
 			empty, _ := newEmptyApp(t)
-			manageShot(t, "logbook-empty"+suffix, empty, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				m.goTo(nav{screen: screenLogbook})
+			manageShot(t, "completed-empty"+suffix, empty, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				m.goTo(nav{screen: screenCompleted})
 				return nil
 			})
 		}

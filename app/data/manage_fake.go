@@ -181,6 +181,35 @@ func (f *Fake) DeleteTask(id int) error {
 	return nil
 }
 
+func (f *Fake) SnapshotTask(id int) (TaskSnapshot, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	t, ok := f.find(id)
+	if !ok {
+		return TaskSnapshot{}, fmt.Errorf("task %d not found", id)
+	}
+	return TaskSnapshot{Task: *t, Reports: f.reportsOf(id)}, nil
+}
+
+func (f *Fake) RestoreTask(s TaskSnapshot) (Task, error) {
+	f.mu.Lock()
+	t := s.Task
+	if _, ok := f.find(t.ID); ok {
+		f.mu.Unlock()
+		return Task{}, fmt.Errorf("task %d already exists", t.ID)
+	}
+	if t.ProjectID != nil {
+		if _, ok := f.project(*t.ProjectID); !ok {
+			t.ProjectID, t.MilestoneID = nil, nil
+		}
+	}
+	f.tasks = append(f.tasks, t)
+	f.reports = append(f.reports, s.Reports...)
+	f.mu.Unlock()
+	f.notify()
+	return t, nil
+}
+
 func (f *Fake) CreateMilestone(projectID int, title string, dueAt *time.Time) (Milestone, error) {
 	title = strings.TrimSpace(title)
 	if title == "" {

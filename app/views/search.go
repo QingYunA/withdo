@@ -99,7 +99,7 @@ func (m *Main) searchIDs() []int {
 func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 	s := &m.manage.search
 	focused := m.searchRef.Focused(c)
-	row := ui.Row(c.Key("search")).Height(28).Shrink(0).Margin(0, 10, 8).Padding(0, 8).Gap(6).AlignItems(ui.Center).
+	row := ui.Row(c.Key("search")).Height(30).Shrink(0).Margin(0, 10, 8).Padding(0, 8).Gap(6).AlignItems(ui.Center).
 		Radius(7).Background(t.Text.Alpha(0.06)).Border(1, ui.Transparent)
 	if focused {
 		row.Border(1, t.Accent.Alpha(0.5))
@@ -109,10 +109,10 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 		ui.Icon(c, theme.IconSearch).Size(14, 14).TextColor(t.TextTertiary).Shrink(0)
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
-			theme.Body.Apply(ui.TextInputBase(c.Key("search-input"), &s.query)).TextColor(t.Text).
+			theme.Compact.Apply(ui.TextInputBase(c.Key("search-input"), &s.query)).TextColor(t.Text).
 				Label(m.say.ManageSearchLabel()).Bind(&m.searchRef).OnTextKey(m.searchKey)
 			if s.query == "" {
-				theme.Text(c, theme.Body, t.TextTertiary, m.say.ManageSearch()).Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Compact, t.TextTertiary, m.say.ManageSearch()).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 		switch {
@@ -195,7 +195,7 @@ func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g searchGroup) {
 		name, key = m.say.NavInbox(), "inbox"
 	}
 	ui.Row(c.Key("search-group-"+key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "#") })
+		ui.Box(c).Size(16, theme.Body.Line).Shrink(0).Center().Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "#") })
 		theme.Text(c, theme.BodyStrong, t.Text, name)
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(g.tasks)))
 	})
@@ -210,7 +210,7 @@ func (m *Main) searchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	fill, opacity, _ := m.app.completionPhase(c, task.ID)
 	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
 	row.Children(func() {
-		m.app.glyphSlot(c, t, task, fill)
+		m.glyphSlot(c, t, task, fill)
 		body(c, func() { m.titleLine(c, t, task, "", true) })
 		right(c, func() { plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now())) })
 	})

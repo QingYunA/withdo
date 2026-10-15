@@ -21,20 +21,23 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opa
 	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(12).
 		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
 	switch {
-	case m.sel == id || m.openID == id:
+	case m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):
 		row.Background(t.BgSelected)
 	case row.Hovered():
 		row.Background(t.BgHover)
 	}
-	if m.sel == id && m.moved {
-		row.ScrollIntoView()
-		m.moved = false
+	if m.sel == id {
+		m.selRect = row.Bounds()
+		if m.moved {
+			row.ScrollIntoView()
+			m.moved = false
+		}
 	}
 	if opacity < 1 {
 		row.Opacity(opacity)
 	}
-	if task, ok := m.app.Task(id); ok {
-		row.ContextMenu(func(mn *ui.Menu) { m.taskMenu(mn, task) })
+	if row.RightClicked() {
+		m.openMenuAtPointer(row, id)
 	}
 	return row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 }
@@ -88,9 +91,17 @@ func right(c *ui.Context, fn func()) {
 }
 
 // glyphSlot puts the status glyph button where the mockup draws the bare glyph: its 24 pt hit
-// target reaches past the 16 pt glyph, so it takes negative margins.
-func (a *App) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
-	a.glyphButton(c, t, task, fill).Margin(-3, -4, -3, -4)
+// target reaches past the 18 pt glyph, so it takes negative margins.
+func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
+	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	m.glyphButton(c, t, task, fill).Margin(-pad)
+}
+
+// glyphSlotTop is glyphSlot for a row whose lines start at its top (a title with a summary under
+// it): the glyph sits 2 pt lower, level with the middle of the first line.
+func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
+	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	m.glyphButton(c, t, task, fill).Margin(2-pad, -pad, -pad-2, -pad)
 }
 
 // ageLabel is how long ago, in the stale color when the agent went quiet.

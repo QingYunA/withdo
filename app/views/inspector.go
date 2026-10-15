@@ -100,7 +100,7 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	title, ok := textField(c, t, m.inspector.fields, fieldSpec{
-		name: "Title", label: m.say.FieldTitle(), value: task.Title, style: theme.Title, color: t.Text,
+		name: "Title", label: m.say.FieldTitle(), value: task.Title, style: theme.Heading, color: t.Text,
 		multiline: true, enterSaves: true, escReverts: true, minLines: 1, maxLines: 4,
 	})
 	if ok && title != "" {
