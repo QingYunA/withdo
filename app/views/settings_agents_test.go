@@ -47,13 +47,3 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	has(t, r.tt, "Codex", "今天汇报 1 次", "6分钟前")
 	hasFold(t, r.tt, "接入的 Agent")
 }
-
-func TestAgentNamesAreTheProductsNames(t *testing.T) {
-	for raw, want := range map[string]string{
-		"claude-code": "Claude Code", "codex": "Codex", "Cursor": "Cursor", "gemini-cli": "Gemini CLI", "opencode": "opencode",
-	} {
-		if got := agentDisplayName(raw); got != want {
-			t.Errorf("%q is called %q, want %q", raw, got, want)
-		}
-	}
-}

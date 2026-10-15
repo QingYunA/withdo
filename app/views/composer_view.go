@@ -23,9 +23,9 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with a
-// sparkle at its left and ⌘K at its right; focused or holding text it turns to the page's own
-// color with an accent ring and grows with its text up to six lines, and the sparkle and ⌘K give
+// composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with the
+// assistant's avatar at its left and ⌘K at its right; focused or holding text it turns to the page's own
+// color with an accent ring and grows with its text up to six lines, and the avatar and ⌘K give
 // way to a round send button. The place is named by the page's title, not by the input.
 func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
 	cs := &m.cmp[s]
@@ -48,7 +48,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	box.Children(func() {
 		if !typed && (!focused || thinking) {
-			m.sparkle(c, t, s, 16)
+			m.assistantMark(c, s)
 		}
 		m.composerField(c, t, s, style)
 		switch {
@@ -123,10 +123,10 @@ func (m *Main) sendButton(c *ui.Context, t *theme.Tokens, s surface) {
 	}
 }
 
-// sparkle is the accent mark of the assistant. While it works on a request from s it pulses,
-// unless Reduce Motion is on.
-func (m *Main) sparkle(c *ui.Context, t *theme.Tokens, s surface, size float32) {
-	icon := ui.Icon(c, theme.IconSparkle).Size(size, size).TextColor(t.Accent).Shrink(0)
+// assistantMark is the assistant's 18 pt avatar at the left of the input. While it works on a
+// request from s it pulses, unless Reduce Motion is on.
+func (m *Main) assistantMark(c *ui.Context, s surface) {
+	icon := theme.AvatarIcon(c.Key("assistant"), theme.Assistant, theme.AvatarRow).Shrink(0)
 	if !m.convo.thinking || m.convo.owner != s || c.Preferences().ReduceMotion {
 		return
 	}
@@ -135,7 +135,7 @@ func (m *Main) sparkle(c *ui.Context, t *theme.Tokens, s surface, size float32) 
 	c.After(40 * time.Millisecond)
 }
 
-// pulsePeriod is one breath of the sparkle, in milliseconds.
+// pulsePeriod is one breath of the assistant's avatar, in milliseconds.
 const pulsePeriod = 1400
 
 // notice is the line under the input after a plain task was added without a model: "✓ Added to

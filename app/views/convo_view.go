@@ -150,11 +150,11 @@ func (m *Main) hereName() string {
 	return ""
 }
 
-// sentenceLine is what the assistant said when it changed nothing: one grey line with a small
-// sparkle, "✦ That one is already in adhd-todo."
+// sentenceLine is what the assistant said when it changed nothing: one grey line that starts with
+// the assistant's 12 pt avatar, "That one is already in adhd-todo."
 func (m *Main) sentenceLine(c *ui.Context, t *theme.Tokens, text string) {
 	ui.Row(c).Shrink(0).Padding(5, 0).Gap(8).AlignItems(ui.Start).Children(func() {
-		ui.Icon(c, theme.IconSparkle).Size(14, 14).TextColor(t.TextTertiary).Shrink(0).Margin(3, 0, 0)
+		theme.AvatarIcon(c.Key("assistant"), theme.Assistant, theme.AvatarSmall).Shrink(0).Margin(4, 0, 0)
 		theme.Paragraph(c, theme.Compact, t.TextSecondary, text, 0).Shrink(1).MinWidth(0)
 	})
 }

@@ -1,7 +1,6 @@
 package views
 
 import (
-	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -70,25 +69,9 @@ func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a data.AgentActivity
 	if a.Since > 0 {
 		sub = s.say.SettingsAgentReports(a.Since)
 	}
-	settingsRowLead(c, t, "agent-"+a.Agent, agentDisplayName(a.Agent), sub, first, func() {
+	settingsRowLead(c, t, "agent-"+a.Agent, agentName(a.Agent), sub, first, func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, s.clock.Age(a.Last, s.app.Now()))
 	}, func() { theme.AvatarIcon(c, theme.AgentAvatar(a.Agent), agentAvatarSize).Shrink(0) })
-}
-
-// agentDisplayName is how an agent is called: the ones the app knows by their product's name, any other
-// by the name it reported under.
-func agentDisplayName(raw string) string {
-	switch n := strings.ToLower(raw); {
-	case strings.Contains(n, "claude"):
-		return "Claude Code"
-	case strings.Contains(n, "codex"):
-		return "Codex"
-	case strings.Contains(n, "cursor"):
-		return "Cursor"
-	case strings.Contains(n, "gemini"):
-		return "Gemini CLI"
-	}
-	return raw
 }
 
 // commandWell is a command in the mono face on a quiet well, with what sits beside it.

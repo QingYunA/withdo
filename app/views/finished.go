@@ -24,13 +24,22 @@ func (a *App) completedBy(t data.Task) (by, said string) {
 	return data.CompletedBy(t, a.latestReport(t.ID), a.githubReport(t.ID))
 }
 
-// agentName is an agent as people write it: the ids agents report under become their product's name.
+// agentName is an agent as people write it: the ids agents report under become their product's
+// name, matched the way theme.AgentAvatar matches them, so a name and its avatar always agree.
 func agentName(agent string) string {
-	switch strings.ToLower(agent) {
-	case "claude-code", "claude_code", "claude code":
-		return "Claude Code"
-	case data.GitHubAgent:
+	switch n := strings.ToLower(agent); {
+	case n == "" || n == unnamedAgent:
+		return "Agent"
+	case n == data.GitHubAgent:
 		return "GitHub"
+	case strings.Contains(n, "claude"):
+		return "Claude Code"
+	case strings.Contains(n, "codex"):
+		return "Codex"
+	case strings.Contains(n, "cursor"):
+		return "Cursor"
+	case strings.Contains(n, "gemini"):
+		return "Gemini CLI"
 	}
 	return agent
 }
@@ -57,7 +66,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 		if o.glyph {
 			m.glyphSlot(c, t, task, fill)
 		} else {
-			ui.Box(c).Width(listIndent - 12).Shrink(0) // the glyph's column, as under a group header
+			m.authorSlot(c, task) // in the glyph's column, as under a group header
 		}
 		body(c, func() {
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {

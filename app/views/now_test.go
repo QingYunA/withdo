@@ -28,7 +28,7 @@ func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
 	if !tt.HasText("Yours") || !tt.HasText("Only mine") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
-	for _, gone := range []string{"Needs you", "Agents at work", "All clear."} {
+	for _, gone := range []string{"Needs you", "Agents at work", "Nothing needs you right now"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q is drawn with nothing in it", gone)
 		}
@@ -38,7 +38,7 @@ func TestNowEmptySectionsAreNotDrawn(t *testing.T) {
 func TestNowAllClearWhenNothingIsHappening(t *testing.T) {
 	app, rec := newEmptyApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
-	for _, want := range []string{"All clear.", "Agents report here through the adhd-todo MCP server.", "How to connect"} {
+	for _, want := range []string{"Nothing needs you right now", "Your agents are at work. Whatever happens shows up here.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}

@@ -15,6 +15,7 @@ const labelWidth float32 = 96
 func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Column(c).Gap(2).Children(func() {
 		m.statusRow(c, t, task)
+		m.fromRow(c, t, task)
 		m.priorityRow(c, t, task)
 		m.taskProjectRow(c, t, task)
 		m.milestoneRow(c, t, task)
@@ -29,10 +30,22 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 	})
 }
 
-// propRow lays out a label and a value on one 32 pt line.
+// propIcons is the line icon before each property's label, by the row's key.
+var propIcons = map[string]*ui.SVG{
+	"status": theme.IconStatus, "from": theme.IconAgent, "priority": theme.IconFlag, "project": theme.IconFolder,
+	"milestone": theme.IconDiamond, "due": theme.IconCalendar, "remind": theme.IconBell, "branch": theme.IconBranch,
+	"pr": theme.IconPR,
+}
+
+// propRow lays out a label (a line icon and its words) and a value on one 32 pt line.
 func (m *Main) propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
 	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, label).Width(labelWidth).Shrink(0)
+		ui.Row(c).Width(labelWidth).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
+			if icon := propIcons[key]; icon != nil {
+				ui.Icon(c, icon).Size(theme.IconProp, theme.IconProp).TextColor(t.TextTertiary).Shrink(0)
+			}
+			theme.Text(c, theme.Meta, t.TextSecondary, label).Shrink(1).MinWidth(0).Ellipsis("…")
+		})
 		value()
 		m.assistMark(c, t, key)
 	})
@@ -57,6 +70,16 @@ func (m *Main) statusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		btn.Children(func() {
 			theme.StatusGlyph(c, t, task.Status, 0)
 			theme.Text(c, theme.Compact, t.Text, statusLabel(m.say, task.Status))
+		})
+	})
+}
+
+// fromRow says who wrote the task: its avatar and the agent's name, or "You".
+func (m *Main) fromRow(c *ui.Context, t *theme.Tokens, task data.Task) {
+	m.propRow(c, t, "from", m.say.PropFrom(), func() {
+		ui.Row(c.Key("from")).Gap(8).Shrink(1).MinWidth(0).AlignItems(ui.Center).Children(func() {
+			theme.AvatarIcon(c, m.app.taskWho(task), theme.AvatarRow).Shrink(0)
+			theme.Text(c, theme.Compact, t.Text, m.taskWhoName(task)).Shrink(1).MinWidth(0).Ellipsis("…")
 		})
 	})
 }

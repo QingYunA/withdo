@@ -2776,30 +2776,32 @@ func (msgs Messages) NotifyReminder(title string) string {
 	return Catalog.Format(msgs.locale, "notifyReminder", map[string]any{"title": title})
 }
 
-// NowAllClear says "All clear."
+// NowAllClear says "Nothing needs you right now"
 // in the language the app shows.
 //
-// Title of the calm Now screen when nothing needs attention.
+// Title of the calm Now screen when nothing needs attention, under the two
+// pixel avatars (you and the assistant).
 func NowAllClear() string { return In(i18n.Locale()).NowAllClear() }
 
-// NowAllClear says "All clear."
+// NowAllClear says "Nothing needs you right now"
 // in the language of msgs.
 //
-// Title of the calm Now screen when nothing needs attention.
+// Title of the calm Now screen when nothing needs attention, under the two
+// pixel avatars (you and the assistant).
 func (msgs Messages) NowAllClear() string {
 	return Catalog.Format(msgs.locale, "nowAllClear", nil)
 }
 
-// NowAllClearBody says "Agents report here through the adhd-todo MCP server."
+// NowAllClearBody says "Your agents are at work. Whatever happens shows up here."
 // in the language the app shows.
 //
-// Second line of the calm Now screen. MCP is a product name.
+// Second line of the calm Now screen.
 func NowAllClearBody() string { return In(i18n.Locale()).NowAllClearBody() }
 
-// NowAllClearBody says "Agents report here through the adhd-todo MCP server."
+// NowAllClearBody says "Your agents are at work. Whatever happens shows up here."
 // in the language of msgs.
 //
-// Second line of the calm Now screen. MCP is a product name.
+// Second line of the calm Now screen.
 func (msgs Messages) NowAllClearBody() string {
 	return Catalog.Format(msgs.locale, "nowAllClearBody", nil)
 }
@@ -3068,6 +3070,22 @@ func PropDue() string { return In(i18n.Locale()).PropDue() }
 // Label of the due date in the inspector.
 func (msgs Messages) PropDue() string {
 	return Catalog.Format(msgs.locale, "propDue", nil)
+}
+
+// PropFrom says "From"
+// in the language the app shows.
+//
+// Label of the inspector row that says who wrote the task: you, or the
+// agent that created it.
+func PropFrom() string { return In(i18n.Locale()).PropFrom() }
+
+// PropFrom says "From"
+// in the language of msgs.
+//
+// Label of the inspector row that says who wrote the task: you, or the
+// agent that created it.
+func (msgs Messages) PropFrom() string {
+	return Catalog.Format(msgs.locale, "propFrom", nil)
 }
 
 // PropMilestone says "Milestone"

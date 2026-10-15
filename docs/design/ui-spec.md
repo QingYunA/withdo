@@ -115,6 +115,47 @@ done plays a 220 ms fill-and-check animation (a plain fill with Reduce Motion), 
 to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
 (below), so an agent's work is never completed by accident and a finished task can be reopened.
 
+## Avatars and icons (M5)
+
+Reference: `docs/design/mockups/v4.html` (frames 2 to 4). Pixel art is for **avatars and empty
+states** only; every other icon stays a 1.4 pt line icon in the color of its text. The sprites live
+in `app/theme/pixel.go` (12 x 12 pixels each, drawn as rectangles, so they stay sharp at any size).
+
+- **Who wrote a task.** `Source == user` is `theme.You`, the pixel person (a task the assistant wrote
+  for me counts as mine). `Source == agent` is `theme.AgentAvatar(name)`, `name` being the agent of
+  the task's latest report (`agent` when it has none): Claude Code, Codex, Cursor and Gemini CLI have
+  their own, any other agent a robot tinted by its name. The assistant is `theme.Assistant`, a
+  purple ghost with a crown.
+- **List rows** (a project, the Inbox, the Done group): an 18 pt avatar in the column of the group
+  glyph, vertically centered on the row; the title stays on the group's title (the avatar's slot
+  gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
+  status glyph (Now, Done today, Completed, search) keep the glyph: it is the way to complete or reopen.
+- **Board cards**: a 12 pt avatar first in the meta line, before the blocked mark, the badge, the
+  branch and the age. The line is always drawn.
+- **Inspector**: a **From** row right under Status: the 18 pt avatar and the agent's name as people
+  write it (`Claude Code`, `Codex`, `Cursor`, `Gemini CLI`, `GitHub`), or `You`. Every property label
+  has a 14 pt line icon in `text.tertiary` before it (Status `IconStatus`, From `IconAgent`, Priority
+  `IconFlag`, Project `IconFolder`, Milestone `IconDiamond`, Due `IconCalendar`, Remind `IconBell`,
+  Branch `IconBranch`, Pull request `IconPR`); the label and its icon share the 96 pt label column.
+- **Activity**: each report starts with its agent's 18 pt avatar (GitHub's own events with its mark)
+  on the thin timeline; the name is in `meta` `text.secondary`, red for the newest report when it
+  is a blocked one.
+- **Assistant**: the composer's mark is the assistant's 18 pt avatar (it pulses while the assistant
+  works, as the sparkle did); a one-line answer that changed nothing starts with its 12 pt avatar.
+  Receipts keep their green check.
+- **Sidebar**: Now `IconNow`, Inbox `IconInbox`, Completed `IconDone`, 16 pt in `text.secondary`;
+  a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
+  does not choose it).
+- **The drawn task menu** (and its Move to and reminder pages) puts a 15 pt line icon before each
+  item: Move to `IconMove`, Remind me `IconClock`, Open PR `IconArrowOut`, Ask `IconSparkle`, the
+  reminder presets `IconClock` / `IconCalendar`, No reminder `IconClose`, Custom `IconPlus`, a
+  project `IconFolder` in its color (white on the highlighted row), Delete `IconTrash` in
+  `status.blocked` with its text. The native context menus are text only.
+- **Empty states** (Now, Inbox, a project, Completed, search with no hits): `theme.DuoIcon` at 60 pt
+  (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
+  line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
+  forward ("How to connect").
+
 ## Surfaces
 
 One window. No tray icon, no flyout panel, no global shortcut (decided 2026-10-14: the user
@@ -130,7 +171,7 @@ like a document, not a spreadsheet.
 
 **Sidebar.** A search field first (see **Search**), then `Now` (count = items in Needs you + Agents
 at work + Yours), `Inbox` (count) and `Completed` (no count: it only grows), then `Projects` (sentence
-case, `section` style) with a quiet `+` at the right of its header: one row per project, name only,
+case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
 **on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
 task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
@@ -196,13 +237,14 @@ its room beside the inspector. Each row: glyph (reminders use a bell in
    the time of day: `Claude Code · PR #245 merged` (the agent's name, then what its latest report
    says, cut to one line) or `You`, then `2:05 PM`. At most five; past them a `Show all in
    Completed` link opens Completed. The section does not count toward the sidebar's Now badge and
-   never makes Now "not clear": **All clear.** looks at the first three. Who finished a task:
+   never makes Now "not clear": **Nothing needs you** looks at the first three. Who finished a task:
    the agent that filed a report at the moment it closed (a report within five seconds of the
    completion, or later), else me.
 
-**All clear.** When the first three sections are empty (Done today may still show below it): a centered calm message under the composer —
-"All clear." and in secondary "Agents report here through the adhd-todo MCP server." with a
-"How to connect" link (opens Settings).
+**Nothing needs you.** When the first three sections are empty (Done today may still show below it): the
+empty state under the composer (see **Avatars and icons**), `Nothing needs you right now` and in
+secondary `Your agents are at work. Whatever happens shows up here.` (zh `现在没有要你处理的事` /
+`Agent 们在干活，有动静会出现在这里`), with a "How to connect" link (opens Settings).
 
 ### Composer
 
@@ -213,12 +255,12 @@ none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is 
 page's title already says where a task goes, so the input has no label, no chip and no hint text.
 
 - **At rest.** One line, 50 pt tall, 12 pt radius, `bg.subtle`, **no border, no shadow**; a 16 pt
-  accent ✦ at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
+  assistant avatar (18 pt) at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
   `text.tertiary`; `⌘K` in `meta` `text.tertiary` at the right (not in the inspector's). The
   placeholder is short: Now `Tell me anything — I'll turn it into tasks`; a project and the Inbox
   `Add a task, or ask me anything`; the inspector `Change anything about this task`.
 - **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
-  ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the ✦ and `⌘K` give
+  ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the avatar and `⌘K` give
   way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text, absent while
   the field is empty; neutral while the assistant is still working on the last request). The box
   keeps its 50 pt from rest to one line of text, so focusing it moves nothing. Empty and focused it
@@ -245,13 +287,13 @@ reports what it did with an Undo; it asks only when an action would be wrong wit
 Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-sentence`,
 `now-question`, `now-no-model` (light and dark), `now-composer-*`.
 
-- **Working.** The ✦ pulses (a plain accent sparkle with Reduce Motion) and the empty field's
+- **Working.** The avatar pulses (plain with Reduce Motion) and the empty field's
   placeholder reads `Thinking…`. One request at a time: Enter while it works keeps what is typed.
   **Esc cancels** the request (its context is cancelled); with nothing changed yet the text returns
   to the field.
 - **The answer is never an echo of the user.** The user's own words are not shown again, and there
-  is no divider, no bubble, no avatar. What shows depends on the turn, always left-aligned with the
-  ✦ of the box (16 pt) and 8 pt under it:
+  is no divider and no bubble. What shows depends on the turn, always left-aligned with the
+  avatar of the box (18 pt) and 8 pt under it:
   - *It changed something*: **one line per task**, 34 pt tall: a green ✓ (an accent bell for a
     reminder), the verb in `text.secondary`, the title in `text` weight 500, the rest in
     `text.secondary`, and **Undo** at the right in `accent` (`meta`, tinted on hover):
@@ -265,8 +307,8 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
     Undo). Clicking a line opens the task. After Undo the title is struck through in `text.tertiary`
     and the line says `Undone`. In the inspector the same lines sit above its box and leave the
     title out when it is the task shown there.
-  - *It changed nothing* but said something: one grey line, a small `text.tertiary` ✦ and the
-    assistant's sentence in `text.secondary`.
+  - *It changed nothing* but said something: one grey line, the assistant's 12 pt avatar and
+    its sentence in `text.secondary`.
   - *A question*: the question in `body`, its 2 to 4 options as small tinted buttons below (the
     style of the Needs you actions), wrapping when they must. A click sends the option as the
     answer; typing a free one works too (the placeholder says `Type an answer, or pick one below`).
@@ -375,8 +417,8 @@ with no project.
 
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
-#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, Priority, **Project**,
-Milestone, Due, Remind, Branch, Pull request) with left labels in `meta` secondary and values
+#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Project**,
+Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
 editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
 - The **Status**, **Priority**, **Project** and **Remind** values open the pieces of the **Task

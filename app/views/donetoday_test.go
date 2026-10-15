@@ -48,7 +48,7 @@ func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
 	if rows != 5 || !tt.HasText("Done today") || !tt.HasText("7") {
 		t.Errorf("%d rows, texts %q", rows, tt.Texts())
 	}
-	if tt.HasText("All clear.") != true {
+	if tt.HasText("Nothing needs you right now") != true {
 		t.Error("Done today alone leaves Now clear: nothing needs me")
 	}
 	if err := tt.Click("Show all in Completed"); err != nil {

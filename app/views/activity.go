@@ -6,7 +6,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// activity is the report timeline, newest first: a dot on a thin line, who and when, what they
+// activity is the report timeline, newest first: the agent's avatar on a thin line, who and when, what they
 // did, and what comes next.
 func (m *Main) activity(c *ui.Context, t *theme.Tokens, task data.Task) {
 	reports := m.app.snap.details[task.ID].Reports
@@ -23,20 +23,19 @@ func (m *Main) activity(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, first bool) {
-	ui.Row(c.Key(r.ID)).AlignItems(ui.Stretch).Gap(12).Children(func() {
-		ui.Column(c).Width(6).Shrink(0).AlignItems(ui.Center).Children(func() {
-			dot := t.TextTertiary
-			if first && r.Status == data.Blocked {
-				dot = t.Blocked() // the one report that needs attention
-			}
-			theme.Dot(c, dot, 6).Margin(6, 0, 0)
+	ui.Row(c.Key(r.ID)).AlignItems(ui.Stretch).Gap(10).Children(func() {
+		ui.Column(c).Width(theme.AvatarRow).Shrink(0).AlignItems(ui.Center).Children(func() {
+			m.reportAvatar(c, t, r)
 			if !last {
 				ui.Box(c).Width(1).Grow(1).Margin(4, 0, 0).Background(t.Border)
 			}
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Padding(0, 0, 16).Children(func() {
 			ui.Row(c).Gap(6).Children(func() {
-				theme.Text(c, theme.Meta, t.TextSecondary, r.Agent)
+				name := theme.Text(c, theme.Meta, t.TextSecondary, agentName(r.Agent))
+				if first && r.Status == data.Blocked {
+					name.TextColor(t.Blocked()) // the one report that needs attention
+				}
 				theme.Text(c, theme.Meta, t.TextTertiary, m.clock.Age(r.CreatedAt, m.app.Now()))
 			})
 			theme.Paragraph(c, theme.Body, t.Text, r.Summary, 0)
@@ -45,4 +44,16 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 			}
 		})
 	})
+}
+
+// reportAvatar starts a report: the avatar of the agent that wrote it, or GitHub's mark for the
+// events the poller files.
+func (m *Main) reportAvatar(c *ui.Context, t *theme.Tokens, r data.Report) {
+	if r.Agent == data.GitHubAgent {
+		ui.Box(c).Size(theme.AvatarRow, theme.AvatarRow).Shrink(0).Center().Children(func() {
+			ui.Icon(c, theme.IconOctocat).Size(theme.AvatarRow-2, theme.AvatarRow-2).TextColor(t.TextSecondary)
+		})
+		return
+	}
+	theme.AvatarIcon(c, theme.AgentAvatar(r.Agent), theme.AvatarRow).Shrink(0)
 }

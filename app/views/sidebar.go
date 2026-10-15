@@ -20,7 +20,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
 		m.navRow(c, t, "calendar", nav{screen: screenCalendar}, theme.IconCalendar, m.say.NavCalendar(), 0)
-		m.navRow(c, t, "completed", nav{screen: screenCompleted}, theme.IconCheck, m.say.ManageNavCompleted(), 0)
+		m.navRow(c, t, "completed", nav{screen: screenCompleted}, theme.IconDone, m.say.ManageNavCompleted(), 0)
 		m.projectsHeader(c, t)
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
@@ -67,9 +67,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row := sidebarRow(c, t, p.ID, selected)
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
-		ui.Box(c).Size(16, theme.Compact.Line).Shrink(0).Center().Children(func() {
-			theme.Text(c, theme.Compact, t.TextTertiary, "#")
-		})
+		ui.Icon(c, theme.IconFolder).Size(16, 16).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
 		if renaming {
 			m.renameInput(c, t)
 		} else {
