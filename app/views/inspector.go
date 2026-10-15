@@ -81,12 +81,7 @@ func (m *Main) inspectorPane(c *ui.Context, t *theme.Tokens) {
 
 func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 12, 0, 24).AlignItems(ui.Center).DragWindow().Children(func() {
-		name := m.app.projectName(task.ProjectID)
-		if name == "" {
-			name = m.say.NavInbox()
-		}
-		theme.Text(c, theme.Meta, t.TextSecondary, name+"  ·  #"+itoa(task.ID))
-		ui.Spacer(c)
+		m.inspectorTopLine(c, t, task)
 		btn := ui.ButtonBase(c.Key("close")).Size(theme.HitTarget, theme.HitTarget).Center().Radius(theme.RadiusControl).
 			Label(m.say.InspectorClose()).Tooltip(m.say.InspectorCloseTip()).TextColor(t.TextSecondary)
 		if btn.Hovered() {
@@ -117,4 +112,23 @@ func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	if ok {
 		_ = m.app.Update(task.ID, data.Patch{Notes: &notes})
 	}
+}
+
+// inspectorTopLine says where the task lives: its project, the repository behind it (where the
+// agent's reports come from) and its number. A long name gives way before the number.
+func (m *Main) inspectorTopLine(c *ui.Context, t *theme.Tokens, task data.Task) {
+	name, repo := m.say.NavInbox(), ""
+	if task.ProjectID != nil {
+		if p, ok := m.app.Project(*task.ProjectID); ok {
+			name, repo = p.Name, p.RepoSlug
+		}
+	}
+	where := name
+	if repo != "" {
+		where += " · " + repo
+	}
+	ui.Row(c).Grow(1).MinWidth(0).Gap(0).AlignItems(ui.Center).Children(func() {
+		theme.Text(c, theme.Meta, t.TextSecondary, where).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, " · #"+itoa(task.ID)).Shrink(0)
+	})
 }

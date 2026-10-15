@@ -58,7 +58,7 @@ func TestNewProjectNeedsANameAndOpensWhenCreated(t *testing.T) {
 	if m.nav.screen != screenProject || m.nav.projectID != garden.ID {
 		t.Errorf("nav = %+v, want the new project", m.nav)
 	}
-	if !tt.HasText("No tasks yet.") || !tt.HasText("# Garden") {
+	if !tt.HasText("No tasks yet.") || !tt.HasText("Add a task, or ask me anything") {
 		t.Errorf("the empty project does not invite a task: %q", tt.Texts())
 	}
 }
@@ -140,8 +140,32 @@ func TestProjectContextMenu(t *testing.T) {
 	if err := tt.RightClick("picpocket"); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := tt.Menu(), []string{"Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub ↗", "New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu %q, want %q", got, want)
+	}
+}
+
+func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing.T) {
+	app, _, rec := newTestApp(t)
+	tt, _, _ := newTesterFor(app, 1100)
+	tt.Frame()
+	_ = tt.RightClick("adhd-todo")
+	if err := tt.ChooseMenuItem("Open QingYunA/adhd-todo on GitHub ↗"); err != nil {
+		t.Fatal(err)
+	}
+	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo" {
+		t.Errorf("opened %v", rec.urls)
+	}
+
+	f := data.NewEmptyFake(fixedNow)
+	p := f.AddProject("local-only", "")
+	plain := NewApp(f, &recorder{}, testConfig())
+	plain.Now = fixedNow
+	tt2, _, _ := newTesterFor(plain, 1100)
+	tt2.Frame()
+	_ = tt2.RightClick(p.Name)
+	if got, want := tt2.Menu(), []string{"New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+		t.Errorf("menu without a repository %q, want %q", got, want)
 	}
 }
 

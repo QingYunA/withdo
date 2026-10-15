@@ -8,12 +8,8 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-const (
-	noticeFor = 1500 * time.Millisecond
-	// noticeRoom is the gap under the card. The "Added to Inbox" confirmation sits in it and in the
-	// section header margin below, so showing it never moves the page.
-	noticeRoom float32 = 6
-)
+// noticeFor is how long the "Added to Inbox" line of a plain task stays.
+const noticeFor = 1500 * time.Millisecond
 
 // surface is where a composer is drawn: at the top of a page, or at the bottom of the inspector.
 type surface int
@@ -35,6 +31,8 @@ type composer struct {
 	// noticeAt and noticeText are the "Added to …" line of a plain task, for 1.5 s.
 	noticeAt   time.Time
 	noticeText string
+	// setUpHover keeps the "Set up the assistant" line while the pointer is on it.
+	setUpHover bool
 }
 
 // pageHasComposer reports whether the screen shows a composer: Now, a project and the Inbox do;
@@ -97,6 +95,9 @@ func (m *Main) takeFocus(c *ui.Context, s surface) {
 // lets go of the keys, and Down walks from the page's composer into the rows.
 func (m *Main) composerKey(s surface) func(ui.TextKey) bool {
 	return func(k ui.TextKey) bool {
+		if k.Mods == ui.Cmd && k.Key == ui.KeyZ && k.Text() == "" && m.convo.canUndo() {
+			return m.undoLast() // nothing typed to undo: Cmd+Z is the assistant's
+		}
 		if k.Mods != 0 {
 			return false
 		}

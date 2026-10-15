@@ -9,10 +9,13 @@ import (
 	"github.com/QingYunA/adhd-todo/app/data"
 )
 
-// sheetClosesAfter is how long the conversation sheet stays after a turn that asked nothing.
-const sheetClosesAfter = 4 * time.Second
+// The one-line answer of a turn that asked nothing stays 6 s, the last 400 ms of them a fade.
+const (
+	answerFor     = 6 * time.Second
+	answerFadeFor = 400 * time.Millisecond
+)
 
-// convoTurn is one exchange in the sheet: what I typed and what came back.
+// convoTurn is one exchange: what I typed (kept for Retry, never shown) and what came back.
 type convoTurn struct {
 	user     string
 	place    data.Place // where it was typed: a retry and an answer go out from the same place
@@ -23,8 +26,9 @@ type convoTurn struct {
 	stopped  bool   // I pressed Esc after some changes were already made
 }
 
-// convo is the reply sheet under the composer that sent the request: this conversation only,
-// never stored. It shows under that composer, on the page or the task it was sent from.
+// convo is the answer under the composer that sent the request: this conversation only, never
+// stored. It shows under that composer, on the page or the task it was sent from: the last turn's
+// one line, question or error.
 type convo struct {
 	owner    surface    // the composer that sent the last request
 	nav      nav        // the screen it was sent from, for a page composer
@@ -34,9 +38,11 @@ type convo struct {
 	thinking bool
 	stopping bool // Esc was pressed; the answer that comes back is only read for receipts
 	cancel   context.CancelFunc
-	doneAt   time.Time    // when the last turn came back, for the 4 s close and Undo's lifetime
+	doneAt   time.Time    // when the last turn came back, for the 6 s of its line
+	typed    string       // what the composer held then: typing anything else ends the line
 	undone   map[int]bool // receipts that were undone
-	live     bool         // the assistant remembers a conversation, so a second Esc forgets it
+	recent   []data.Receipt
+	live     bool // the assistant remembers a conversation, so a second Esc forgets it
 }
 
 // assistReady reports whether a model is connected. Without one the composer adds plain tasks.
@@ -80,6 +86,8 @@ func (m *Main) answered(text string, reply data.Reply, err error) {
 	}
 	turn := &cv.turns[i]
 	turn.reply, turn.receipts, turn.question = reply.Text, reply.Receipts, reply.Question
+	cv.typed = m.cmp[cv.owner].buf
+	cv.recent = append(cv.recent, reply.Receipts...)
 	m.markReceipts(reply.Receipts)
 	switch {
 	case errors.Is(err, context.Canceled):
@@ -105,7 +113,7 @@ func (m *Main) stopped(text string, i int) {
 	m.closeSheet()
 }
 
-// closeSheet hides the sheet and forgets what it showed. The assistant still remembers the
+// closeSheet hides the answer and forgets what it showed. The assistant still remembers the
 // conversation until it idles out or I press Esc again.
 func (m *Main) closeSheet() {
 	m.convo.open = false
@@ -123,7 +131,7 @@ func (m *Main) cancelAsk() {
 
 // forgetConversation is the second Esc: the assistant starts fresh.
 func (m *Main) forgetConversation() {
-	m.convo.live = false
+	m.convo.live, m.convo.recent = false, nil
 	if m.app.Assistant != nil {
 		m.app.Assistant.Reset()
 	}
@@ -149,7 +157,7 @@ func (m *Main) retry() {
 	m.sendToAssistant(last.user, last.place, cv.owner)
 }
 
-// undo reverts one receipt. The row stays, struck through, so it is clear what happened.
+// undo reverts one receipt. Its line stays, struck through, so it is clear what happened.
 func (m *Main) undo(r data.Receipt) {
 	cv := &m.convo
 	if err := m.app.Assistant.Undo(r.ID); err != nil {
@@ -163,11 +171,47 @@ func (m *Main) undo(r data.Receipt) {
 	}
 	cv.undone[r.ID] = true
 	m.unmark(r.TaskID)
-	cv.doneAt = m.app.Now() // the sheet stays a little longer so the result can be seen
+	cv.doneAt = m.app.Now() // the line stays a little longer so the result can be seen
 	m.app.Refresh()
 }
 
-// sheetDone is true when the last turn is over and asked me nothing: the sheet will close itself.
+// canUndo reports whether the assistant has a change left that Cmd+Z can undo.
+func (cv *convo) canUndo() bool {
+	for _, r := range cv.recent {
+		if !cv.undone[r.ID] {
+			return true
+		}
+	}
+	return false
+}
+
+// undoLast is Cmd+Z: it undoes the assistant's last change that is not undone, while its line is
+// shown or the conversation is live. With the line gone the result shows as "Undone" for a moment.
+func (m *Main) undoLast() bool {
+	cv := &m.convo
+	if m.app.Assistant == nil || cv.thinking {
+		return false
+	}
+	for i := len(cv.recent) - 1; i >= 0; i-- {
+		if r := cv.recent[i]; !cv.undone[r.ID] {
+			m.undo(r)
+			m.showLastTurn()
+			return true
+		}
+	}
+	return false
+}
+
+// showLastTurn brings the last turn's line back after Cmd+Z, if it is the turn that was undone and
+// its composer is still on screen.
+func (m *Main) showLastTurn() {
+	cv := &m.convo
+	if n := len(cv.turns); n > 0 && !cv.open && len(cv.turns[n-1].receipts) > 0 && m.replyFor(cv.owner, cv.place.TaskID) {
+		cv.open, cv.typed = true, m.cmp[cv.owner].buf
+	}
+}
+
+// sheetDone is true when the last turn is over and asked me nothing: its line will go by itself.
 func (cv *convo) sheetDone() bool {
 	if !cv.open || cv.thinking || len(cv.turns) == 0 {
 		return false
@@ -176,11 +220,16 @@ func (cv *convo) sheetDone() bool {
 	return last.question == nil && last.err == "" && !last.stopped
 }
 
-// replyIn reports whether the reply sheet shows under the composer on s: it belongs to the
-// composer that sent the request, on the page or the task it was sent from.
+// replyIn reports whether the answer shows under the composer on s: it belongs to the composer
+// that sent the request, on the page or the task it was sent from.
 func (m *Main) replyIn(s surface, task int) bool {
+	return m.convo.open && m.replyFor(s, task)
+}
+
+// replyFor is replyIn for an answer that may be hidden already.
+func (m *Main) replyFor(s surface, task int) bool {
 	cv := &m.convo
-	if !cv.open || len(cv.turns) == 0 || cv.owner != s {
+	if len(cv.turns) == 0 || cv.owner != s {
 		return false
 	}
 	if s == surfaceInspector {

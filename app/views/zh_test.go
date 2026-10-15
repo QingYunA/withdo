@@ -61,7 +61,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	inChinese(tt)
 	has(t, tt, "全部处理完了。", "Agent 会通过 adhd-todo 的 MCP 服务器在这里汇报进度。", "如何连接",
-		"要我记住什么？像平时说话那样写就行，比如“站会前审查 PR 12，很急”", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
+		"告诉我任何事，我来变成任务", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
 }
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
@@ -80,7 +80,7 @@ func TestChineseProjectList(t *testing.T) {
 	tt.SetSize(1100, 1600) // room for the Done group
 	tt.Frame()
 	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成", "显示全部 5 项 →", "待规划 2", "— 显示", "停滞3天",
-		"adhd-todo 里接下来做什么？比如“修复登录重定向死循环，p1，周五”")
+		"添加任务，或者问我任何事")
 	if err := tt.Click("显示待规划 2"); err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,8 @@ func TestChineseBoardAndInbox(t *testing.T) {
 	has(t, tt, "列表", "看板", "待办")
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	has(t, tt, "收件箱", "没有归属项目的任务")
+	has(t, tt, "收件箱")
+	hasNot(t, tt, "没有归属项目的任务")
 	app, p := emptyProjectApp(t)
 	tt2, m2, _ := newTesterFor(app, 1100)
 	inChinese(tt2)
@@ -183,10 +184,14 @@ func TestChineseQuestionAndErrors(t *testing.T) {
 	hasNot(t, bad.tt, "Couldn't reach the model.")
 }
 
-func TestChineseNoModelChipAndInboxNotice(t *testing.T) {
+func TestChineseNoModelSetUpLineAndInboxNotice(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	inChinese(r.tt)
+	hasNot(t, r.tt, "设置助手")
+	r.tt.Key(ui.Cmd, ui.KeyK)
 	has(t, r.tt, "设置助手")
+	r.tt.Type("x")
+	r.tt.Key(0, ui.KeyBackspace)
 	r.ask("浇花")
 	has(t, r.tt, "已添加到收件箱")
 	r.now = r.now.Add(2 * time.Second)
@@ -194,12 +199,11 @@ func TestChineseNoModelChipAndInboxNotice(t *testing.T) {
 	hasNot(t, r.tt, "已添加到收件箱")
 }
 
-func TestChineseComposerChipsAndInspectorPlaceholder(t *testing.T) {
+func TestChineseComposerPlaceholders(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	inChinese(r.tt)
-	mustNil(t, r.app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-x"}))
-	mustNil(t, r.app.Models.SetActive("anthropic"))
 	r.m.OpenTask(5)
 	r.tt.Frame()
-	has(t, r.tt, "助手 · Haiku 5.5", "想改什么都行，比如“挪到周五下午”")
+	has(t, r.tt, "告诉我任何事，我来变成任务", "说说要怎么改这个任务")
+	hasNot(t, r.tt, "助手 ·")
 }

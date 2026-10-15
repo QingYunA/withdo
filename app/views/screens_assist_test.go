@@ -62,6 +62,37 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 	}
 }
 
+// TestScreensAssistSentenceAndSeveral renders a turn that changed nothing, and one that changed
+// four tasks (three lines and "and 1 more").
+func TestScreensAssistSentenceAndSeveral(t *testing.T) {
+	for _, a := range appearances() {
+		sentence := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)}
+		app, _, rec := assistApp(t, sentence)
+		mainShot(t, "now-reply-sentence-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "write the release notes", true))
+
+		fa := &data.FakeAssistant{Ready: true}
+		several, store, rec2 := assistApp(t, fa)
+		fa.Script = func(string) (data.Reply, error) {
+			var reply data.Reply
+			for i, title := range []string{"Buy milk", "Call the dentist", "Water the plants", "Send the invoice to Anna"} {
+				task, err := store.CreateTask(data.CreateTaskInput{Title: title, Source: data.SourceUser})
+				if err != nil {
+					return data.Reply{}, err
+				}
+				detail := data.Detail{Kind: data.DetailAdded}
+				if i == 1 {
+					due := fixedNow().Add(18*time.Hour + 30*time.Minute)
+					_, _ = store.UpdateTask(task.ID, data.Patch{DueAt: &due})
+					detail = data.Detail{Kind: data.DetailDue, At: due}
+				}
+				reply.Receipts = append(reply.Receipts, data.Receipt{ID: i + 1, TaskID: task.ID, Title: title, Status: data.Todo, Detail: detail})
+			}
+			return reply, nil
+		}
+		mainShot(t, "now-reply-receipts-"+a.suffix+".png", several, a.dark, sendAnd(t, rec2, "buy milk, call the dentist tomorrow, water the plants, send the invoice to Anna", true))
+	}
+}
+
 func TestScreensAssistQuestion(t *testing.T) {
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Question: &data.Question{

@@ -133,14 +133,16 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	lm := m.listModel()
-	if lm.total == 0 {
-		m.emptyList(c, t)
-		return
-	}
-	for _, g := range lm.groups {
-		m.group(c, t, g.status, g.tasks)
-	}
-	m.doneAndBacklog(c, t, lm)
+	m.belowComposer(c, func() {
+		if lm.total == 0 {
+			m.emptyList(c, t)
+			return
+		}
+		for _, g := range lm.groups {
+			m.group(c, t, g.status, g.tasks)
+		}
+		m.doneAndBacklog(c, t, lm)
+	})
 }
 
 // group is a header, glyph and name and count, and its rows indented under the name.
@@ -168,8 +170,8 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	row.Children(func() {
 		ui.Box(c).Width(listIndent - 12).Shrink(0) // the glyph's column, and the gap after it
 		body(c, func() {
-			m.titleLine(c, t, task, "", true)
-			summaryLine(c, t, listSummary(task, ot))
+			m.titleLine(c, t, task, "", false)
+			summaryLine(c, t, listMeta(task, ot))
 		})
 		right(c, func() { m.listRight(c, t, task, ot) })
 	})
@@ -178,21 +180,35 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	}
 }
 
-// listSummary is what an agent last said; for a blocked task, what it is waiting for.
-func listSummary(task data.Task, ot data.OverviewTask) string {
-	if task.Source != data.SourceAgent || ot.LatestReport == nil || task.Status.Terminal() {
-		return ""
+// listMeta is the quiet second line of a row: who it is (an agent's name), where (its branch and
+// pull request) and what the agent last said; for a blocked task, what it is waiting for. A
+// task of mine with no branch has none.
+func listMeta(task data.Task, ot data.OverviewTask) string {
+	var parts []string
+	said := ""
+	if task.Source == data.SourceAgent && ot.LatestReport != nil && !task.Status.Terminal() {
+		parts = append(parts, agentName(ot.LatestReport.Agent))
+		said = ot.LatestReport.Summary
+		if task.Status == data.Blocked && ot.LatestReport.NextStep != "" {
+			said = ot.LatestReport.NextStep
+		}
 	}
-	if task.Status == data.Blocked && ot.LatestReport.NextStep != "" {
-		return ot.LatestReport.NextStep
+	if task.Branch != "" {
+		parts = append(parts, task.Branch)
 	}
-	return ot.LatestReport.Summary
+	if task.PRNumber > 0 {
+		parts = append(parts, "#"+itoa(task.PRNumber))
+	}
+	if said != "" {
+		parts = append(parts, said)
+	}
+	return strings.Join(parts, " · ")
 }
 
 func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data.OverviewTask) {
 	now := m.app.Now()
-	if task.Priority != data.P2 && !task.Status.Terminal() {
-		theme.PriorityBars(c, t, task.Priority)
+	if theme.ShowsPriority(task.Priority) && !task.Status.Terminal() {
+		theme.PriorityBadge(c, t, task.Priority)
 	}
 	switch {
 	case task.Status.Terminal():
@@ -233,7 +249,7 @@ func (m *Main) doneAndBacklog(c *ui.Context, t *theme.Tokens, lm listModel) {
 	if open {
 		m.group(c, t, data.Backlog, lm.backlog)
 	}
-	m.foldLine(c, t, lm, open, 16, false)
+	m.foldLine(c, t, lm, open, 16)
 }
 
 func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
@@ -245,37 +261,17 @@ func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
 	}
 }
 
-// foldParts joins the counts of the folded line for the label: "Done 4 and Backlog 2".
-func (m *Main) foldParts(parts []string) string {
-	if len(parts) == 2 {
-		return m.say.FoldAnd(parts[0], parts[1])
-	}
-	return strings.Join(parts, "")
-}
-
-// foldCounts are the counts the folded line names: "Done 4" and "Backlog 2", Done only on the board.
-func (m *Main) foldCounts(lm listModel, doneToo bool) []string {
-	var parts []string
-	if doneToo && len(lm.done) > 0 {
-		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Done), len(lm.done)))
-	}
-	if len(lm.backlog) > 0 {
-		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Backlog), len(lm.backlog)))
-	}
-	return parts
-}
-
-// foldLine is the line that folds Backlog, and on the board Done as well (doneToo): "Backlog 2 — show".
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32, doneToo bool) {
-	parts := m.foldCounts(lm, doneToo)
-	label, verb := m.say.FoldShow(m.foldParts(parts)), m.say.FoldShowShort()
+// foldLine is the last line of a list, which folds Backlog: "Backlog 2 — show".
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32) {
+	count := m.say.FoldCount(statusLabel(m.say, data.Backlog), len(lm.backlog))
+	label, verb := m.say.FoldShow(count), m.say.FoldShowShort()
 	if open {
-		label, verb = m.say.FoldHide(m.foldParts(parts)), m.say.FoldHideShort()
+		label, verb = m.say.FoldHide(count), m.say.FoldHideShort()
 	}
 	line := ui.Row(c.Key("fold")).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer).Label(label)
 	line.Children(func() {
-		theme.Text(c, theme.BodyStrong, t.TextTertiary, strings.Join(parts, " · "))
+		theme.Text(c, theme.BodyStrong, t.TextTertiary, count)
 		verbColor := t.TextTertiary
 		if line.Hovered() {
 			verbColor = t.TextSecondary
@@ -305,25 +301,18 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// listHeader is the project's name and repository (or Inbox), the milestone menu, and the
-// List | Board switch.
+// listHeader is the project's name, or Inbox, with the milestone filter (once the project has a
+// milestone) and the List | Board switch at the right.
 func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
-	title, sub := m.headerText()
-	m.pageHeader(c, t, title, sub, func() {
+	title := m.say.NavInbox()
+	if m.nav.screen == screenProject {
+		p, _ := m.app.Project(m.nav.projectID)
+		title = p.Name
+	}
+	m.pageHeader(c, t, title, "", func() {
 		m.milestoneMenu(c, t)
-		if m.boardActive() {
-			m.boardFold(c, t)
-		}
 		if m.nav.screen == screenProject {
 			m.viewToggle(c, t)
 		}
 	})
-}
-
-func (m *Main) headerText() (title, sub string) {
-	if m.nav.screen == screenInbox {
-		return m.say.NavInbox(), m.say.InboxSubtitle()
-	}
-	p, _ := m.app.Project(m.nav.projectID)
-	return p.Name, p.RepoSlug
 }

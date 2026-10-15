@@ -240,10 +240,6 @@
   "@askThinking": {
     "description": "Placeholder of the ask field while the assistant works."
   },
-  "boardEmpty": "Nothing waiting. Drag a card here to plan it.",
-  "@boardEmpty": {
-    "description": "Hint in the empty To do column of the board."
-  },
   "boardShowAll": "Show all {n}",
   "@boardShowAll": {
     "description": "Link under the recent done tasks of a board column.",
@@ -428,20 +424,6 @@
   "@fieldTitle": {
     "description": "Accessibility label of the task title field."
   },
-  "foldAnd": "{first} and {second}",
-  "@foldAnd": {
-    "description": "Joins two counts in the accessibility label of the folded line.",
-    "placeholders": {
-      "first": {
-        "type": "String",
-        "example": "Done 4"
-      },
-      "second": {
-        "type": "String",
-        "example": "Backlog 2"
-      }
-    }
-  },
   "foldCount": "{name} {count}",
   "@foldCount": {
     "description": "A status and how many tasks it has, in the folded line under a list, e.g. Done 4.",
@@ -491,10 +473,6 @@
   "inboxEmptyTitle": "Your inbox is clear.",
   "@inboxEmptyTitle": {
     "description": "Title of an empty Inbox."
-  },
-  "inboxSubtitle": "Tasks without a project",
-  "@inboxSubtitle": {
-    "description": "Quiet line next to the Inbox title."
   },
   "inspectorClose": "Close",
   "@inspectorClose": {
@@ -660,7 +638,7 @@
   },
   "manageMilestoneNew": "New milestone…",
   "@manageMilestoneNew": {
-    "description": "Item of the milestone menu that opens the new milestone sheet."
+    "description": "Item of a project context menu in the sidebar, and of the milestone filter menu: opens the new milestone sheet."
   },
   "manageMilestoneNewTitle": "New milestone",
   "@manageMilestoneNewTitle": {
@@ -1482,35 +1460,13 @@
   "@settingsAssistantNone": {
     "description": "Line of Settings > Assistant when the app has no assistant."
   },
-  "composerChipAssistant": "Assistant · {model}",
-  "@composerChipAssistant": {
-    "description": "Chip at the left of the composer's bar on Now when a model is connected.",
-    "placeholders": {
-      "model": {
-        "type": "String",
-        "example": "Haiku 5.5"
-      }
-    }
-  },
-  "composerChipAssistantBare": "Assistant",
-  "@composerChipAssistantBare": {
-    "description": "Chip of the composer on Now when the model's name is not known."
-  },
   "composerChipSetUp": "Set up the assistant",
   "@composerChipSetUp": {
-    "description": "Chip of the composer, and a link, while no model is connected. It opens Settings > Assistant."
+    "description": "Quiet link under the composer while it is focused and no model is connected. It opens Settings > Assistant."
   },
   "composerHintIdle": "⌘K",
   "@composerHintIdle": {
-    "description": "Key cap at the right of the composer's bar while it is not focused: the shortcut that focuses it."
-  },
-  "composerHintSend": "↵ to send",
-  "@composerHintSend": {
-    "description": "Keyboard hint at the right of the composer's bar while it is focused and empty."
-  },
-  "composerHintTyped": "↵ send · ⇧↵ new line",
-  "@composerHintTyped": {
-    "description": "Keyboard hints at the right of the composer's bar while it is focused and has text."
+    "description": "The shortcut that focuses the composer, at its right while it is not focused."
   },
   "composerLabel": "Ask the assistant",
   "@composerLabel": {
@@ -1520,23 +1476,13 @@
   "@composerLabelTask": {
     "description": "Accessibility label of the composer's text area in the inspector."
   },
-  "composerPlaceholder": "What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's urgent”",
+  "composerPlaceholder": "Tell me anything — I'll turn it into tasks",
   "@composerPlaceholder": {
-    "description": "Placeholder of the composer on Now and in the Inbox. The quoted example is something a user could type."
+    "description": "Placeholder of the composer on Now, where no project says what a new task is for."
   },
-  "composerPlaceholderProject": "What's next in {project}? “fix the login redirect loop, p1, friday”",
-  "@composerPlaceholderProject": {
-    "description": "Placeholder of the composer on a project's page. The quoted example is something a user could type.",
-    "placeholders": {
-      "project": {
-        "type": "String",
-        "example": "adhd-todo"
-      }
-    }
-  },
-  "composerPlaceholderTask": "Change anything — “move it to friday afternoon”",
+  "composerPlaceholderTask": "Change anything about this task",
   "@composerPlaceholderTask": {
-    "description": "Placeholder of the composer at the bottom of the inspector. The quoted example is something a user could type."
+    "description": "Placeholder of the composer at the bottom of the inspector."
   },
   "composerSend": "Send",
   "@composerSend": {
@@ -1545,10 +1491,6 @@
   "markAssistant": "Set by the assistant",
   "@markAssistant": {
     "description": "Tooltip of the small sparkle after a value in the inspector that the assistant just set."
-  },
-  "boardAdd": "Add a task",
-  "@boardAdd": {
-    "description": "Tooltip and accessibility label of the + in the To do column's header on the board; it puts the cursor in the composer."
   },
   "valueNone": "None",
   "@valueNone": {
@@ -1565,5 +1507,45 @@
   "windowTitle": "ADHD Todo",
   "@windowTitle": {
     "description": "Title of the main window."
+  },
+  "manageOpenRepo": "Open {repo} on GitHub ↗",
+  "@manageOpenRepo": {
+    "description": "First item of a project context menu in the sidebar, shown only when the project has a repository: opens it in the browser.",
+    "placeholders": {
+      "repo": {
+        "type": "String",
+        "example": "QingYunA/adhd-todo"
+      }
+    }
+  },
+  "boardEmptyDoing": "Drag here to start",
+  "@boardEmptyDoing": {
+    "description": "Quiet line in the empty Doing lane of the board."
+  },
+  "boardEmptyReview": "Nothing to review",
+  "@boardEmptyReview": {
+    "description": "Quiet line in the empty In review lane of the board."
+  },
+  "boardEmptyNone": "Nothing yet",
+  "@boardEmptyNone": {
+    "description": "Quiet line in an empty To do or Done lane of the board."
+  },
+  "composerPlaceholderAdd": "Add a task, or ask me anything",
+  "@composerPlaceholderAdd": {
+    "description": "Placeholder of the composer in a project and in the Inbox; the page's title says where a task goes."
+  },
+  "resultAdded": "Added",
+  "@resultAdded": {
+    "description": "First word of the one-line answer after the assistant added a task: \"✓ Added Fix the login loop · Fri · P1\"."
+  },
+  "resultMore": "and {n} more",
+  "@resultMore": {
+    "description": "Last line of the answer when the assistant changed more than three tasks in one turn.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   }
 }

@@ -1,8 +1,6 @@
 package views
 
 import (
-	"fmt"
-
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
@@ -15,14 +13,14 @@ var cardMotion = ui.ElementTransition{
 	Exit:      &ui.Motion{Collapse: true},
 }
 
-// card is one task on the board. It drags to another column; while it is dragged the card lifts
-// (a shadow, a 2 degree tilt) and leaves an empty slot where it was.
+// card is one task on the board: its title and one line of meta. It drags to another lane; while
+// it is dragged the card lifts (a shadow, a 2 degree tilt) and leaves an empty slot where it was.
 func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
-	fill, opacity, _ := m.app.completionPhase(c, task.ID)
+	_, opacity, _ := m.app.completionPhase(c, task.ID)
 	slot := ui.Column(c.Key(task.ID)).Transition(cardMotion)
 	dragging := false
 	slot.Children(func() {
-		card := ui.Column(c.Key("card")).Padding(9, 12, 12, 8).Radius(theme.RadiusCard).Cursor(ui.CursorPointer)
+		card := ui.Column(c.Key("card")).Padding(12).Gap(4).Radius(theme.RadiusTile).Cursor(ui.CursorPointer)
 		card.Drag(dragCard{id: task.ID})
 		dragging = card.Dragging()
 		if m.sel == task.ID {
@@ -30,10 +28,12 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		}
 		m.styleCard(c, t, card, task, dragging, opacity)
 		card.Children(func() {
-			ui.Row(c).Gap(4).AlignItems(ui.Start).Children(func() {
-				m.glyphButton(c, t, task, fill)
-				m.cardText(c, t, task)
-			})
+			if task.Status == data.Done {
+				theme.Paragraph(c, theme.Body, t.TextSecondary, task.Title, 3)
+			} else {
+				theme.Paragraph(c, theme.BodyStrong, t.Text, task.Title, 3)
+			}
+			m.cardMeta(c, t, task)
 		})
 		if card.RightClicked() {
 			m.openMenuAtPointer(card, task.ID)
@@ -44,13 +44,18 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		}
 	})
 	if dragging {
-		m.dragging = task.ID
-		slot.Radius(theme.RadiusCard).Border(1, t.Border).BorderStyle(ui.BorderDashed)
+		slot.Radius(theme.RadiusTile).Border(1, t.Border).BorderStyle(ui.BorderDashed)
 	}
 }
 
+// styleCard is the card's look: white with a hairline ring and a soft shadow; a finished task's is
+// a flat well. The open, selected and menu'd card is tinted with the accent.
 func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task data.Task, dragging bool, opacity float32) {
 	bg, border := t.Bg, t.Border
+	flat := task.Status == data.Done
+	if flat {
+		bg, border = t.BgSubtle, ui.Transparent
+	}
 	switch {
 	case dragging:
 		border = t.TextTertiary
@@ -60,6 +65,9 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 		border = t.TextTertiary
 	}
 	card.Background(bg).Border(1, border)
+	if !flat {
+		card.Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.14))
+	}
 	card.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	if !c.Preferences().ReduceMotion { // with Reduce Motion the lift is the shadow alone
 		tilt := card.AnimateTo("tilt", boolTo(dragging), ui.Snappy)
@@ -80,51 +88,30 @@ func boolTo(b bool) float32 {
 	return 0
 }
 
-// cardText is the title and, below it, whatever else is worth a glance.
-func (m *Main) cardText(c *ui.Context, t *theme.Tokens, task data.Task) {
-	ui.Column(c).Grow(1).MinWidth(0).Margin(3, 0, 0).Gap(4).Children(func() {
-		theme.Paragraph(c, theme.BodyStrong, t.Text, task.Title, 3)
-		m.cardMeta(c, t, task)
-	})
-}
-
-// cardMeta is what else is worth a glance: priority bars when it is not the default, the branch
-// and the pull request, and the agent's age, a stale label, or when I wanted to be reminded. The
-// branch has a line of its own, so it keeps its room in a narrow card.
+// cardMeta is the card's one line: the blocked mark, a P0 or P1 badge, the branch, and at the
+// right the due label or the age (or the stale label). It is not drawn when there is nothing to say.
 func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task) {
 	right := m.metaRight(task)
-	refs := task.Branch != "" || task.PRNumber > 0
-	bars := task.Priority != data.P2
-	// Without priority bars the age shares the line of the branch.
-	ageUp := bars || !refs
-	line := func(fn func()) { ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(fn) }
-	atRight := func() {
+	badge := theme.ShowsPriority(task.Priority) && !task.Status.Terminal()
+	blocked := task.Status == data.Blocked
+	if !badge && !blocked && task.Branch == "" && right == nil {
+		return
+	}
+	ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(func() {
+		if blocked {
+			theme.StatusGlyphSized(c, t, data.Blocked, 14, 0)
+		}
+		if badge {
+			theme.PriorityBadge(c, t, task.Priority)
+		}
+		if task.Branch != "" {
+			theme.Text(c, theme.Mono, t.TextSecondary, task.Branch).Shrink(4).MinWidth(0).Ellipsis("…")
+		}
 		ui.Spacer(c)
 		if right != nil {
 			right(c, t)
 		}
-	}
-	if bars || (right != nil && ageUp) {
-		line(func() {
-			if bars {
-				theme.PriorityBars(c, t, task.Priority).Shrink(0)
-			}
-			atRight()
-		})
-	}
-	if refs {
-		line(func() {
-			if task.Branch != "" {
-				pill(c, t, task.Branch)
-			}
-			if task.PRNumber > 0 {
-				theme.Text(c, theme.Mono, t.TextSecondary, fmt.Sprintf("#%d", task.PRNumber)).Shrink(0)
-			}
-			if !ageUp {
-				atRight()
-			}
-		})
-	}
+	})
 }
 
 // metaRight builds the right end of the second line, or returns nil when there is nothing to say.

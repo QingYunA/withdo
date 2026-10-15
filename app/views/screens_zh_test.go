@@ -45,6 +45,7 @@ func TestScreensChineseSeed(t *testing.T) {
 			toProject(1)(tt, m)
 			m.board[1] = true
 		})
+		zhShot(t, "inbox-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 		zhShot(t, "inspector-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
 		empty, _ := newEmptyApp(t)
 		zhShot(t, "now-empty-zh-"+a.suffix+".png", empty, a.dark, nil)

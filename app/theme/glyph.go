@@ -14,7 +14,12 @@ const (
 // repeats it. complete runs from 0 to 1 while a task is being marked done: the ring fills and the
 // check draws itself.
 func StatusGlyph(c *ui.Context, t *Tokens, s data.Status, complete float32) ui.Element {
-	return ui.Box(c).Size(GlyphSize, GlyphSize).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+	return StatusGlyphSized(c, t, s, GlyphSize, complete)
+}
+
+// StatusGlyphSized is StatusGlyph at another size: the blocked mark in a card's meta line is 14 pt.
+func StatusGlyphSized(c *ui.Context, t *Tokens, s data.Status, size, complete float32) ui.Element {
+	return ui.Box(c).Size(size, size).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
 		drawStatus(p, r, t, s, complete)
 	})
 }
@@ -95,35 +100,19 @@ func drawCheck(p *ui.Painter, r ui.Rect, col ui.Color, progress float32) {
 	p.StrokePath(check.Trim(0, progress), 1.7*u, col)
 }
 
-// PriorityBars draws three ascending bars. P0 is red, P1 three bars, P2 two, P3 one; bars beyond
-// the level stay faint so the set always reads as "n of three".
-func PriorityBars(c *ui.Context, t *Tokens, pr data.Priority) ui.Element {
-	return ui.Box(c).Size(12, 12).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
-		level, col := priorityLevel(pr), t.TextSecondary
-		if pr == data.P0 {
-			col = t.Blocked()
-		}
-		const w, gap float32 = 2.5, 1.75
-		heights := [3]float32{4.5, 7.5, 11}
-		for i, h := range heights {
-			bar := ui.Rect{X: r.X + float32(i)*(w+gap) + 0.5, Y: r.Y + r.H - h, W: w, H: h}
-			if i < level {
-				p.Fill(bar, col, 1)
-			} else {
-				p.Fill(bar, t.TextTertiary.Alpha(0.45), 1)
-			}
-		}
-	})
-}
+// ShowsPriority reports whether a priority is drawn on a row or a card: only the deliberate ones.
+// P2 is the default and P3 means "whenever", so both stay quiet.
+func ShowsPriority(p data.Priority) bool { return p == data.P0 || p == data.P1 }
 
-func priorityLevel(pr data.Priority) int {
-	switch pr {
-	case data.P0, data.P1:
-		return 3
-	case data.P2:
-		return 2
+// PriorityBadge is the small outlined "P0" or "P1" of a row or a card: P0 in the blocked color,
+// P1 in secondary text.
+func PriorityBadge(c *ui.Context, t *Tokens, p data.Priority) ui.Element {
+	ink, ring := t.TextSecondary, t.Border
+	if p == data.P0 {
+		ink, ring = t.Blocked(), t.Blocked().Alpha(0.35)
 	}
-	return 1
+	return ui.Row(c.Key("badge-"+string(p))).Shrink(0).Padding(0, 5).Radius(5).Border(1, ring).AlignItems(ui.Center).
+		Children(func() { Text(c, Badge, ink, string(p)) })
 }
 
 // ClockGlyph draws a small clock, the mark of a reminder.

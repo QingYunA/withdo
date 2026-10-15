@@ -4,76 +4,63 @@ import (
 	"math"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
-// hintShownAbove is the content width under which the card drops its keyboard hint.
-const hintShownAbove float32 = 560
-
 // pageComposer is the composer at the top of Now, a project or the Inbox, with the "Added to …"
-// confirmation under it and the reply of the request it sent.
+// confirmation under it and the answer to the request it sent.
 func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 	if !m.pageHasComposer() {
 		return
 	}
-	m.composerCard(c, t)
+	m.composerBox(c, t, surfacePage, theme.Input)
 	m.notice(c, t)
 	if m.replyIn(surfacePage, 0) {
-		m.convoSheet(c, t, false)
+		m.answerView(c, t, false)
 	}
 }
 
-// composerCard is the card: the text area, 2 lines tall empty and growing to 6, and under it the
-// bar with the place's chip, the keyboard hint and the round send button.
-func (m *Main) composerCard(c *ui.Context, t *theme.Tokens) {
-	cs := &m.cmp[surfacePage]
-	focused := cs.ref.Focused(c)
-	card := ui.Column(c.Key("composer")).Shrink(0).Padding(14, 16, 10).Radius(theme.ComposerRadius).Background(t.Bg)
-	if focused {
-		card.Border(1, t.Accent.Alpha(0.55)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.12))
-	} else {
-		card.Border(1, t.ComposerBorder()).Shadow(0, 4, 16, 0, t.Shadow.Alpha(0.06))
+// composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with a
+// sparkle at its left and ⌘K at its right; focused or holding text it turns to the page's own
+// color with an accent ring and grows with its text up to six lines, and the sparkle and ⌘K give
+// way to a round send button. The place is named by the page's title, not by the input.
+func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
+	cs := &m.cmp[s]
+	focused, typed := cs.ref.Focused(c), cs.buf != ""
+	thinking := m.convo.thinking && m.convo.owner == s
+	key := "composer"
+	if s == surfaceInspector {
+		key = "inspector-card"
 	}
-	card.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	card.Children(func() {
-		m.composerField(c, t, surfacePage, theme.Input)
-		ui.Row(c).Height(theme.SendSize).Shrink(0).Margin(6, 0, 0).Gap(8).AlignItems(ui.Center).Children(func() {
-			m.composerChip(c, t)
-			ui.Spacer(c)
-			if m.width >= hintShownAbove && !(m.convo.thinking && m.convo.owner == surfacePage) {
-				m.composerHint(c, t, focused, cs.buf != "")
-			}
-			m.sendButton(c, t, surfacePage)
-		})
-	})
-	if card.Clicked() {
-		cs.ref.Focus(c) // a click on the card, not on a control in it, is a click in the field
-	}
-}
-
-// composerHint is the keyboard hint at the right of the bar, as little as the moment needs: only
-// the ⌘K key cap while the field is not focused, "↵ to send" once it is, and the line break as well
-// when there is text to break.
-func (m *Main) composerHint(c *ui.Context, t *theme.Tokens, focused, typed bool) {
+	box := ui.Row(c.Key(key)).Shrink(0).MinHeight(theme.ComposerHeight).Padding(10, 10, 10, 16).Gap(10).
+		AlignItems(ui.Center).Radius(theme.ComposerRadius)
 	switch {
-	case !focused:
-		keyCap(c, t, m.say.ComposerHintIdle())
-	case typed:
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintTyped()).Shrink(1).MinWidth(0).Ellipsis("…")
+	case focused || typed:
+		box.Background(t.Bg).Border(1, t.Accent.Alpha(0.5)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
+	case box.Hovered():
+		box.Background(t.BgSubtle.Mix(t.Text, 0.03)).Border(1, ui.Transparent)
 	default:
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintSend()).Shrink(1).MinWidth(0).Ellipsis("…")
+		box.Background(t.BgSubtle).Border(1, ui.Transparent)
 	}
-}
-
-// keyCap is a shortcut in a small outlined cap.
-func keyCap(c *ui.Context, t *theme.Tokens, text string) {
-	ui.Row(c).Shrink(0).Padding(1, 6).Radius(5).Border(1, t.Border).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextTertiary, text)
+	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
+	box.Children(func() {
+		if !typed && (!focused || thinking) {
+			m.sparkle(c, t, s, 16)
+		}
+		m.composerField(c, t, s, style)
+		switch {
+		case typed:
+			m.sendButton(c, t, s)
+		case !focused && s == surfacePage:
+			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle()).Shrink(0)
+		}
 	})
+	if box.Clicked() {
+		cs.ref.Focus(c) // a click on the box, not on a control in it, is a click in the field
+	}
 }
 
 // composerField is the text area of a composer with its placeholder over it.
@@ -89,7 +76,7 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 			TextColor(t.Text).Label(label).Bind(&cs.ref).OnTextKey(m.composerKey(s))
 		m.takeFocus(c, s)
 		if cs.buf == "" {
-			theme.Paragraph(c, style, t.TextTertiary, m.placeholder(s), 2).Absolute().Left(0).Top(0).Right(0).PassThrough()
+			theme.Text(c, style, t.TextTertiary, m.placeholder(s)).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
 		}
 	})
 }
@@ -104,85 +91,21 @@ func (m *Main) placeholder(s surface) string {
 	case cv.open && cv.owner == s && len(cv.turns) > 0 && cv.turns[len(cv.turns)-1].question != nil:
 		return m.say.AskAnswerHint()
 	}
-	switch place := m.placeOf(s); place.Kind {
-	case data.PlaceProject:
-		return m.say.ComposerPlaceholderProject(m.app.projectName(&place.ProjectID))
+	switch m.placeOf(s).Kind {
+	case data.PlaceProject, data.PlaceInbox:
+		return m.say.ComposerPlaceholderAdd()
 	case data.PlaceTask:
 		return m.say.ComposerPlaceholderTask()
 	}
 	return m.say.ComposerPlaceholder()
 }
 
-// composerChip names the place new tasks go to: a project, the Inbox, or on Now the assistant and
-// its model. While no model is connected it offers to set one up.
-func (m *Main) composerChip(c *ui.Context, t *theme.Tokens) {
-	place := m.placeOf(surfacePage)
-	setUp := m.app.Assistant != nil && !m.assistReady()
-	switch {
-	case place.Kind == data.PlaceProject:
-		chip(c, t, "chip", func() { theme.Text(c, theme.Meta, t.TextSecondary, "# "+m.app.projectName(&place.ProjectID)) })
-	case place.Kind == data.PlaceInbox:
-		chip(c, t, "chip", func() { theme.Text(c, theme.Meta, t.TextSecondary, m.say.NavInbox()) })
-	case m.assistReady():
-		chip(c, t, "chip", func() {
-			m.sparkle(c, t, surfacePage, 14)
-			theme.Text(c, theme.Meta, t.TextSecondary, m.assistantChip())
-		})
-	case !setUp:
-		chip(c, t, "chip", func() { theme.Text(c, theme.Meta, t.TextSecondary, m.say.NavInbox()) })
-	}
-	if setUp {
-		if link(c, t, m.say.ComposerChipSetUp()).Shrink(0).Clicked() {
-			m.openSettings(PaneAssistant)
-		}
-	}
-}
-
-// chip is a small label on a quiet well.
-func chip(c *ui.Context, t *theme.Tokens, key string, body func()) ui.Element {
-	return ui.Row(c.Key(key)).Shrink(0).Padding(2, 8).Gap(5).AlignItems(ui.Center).Radius(theme.ChipRadius).
-		Background(t.BgSubtle).Children(body)
-}
-
-// assistantChip is "Assistant · Haiku 5.5", or "Assistant" when the model's name is not known.
-func (m *Main) assistantChip() string {
-	if m.app.Models != nil {
-		for _, p := range m.app.Models.Providers() {
-			if p.Active && p.Model != "" {
-				return m.say.ComposerChipAssistant(shortModel(p.Model))
-			}
-		}
-	}
-	return m.say.ComposerChipAssistantBare()
-}
-
-// shortModel is a model's id as a person says it: "claude-haiku-5-5" is "Haiku 5.5". Any other
-// id is left as it is.
-func shortModel(id string) string {
-	rest, ok := strings.CutPrefix(id, "claude-")
-	if !ok {
-		return id
-	}
-	var words, nums []string
-	for _, part := range strings.Split(rest, "-") {
-		if part != "" && unicode.IsDigit(rune(part[0])) {
-			nums = append(nums, part)
-			continue
-		}
-		words = append(words, strings.ToUpper(part[:1])+part[1:])
-	}
-	if len(nums) == 0 || len(words) == 0 {
-		return id
-	}
-	return strings.Join(words, " ") + " " + strings.Join(nums, ".")
-}
-
-// sendButton is the round button at the right of the bar: accent when there is something to send,
-// neutral when not.
+// sendButton is the round button at the right of the box, drawn once there is text: accent when it
+// can be sent, neutral while the assistant is still working on the last request.
 func (m *Main) sendButton(c *ui.Context, t *theme.Tokens, s surface) {
 	can := strings.TrimSpace(m.cmp[s].buf) != "" && !m.convo.thinking
 	btn := ui.ButtonBase(c.Key("send-"+itoa(int(s)))).Size(theme.SendSize, theme.SendSize).Shrink(0).Center().
-		Radius(theme.SendSize / 2).Label(m.say.ComposerSend())
+		AlignSelf(ui.End).Radius(theme.SendSize / 2).Label(m.say.ComposerSend())
 	switch {
 	case can && btn.Hovered():
 		btn.Background(t.Accent.Mix(t.Text, 0.12)).Cursor(ui.CursorPointer)
@@ -213,13 +136,14 @@ func (m *Main) sparkle(c *ui.Context, t *theme.Tokens, s surface, size float32) 
 // pulsePeriod is one breath of the sparkle, in milliseconds.
 const pulsePeriod = 1400
 
-// notice is the inline "Added to …" confirmation of a plain task: 1.5 s, fading at the end.
+// notice is the line under the input after a plain task was added without a model: "✓ Added to
+// Inbox", 1.5 s, fading at the end. When there is none, the quiet way to set a model up takes its
+// place while the field is focused and empty.
 func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	cs := &m.cmp[surfacePage]
-	room := ui.Box(c).Height(noticeRoom).Shrink(0)
 	age := m.app.Now().Sub(cs.noticeAt)
 	if cs.noticeAt.IsZero() || age >= noticeFor {
-		room.Children(func() {})
+		m.setUpLine(c, t)
 		return
 	}
 	c.After(noticeFor - age)
@@ -227,11 +151,29 @@ func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	if age > noticeFor-300*time.Millisecond {
 		opacity = float32(noticeFor-age) / float32(300*time.Millisecond)
 	}
-	room.Children(func() {
-		ui.Row(c).Absolute().Left(4).Top(10).Gap(6).Opacity(opacity).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.TextSecondary)
-			theme.Text(c, theme.Meta, t.TextSecondary, cs.noticeText)
-		})
+	ui.Row(c.Key("notice")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).Gap(6).
+		Opacity(opacity).AlignItems(ui.Center).Children(func() {
+		ui.Icon(c, theme.IconCheck).Size(14, 14).TextColor(t.Status(data.Done)).Shrink(0)
+		theme.Text(c, theme.Compact, t.TextSecondary, cs.noticeText)
+	})
+}
+
+// setUpLine is the one extra line of a composer with no model behind it: while the field is
+// focused and empty, a quiet way to Settings > Assistant. Enter adds a plain task meanwhile.
+func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
+	cs := &m.cmp[surfacePage]
+	if m.app.Assistant == nil || m.assistReady() || cs.buf != "" || !(cs.ref.Focused(c) || cs.setUpHover) {
+		cs.setUpHover = false
+		return
+	}
+	// A press on the line takes the focus from the field: the line stays while the pointer is on it,
+	// so the click is not lost.
+	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).AlignItems(ui.Center).Children(func() {
+		l := link(c, t, m.say.ComposerChipSetUp())
+		cs.setUpHover = l.Hovered()
+		if l.Clicked() {
+			m.openSettings(PaneAssistant)
+		}
 	})
 }
 
@@ -246,31 +188,15 @@ func (m *Main) inspectorComposer(c *ui.Context, t *theme.Tokens, task data.Task)
 	if cs.task != task.ID {
 		cs.task, cs.buf, cs.frames = task.ID, "", 0
 	}
-	focused := cs.ref.Focused(c)
 	hairline(c, t) // the properties scroll above it; this stack stays where it is
 	ui.Column(c.Key("inspector-composer")).Shrink(0).Padding(12, 14, 14).Children(func() {
 		if m.replyIn(surfaceInspector, task.ID) {
-			// The words line up with the properties above (24 pt); a receipt's well reaches out to the card's edge.
+			// The words line up with the properties above (24 pt); a receipt's well reaches out to the box's edge.
 			ui.Scroll(c.Key("inspector-reply")).MaxHeight(inspectorReplyMax).Margin(0, 0, 10).Children(func() {
-				ui.Column(c).Padding(0, 10).Children(func() { m.convoSheet(c, t, true) })
+				ui.Column(c).Padding(0, 10).Children(func() { m.answerView(c, t, true) })
 			})
 		}
-		row := ui.Row(c.Key("inspector-card")).Shrink(0).Padding(10, 10, 10, 14).Gap(10).AlignItems(ui.Center).
-			Radius(theme.ComposerRadius).Background(t.Bg)
-		if focused {
-			row.Border(1, t.Accent.Alpha(0.55)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.12))
-		} else {
-			row.Border(1, t.ComposerBorder())
-		}
-		row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-		row.Children(func() {
-			m.sparkle(c, t, surfaceInspector, 16)
-			m.composerField(c, t, surfaceInspector, theme.Body)
-			m.sendButton(c, t, surfaceInspector)
-		})
-		if row.Clicked() {
-			cs.ref.Focus(c)
-		}
+		m.composerBox(c, t, surfaceInspector, theme.Body)
 	})
 }
 

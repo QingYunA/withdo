@@ -15,13 +15,21 @@ func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
 	if !m.app.snap.loaded {
 		return
 	}
-	if now.Empty() {
-		m.allClear(c, t)
-	}
-	m.needsSection(c, t, now.Needs)
-	m.agentsSection(c, t, now.Agents)
-	m.yoursSection(c, t, now)
-	m.doneTodaySection(c, t, now)
+	m.belowComposer(c, func() {
+		if now.Empty() {
+			m.allClear(c, t)
+		}
+		m.needsSection(c, t, now.Needs)
+		m.agentsSection(c, t, now.Agents)
+		m.yoursSection(c, t, now)
+		m.doneTodaySection(c, t, now)
+	})
+}
+
+// belowComposer holds what the page shows under its composer. It slides down when the answer's
+// line appears and back up when it goes, instead of jumping (with Reduce Motion it just moves).
+func (m *Main) belowComposer(c *ui.Context, body func()) {
+	ui.Column(c.Key("below")).Shrink(0).Transition(ui.ElementTransition{Position: true, Duration: theme.MotionFast}).Children(body)
 }
 
 // pageHeader is the title with a quiet companion, and whatever controls sit at the right.

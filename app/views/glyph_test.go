@@ -9,7 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// TestScreensGlyphs renders every status and priority glyph large, for the review.
+// TestScreensGlyphs renders every status glyph and the priority badges large, for the review.
 func TestScreensGlyphs(t *testing.T) {
 	for _, dark := range []bool{false, true} {
 		suffix := "light"
@@ -28,10 +28,10 @@ func TestScreensGlyphs(t *testing.T) {
 					}
 				})
 				ui.Row(c).Gap(18).AlignItems(ui.Center).Children(func() {
-					for _, p := range data.Priorities {
+					for _, p := range []data.Priority{data.P0, data.P1} {
 						ui.Column(c.Key(string(p))).Gap(6).AlignItems(ui.Center).Children(func() {
-							theme.PriorityBars(c, tk, p)
-							theme.Text(c, theme.Meta, tk.TextSecondary, string(p))
+							theme.PriorityBadge(c, tk, p)
+							theme.Text(c, theme.Meta, tk.TextSecondary, "badge")
 						})
 					}
 					for i, k := range []float32{0.25, 0.5, 0.75, 1} {

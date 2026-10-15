@@ -17,12 +17,21 @@ func openMilestoneMenu(t *testing.T, tt *ui.Tester, label string) {
 	}
 }
 
-func TestMilestoneMenuIsAlwaysThereWithNewMilestone(t *testing.T) {
-	tt, _, _ := projectTester(t, 2) // no milestone yet
-	openMilestoneMenu(t, tt, "All milestones")
-	if got, want := tt.Menu(), []string{"All milestones", "-", "New milestone…"}; !slices.Equal(got, want) {
-		t.Errorf("menu %q, want %q", got, want)
+// newMilestoneOf opens the New milestone sheet from the project's sidebar menu, where a project
+// without a milestone has its only way to one.
+func newMilestoneOf(t *testing.T, tt *ui.Tester, project string) {
+	t.Helper()
+	if err := tt.RightClick(project); err != nil {
+		t.Fatal(err)
 	}
+	if err := tt.ChooseMenuItem("New milestone…"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMilestoneMenuAppearsWithTheFirstMilestoneAndKeepsNewMilestone(t *testing.T) {
+	tt, _, _ := projectTester(t, 2) // no milestone yet
+	hasNot(t, tt, "All milestones")
 
 	tt, _, _ = projectTester(t, 1)
 	openMilestoneMenu(t, tt, "All milestones")
@@ -46,10 +55,7 @@ func TestMilestoneMenuIsAlwaysThereWithNewMilestone(t *testing.T) {
 
 func TestNewMilestoneSheetCreatesAnOpenMilestone(t *testing.T) {
 	tt, _, app := projectTester(t, 2)
-	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("New milestone…"); err != nil {
-		t.Fatal(err)
-	}
+	newMilestoneOf(t, tt, "answer-me-with-html")
 	for _, want := range []string{"New milestone", "Title", "Due", "No due date", "Cancel", "Create"} {
 		if !tt.HasText(want) {
 			t.Errorf("sheet lacks %q in %q", want, tt.Texts())
@@ -75,8 +81,7 @@ func TestNewMilestoneSheetCreatesAnOpenMilestone(t *testing.T) {
 
 func TestNewMilestoneWithADueDate(t *testing.T) {
 	tt, _, app := projectTester(t, 2)
-	openMilestoneMenu(t, tt, "All milestones")
-	_ = tt.ChooseMenuItem("New milestone…")
+	newMilestoneOf(t, tt, "answer-me-with-html")
 	tt.Type("Launch")
 	if err := tt.Click("No due date"); err != nil {
 		t.Fatal(err)

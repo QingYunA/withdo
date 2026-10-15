@@ -144,10 +144,13 @@ func TestMainEmptyProjectAndInbox(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	for _, want := range []string{"scratch", "me/scratch", "No tasks yet.", "How to connect"} {
+	for _, want := range []string{"scratch", "No tasks yet.", "How to connect"} {
 		if !tt.HasText(want) {
 			t.Errorf("empty project is missing %q in %q", want, tt.Texts())
 		}
+	}
+	if tt.HasText("me/scratch") {
+		t.Error("the repository is in the header")
 	}
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()

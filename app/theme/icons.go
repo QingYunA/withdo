@@ -25,5 +25,7 @@ var (
 	IconMove      = icon(`<path d="M3 8h10M9 4l4 4-4 4"/>`)
 	IconClock     = icon(`<circle cx="8" cy="8" r="5.6"/><path d="M8 4.8V8l2.2 1.4"/>`)
 	IconTrash     = icon(`<path d="M3 4.5h10M6.4 4.5V3h3.2v1.5M4.4 4.5l.6 8.2h6l.6-8.2M6.9 7v3.6M9.1 7v3.6"/>`)
+	IconList      = icon(`<path d="M3 4.5h10M3 8h10M3 11.5h10"/>`)
+	IconBoard     = icon(`<rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.2 3v10M9.8 3v10"/>`)
 	IconBack      = icon(`<path d="M10 3.5 5.5 8l4.5 4.5"/>`)
 )

@@ -37,7 +37,7 @@ func fridayP1(store *data.Fake, project int, title, say string) func(string) (da
 		}
 		return data.Reply{Text: say, Receipts: []data.Receipt{{
 			ID: 1, TaskID: task.ID, Title: title, Status: data.Todo,
-			Detail: data.Detail{Kind: data.DetailDue, At: due, Priority: "P1"},
+			Detail: data.Detail{Kind: data.DetailDue, At: due, Priority: "P1", Project: "adhd-todo"},
 		}}}, nil
 	}
 }
@@ -72,11 +72,10 @@ func TestScreensComposer(t *testing.T) {
 				}
 				mainShot(t, name+sfx, app, a.dark, setup)
 			}
-			text, project, next, saidAdded := "review PR 12 before standup, it's urgent", "fix the login redirect loop, p1, friday",
-				"ask Anna about the invoice", "Added it to adhd-todo, due Friday, P1."
+			text, project, saidAdded := "review PR 12 before standup, it's urgent", "fix the login redirect loop, p1, friday", "Added it to adhd-todo, due Friday, P1."
 			made := "Fix the login redirect loop"
 			if zh {
-				text, project, next, saidAdded = "站会前审查 PR 12，很急", "修复登录重定向死循环，p1，周五", "问问 Anna 发票的事", "已添加到 adhd-todo，周五截止，P1。"
+				text, project, saidAdded = "站会前审查 PR 12，很急", "修复登录重定向死循环，p1，周五", "已添加到 adhd-todo，周五截止，P1。"
 				made = "修复登录重定向死循环"
 			}
 
@@ -98,19 +97,25 @@ func TestScreensComposer(t *testing.T) {
 				}
 			})
 			off, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})
-			shotOf("now-composer-no-model", off, nil)
+			shotOf("now-composer-no-model", off, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) }) // focused: the one extra line shows
 
 			fa := &data.FakeAssistant{Ready: true}
 			app, store, rec := readyApp(t, fa)
 			fa.Script = fridayP1(store, 1, made, saidAdded)
-			shotOf("project-composer", app, func(tt *ui.Tester, m *Main) {
+			shotOf("project-composer", app, func(tt *ui.Tester, m *Main) { // one line says what the words made
 				m.goTo(nav{screen: screenProject, projectID: 1})
 				tt.Frame()
 				tt.Key(ui.Cmd, ui.KeyK)
 				tt.Type(project)
 				tt.Key(0, ui.KeyEnter)
 				rec.drain(t)
-				tt.Type(next) // the next thought, already in the field
+			})
+			typedInProject, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
+			shotOf("project-composer-typed", typedInProject, func(tt *ui.Tester, m *Main) {
+				m.goTo(nav{screen: screenProject, projectID: 1})
+				tt.Frame()
+				tt.Key(ui.Cmd, ui.KeyK)
+				tt.Type(project)
 			})
 			inbox, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
 			shotOf("inbox-composer", inbox, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })

@@ -5,7 +5,11 @@ Every screen is judged against that question. The audience is a developer with A
 several coding agents in parallel. Visual noise costs them focus, so the UI is quiet by
 default and loud only where something needs attention.
 
-Built with mygo native UI (`github.com/egoist/mygo/ui`, v0.4.8). No webview.
+Built with mygo native UI (`github.com/egoist/mygo/ui`, v0.5.1). No webview.
+
+M4d (2026-10-15) made every screen **one title, one input, one list**: what is not needed to read or
+act appears on hover, in a right-click menu or in the inspector. The reference for it is
+`docs/design/mockups/v3.html` (rendered: `v3.png`); `docs/plans/m4d-restraint.md` is the plan.
 
 ## References and what we take from each
 
@@ -24,7 +28,8 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
    keyboard selection. Everything else is neutral.
 2. **Status reads without color.** Every status has a distinct glyph shape; color is a second cue.
 3. **Hierarchy through type, not boxes.** Prefer weight, size and secondary color over borders,
-   cards and backgrounds. Cards exist only on the board, where they are dragged.
+   cards and backgrounds. Cards exist only on the board, where they are dragged; a board lane is no
+   box, only its header and its cards.
 4. **Agents and me are different.** Agent work shows its latest report and its age. My work
    shows when it is due or when I asked to be reminded.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
@@ -40,7 +45,7 @@ Neutrals are a cool gray. One accent. Status colors are muted so a board of them
 |---|---|---|---|
 | `bg` | `#FFFFFF` | `#1C1C1E` | window content |
 | `bg.sidebar` | material (vibrancy) | material (vibrancy) | sidebar |
-| `bg.subtle` | `#F5F5F7` | `#232326` | board columns, input wells |
+| `bg.subtle` | `#F5F5F7` | `#232326` | the input at rest, finished cards, the view control's well |
 | `bg.hover` | `#0000000A` | `#FFFFFF0F` | row hover |
 | `bg.selected` | `accent @ 12%` | `accent @ 22%` | selected row, keyboard highlight |
 | `border` | `#0000001A` | `#FFFFFF1A` | hairlines (1 px) |
@@ -72,6 +77,7 @@ System font (SF Pro), SF Mono for branches and PR numbers. Use at most three siz
 | `meta` | 13 / 18 | 400 | summaries, ages, field labels |
 | `section` | 13 / 18 | 600, `text.secondary`, sentence case, no tracking | section headers |
 | `mono` | 12.5 / 18 | 400 | branch, `#42` |
+| `badge` | 11.5 / 16 | 600 | the `P0` / `P1` mark |
 
 M4c made type one step larger everywhere (2026-10-15): the first version read small on a retina
 display. Views keep using the tokens; no literal sizes.
@@ -79,7 +85,7 @@ display. Views keep using the tokens; no literal sizes.
 ### Space, shape, motion
 
 - 4 pt grid. Common gaps 4, 8, 12, 16, 24.
-- Radii: 6 (pills, inputs), 9 (cards, rows), 12 (composer, Needs you container, popovers).
+- Radii: 6 (pills, inputs), 9 (rows), 10 (board cards), 12 (composer, Needs you container, popovers).
 - Shadows only on floating things: drag ghost, popovers, the window.
 - Motion 160 ms ease-out for hover, selection and drawer; 220 ms spring for a card
   appearing and a card settling after a drop. Respect Reduce Motion: fade only.
@@ -98,9 +104,11 @@ display. Views keep using the tokens; no literal sizes.
 | done | filled circle with a white check |
 | cancelled | circle with a slash, tertiary color |
 
-Priority: three ascending bars. P0 = three bars in `status.blocked` color, P1 = three bars,
-P2 = two bars, P3 = one bar, in `text.secondary`. P2 is the default and shows **nothing** on
-cards and rows, so only deliberate priorities draw the eye.
+Priority: a small outlined text badge, `P0` in `status.blocked` (1 pt ring at 35 %) and `P1` in
+`text.secondary` (`border` ring), 5 pt radius, `badge` type. **Only P0 and P1 are drawn**, on rows
+and cards, before the due label or the age; P2 is the default and P3 means "whenever", so both
+show nothing and only deliberate priorities draw the eye. There is no bars glyph any more: the
+inspector and the task menu say all four levels as text (`P1  High`, the strip `P0 P1 P2 P3`).
 
 Clicking the status glyph of **my own** task marks it done at once (one click, no menu); marking
 done plays a 220 ms fill-and-check animation (a plain fill with Reduce Motion), then the item moves
@@ -130,21 +138,23 @@ task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tal
 
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
-- **Right-click a project**: `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
+- **Right-click a project**: `Open QingYunA/adhd-todo on GitHub ↗` (only with a repository: it opens
+  github.com in the browser), `New milestone…` (the project's only way to its first milestone), a
+  separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
   the old name back. Archive acts at once (the project is in Settings > General > Archived projects,
   one click from coming back); Delete… asks first (**Delete confirmation**). Archiving or deleting the
   project on screen goes to Now.
-- A project with no repository shows no repository line under its name on its page.
+- The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Now (home)
 
-Header: `Now` in `title` + the date in `text.tertiary`.
+Header: `Now` in `title` + the date in `text.tertiary`, nothing else.
 
-**Composer.** The ask field is now the **Composer** (see **Composer** below), the first thing on the page.
+**Composer.** The one input is the **Composer** (see **Composer** below), the first thing on the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
 assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Now) and
-shows an inline "Added to Inbox" confirmation under the card for 1.5 s.
+shows a quiet "Added to Inbox" line under the box for 1.5 s.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.**
 
@@ -199,95 +209,113 @@ its room beside the inspector. Each row: glyph (reminders use a bell in
 One component, four places: the top of **Now**, the top of **every project** (under the header, above
 the list or the board), the top of the **Inbox**, and the bottom of the **inspector**. It replaces the
 old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
-none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`.
+none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
+page's title already says where a task goes, so the input has no label, no chip and no hint text.
 
-- **Card.** `bg`, 1 pt `border` (stronger than a hairline: `border` at full strength), 14 pt radius,
-  a soft shadow (0 1 2 and 0 4 16 at 4 %). Focus: the border becomes `accent` at 55 % and a 3 pt
-  `accent` ring at 12 % sits around it.
-- **Text area.** `input` type (17 / 25), 2 lines tall when empty, growing with the text to 6 lines,
-  then it scrolls. `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the
-  reply, else leaves the field. `↓` on Now walks into the rows. `↵` on an empty field opens the
-  highlighted row. The placeholder says the place:
-  Now `What should I remember? Write it the way you'd say it — “review PR 12 before standup, it's
-  urgent”`; a project `What's next in adhd-todo? “fix the login redirect loop, p1, friday”`; the
-  Inbox the Now one; the inspector `Change anything — “move it to friday afternoon”`.
-- **Bar** inside the card, under the text: a **context chip** at the left (`meta`, `bg.subtle`, 7 pt
-  radius): `✦ Assistant · <model>` on Now and in the Inbox, `# <project>` in a project; when no model
-  is connected it reads `Set up the assistant` and opens Settings > Assistant. A hint at the right,
-  as little as the moment needs (dropped under 560 pt): while the field is not focused only a `⌘K`
-  key cap (`meta`, `text.tertiary`, a 1 pt `border` outline, 5 pt radius); focused and empty
-  `↵ to send`; focused with text `↵ send · ⇧↵ new line` (`text.tertiary`). And a 28 pt round **send** button: `accent` with text,
-  neutral without; the sparkle in the chip pulses while the assistant works.
-- **The inspector's composer** is a compact variant: no chip and no hint, a sparkle, the text area
-  (1 to 6 lines) and the send button; shown only when a model is connected.
+- **At rest.** One line, 50 pt tall, 12 pt radius, `bg.subtle`, **no border, no shadow**; a 16 pt
+  accent ✦ at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
+  `text.tertiary`; `⌘K` in `meta` `text.tertiary` at the right (not in the inspector's). The
+  placeholder is short: Now `Tell me anything — I'll turn it into tasks`; a project and the Inbox
+  `Add a task, or ask me anything`; the inspector `Change anything about this task`.
+- **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
+  ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the ✦ and `⌘K` give
+  way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text, absent while
+  the field is empty; neutral while the assistant is still working on the last request). The box
+  keeps its 50 pt from rest to one line of text, so focusing it moves nothing. Empty and focused it
+  shows only the cursor and the placeholder. No `↵ to send` or `⇧↵ new line` text: the button is the
+  hint.
+- **Keys.** `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the answer,
+  else leaves the field. `↓` on a page walks into the rows. `↵` on an empty field opens the highlighted
+  row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
+- **No model connected.** The same field; `↵` adds a plain task in the place of the page (a project,
+  the Inbox; Now → Inbox) and a quiet `✓ Added to Inbox` line shows 1.5 s under the field. The only
+  extra is the line `Set up the assistant` (a link to Settings > Assistant) under the field while it
+  is focused and empty. The inspector's composer is not drawn without a model.
 - **Scope.** The composer tells the assistant where it is. On Now: nothing (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
   the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”
-  mean it. Without a model the text becomes a plain task in the place (project, Inbox; Now → Inbox).
-- **Reply.** The assistant's sentence, the receipts with Undo and a question with its options show
-  directly under the composer that sent them (above the inspector's composer, which sits at the
-  bottom). Behavior as in **Assistant**.
-- The board's `+` on its To do column focuses the composer.
+  mean it.
+- **Answer.** What comes back shows as one line directly under the box that sent it (above the
+  inspector's, which sits at the bottom). Behavior as in **Assistant**.
 
-### Assistant (M3)
+### Assistant (M3, restrained in M4d)
 
 The composer is the entry to a small built-in agent (Eino, `internal/agent`). It acts at once and
 reports what it did with an Undo; it asks only when an action would be wrong without the answer.
-Screens: `now-thinking`, `now-reply-receipt`, `now-question`, `now-no-model` (light and dark), `now-composer-*`.
+Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-sentence`,
+`now-question`, `now-no-model` (light and dark), `now-composer-*`.
 
-- **Working.** The chip's sparkle pulses (a plain accent sparkle with Reduce Motion), the empty field's
-  placeholder reads `Thinking…`, and the typed text has moved into the sheet. One request at a
-  time: Enter while it works keeps what is typed. **Esc cancels** the request (its context is
-  cancelled); with nothing changed yet the sheet closes and the text returns to the field.
-- **Conversation sheet.** Opens directly under the composer, inside the content column, and
-  pushes the sections down; a hairline marks where it ends. It is part of the page, not a chat:
-  no bubbles, no avatars, no timestamps, everything on the column's left edge. It holds this
-  conversation only (the last three exchanges), never stored.
-  - *My line*: `body` in `text.secondary`.
-  - *Reply*: `body` in `text`, one short sentence, 6 pt under my line.
-  - *Receipts*: one row per change, in the list-row style: status glyph (a bell in `accent` when
-    a reminder was set), title in `body.strong`, a quiet detail in `text.tertiary`
-    (`Tomorrow 9:00 AM · reminder`, `Added to Inbox`, `Marked done`). An update reads like a
-    create, with its parts joined by ` · `: `Tomorrow 9:00 AM · reminder`, `Fri · due · P1`,
-    `Moved to adhd-todo`, `Set to Doing`, `Reminder cleared`, `Renamed`, `Notes updated`; there is no
-    `Updated` in front. And
-    **Undo** at the right (`meta`, medium, `text.secondary`, tinted on hover). Clicking the row
-    opens the task. After Undo the title is struck through in `text.tertiary` and the row says
-    `Undone`.
-  - *Question*: `body` text; its 2 to 4 options are small tinted buttons, the same style as the
-    Needs you actions, wrapping onto a second line when they must. A click sends the option as
-    my answer; typing a free answer works too (the placeholder says `Type an answer, or pick one
-    below`). A question never times out. Once answered its buttons are gone.
-  - *Error*: neutral words ("Couldn't reach the model. Is the address right and the server
-    running?", "The provider didn't accept the API key.") with **Retry** as a link. No red.
-  - After a turn that asked nothing and failed nothing the sheet **closes itself after 4 s**
-    (Undo restarts the 4 s), or at once on **Esc**. A second **Esc** with nothing else to close
-    makes the assistant forget the conversation (it also forgets after 10 minutes idle).
-- **No model connected.** The composer's chip reads `Set up the assistant` and opens Settings >
-  Assistant. Enter keeps adding plain tasks, to the place the composer is in.
+- **Working.** The ✦ pulses (a plain accent sparkle with Reduce Motion) and the empty field's
+  placeholder reads `Thinking…`. One request at a time: Enter while it works keeps what is typed.
+  **Esc cancels** the request (its context is cancelled); with nothing changed yet the text returns
+  to the field.
+- **The answer is never an echo of the user.** The user's own words are not shown again, and there
+  is no divider, no bubble, no avatar. What shows depends on the turn, always left-aligned with the
+  ✦ of the box (16 pt) and 8 pt under it:
+  - *It changed something*: **one line per task**, 34 pt tall: a green ✓ (an accent bell for a
+    reminder), the verb in `text.secondary`, the title in `text` weight 500, the rest in
+    `text.secondary`, and **Undo** at the right in `accent` (`meta`, tinted on hover):
+    `✓ Added Fix the login redirect loop · Fri · P1   Undo`. The verb is `Added` for a new task,
+    `Marked done`, and none for an edit (`✓ Team meeting · Moved to adhd-todo`). What follows the
+    title is what the words made of it: a deadline as its day (`Fri`; a time only when one was said,
+    `Fri 3:00 PM`; `18:00` is the assistant's default end of day and reads as the day alone), a
+    reminder as `Tomorrow 9:00 AM · reminder`, `P1` when the priority is not the default, and the
+    project or `Inbox` only when it is not the page the words were typed on (on Now, a task in the
+    Inbox says nothing). Up to **three** lines; more receipts end in `and 1 more` (`meta`-quiet, no
+    Undo). Clicking a line opens the task. After Undo the title is struck through in `text.tertiary`
+    and the line says `Undone`. In the inspector the same lines sit above its box and leave the
+    title out when it is the task shown there.
+  - *It changed nothing* but said something: one grey line, a small `text.tertiary` ✦ and the
+    assistant's sentence in `text.secondary`.
+  - *A question*: the question in `body`, its 2 to 4 options as small tinted buttons below (the
+    style of the Needs you actions), wrapping when they must. A click sends the option as the
+    answer; typing a free one works too (the placeholder says `Type an answer, or pick one below`).
+    A question **stays until it is answered**; once answered its buttons are gone.
+  - *An error*: neutral words ("Couldn't reach the model. Is the address right and the server
+    running?") with **Retry** as a link. No red. It stays.
+- **It goes by itself.** The line of a turn that asked and failed nothing shows **6 s**, the last 400 ms
+  a fade (opacity only, so Reduce Motion changes nothing), by the app clock; Undo restarts the 6 s.
+  It goes at once when the user types in the composer it came from. What is under it slides up
+  rather than jumping (not with Reduce Motion). `Esc` closes it at once; a further `Esc` with
+  nothing else to close makes the assistant forget the conversation (it forgets after 10 minutes
+  idle as well).
+- **⌘Z** undoes the assistant's last change that is not undone, newest first, while its line is shown
+  or the conversation is live (until the second `Esc`, or the assistant idling out); with the line
+  gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
+  field's own. (The task menu's Delete keeps its own Undo toast.)
+- **No model connected.** See **Composer**.
 - Times in receipts follow the Now screen's words: `Today`, `Tomorrow`, a weekday, then a date,
-  followed by the clock (`9:00 AM`).
+  followed by the clock (`9:00 AM`) when there is one to say.
 
 ### Project
 
-Header: project name in `title`, repo slug in `text.tertiary`, a milestone menu (always shown, even
-before the project has a milestone) and a `List | Board` segmented control at the right (List default).
+**Header.** One line: the project's name in `title`, and at the right a quiet `List | Board` control:
+two icons (list ☰, board ▥) in a `bg.subtle` well, 30 × 26 pt cells, 6 pt radius, the chosen one
+raised on `bg` with a 1 pt shadow; the others in `text.tertiary`. They have no text; the tooltips say
+`List` and `Board`, and the accessibility labels `List view` and `Board view` (List is the default).
+Nothing else is in the header: **no repository** (it is in the sidebar's project menu and the
+inspector's top line), **no `Done 5 · Backlog 2`** (finished tasks are in the list), and **no
+milestone menu until the project has a milestone**.
 
-**Milestone menu.** The button reads `All milestones` or the milestone being filtered by. The menu:
+**Milestone filter.** With at least one milestone, quiet `meta` text with a small chevron sits before the
+view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 native ⌄`). Its menu:
 
 1. `All milestones`, a separator, then one item per milestone (checked when it filters the page),
    as before: `v0.2 · due Oct 28`, `v0.1 · closed`;
 2. a separator and `New milestone…`;
-3. when there are milestones, a separator and one submenu per milestone, `Edit “v0.2”`, holding
-   `Rename…`, `Due date…` and `Close milestone` (`Reopen milestone` for a closed one).
+3. a separator and one submenu per milestone, `Edit “v0.2”`, holding `Rename…`, `Due date…` and
+   `Close milestone` (`Reopen milestone` for a closed one).
 
 `New milestone…`, `Rename…` and `Due date…` open the **Milestone sheet**. Closing and reopening act
-at once. A project that has no milestone shows the menu with `All milestones` and `New milestone…`.
+at once. A project with no milestone has no filter: `New milestone…` is in its sidebar menu.
 
 **List view.** Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
 name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
-per row; the group says the status). Row: title, branch pill, `#PR`, summary line for agent
-tasks, age or due label on the right, stale label when stale. **Empty groups are not drawn.**
+per row; the group says the status). Row: the title (one line, `body.strong`); for an agent's task a
+quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
+agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
+at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
+or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
 The composer sits above the groups (see **Composer**): it is how a task is added here.
 After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
 its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
@@ -295,25 +323,34 @@ Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in
 the group in place. Last line: `Backlog 2 — show` in `text.tertiary` (folded: Backlog stays out of
 the way); clicking it opens the group. With no backlog the line is not drawn.
 
-**Board view.** Kept for people who like columns, but it shows only columns that have tasks,
-plus To do (always; its `+` focuses the composer). No collapsed strips, no zero-count columns. Cards as
-before; drag between visible columns changes status. Dragging also reveals drop targets for
-hidden statuses in a strip at the bottom of the board.
+**Board view.** Four fixed lanes, left to right: **To do, Doing, In review, Done**. A blocked task sits
+in Doing, **first**, with the red blocked glyph at the start of its meta line. Backlog and Cancelled
+tasks are not on the board (the list shows them). Done shows its **newest 5** and, past them, `Show
+all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
 
-The header, the composer and the columns share their left and right edges: one centered block,
-at least as wide as the lists' column (684 pt) and as wide as its columns want (264 pt each), but no
-wider than the window less 24 pt on each side. When even 192 pt columns do not fit, the block fills
-the window and the columns scroll sideways. `Done 5 · Backlog 2` is a quiet text button in the
-header, before the `List | Board` control; it shows or hides those columns.
+- **Lanes have no background.** A lane is its header (status glyph 18 pt, name in `body.strong`,
+  count in `text.tertiary`, 32 pt tall) and its cards 8 pt apart; lanes are 20 pt apart. While a card
+  is dragged over a lane it gets a faint accent wash (7 %) reaching 8 pt past the cards. An empty lane
+  says what it is for in `meta` `text.tertiary`: `Drag here to start` (Doing), `Nothing to review` (In
+  review), `Nothing yet` (To do, Done).
+- **Cards**: `bg` with a 10 pt radius, a 1 pt `border` ring and a 1 pt soft shadow; 12 pt padding, 4 pt
+  between the two lines. The title in `body.strong` (up to three lines), then **one meta line**
+  (13 / 18): the blocked mark (14 pt) for a blocked card, the `P0` / `P1` badge, the branch in
+  `mono` (ellipsized), and at the right the due label, the age or the stale label. A card with
+  nothing to say has no meta line. **No status glyph on a card**: its lane says it (so the way to finish
+  your own task is the task menu, `Space`, or dragging it to Done). Done cards are flat `bg.subtle`
+  with no ring, the title in `text.secondary` weight 400.
+- **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
+  status as before (a blocked card dropped on Doing stays blocked); there are no drop targets for
+  hidden statuses.
+- **Edges.** The header, the composer and the four lanes share their left and right edges: one
+  centered block as wide as the window allows less the page's side padding (48 pt), but no wider than
+  980 pt. When even 176 pt lanes do not fit (the inspector open on a small window), the block fills
+  the room and the lanes scroll sideways.
 
 Decisions made while building it (2026-10-14):
 
-- **Backlog and Done on the board** follow the `Done 5 · Backlog 2` button of the header. Folded,
-  they are drop targets that appear while a card is dragged. With them shown by default the seeded
-  project needed six columns and scrolled sideways at 1100 pt.
-- **Drop targets** for hidden statuses float in a strip at the bottom of the board, where columns
-  are usually empty, so they cover no header or card and are in reach however far it is scrolled.
-- **One word per status**, everywhere (list groups, board columns, the inspector, the menu strips
+- **One word per status**, everywhere (list groups, board lanes, the inspector, the menu strips
   and their accessibility labels, receipts, Chinese too): Backlog, To do, Doing, Blocked, In review,
   Done, Cancelled. The stale label is `3d stale` in the list and on a card, with no `!`.
 - **Review without a PR** still goes to Needs you (summary "Ready for your review", action Open).
@@ -322,22 +359,23 @@ Decisions made while building it (2026-10-14):
   the Inbox only.
 - **Reminders** stay in Needs you until marked done; the notification fires once, the row does not
   go away.
-- **Tight rows** (the inspector open on a small window) drop the project name below 600 pt of
+- **Tight rows** (the inspector open on a small window): Now's rows drop the project name below 600 pt of
   content, and the branch, pull request and age below 460 pt. Needs you rows with two buttons put
   them under the summary below 560 pt, and every Needs you row does below 420 pt (the 860 pt window
   with the inspector open leaves 282 pt), so the title keeps its width. A finished row drops who
   finished it below 460 pt and what they said below 600 pt.
-- **Inline add** keeps its input open and empty after Enter, to catch several thoughts in a row;
-  Esc closes it.
 - A notification click opens the task in the inspector over Now.
 
 ### Inbox
 
-Same list view as a project, without the board toggle; tasks with no project.
+Same list view as a project, without the view control and with no subtitle under its title; tasks
+with no project.
 
 ### Inspector (360 pt, slides in 160 ms)
 
-Unchanged from the previous spec: large editable title; property list (Status, Priority, **Project**,
+Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
+QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
+#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, Priority, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels in `meta` secondary and values
 editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
@@ -347,9 +385,12 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
-  the pinned stack leaves; the **reply and composer** are pinned at the bottom under a hairline and
-  never overlap it. The reply's words line up with the properties (24 pt), a receipt's well reaches
-  the composer card's edge (14 pt). (See **Composer**); `Ask about this task…` (⌘J) focuses it. Values the assistant set in the last 10 s carry a small accent `✦` after the value.
+  the pinned stack leaves; the **answer and composer** are pinned at the bottom under a hairline and
+  never overlap it. The answer is the one line of **Assistant**, its left edge on the properties' (24 pt),
+  leaving out the title the pane already shows; the composer is the same quiet box (see **Composer**,
+  without `⌘K`, placeholder `Change anything about this task`). `Ask about this task…` (⌘J) focuses it.
+  Values the assistant set in the last 10 s carry a small accent `✦` after the value. Priority reads as
+  text (`P1  High`), with no bars glyph.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
 
@@ -462,7 +503,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 ### Keyboard
 
-`⌘K` the page's composer · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘1` Now, `⌘2` Inbox, `⌘3` Completed.
 
@@ -475,7 +516,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 
 | Input | `↵` | `Esc` | `↓` |
 |---|---|---|---|
-| Composer | sends (`⇧↵` breaks the line); on an empty field opens the highlighted row | cancels a running request, else closes the reply, else leaves the field | moves into the rows (Now) |
+| Composer | sends (`⇧↵` breaks the line); on an empty field opens the highlighted row | cancels a running request, else closes the answer, else leaves the field | moves into the rows (Now); `⌘Z` on an empty field undoes the assistant's last change |
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
@@ -571,6 +612,9 @@ Before calling a screen done, render it in light and dark and check:
 - [ ] Only blocked, stale and selection use strong color.
 - [ ] Every status is distinguishable in grayscale.
 - [ ] Nothing is boxed that could be separated by space.
+- [ ] Nothing repeats what is next to it: no label the title says, no hint a control shows, no glyph the group
+      or lane names.
+- [ ] One title line, one input, one list; the rest appears on hover, in a menu or in the inspector.
 - [ ] Text is aligned to a shared left edge in each section.
 - [ ] Empty, loading and error states exist and read well.
 - [ ] Hit targets are at least 24 px; rows at least 32 px.
