@@ -74,7 +74,7 @@ func (m *Main) answered(text string, reply data.Reply, err error) {
 	case errors.Is(err, context.Canceled):
 		m.stopped(text, i)
 	case err != nil:
-		turn.err = err.Error()
+		turn.err = problemText(m.say, err)
 	default:
 		cv.live = true
 	}
@@ -137,7 +137,7 @@ func (m *Main) undo(r data.Receipt) {
 	cv := &m.convo
 	if err := m.app.Assistant.Undo(r.ID); err != nil {
 		if n := len(cv.turns); n > 0 {
-			cv.turns[n-1].err = "Couldn't undo that: " + strings.TrimSpace(err.Error())
+			cv.turns[n-1].err = m.say.ConvoUndoFailed(strings.TrimSpace(problemText(m.say, err)))
 		}
 		return
 	}

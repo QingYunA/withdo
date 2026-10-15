@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/cloudwego/eino/schema"
@@ -46,7 +47,15 @@ func TestUndoUpdateRestoresOnlyWhatChanged(t *testing.T) {
 		say("ok"),
 	}
 	res := r.ask("rename and move the reminder")
-	contains(t, "detail", res.Receipts[0].Detail, "Updated · reminder Tomorrow")
+	d := res.Receipts[0].Detail
+	if d.Kind != DetailUpdated || len(d.Changes) != 3 || d.Changes[0].Kind != ChangeReminder ||
+		d.Changes[1].Kind != ChangePriority || d.Changes[1].Value != "P0" || d.Changes[2].Kind != ChangeRenamed {
+		t.Errorf("detail = %+v", d)
+	}
+	wantReminder := time.Date(2026, 10, 15, 1, 0, 0, 0, time.UTC)
+	if !d.Changes[0].At.Equal(wantReminder) {
+		t.Errorf("reminder at %v, want %v", d.Changes[0].At, wantReminder)
+	}
 	got := r.task(tk.ID)
 	eq(t, "title", got.Title, "new title")
 	eq(t, "priority", string(got.Priority), "P0")
@@ -72,7 +81,9 @@ func TestUndoUpdateThatClearedAField(t *testing.T) {
 	tk := r.mustTask(domain.CreateTaskInput{Title: "t", DueAt: &due})
 	r.model.steps = []step{call("update_task", m{"task_id": tk.ID, "clear": []string{"due_at"}}), say("ok")}
 	res := r.ask("no deadline")
-	contains(t, "detail", res.Receipts[0].Detail, "due cleared")
+	if d := res.Receipts[0].Detail; d.Kind != DetailUpdated || len(d.Changes) != 1 || d.Changes[0].Kind != ChangeDue || !d.Changes[0].At.IsZero() {
+		t.Errorf("detail = %+v, want a cleared due time", d)
+	}
 	if r.task(tk.ID).DueAt != nil {
 		t.Fatal("due_at not cleared")
 	}
@@ -112,7 +123,9 @@ func TestUndoComplete(t *testing.T) {
 	tk := r.mustTask(domain.CreateTaskInput{Title: "t", Status: domain.StatusDoing})
 	r.model.steps = []step{call("complete_task", m{"task_id": tk.ID}), say("done")}
 	res := r.ask("finish it")
-	eq(t, "detail", res.Receipts[0].Detail, "Marked done")
+	if res.Receipts[0].Detail.Kind != DetailDone {
+		t.Errorf("detail = %+v", res.Receipts[0].Detail)
+	}
 	if got := r.task(tk.ID); got.Status != domain.StatusDone || got.CompletedAt == nil {
 		t.Fatalf("not completed: %+v", got)
 	}

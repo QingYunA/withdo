@@ -11,9 +11,9 @@ import (
 func (m *Main) activity(c *ui.Context, t *theme.Tokens, task data.Task) {
 	reports := m.app.snap.details[task.ID].Reports
 	ui.Column(c).Gap(8).Children(func() {
-		theme.Text(c, theme.Section, t.TextSecondary, "Activity")
+		theme.Text(c, theme.Section, t.TextSecondary, m.say.ActivityTitle())
 		if len(reports) == 0 {
-			theme.Paragraph(c, theme.Body, t.TextSecondary, "No reports yet. Agents file their progress here as they work.", 0)
+			theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.ActivityEmpty(), 0)
 			return
 		}
 		for i, r := range reports {
@@ -37,11 +37,11 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Padding(0, 0, 16).Children(func() {
 			ui.Row(c).Gap(6).Children(func() {
 				theme.Text(c, theme.Meta, t.TextSecondary, r.Agent)
-				theme.Text(c, theme.Meta, t.TextTertiary, data.Age(r.CreatedAt, m.app.Now()))
+				theme.Text(c, theme.Meta, t.TextTertiary, m.clock.Age(r.CreatedAt, m.app.Now()))
 			})
 			theme.Paragraph(c, theme.Body, t.Text, r.Summary, 0)
 			if r.NextStep != "" {
-				theme.Paragraph(c, theme.Body, t.TextSecondary, "Next: "+r.NextStep, 0)
+				theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.ActivityNext(r.NextStep), 0)
 			}
 		})
 	})

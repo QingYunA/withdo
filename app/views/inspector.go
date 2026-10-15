@@ -28,6 +28,16 @@ func (i *inspector) editing() bool {
 	return false
 }
 
+// reverted reports, once, that Esc sent a field back to its stored text: the keys then go to the
+// page, so the next Esc closes the pane.
+func (i *inspector) reverted() bool {
+	any := false
+	for _, f := range i.fields {
+		any, f.revert = any || f.revert, false
+	}
+	return any
+}
+
 func (i *inspector) reset() {
 	i.fields = fields{}
 	i.dueOpen, i.remOpen = false, false
@@ -71,12 +81,12 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 12, 0, 24).AlignItems(ui.Center).DragWindow().Children(func() {
 		name := m.app.projectName(task.ProjectID)
 		if name == "" {
-			name = "Inbox"
+			name = m.say.NavInbox()
 		}
 		theme.Text(c, theme.Meta, t.TextSecondary, name+"  ·  #"+itoa(task.ID))
 		ui.Spacer(c)
 		btn := ui.ButtonBase(c.Key("close")).Size(theme.HitTarget, theme.HitTarget).Center().Radius(theme.RadiusControl).
-			Label("Close").Tooltip("Close (esc)").TextColor(t.TextSecondary)
+			Label(m.say.InspectorClose()).Tooltip(m.say.InspectorCloseTip()).TextColor(t.TextSecondary)
 		if btn.Hovered() {
 			btn.Background(t.BgHover)
 		}
@@ -89,8 +99,8 @@ func (m *Main) inspectorHeader(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	title, ok := textField(c, t, m.inspector.fields, fieldSpec{
-		name: "Title", value: task.Title, style: theme.Title, color: t.Text,
-		multiline: true, enterSaves: true, minLines: 1, maxLines: 4,
+		name: "Title", label: m.say.FieldTitle(), value: task.Title, style: theme.Title, color: t.Text,
+		multiline: true, enterSaves: true, escReverts: true, minLines: 1, maxLines: 4,
 	})
 	if ok && title != "" {
 		_ = m.app.Update(task.ID, data.Patch{Title: &title})
@@ -99,8 +109,8 @@ func (m *Main) titleField(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 	notes, ok := textField(c, t, m.inspector.fields, fieldSpec{
-		name: "Notes", value: task.Notes, style: theme.Body, color: t.Text, placeholder: "Add notes…",
-		multiline: true, minLines: 3, maxLines: 12,
+		name: "Notes", label: m.say.FieldNotes(), value: task.Notes, style: theme.Body, color: t.Text, placeholder: m.say.NotesPlaceholder(),
+		multiline: true, escReverts: true, minLines: 3, maxLines: 12,
 	})
 	if ok {
 		_ = m.app.Update(task.ID, data.Patch{Notes: &notes})

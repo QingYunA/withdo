@@ -16,17 +16,16 @@ const listIndent float32 = 24
 // listGroup is one status of a list: a header and its rows.
 type listGroup struct {
 	status data.Status
-	name   string
 	tasks  []data.Task
 }
 
-// activeGroups are the groups every list draws, in order. The names are the ones the list uses:
-// the group says the status, so rows carry no glyph.
+// activeGroups are the groups every list draws, in order. A group says the status, so rows carry
+// no glyph.
 var activeGroups = []listGroup{
-	{status: data.Blocked, name: "Blocked"},
-	{status: data.Review, name: "In review"},
-	{status: data.Doing, name: "Doing"},
-	{status: data.Todo, name: "To do"},
+	{status: data.Blocked},
+	{status: data.Review},
+	{status: data.Doing},
+	{status: data.Todo},
 }
 
 // listModel is the tasks of the current project or the Inbox, grouped. Empty groups are dropped.
@@ -137,17 +136,17 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	for _, g := range lm.groups {
-		m.group(c, t, g.status, g.name, g.tasks)
+		m.group(c, t, g.status, g.tasks)
 	}
 	m.addTaskRow(c, t, listIndent)
 	m.foldedGroups(c, t, lm)
 }
 
 // group is a header, glyph and name and count, and its rows indented under the name.
-func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, name string, tasks []data.Task) {
+func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
 	ui.Row(c.Key("group-"+string(s))).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.StatusGlyph(c, t, s, 0)
-		theme.Text(c, theme.BodyStrong, t.Text, name)
+		theme.Text(c, theme.BodyStrong, t.Text, groupName(m.say, s))
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(tasks)))
 	})
 	for _, task := range tasks {
@@ -192,13 +191,13 @@ func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data
 	}
 	switch {
 	case task.Status.Terminal():
-		plainText(c, t, data.Age(doneAt(task), now))
+		plainText(c, t, m.clock.Age(doneAt(task), now))
 	case task.Source == data.SourceUser:
-		if label := data.DueLabel(task, now); label != "" {
+		if label := m.clock.DueLabel(task, now); label != "" {
 			plainText(c, t, label)
 		}
 	case ot.Stale && task.Status.Active():
-		theme.Text(c, theme.Meta, t.Stale, staleWords(ot.HoursSinceActivity)).Shrink(0)
+		theme.Text(c, theme.Meta, t.Stale, m.clock.Stale(ot.HoursSinceActivity)).Shrink(0)
 	default:
 		since := task.UpdatedAt
 		if ot.LatestReport != nil {
@@ -207,7 +206,7 @@ func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data
 		if task.Status == data.Doing && now.Sub(since) < data.LiveWithin {
 			liveDot(c, t)
 		}
-		plainText(c, t, data.Age(since, now))
+		plainText(c, t, m.clock.Age(since, now))
 	}
 }
 
@@ -223,11 +222,11 @@ func (m *Main) addTaskRow(c *ui.Context, t *theme.Tokens, indent float32) {
 		return
 	}
 	row := ui.Row(c.Key("add-task")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0, -6).Padding(0, 6, 0, indent+6).
-		Radius(theme.RadiusCard).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label("Add a task")
+		Radius(theme.RadiusCard).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ListAddTask())
 	if row.Hovered() {
 		row.Background(t.BgHover)
 	}
-	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, "+ Add a task") })
+	row.Children(func() { theme.Text(c, theme.Body, t.TextTertiary, m.say.ListAddTaskRow()) })
 	if row.Clicked() {
 		m.adding, m.addNav, m.addBuf = true, m.nav, ""
 	}
@@ -237,16 +236,34 @@ func (m *Main) addInput(c *ui.Context, t *theme.Tokens, indent float32) {
 	ui.Row(c.Key("add-input-row")).Height(theme.RowOneLine).Shrink(0).Margin(8, 0, 0).Padding(0, 0, 0, indent).AlignItems(ui.Center).Children(func() {
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
-			in := theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
-				Label("New task title").AutoFocus()
-			if in.Submitted() {
-				m.submitAdding()
-			}
+			theme.Body.Apply(ui.TextInputBase(c.Key("add-input"), &m.addBuf)).TextColor(t.Text).
+				Label(m.say.ListNewTaskTitle()).AutoFocus().Bind(&m.addRef).OnTextKey(m.addKey)
 			if m.addBuf == "" {
-				theme.Text(c, theme.Body, t.TextTertiary, "Task title").Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Body, t.TextTertiary, m.say.ListTaskTitle()).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 	})
+}
+
+// addKey is the keyboard of the inline add input: Enter adds and keeps the input open and empty,
+// Esc closes it.
+func (m *Main) addKey(k ui.TextKey) bool {
+	if k.Mods != 0 {
+		return false
+	}
+	switch k.Key {
+	case ui.KeyEnter:
+		m.addBuf = k.Text()
+		m.submitAdding()
+		if m.addBuf != k.Text() {
+			k.SetText(m.addBuf)
+		}
+	case ui.KeyEscape:
+		m.cancelAdding()
+	default:
+		return false
+	}
+	return true
 }
 
 func (m *Main) cancelAdding() { m.adding, m.addBuf = false, "" }
@@ -276,10 +293,10 @@ func (m *Main) foldedGroups(c *ui.Context, t *theme.Tokens, lm listModel) {
 	open := m.expanded[m.nav]
 	if open {
 		if len(lm.backlog) > 0 {
-			m.group(c, t, data.Backlog, "Backlog", lm.backlog)
+			m.group(c, t, data.Backlog, lm.backlog)
 		}
 		if len(lm.done) > 0 {
-			m.group(c, t, data.Done, "Done", m.shownDone(lm))
+			m.group(c, t, data.Done, m.shownDone(lm))
 			m.showAllDone(c, t, lm)
 		}
 	}
@@ -290,32 +307,40 @@ func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
 	if m.allDone[m.nav] || len(lm.done) <= theme.DoneRecentLimit {
 		return
 	}
-	if link(c, t, "Show all "+itoa(len(lm.done))+" done").Margin(6, 0, 0, 24).Clicked() {
+	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, 24).Clicked() {
 		m.allDone[m.nav] = true
 	}
+}
+
+// foldParts joins the counts of the folded line for the label: "Done 4 and Backlog 2".
+func (m *Main) foldParts(parts []string) string {
+	if len(parts) == 2 {
+		return m.say.FoldAnd(parts[0], parts[1])
+	}
+	return strings.Join(parts, "")
 }
 
 func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32) {
 	var parts []string
 	if len(lm.done) > 0 {
-		parts = append(parts, "Done "+itoa(len(lm.done)))
+		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Done), len(lm.done)))
 	}
 	if len(lm.backlog) > 0 {
-		parts = append(parts, "Backlog "+itoa(len(lm.backlog)))
+		parts = append(parts, m.say.FoldCount(statusLabel(m.say, data.Backlog), len(lm.backlog)))
 	}
-	verb := "show"
+	label, verb := m.say.FoldShow(m.foldParts(parts)), m.say.FoldShowShort()
 	if open {
-		verb = "hide"
+		label, verb = m.say.FoldHide(m.foldParts(parts)), m.say.FoldHideShort()
 	}
 	line := ui.Row(c.Key("fold")).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
-		Cursor(ui.CursorPointer).Label(verb + " " + strings.Join(parts, " and "))
+		Cursor(ui.CursorPointer).Label(label)
 	line.Children(func() {
 		theme.Text(c, theme.BodyStrong, t.TextTertiary, strings.Join(parts, " · "))
 		verbColor := t.TextTertiary
 		if line.Hovered() {
 			verbColor = t.TextSecondary
 		}
-		theme.Text(c, theme.Body, verbColor, "— "+verb)
+		theme.Text(c, theme.Body, verbColor, verb)
 	})
 	if line.Clicked() {
 		m.expanded[m.nav] = !open
@@ -325,15 +350,15 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool,
 // emptyList is a project or the Inbox with no task at all. It says what will appear and how to
 // make it appear, and offers the input.
 func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
-	title, body := "No tasks yet.", "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself."
+	title, body := m.say.ListEmptyTitle(), m.say.ListEmptyBody()
 	if m.nav.screen == screenInbox {
-		title, body = "Your inbox is clear.", "Tasks without a project land here. Add one below, or press ⌘K on Now."
+		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody()
 	}
 	ui.Column(c).Padding(32, 0, 0).Gap(4).Shrink(0).Children(func() {
 		theme.Text(c, theme.BodyStrong, t.Text, title)
 		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0)
 		if m.nav.screen == screenProject {
-			if link(c, t, "How to connect").Margin(4, 0, 0).Clicked() {
+			if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
 				m.settings = true
 			}
 		}
@@ -355,7 +380,7 @@ func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
 
 func (m *Main) headerText() (title, sub string) {
 	if m.nav.screen == screenInbox {
-		return "Inbox", "Tasks without a project"
+		return m.say.NavInbox(), m.say.InboxSubtitle()
 	}
 	p, _ := m.app.Project(m.nav.projectID)
 	return p.Name, p.RepoSlug

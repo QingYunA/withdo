@@ -26,27 +26,6 @@ var Statuses = []Status{Backlog, Todo, Doing, Blocked, Review, Done, Cancelled}
 // BoardStatuses are the statuses that have a column on the board.
 var BoardStatuses = []Status{Backlog, Todo, Doing, Blocked, Review, Done}
 
-// Label is the sentence-case name shown in the UI.
-func (s Status) Label() string {
-	switch s {
-	case Backlog:
-		return "Backlog"
-	case Todo:
-		return "Todo"
-	case Doing:
-		return "Doing"
-	case Blocked:
-		return "Blocked"
-	case Review:
-		return "Review"
-	case Done:
-		return "Done"
-	case Cancelled:
-		return "Cancelled"
-	}
-	return string(s)
-}
-
 // Terminal reports whether the status ends a task's life.
 func (s Status) Terminal() bool { return s == Done || s == Cancelled }
 

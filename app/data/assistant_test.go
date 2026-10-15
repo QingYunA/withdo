@@ -80,7 +80,7 @@ func TestAgentAssistantMapsReceiptsAndWritesThroughTheStore(t *testing.T) {
 		t.Fatalf("reply %+v", reply)
 	}
 	rc := reply.Receipts[0]
-	if rc.Title != "开会" || !rc.Bell || rc.Status != Todo || rc.TaskID == 0 || !strings.Contains(rc.Detail, "reminder") {
+	if rc.Title != "开会" || !rc.Bell || rc.Status != Todo || rc.TaskID == 0 || rc.Detail.Kind != agent.DetailReminder {
 		t.Errorf("receipt %+v", rc)
 	}
 	tasks, _ := r.ListTasks(Filter{})
@@ -109,7 +109,7 @@ func TestAgentAssistantErrorsAreInPlainWords(t *testing.T) {
 		return nil, errors.New("401 invalid x-api-key sk-secret")
 	})
 	_, err := a.Ask(bg, "x")
-	if err == nil || err.Error() != "The provider didn't accept the API key." {
+	if p := (*ProblemError)(nil); !errors.As(err, &p) || p.Problem != ProblemKeyRejected || p.Text != "The provider didn't accept the API key." {
 		t.Errorf("err = %v", err)
 	}
 	if strings.Contains(err.Error(), "secret") {
@@ -196,11 +196,32 @@ func TestProviderSettingsTest(t *testing.T) {
 		t.Fatalf("Test = %v, %v", d, err)
 	}
 	_, err = ps.Test(bg, "anthropic", ProviderEdit{BaseURL: srv.URL, Key: "sk-bad"})
-	if err == nil || err.Error() != "The provider didn't accept the API key." {
+	if p := (*ProblemError)(nil); !errors.As(err, &p) || p.Problem != ProblemKeyRejected || p.Text != "The provider didn't accept the API key." {
 		t.Errorf("err = %v", err)
 	}
-	if _, err := ps.Test(bg, "anthropic", ProviderEdit{BaseURL: srv.URL}); err == nil || err.Error() != "This provider needs an API key." {
+	if _, err := ps.Test(bg, "anthropic", ProviderEdit{BaseURL: srv.URL}); ProblemOf(err) != ProblemNoKey {
 		t.Errorf("no key: %v", err)
+	}
+}
+
+func TestEveryKindOfFailureIsRecognized(t *testing.T) {
+	for want, err := range map[Problem]error{
+		ProblemNotConfigured: providers.ErrNotConfigured,
+		ProblemNoKey:         providers.ErrNoKey,
+		ProblemCancelled:     context.Canceled,
+		ProblemTimeout:       context.DeadlineExceeded,
+		ProblemUnreachable:   errors.New("Post http://x: dial tcp 127.0.0.1:9: connect: connection refused"),
+		ProblemKeyRejected:   errors.New("403 forbidden"),
+		ProblemUnknownModel:  errors.New("404 model_not_found"),
+		ProblemRateLimited:   errors.New("429 rate limit exceeded"),
+		ProblemBusy:          agent.ErrBusy,
+	} {
+		if got := ProblemOf(problemFor(err)); got != want {
+			t.Errorf("%v: problem %v, want %v", err, got, want)
+		}
+	}
+	if got := problemFor(errors.New("something odd\nmore")); ProblemOf(got) != ProblemOther || got.Error() != "something odd" {
+		t.Errorf("an unknown failure: %v", got)
 	}
 }
 

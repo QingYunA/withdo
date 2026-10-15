@@ -32,12 +32,19 @@ func moveSelection(cur, dir, n int) int {
 	return max(-1, min(cur+dir, n-1))
 }
 
-// keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; Esc to close, then
-// clear; and, unless a text field has the keys, arrows, Enter and Space on the rows.
+// typing reports whether a text input has the keyboard. Its keys are the input's own
+// (Element.OnTextKey), so the window leaves Esc, the arrows, Enter and Space alone meanwhile.
+func (m *Main) typing(c *ui.Context) bool {
+	return m.askRef.Focused(c) || m.addRef.Focused(c) || m.inspector.editing()
+}
+
+// keys handles the keyboard for one frame: Cmd+K, Cmd+1 and Cmd+2 anywhere; and, unless a text
+// input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
 	if m.settings {
 		return
 	}
+	m.runQueued(c, ids)
 	switch {
 	case c.Shortcut(ui.Cmd, ui.KeyK):
 		m.focusAsk(c)
@@ -45,23 +52,41 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{})
 	case c.Shortcut(ui.Cmd, ui.Key2):
 		m.goTo(nav{screen: screenInbox})
-	case c.Shortcut(0, ui.KeyEscape):
-		m.escape()
 	}
-	if m.adding || m.inspector.editing() {
+	if m.typing(c) {
 		return
 	}
 	switch {
+	case c.Shortcut(0, ui.KeyEscape):
+		m.escape()
 	case c.Shortcut(0, ui.KeyDown):
 		m.move(c, ids, 1)
 	case c.Shortcut(0, ui.KeyUp):
 		m.move(c, ids, -1)
-	case m.askRef.Focused(c):
-		// Enter belongs to the field; a Space is a space.
 	case c.Shortcut(0, ui.KeyEnter):
 		m.openSelected()
 	case c.Shortcut(0, ui.KeySpace):
 		m.toggleSelected()
+	}
+}
+
+// queued is what a text input's key asked for that needs the Context, which OnTextKey does not
+// have: it runs between frames. keys carries it out at the start of the next frame.
+type queued struct {
+	move  int  // arrow: walk the rows by this much
+	leave bool // hand the keys from the input to the page
+}
+
+// runQueued carries out what the last key of a text input asked for.
+func (m *Main) runQueued(c *ui.Context, ids []int) {
+	q := m.queue
+	m.queue = queued{}
+	q.leave = q.leave || m.inspector.reverted()
+	switch {
+	case q.move != 0:
+		m.move(c, ids, q.move)
+	case q.leave:
+		m.listRef.Focus(c)
 	}
 }
 

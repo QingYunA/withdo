@@ -96,7 +96,7 @@ func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 	if it.Stale {
 		color = t.Stale
 	}
-	theme.Text(c, theme.Meta, color, data.Age(it.Since, m.app.Now())).Shrink(0)
+	theme.Text(c, theme.Meta, color, m.clock.Age(it.Since, m.app.Now())).Shrink(0)
 }
 
 // liveDot is the 6 pt doing dot with a soft ring, drawn while an agent reported in the last ten

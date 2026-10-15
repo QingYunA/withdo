@@ -24,6 +24,7 @@ type recorder struct {
 	opened   []int
 	urls     []string
 	settings int
+	language string // what SetLanguage last chose
 
 	mu     sync.Mutex
 	posted []func()
@@ -33,6 +34,10 @@ type recorder struct {
 func (r *recorder) OpenTask(id int)    { r.opened = append(r.opened, id) }
 func (r *recorder) OpenSettings()      { r.settings++ }
 func (r *recorder) OpenURL(url string) { r.urls = append(r.urls, url) }
+
+func (r *recorder) Languages() []string    { return []string{"en", "zh-Hans"} }
+func (r *recorder) Language() string       { return r.language }
+func (r *recorder) SetLanguage(tag string) { r.language = tag }
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {

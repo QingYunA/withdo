@@ -9,7 +9,7 @@ import (
 // nowScreen is the home screen: the date, the ask field, and up to three sections. A section with
 // nothing in it is not drawn; with nothing in any of them the screen says All clear.
 func (m *Main) nowScreen(c *ui.Context, t *theme.Tokens, now data.Now) {
-	m.pageHeader(c, t, "Now", m.app.Now().Format("Monday, Jan 2"), nil)
+	m.pageHeader(c, t, m.say.NavNow(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
 	m.askField(c, t)
 	m.convoSheet(c, t)
@@ -50,9 +50,9 @@ func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 // allClear is the calm state: nothing needs me, nothing is running, nothing is mine.
 func (m *Main) allClear(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c).Padding(96, 0, 0).Gap(6).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Input, t.Text, "All clear.")
-		theme.Text(c, theme.Body, t.TextSecondary, "Agents report here through the adhd-todo MCP server.")
-		if link(c, t, "How to connect").Margin(6, 0, 0).Clicked() {
+		theme.Text(c, theme.Input, t.Text, m.say.NowAllClear())
+		theme.Text(c, theme.Body, t.TextSecondary, m.say.NowAllClearBody())
+		if link(c, t, m.say.LinkHowToConnect()).Margin(6, 0, 0).Clicked() {
 			m.settings = true
 		}
 	})
@@ -63,7 +63,7 @@ func (m *Main) needsSection(c *ui.Context, t *theme.Tokens, items []data.NowItem
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, "Needs you", len(items))
+	sectionHeader(c, t, m.say.SectionNeeds(), len(items))
 	ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
 		for i, it := range items {
 			if i > 0 {
@@ -85,7 +85,7 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 		}
 		body(c, func() {
 			m.titleLine(c, t, it.Task, it.Project, false)
-			summaryLine(c, t, it.Summary)
+			summaryLine(c, t, m.needSummary(it))
 		})
 		right(c, func() {
 			if m.width >= dropPillsBelow { // beside the inspector the title needs the room more
@@ -106,11 +106,11 @@ func (m *Main) needRow(c *ui.Context, t *theme.Tokens, it data.NowItem) {
 func (m *Main) actionFor(it data.NowItem) (text, label string) {
 	switch {
 	case it.Kind == data.NeedReminder:
-		return "Done", "Mark done: " + it.Title
+		return m.say.ActionDone(), m.say.A11yMarkDone(it.Title)
 	case it.Kind == data.NeedReview && it.PRURL != "":
-		return "Open PR", "Open pull request #" + itoa(it.PRNumber)
+		return m.say.ActionOpenPR(), m.say.A11yOpenPR(itoa(it.PRNumber))
 	}
-	return "Open", "Open " + it.Title
+	return m.say.ActionOpen(), m.say.A11yOpenTask(it.Title)
 }
 
 // act runs the button of a Needs you row.
@@ -130,7 +130,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, "Agents at work", len(items))
+	sectionHeader(c, t, m.say.SectionAgents(), len(items))
 	for _, it := range items {
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity)
@@ -138,7 +138,7 @@ func (m *Main) agentsSection(c *ui.Context, t *theme.Tokens, items []data.NowIte
 			m.app.glyphSlot(c, t, it.Task, fill)
 			body(c, func() {
 				m.titleLine(c, t, it.Task, it.Project, true)
-				summaryLine(c, t, it.Summary)
+				summaryLine(c, t, m.agentSummary(it))
 			})
 			right(c, func() {
 				if it.Live {
@@ -158,15 +158,15 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 	if len(now.Yours) == 0 {
 		return
 	}
-	sectionHeader(c, t, "Yours", len(now.Yours))
+	sectionHeader(c, t, m.say.SectionYours(), len(now.Yours))
 	for _, it := range now.Yours {
 		fill, opacity, _ := m.app.completionPhase(c, it.ID)
 		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
 		row.Children(func() {
 			m.app.glyphSlot(c, t, it.Task, fill)
 			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
-			if it.Label != "" {
-				theme.Text(c, theme.Meta, t.TextTertiary, it.Label).Shrink(0)
+			if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
+				theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
 			}
 		})
 		if row.Clicked() {
@@ -174,8 +174,7 @@ func (m *Main) yoursSection(c *ui.Context, t *theme.Tokens, now data.Now) {
 		}
 	}
 	if now.MoreUndated > 0 {
-		label := "Show all in Inbox"
-		if link(c, t, label).Margin(8, 0, 0).Clicked() {
+		if link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
 			m.goTo(nav{screen: screenInbox})
 		}
 	}

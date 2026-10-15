@@ -39,34 +39,11 @@ func localRFC3339(stored *string, loc *time.Location) string {
 	return t.In(loc).Format(time.RFC3339)
 }
 
-// whenLabel is a moment the way a receipt says it: "Today 4:00 PM", "Tomorrow 9:00 AM", "Fri
-// 9:00 AM", "Oct 20 9:00 AM".
-func whenLabel(stored string, now time.Time) string {
+// storedTime reads a stored timestamp in the zone of now. A malformed one is the zero time.
+func storedTime(stored string, now time.Time) time.Time {
 	t, err := time.Parse(time.RFC3339Nano, stored)
 	if err != nil {
-		return stored
+		return time.Time{}
 	}
-	t, now = t.In(now.Location()), now.In(now.Location())
-	days := dayIndex(t) - dayIndex(now)
-	var day string
-	switch {
-	case days == 0:
-		day = "Today"
-	case days == 1:
-		day = "Tomorrow"
-	case days == -1:
-		day = "Yesterday"
-	case days > 1 && days < 7:
-		day = t.Format("Mon")
-	case t.Year() != now.Year():
-		day = t.Format("Jan 2, 2006")
-	default:
-		day = t.Format("Jan 2")
-	}
-	return day + " " + t.Format("3:04 PM")
-}
-
-func dayIndex(t time.Time) int {
-	y, m, d := t.Date()
-	return int(time.Date(y, m, d, 0, 0, 0, 0, time.UTC).Unix() / 86400)
+	return t.In(now.Location())
 }

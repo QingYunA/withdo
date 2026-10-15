@@ -11,24 +11,24 @@ func (m *Main) milestoneMenu(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	pid := m.nav.projectID
-	label := "All milestones"
+	label := m.say.MilestoneAll()
 	for _, ms := range m.app.snap.milestones[pid] {
 		if ms.ID == m.milestone[pid] {
 			label = ms.Title
 		}
 	}
 	btn := ui.ButtonBase(c.Key("milestone")).Height(28).Padding(0, 8, 0, 10).Gap(4).Radius(theme.RadiusControl).
-		Label("Milestone: " + label).TextColor(t.TextSecondary).AlignItems(ui.Center).Shrink(0)
+		Label(m.say.A11yMilestone(label)).TextColor(t.TextSecondary).AlignItems(ui.Center).Shrink(0)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)
 	}
 	btn.Menu(func(mn *ui.Menu) {
-		if mn.Item("All milestones").Checked(m.milestone[pid] == 0).Chosen() {
+		if mn.Item(m.say.MilestoneAll()).Checked(m.milestone[pid] == 0).Chosen() {
 			m.milestone[pid] = 0
 		}
 		mn.Separator()
 		for _, ms := range m.app.snap.milestones[pid] {
-			if mn.Item(milestoneLabel(ms, m.app.Now())).Checked(m.milestone[pid] == ms.ID).Chosen() {
+			if mn.Item(m.milestoneLabel(ms)).Checked(m.milestone[pid] == ms.ID).Chosen() {
 				m.milestone[pid] = ms.ID
 			}
 		}
@@ -45,11 +45,14 @@ func (m *Main) viewToggle(c *ui.Context, t *theme.Tokens) {
 	pid := m.nav.projectID
 	ui.Row(c.Key("view-toggle")).Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Children(func() {
 		for _, side := range []struct {
-			name  string
-			board bool
-		}{{"List", false}, {"Board", true}} {
+			key, name, label string
+			board            bool
+		}{
+			{"List", m.say.ViewList(), m.say.A11yViewList(), false},
+			{"Board", m.say.ViewBoard(), m.say.A11yViewBoard(), true},
+		} {
 			on := m.board[pid] == side.board
-			seg := ui.ButtonBase(c.Key("view-"+side.name)).Padding(3, 10).Radius(5).Label(side.name + " view").Cursor(ui.CursorPointer)
+			seg := ui.ButtonBase(c.Key("view-"+side.key)).Padding(3, 10).Radius(5).Label(side.label).Cursor(ui.CursorPointer)
 			switch {
 			case on:
 				seg.Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))

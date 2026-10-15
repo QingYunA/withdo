@@ -51,6 +51,14 @@ func (tb *toolbox) projectName(id *int64) string {
 	return fmt.Sprintf("project %d", *id)
 }
 
+// projectLabel is a project's name for a receipt: empty for the Inbox, which the UI names itself.
+func (tb *toolbox) projectLabel(id *int64) string {
+	if id == nil {
+		return ""
+	}
+	return tb.projectName(id)
+}
+
 func (tb *toolbox) addReceipt(r Receipt, undo func(context.Context) error) {
 	r.ID = tb.journal.add(undo)
 	tb.mu.Lock()

@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/egoist/mygo"
@@ -21,6 +23,9 @@ type shell struct {
 
 	mu      sync.Mutex
 	mainWin *mygo.Window
+	// choice is the language picked in Settings during this run; chosen tells that one was.
+	choice string
+	chosen bool
 
 	// quitting is set when a quit starts, so that closing the main window then really closes it.
 	quitting atomic.Bool
@@ -46,6 +51,43 @@ func (s *shell) OpenURL(url string) {
 	}
 }
 
+// Languages implements views.Actions: the languages the catalogs have.
+func (s *shell) Languages() []string { return mygo.App.Languages() }
+
+// Language implements views.Actions. mygo keeps the language the user chose but does not report
+// it, so after a launch it is read back: a language that differs from the one the system's
+// languages would give was chosen, and the same one is taken as following the system.
+func (s *shell) Language() string {
+	if s.chosen {
+		return s.choice
+	}
+	shown := mygo.App.Locale()
+	if shown == systemLanguage() {
+		return ""
+	}
+	return shown
+}
+
+// SetLanguage implements views.Actions.
+func (s *shell) SetLanguage(tag string) {
+	s.choice, s.chosen = tag, true
+	mygo.App.SetLocale(tag)
+}
+
+// systemLanguage is the app language the system's preferred languages give: the first one that
+// names a language of the app, else the app's own.
+func systemLanguage() string {
+	langs := mygo.App.Languages()
+	for _, preferred := range mygo.App.PreferredLanguages() {
+		for _, l := range langs {
+			if preferred == l || strings.HasPrefix(preferred, l+"-") {
+				return l
+			}
+		}
+	}
+	return langs[0]
+}
+
 // Post runs fn on the main thread and redraws; the assistant answers through it.
 func (s *shell) Post(fn func()) {
 	if w := s.window(); w != nil {
@@ -69,7 +111,7 @@ func (s *shell) invalidateMain() {
 // Quit.
 func (s *shell) createMain() {
 	win := mygo.NewWindow(mygo.WindowOptions{
-		Title:          "ADHD Todo",
+		Title:          locales.WindowTitle(),
 		Width:          theme.WindowWidth,
 		Height:         theme.WindowHeight,
 		MinWidth:       theme.WindowMinWidth,
@@ -80,6 +122,8 @@ func (s *shell) createMain() {
 		Vibrancy:       mygo.VibrancySidebar,
 		Content:        ui.View(s.main.View),
 	})
+	// What was set once says the new language when it changes.
+	mygo.App.OnLocaleChanged(func(string) { win.SetTitle(locales.WindowTitle()) })
 	win.OnClose(func(e *mygo.CloseEvent) {
 		if !s.quitting.Load() {
 			e.PreventDefault()
@@ -125,9 +169,9 @@ func notifyReminder(r data.Reminder) {
 	}
 	body := r.ProjectName
 	if body == "" {
-		body = "Inbox"
+		body = locales.NavInbox()
 	}
-	n := mygo.NewNotification(mygo.NotificationOptions{ID: notificationID(r.TaskID), Title: "Reminder: " + r.Title, Body: body})
+	n := mygo.NewNotification(mygo.NotificationOptions{ID: notificationID(r.TaskID), Title: locales.NotifyReminder(r.Title), Body: body})
 	if err := n.Show(); err != nil {
 		log.Printf("notification: %v", err)
 	}

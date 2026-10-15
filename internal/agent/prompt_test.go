@@ -58,20 +58,15 @@ func TestPromptSpellsOutDaylightSavingChange(t *testing.T) {
 	}
 }
 
-func TestWhenLabel(t *testing.T) {
+func TestStoredTimeIsInTheZoneOfNow(t *testing.T) {
 	loc := loadZone(t, "Asia/Shanghai")
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, loc)
-	cases := map[string]string{
-		"2026-10-14T08:00:00.000Z": "Today 4:00 PM",
-		"2026-10-15T01:00:00.000Z": "Tomorrow 9:00 AM",
-		"2026-10-16T05:30:00.000Z": "Fri 1:30 PM",
-		"2026-10-13T01:00:00.000Z": "Yesterday 9:00 AM",
-		"2026-10-24T01:00:00.000Z": "Oct 24 9:00 AM",
-		"2027-01-02T01:00:00.000Z": "Jan 2, 2027 9:00 AM",
-		"garbage":                  "garbage",
+	got := storedTime("2026-10-15T01:00:00.000Z", now)
+	if got.Location() != loc || got.Hour() != 9 {
+		t.Errorf("storedTime = %v, want 9:00 in Shanghai", got)
 	}
-	for in, want := range cases {
-		eq(t, in, whenLabel(in, now), want)
+	if !storedTime("garbage", now).IsZero() {
+		t.Error("a malformed timestamp is not the zero time")
 	}
 }
 

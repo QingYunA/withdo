@@ -17,8 +17,8 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.statusRow(c, t, task)
 		m.priorityRow(c, t, task)
 		m.milestoneRow(c, t, task)
-		m.dateRow(c, t, "Due", task.DueAt, &m.inspector.dueOpen, func(tm time.Time) data.Patch { return data.Patch{DueAt: &tm} }, false)
-		m.dateRow(c, t, "Remind", task.RemindAt, &m.inspector.remOpen, func(tm time.Time) data.Patch { return data.Patch{RemindAt: &tm} }, true)
+		m.dateRow(c, t, "due", m.say.PropDue(), task.DueAt, &m.inspector.dueOpen, func(tm time.Time) data.Patch { return data.Patch{DueAt: &tm} }, false)
+		m.dateRow(c, t, "remind", m.say.PropRemind(), task.RemindAt, &m.inspector.remOpen, func(tm time.Time) data.Patch { return data.Patch{RemindAt: &tm} }, true)
 		if task.Source == data.SourceAgent || task.Branch != "" {
 			m.branchRow(c, t, task)
 		}
@@ -29,8 +29,8 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 // propRow lays out a label and a value on one 32 pt line.
-func propRow(c *ui.Context, t *theme.Tokens, label string, value func()) {
-	ui.Row(c.Key("prop-" + label)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
+func propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
+	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, label).Width(labelWidth).Shrink(0)
 		value()
 	})
@@ -47,31 +47,29 @@ func valueButton(c *ui.Context, t *theme.Tokens, key string) ui.Element {
 }
 
 func (m *Main) statusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "Status", func() {
-		btn := valueButton(c, t, "status").Label("Status: " + task.Status.Label())
+	propRow(c, t, "status", m.say.PropStatus(), func() {
+		btn := valueButton(c, t, "status").Label(m.say.A11yStatus(statusLabel(m.say, task.Status)))
 		btn.Menu(func(mn *ui.Menu) {
 			for _, s := range data.Statuses {
-				if mn.Item(s.Label()).Checked(task.Status == s).Chosen() {
+				if mn.Item(statusLabel(m.say, s)).Checked(task.Status == s).Chosen() {
 					m.app.SetStatus(task, s)
 				}
 			}
 		})
 		btn.Children(func() {
 			theme.StatusGlyph(c, t, task.Status, 0)
-			theme.Text(c, theme.Body, t.Text, task.Status.Label())
+			theme.Text(c, theme.Body, t.Text, statusLabel(m.say, task.Status))
 		})
 	})
 }
 
-var priorityNames = map[data.Priority]string{data.P0: "Urgent", data.P1: "High", data.P2: "Normal", data.P3: "Low"}
-
 func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "Priority", func() {
-		label := string(task.Priority) + "  " + priorityNames[task.Priority]
-		btn := valueButton(c, t, "priority").Label("Priority: " + label)
+	propRow(c, t, "priority", m.say.PropPriority(), func() {
+		label := priorityLabel(m.say, task.Priority)
+		btn := valueButton(c, t, "priority").Label(m.say.A11yPriority(label))
 		btn.Menu(func(mn *ui.Menu) {
 			for _, p := range data.Priorities {
-				if mn.Item(string(p) + "  " + priorityNames[p]).Checked(task.Priority == p).Chosen() {
+				if mn.Item(priorityLabel(m.say, p)).Checked(task.Priority == p).Chosen() {
 					_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})
 				}
 			}
@@ -88,21 +86,21 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		return
 	}
 	ms := m.app.snap.milestones[*task.ProjectID]
-	propRow(c, t, "Milestone", func() {
-		label, color := "None", t.TextTertiary
+	propRow(c, t, "milestone", m.say.PropMilestone(), func() {
+		label, color := m.say.ValueNone(), t.TextTertiary
 		for _, x := range ms {
 			if task.MilestoneID != nil && x.ID == *task.MilestoneID {
 				label, color = x.Title, t.Text
 			}
 		}
-		btn := valueButton(c, t, "milestone").Label("Milestone: " + label)
+		btn := valueButton(c, t, "milestone").Label(m.say.A11yMilestone(label))
 		btn.Menu(func(mn *ui.Menu) {
-			if mn.Item("None").Checked(task.MilestoneID == nil).Chosen() {
+			if mn.Item(m.say.ValueNone()).Checked(task.MilestoneID == nil).Chosen() {
 				_ = m.app.Update(task.ID, data.Patch{MilestoneID: data.IntPtr(0)})
 			}
 			for _, x := range ms {
 				on := task.MilestoneID != nil && *task.MilestoneID == x.ID
-				if mn.Item(milestoneLabel(x, m.app.Now())).Checked(on).Chosen() {
+				if mn.Item(m.milestoneLabel(x)).Checked(on).Chosen() {
 					_ = m.app.Update(task.ID, data.Patch{MilestoneID: data.IntPtr(x.ID)})
 				}
 			}
@@ -112,11 +110,12 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "Branch", func() {
+	propRow(c, t, "branch", m.say.FieldBranch(), func() {
 		box := ui.Box(c).Grow(1).MinWidth(0).Height(28).Justify(ui.Center)
 		box.Children(func() {
 			branch, ok := textField(c, t, m.inspector.fields, fieldSpec{
-				name: "Branch", value: task.Branch, style: theme.Mono, color: t.Text, placeholder: "None",
+				name: "Branch", label: m.say.FieldBranch(), value: task.Branch, style: theme.Mono, color: t.Text,
+				placeholder: m.say.ValueNone(), escReverts: true,
 			})
 			if ok {
 				_ = m.app.Update(task.ID, data.Patch{Branch: &branch})
@@ -126,8 +125,8 @@ func (m *Main) branchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	propRow(c, t, "Pull request", func() {
-		btn := valueButton(c, t, "pr").Label("Open pull request #" + itoa(task.PRNumber)).Tooltip(task.PRURL)
+	propRow(c, t, "pr", m.say.PropPullRequest(), func() {
+		btn := valueButton(c, t, "pr").Label(m.say.A11yOpenPR(itoa(task.PRNumber))).Tooltip(task.PRURL)
 		btn.Children(func() {
 			theme.Text(c, theme.Mono, t.Accent, "#"+itoa(task.PRNumber))
 			ui.Icon(c, theme.IconArrowOut).Size(13, 13).TextColor(t.Accent)
@@ -140,14 +139,14 @@ func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // dateRow is a due or reminder time. It opens a calendar (and a time of day for reminders) in a
 // popover and saves as soon as a day or time is picked.
-func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, label string, current *time.Time, open *bool, patch func(time.Time) data.Patch, withTime bool) {
+func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, key, label string, current *time.Time, open *bool, patch func(time.Time) data.Patch, withTime bool) {
 	task, _ := m.app.Task(m.inspector.lastOpen)
-	propRow(c, t, label, func() {
-		text, color := "None", t.TextTertiary
+	propRow(c, t, key, label, func() {
+		text, color := m.say.ValueNone(), t.TextTertiary
 		if current != nil {
-			text, color = formatMoment(*current, m.app.Now(), withTime), t.Text
+			text, color = m.clock.Moment(*current, m.app.Now(), withTime), t.Text
 		}
-		btn := valueButton(c, t, "date-"+label).Label(label + ": " + text)
+		btn := valueButton(c, t, "date-"+key).Label(m.say.A11yDate(label, text))
 		btn.Children(func() {
 			theme.Text(c, theme.Body, color, text)
 		})
@@ -163,19 +162,19 @@ func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, label string, current *ti
 
 func (m *Main) datePicker(c *ui.Context, t *theme.Tokens, task data.Task, patch func(time.Time) data.Patch, withTime bool, open *bool) {
 	ui.Column(c).Padding(8).Gap(8).Children(func() {
-		changed := ui.Calendar(c, &m.inspector.when).Label("Day").Changed()
+		changed := ui.Calendar(c, &m.inspector.when).Label(m.say.PickerDay()).Changed()
 		if withTime {
-			changed = ui.TimeInput(c, &m.inspector.when).Label("Time").Changed() || changed
+			changed = ui.TimeInput(c, &m.inspector.when).Label(m.say.PickerTime()).Changed() || changed
 		}
 		if changed {
 			_ = m.app.Update(task.ID, patch(m.inspector.when))
 		}
 		ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
-			if ui.Button(c, "Clear").Clicked() {
+			if ui.Button(c, m.say.PickerClear()).Clicked() {
 				_ = m.app.Update(task.ID, patch(time.Time{}))
 				*open = false
 			}
-			if ui.PrimaryButton(c, "Done").Clicked() {
+			if ui.PrimaryButton(c, m.say.PickerDone()).Clicked() {
 				*open = false
 			}
 		})
@@ -193,22 +192,4 @@ func startingMoment(cur *time.Time, now time.Time, withTime bool) time.Time {
 		hour = now.Add(time.Hour).Hour()
 	}
 	return time.Date(y, mo, d+1, hour, 0, 0, 0, now.Location())
-}
-
-// formatMoment writes "Tomorrow" or "Tomorrow, 10:00".
-func formatMoment(t, now time.Time, withTime bool) string {
-	day := data.DayWord(t, now)
-	day = string(upperFirst(day))
-	if withTime || t.Hour() != 0 && t.Minute() != 0 {
-		return day + ", " + t.Format("15:04")
-	}
-	return day
-}
-
-func upperFirst(s string) []byte {
-	b := []byte(s)
-	if len(b) > 0 && b[0] >= 'a' && b[0] <= 'z' {
-		b[0] -= 32
-	}
-	return b
 }

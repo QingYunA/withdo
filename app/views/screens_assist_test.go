@@ -55,7 +55,7 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 				return data.Reply{}, err
 			}
 			return data.Reply{Text: "好的，明天 9:00 提醒你开会。", Receipts: []data.Receipt{
-				{ID: 1, TaskID: task.ID, Title: "开会", Detail: "Tomorrow 9:00 AM · reminder", Status: data.Todo, Bell: true},
+				{ID: 1, TaskID: task.ID, Title: "开会", Detail: tomorrowReminder(), Status: data.Todo, Bell: true},
 			}}, nil
 		}
 		mainShot(t, "now-reply-receipt-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "明天九点提醒我开会", true))

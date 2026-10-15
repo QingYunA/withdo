@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -113,9 +112,9 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 	switch {
 	case task.Status.Terminal():
 		at := doneAt(task)
-		return plainMeta(data.Age(at, now))
+		return plainMeta(m.clock.Age(at, now))
 	case task.Source == data.SourceUser:
-		words := data.DueLabel(task, now)
+		words := m.clock.DueLabel(task, now)
 		if words == "" {
 			return nil
 		}
@@ -133,14 +132,14 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 	if ot.Stale && task.Status.Active() {
 		hours := ot.HoursSinceActivity
 		return func(c *ui.Context, t *theme.Tokens) {
-			theme.Text(c, theme.Meta, t.Stale, "! "+staleWords(hours)).Shrink(0)
+			theme.Text(c, theme.Meta, t.Stale, "! "+m.clock.Stale(hours)).Shrink(0)
 		}
 	}
 	since := task.UpdatedAt
 	if ot.LatestReport != nil {
 		since = ot.LatestReport.CreatedAt
 	}
-	return plainMeta(data.Age(since, now))
+	return plainMeta(m.clock.Age(since, now))
 }
 
 func plainMeta(text string) func(*ui.Context, *theme.Tokens) {
@@ -149,12 +148,12 @@ func plainMeta(text string) func(*ui.Context, *theme.Tokens) {
 	}
 }
 
-func milestoneLabel(ms data.Milestone, now time.Time) string {
+func (m *Main) milestoneLabel(ms data.Milestone) string {
 	switch {
 	case !ms.Open:
-		return ms.Title + " · closed"
+		return m.say.MilestoneClosed(ms.Title)
 	case ms.DueAt != nil:
-		return ms.Title + " · due " + data.DayWord(*ms.DueAt, now)
+		return m.say.MilestoneDue(ms.Title, m.clock.DayInline(*ms.DueAt, m.app.Now()))
 	}
 	return ms.Title
 }

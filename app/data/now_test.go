@@ -72,32 +72,26 @@ func TestBuildNowSeedMatchesTheMockup(t *testing.T) {
 	}
 }
 
-func TestBuildNowSummariesAndLabels(t *testing.T) {
+func TestBuildNowSaysWhyAndWhatTheAgentSaid(t *testing.T) {
 	n := nowOf(t, NewFake(fixedNow))
-	wants := map[string]string{
-		"Fix tray race on launch":  "Agent is waiting: “Needs a decision on the activation policy”",
-		"Reply to design feedback": "You asked to be reminded at 2:30 PM",
-		"Native UI with mygo":      "PR #12 is ready for your review",
+	words := map[string]string{
+		"Fix tray race on launch":  "Needs a decision on the activation policy",
+		"Reply to design feedback": "",
+		"Native UI with mygo":      "",
 	}
 	for _, it := range n.Needs {
-		if it.Summary != wants[it.Title] {
-			t.Errorf("%s: summary %q, want %q", it.Title, it.Summary, wants[it.Title])
+		if it.Words != words[it.Title] {
+			t.Errorf("%s: words %q, want %q", it.Title, it.Words, words[it.Title])
 		}
 	}
 	if !n.Needs[0].Stale || n.Needs[0].Hours != 72 {
 		t.Errorf("blocked task stale %v hours %d", n.Needs[0].Stale, n.Needs[0].Hours)
 	}
-	if got := n.Agents[0].Summary; got != "Ported the store and migrations; next: port the MCP server" {
-		t.Errorf("agent summary %q", got)
+	if got := n.Agents[0]; got.Summary != "Ported the store and migrations" || got.NextStep != "Port the MCP server" {
+		t.Errorf("agent said %q, next %q", got.Summary, got.NextStep)
 	}
 	if !n.Agents[0].Live || n.Agents[1].Live {
 		t.Errorf("live dots: %v %v, want the 2 minute old report only", n.Agents[0].Live, n.Agents[1].Live)
-	}
-	labels := []string{"Today", "Tomorrow", "Fri", ""}
-	for i, it := range n.Yours {
-		if it.Label != labels[i] {
-			t.Errorf("%s label %q, want %q", it.Title, it.Label, labels[i])
-		}
 	}
 }
 
@@ -119,7 +113,7 @@ func TestBuildNowStaleAgentWithoutReports(t *testing.T) {
 	task, _ := f.CreateTask(CreateTaskInput{Title: "Quiet one", Source: SourceAgent, Status: Doing})
 	now = now.Add(80 * time.Hour)
 	n := nowOf(t, f)
-	if len(n.Needs) != 1 || n.Needs[0].Kind != NeedStale || n.Needs[0].Summary != "No update for 3d" || len(n.Agents) != 0 {
+	if len(n.Needs) != 1 || n.Needs[0].Kind != NeedStale || n.Needs[0].Hours != 80 || len(n.Agents) != 0 {
 		t.Errorf("%+v / agents %d", n.Needs, len(n.Agents))
 	}
 	_ = task
@@ -134,8 +128,9 @@ func TestBuildNowReviewWithoutPRAndUserBlocked(t *testing.T) {
 	if got := titles(n.Needs); !equal(got, []string{"Stuck", "Reviewable"}) {
 		t.Fatalf("needs %q: a user review task waits on others, not on me", got)
 	}
-	if n.Needs[0].Summary != "Marked as blocked" || n.Needs[1].Summary != "Ready for your review" {
-		t.Errorf("summaries %q, %q", n.Needs[0].Summary, n.Needs[1].Summary)
+	if n.Needs[0].Kind != NeedBlocked || n.Needs[0].Source != SourceUser || n.Needs[0].Words != "" ||
+		n.Needs[1].Kind != NeedReview || n.Needs[1].PRNumber != 0 {
+		t.Errorf("needs %+v, %+v", n.Needs[0], n.Needs[1])
 	}
 }
 
@@ -150,8 +145,8 @@ func TestBuildNowYoursLimitsAndHorizon(t *testing.T) {
 	over, _ := f.CreateTask(CreateTaskInput{Title: "Overdue"})
 	f.UpdateTask(over.ID, Patch{DueAt: TimePtr(now.Add(-26 * time.Hour))})
 	n := nowOf(t, f)
-	if n.Yours[0].Title != "Overdue" || n.Yours[0].Label != "Yesterday" {
-		t.Errorf("first row %q %q, want the overdue task", n.Yours[0].Title, n.Yours[0].Label)
+	if n.Yours[0].Title != "Overdue" {
+		t.Errorf("first row %q, want the overdue task", n.Yours[0].Title)
 	}
 	if len(n.Yours) != 1+MaxUndated || n.MoreUndated != 3 {
 		t.Errorf("%d rows, %d more", len(n.Yours), n.MoreUndated)
@@ -163,30 +158,7 @@ func TestBuildNowYoursLimitsAndHorizon(t *testing.T) {
 	}
 }
 
-func TestReminderWording(t *testing.T) {
-	now := fixedNow()
-	cases := map[time.Duration]string{
-		-time.Hour:       "at 1:30 PM",
-		-24 * time.Hour:  "yesterday at 2:30 PM",
-		-72 * time.Hour:  "on Oct 11 at 2:30 PM",
-		-time.Second * 5: "at 2:29 PM",
-	}
-	for d, want := range cases {
-		if got := reminderWhen(now.Add(d), now); got != want {
-			t.Errorf("%v: %q, want %q", d, got, want)
-		}
-	}
-}
-
-func TestLowerFirstKeepsAcronyms(t *testing.T) {
-	for in, want := range map[string]string{"Port the MCP server": "port the MCP server", "MCP tools": "MCP tools", "next": "next", "": ""} {
-		if got := lowerFirst(in); got != want {
-			t.Errorf("%q -> %q, want %q", in, got, want)
-		}
-	}
-}
-
-func TestNextMomentAndShort(t *testing.T) {
+func TestNextMoment(t *testing.T) {
 	now := fixedNow()
 	a, b := now.Add(time.Hour), now.Add(2*time.Hour)
 	if at, ok := NextMoment(Task{DueAt: &b, RemindAt: &a}); !ok || !at.Equal(a) {
@@ -194,12 +166,6 @@ func TestNextMomentAndShort(t *testing.T) {
 	}
 	if _, ok := NextMoment(Task{}); ok {
 		t.Error("a task with no times has a moment")
-	}
-	if Short(0) != "1h" || Short(5) != "5h" || Short(72) != "3d" {
-		t.Errorf("short %q %q %q", Short(0), Short(5), Short(72))
-	}
-	if Capital("") != "" || Capital("fri") != "Fri" {
-		t.Error("capital")
 	}
 }
 
