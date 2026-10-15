@@ -21,8 +21,8 @@ func toMessages(in []*schema.Message) (system []sdk.TextBlockParam, out []sdk.Me
 				system = append(system, sdk.TextBlockParam{Text: m.Content})
 			}
 		case schema.User:
-			if m.Content != "" {
-				out = append(out, sdk.NewUserMessage(sdk.NewTextBlock(m.Content)))
+			if blocks := userBlocks(m); len(blocks) > 0 {
+				out = append(out, sdk.NewUserMessage(blocks...))
 			}
 		case schema.Assistant:
 			blocks, err := assistantBlocks(m)
@@ -44,6 +44,26 @@ func toMessages(in []*schema.Message) (system []sdk.TextBlockParam, out []sdk.Me
 		}
 	}
 	return system, out, nil
+}
+
+// userBlocks is what the user said: its text, then its pictures as image blocks, in the order of
+// the message's parts. A message with only pictures is kept.
+func userBlocks(m *schema.Message) []sdk.ContentBlockParamUnion {
+	var blocks []sdk.ContentBlockParamUnion
+	if m.Content != "" {
+		blocks = append(blocks, sdk.NewTextBlock(m.Content))
+	}
+	for _, p := range m.UserInputMultiContent {
+		switch {
+		case p.Type == schema.ChatMessagePartTypeText && p.Text != "":
+			blocks = append(blocks, sdk.NewTextBlock(p.Text))
+		case p.Type == schema.ChatMessagePartTypeImageURL && p.Image != nil && p.Image.Base64Data != nil:
+			blocks = append(blocks, sdk.NewImageBlockBase64(p.Image.MIMEType, *p.Image.Base64Data))
+		case p.Type == schema.ChatMessagePartTypeImageURL && p.Image != nil && p.Image.URL != nil:
+			blocks = append(blocks, sdk.NewImageBlock(sdk.URLImageSourceParam{URL: *p.Image.URL}))
+		}
+	}
+	return blocks
 }
 
 // assistantBlocks is the assistant's text followed by its tool calls as tool_use blocks.

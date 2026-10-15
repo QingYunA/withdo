@@ -36,11 +36,20 @@ type Assistant interface {
 	// Ask runs one turn of the current conversation, typed in place. It blocks, so the UI calls
 	// it off its thread; cancelling ctx stops it. On error the Reply still lists the changes made
 	// before the turn stopped. The error's text is fit to show.
-	Ask(ctx context.Context, text string, place Place) (Reply, error)
+	// Pictures ride along with the text; most calls send none.
+	Ask(ctx context.Context, text string, place Place, pictures ...Attachment) (Reply, error)
 	// Undo reverts the one change a receipt describes.
 	Undo(receiptID int) error
 	// Reset forgets the conversation.
 	Reset()
+}
+
+// Attachment is a picture sent with a request, already prepared by PrepareImage. It lives in
+// memory only: it is never written to the database or to disk.
+type Attachment struct {
+	Name string // the file's name, for the thumbnail's label
+	MIME string // image/jpeg, image/png or image/gif
+	Data []byte
 }
 
 // Reply is what one turn produced.
@@ -146,7 +155,8 @@ const (
 	ProblemKeyRejected
 	ProblemUnknownModel
 	ProblemRateLimited
-	ProblemBusy // a second request while one runs
+	ProblemBusy     // a second request while one runs
+	ProblemNoImages // pictures were sent to a model that cannot read them
 )
 
 // ProblemError is a failure the views word themselves. Error is the English text; Err is the

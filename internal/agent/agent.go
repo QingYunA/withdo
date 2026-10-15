@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -68,12 +69,37 @@ func (a *Agent) Reset() {
 // Undo reverts the one change a receipt describes.
 func (a *Agent) Undo(ctx context.Context, receiptID int) error { return a.journal.run(ctx, receiptID) }
 
+// Image is a picture sent with the user's text. It lives in memory only, as part of the
+// conversation.
+type Image struct {
+	MIME string // image/jpeg, image/png, image/gif or image/webp
+	Data []byte
+}
+
+// userMessage is what the user said: plain text, or the text followed by its pictures.
+func userMessage(text string, images []Image) *schema.Message {
+	if len(images) == 0 {
+		return schema.UserMessage(text)
+	}
+	parts := make([]schema.MessageInputPart, 0, len(images)+1)
+	if strings.TrimSpace(text) != "" {
+		parts = append(parts, schema.MessageInputPart{Type: schema.ChatMessagePartTypeText, Text: text})
+	}
+	for _, im := range images {
+		b64 := base64.StdEncoding.EncodeToString(im.Data)
+		parts = append(parts, schema.MessageInputPart{Type: schema.ChatMessagePartTypeImageURL, Image: &schema.MessageInputImage{
+			MessagePartCommon: schema.MessagePartCommon{Base64Data: &b64, MIMEType: im.MIME},
+		}})
+	}
+	return &schema.Message{Role: schema.User, UserInputMultiContent: parts}
+}
+
 // Ask runs one turn: the user's text, as a continuation of the current conversation, typed in
 // the place scope names. It blocks until the model has answered, so call it off the UI thread;
 // cancelling ctx stops it. On error the Result still lists the changes made before the turn
 // stopped.
-func (a *Agent) Ask(ctx context.Context, text string, scope Scope) (Result, error) {
-	msgs, err := a.begin(text)
+func (a *Agent) Ask(ctx context.Context, text string, scope Scope, images ...Image) (Result, error) {
+	msgs, err := a.begin(userMessage(text, images))
 	if err != nil {
 		return Result{}, err
 	}
@@ -95,7 +121,7 @@ func (a *Agent) Ask(ctx context.Context, text string, scope Scope) (Result, erro
 }
 
 // begin starts a turn: it refuses a second one and forgets a stale conversation.
-func (a *Agent) begin(text string) ([]*schema.Message, error) {
+func (a *Agent) begin(user *schema.Message) ([]*schema.Message, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.busy {
@@ -105,7 +131,7 @@ func (a *Agent) begin(text string) ([]*schema.Message, error) {
 		a.history = nil
 	}
 	a.busy = true
-	return append(append([]*schema.Message(nil), a.history...), schema.UserMessage(text)), nil
+	return append(append([]*schema.Message(nil), a.history...), user), nil
 }
 
 func (a *Agent) finish() {

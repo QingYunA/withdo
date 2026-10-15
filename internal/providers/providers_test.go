@@ -311,7 +311,8 @@ func TestFriendly(t *testing.T) {
 		"The provider didn't accept the API key.":                                errors.New("POST /v1/messages: 403 Forbidden"),
 		"The provider doesn't know this model or address.":                       errors.New("404 page not found"),
 		"The provider is busy or out of quota. Try again in a moment.":           errors.New("429 rate limit"),
-		"something odd": errors.New("something odd\nsecond line"),
+		"This model cannot read images.":                                         errors.New(`400 {"error":{"message":"unknown variant image_url, expected text"}}`),
+		"something odd":                                                          errors.New("something odd\nsecond line"),
 	}
 	for want, err := range cases {
 		if got := Friendly(err); got != want {
