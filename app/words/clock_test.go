@@ -160,3 +160,14 @@ func TestWeeksStartOnMondayInChineseAndSundayInEnglishUnlessTheSystemSaysOtherwi
 		}
 	}
 }
+
+// A calendar cell is narrow: its times drop the minutes on the hour and the long day-half words.
+func TestShortTimeFitsACalendarCell(t *testing.T) {
+	en := New("en", i18n.Region{})
+	check(t, "en on the hour", en.ShortTime(at(0, 14, 0)), "2pm")
+	check(t, "en with minutes", en.ShortTime(at(0, 9, 30)), "9:30am")
+	check(t, "en midnight", en.ShortTime(at(0, 0, 0)), "12am")
+	check(t, "en 24 hours", New("en", i18n.Region{Locale: "en-GB", HourCycle: 24}).ShortTime(at(0, 14, 0)), "14:00")
+	check(t, "zh", New("zh-Hans", i18n.Region{Locale: "zh-CN", HourCycle: 12}).ShortTime(at(0, 14, 0)), "14:00")
+	check(t, "zh morning", New("zh-Hans", i18n.Region{}).ShortTime(at(0, 9, 5)), "9:05")
+}

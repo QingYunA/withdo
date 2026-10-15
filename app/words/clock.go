@@ -35,6 +35,33 @@ func (k Clock) format(t time.Time, skeleton string) string {
 // Time is the time of day: "4:00 PM", "下午4:00", or "16:00" for a reader of 24 hours.
 func (k Clock) Time(t time.Time) string { return k.format(t, "jm") }
 
+// ShortTime is a time for a narrow place, a calendar cell: "2pm", "9:30am", or "14:00" for a
+// reader of 24 hours and in Chinese and Japanese, whose day-half words ("下午") are too long there.
+func (k Clock) ShortTime(t time.Time) string {
+	h24 := strings.Contains(k.format(time.Date(2000, 1, 1, 13, 0, 0, 0, time.UTC), "j"), "13")
+	if h24 || strings.HasPrefix(k.Formats, "zh") || strings.HasPrefix(k.Formats, "ja") {
+		return strconv.Itoa(t.Hour()) + ":" + twoDigits(t.Minute())
+	}
+	h, half := t.Hour()%12, "am"
+	if h == 0 {
+		h = 12
+	}
+	if t.Hour() >= 12 {
+		half = "pm"
+	}
+	if t.Minute() == 0 {
+		return strconv.Itoa(h) + half
+	}
+	return strconv.Itoa(h) + ":" + twoDigits(t.Minute()) + half
+}
+
+func twoDigits(n int) string {
+	if n < 10 {
+		return "0" + strconv.Itoa(n)
+	}
+	return strconv.Itoa(n)
+}
+
 // Date is a calendar date: "Oct 12", or "Oct 12, 2025" in another year than now's.
 func (k Clock) Date(t, now time.Time) string {
 	t = t.In(now.Location())

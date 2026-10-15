@@ -187,23 +187,18 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 // calendarChipPad is the padding at the sides of an item.
 const calendarChipPad float32 = 4
 
-// minTitle is the least room a title keeps beside the time of a reminder before the time gives way
-// to a clock: below it the title would be cut to its first letters.
-const minTitle float32 = 48
+// minTitle is the least room a title keeps beside the time of a reminder: below it the time
+// gives way and the title has the cell to itself.
+const minTitle float32 = 36
 
-// reminderTime is the time of a reminder before its title, in text.tertiary. In a cell too narrow
-// to keep a readable title beside it, a small clock stands for it (the time is in its tooltip), and
-// in a narrower one the title has the room to itself.
+// reminderTime is the short time of a reminder before its title ("2pm", "14:00"), in
+// text.tertiary, when the cell leaves the title its room beside it.
 func (m *Main) reminderTime(c *ui.Context, t *theme.Tokens, it data.CalItem) {
-	at := m.clock.Time(it.At)
+	at := m.clock.ShortTime(it.At)
 	w, _ := c.MeasureText(0, ui.Span{Text: at, Size: theme.Meta.Size, Weight: theme.Meta.Weight})
 	room := m.calendarCellWidth(c) - 2*theme.CalendarPadX - 2*calendarChipPad - theme.AvatarSmall - 5
 	if room-w-5 >= minTitle {
 		theme.Text(c, theme.Meta, t.TextTertiary, at).Shrink(0)
-		return
-	}
-	if room-12-5 >= minTitle { // no clock either when even that would cost the title its room
-		ui.Icon(c, theme.IconClock).Size(12, 12).TextColor(t.TextTertiary).Shrink(0).Tooltip(at).Label(at)
 	}
 }
 

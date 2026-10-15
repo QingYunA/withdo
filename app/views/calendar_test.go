@@ -135,7 +135,9 @@ func TestTheSystemsFirstWeekdayWinsWhenItNamesARegion(t *testing.T) {
 func TestItemsAreInTheirCells(t *testing.T) {
 	app, _ := calendarApp(t)
 	tt, _ := calendarTester(t, app, 1100)
-	has(t, tt, "Review PR 12", "Dentist", "9:30 AM", "Ship notes", "Call the landlord", "v0.3 release")
+	has(t, tt, "Review PR 12", "Dentist", "Ship notes", "Call the landlord", "v0.3 release")
+	wide, _ := calendarTester(t, app, 1500) // a reminder's time needs a wider cell than 1100 pt gives
+	has(t, wide, "9:30am")
 	// The done task is struck through and sits on the day it was finished (today), not on a due date.
 	r, _ := tt.Find("Ship notes")
 	today, _ := tt.Find("14")
