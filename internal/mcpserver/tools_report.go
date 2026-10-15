@@ -19,6 +19,8 @@ type reportProgressArgs struct {
 	Cwd      string         `json:"cwd"`
 	Branch   string         `json:"branch"`
 	PRURL    string         `json:"pr_url"`
+	// ParentTaskID is the task of the agent that started this one as a subagent.
+	ParentTaskID *int64 `json:"parent_task_id"`
 }
 
 func (t *tools) registerReportProgress(s *mcp.Server) {
@@ -33,10 +35,12 @@ func (t *tools) registerReportProgress(s *mcp.Server) {
 			"status":    statusEnum("New task status; omit to leave unchanged"),
 			"next_step": text("What happens next, or what you are waiting on"),
 			"task_id":   id("Task to report on; omit to match by repo and branch"),
-			"title":     text("Title for a newly created task; defaults to the branch name"),
+			"title":     text("Title for a newly created task; defaults to the first sentence of the summary"),
 			"cwd":       withDesc(cwdProp, "Your current working directory. Always pass it: it decides the repo and branch"),
 			"branch":    text("Branch name; defaults to the current git branch of cwd"),
 			"pr_url":    prURL,
+			"parent_task_id": id("The task_id of the agent that started you as a subagent; makes your task its subtask. " +
+				"Pass it on every report if you were given one"),
 		}, "summary"),
 	}, t.reportProgress)
 }
@@ -51,7 +55,7 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	}
 	res, err := t.core.ReportProgress(ctx, domain.ProgressInput{
 		Summary: a.Summary, Agent: agentName(req), Status: a.Status, NextStep: a.NextStep,
-		TaskID: a.TaskID, Title: a.Title, Cwd: cwd, Branch: a.Branch, PRURL: a.PRURL,
+		TaskID: a.TaskID, Title: a.Title, Cwd: cwd, Branch: a.Branch, PRURL: a.PRURL, ParentTaskID: a.ParentTaskID,
 	})
 	if err != nil {
 		return t.fail(err)
