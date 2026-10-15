@@ -124,7 +124,7 @@ task shows no count. Settings is a gear button at the bottom. Selected row: `bg.
 - **`+` on PROJECTS** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
 - **Right-click a project**: `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
-  row itself: the label becomes an input with the text selected, Enter saves, Esc and a click away put
+  row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
   the old name back. Archive acts at once (the project is in Settings > General > Archived projects,
   one click from coming back); Delete… asks first (**Delete confirmation**). Archiving or deleting the
   project on screen goes to Now.
@@ -287,14 +287,15 @@ A project's menu is in the Sidebar. Menus never carry a destructive default and 
 28 pt well on the sidebar material (`bg.hover`, 7 pt radius) with a magnifier, the placeholder
 `Search` and a `⌘F` hint at the right while empty.
 
-Typing replaces the page with **Search results**; the sidebar selection stays where it was. The page
+Typing replaces the page with **Search results**; while they show, no sidebar row is highlighted, and
+the screen under them comes back when the search ends. The page
 header reads `Search` with `12 results for “login”` in `text.tertiary`. Results are tasks of every
 project and the Inbox, whatever their status, done and cancelled included (the tasks of archived
 projects are left out), matching every word of the query in the title, notes or branch, or a pull
 request number (`#42` and `42`). They are grouped by project, the Inbox last, groups ordered by the
 newest task in them. Group header: `#` mark, project name in `body.strong`, count in `text.tertiary`.
 Row: status glyph (a button, like on Now), title, branch pill and `#PR`, and at the right the age of
-the last change. Done and cancelled rows keep their glyph and read in `text.secondary`.
+the last change. Done and cancelled rows keep their glyph (a button, so a finished task can be reopened from here).
 
 - **No match**: `No tasks match “xyz”` and, in secondary, `Search looks in titles, notes, branches and
   pull request numbers, in every project.`

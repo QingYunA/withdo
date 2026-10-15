@@ -15,6 +15,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool, now data.No
 	}
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
+		m.searchField(c, t)
 		m.navRow(c, t, "now", nav{}, theme.IconNow, m.say.NavNow(), now.Count())
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
@@ -45,7 +46,7 @@ func openCount(tasks []data.Task, match func(data.Task) bool) (n int, blocked bo
 }
 
 func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *ui.SVG, label string, count int) {
-	selected := m.nav == to
+	selected := m.nav == to && !m.searching()
 	row := sidebarRow(c, t, key, selected)
 	row.Children(func() {
 		ui.Icon(c, icon).Size(16, 16).TextColor(t.TextSecondary)
@@ -59,7 +60,7 @@ func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *
 
 func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool) {
 	to := nav{screen: screenProject, projectID: p.ID}
-	selected := m.nav == to
+	selected := m.nav == to && !m.searching()
 	renaming := m.manage.rename.id == p.ID
 	row := sidebarRow(c, t, p.ID, selected)
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })

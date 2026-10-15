@@ -132,6 +132,7 @@
   "manageRestore": "恢复",
   "manageSave": "保存",
   "manageSearch": "搜索",
+  "manageSearchClear": "清除搜索",
   "manageSearchCount": "找到{count}条与“{query}”相关的结果",
   "manageSearchLabel": "搜索任务",
   "manageSearchMore": "只显示前{count}条。缩小搜索范围可以看到其余的。",

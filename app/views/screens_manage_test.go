@@ -75,7 +75,7 @@ func TestScreensManageTasks(t *testing.T) {
 				}
 				return &menuSpec{
 					x: x, y: y, items: tt.Menu(),
-					subs: map[string]bool{m.say.PropStatus(): true, m.say.PropPriority(): true, m.say.ManageMoveTo(): true},
+					subs:   map[string]bool{m.say.PropStatus(): true, m.say.PropPriority(): true, m.say.ManageMoveTo(): true},
 					flyout: &flyoutSpec{parent: m.say.PropStatus(), items: statuses, checked: map[string]bool{statusLabel(m.say, data.Blocked): true}},
 				}
 			})
@@ -86,6 +86,30 @@ func TestScreensManageTasks(t *testing.T) {
 			})
 			manageShot(t, "inspector-project"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.OpenTask(5)
+				return nil
+			})
+		}
+	}
+}
+
+func TestScreensManageSearch(t *testing.T) {
+	for _, a := range appearances() {
+		for _, l := range languages {
+			suffix := l.suffix + "-" + a.suffix + ".png"
+			app, _, _ := newTestApp(t)
+			query := map[string]string{"en": "port", "zh-Hans": "port"}[l.tag]
+			manageShot(t, "search-results"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				tt.Key(ui.Cmd, ui.KeyF)
+				tt.Frame()
+				tt.Type(query)
+				tt.Key(0, ui.KeyDown)
+				tt.Key(0, ui.KeyDown)
+				return nil
+			})
+			manageShot(t, "search-none"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+				tt.Key(ui.Cmd, ui.KeyF)
+				tt.Frame()
+				tt.Type("kubernetes")
 				return nil
 			})
 		}

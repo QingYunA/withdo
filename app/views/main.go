@@ -127,6 +127,9 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Project(m.nav.projectID); m.nav.screen == screenProject && !ok {
 		m.goTo(nav{}) // archived or deleted, here or by another process
 	}
+	if on := m.searching(); on != m.manage.search.was {
+		m.manage.search.was, m.scroll = on, ui.ScrollState{}
+	}
 	m.wasDrag, m.dragging = m.dragging, 0
 	m.width = m.contentWidth(c)
 	now := m.app.buildNow()
@@ -149,6 +152,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 		ui.Box(c).Height(dragStrip).Shrink(0).DragWindow()
 		m.errorStrip(c, t)
 		switch {
+		case m.searching():
+			m.page(c, t, func() { m.searchScreen(c, t) })
 		case m.nav.screen == screenNow:
 			m.page(c, t, func() { m.nowScreen(c, t, now) })
 		case m.boardActive():
@@ -157,6 +162,14 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens, now data.Now) {
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
 	})
+}
+
+// pageKey keys the page's scroller: the screen, or the search results over it.
+func (m *Main) pageKey() any {
+	if m.searching() {
+		return "search"
+	}
+	return m.nav
 }
 
 func (m *Main) showsBoard() bool {
@@ -189,10 +202,10 @@ func (m *Main) sidePad(c *ui.Context) float32 {
 // keyboard's focus, so the arrow keys and Space work as soon as the screen opens.
 func (m *Main) page(c *ui.Context, t *theme.Tokens, body func()) {
 	pad := m.sidePad(c)
-	ui.Scroll(c.Key(m.nav)).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
+	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
 			col := ui.Column(c).FillWidth().MaxWidth(theme.ContentMax).Padding(0, pad, 48).Focusable().FocusRing(false)
-			if !m.wantAsk {
+			if !m.wantAsk && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
 				col.AutoFocus()
 			}
 			col.Bind(&m.listRef).Children(body)

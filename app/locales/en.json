@@ -780,6 +780,10 @@
   "@manageSearch": {
     "description": "Placeholder and name of the search field at the top of the sidebar, and the title of the search results page."
   },
+  "manageSearchClear": "Clear search",
+  "@manageSearchClear": {
+    "description": "Accessibility label of the button that clears the search field of the sidebar."
+  },
   "manageSearchCount": "{count, plural, one {# result} other {# results}} for “{query}”",
   "@manageSearchCount": {
     "description": "Subtitle of the search results page.",

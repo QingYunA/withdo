@@ -9,6 +9,8 @@ import (
 // the arrow keys walk.
 func (m *Main) rowIDs(now data.Now) []int {
 	switch {
+	case m.searching():
+		return m.searchIDs()
 	case m.nav.screen == screenNow:
 		return now.IDs()
 	case m.boardActive():
@@ -48,6 +50,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	switch {
 	case c.Shortcut(ui.Cmd, ui.KeyK):
 		m.focusAsk(c)
+	case c.Shortcut(ui.Cmd, ui.KeyF):
+		m.searchRef.Focus(c)
 	case c.Shortcut(ui.Cmd, ui.Key1):
 		m.goTo(nav{})
 	case c.Shortcut(ui.Cmd, ui.Key2):
@@ -105,6 +109,8 @@ func (m *Main) escape() {
 		m.openID = 0
 	case m.sel != 0:
 		m.sel = 0
+	case m.searching():
+		m.clearSearch()
 	case m.convo.live:
 		m.forgetConversation()
 	}

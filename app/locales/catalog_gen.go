@@ -1392,7 +1392,7 @@ func (msgs Messages) ManageDeleteConfirm() string {
 	return Catalog.Format(msgs.locale, "manageDeleteConfirm", nil)
 }
 
-// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project’s milestones. It can’t …"
+// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project's milestones. It can't be u…"
 // in the language the app shows.
 //
 // Body of the confirmation before a project that has tasks is deleted.
@@ -1400,7 +1400,7 @@ func ManageDeleteProjectBody(count int) string {
 	return In(i18n.Locale()).ManageDeleteProjectBody(count)
 }
 
-// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project’s milestones. It can’t …"
+// ManageDeleteProjectBody says "This removes {count, plural, one {# task} other {# tasks}}, their reports and the project's milestones. It can't be u…"
 // in the language of msgs.
 //
 // Body of the confirmation before a project that has tasks is deleted.
@@ -1408,13 +1408,13 @@ func (msgs Messages) ManageDeleteProjectBody(count int) string {
 	return Catalog.Format(msgs.locale, "manageDeleteProjectBody", map[string]any{"count": count})
 }
 
-// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can’t be undone."
+// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can't be undone."
 // in the language the app shows.
 //
 // Body of the confirmation before a project without tasks is deleted.
 func ManageDeleteProjectEmpty() string { return In(i18n.Locale()).ManageDeleteProjectEmpty() }
 
-// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can’t be undone."
+// ManageDeleteProjectEmpty says "This removes the project and its milestones. It can't be undone."
 // in the language of msgs.
 //
 // Body of the confirmation before a project without tasks is deleted.
@@ -1454,13 +1454,13 @@ func (msgs Messages) ManageDeleteTask() string {
 	return Catalog.Format(msgs.locale, "manageDeleteTask", nil)
 }
 
-// ManageDeleteTaskBody says "Its progress reports go with it. It can’t be undone."
+// ManageDeleteTaskBody says "Its progress reports go with it. It can't be undone."
 // in the language the app shows.
 //
 // Body of the confirmation before a task is deleted.
 func ManageDeleteTaskBody() string { return In(i18n.Locale()).ManageDeleteTaskBody() }
 
-// ManageDeleteTaskBody says "Its progress reports go with it. It can’t be undone."
+// ManageDeleteTaskBody says "Its progress reports go with it. It can't be undone."
 // in the language of msgs.
 //
 // Body of the confirmation before a task is deleted.
@@ -1918,6 +1918,22 @@ func ManageSearch() string { return In(i18n.Locale()).ManageSearch() }
 // the title of the search results page.
 func (msgs Messages) ManageSearch() string {
 	return Catalog.Format(msgs.locale, "manageSearch", nil)
+}
+
+// ManageSearchClear says "Clear search"
+// in the language the app shows.
+//
+// Accessibility label of the button that clears the search field of the
+// sidebar.
+func ManageSearchClear() string { return In(i18n.Locale()).ManageSearchClear() }
+
+// ManageSearchClear says "Clear search"
+// in the language of msgs.
+//
+// Accessibility label of the button that clears the search field of the
+// sidebar.
+func (msgs Messages) ManageSearchClear() string {
+	return Catalog.Format(msgs.locale, "manageSearchClear", nil)
 }
 
 // ManageSearchCount says "{count, plural, one {# result} other {# results}} for “{query}”"
