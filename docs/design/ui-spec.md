@@ -877,10 +877,12 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   joining the list; empty text does nothing. **Closing**: `Esc`, a click outside (it does nothing
   else: it does not select the day under it), the close button, a change of month or `Today`, and
   leaving the page. While the card is open the window's shortcuts wait, so the arrows do not move the
-  day. **Opening** is four pixel steps, no tween (`theme.DayCardAt`): 55 %, 70 %, 85 %, then full size
-  from 150 ms, done at 200 ms, scaling the card's width and height from the corner it grows from and
-  clipping the contents; opacity is 1 throughout. A frame is asked for every 16 ms only while it
-  plays; with Reduce Motion the card is full size at once. Closing has no animation. Screens
+  day. **Opening** is a pop-out (`theme.DayCardAt`): the card is laid out at its full size
+  and position from the first frame and a visual transform grows it from the corner of the cell it
+  grows from, so nothing is resized or clipped. Over 140 ms its scale goes from the cell's width over
+  the card's (clamped to 0.5 to 0.95) to 1 along an ease-out cubic, and its opacity goes 0 to 1 with
+  an ease-out over the first 100 ms. A frame is asked for every 16 ms only while it plays; with
+  Reduce Motion the card is full size and opaque at once. Closing has no animation. Screens
   `calendar-day-card-{light,dark,zh-light}`.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
   month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月

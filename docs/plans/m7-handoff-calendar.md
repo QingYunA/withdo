@@ -50,10 +50,12 @@ clicked and a task could not be added right on a day. Four small parts, each its
   that day at 18:00, keeping the card open. Esc, a click outside, the close button, a change of month
   and leaving the page close it. While it is open the window's shortcuts wait, so the arrows do not
   move the day.
-- It opens in four pixel steps, no tween: `theme.DayCardAt` gives 0.55, 0.7, 0.85 every 50 ms and 1
-  from 150 ms, done at 200 ms, scaling width and height from the corner it grows from with the
-  contents clipped. A frame is asked for every 16 ms only while it plays; Reduce Motion shows it at
-  full size at once. Time is `App.Now`, so the tests move a clock.
+- It opens as a pop-out, not a resize: the card is laid out at its full size and position from the
+  first frame and `Scale`, `TransformOrigin` (the corner it grows from) and `Opacity` animate it.
+  `theme.DayCardAt` gives the ease-out cubic progress and an opacity that is 1 from 100 ms, done at
+  140 ms; the scale runs from the cell's width over the card's (clamped to 0.5 to 0.95) to 1. A frame
+  is asked for every 16 ms only while it plays; Reduce Motion shows it at full size at once. Time is
+  `App.Now`, so the tests move a clock.
 - mygo notes: an element's `Clicked` is taken by the deepest element that asks for clicks, so "N more"
   and the `+` take their clicks alone; a double click is two `Clicked` and one `DoubleClicked` on
   the cell (tested in `calendar_day_test.go`). The card's backdrop is a `Modal` box in the overlay,
