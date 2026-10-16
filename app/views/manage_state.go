@@ -31,8 +31,9 @@ func sheet(c *ui.Context, t *theme.Tokens, open *bool, body func()) {
 }
 
 // wellInput is a text input in a 30 pt well on bg.subtle, with a placeholder. onKey is its keyboard.
-func wellInput(c *ui.Context, t *theme.Tokens, key string, value *string, label, placeholder string, style theme.Style, focus bool, onKey func(ui.TextKey) bool) {
-	ui.Row(c.Key(key+"-well")).Height(30).Shrink(0).Padding(0, 10).Radius(theme.RadiusControl).Background(t.BgSubtle).
+// It returns the well, for the day card that draws it in pixels.
+func wellInput(c *ui.Context, t *theme.Tokens, key string, value *string, label, placeholder string, style theme.Style, focus bool, onKey func(ui.TextKey) bool) ui.Element {
+	return ui.Row(c.Key(key+"-well")).Height(30).Shrink(0).Padding(0, 10).Radius(theme.RadiusControl).Background(t.BgSubtle).
 		AlignItems(ui.Center).Children(func() {
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {

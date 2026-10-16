@@ -59,9 +59,9 @@ func dayCardListHeight(n int) float32 {
 	return min(float32(n)*theme.DayCardRow, theme.DayCardMaxH-dayCardChrome)
 }
 
-// dayCardChrome is the card's height without its list: border, padding, header, input and the
-// gap between each.
-const dayCardChrome = 2 + 2*theme.DayCardPad + theme.DayCardHead + theme.DayCardInput + 2*theme.DayCardGap
+// dayCardChrome is the card's height without its list: edge, padding, header, input and the gap
+// between each.
+const dayCardChrome = 2*theme.PixelUnit + 2*theme.DayCardPad + theme.DayCardHead + theme.DayCardInput + 2*theme.DayCardGap
 
 // dayCardPlace is the box of the card for n items, grown from the anchor, inside a window of
 // winW by winH whose cells are cellW wide.
@@ -94,7 +94,8 @@ func (m *Main) dayCardDay() (data.CalDay, bool) {
 }
 
 // dayCardView draws the card above the window while it is open: over a backdrop that takes the
-// presses outside it, and popped out of its cell unless Reduce Motion is on.
+// presses outside it, a pixel panel (theme.DrawPixelPanel), and popped out of its cell unless Reduce
+// Motion is on.
 func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 	dc := &m.cal.card
 	if !dc.isOpen() {
@@ -132,9 +133,9 @@ func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 			return
 		}
 		back.Children(func() {
-			panel := ui.Box(c.Key("day-card")).Absolute().Left(g.x).Top(g.y).Size(g.w, g.h).Shrink(0).Clip().Radius(theme.RadiusPanel).
+			panel := ui.Box(c.Key("day-card")).Absolute().Left(g.x).Top(g.y).Size(g.w, g.h).Shrink(0).
 				TransformOrigin(ox, oy).Scale(scale, scale).Opacity(opacity).
-				Background(t.Bg).Border(1, t.Border).Shadow(0, 20, 48, 0, t.Shadow).Role(ui.RoleDialog).
+				Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelPanel(p, r, t) }).Role(ui.RoleDialog).
 				Label(m.say.A11yCalendarDayCard(m.clock.CalendarDay(day.Date)))
 			panel.Clicked() // presses on it stay in it
 			panel.Children(func() { m.dayCardBody(c, t, day, g) })
@@ -142,15 +143,15 @@ func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// dayCardBody is what the card holds, laid out at its full size: the
-// header, the day's items, and the input.
+// dayCardBody is what the card holds, inside its edge: the header, the day's items, and the input.
 func (m *Main) dayCardBody(c *ui.Context, t *theme.Tokens, day data.CalDay, g dayCardBox) {
 	dc := &m.cal.card
-	ui.Column(c.Key("day-card-body")).Absolute().Left(0).Top(0).Size(g.w-2, g.h-2).Padding(theme.DayCardPad).Children(func() {
+	edge := theme.PixelUnit
+	ui.Column(c.Key("day-card-body")).Absolute().Left(edge).Top(edge).Size(g.w-2*edge, g.h-2*edge).Clip().Padding(theme.DayCardPad).Children(func() {
 		m.dayCardHeader(c, t, day)
 		if len(day.Items) > 0 {
 			ui.Box(c).Height(theme.DayCardGap).Shrink(0)
-			rowW := g.w - 2 - 2*theme.DayCardPad
+			rowW := g.w - 2*edge - 2*theme.DayCardPad
 			ui.Scroll(c.Key("day-card-list")).Height(dayCardListHeight(len(day.Items))).Shrink(0).Children(func() {
 				ui.Column(c).FillWidth().Children(func() {
 					for _, it := range day.Items {
@@ -160,7 +161,8 @@ func (m *Main) dayCardBody(c *ui.Context, t *theme.Tokens, day data.CalDay, g da
 			})
 		}
 		ui.Box(c).Height(theme.DayCardGap).Shrink(0)
-		wellInput(c, t, "day-card-input", &dc.buf, m.say.CalendarDayInput(), m.say.CalendarDayPlaceholder(), theme.Body, dc.focus, m.dayCardKey)
+		wellInput(c, t, "day-card-input", &dc.buf, m.say.CalendarDayInput(), m.say.CalendarDayPlaceholder(), theme.Body, dc.focus, m.dayCardKey).
+			Radius(0).Background(ui.Transparent).Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelWell(p, r, t.BgSubtle) })
 	})
 }
 

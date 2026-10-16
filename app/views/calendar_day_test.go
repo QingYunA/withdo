@@ -273,8 +273,8 @@ func TestWithReduceMotionTheCardIsFullSizeAtOnce(t *testing.T) {
 	_, _, tt, m := crowdedApp(t)
 	openCrowdedCard(t, tt)
 	panel, _ := tt.Find(cardLabel)
-	if panel.W < theme.DayCardMinWidth || panel.H != 240 || m.cal.card.asked != 0 {
-		t.Errorf("card %v, %d frames asked: want full size, 240 pt tall, and none", panel, m.cal.card.asked)
+	if panel.W < theme.DayCardMinWidth || panel.H != 242 || m.cal.card.asked != 0 {
+		t.Errorf("card %v, %d frames asked: want full size, 242 pt tall, and none", panel, m.cal.card.asked)
 	}
 }
 
