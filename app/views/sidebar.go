@@ -9,6 +9,9 @@ import (
 // sidebarRowPad is the padding inside a sidebar row, left and right.
 const sidebarRowPad float32 = 10
 
+// sidebarRowGap is the room between the icon and the label of a sidebar row.
+const sidebarRowGap float32 = 10
+
 // sidebar is the source list over the window's material: Mine and Agents, Inbox, Calendar and
 // Completed, then the projects, then Settings at the bottom.
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
@@ -20,7 +23,9 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
 		m.searchField(c, t)
 		m.mineRow(c, t)
+		m.mineSubRows(c, t)
 		m.agentsRow(c, t)
+		m.agentSubRows(c, t)
 		inbox, _ := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID == nil })
 		m.navRow(c, t, "inbox", nav{screen: screenInbox}, theme.IconInbox, m.say.NavInbox(), inbox)
 		m.navRow(c, t, "calendar", nav{screen: screenCalendar}, theme.IconCalendar, m.say.NavCalendar(), 0)
@@ -197,7 +202,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 
 // sidebarRow is a 32 pt row inset 10 pt, highlighted by selection or hover.
 func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Element {
-	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, sidebarRowPad).Gap(10).
+	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, sidebarRowPad).Gap(sidebarRowGap).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case selected:

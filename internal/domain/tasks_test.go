@@ -320,3 +320,36 @@ func TestDeleteTask(t *testing.T) {
 		t.Errorf("second delete = %v, want not found", err)
 	}
 }
+
+func TestCategoryValid(t *testing.T) {
+	for c, want := range map[domain.Category]bool{domain.CategoryWork: true, domain.CategoryLife: true, "": false, "play": false} {
+		eq(t, "Valid("+string(c)+")", c.Valid(), want)
+	}
+}
+
+func TestCreateTaskCategory(t *testing.T) {
+	c, _ := newCore(t)
+	eq(t, "unclassified by default", mustTask(t, c, domain.CreateTaskInput{Title: "x"}).Category == nil, true)
+	work := mustTask(t, c, domain.CreateTaskInput{Title: "x", Category: ptr(domain.CategoryWork)})
+	eqPtr(t, "work", work.Category, ptr(domain.CategoryWork))
+	life := mustTask(t, c, domain.CreateTaskInput{Title: "x", Category: ptr(domain.CategoryLife)})
+	got := must[*domain.Task](t)(c.GetTask(ctx, life.ID))
+	eqPtr(t, "life read back", got.Category, ptr(domain.CategoryLife))
+	_, err := c.CreateTask(ctx, domain.CreateTaskInput{Title: "x", Category: ptr(domain.Category("play"))})
+	wantFieldError(t, err, "category")
+}
+
+func TestUpdateTaskCategory(t *testing.T) {
+	c, _ := newCore(t)
+	task := mustTask(t, c, domain.CreateTaskInput{Title: "x"})
+	set := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Set(domain.CategoryLife)}))
+	eqPtr(t, "set", set.Category, ptr(domain.CategoryLife))
+	kept := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Title: ptr("y")}))
+	eqPtr(t, "an omitted category stays", kept.Category, ptr(domain.CategoryLife))
+	cleared := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Clear[domain.Category]()}))
+	if cleared.Category != nil {
+		t.Errorf("category = %v, want cleared", *cleared.Category)
+	}
+	_, err := c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Set(domain.Category("play"))})
+	wantFieldError(t, err, "category")
+}

@@ -126,6 +126,9 @@ func (m *Main) receiptWords(r data.Receipt, here string) (verb, tail string) {
 	if d.Priority != "" {
 		parts = append(parts, d.Priority)
 	}
+	if d.Category != "" {
+		parts = append(parts, categoryName(m.say, data.Category(d.Category)))
+	}
 	if place := m.inboxOr(d.Project); verb != "" && place != here && !(here == "" && d.Project == "") {
 		parts = append(parts, place) // not where the composer is; on Now the Inbox goes without saying
 	}
@@ -168,6 +171,11 @@ func (m *Main) changeText(c data.Change) string {
 		return m.say.ChangeStatus(statusLabel(m.say, data.Status(c.Value)))
 	case data.ChangeProject:
 		return m.say.ChangeProject(m.inboxOr(c.Value))
+	case data.ChangeCategory:
+		if c.Value == "" {
+			return m.say.ChangeCategoryCleared()
+		}
+		return m.say.ChangeCategory(categoryName(m.say, data.Category(c.Value)))
 	case data.ChangeRenamed:
 		return m.say.ChangeRenamed()
 	case data.ChangeNotes:

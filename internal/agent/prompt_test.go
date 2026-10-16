@@ -40,6 +40,14 @@ func TestPromptInfersFromChineseAndSplitsLists(t *testing.T) {
 	}
 }
 
+// A new task is classified as work or life from its words; the rule says when to leave it out.
+func TestPromptClassifiesTasksAsWorkOrLife(t *testing.T) {
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
+	for _, want := range []string{"category", "work or life", "交房租", "写周报", "repository"} {
+		contains(t, "prompt", p, want)
+	}
+}
+
 func TestPromptWithoutProjects(t *testing.T) {
 	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
 	contains(t, "prompt", p, "none yet")

@@ -14,6 +14,7 @@ type createArgs struct {
 	ProjectID *int64  `json:"project_id,omitempty" jsonschema:"description=Project id from list_projects. Omit for the place the request came from (see the prompt); 0 means the Inbox."`
 	Notes     *string `json:"notes,omitempty"`
 	Priority  string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3,description=P0 is urgent and P2 the default."`
+	Category  string  `json:"category,omitempty" jsonschema:"enum=work,enum=life,description=What the task is for the user. Leave out when unsure or when the task goes into a repository's project (that counts as work)."`
 	DueAt     string  `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
 	RemindAt  string  `json:"remind_at,omitempty" jsonschema:"description=When to remind the user as RFC 3339 with a UTC offset."`
 }
@@ -23,6 +24,11 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	in := domain.CreateTaskInput{
 		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: tb.projectFor(a.ProjectID),
 		Notes: a.Notes, Priority: domain.Priority(a.Priority),
+	}
+	in.Category = tb.defaultCategory
+	if a.Category != "" {
+		c := domain.Category(a.Category)
+		in.Category = &c
 	}
 	var err error
 	if in.DueAt, err = optWhen("due_at", a.DueAt, now, false); err != nil {
@@ -66,8 +72,8 @@ func optWhen(field, s string, now time.Time, future bool) (*string, error) {
 	return &stored, nil
 }
 
-// createDetail is what a receipt says about a new task: its date and the priority when the words
-// set one, so what was inferred shows.
+// createDetail is what a receipt says about a new task: its date, the priority and the category when
+// the words set them, so what was inferred shows.
 func (tb *toolbox) createDetail(t domain.Task) Detail {
 	now := tb.now()
 	d := Detail{Kind: DetailAdded, Project: tb.projectLabel(t.ProjectID)}
@@ -83,6 +89,7 @@ func (tb *toolbox) createDetail(t domain.Task) Detail {
 	if t.Priority != domain.P2 {
 		d.Priority = string(t.Priority)
 	}
+	d.Category = categoryName(t.Category)
 	return d
 }
 
@@ -91,11 +98,12 @@ type updateArgs struct {
 	Title     *string  `json:"title,omitempty"`
 	Status    *string  `json:"status,omitempty" jsonschema:"enum=backlog,enum=todo,enum=doing,enum=blocked,enum=review,enum=done,enum=cancelled"`
 	Priority  *string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3"`
+	Category  *string  `json:"category,omitempty" jsonschema:"enum=work,enum=life"`
 	Notes     *string  `json:"notes,omitempty"`
 	ProjectID *int64   `json:"project_id,omitempty" jsonschema:"description=Move the task to this project."`
 	DueAt     *string  `json:"due_at,omitempty" jsonschema:"description=RFC 3339 with a UTC offset."`
 	RemindAt  *string  `json:"remind_at,omitempty" jsonschema:"description=RFC 3339 with a UTC offset."`
-	Clear     []string `json:"clear,omitempty" jsonschema:"description=Fields to empty: notes or project or due_at or remind_at."`
+	Clear     []string `json:"clear,omitempty" jsonschema:"description=Fields to empty: notes or project or category or due_at or remind_at."`
 }
 
 func (tb *toolbox) update(ctx context.Context, a updateArgs) (reply, error) {
@@ -134,6 +142,9 @@ func (tb *toolbox) patchFrom(a updateArgs, before domain.Task) (domain.TaskPatch
 		pr := domain.Priority(*a.Priority)
 		p.Priority = &pr
 	}
+	if a.Category != nil {
+		p.Category = domain.Set(domain.Category(*a.Category))
+	}
 	if a.Notes != nil {
 		p.Notes = domain.Set(*a.Notes)
 	}
@@ -156,12 +167,14 @@ func (tb *toolbox) patchFrom(a updateArgs, before domain.Task) (domain.TaskPatch
 			p.Notes = domain.Clear[string]()
 		case "project":
 			p.ProjectID, p.MilestoneID = domain.Clear[int64](), domain.Clear[int64]()
+		case "category":
+			p.Category = domain.Clear[domain.Category]()
 		case "due_at":
 			p.DueAt = domain.Clear[string]()
 		case "remind_at":
 			p.RemindAt = domain.Clear[string]()
 		default:
-			return p, fmt.Errorf("cannot clear %q: use notes, project, due_at or remind_at", f)
+			return p, fmt.Errorf("cannot clear %q: use notes, project, category, due_at or remind_at", f)
 		}
 	}
 	if isEmptyPatch(p) {
@@ -182,7 +195,7 @@ func nullableWhen(field string, s *string, now time.Time, future bool) (domain.N
 }
 
 func isEmptyPatch(p domain.TaskPatch) bool {
-	return p.Title == nil && p.Status == nil && p.Priority == nil && !p.Notes.Present && !p.ProjectID.Present &&
+	return p.Title == nil && p.Status == nil && p.Priority == nil && !p.Category.Present && !p.Notes.Present && !p.ProjectID.Present &&
 		!p.DueAt.Present && !p.RemindAt.Present
 }
 
@@ -201,6 +214,9 @@ func (tb *toolbox) changeDetail(p domain.TaskPatch, after domain.Task) Detail {
 	}
 	if p.Priority != nil {
 		changes = append(changes, Change{Kind: ChangePriority, Value: string(after.Priority)})
+	}
+	if p.Category.Present {
+		changes = append(changes, Change{Kind: ChangeCategory, Value: categoryName(after.Category)})
 	}
 	if p.ProjectID.Present {
 		changes = append(changes, Change{Kind: ChangeProject, Value: tb.projectLabel(after.ProjectID)})

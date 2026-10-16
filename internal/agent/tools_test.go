@@ -118,6 +118,83 @@ func TestUndoMoveBetweenProjectsDropsAndRestoresMilestone(t *testing.T) {
 	}
 }
 
+func TestCreateTaskTakesACategory(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "pay rent", "category": "life"}), say("ok"))
+	res := r.ask("pay rent")
+	d := res.Receipts[0].Detail
+	eq(t, "receipt category", d.Category, "life")
+	got := r.task(res.Receipts[0].TaskID)
+	if got.Category == nil || *got.Category != domain.CategoryLife {
+		t.Errorf("category = %v, want life", got.Category)
+	}
+}
+
+func TestCreateTaskWithoutACategoryLeavesItOut(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "x"}), say("ok"))
+	res := r.ask("x")
+	eq(t, "receipt category", res.Receipts[0].Detail.Category, "")
+	if got := r.task(res.Receipts[0].TaskID); got.Category != nil {
+		t.Errorf("category = %v, want none", *got.Category)
+	}
+}
+
+func TestCreateTaskRejectsAnUnknownCategory(t *testing.T) {
+	var saw string
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "x", "category": "play"}),
+		func(_ context.Context, in []*schema.Message) (*schema.Message, error) {
+			saw = lastToolText(in)
+			return schema.AssistantMessage("sorry", nil), nil
+		})
+	r.ask("x")
+	contains(t, "tool result", saw, "category")
+}
+
+func TestUpdateCategoryAndUndo(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14)
+	tk := r.mustTask(domain.CreateTaskInput{Title: "t", Category: ptr(domain.CategoryWork)})
+	r.model.steps = []step{call("update_task", m{"task_id": tk.ID, "category": "life"}), say("ok")}
+	res := r.ask("that is a life thing")
+	d := res.Receipts[0].Detail
+	if d.Kind != DetailUpdated || len(d.Changes) != 1 || d.Changes[0].Kind != ChangeCategory || d.Changes[0].Value != "life" {
+		t.Errorf("detail = %+v", d)
+	}
+	if got := r.task(tk.ID).Category; got == nil || *got != domain.CategoryLife {
+		t.Fatalf("category = %v, want life", got)
+	}
+	if err := r.agent.Undo(context.Background(), res.Receipts[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	if got := r.task(tk.ID).Category; got == nil || *got != domain.CategoryWork {
+		t.Errorf("after undo category = %v, want work", got)
+	}
+}
+
+func TestClearCategoryAndUndo(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14)
+	tk := r.mustTask(domain.CreateTaskInput{Title: "t", Category: ptr(domain.CategoryLife)})
+	r.model.steps = []step{call("update_task", m{"task_id": tk.ID, "clear": []string{"category"}}), say("ok")}
+	res := r.ask("unsort it")
+	if d := res.Receipts[0].Detail; len(d.Changes) != 1 || d.Changes[0].Kind != ChangeCategory || d.Changes[0].Value != "" {
+		t.Errorf("detail = %+v, want a cleared category", d)
+	}
+	if r.task(tk.ID).Category != nil {
+		t.Fatal("category not cleared")
+	}
+	if err := r.agent.Undo(context.Background(), res.Receipts[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	if got := r.task(tk.ID).Category; got == nil || *got != domain.CategoryLife {
+		t.Errorf("after undo category = %v, want life", got)
+	}
+}
+
+func TestTaskViewShowsTheCategory(t *testing.T) {
+	tb := &toolbox{now: func() time.Time { return oct14 }, journal: newJournal()}
+	life := domain.CategoryLife
+	eq(t, "category", tb.view(domain.Task{Category: &life}).Category, "life")
+	eq(t, "none", tb.view(domain.Task{}).Category, "")
+}
+
 func TestUndoComplete(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14)
 	tk := r.mustTask(domain.CreateTaskInput{Title: "t", Status: domain.StatusDoing})

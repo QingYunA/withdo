@@ -80,6 +80,8 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.statusStrip(c, t, task, false)
 	m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 	m.priorityStrip(c, t, task, false)
+	m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.Category))
+	m.categoryStrip(c, t, task, false)
 	menuRule(c, t)
 	m.popRow(c, t, popSpec{key: "move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
 		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
@@ -182,6 +184,36 @@ func (m *Main) priorityStrip(c *ui.Context, t *theme.Tokens, task data.Task, key
 					_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})
 				},
 				func() { theme.Text(c, theme.CompactStrong, ink, string(p)) })
+		}
+	})
+}
+
+// categoryChoices are the choices of the category strip: work, life, and none, which unclassifies.
+var categoryChoices = []data.Category{data.CategoryWork, data.CategoryLife, ""}
+
+// categoryText is a task's own category as the row and the strip read it: Work, Life or None.
+func (m *Main) categoryText(c data.Category) string {
+	if c == "" {
+		return m.say.ValueNone()
+	}
+	return categoryName(m.say, c)
+}
+
+// categoryStrip is Work, Life and None in a row; one click sets the category.
+func (m *Main) categoryStrip(c *ui.Context, t *theme.Tokens, task data.Task, keyboard bool) {
+	ui.Row(c.Key("pop-category")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
+		for _, cat := range categoryChoices {
+			name := m.categoryText(cat)
+			ink := t.Text
+			if cat == "" {
+				ink = t.TextTertiary
+			}
+			m.stripButton(c, t, "category", "pop-category-"+string(cat), m.say.A11yMenuCategory(name), name, task.Category == cat, keyboard,
+				func() {
+					m.closeMenu()
+					_ = m.app.Update(task.ID, data.Patch{Category: data.CategoryPtr(cat)})
+				},
+				func() { theme.Text(c, theme.Compact, ink, name) })
 		}
 	})
 }

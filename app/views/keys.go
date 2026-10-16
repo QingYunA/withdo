@@ -12,9 +12,9 @@ func (m *Main) rowIDs() []int {
 	case m.searching():
 		return m.searchIDs()
 	case m.nav.screen == screenMine:
-		return m.mine.IDs()
+		return m.minePage.IDs()
 	case m.nav.screen == screenAgents:
-		return m.agents.IDs()
+		return m.agentsPage.IDs()
 	case m.nav.screen == screenCompleted:
 		return m.completedIDs()
 	case m.nav.screen == screenCalendar:

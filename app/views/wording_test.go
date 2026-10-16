@@ -19,6 +19,8 @@ func TestUpdateReceiptsReadLikeCreates(t *testing.T) {
 		{"due and priority", []data.Change{{Kind: data.ChangeDue, At: at}, {Kind: data.ChangePriority, Value: "P1"}}, "Tomorrow 9:00 AM · due · P1"},
 		{"project", []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}, "Moved to adhd-todo"},
 		{"inbox", []data.Change{{Kind: data.ChangeProject}}, "Moved to Inbox"},
+		{"category", []data.Change{{Kind: data.ChangeCategory, Value: "life"}}, "Category: Life"},
+		{"category cleared", []data.Change{{Kind: data.ChangeCategory}}, "Category cleared"},
 		{"done", []data.Change{{Kind: data.ChangeStatus, Value: "done"}}, "Marked done"},
 		{"status", []data.Change{{Kind: data.ChangeStatus, Value: "review"}}, "Set to In review"},
 		{"cleared", []data.Change{{Kind: data.ChangeReminder}, {Kind: data.ChangeDue}}, "Reminder cleared · Due cleared"},
@@ -48,6 +50,26 @@ func TestUpdateReceiptsInChinese(t *testing.T) {
 	r.answer(t)
 	has(t, r.tt, "移到adhd-todo · 设为进行中")
 	hasNot(t, r.tt, "已更新")
+}
+
+// A task the assistant classified says so on its receipt, in the user's language.
+func TestACreatedTaskReceiptNamesItsCategory(t *testing.T) {
+	for _, tc := range []struct {
+		name, want string
+		zh         bool
+	}{{"en", "Life", false}, {"zh", "生活", true}} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "ok", Receipts: []data.Receipt{{
+				ID: 1, TaskID: 8, Title: "Book dentist", Status: data.Todo, Detail: data.Detail{Kind: data.DetailAdded, Category: "life"},
+			}}}, nil)})
+			if tc.zh {
+				inChinese(r.tt)
+			}
+			r.ask("book the dentist")
+			r.answer(t)
+			has(t, r.tt, tc.want)
+		})
+	}
 }
 
 // One word per status, wherever it is shown.

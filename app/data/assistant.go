@@ -27,6 +27,8 @@ type Place struct {
 	TaskID    int // PlaceTask
 	// Day is the selected day of the Calendar page as "2006-01-02" (PlaceCalendar).
 	Day string
+	// Category is the Work or Life page of Mine (PlaceNow): a new task is in that category.
+	Category Category
 }
 
 // Assistant is the built-in agent behind the composer, as the UI sees it.
@@ -94,6 +96,7 @@ const (
 	ChangeProject  = agent.ChangeProject
 	ChangeRenamed  = agent.ChangeRenamed
 	ChangeNotes    = agent.ChangeNotes
+	ChangeCategory = agent.ChangeCategory
 )
 
 // Question is a short question with 2 to 4 answers to pick from; a typed answer works too.

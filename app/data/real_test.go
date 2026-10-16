@@ -363,3 +363,36 @@ func TestRealCreatesATaskWithADueDate(t *testing.T) {
 		t.Fatalf("stored %+v, %v", got.Task.DueAt, err)
 	}
 }
+
+func TestRealReadsAndWritesACategory(t *testing.T) {
+	r, core := realPair(t, nil)
+	made, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Pay rent", Category: ptrTo(domain.CategoryLife)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tasks, _ := r.ListTasks(Filter{})
+	if len(tasks) != 1 || tasks[0].Category != CategoryLife {
+		t.Fatalf("read %+v, want life", tasks)
+	}
+	created, err := r.CreateTask(CreateTaskInput{Title: "Ship it", Category: CategoryWork})
+	if err != nil || created.Category != CategoryWork {
+		t.Fatalf("created %+v, %v", created, err)
+	}
+	moved, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr(CategoryWork)})
+	if err != nil || moved.Category != CategoryWork {
+		t.Fatalf("moved %+v, %v", moved, err)
+	}
+	kept, _ := r.UpdateTask(int(made.ID), Patch{Title: StrPtr("Pay the rent")})
+	if kept.Category != CategoryWork {
+		t.Errorf("a patch without a category changed it to %q", kept.Category)
+	}
+	cleared, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("")})
+	if err != nil || cleared.Category != "" {
+		t.Errorf("cleared %+v, %v", cleared, err)
+	}
+	if _, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("play")}); err == nil {
+		t.Error("an unknown category was accepted")
+	}
+}
+
+func ptrTo[T any](v T) *T { return &v }

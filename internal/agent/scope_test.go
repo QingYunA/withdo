@@ -128,6 +128,36 @@ func TestProjectScopeLetsTheWordsNameAnotherProjectOrTheInbox(t *testing.T) {
 	}
 }
 
+func TestWorkAndLifePagesOfMineClassifyNewTasks(t *testing.T) {
+	for _, c := range []domain.Category{domain.CategoryWork, domain.CategoryLife} {
+		r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "a thing"}), say("ok"))
+		rc := r.askIn(Scope{Kind: ScopeNow, Category: c}, "a thing").Receipts[0]
+		if got := r.task(rc.TaskID).Category; got == nil || *got != c {
+			t.Errorf("%s page: category %v", c, got)
+		}
+		eq(t, "receipt category", rc.Detail.Category, string(c))
+		contains(t, "system prompt", r.system(), "the "+string(c)+" page of Mine")
+		contains(t, "system prompt", r.system(), "Inbox unless the words name a project")
+	}
+}
+
+func TestTheWordsCanNameAnotherCategoryThanThePage(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "pay rent", "category": "life"}), say("ok"))
+	rc := r.askIn(Scope{Kind: ScopeNow, Category: domain.CategoryWork}, "pay rent").Receipts[0]
+	if got := r.task(rc.TaskID).Category; got == nil || *got != domain.CategoryLife {
+		t.Errorf("category %v, want the one the model named", got)
+	}
+}
+
+func TestACategoryOnAnotherPageIsIgnored(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "loose"}), say("ok"))
+	p := r.project("a-project")
+	rc := r.askIn(Scope{Kind: ScopeProject, ProjectID: p.ID, Category: domain.CategoryLife}, "loose").Receipts[0]
+	if got := r.task(rc.TaskID).Category; got != nil {
+		t.Errorf("category %v on a project page", *got)
+	}
+}
+
 func TestInboxAndNowScopesCreateInTheInbox(t *testing.T) {
 	for _, sc := range []Scope{{}, {Kind: ScopeInbox}} {
 		r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "loose"}), say("ok"))
