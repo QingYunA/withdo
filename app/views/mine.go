@@ -104,6 +104,9 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item) {
 		body(c, func() {
 			m.titleLine(c, t, it.Task, "", false)
 			summaryLine(c, t, m.handedSummary(it))
+			if m.openFail.id == it.ID && m.openFail.err != nil {
+				theme.Paragraph(c, theme.Meta, t.Blocked(), m.openFailText(m.openFail.err), 2).Margin(2, 0, 0)
+			}
 			if stacked {
 				ui.Row(c).Shrink(0).Gap(8).Margin(8, 0, 0).Children(buttons)
 			}
@@ -176,6 +179,10 @@ func (m *Main) actionsFor(it data.Item) []rowAction {
 	open := func(text string) []rowAction {
 		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
 	}
+	// goSee takes the user to where the agent is, the way Settings says, rather than to the inspector.
+	goSee := func(text string) []rowAction {
+		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openWork(m.app.OpenWith(), it.Task) }}}
+	}
 	accept := rowAction{m.say.ActionAccept(), m.say.A11yAcceptTask(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}
 	switch {
 	case it.Kind == data.NeedReminder:
@@ -190,9 +197,9 @@ func (m *Main) actionsFor(it data.Item) []rowAction {
 	case it.Kind == data.NeedReview && it.PRURL != "":
 		return []rowAction{openPR, accept}
 	case it.Kind == data.NeedBlocked:
-		return open(m.say.ActionAnswer())
+		return goSee(m.say.ActionAnswer())
 	case it.Kind == data.NeedReview:
-		return append(open(m.say.ActionReview()), accept)
+		return append(goSee(m.say.ActionReview()), accept)
 	}
 	return open(m.say.ActionOpen())
 }

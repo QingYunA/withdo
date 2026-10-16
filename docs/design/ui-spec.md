@@ -245,13 +245,13 @@ a row anywhere (see **Subtasks**).
    row: the agent's 18 pt avatar, the title, one reason line (`reason · project name`, the project
    dropped below 600 pt), the age, and one tinted button (`bg.selected`, accent text):
    - an agent task that is blocked: `Claude Code is stuck: "<next_step or summary>"` (`卡住了`),
-     button **Answer** / `回答` (opens the inspector); with nothing to quote, `Claude Code is stuck
-     and waits for you`;
+     button **Answer** / `回答` (goes to where the agent is, see **Going to the agent** below); with
+     nothing to quote, `Claude Code is stuck and waits for you`;
    - an agent task in review: with a PR `PR #12 is ready for your review`, buttons **Open PR** and
      **Accept** / `收下`; without one `Claude Code finished and is waiting for you` (`做完了，等你试用`),
-     buttons **Review** / `去看看` and **Accept**. Accept sets the task to done (the row fades like
-     any completion);
-   - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open**;
+     buttons **Review** / `去看看` (goes to where the agent is, as Answer) and **Accept**. Accept sets
+     the task to done (the row fades like any completion);
+   - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open** (the inspector);
    - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
    - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
      task** and **Keep** (the row goes away for good, until the pull request changes state again);
@@ -291,6 +291,27 @@ here.` (zh `现在没有要你处理的事` / `Agent 们在干活，有动静会
 
 Tight rows (the inspector open on a small window): the project name goes below 600 pt of content;
 the branch, pull request and age below 460 pt.
+
+**Going to the agent.** Answer and Review do not open the inspector; they take the user to where the
+agent works, the way Settings > Agents says (default: **the agent's app**). The row itself still opens
+the inspector, as every row does. The folder the agent works in is the `cwd` it passed to
+`report_progress`, kept on each report (`reports.cwd`, migration 005; a report that passed none keeps
+`''`, the server's default folder is not stored): the newest report that has one, else the project's
+folder, else none. The places:
+- **The agent's app**: `open -a <App>` for the desktop app that matches the agent (Claude Code
+  `Claude`, Codex `Codex`, Cursor, Windsurf, Zed, Copilot `Visual Studio Code`; Gemini CLI, Qwen Code,
+  Kimi CLI, opencode, Cline and unknown agents have none). It brings the app forward, and for the
+  editors also opens the folder. **It cannot open the exact session**: MCP gives no session id, so
+  only the app is brought forward. An agent with no app, or an app that is not installed, falls back
+  to a terminal at the folder;
+- **Terminal**: `open -a Terminal <folder>`;
+- **Editor**: the first installed of Cursor, Visual Studio Code and Zed (found with `open -Ra`, which
+  does not launch it), opened on the folder;
+- **Finder**: the folder.
+Terminal, Editor and Finder need a folder. When opening fails, one quiet line in `meta` and the blocked
+red shows under the row's reason line (`Couldn't open it: …`, `Nothing to open: the agent did not
+say where it works.`, `No editor found. Install Cursor, Visual Studio Code or Zed.`); it goes away
+with the next successful open or when the row is opened.
 
 ### Agents
 
@@ -609,8 +630,13 @@ Main page, top to bottom (10 pt padding):
    Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day, Clear and
    `Set reminder`;
 6. `Open PR`, only when the task has a pull request;
-7. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
-8. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
+7. `Open in…` (`IconTerminal`), only for an agent's task: replaced by a page titled `Open in…` with a
+   back chevron and four choices, `The agent's app`, `Terminal`, `Editor`, `Finder` (see **Going to
+   the agent** under Mine). A click opens that place once and closes the menu; it does not change the
+   Settings choice. A choice with nowhere to go (no folder, or no app and no folder) is drawn in
+   `text.tertiary`, with no hover, and does nothing;
+8. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
+9. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
 
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
@@ -823,7 +849,11 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   line the agent's own command printed, "adhd-core isn't at ~/.local/bin/adhd-core", a timeout).
   A config file with comments (Zed's `settings.json`) is **never rewritten**: a `Add this to
   ~/.config/zed/settings.json:` line and the snippet in the mono well with **Copy** appear under the
-  columns. At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
+  columns. Under them one group with one row, **Open agent work in** / `去看看时打开`, with the `meta`
+  line `Brings the agent's app forward. It cannot open the exact session.` and a pop-up at the right:
+  `The agent's app` (default) / `Terminal` / `Editor` / `Finder`. It is where Review and Answer on a
+  handed-over row go (see **Going to the agent** under Mine); the choice is kept in `prefs.json` next
+  to the database. Screen `settings-agents-open-with-*` (scrolled to the bottom). At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
   `claude mcp add` command in a mono well with **Copy**. "Install MCP" is the only word for this; it
   is never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
   `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's PATH

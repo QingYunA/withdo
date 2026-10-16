@@ -103,6 +103,10 @@ func TestScreensSettings(t *testing.T) {
 			settingsShot(t, "settings-assistant-new"+sfx+".png", fresh, a.dark, zh, PaneAssistant, nil)
 
 			settingsShot(t, "settings-agents"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAgents, nil)
+			// Under the agents: where Review and Answer on a handed-over row go.
+			settingsShot(t, "settings-agents-open-with"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAgents, func(r *settingsRig) {
+				r.tt.Scroll(340, 300, 0, 3000)
+			})
 			for _, s := range githubStates() {
 				gh := settingsApp(t, s.st)
 				settingsShot(t, "settings-github"+s.name+sfx+".png", gh, a.dark, zh, PaneGitHub, nil)

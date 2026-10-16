@@ -48,6 +48,7 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opa
 // openRow opens a row's task in the inspector and highlights it.
 func (m *Main) openRow(id int) {
 	m.openID, m.sel = id, id
+	m.openFail = openFailure{}
 	m.inspector.reset()
 }
 

@@ -5137,3 +5137,165 @@ func AgentsEmptyBody() string { return In(i18n.Locale()).AgentsEmptyBody() }
 func (msgs Messages) AgentsEmptyBody() string {
 	return Catalog.Format(msgs.locale, "agentsEmptyBody", nil)
 }
+
+// MenuOpenIn says "Open in…"
+// in the language the app shows.
+//
+// Item of the task menu of an agent's task, and the title of its page:
+// opens where the agent works in the agent's app, a terminal, an editor or
+// Finder.
+func MenuOpenIn() string { return In(i18n.Locale()).MenuOpenIn() }
+
+// MenuOpenIn says "Open in…"
+// in the language of msgs.
+//
+// Item of the task menu of an agent's task, and the title of its page:
+// opens where the agent works in the agent's app, a terminal, an editor or
+// Finder.
+func (msgs Messages) MenuOpenIn() string {
+	return Catalog.Format(msgs.locale, "menuOpenIn", nil)
+}
+
+// OpenWithAgentApp says "The agent's app"
+// in the language the app shows.
+//
+// Choice of where to open an agent's work: the desktop app of the agent
+// that handed the task over. Also in the Open in page of the task menu.
+func OpenWithAgentApp() string { return In(i18n.Locale()).OpenWithAgentApp() }
+
+// OpenWithAgentApp says "The agent's app"
+// in the language of msgs.
+//
+// Choice of where to open an agent's work: the desktop app of the agent
+// that handed the task over. Also in the Open in page of the task menu.
+func (msgs Messages) OpenWithAgentApp() string {
+	return Catalog.Format(msgs.locale, "openWithAgentApp", nil)
+}
+
+// OpenWithTerminal says "Terminal"
+// in the language the app shows.
+//
+// Choice of where to open an agent's work: a terminal at the folder the
+// agent works in.
+func OpenWithTerminal() string { return In(i18n.Locale()).OpenWithTerminal() }
+
+// OpenWithTerminal says "Terminal"
+// in the language of msgs.
+//
+// Choice of where to open an agent's work: a terminal at the folder the
+// agent works in.
+func (msgs Messages) OpenWithTerminal() string {
+	return Catalog.Format(msgs.locale, "openWithTerminal", nil)
+}
+
+// OpenWithEditor says "Editor"
+// in the language the app shows.
+//
+// Choice of where to open an agent's work: a code editor (Cursor, Visual
+// Studio Code or Zed) on the folder the agent works in.
+func OpenWithEditor() string { return In(i18n.Locale()).OpenWithEditor() }
+
+// OpenWithEditor says "Editor"
+// in the language of msgs.
+//
+// Choice of where to open an agent's work: a code editor (Cursor, Visual
+// Studio Code or Zed) on the folder the agent works in.
+func (msgs Messages) OpenWithEditor() string {
+	return Catalog.Format(msgs.locale, "openWithEditor", nil)
+}
+
+// OpenWithFinder says "Finder"
+// in the language the app shows.
+//
+// Choice of where to open an agent's work: the folder the agent works in,
+// shown in Finder.
+func OpenWithFinder() string { return In(i18n.Locale()).OpenWithFinder() }
+
+// OpenWithFinder says "Finder"
+// in the language of msgs.
+//
+// Choice of where to open an agent's work: the folder the agent works in,
+// shown in Finder.
+func (msgs Messages) OpenWithFinder() string {
+	return Catalog.Format(msgs.locale, "openWithFinder", nil)
+}
+
+// SettingsOpenWith says "Open agent work in"
+// in the language the app shows.
+//
+// Label of the setting in Settings > Agents that says where Review and
+// Answer on a handed-over row take the user.
+func SettingsOpenWith() string { return In(i18n.Locale()).SettingsOpenWith() }
+
+// SettingsOpenWith says "Open agent work in"
+// in the language of msgs.
+//
+// Label of the setting in Settings > Agents that says where Review and
+// Answer on a handed-over row take the user.
+func (msgs Messages) SettingsOpenWith() string {
+	return Catalog.Format(msgs.locale, "settingsOpenWith", nil)
+}
+
+// SettingsOpenWithBody says "Brings the agent's app forward. It cannot open the exact session."
+// in the language the app shows.
+//
+// Quiet line under the Open agent work in setting: what opening the agent's
+// app can and cannot do.
+func SettingsOpenWithBody() string { return In(i18n.Locale()).SettingsOpenWithBody() }
+
+// SettingsOpenWithBody says "Brings the agent's app forward. It cannot open the exact session."
+// in the language of msgs.
+//
+// Quiet line under the Open agent work in setting: what opening the agent's
+// app can and cannot do.
+func (msgs Messages) SettingsOpenWithBody() string {
+	return Catalog.Format(msgs.locale, "settingsOpenWithBody", nil)
+}
+
+// RowOpenFailed says "Couldn't open it: {reason}"
+// in the language the app shows.
+//
+// Quiet error line under a handed-over row when opening the agent's work
+// failed. The reason is the system's own words.
+func RowOpenFailed(reason string) string { return In(i18n.Locale()).RowOpenFailed(reason) }
+
+// RowOpenFailed says "Couldn't open it: {reason}"
+// in the language of msgs.
+//
+// Quiet error line under a handed-over row when opening the agent's work
+// failed. The reason is the system's own words.
+func (msgs Messages) RowOpenFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "rowOpenFailed", map[string]any{"reason": reason})
+}
+
+// RowOpenNoFolder says "Nothing to open: the agent did not say where it works."
+// in the language the app shows.
+//
+// Quiet error line under a handed-over row when there is no folder to open
+// in a terminal, an editor or Finder.
+func RowOpenNoFolder() string { return In(i18n.Locale()).RowOpenNoFolder() }
+
+// RowOpenNoFolder says "Nothing to open: the agent did not say where it works."
+// in the language of msgs.
+//
+// Quiet error line under a handed-over row when there is no folder to open
+// in a terminal, an editor or Finder.
+func (msgs Messages) RowOpenNoFolder() string {
+	return Catalog.Format(msgs.locale, "rowOpenNoFolder", nil)
+}
+
+// RowOpenNoEditor says "No editor found. Install Cursor, Visual Studio Code or Zed."
+// in the language the app shows.
+//
+// Quiet error line under a handed-over row when none of the supported
+// editors is installed.
+func RowOpenNoEditor() string { return In(i18n.Locale()).RowOpenNoEditor() }
+
+// RowOpenNoEditor says "No editor found. Install Cursor, Visual Studio Code or Zed."
+// in the language of msgs.
+//
+// Quiet error line under a handed-over row when none of the supported
+// editors is installed.
+func (msgs Messages) RowOpenNoEditor() string {
+	return Catalog.Format(msgs.locale, "rowOpenNoEditor", nil)
+}

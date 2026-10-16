@@ -41,6 +41,27 @@ func TestReportProgressCreatesDoingTaskFromCwd(t *testing.T) {
 	eqPtr(t, "task project", r.Task.ProjectID, &projects[0].ID)
 }
 
+func TestReportProgressStoresTheCleanedCwdItWasGiven(t *testing.T) {
+	c, _ := newCore(t)
+	dir := widgetsRepo(t, "feat/login")
+	r := progress(t, c, domain.ProgressInput{Summary: "one", Cwd: dir + "/."})
+	eq(t, "cwd", r.Report.Cwd, dir)
+	got := must[[]domain.Report](t)(c.ListReports(ctx, r.Task.ID))
+	eq(t, "stored cwd", got[0].Cwd, dir)
+}
+
+// A cwd that only steers the project lookup (the server's default) is not the agent's own.
+func TestReportProgressStoresNoCwdWhenOnlyAFallbackResolvedTheProject(t *testing.T) {
+	c, _ := newCore(t)
+	r := progress(t, c, domain.ProgressInput{Summary: "one", FallbackCwd: widgetsRepo(t, "feat/login")})
+	if r.Task.ProjectID == nil {
+		t.Error("the fallback cwd should still resolve the project")
+	}
+	eq(t, "cwd", r.Report.Cwd, "")
+	b := progress(t, c, domain.ProgressInput{Summary: "two", TaskID: &r.Task.ID})
+	eq(t, "cwd by task id", b.Report.Cwd, "")
+}
+
 func TestReportProgressReusesTaskOnSameBranch(t *testing.T) {
 	c, _ := newCore(t)
 	dir := widgetsRepo(t, "feat/login")

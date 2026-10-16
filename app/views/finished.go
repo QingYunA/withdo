@@ -62,6 +62,26 @@ func agentName(agent string) string {
 	return agent
 }
 
+// agentApp is the macOS app of the desktop agent behind an id agents report under, matched the way
+// agentName matches it; "" for agents that have none (they run in a terminal).
+func agentApp(agent string) string {
+	switch n := strings.ToLower(agent); {
+	case strings.Contains(n, "claude"):
+		return "Claude"
+	case strings.Contains(n, "codex"):
+		return "Codex"
+	case strings.Contains(n, "cursor"):
+		return "Cursor"
+	case strings.Contains(n, "windsurf"):
+		return "Windsurf"
+	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
+		return "Zed"
+	case strings.Contains(n, "copilot") || strings.Contains(n, "visual studio code"):
+		return "Visual Studio Code"
+	}
+	return ""
+}
+
 // whoFinished is the words at the right of a finished row: "You", or an agent's name, and with
 // summary what its closing report said ("Claude Code · PR #245 merged").
 func (m *Main) whoFinished(task data.Task, summary bool) string {

@@ -106,9 +106,9 @@ func TestTightRowsDropTheirCompanions(t *testing.T) {
 	}
 }
 
-func TestHandedOverOpenOpensTheInspector(t *testing.T) {
+func TestClickingAHandedOverRowOpensTheInspector(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	if err := tt.Click("Open Fix tray race on launch"); err != nil {
+	if err := tt.Click("Fix tray race on launch"); err != nil {
 		t.Fatal(err)
 	}
 	if m.openID != 3 || !tt.HasText("Activity") {

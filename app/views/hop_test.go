@@ -289,12 +289,13 @@ func (r *hopRig) sidebarPixels() []byte {
 }
 
 func TestHandedOverRowsHaveActionsThatDoTheNextThing(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	app, _, rec := newTestApp(t)
+	tt, m, _ := newTesterFor(app, 1100)
 	if err := tt.Click("Open Fix tray race on launch"); err != nil {
 		t.Fatal(err)
 	}
-	if m.openID != 3 {
-		t.Errorf("Answer opened %d, want the blocked task 3", m.openID)
+	if len(rec.opens) != 1 || m.openID != 0 {
+		t.Errorf("Answer opened %v and the inspector on %d: it goes to the agent, not the inspector", rec.opens, m.openID)
 	}
 	has(t, tt, "Answer", "Open PR")
 	hasNot(t, tt, "Review")

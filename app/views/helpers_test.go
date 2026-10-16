@@ -19,13 +19,21 @@ import (
 // fixedNow is the clock of every test and screenshot, so relative times read the same each run.
 func fixedNow() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.Local) }
 
+// openCall is one OpenIn the views asked for.
+type openCall struct {
+	how      OpenWith
+	app, dir string
+}
+
 // recorder is an Actions that remembers what the views asked for.
 type recorder struct {
 	opened   []int
 	urls     []string
-	panes    []Pane   // what OpenSettings was asked to show
-	folders  []string // what ShowInFinder was asked to reveal
-	language string   // what SetLanguage last chose
+	panes    []Pane     // what OpenSettings was asked to show
+	folders  []string   // what ShowInFinder was asked to reveal
+	language string     // what SetLanguage last chose
+	opens    []openCall // what OpenIn was asked for
+	openErr  error      // what OpenIn answers
 
 	mu     sync.Mutex
 	posted []func()
@@ -36,6 +44,11 @@ func (r *recorder) OpenTask(id int)          { r.opened = append(r.opened, id) }
 func (r *recorder) OpenSettings(p Pane)      { r.panes = append(r.panes, p) }
 func (r *recorder) OpenURL(url string)       { r.urls = append(r.urls, url) }
 func (r *recorder) ShowInFinder(path string) { r.folders = append(r.folders, path) }
+
+func (r *recorder) OpenIn(how OpenWith, agentApp, dir string) error {
+	r.opens = append(r.opens, openCall{how, agentApp, dir})
+	return r.openErr
+}
 
 func (r *recorder) Languages() []string    { return []string{"en", "zh-Hans"} }
 func (r *recorder) Language() string       { return r.language }

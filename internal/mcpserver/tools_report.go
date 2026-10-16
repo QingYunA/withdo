@@ -49,13 +49,13 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	if err := urlArg("pr_url", a.PRURL); err != nil {
 		return t.fail(err)
 	}
-	cwd := a.Cwd
-	if a.TaskID == nil && cwd == "" {
-		cwd = t.defaultCwd
+	fallback := ""
+	if a.TaskID == nil && a.Cwd == "" {
+		fallback = t.defaultCwd
 	}
 	res, err := t.core.ReportProgress(ctx, domain.ProgressInput{
 		Summary: a.Summary, Agent: agentName(req), Status: a.Status, NextStep: a.NextStep,
-		TaskID: a.TaskID, Title: a.Title, Cwd: cwd, Branch: a.Branch, PRURL: a.PRURL, ParentTaskID: a.ParentTaskID,
+		TaskID: a.TaskID, Title: a.Title, Cwd: a.Cwd, FallbackCwd: fallback, Branch: a.Branch, PRURL: a.PRURL, ParentTaskID: a.ParentTaskID,
 	})
 	if err != nil {
 		return t.fail(err)

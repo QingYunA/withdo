@@ -149,6 +149,12 @@ func TestRealMilestonesAndGetTask(t *testing.T) {
 	if err != nil || len(d.Reports) != 2 || d.Reports[0].Summary != "second" || d.Reports[0].Status != Doing || d.Reports[0].NextStep != "go on" {
 		t.Fatalf("detail = %+v, %v", d, err)
 	}
+	if _, err := core.AddReport(bg, domain.AddReportInput{TaskID: int64(task.ID), Agent: "claude", Summary: "third", Cwd: "/work/tree"}); err != nil {
+		t.Fatal(err)
+	}
+	if d, err := r.GetTask(task.ID); err != nil || len(d.Reports) != 3 || d.Reports[0].Cwd != "/work/tree" || d.Reports[1].Cwd != "" {
+		t.Fatalf("cwd of the reports = %+v, %v", d, err)
+	}
 	if _, err := r.GetTask(4242); err == nil {
 		t.Error("a missing task must be an error")
 	}

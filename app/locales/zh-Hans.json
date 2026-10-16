@@ -347,5 +347,15 @@
   "a11yMineUnseen": "{count} 项 Agent 新交过来的",
   "composerPlaceholderAgents": "问问 Agent 们在做什么",
   "agentsEmpty": "没有 Agent 在做事",
-  "agentsEmptyBody": "Agent 汇报进度后，会出现在这里。"
+  "agentsEmptyBody": "Agent 汇报进度后，会出现在这里。",
+  "menuOpenIn": "打开方式…",
+  "openWithAgentApp": "Agent 的 App",
+  "openWithTerminal": "终端",
+  "openWithEditor": "编辑器",
+  "openWithFinder": "Finder",
+  "settingsOpenWith": "去看看时打开",
+  "settingsOpenWithBody": "只会把 Agent 的 App 带到前面，打不开具体的那场会话。",
+  "rowOpenFailed": "没能打开：{reason}",
+  "rowOpenNoFolder": "没有可打开的位置：Agent 没说它在哪里工作。",
+  "rowOpenNoEditor": "没找到编辑器。请安装 Cursor、Visual Studio Code 或 Zed。"
 }

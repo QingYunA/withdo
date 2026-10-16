@@ -64,10 +64,24 @@ func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 	if h := s.setup.manual; h != nil {
 		s.manualPanel(c, t, h)
 	}
+	group(c, t, "open-with", func() {
+		settingsRow(c, t, "open-with", s.say.SettingsOpenWith(), s.say.SettingsOpenWithBody(), true, func() { s.openWithControl(c, t) })
+	})
 	ui.Column(c).Shrink(0).Gap(8).Margin(0, 0, 18).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsCommand()).Margin(0, 4)
 		commandWell(c, t, s.app.Config.ConnectCommand, func() { s.copyButton(c, t, "copy", s.app.Config.ConnectCommand) })
 	})
+}
+
+// openWithControl chooses where Review and Answer on a handed-over row take the user.
+func (s *Settings) openWithControl(c *ui.Context, t *theme.Tokens) {
+	opts := make([]popOption, 0, len(openWiths))
+	for _, how := range openWiths {
+		opts = append(opts, popOption{string(how), openWithName(s.say, how)})
+	}
+	if v, ok := popUp(c, t, "open-with", string(s.app.OpenWith()), opts); ok {
+		s.app.SetOpenWith(OpenWith(v))
+	}
 }
 
 // scanAgents is what is on this Mac, looked at on first use and again every agentsRefreshEvery

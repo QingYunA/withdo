@@ -18,7 +18,7 @@ func richTask(t *testing.T, c *domain.Core, projectID, milestoneID *int64) *doma
 		RemindAt: ptr("2026-10-19T09:00:00.000Z"),
 	})
 	st := domain.StatusDoing
-	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "claude-code", Summary: "first", Status: &st, NextStep: ptr("second")}))
+	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "claude-code", Summary: "first", Status: &st, NextStep: ptr("second"), Cwd: "/work/tree"}))
 	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "github", Summary: "PR #7 merged"}))
 	return must[*domain.Task](t)(c.GetTask(ctx, task.ID))
 }

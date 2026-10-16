@@ -21,6 +21,9 @@ const seenFile = "seen.json"
 // dismissedFile is the record of the handed-over rows the user put aside with Not now, in the data folder.
 const dismissedFile = "dismissed.json"
 
+// prefsFile is the app's own choices from Settings, in the data folder.
+const prefsFile = "prefs.json"
+
 // ghRunner runs the gh CLI for the pull request poller. Tests replace it: they never reach GitHub.
 var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 
@@ -42,6 +45,8 @@ type backend struct {
 	seen data.SeenStore
 	// dismissed keeps which handed-over rows of Mine the user put aside, between runs.
 	dismissed data.SeenStore
+	// prefs keeps the choices made in Settings that the app keeps itself, between runs.
+	prefs data.PrefsStore
 }
 
 // openBackend returns the fake (with seed data, or empty) when asked for, otherwise the shared
@@ -82,6 +87,7 @@ func openReal(path string) (*backend, error) {
 		github:     data.PollerGitHub{Poller: poller},
 		seen:       data.FileSeen{Path: filepath.Join(dir, seenFile)},
 		dismissed:  data.FileSeen{Path: filepath.Join(dir, dismissedFile)},
+		prefs:      data.FilePrefs{Path: filepath.Join(dir, prefsFile)},
 	}, nil
 }
 
@@ -111,6 +117,7 @@ func openFake(empty bool) *backend {
 		models:     demoModels(),
 		seen:       &data.MemorySeen{},
 		dismissed:  &data.MemorySeen{},
+		prefs:      &data.MemoryPrefs{},
 		github:     data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: time.Now()}),
 	}
 }

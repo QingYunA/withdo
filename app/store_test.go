@@ -100,6 +100,12 @@ func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *te
 	if _, ok := fake.dismissed.(*data.MemorySeen); !ok {
 		t.Errorf("the demo keeps dismissed in %T, want memory", fake.dismissed)
 	}
+	if put, ok := be.prefs.(data.FilePrefs); !ok || put.Path != filepath.Join(dir, prefsFile) {
+		t.Fatalf("prefs store %#v, want a file named %s in the data folder", be.prefs, prefsFile)
+	}
+	if _, ok := fake.prefs.(*data.MemoryPrefs); !ok {
+		t.Errorf("the demo keeps prefs in %T, want memory", fake.prefs)
+	}
 }
 
 func TestOpenBackendFakes(t *testing.T) {

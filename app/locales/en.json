@@ -2049,5 +2049,51 @@
   "agentsEmptyBody": "When an agent reports its progress, it shows up here.",
   "@agentsEmptyBody": {
     "description": "Quiet line under the title of the empty Agents screen."
+  },
+  "menuOpenIn": "Open in…",
+  "@menuOpenIn": {
+    "description": "Item of the task menu of an agent's task, and the title of its page: opens where the agent works in the agent's app, a terminal, an editor or Finder."
+  },
+  "openWithAgentApp": "The agent's app",
+  "@openWithAgentApp": {
+    "description": "Choice of where to open an agent's work: the desktop app of the agent that handed the task over. Also in the Open in page of the task menu."
+  },
+  "openWithTerminal": "Terminal",
+  "@openWithTerminal": {
+    "description": "Choice of where to open an agent's work: a terminal at the folder the agent works in."
+  },
+  "openWithEditor": "Editor",
+  "@openWithEditor": {
+    "description": "Choice of where to open an agent's work: a code editor (Cursor, Visual Studio Code or Zed) on the folder the agent works in."
+  },
+  "openWithFinder": "Finder",
+  "@openWithFinder": {
+    "description": "Choice of where to open an agent's work: the folder the agent works in, shown in Finder."
+  },
+  "settingsOpenWith": "Open agent work in",
+  "@settingsOpenWith": {
+    "description": "Label of the setting in Settings > Agents that says where Review and Answer on a handed-over row take the user."
+  },
+  "settingsOpenWithBody": "Brings the agent's app forward. It cannot open the exact session.",
+  "@settingsOpenWithBody": {
+    "description": "Quiet line under the Open agent work in setting: what opening the agent's app can and cannot do."
+  },
+  "rowOpenFailed": "Couldn't open it: {reason}",
+  "@rowOpenFailed": {
+    "description": "Quiet error line under a handed-over row when opening the agent's work failed. The reason is the system's own words.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "exit status 1"
+      }
+    }
+  },
+  "rowOpenNoFolder": "Nothing to open: the agent did not say where it works.",
+  "@rowOpenNoFolder": {
+    "description": "Quiet error line under a handed-over row when there is no folder to open in a terminal, an editor or Finder."
+  },
+  "rowOpenNoEditor": "No editor found. Install Cursor, Visual Studio Code or Zed.",
+  "@rowOpenNoEditor": {
+    "description": "Quiet error line under a handed-over row when none of the supported editors is installed."
   }
 }

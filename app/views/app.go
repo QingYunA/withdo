@@ -17,6 +17,10 @@ type Actions interface {
 	OpenSettings(pane Pane) // show the Settings window on a pane
 	OpenURL(url string)
 	ShowInFinder(path string)
+	// OpenIn brings up where an agent works: its own desktop app (agentApp, "" when it has none), or
+	// a terminal, an editor or Finder at dir. The agent's app cannot be asked for the exact session,
+	// only brought forward; without that app, or when it is not installed, a terminal opens.
+	OpenIn(how OpenWith, agentApp, dir string) error
 	// Post runs fn on the UI thread and redraws. The assistant answers through it.
 	Post(fn func())
 	// Languages are the languages the interface is written in. Language is the one the user
@@ -55,11 +59,16 @@ type App struct {
 	// Dismissed keeps which handed-over rows the user put aside with Not now; nil keeps that for
 	// this run only.
 	Dismissed data.SeenStore
+	// Prefs keeps the choices made in Settings that the app keeps itself; nil keeps them for this
+	// run only.
+	Prefs data.PrefsStore
 
 	seen            data.Seen
 	seenLoaded      bool
 	dismissed       data.Seen
 	dismissedLoaded bool
+	prefs           data.Prefs
+	prefsLoaded     bool
 	snap            snapshot
 	rev             int // counts the snapshots, so a search or Completed knows its answer is old
 	completing      map[int]completion
