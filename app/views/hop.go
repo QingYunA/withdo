@@ -59,7 +59,7 @@ func (m *Main) mineShown() bool { return m.nav.screen == screenMine && !m.search
 func (m *Main) hopTick(c *ui.Context) {
 	h, now := &m.hop, m.app.Now()
 	if m.mineShown() {
-		m.app.markSeen(m.mine.FromAgents)
+		m.app.markSeen(m.minePage.FromAgents)
 		h.flights, h.launched, h.shown = nil, nil, 0
 		return
 	}

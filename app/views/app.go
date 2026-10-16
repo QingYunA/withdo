@@ -244,12 +244,24 @@ func (a *App) mineInput() data.MineInput {
 
 // buildMine sorts the snapshot into the sections of the Mine screen, without the handed-over rows
 // the user put aside, so the count, the badge and the hop leave them out too.
-func (a *App) buildMine() data.Mine {
-	return data.BuildMine(a.mineInput()).WithoutDismissed(a.dismissedSet())
+func (a *App) buildMine() data.Mine { return a.buildMineOf(nil) }
+
+// buildMineOf is buildMine for the tasks keep accepts; nil keeps them all.
+func (a *App) buildMineOf(keep func(data.Task) bool) data.Mine {
+	in := a.mineInput()
+	in.Keep = keep
+	return data.BuildMine(in).WithoutDismissed(a.dismissedSet())
 }
 
 // buildAgents lists what the agents are doing, with their subtasks.
-func (a *App) buildAgents() data.AgentsScreen { return data.BuildAgents(a.mineInput()) }
+func (a *App) buildAgents() data.AgentsScreen { return a.buildAgentsOf(nil) }
+
+// buildAgentsOf is buildAgents for the tasks keep accepts; nil keeps them all.
+func (a *App) buildAgentsOf(keep func(data.Task) bool) data.AgentsScreen {
+	in := a.mineInput()
+	in.Keep = keep
+	return data.BuildAgents(in)
+}
 
 // topLevel are the tasks that get a row of their own: the snapshot without the subtasks, which live
 // under their parent.

@@ -10,23 +10,23 @@ import (
 // then today, then later. A section with nothing in it is not drawn; with nothing in any of them the
 // screen says All clear. What was finished today closes the page.
 func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
-	m.pageHeader(c, t, m.say.NavMine(), m.clock.Heading(m.app.Now()), nil)
+	m.pageHeader(c, t, m.mineTitle(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
 	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
 	m.belowComposer(c, func() {
-		if m.mine.Empty() {
+		if m.minePage.Empty() {
 			m.allClear(c, t)
 		}
-		m.fromAgentsSection(c, t, m.mine.FromAgents)
-		m.mineSection(c, t, m.say.SectionToday(), m.mine.Today)
-		m.mineSection(c, t, m.say.SectionLater(), m.mine.Later)
-		if m.mine.MoreLater > 0 && link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
+		m.fromAgentsSection(c, t, m.minePage.FromAgents)
+		m.mineSection(c, t, m.say.SectionToday(), m.minePage.Today)
+		m.mineSection(c, t, m.say.SectionLater(), m.minePage.Later)
+		if m.minePage.MoreLater > 0 && link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
 			m.goTo(nav{screen: screenInbox})
 		}
-		m.doneTodaySection(c, t, m.mine.Done, m.mine.MoreDone)
+		m.doneTodaySection(c, t, m.minePage.Done, m.minePage.MoreDone)
 	})
 }
 

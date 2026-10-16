@@ -121,7 +121,6 @@ func (a AgentsScreen) Empty() bool { return len(a.Working)+len(a.Done) == 0 }
 // AgentTally is one agent's share of the Agents screen.
 type AgentTally struct {
 	Name    string // the name the agent goes by
-	Task    Task   // its first task on the screen, which its avatar is drawn from
 	Working int    // how many of its tasks are at work
 }
 
@@ -138,7 +137,7 @@ func (a AgentsScreen) Tally(name func(Task) string) []AgentTally {
 			if !ok {
 				j = len(out)
 				at[n] = j
-				out = append(out, AgentTally{Name: n, Task: r.Task})
+				out = append(out, AgentTally{Name: n})
 			}
 			if i == 0 {
 				out[j].Working++

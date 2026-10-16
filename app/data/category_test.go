@@ -166,7 +166,4 @@ func TestAgentsScreenTalliesByAgentInScreenOrder(t *testing.T) {
 		tally[2].Name != "Gemini" || tally[2].Working != 0 {
 		t.Errorf("tally %+v: newest report first, then who only finished something", tally)
 	}
-	if tally[1].Task.Title != "a" {
-		t.Errorf("the tally keeps a task of the agent for its avatar: %+v", tally[1].Task)
-	}
 }

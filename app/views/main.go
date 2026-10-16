@@ -32,6 +32,9 @@ const (
 type nav struct {
 	screen    screen
 	projectID int
+	// sub narrows Mine or Agents to one slice: a category (subWork, subLife, subUnsorted) or an
+	// agent's name; "" is the whole screen.
+	sub string
 }
 
 // Main is the window: sidebar, one screen and the inspector, with the sheets that float over them.
@@ -45,15 +48,21 @@ type Main struct {
 	weekStart time.Weekday // the day the calendar's weeks start on
 
 	nav    nav
-	mine   data.Mine         // what the Mine screen shows this frame
-	agents data.AgentsScreen // what the Agents screen shows this frame
-	hop    hopper            // the hop to the Mine row, and the badge there
-	cols   columnsState      // a project's two columns, and where they were drawn
-	ho     handOffState      // handing a task to an agent, and its motion
-	openID int               // task open in the inspector, 0 for none
-	sel    int               // task the keyboard highlights, 0 for none
-	moved  bool
-	width  float32 // the room the screen has this frame
+	mine   data.Mine         // all of Mine this frame: the sidebar's count and the hop read it
+	agents data.AgentsScreen // all of Agents this frame
+	// minePage and agentsPage are what the open Mine or Agents page lists: the same as mine and
+	// agents, or one slice of them when nav.sub names one. slices holds the parts of Mine.
+	minePage   data.Mine
+	agentsPage data.AgentsScreen
+	slices     mineSlices
+	agentRows  []data.AgentTally // the agents the sidebar lists under Agents
+	hop        hopper            // the hop to the Mine row, and the badge there
+	cols       columnsState      // a project's two columns, and where they were drawn
+	ho         handOffState      // handing a task to an agent, and its motion
+	openID     int               // task open in the inspector, 0 for none
+	sel        int               // task the keyboard highlights, 0 for none
+	moved      bool
+	width      float32 // the room the screen has this frame
 	// focusComposer is set by Cmd+K: the page's composer takes the focus once it is drawn.
 	// focusInspectorComposer is set by "Ask about this task…": the inspector's does.
 	focusComposer          bool
@@ -135,7 +144,7 @@ func (m *Main) View(c *ui.Context) {
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)
-	m.mine, m.agents = m.app.buildMine(), m.app.buildAgents()
+	m.buildPages()
 	m.hopTick(c)
 	m.handOffTick(c)
 	ids := m.rowIDs()

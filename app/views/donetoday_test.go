@@ -74,7 +74,7 @@ func TestDoneRowsNameWhoFinishedThemOnlyInCompleted(t *testing.T) {
 			t.Errorf("list: missing %q in %q", want, tt.Texts())
 		}
 	}
-	hasNot(t, tt, "Claude Code") // the columns say who finished a row
+	onlyInSidebar(t, tt, "Claude Code") // the columns say who finished a row
 	m.goTo(nav{screen: screenCompleted})
 	tt.Frame()
 	for _, want := range []string{"Claude Code", "You", "1:50 PM"} {
