@@ -893,20 +893,23 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   left sits on the cell's top left, so it covers the cell and grows outward; near the right or bottom
   edge of the window it grows left or up instead and stays 8 pt inside the window. Width
   `max(1.6 × cell, 280 pt)` on the 4 pt grid; height follows its content up to 420 pt, then the list
-  scrolls. A panel like the sheets: `bg`, `RadiusPanel`, 1 pt `border`, the sheets' shadow, 12 pt
-  padding. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
+  scrolls. A **pixel panel** (`theme.DrawPixelPanel`, `v8.html` B): `bg`, corners stepped in twice by
+  2 pt, a 2 pt edge in `PixelEdge` (`bg` a fifth of the way to `text`), and a hard shadow 4 pt right
+  and down, not blurred (black at 10 %, 50 % in dark mode); 12 pt padding inside the edge. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
   count `5 items` / `5 项` in `text.tertiary`, a 24 pt `IconClose` button at the right); every item of
   the day, 28 pt rows drawn like the cell's items (avatar, a reminder's time, the title; finished items
   struck through, milestones as the accent chip), a click opens the task in the inspector and closes
-  the card; at the foot an input in the sheets' well (`Add to this day…` / `添加到这天…`). Enter adds a
+  the card; at the foot an input in the sheets' well, its corners stepped once (`theme.DrawPixelWell`) (`Add to this day…` / `添加到这天…`). Enter adds a
   plain task by me, due that day at 18:00, clears the input and keeps the card open, the new item
   joining the list; empty text does nothing. **Closing**: `Esc`, a click outside (it does nothing
   else: it does not select the day under it), the close button, a change of month or `Today`, and
   leaving the page. While the card is open the window's shortcuts wait, so the arrows do not move the
-  day. **Opening** is four pixel steps, no tween (`theme.DayCardAt`): 55 %, 70 %, 85 %, then full size
-  from 150 ms, done at 200 ms, scaling the card's width and height from the corner it grows from and
-  clipping the contents; opacity is 1 throughout. A frame is asked for every 16 ms only while it
-  plays; with Reduce Motion the card is full size at once. Closing has no animation. Screens
+  day. **Opening** is a pop-out (`theme.DayCardAt`): the card is laid out at its full size
+  and position from the first frame and a visual transform grows it from the corner of the cell it
+  grows from, so nothing is resized or clipped. Over 140 ms its scale goes from the cell's width over
+  the card's (clamped to 0.5 to 0.95) to 1 along an ease-out cubic, and its opacity goes 0 to 1 with
+  an ease-out over the first 100 ms. A frame is asked for every 16 ms only while it plays; with
+  Reduce Motion the card is full size and opaque at once. Closing has no animation. Screens
   `calendar-day-card-{light,dark,zh-light}`.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
   month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v8 草稿 — 日卡的像素风和打开动画</title>
+<style>
+  :root {
+    --bg: #ffffff; --subtle: #f4f4f6; --hover: rgba(0,0,0,.045); --border: rgba(0,0,0,.08);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #a1a1a6; --accent: #5b5bd6; --blocked: #e5484d;
+    --ring: rgba(91,91,214,.6); --well: #f4f4f6;
+    --px-edge: #c9c9d1; --px-shadow: rgba(0,0,0,.10); --ink: #2a2a33; --ink-shadow: rgba(91,91,214,.35);
+  }
+  .dark {
+    --bg: #1c1c1e; --subtle: #2a2a2d; --hover: rgba(255,255,255,.06); --border: rgba(255,255,255,.10);
+    --text: #f2f2f7; --text2: #a1a1a8; --text3: #6c6c73; --accent: #7b7bf0; --blocked: #ff6369;
+    --ring: rgba(123,123,240,.6); --well: #2a2a2d;
+    --px-edge: #48484f; --px-shadow: rgba(0,0,0,.55); --ink: #e6e6ee; --ink-shadow: rgba(123,123,240,.45);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; }
+  .lead { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 36px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 640px); gap: 40px 48px; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; display: flex; align-items: center; gap: 10px; }
+  .caption .tag { font-weight: 500; font-size: 12px; color: #fff; background: #5b5bd6; border-radius: 6px; padding: 0 7px; }
+  .caption button:first-of-type { margin-left: auto; }
+  .caption button { font: 500 12px/20px -apple-system, "PingFang SC"; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: #1d1d1f; cursor: pointer; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; }
+  .frame { width: 640px; height: 470px; background: var(--bg); color: var(--text); border-radius: 12px; overflow: hidden; position: relative; padding: 20px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+
+  /* the calendar fragment: Tue to Fri of four weeks */
+  .wk { display: grid; grid-template-columns: repeat(4, 150px); font-size: 12px; line-height: 16px; color: var(--text3); padding: 0 0 8px 10px; }
+  .cal { position: relative; width: 600px; height: 416px; display: grid; grid-template-columns: repeat(4, 150px); grid-template-rows: repeat(4, 104px); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .cell { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px 10px 0; cursor: pointer; position: relative; }
+  .cell:nth-child(4n) { border-right: 0; }
+  .cell:nth-last-child(-n+4) { border-bottom: 0; }
+  .num { font-size: 13px; line-height: 20px; color: var(--text2); height: 20px; display: inline-flex; align-items: center; }
+  .today { background: var(--accent); color: #fff; border-radius: 10px; padding: 0 7px; font-weight: 600; }
+  .it { display: flex; align-items: center; gap: 5px; height: 20px; margin-top: 2px; font-size: 12px; white-space: nowrap; overflow: hidden; color: var(--text); }
+  .it span { overflow: hidden; text-overflow: ellipsis; }
+  .it.done span { color: var(--text3); text-decoration: line-through; }
+  .it.late span { color: var(--blocked); }
+  .chip { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: 5px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-size: 12px; font-weight: 500; margin-top: 2px; }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  /* the day card, as today */
+  .card { position: absolute; width: 280px; transform-origin: 0 0; }
+  .card .body { padding: 12px; }
+  .card.now { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 48px rgba(0,0,0,.18); }
+  .dark .card.now { box-shadow: 0 20px 48px rgba(0,0,0,.55); }
+  .head { display: flex; align-items: center; gap: 8px; height: 24px; }
+  .head b { font-weight: 600; font-size: 15px; }
+  .head i { font-style: normal; font-size: 12px; color: var(--text3); }
+  .close { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; color: var(--text3); border-radius: 6px; }
+  .list { margin-top: 8px; }
+  .row { display: flex; align-items: center; gap: 8px; height: 28px; font-size: 14px; padding: 0 2px; }
+  .row .t { color: var(--text3); }
+  .well { margin-top: 8px; height: 32px; border-radius: 8px; background: var(--well); color: var(--text3); font-size: 14px; display: flex; align-items: center; padding: 0 10px; }
+
+  /* pixel corners: two 2 pt steps outside, one inside a 2 pt edge */
+  .step2 { clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 2px 4px, 2px 2px, 4px 2px); }
+  .step1 { clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
+  .card.px .shadow, .card.px .edge { position: absolute; inset: 0; }
+  .card.px .shadow { transform: translate(4px, 4px); background: var(--px-shadow); }
+  .card.px .edge { background: var(--px-edge); }
+  .card.px .inner { position: relative; margin: 2px; background: var(--bg); }
+  .card.px .well { border-radius: 0; }
+  .card.ink .edge { background: var(--ink); }
+  .card.ink .shadow { background: var(--ink-shadow); }
+  .card.ink .head { border-bottom: 2px solid var(--subtle); height: 32px; padding-bottom: 8px; }
+
+  /* the whole calendar in pixels */
+  .pxcal .cal { border: 0; border-radius: 0; background: var(--px-edge); padding: 2px; gap: 2px; grid-template-columns: repeat(4, 147px); grid-template-rows: repeat(4, 101px); }
+  .pxcal .cal .cell { background: var(--bg); border: 0; }
+  .pxcal .today { border-radius: 0; }
+  .pxcal .chip { border-radius: 0; }
+
+  /* the opening: 140 ms ease-out cubic from about the cell's size, fading in over the first 100 ms */
+  .card.play { animation: pop 140ms cubic-bezier(.33, 1, .68, 1) both, fade 100ms cubic-bezier(.33, 1, .68, 1) both; }
+  @keyframes pop { from { transform: scale(.62); } to { transform: scale(1); } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .slow .card.play { animation-duration: 1400ms, 1000ms; }
+</style>
+</head>
+<body>
+<h1>v8 · 日卡：像素风选哪种，以及新的打开动画</h1>
+<p class="lead">四种外观放在一起比：A 是现在的样子，B、C 只改日卡，D 连日历格子一起改。每块右上角的「播放」会重放打开动画（新的平滑弹出：140 毫秒，从格子大小放大并淡入），点任意格子也会重放；「慢放 10 倍」方便看清过程。下面两块是 B 和 D 的深色模式。所有方案里文字、头像、图标都不变，变的只是卡片和格子的边、角、影子。</p>
+<div class="grid2" id="panels"></div>
+
+<script>
+const S = {
+  you: { pal: { h: '#3b2f2f', s: '#f1c7a5', e: '#2a2a33', m: '#c96f5a', b: '#5b5bd6' }, g: [
+    '............', '...hhhhhh...', '..hhhhhhhh..', '..hssssssh..', '..sesssses..', '..ssssssss..',
+    '...ssmmss...', '....ssss....', '..bbbbbbbb..', '.bbbbbbbbbb.', '.bbbbbbbbbb.', '............'] },
+  crab: { pal: { o: '#e07a4f', w: '#ffffff', e: '#2a2a33' }, g: [
+    '............', '.o........o.', '.oo......oo.', '..oooooooo..', '.oowoooowoo.', '.ooeooooeoo.',
+    'oooooooooooo', '.oooooooooo.', '..o.o..o.o..', '.o..o..o..o.', '............', '............'] },
+  bot: { pal: { m: '#4f7cf0', d: '#3a5fc4', w: '#ffffff', e: '#1d2a55', a: '#9db6ff' }, g: [
+    '.....a......', '.....m......', '..mmmmmmmm..', '.mmwwmmwwmm.', '.mmwemmwemm.', '.mmmmmmmmmm.',
+    '..mmeeeemm..', '..mmmmmmmm..', '...dddddd...', '..dd....dd..', '............', '............'] },
+};
+function sprite(name, size) {
+  const a = S[name]; let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; }));
+  return `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12">${r}</svg>`;
+}
+// pixel glyphs on a 12 grid, tinted with the text color
+function glyph(cells, size) {
+  return `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12" fill="currentColor">${cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1" height="1"/>`).join('')}</svg>`;
+}
+const closeCells = [];
+for (let i = 2; i <= 9; i++) { closeCells.push([i, i], [11 - i, i]); }
+const flagCells = [[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,9],[2,10]];
+for (let y = 1; y <= 5; y++) for (let x = 3; x <= 9; x++) flagCells.push([x, y]);
+
+const item = (av, text, cls = '') => `<div class="it ${cls}">${sprite(av, 12)}<span>${text}</span></div>`;
+const days = [
+  ['6', ''], ['7', ''], ['8', item('crab', 'M3 设置页', 'done') + item('you', '体检预约', 'done')], ['9', item('you', '回复房东', 'late')],
+  ['13', item('crab', 'M4 GitHub', 'done') + item('you', '交房租', 'done')], ['14', item('crab', '界面重做', 'done')], ['15', item('you', '复诊牙医') + item('crab', 'M5 日历')], ['16', item('you', 'Go 泛型笔记')],
+  ['20', item('you', '写周报')], ['21', ''], ['22', ''], ['23', ''],
+  ['27', item('you', '季度总结')], ['28', `<div class="chip">${glyph(flagCells, 12)}v0.2 原生</div>`], ['29', ''], ['30', ''],
+];
+function calendar() {
+  const cells = days.map(([n, inner]) => `<div class="cell"><div class="num ${n === '14' ? 'today' : ''}">${n}</div>${inner}</div>`).join('');
+  return `<div class="wk"><span>周二</span><span>周三</span><span>周四</span><span>周五</span></div><div class="cal">${cells}</div>`;
+}
+function cardBody() {
+  const rows = [['you', '复诊牙医', '下午 2 点'], ['crab', 'M5 日历和头像'], ['bot', '解析器边界情况'], ['you', '订火车票'], ['you', '给 Sam 回电话']]
+    .map(([av, text, t]) => `<div class="row">${sprite(av, 18)}${t ? `<span class="t">${t}</span>` : ''}<span>${text}</span></div>`).join('');
+  return `<div class="body"><div class="head"><b>10 月 15 日 星期四</b><i>5 项</i><span class="close">${glyph(closeCells, 12)}</span></div><div class="list">${rows}</div><div class="well WELL">添加到这天…</div></div>`;
+}
+// the card's top left sits on the cell of the 15th: column 3, row 2, under the weekday names
+const at = 'left:321px; top:149px;';
+function card(kind) {
+  if (kind === 'now') return `<div class="card now" style="${at}">${cardBody().replace('WELL', '')}</div>`;
+  const ink = kind === 'ink' ? ' ink' : '';
+  return `<div class="card px${ink}" style="${at}"><div class="shadow step2"></div><div class="edge step2"></div><div class="inner step1">${cardBody().replace('WELL', 'step1')}</div></div>`;
+}
+
+const panels = [
+  { id: 'A', title: 'A · 现在：圆角 + 柔和阴影', card: 'now', note: '对照组。圆角 12、1 点浅描边、模糊的大阴影：和系统的弹出面板一个路子，跟像素图标和头像放在一起有点两种画风。' },
+  { id: 'B', title: 'B · 克制的像素卡片', tag: '我倾向', card: 'px', note: '只改日卡：角做成两级台阶，2 点实色灰边，影子换成向右下偏 4 点、不模糊的硬影。颜色还是界面原来的灰，安静，但一眼能看出是像素的“块”，和头像、图标是同一套语言。输入框也是台阶角。' },
+  { id: 'C', title: 'C · 游戏感更强的像素卡片', card: 'ink', note: '在 B 的基础上把边换成深色墨线，硬影染成主题紫，标题下加一条 2 点分隔。更像游戏里的对话框，存在感强；但整个界面别处都很安静，它会显得跳。' },
+  { id: 'D', title: 'D · 整个日历一起像素化', card: 'px', pxcal: true, note: '日卡同 B，日历也跟着改：外框和格线变成 2 点实色，没有圆角；“今天”的紫色标记和里程碑标签变成直角块。风格最统一，但改动面大，日历会比别的页面“硬”。' },
+  { id: 'B-dark', title: 'B · 深色模式', card: 'px', dark: true, note: '深色下边是深灰，硬影几乎是黑的：卡片像是浮起来一格。' },
+  { id: 'D-dark', title: 'D · 深色模式', card: 'px', dark: true, pxcal: true, note: '深色下整个日历的 2 点格线会比 A 的细线明显得多。' },
+];
+document.getElementById('panels').innerHTML = panels.map(p => `
+  <div>
+    <div class="caption">${p.title}${p.tag ? `<span class="tag">${p.tag}</span>` : ''}<button data-play="${p.id}">播放</button><button data-slow="${p.id}">慢放 10 倍</button></div>
+    <div class="frame ${p.dark ? 'dark' : ''} ${p.pxcal ? 'pxcal' : ''}" id="f-${p.id}">${calendar()}${card(p.card)}</div>
+    <p class="note">${p.note}</p>
+  </div>`).join('');
+
+function play(id, slow) {
+  const f = document.getElementById('f-' + id), c = f.querySelector('.card');
+  f.classList.toggle('slow', !!slow);
+  c.classList.remove('play'); void c.offsetWidth; c.classList.add('play');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) { play(b.dataset.play || b.dataset.slow, !!b.dataset.slow); return; }
+  const f = e.target.closest('.frame');
+  if (f && e.target.closest('.cell')) play(f.id.slice(2));
+});
+</script>
+</body>
+</html>
