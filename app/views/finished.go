@@ -86,7 +86,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 		} else if o.quiet {
 			theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow) // as in the Working rows above
 		} else {
-			m.authorSlot(c, task) // in the glyph's column, as under a group header
+			m.authorSlot(c, task) // under the group's name, as the list's rows
 		}
 		body(c, func() {
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {

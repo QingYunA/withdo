@@ -158,9 +158,10 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   the task's latest report (`agent` when it has none): Claude Code, Codex, Cursor and Gemini CLI have
   their own, any other agent a robot tinted by its name. The assistant is `theme.Assistant`, a
   purple ghost with a crown.
-- **List rows** (a project, the Inbox, the Done group): an 18 pt avatar in the column of the group
-  glyph, vertically centered on the row; the title stays on the group's title (the avatar's slot
-  gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
+- **List rows** (a project, the Inbox, the Done group): an 18 pt avatar under the group's name (the
+  rows sit 26 pt in from the header, so the header reads as their parent), vertically centered on
+  the row; the title is as far from the avatar as the header's name from its glyph (the avatar's
+  slot gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
   status glyph (Mine's Today and Later, Done today, Completed, search) keep the glyph: it is the way to complete or reopen.
 - **Board cards**: a 12 pt avatar first in the meta line, before the blocked mark, the badge, the
   branch and the age. The line is always drawn.
@@ -477,8 +478,9 @@ view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 na
 at once. A project with no milestone has no filter: `New milestone…` is in its sidebar menu.
 
 **List view.** Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
-name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
-per row; the group says the status). Row: the title (one line, `body.strong`); for an agent's task a
+name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar under the
+header's name (no glyph per row; the group says the status); `Show all N →` under Done lines up
+with the rows' titles. Row: the title (one line, `body.strong`); for an agent's task a
 quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
 agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
