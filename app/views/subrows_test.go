@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -35,14 +36,17 @@ func TestSidebarSplitsMineIntoWorkLifeAndUnsorted(t *testing.T) {
 	}
 }
 
-func TestSubRowLabelsLineUpWithTheirParents(t *testing.T) {
+func TestSubRowsAreIndentedOneStepUnderTheirParents(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	mine, _ := tt.Find("Mine")
 	work, _ := tt.Find("Work")
 	agents, _ := tt.Find("Agents")
 	claude, _ := tt.Find("Claude Code")
-	if work.X != mine.X || claude.X != agents.X {
-		t.Errorf("labels at Mine %v, Work %v, Agents %v, Claude Code %v: a sub-row's label starts where its parent's does", mine.X, work.X, agents.X, claude.X)
+	// The sub-row's 12 pt slot starts where the parent's label does, and its label follows the slot.
+	in := theme.AvatarSmall + sidebarRowGap
+	if work.X != mine.X+in || claude.X != agents.X+in {
+		t.Errorf("labels at Mine %v, Work %v, Agents %v, Claude Code %v: a sub-row's label starts %v pt in from its parent's",
+			mine.X, work.X, agents.X, claude.X, in)
 	}
 }
 

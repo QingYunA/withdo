@@ -9,6 +9,9 @@ import (
 // sidebarRowPad is the padding inside a sidebar row, left and right.
 const sidebarRowPad float32 = 10
 
+// sidebarRowGap is the room between the icon and the label of a sidebar row.
+const sidebarRowGap float32 = 10
+
 // sidebar is the source list over the window's material: Mine and Agents, Inbox, Calendar and
 // Completed, then the projects, then Settings at the bottom.
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
@@ -199,7 +202,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 
 // sidebarRow is a 32 pt row inset 10 pt, highlighted by selection or hover.
 func sidebarRow(c *ui.Context, t *theme.Tokens, key any, selected bool) ui.Element {
-	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, sidebarRowPad).Gap(10).
+	row := ui.Row(c.Key(key)).Height(theme.SidebarRow).Shrink(0).Margin(0, 10).Padding(0, sidebarRowPad).Gap(sidebarRowGap).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case selected:

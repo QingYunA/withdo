@@ -29,8 +29,8 @@ work, and a task nobody classified is Unsorted (no keyword guessing).
   rows. Under Agents: one row per agent with a task at work or finished today, by
   `agentName(taskAgent(t))` (so `claude-code` and `Claude Code` are one row), in the order of the
   Agents screen; an agent with no name is `Agent`.
-- A sub-row is a sidebar row whose label lines up with its parent's label (no icon of its own, the
-  indent is the 18 pt icon plus the gap); an agent's sub-row has its 12 pt avatar in that indent.
+- A sub-row is a sidebar row one step in from its parent: a 12 pt slot flush with the parent's label,
+  empty for a category and holding the agent's avatar for an agent, then the label.
   The count is the parent's count for that slice: rows asking for attention for Mine's, tasks at
   work for an agent's. The red unseen badge stays on Mine only.
 - `nav` gets a sub key (category or agent name). A sub-row opens its parent's screen showing only

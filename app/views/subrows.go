@@ -143,13 +143,17 @@ func hasAgentRow(rows []data.AgentTally, name string) bool {
 	return false
 }
 
-// subRow is a sidebar row under Mine or Agents. It has no icon of its own: the room of its parent's
-// 18 pt icon is left empty, or holds the agent's 12 pt avatar, so the label lines up with the parent's.
+// subRowIndent is how far a sub-row's content sits in from its parent's: one 18 pt icon and the row's
+// gap, so its slot starts where the parent's label does.
+const subRowIndent = theme.IconRow + sidebarRowGap
+
+// subRow is a sidebar row under Mine or Agents, one step in from its parent. Its 12 pt slot, flush
+// with the parent's label, is empty or holds the agent's avatar, so the sub-rows' labels line up.
 func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, avatar *theme.Who) {
 	selected := m.nav == to && !m.searching()
-	row := sidebarRow(c, t, key, selected)
+	row := sidebarRow(c, t, key, selected).Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent)
 	row.Children(func() {
-		ui.Row(c.Key("lead")).Width(theme.IconRow).Height(theme.IconRow).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		ui.Row(c.Key("lead")).Width(theme.AvatarSmall).Height(theme.AvatarSmall).Shrink(0).Children(func() {
 			if avatar != nil {
 				theme.AvatarIcon(c.Key("avatar"), *avatar, theme.AvatarSmall)
 			}

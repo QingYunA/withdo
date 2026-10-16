@@ -179,8 +179,9 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   Receipts keep their green check.
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
-  a sub-row under them has no icon of its own: the 18 pt slot is empty (Work, Life, Unsorted) or holds
-  the agent's 12 pt avatar (`theme.AvatarSmall`), so its label lines up with the parent's;
+  a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, empty (Work,
+  Life, Unsorted) or holding the agent's avatar (`theme.AvatarSmall`), then its label, so the
+  sub-rows' labels line up with each other;
   Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
   does not choose it).
@@ -222,7 +223,8 @@ task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tal
 only while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
 or finished today, named as the Agents screen names it (`claude-code` and `Claude Code` are one
 `Claude Code` row), in the order of that screen; an agent with no name is `Agent`. A sub-row is a
-normal 32 pt sidebar row (selection, hover) with its label in line with its parent's. Its count is
+normal 32 pt sidebar row (selection, hover) whose content is indented 28 pt (an icon and the gap),
+so it reads as part of its parent. Its count is
 the parent's count for that slice, in `text.tertiary`: the rows asking for attention (From your
 agents plus Today) for a slice of Mine, the tasks at work for an agent. The red unseen badge stays
 on `Mine` alone. A click opens the parent's screen showing only that slice: the same sections,
