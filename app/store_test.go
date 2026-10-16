@@ -81,6 +81,9 @@ func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *te
 	if !ok || file.Path != filepath.Join(dir, seenFile) {
 		t.Fatalf("seen store %#v, want a file named %s in the data folder", be.seen, seenFile)
 	}
+	if put, ok := be.dismissed.(data.FileSeen); !ok || put.Path != filepath.Join(dir, dismissedFile) {
+		t.Fatalf("dismissed store %#v, want a file named %s in the data folder", be.dismissed, dismissedFile)
+	}
 	if err := file.SaveSeen(data.Seen{4: time.Now()}); err != nil {
 		t.Fatal(err)
 	}
@@ -93,6 +96,9 @@ func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *te
 	}
 	if _, ok := fake.seen.(*data.MemorySeen); !ok {
 		t.Errorf("the demo keeps seen in %T, want memory", fake.seen)
+	}
+	if _, ok := fake.dismissed.(*data.MemorySeen); !ok {
+		t.Errorf("the demo keeps dismissed in %T, want memory", fake.dismissed)
 	}
 }
 

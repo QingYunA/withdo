@@ -33,7 +33,7 @@ func TestChineseMineScreen(t *testing.T) {
 		"Agent 交过来的", "今天", "之后",
 		"Claude Code 卡住了：“Needs a decision on the activation policy”",
 		"下午2:30", "PR #12 等你审查",
-		"打开 PR", "回答",
+		"打开 PR", "回答", "收下",
 		"3天前", "25分钟前",
 		"明天", "周五",
 		"收件箱", "项目", "设置",

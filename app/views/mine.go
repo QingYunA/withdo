@@ -88,6 +88,7 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item) {
 	_, opacity, _ := m.app.completionPhase(c, it.ID)
 	row := m.rowShell(c, t, it.ID, needRow, opacity)
 	actions := m.actionsFor(it)
+	showNotNow := row.Hovered() || m.sel == it.ID
 	// Two buttons beside a title in a narrow row leave it no room: they go under the summary, and
 	// in a very narrow one so does a single button.
 	stacked := (len(actions) > 1 && m.width < stackActionsBelow) || m.width < stackAllActionsBelow
@@ -114,11 +115,36 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item) {
 			if !stacked {
 				buttons()
 			}
+			if m.notNowButton(c, t, it, showNotNow).Clicked() {
+				m.app.dismiss(it)
+			}
 		})
 	})
 	if row.Clicked() {
 		m.openRow(it.ID)
 	}
+}
+
+// notNowSlot is the side of the square slot of the x on a handed-over row.
+const notNowSlot float32 = 20
+
+// notNowButton is the small x at the right end of a handed-over row that puts the row aside until
+// the agent reports again. The slot is always there, so the row does not jump when the x shows.
+func (m *Main) notNowButton(c *ui.Context, t *theme.Tokens, it data.Item, shown bool) ui.Element {
+	btn := ui.ButtonBase(c.Key("not-now-"+itoa(it.ID))).Size(notNowSlot, notNowSlot).Shrink(0).Center().
+		Radius(theme.RadiusControl).Label(m.say.A11yNotNow(it.Title)).Tooltip(m.say.ActionNotNow()).Cursor(ui.CursorPointer)
+	color := t.TextTertiary
+	if btn.Hovered() {
+		btn.Background(t.BgSelected)
+		color = t.TextSecondary
+	}
+	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
+	btn.Children(func() {
+		if shown {
+			ui.Icon(c, theme.IconClose).Size(theme.IconSmall, theme.IconSmall).TextColor(color)
+		}
+	})
+	return btn
 }
 
 // handedSummary is the second line of a handed-over row: why it is here, and the project it is in.
@@ -150,6 +176,7 @@ func (m *Main) actionsFor(it data.Item) []rowAction {
 	open := func(text string) []rowAction {
 		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
 	}
+	accept := rowAction{m.say.ActionAccept(), m.say.A11yAcceptTask(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}
 	switch {
 	case it.Kind == data.NeedReminder:
 		return []rowAction{{m.say.ActionDone(), m.say.A11yMarkDone(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}}
@@ -158,12 +185,14 @@ func (m *Main) actionsFor(it data.Item) []rowAction {
 			{m.say.ActionCancelTask(), m.say.A11yCancelTask(it.Title), func() { m.app.SetStatus(it.Task, data.Cancelled) }},
 			{m.say.ActionKeep(), m.say.A11yKeepTask(it.Title), func() { m.app.KeepClosedPR(it.ID) }},
 		}
-	case it.Kind == data.NeedPRFailing || it.Kind == data.NeedPRChanges, it.Kind == data.NeedReview && it.PRURL != "":
+	case it.Kind == data.NeedPRFailing || it.Kind == data.NeedPRChanges:
 		return []rowAction{openPR}
+	case it.Kind == data.NeedReview && it.PRURL != "":
+		return []rowAction{openPR, accept}
 	case it.Kind == data.NeedBlocked:
 		return open(m.say.ActionAnswer())
 	case it.Kind == data.NeedReview:
-		return open(m.say.ActionReview())
+		return append(open(m.say.ActionReview()), accept)
 	}
 	return open(m.say.ActionOpen())
 }

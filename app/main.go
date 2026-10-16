@@ -36,7 +36,7 @@ func main() {
 		Version:        version,
 		AgentSetup:     agentsetup.New(home),
 	})
-	app.Assistant, app.Models, app.GitHub, app.Seen = be.assistant, be.models, be.github, be.seen
+	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
 

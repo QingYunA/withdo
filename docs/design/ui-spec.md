@@ -247,9 +247,10 @@ a row anywhere (see **Subtasks**).
    - an agent task that is blocked: `Claude Code is stuck: "<next_step or summary>"` (`卡住了`),
      button **Answer** / `回答` (opens the inspector); with nothing to quote, `Claude Code is stuck
      and waits for you`;
-   - an agent task in review: with a PR `PR #12 is ready for your review`, button **Open PR**;
-     without one `Claude Code finished and is waiting for you` (`做完了，等你试用`), button
-     **Review** / `去看看`;
+   - an agent task in review: with a PR `PR #12 is ready for your review`, buttons **Open PR** and
+     **Accept** / `收下`; without one `Claude Code finished and is waiting for you` (`做完了，等你试用`),
+     buttons **Review** / `去看看` and **Accept**. Accept sets the task to done (the row fades like
+     any completion);
    - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open**;
    - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
    - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
@@ -261,7 +262,14 @@ a row anywhere (see **Subtasks**).
    pull requests, failing checks, requested changes, review, stale; the longest wait first within a
    kind. A task shows once, under the first reason it has. Pull request rows age from GitHub's own
    report, not the agent's last word; GitHub's reports (agent `github`) show in Activity but never
-   count as the agent speaking. A row with two buttons puts them under its summary below 560 pt of
+   count as the agent speaking. **Not now.** A row can be put aside: while it is hovered or
+   keyboard-selected, a 12 pt `close` icon (`text.tertiary`, `text.secondary` on hover) shows at the
+   far right, after the buttons, in a 20 pt square slot that is always reserved so the row does
+   not shift. Tooltip `Not now` / `先放一放`, a11y `Not now: <title>`. A click hides the row without
+   opening it or changing the task (it stays in its project and on Agents); the row's `Since` is
+   kept in `dismissed.json` next to the database, so it comes back when the agent reports again
+   or GitHub files a new event, and entries of tasks that are gone are dropped. A hidden row is
+   out of the sidebar count, the badge and the hop. A row with two buttons puts them under its summary below 560 pt of
    content, and every row does below 420 pt. Screens `mine-pull-requests-*`.
 2. **Today** / `今天` — the user's tasks (a user task that is blocked or doing, too): due or
    reminded today and overdue first by time, then what is in progress. Row: the status glyph (it

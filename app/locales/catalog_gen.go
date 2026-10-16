@@ -34,6 +34,22 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
+// A11yAcceptTask says "Accept: {title}"
+// in the language the app shows.
+//
+// Accessibility label of the Accept button on the row of a task an agent
+// finished and handed over for review.
+func A11yAcceptTask(title string) string { return In(i18n.Locale()).A11yAcceptTask(title) }
+
+// A11yAcceptTask says "Accept: {title}"
+// in the language of msgs.
+//
+// Accessibility label of the Accept button on the row of a task an agent
+// finished and handed over for review.
+func (msgs Messages) A11yAcceptTask(title string) string {
+	return Catalog.Format(msgs.locale, "a11yAcceptTask", map[string]any{"title": title})
+}
+
 // A11yCancelTask says "Cancel task: {title}"
 // in the language the app shows.
 //
@@ -168,6 +184,22 @@ func (msgs Messages) A11yMilestone(name string) string {
 	return Catalog.Format(msgs.locale, "a11yMilestone", map[string]any{"name": name})
 }
 
+// A11yNotNow says "Not now: {title}"
+// in the language the app shows.
+//
+// Accessibility label of the small x on a From your agents row that puts
+// the row aside until the agent reports again.
+func A11yNotNow(title string) string { return In(i18n.Locale()).A11yNotNow(title) }
+
+// A11yNotNow says "Not now: {title}"
+// in the language of msgs.
+//
+// Accessibility label of the small x on a From your agents row that puts
+// the row aside until the agent reports again.
+func (msgs Messages) A11yNotNow(title string) string {
+	return Catalog.Format(msgs.locale, "a11yNotNow", map[string]any{"title": title})
+}
+
 // A11yOpenPR says "Open pull request #{number}"
 // in the language the app shows.
 //
@@ -266,6 +298,22 @@ func (msgs Messages) A11yViewList() string {
 	return Catalog.Format(msgs.locale, "a11yViewList", nil)
 }
 
+// ActionAccept says "Accept"
+// in the language the app shows.
+//
+// Button on the row of a task an agent finished and handed over for review:
+// accepts the work and sets the task to done.
+func ActionAccept() string { return In(i18n.Locale()).ActionAccept() }
+
+// ActionAccept says "Accept"
+// in the language of msgs.
+//
+// Button on the row of a task an agent finished and handed over for review:
+// accepts the work and sets the task to done.
+func (msgs Messages) ActionAccept() string {
+	return Catalog.Format(msgs.locale, "actionAccept", nil)
+}
+
 // ActionCancelTask says "Cancel task"
 // in the language the app shows.
 //
@@ -310,6 +358,22 @@ func ActionKeep() string { return In(i18n.Locale()).ActionKeep() }
 // without merging: dismisses the row and keeps the task as it is.
 func (msgs Messages) ActionKeep() string {
 	return Catalog.Format(msgs.locale, "actionKeep", nil)
+}
+
+// ActionNotNow says "Not now"
+// in the language the app shows.
+//
+// Tooltip of the small x on a From your agents row: puts the row aside
+// until the agent reports again. The task itself is not changed.
+func ActionNotNow() string { return In(i18n.Locale()).ActionNotNow() }
+
+// ActionNotNow says "Not now"
+// in the language of msgs.
+//
+// Tooltip of the small x on a From your agents row: puts the row aside
+// until the agent reports again. The task itself is not changed.
+func (msgs Messages) ActionNotNow() string {
+	return Catalog.Format(msgs.locale, "actionNotNow", nil)
 }
 
 // ActionOpen says "Open"

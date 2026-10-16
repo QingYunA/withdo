@@ -1,5 +1,15 @@
 {
   "@@locale": "en",
+  "a11yAcceptTask": "Accept: {title}",
+  "@a11yAcceptTask": {
+    "description": "Accessibility label of the Accept button on the row of a task an agent finished and handed over for review.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yCancelTask": "Cancel task: {title}",
   "@a11yCancelTask": {
     "description": "Accessibility label of the Cancel task button on the Needs you row of a closed pull request.",
@@ -88,6 +98,16 @@
       }
     }
   },
+  "a11yNotNow": "Not now: {title}",
+  "@a11yNotNow": {
+    "description": "Accessibility label of the small x on a From your agents row that puts the row aside until the agent reports again.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yOpenPR": "Open pull request #{number}",
   "@a11yOpenPR": {
     "description": "Accessibility label of the Open PR button.",
@@ -146,6 +166,10 @@
   "@a11yViewList": {
     "description": "Accessibility label of the List segment."
   },
+  "actionAccept": "Accept",
+  "@actionAccept": {
+    "description": "Button on the row of a task an agent finished and handed over for review: accepts the work and sets the task to done."
+  },
   "actionCancelTask": "Cancel task",
   "@actionCancelTask": {
     "description": "Button on the Needs you row of a task whose pull request was closed without merging: sets the task to cancelled."
@@ -157,6 +181,10 @@
   "actionKeep": "Keep",
   "@actionKeep": {
     "description": "Button on the Needs you row of a task whose pull request was closed without merging: dismisses the row and keeps the task as it is."
+  },
+  "actionNotNow": "Not now",
+  "@actionNotNow": {
+    "description": "Tooltip of the small x on a From your agents row: puts the row aside until the agent reports again. The task itself is not changed."
   },
   "actionOpen": "Open",
   "@actionOpen": {
