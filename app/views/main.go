@@ -48,6 +48,8 @@ type Main struct {
 	mine   data.Mine         // what the Mine screen shows this frame
 	agents data.AgentsScreen // what the Agents screen shows this frame
 	hop    hopper            // the hop to the Mine row, and the badge there
+	cols   columnsState      // a project's two columns, and where they were drawn
+	ho     handOffState      // handing a task to an agent, and its motion
 	openID int               // task open in the inspector, 0 for none
 	sel    int               // task the keyboard highlights, 0 for none
 	moved  bool
@@ -134,6 +136,7 @@ func (m *Main) View(c *ui.Context) {
 	m.width = m.contentWidth(c)
 	m.mine, m.agents = m.app.buildMine(), m.app.buildAgents()
 	m.hopTick(c)
+	m.handOffTick(c)
 	ids := m.rowIDs()
 	m.keys(c, ids)
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
@@ -147,6 +150,7 @@ func (m *Main) View(c *ui.Context) {
 	m.confirmSheet(c, t)
 	m.taskMenuView(c, t)
 	m.hopOverlay(c)
+	m.handOffOverlay(c, t)
 }
 
 // content is the screen the sidebar chose.
@@ -167,6 +171,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
 		case m.boardActive():
 			m.boardScreen(c, t)
+		case m.columnsActive():
+			m.pageIn(c, t, theme.BoardMax+2*m.sidePad(c), func() { m.listScreen(c, t) })
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}

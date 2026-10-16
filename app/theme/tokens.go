@@ -16,6 +16,7 @@ type Tokens struct {
 
 	Bg            ui.Color // window content
 	BgSubtle      ui.Color // board wells, input wells
+	BgTray        ui.Color // the Agents column of a project: half as dark as BgSubtle
 	BgHover       ui.Color // row hover
 	BgSelected    ui.Color // selected row, keyboard highlight
 	Border        ui.Color // hairlines
@@ -44,6 +45,7 @@ func (t *Tokens) Blocked() ui.Color { return t.Status(data.Blocked) }
 var light = &Tokens{
 	Bg:            ui.Hex("#FFFFFF"),
 	BgSubtle:      ui.Hex("#F5F5F7"),
+	BgTray:        ui.Hex("#F8F8FA"),
 	BgHover:       ui.Hex("#0000000A"),
 	Border:        ui.Hex("#0000001A"),
 	Text:          ui.Hex("#1D1D1F"),
@@ -68,6 +70,7 @@ var dark = &Tokens{
 	Dark:          true,
 	Bg:            ui.Hex("#1C1C1E"),
 	BgSubtle:      ui.Hex("#232326"),
+	BgTray:        ui.Hex("#202023"),
 	BgHover:       ui.Hex("#FFFFFF0F"),
 	Border:        ui.Hex("#FFFFFF1A"),
 	Text:          ui.Hex("#F5F5F7"),

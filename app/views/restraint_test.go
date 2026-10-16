@@ -42,10 +42,10 @@ func TestRowsShowAPriorityBadgeOnlyForP0AndP1(t *testing.T) {
 	hasNot(t, tt, "Priority: P1  High") // no bars glyph label either
 }
 
-func TestAnAgentRowTellsWhoWhereAndWhat(t *testing.T) {
+func TestAnAgentRowTellsWhatItSaidAndHasNoBranch(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	has(t, tt, "Claude Code · feat/native-ui · #12 · Board, lists and inspector are in; waiting for your review",
-		"Claude Code · fix/tray · Needs a decision on the activation policy")
+	has(t, tt, "#12 · Board, lists and inspector are in; waiting for your review", "Needs a decision on the activation policy")
+	hasNot(t, tt, "feat/native-ui", "fix/tray", "Claude Code ·")
 }
 
 func TestInspectorTopLineHasTheProjectItsRepositoryAndTheNumber(t *testing.T) {

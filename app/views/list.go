@@ -59,10 +59,13 @@ func (m *Main) selectionTasks() []data.Task {
 	return m.app.withCompleting(out, in)
 }
 
-func (m *Main) listModel() listModel {
+func (m *Main) listModel() listModel { return buildList(m.selectionTasks()) }
+
+// buildList groups tasks by status.
+func buildList(tasks []data.Task) listModel {
 	var lm listModel
 	by := map[data.Status][]data.Task{}
-	for _, t := range m.selectionTasks() {
+	for _, t := range tasks {
 		lm.total++
 		by[t.Status] = append(by[t.Status], t)
 	}
@@ -107,8 +110,12 @@ func (m *Main) shownDone(lm listModel) []data.Task {
 	return lm.done[:theme.DoneListRows]
 }
 
-// listIDs is the task ids of the rows the list draws, for the arrow keys.
+// listIDs is the task ids of the rows the list draws, for the arrow keys: a project's Mine column,
+// then its Agents column.
 func (m *Main) listIDs() []int {
+	if m.columnsActive() {
+		return m.columnIDs()
+	}
 	lm := m.listModel()
 	var ids []int
 	add := func(ts []data.Task) {
@@ -126,8 +133,13 @@ func (m *Main) listIDs() []int {
 	return ids
 }
 
-// listScreen is a project or the Inbox as a list grouped by status.
+// listScreen is a project or the Inbox as a list grouped by status. A project with tasks is two
+// columns instead (columnsScreen).
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
+	if m.columnsActive() {
+		m.columnsScreen(c, t)
+		return
+	}
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
 	m.pageComposer(c, t)
@@ -149,14 +161,24 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 
 // group is a header, glyph and name and count, and its rows indented under the name.
 func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
-	ui.Row(c.Key("group-"+string(s))).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-		theme.StatusGlyph(c, t, s, 0)
-		theme.Text(c, theme.BodyStrong, t.Text, statusLabel(m.say, s))
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(tasks)))
-	})
+	m.groupOf(c, t, s, tasks, func(task data.Task) { m.listRow(c, t, task) })
+}
+
+// groupOf is group with its own way to draw a row.
+func (m *Main) groupOf(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task, row func(data.Task)) {
+	groupHeader(c, t, "group-"+string(s), len(tasks), statusLabel(m.say, s), func() { theme.StatusGlyph(c, t, s, 0) })
 	for _, task := range tasks {
-		m.listRow(c, t, task)
+		row(task)
 	}
+}
+
+// groupHeader is a glyph, a name and a count.
+func groupHeader(c *ui.Context, t *theme.Tokens, key string, n int, name string, glyph func()) {
+	ui.Row(c.Key(key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		glyph()
+		theme.Text(c, theme.BodyStrong, t.Text, name)
+		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
+	})
 }
 
 // listRow is one task: title, branch and pull request, a summary line for agent work, and on the
@@ -251,7 +273,9 @@ func (m *Main) doneAndBacklog(c *ui.Context, t *theme.Tokens, lm listModel) {
 	if open {
 		m.group(c, t, data.Backlog, lm.backlog)
 	}
-	m.foldLine(c, t, lm, open, 16)
+	if m.foldLine(c, t, len(lm.backlog), open, 16) {
+		m.expanded[m.nav] = !open
+	}
 }
 
 func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
@@ -263,9 +287,9 @@ func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
 	}
 }
 
-// foldLine is the last line of a list, which folds Backlog: "Backlog 2 — show".
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool, above float32) {
-	count := m.say.FoldCount(statusLabel(m.say, data.Backlog), len(lm.backlog))
+// foldLine is the last line of a list, which folds Backlog: "Backlog 2 — show". It reports a click.
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, n int, open bool, above float32) bool {
+	count := m.say.FoldCount(statusLabel(m.say, data.Backlog), n)
 	label, verb := m.say.FoldShow(count), m.say.FoldShowShort()
 	if open {
 		label, verb = m.say.FoldHide(count), m.say.FoldHideShort()
@@ -280,9 +304,7 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, lm listModel, open bool,
 		}
 		theme.Text(c, theme.Body, verbColor, verb)
 	})
-	if line.Clicked() {
-		m.expanded[m.nav] = !open
-	}
+	return line.Clicked()
 }
 
 // emptyList is a project or the Inbox with no task at all. It says what will appear and how to

@@ -79,7 +79,7 @@ func TestChineseProjectList(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.SetSize(1100, 1600) // room for the Done group
 	tt.Frame()
-	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成", "显示全部 5 项 →", "待规划 2", "— 显示", "停滞3天",
+	has(t, tt, "已阻塞", "待审查", "进行中", "待办", "已完成", "我的", "待规划 2", "— 显示", "停滞3天",
 		"添加任务，或者问我任何事")
 	if err := tt.Click("显示待规划 2"); err != nil {
 		t.Fatal(err)

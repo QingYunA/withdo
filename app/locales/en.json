@@ -2021,5 +2021,111 @@
   "agentsEmptyBody": "When an agent reports its progress, it shows up here.",
   "@agentsEmptyBody": {
     "description": "Quiet line under the title of the empty Agents screen."
+  },
+  "listMineEmpty": "Nothing for you here — write one above",
+  "@listMineEmpty": {
+    "description": "Quiet line in the Mine column of a project that has tasks but none of yours."
+  },
+  "listAgentsEmpty": "No agent has reported in this project yet",
+  "@listAgentsEmpty": {
+    "description": "Quiet line in the Agents column of a project where no agent has reported."
+  },
+  "listInstallMCP": "Install MCP →",
+  "@listInstallMCP": {
+    "description": "Link after the empty Agents column's line; opens Settings > Agents."
+  },
+  "listWaiting": "Waiting for an agent",
+  "@listWaiting": {
+    "description": "Group in the Agents column of a project: tasks the user handed to an agent that has not reported on them yet."
+  },
+  "listHandedTo": "Handed to {agent}",
+  "@listHandedTo": {
+    "description": "Second line of a row waiting for an agent, when it is not known how it was handed over.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "listHandedToOpened": "Handed to {agent} · opened in Terminal",
+  "@listHandedToOpened": {
+    "description": "Second line of a row waiting for an agent that was started in a Terminal window.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "listHandedToCopied": "Handed to {agent} · prompt copied",
+  "@listHandedToCopied": {
+    "description": "Second line of a row waiting for an agent whose prompt was copied to the clipboard.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "listDropToHand": "Drop to hand to {agent}",
+  "@listDropToHand": {
+    "description": "First line of the Agents column while a task of the user is dragged over it.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "handOffOpened": "Handed to {agent} — opened in Terminal",
+  "@handOffOpened": {
+    "description": "Toast after a task was handed to an agent that started in Terminal.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "handOffCopied": "Prompt copied — paste it to any agent",
+  "@handOffCopied": {
+    "description": "Toast after a task was handed over but no agent could be started: the prompt is on the clipboard."
+  },
+  "handOffTakenBack": "Yours now",
+  "@handOffTakenBack": {
+    "description": "Toast after an agent's task was dragged back to the Mine column."
+  },
+  "handOffPrompt": "Please do task #{id} in adhd-todo: {title}\nStart by calling report_progress (task_id: {id}, status: \"doing\"), then keep reporting as adhd-todo's instructions say.",
+  "@handOffPrompt": {
+    "description": "The prompt an agent starts with when the user hands it a task that has no notes. It is written for the agent, in the app's language.",
+    "placeholders": {
+      "id": {
+        "type": "int",
+        "example": "44"
+      },
+      "title": {
+        "type": "String",
+        "example": "Port the watcher"
+      }
+    }
+  },
+  "handOffPromptNotes": "Please do task #{id} in adhd-todo: {title}\n{notes}\nStart by calling report_progress (task_id: {id}, status: \"doing\"), then keep reporting as adhd-todo's instructions say.",
+  "@handOffPromptNotes": {
+    "description": "The prompt an agent starts with when the user hands it a task that has notes; notes is the task's notes.",
+    "placeholders": {
+      "id": {
+        "type": "int",
+        "example": "44"
+      },
+      "title": {
+        "type": "String",
+        "example": "Port the watcher"
+      },
+      "notes": {
+        "type": "String",
+        "example": "Cover the Go core."
+      }
+    }
   }
 }

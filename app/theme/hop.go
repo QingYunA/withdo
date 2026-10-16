@@ -38,10 +38,12 @@ func HopAt(elapsed time.Duration, fromX, fromY, toX, toY float32) (f HopFrame, o
 	flight := HopLanding
 	if elapsed < flight {
 		s := float32(elapsed) / float32(flight)
-		// A parabola through the start and the landing whose top is HopPeak above the landing:
-		// y = A s² + B s + fromY, solved so its vertex is at toY - HopPeak.
-		d := float64(fromY - (toY - HopPeak)) // from the start up to the top
-		bq := -2 * (d + math.Sqrt(d*float64(HopPeak)))
+		// A parabola through the start and the landing whose top is HopPeak above the higher of
+		// the two: y = A s² + B s + fromY, solved so its vertex is at that top. Hopping up to a
+		// row the top is HopPeak above the landing; hopping down, above the start.
+		top := min(toY, fromY) - HopPeak
+		d := float64(fromY - top) // from the start up to the top
+		bq := -2 * (d + math.Sqrt(d*float64(toY-top)))
 		aq := float64(toY-fromY) - bq
 		return HopFrame{
 			X: fromX + (toX-fromX)*s,

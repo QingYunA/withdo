@@ -1,6 +1,7 @@
 package views
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -23,7 +24,10 @@ func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "Blocked", "In review") || !above(t, tt, "In review", "Doing") || !above(t, tt, "Doing", "To do") {
+	// Mine's groups, then Agents' (Blocked and In review only exist there).
+	if !above(t, tt, "Doing", "To do") || !above(t, tt, "Blocked", "In review") ||
+		!above(t, tt, "Fix tray race on launch", "Native UI with mygo") || !above(t, tt, "Native UI with mygo", "Port core to Go") ||
+		!above(t, tt, "Port core to Go", "Port the reminder watcher") {
 		t.Error("groups are out of order")
 	}
 	if tt.HasText("Poll gh for PR status") {
@@ -78,7 +82,7 @@ func TestProjectListShowsOnlyWhatExistsInTheFoldLine(t *testing.T) {
 
 func TestProjectListRowsCarryAgentSummaryAndLabels(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	for _, want := range []string{"Needs a decision on the activation policy", "3d stale", "Ported the store and migrations", "Fri", "5h", "fix/tray", "#12"} {
+	for _, want := range []string{"Needs a decision on the activation policy", "3d stale", "Ported the store and migrations", "Fri", "5h", "#12 · Board, lists and inspector are in; waiting for your review"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -124,16 +128,17 @@ func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
 func TestListKeyboardWalksRowsInOrder(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	ids := m.listIDs()
-	if len(ids) != 9 || ids[0] != 3 || ids[1] != 2 { // blocked, review, doing, to do, then the newest three done
-		t.Fatalf("ids %v", ids)
+	// Mine's rows (doing, to do, done), then Agents' (blocked, review, doing, to do, done).
+	if want := []int{6, 5, 13, 14, 3, 2, 1, 10, 20, 11, 12}; !slices.Equal(ids, want) {
+		t.Fatalf("ids %v, want %v", ids, want)
 	}
 	tt.Key(0, ui.KeyDown)
 	tt.Key(0, ui.KeyDown)
-	if m.sel != 2 {
-		t.Fatalf("selected %d, want the review task", m.sel)
+	if m.sel != 5 {
+		t.Fatalf("selected %d, want my to do task", m.sel)
 	}
 	tt.Key(0, ui.KeyEnter)
-	if m.openID != 2 {
+	if m.openID != 5 {
 		t.Errorf("opened %d", m.openID)
 	}
 	tt.Key(0, ui.KeyEscape)
@@ -142,10 +147,13 @@ func TestListKeyboardWalksRowsInOrder(t *testing.T) {
 		t.Errorf("Esc left open %d, selected %d", m.openID, m.sel)
 	}
 	tt.Key(0, ui.KeyDown)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		tt.Key(0, ui.KeyDown)
 	}
-	tt.Key(0, ui.KeySpace) // task 1 is an agent's: nothing happens
+	tt.Key(0, ui.KeySpace) // task 3 is an agent's, the first row of its column: nothing happens
+	if m.sel != 3 {
+		t.Errorf("selected %d, want the first row of the Agents column", m.sel)
+	}
 	if task, _ := app.Task(m.sel); task.Source == data.SourceUser && task.Status == data.Done {
 		t.Error("Space completed the wrong task")
 	}

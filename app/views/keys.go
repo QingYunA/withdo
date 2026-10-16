@@ -49,9 +49,11 @@ func (m *Main) typing(c *ui.Context) bool {
 // undoKeyFree reports whether Cmd+Z is the assistant's: it has a change to undo, and no text field
 // would take the key for its own undo (a composer with nothing typed has none).
 func (m *Main) undoKeyFree(c *ui.Context) bool {
-	if !m.convo.canUndo() {
-		return false
-	}
+	return m.convo.canUndo() && m.textUndoFree(c)
+}
+
+// textUndoFree reports whether no text field would take Cmd+Z for its own undo.
+func (m *Main) textUndoFree(c *ui.Context) bool {
 	empty := func(s surface) bool { return m.cmp[s].ref.Focused(c) && m.cmp[s].buf == "" }
 	return !m.typing(c) || empty(surfacePage) || empty(surfaceInspector)
 }
@@ -80,6 +82,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenCompleted})
 	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
 		m.undoLast()
+	case m.ho.undo != nil && m.textUndoFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
+		m.undoHandOffKey(c)
 	}
 	typing := m.typing(c)
 	m.taskKeys(c, typing)

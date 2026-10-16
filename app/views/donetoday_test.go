@@ -67,13 +67,14 @@ func TestDoneTodayIsAbsentWithNothingFinished(t *testing.T) {
 	}
 }
 
-func TestDoneRowsNameWhoFinishedThemInListsAndCompleted(t *testing.T) {
+func TestDoneRowsNameWhoFinishedThemOnlyInCompleted(t *testing.T) {
 	tt, m, _ := projectTester(t, 1)
-	for _, want := range []string{"Port the MCP server", "Claude Code", "Today", "Draft the UI spec", "You", "Yesterday"} {
+	for _, want := range []string{"Port the MCP server", "Today", "Draft the UI spec", "Yesterday"} {
 		if !tt.HasText(want) {
 			t.Errorf("list: missing %q in %q", want, tt.Texts())
 		}
 	}
+	hasNot(t, tt, "Claude Code") // the columns say who finished a row
 	m.goTo(nav{screen: screenCompleted})
 	tt.Frame()
 	for _, want := range []string{"Claude Code", "You", "1:50 PM"} {

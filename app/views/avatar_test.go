@@ -80,12 +80,12 @@ func TestAgentNamesAreTheProductsNames(t *testing.T) {
 	}
 }
 
-func TestListRowsStartWithTheirAuthorsAvatar(t *testing.T) {
+func TestAgentRowsStartWithTheirAvatarAndMineHaveNone(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.Frame()
-	if !paintedLeftOf(t, tt, 1100, "Write the release notes", 30, youColor) {
-		t.Error("my task has no avatar of mine before its title")
+	if paintedLeftOf(t, tt, 1100, "Write the release notes", 30, youColor) {
+		t.Error("my task has an avatar before its title: its column says whose it is")
 	}
 	if !paintedLeftOf(t, tt, 1100, "Port core to Go", 30, claudeColor) {
 		t.Error("an agent's task has no avatar of Claude Code before its title")

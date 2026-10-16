@@ -188,6 +188,19 @@ var (
 		"............",
 		"............",
 	}}
+	// The parcel of a hand-off: 10 x 10, a brown box with a tape across it.
+	spriteParcel = &Sprite{Palette: pal("k#7A4A1E b#D9A066 t#F3E2C0"), Rows: []string{
+		"..........",
+		".kkkkkkkk.",
+		".kbbttbbk.",
+		".kbbttbbk.",
+		".kkkkkkkk.",
+		".kbbttbbk.",
+		".kbbttbbk.",
+		".kbbttbbk.",
+		".kkkkkkkk.",
+		"..........",
+	}}
 	// The agents without a drawing of their own get the robot in the color of their brand.
 	spriteQwen     = tintedBot("#615CED")
 	spriteKimi     = tintedBot("#1F6FEB")
@@ -348,3 +361,16 @@ func DuoIcon(c *ui.Context, size float32) ui.Element {
 		AvatarIcon(c, Assistant, size)
 	})
 }
+
+// Parcel is the drawing of a task in hand, at ParcelSize points (2 pt a pixel).
+const ParcelSize float32 = 20
+
+// ParcelGlyph is the parcel in the 18 pt slot of a group header: Waiting for an agent.
+func ParcelGlyph(c *ui.Context) ui.Element {
+	return ui.Box(c).Size(GlyphSize, GlyphSize).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+		DrawParcel(p, ui.Rect{X: r.X + (r.W-ParcelSize)/2, Y: r.Y + (r.H-ParcelSize)/2, W: ParcelSize, H: ParcelSize})
+	})
+}
+
+// DrawParcel fills r with the parcel.
+func DrawParcel(p *ui.Painter, r ui.Rect) { DrawSprite(p, r, spriteParcel) }
