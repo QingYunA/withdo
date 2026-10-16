@@ -443,8 +443,17 @@ func (f *Fake) AddReport(r Report) {
 	f.mu.Lock()
 	r.ID = f.newID()
 	f.reports = append(f.reports, r)
+	f.picked(r.TaskID)
 	f.mu.Unlock()
 	f.notify()
+}
+
+// picked mirrors the core: the first report on a handed-off task means its agent took it. The lock
+// is held.
+func (f *Fake) picked(id int) {
+	if t, ok := f.find(id); ok {
+		t.HandedTo, t.HandedAt = "", nil
+	}
 }
 
 // KeepClosedPR implements Store.

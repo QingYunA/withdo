@@ -76,6 +76,7 @@ func (f *Fake) AgentActivity(since time.Time) ([]AgentActivity, error) {
 func (f *Fake) ReportAs(taskID int, agent, summary string, at time.Time) {
 	f.mu.Lock()
 	f.reports = append(f.reports, Report{ID: len(f.reports) + 1, TaskID: taskID, Agent: agent, Summary: summary, CreatedAt: at})
+	f.picked(taskID)
 	f.mu.Unlock()
 	f.notify()
 }

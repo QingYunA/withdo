@@ -101,6 +101,11 @@ type Task struct {
 	PRReview       PRReview
 	PRCheckedAt    *time.Time
 	PRClosedSeenAt *time.Time // the user dismissed the closed pull request
+
+	// HandedTo is the agent the user handed the task to (an agentsetup ID: "claude", "codex"),
+	// until that agent first reports on it; empty otherwise. HandedAt is when.
+	HandedTo string
+	HandedAt *time.Time
 }
 
 // IsSubtask reports whether the task belongs to another task.
@@ -220,6 +225,24 @@ type Store interface {
 	// KeepClosedPR dismisses the Needs you row of a task whose pull request was closed without
 	// merging; the task stays as it is.
 	KeepClosedPR(id int) error
+
+	// HandOff gives a task of the user's to a coding agent. The task becomes the agent's (Source
+	// agent, To do, HandedTo set) and waits there until the agent reports on it. The agent is the
+	// one that last reported in the task's project, else the first one found on this Mac. When its
+	// command and the project's folder are found, it starts in a Terminal window with prompt and
+	// Launched is true; otherwise the view copies prompt for the user to paste.
+	HandOff(id int, prompt string) (HandOffResult, error)
+	// TakeBack makes an agent's task the user's again: Source user, HandedTo cleared. Its status
+	// stays.
+	TakeBack(id int) (Task, error)
+}
+
+// HandOffResult is what HandOff did.
+type HandOffResult struct {
+	Task      Task
+	Agent     string // the agentsetup ID, as in Task.HandedTo
+	AgentName string // as people write it: "Claude Code"
+	Launched  bool   // the agent was started; false: the prompt is for the clipboard
 }
 
 // IntPtr returns a pointer to v.

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v7 草稿 — 项目页：左边我的，右边 Agent</title>
+<style>
+
+  :root {
+    --bg: #ffffff; --sidebar: #f4f4f6; --subtle: #f4f4f6; --hover: rgba(0,0,0,.035);
+    --selected: rgba(91,91,214,.10); --border: rgba(0,0,0,.08);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #a1a1a6;
+    --accent: #5b5bd6; --doing: #3b82f6; --blocked: #e5484d; --review: #e0a800; --done: #30a46c; --stale: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 12px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: var(--text2); max-width: 1100px; margin: -28px 4px 56px; }
+  .window { width: 1100px; height: 680px; background: var(--bg); border-radius: 12px; overflow: hidden; display: flex; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 24px 60px rgba(0,0,0,.16); margin-bottom: 44px; position: relative; }
+  .sidebar { width: 224px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 14px 10px; display: flex; flex-direction: column; flex: none; }
+  .lights { display: flex; gap: 8px; padding: 2px 6px 18px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .search { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: rgba(0,0,0,.045); color: var(--text3); font-size: 14px; margin-bottom: 10px; }
+  .nav { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: 8px; font-size: 14px; white-space: nowrap; }
+  .nav.sel { background: var(--selected); font-weight: 500; }
+  .nav svg.li { width: 16px; height: 16px; color: var(--text2); flex: none; }
+  .nav.sel svg.li { color: var(--accent); }
+  .nav .n { margin-left: auto; color: var(--text3); font-size: 13px; }
+  .nav .fd { width: 16px; height: 16px; flex: none; }
+  .group { display: flex; font: 600 12px/16px -apple-system, "PingFang SC"; color: var(--text3); padding: 18px 10px 6px; }
+  .group .plus { margin-left: auto; font-weight: 400; font-size: 16px; }
+  .foot { margin-top: auto; }
+  .main { flex: 1; min-width: 0; overflow: hidden; display: flex; }
+  .content { padding: 30px 48px 0; max-width: 760px; margin: 0 auto; flex: 1; min-width: 0; }
+  .content.wide { max-width: 980px; }
+  .head { display: flex; align-items: center; height: 34px; gap: 8px; }
+  h1 { font: 700 26px/32px -apple-system, "PingFang SC"; margin: 0; letter-spacing: -.2px; }
+  .views { margin-left: auto; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--subtle); }
+  .views span { width: 30px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--text3); font-size: 13px; }
+  .views span.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .views span.txt { width: auto; padding: 0 10px; }
+  .input { margin: 18px 0 8px; height: 50px; border-radius: 12px; background: var(--subtle); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 14px; }
+  .input .ph { color: var(--text3); font-size: 16px; flex: 1; }
+  .input kbd { font: 12px -apple-system; color: var(--text3); }
+  .gh { display: flex; align-items: center; gap: 9px; margin: 22px 0 2px; font-weight: 600; font-size: 15px; }
+  .gh .c { color: var(--text3); font-weight: 400; font-size: 13px; }
+  .g { width: 18px; height: 18px; flex: none; }
+  .row { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 10px 7px 10px; margin: 0 -10px; border-radius: 9px; }
+  .row.two { align-items: flex-start; }
+  .row.two .av { margin-top: 2px; }
+  .row.sel { background: var(--selected); }
+  .row .body { flex: 1; min-width: 0; }
+  .row .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 13px; line-height: 18px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .r { font-size: 13px; color: var(--text3); white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+  .row.done .t { color: var(--text2); }
+  .p1 { font: 600 11.5px/16px -apple-system; color: var(--text2); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; }
+  .p0 { font: 600 11.5px/16px -apple-system; color: var(--blocked); border: 1px solid rgba(229,72,77,.35); border-radius: 5px; padding: 0 5px; }
+  .live { width: 7px; height: 7px; border-radius: 50%; background: var(--doing); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+  .mono { font: 12.5px/18px "SF Mono", ui-monospace, monospace; color: var(--text2); }
+  .av { flex: none; display: inline-block; image-rendering: pixelated; }
+  .av svg { display: block; }
+
+  /* calendar */
+  .cal { margin-top: 14px; border-top: 1px solid var(--border); }
+  .dow { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 12px; color: var(--text3); padding: 8px 0 6px; }
+  .dow span { padding-left: 8px; }
+  .weeks { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 116px; border-left: 1px solid var(--border); }
+  .day { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 5px 5px 0; overflow: hidden; position: relative; }
+  .weeks .day:nth-child(-n+7) { border-top: 1px solid var(--border); }
+  .day.out .dn { color: var(--text3); }
+  .day.we { background: #fbfbfc; }
+  .dn { font-size: 12.5px; line-height: 20px; height: 20px; color: var(--text2); padding: 0 4px; display: inline-block; border-radius: 10px; }
+  .day.today .dn { background: var(--accent); color: #fff; font-weight: 600; min-width: 20px; text-align: center; padding: 0 6px; }
+  .day.pick { box-shadow: inset 0 0 0 2px rgba(91,91,214,.55); }
+  .chip { display: flex; align-items: center; gap: 5px; font-size: 12px; line-height: 18px; height: 20px; padding: 0 4px; border-radius: 5px; margin-top: 2px; white-space: nowrap; overflow: hidden; }
+  .chip .x { overflow: hidden; text-overflow: ellipsis; }
+  .chip .tm { color: var(--text3); font-variant-numeric: tabular-nums; }
+  .chip.done .x { color: var(--text3); text-decoration: line-through; }
+  .chip.over .x { color: var(--blocked); }
+  .chip.ms { color: var(--accent); background: var(--selected); font-weight: 500; }
+  .chip.hl { background: var(--hover); }
+  .chip.more { color: var(--text3); padding-left: 6px; }
+  .chip svg.li { width: 12px; height: 12px; flex: none; }
+
+  /* inspector */
+  .insp { width: 360px; border-left: 1px solid var(--border); padding: 26px 22px; flex: none; }
+  .insp h2 { font: 600 19px/26px -apple-system, "PingFang SC"; margin: 0 0 4px; }
+  .insp .top { font-size: 12.5px; color: var(--text3); }
+  .prop { display: flex; font-size: 13.5px; line-height: 30px; }
+  .prop .k { width: 84px; color: var(--text2); display: flex; align-items: center; gap: 7px; }
+  .prop .k svg { width: 14px; height: 14px; }
+  .sec { font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--text2); margin: 22px 0 8px; }
+  .ev { display: flex; gap: 10px; padding: 6px 0; }
+  .ev .w { flex: 1; min-width: 0; font-size: 13.5px; line-height: 20px; }
+  .ev .w .m { font-size: 12px; color: var(--text3); }
+  .ev .rail { display: flex; flex-direction: column; align-items: center; }
+  .ev .rail i { width: 1px; flex: 1; background: var(--border); margin-top: 4px; }
+
+  /* avatars sheet */
+  .sheet { display: flex; flex-wrap: wrap; gap: 26px 34px; padding: 36px 44px; }
+  .who { width: 112px; text-align: center; }
+  .who .nm { font-size: 13.5px; font-weight: 500; margin-top: 10px; }
+  .who .ds { font-size: 12px; color: var(--text3); line-height: 17px; }
+  .tile { width: 96px; height: 96px; border-radius: 22px; background: var(--subtle); display: grid; place-items: center; margin: 0 auto; }
+
+  /* menu */
+  .menu { position: absolute; width: 232px; background: rgba(255,255,255,.97); border-radius: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 10px 32px rgba(0,0,0,.16); padding: 5px; font-size: 13.5px; }
+  .mi { display: flex; align-items: center; gap: 9px; height: 28px; padding: 0 9px; border-radius: 6px; }
+  .mi svg { width: 15px; height: 15px; color: var(--text2); flex: none; }
+  .mi .sh { margin-left: auto; color: var(--text3); font-size: 12px; }
+  .mi.on { background: var(--accent); color: #fff; }
+  .mi.on svg, .mi.on .sh { color: #fff; }
+  .mi.red, .mi.red svg { color: var(--blocked); }
+  .sep { height: 1px; background: var(--border); margin: 4px 8px; }
+
+  .empty { text-align: center; padding-top: 70px; }
+  .empty .t1 { font-weight: 600; font-size: 16px; margin-top: 18px; }
+  .empty .t2 { font-size: 13.5px; color: var(--text2); margin-top: 4px; }
+
+  /* settings */
+  .sw { width: 680px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 24px 60px rgba(0,0,0,.16); overflow: hidden; margin-bottom: 44px; }
+  .sbar { height: 86px; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); background: #fafafb; }
+  .sbar .lights { padding: 14px 16px 0; }
+  .tabs { display: flex; justify-content: center; gap: 4px; margin-top: -8px; }
+  .tab { width: 78px; height: 52px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: var(--text2); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { background: rgba(0,0,0,.055); color: var(--accent); }
+  .sbody { padding: 22px 36px; height: 434px; }
+  .lbl { font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 10px; }
+  .cur { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; background: var(--subtle); }
+  .cur .nm { font-weight: 600; }
+  .cur .sub { font-size: 13px; color: var(--text2); }
+  .ok { color: var(--done); font-size: 13px; }
+  .btn { margin-left: auto; font-size: 13px; padding: 5px 13px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px var(--border), 0 1px 1px rgba(0,0,0,.04); }
+  .btn.pri { background: var(--accent); color: #fff; box-shadow: none; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #fff; font: 700 15px/1 -apple-system; flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .pv { height: 76px; border-radius: 11px; box-shadow: 0 0 0 1px var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text); position: relative; }
+  .pv .logo { width: 32px; height: 32px; font-size: 13px; border-radius: 9px; }
+  .pv.on { box-shadow: 0 0 0 2px var(--accent); background: rgba(91,91,214,.04); }
+  .pv .cm { position: absolute; top: 5px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--done); }
+  .form { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--subtle); }
+  .fr { display: flex; align-items: center; gap: 12px; font-size: 13.5px; margin-bottom: 10px; }
+  .fr .k { width: 56px; color: var(--text2); }
+  .field { flex: 1; height: 32px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px var(--border); display: flex; align-items: center; padding: 0 10px; font-size: 13.5px; }
+  .field.ph { color: var(--text3); }
+  .field .chev { margin-left: auto; color: var(--text3); }
+  .link { color: var(--accent); font-size: 13px; white-space: nowrap; }
+  .arow { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+  .arow .nm { font-weight: 500; }
+  .arow .sub { font-size: 12.5px; color: var(--text3); }
+  .arow .r { margin-left: auto; font-size: 12.5px; color: var(--text2); text-align: right; }
+  .tag { font-size: 12px; color: var(--text2); background: var(--subtle); border-radius: 6px; padding: 2px 8px; }
+
+  .px { display: inline-block; flex: none; }
+  .px svg { display: block; shape-rendering: crispEdges; }
+  .cmp { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px 18px; padding: 30px 40px; }
+  .cmp .c { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 10px; background: var(--subtle); }
+  .cmp .old { color: var(--text3); width: 20px; height: 20px; }
+  .cmp .arrow { color: var(--text3); font-size: 12px; }
+  .cmp .nm { font-size: 12px; color: var(--text2); margin-left: auto; }
+  .row3 { display: flex; gap: 34px; padding: 30px 40px; align-items: flex-end; flex-wrap: wrap; }
+  .gl { text-align: center; font-size: 12px; color: var(--text2); }
+  .gl .px { margin-bottom: 8px; }
+  .logos { display: flex; gap: 40px; padding: 36px 44px; }
+  .logo { text-align: center; width: 300px; }
+  .logo .big { width: 164px; height: 164px; border-radius: 37px; margin: 0 auto; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.12); }
+  .logo .small { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 18px; }
+  .logo .s { border-radius: 7px; display: grid; place-items: center; }
+  .logo .nm2 { font-weight: 600; margin-top: 14px; }
+  .logo .ds { font-size: 12.5px; color: var(--text2); line-height: 18px; margin-top: 4px; }
+  .pvrow { display: flex; gap: 14px; padding: 26px 40px 10px; align-items: center; }
+  .pvrow .lbl3 { width: 110px; font-size: 13px; color: var(--text2); }
+  .pvt { width: 74px; height: 70px; border-radius: 11px; background: #fff; box-shadow: 0 0 0 1px var(--border); display: grid; place-items: center; }
+  .st { display: inline-grid; place-items: center; }
+  .content.wide { max-width: 980px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 6px; }
+  .col { min-width: 0; }
+  .ch { display: flex; align-items: center; gap: 9px; height: 40px; margin-top: 10px; border-bottom: 1px solid var(--border); }
+  .ch .nm { font: 600 15px/20px -apple-system, "PingFang SC"; }
+  .ch .c { color: var(--text3); font-size: 13px; }
+  .ch .sub { margin-left: auto; color: var(--text3); font-size: 12.5px; }
+  .gh { margin: 16px 0 2px; font-size: 14px; }
+  .row { min-height: 36px; padding: 6px 10px; }
+  .row .t { font-weight: 500; }
+  .row .ind { width: 18px; flex: none; }
+  .row.agent { align-items: flex-start; }
+  .row.agent .av { margin-top: 2px; }
+  .row .top { display: flex; gap: 8px; align-items: center; }
+  .row .top .t { flex: 1; min-width: 0; }
+  .row .said { font-size: 13px; line-height: 18px; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; }
+  .row.done .t { font-weight: 400; color: var(--text2); }
+  .more { color: var(--accent); font-size: 13px; margin: 4px 0 0 26px; }
+  .fold { color: var(--text3); font-size: 13.5px; margin: 14px 0 0; }
+  .fold b { font-weight: 600; margin-right: 6px; }
+  .quiet { color: var(--text3); font-size: 13.5px; padding: 18px 0 0 2px; }
+  .quiet a { color: var(--accent); text-decoration: none; margin-left: 6px; }
+  .blk { font: 600 12px/18px -apple-system; color: var(--blocked); background: rgba(229,72,77,.1); border-radius: 5px; padding: 0 6px; }
+  .insp { width: 300px; flex: none; border-left: 1px solid var(--border); padding: 30px 22px; font-size: 13.5px; }
+  .insp .it { color: var(--text3); font-size: 12.5px; }
+  .insp .ititle { font: 700 19px/26px -apple-system, "PingFang SC"; margin: 8px 0 18px; }
+  .insp .prop { display: flex; gap: 14px; height: 32px; align-items: center; }
+  .insp .prop span:first-child { width: 44px; color: var(--text3); }
+  .insp .prop b { font-weight: 400; display: flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="caption">A · 默认窗口（1100 宽）：标题和输入框不变，下面分成两列 —— 左边是你要做的，右边是 Agent 在做的</div>
+<div class="window"><div class="sidebar sb"></div><div class="main"><div class="content wide">
+  <div class="head"><h1>adhd-todo</h1><div class="views"><span class="on" data-i="bulletlist" data-s="16"></span><span data-i="grid-3x2" data-s="16"></span></div></div>
+  <div class="input"><span data-i="plus" data-s="18" data-c="var(--text3)"></span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+  <div class="cols" id="wide"></div>
+</div></div></div>
+<div class="note">两列等宽、间距 40 pt、没有底色也没有竖线（看板那次你否掉了灰底）。<b>左列</b>是你的任务：没有头像（列头已经说了是你），右边只放 P0/P1 和到期时间。<b>右列</b>是 Agent 的任务：保留每行的 Agent 头像（区分 Claude Code / Codex），标题下面直接放它最后说的话，最多两行；分支名不再占位置（检查器里还有），PR 号留着。两列各自按状态分组，各自有「已完成」三行 +「显示全部」。</div>
+
+<div class="caption">B · 一边是空的：这个项目里还没有 Agent 汇报过</div>
+<div class="window" style="height:560px"><div class="sidebar sb"></div><div class="main"><div class="content wide">
+  <div class="head"><h1>answer-me-with-html</h1><div class="views"><span class="on" data-i="bulletlist" data-s="16"></span><span data-i="grid-3x2" data-s="16"></span></div></div>
+  <div class="input"><span data-i="plus" data-s="18" data-c="var(--text3)"></span><span class="ph">添加任务，或者问我任何事</span><kbd>⌘K</kbd></div>
+  <div class="cols" id="oneside"></div>
+</div></div></div>
+<div class="note">空的那列不消失，只留列头和一行灰字（右列多一个「安装 MCP」链接），这样左右位置永远固定，不会这个项目在左、那个项目又跑到中间。整个项目一条任务都没有时，还是原来那个居中的空状态。</div>
+
+<div class="caption">C · 窄：打开检查器、内容区不到 640 pt 时，两列改成上下两段</div>
+<div class="window"><div class="sidebar sb"></div><div class="main" style="display:flex">
+  <div class="content" style="max-width:none;padding:30px 32px 0">
+    <div class="head"><h1>adhd-todo</h1><div class="views"><span class="on" data-i="bulletlist" data-s="16"></span><span data-i="grid-3x2" data-s="16"></span></div></div>
+    <div class="input"><span data-i="plus" data-s="18" data-c="var(--text3)"></span><span class="ph">添加任务，或者问我任何事</span></div>
+    <div id="narrow"></div>
+  </div>
+  <div class="insp"><div class="it">adhd-todo · #44</div><div class="ititle">项目页拆成两列：左边人、右边 Agent</div>
+    <div class="prop"><span>状态</span><b><span data-st="doing" class="px"></span> 进行中</b></div>
+    <div class="prop"><span>来自</span><b><span class="av" data-a="claude" data-s="16"></span> Claude Code</b></div>
+    <div class="prop"><span>分支</span><b class="mono">claude/zen-noether-60b865</b></div>
+  </div>
+</div></div>
+<div class="note">顺序是「我的」在上、「Agent」在下，跟宽屏左→右的阅读顺序一致。收件箱、看板、我的、Agent 页都不变，只改项目页的列表视图。</div>
+
+<script>
+const P = {
+  you: { pal: { h: '#3a3550', s: '#f3c7a0', e: '#2b2838', b: '#5b5bd6', d: '#4646b8', c: '#e88b8b' }, g: [
+    '...hhhhhh...',
+    '..hhhhhhhh..',
+    '.hhhhhhhhhh.',
+    '.hhssssssh..',
+    '.hsesssses..',
+    '..ssssssss..',
+    '..scsssscs..',
+    '...ssssss...',
+    '..bbbbbbbb..',
+    '.bbbbddbbbb.',
+    '.bbbbddbbbb.',
+    '.bbbbbbbbbb.' ] },
+  buddy: { pal: { a: '#f5c542', p: '#7c6cf0', d: '#5b4fd0', w: '#ffffff', e: '#231f3a', k: '#f0a3c0' }, g: [
+    '.....a......',
+    '....aaa.....',
+    '.....a......',
+    '...pppppp...',
+    '..pppppppp..',
+    '.pppwwppwwp.',
+    '.pppweppwep.',
+    '.pkpppppppk.',
+    '.pppppddppp.',
+    '.pppppppppp.',
+    '.pp.pp.pp.p.',
+    '.p..p..p..p.' ] },
+  claude: { pal: { o: '#d97757', d: '#b85c3e', e: '#2b1d17' }, g: [
+    '............',
+    '............',
+    '..oooooooo..',
+    '..oooooooo..',
+    '..oeooooeo..',
+    'oooeooooeooo',
+    'oooooooooooo',
+    '..oooooooo..',
+    '..oooooooo..',
+    '..d.d..d.d..',
+    '..d.d..d.d..',
+    '............' ] },
+  codex: { pal: { b: '#5b7cfa', d: '#4a5ee0', w: '#ffffff' }, g: [
+    '............',
+    '...bbb.bbb..',
+    '..bbbbbbbbb.',
+    '.bbbbbbbbbbb',
+    '.bwbbbbbbbbb',
+    'bbbwbbbbbbbb',
+    'bbbbwbbbbbbb',
+    'bbbwbbbbbbbb',
+    'bbwbbbwwwbbb',
+    '.ddddddddddd',
+    '..dddd.dddd.',
+    '............' ] },
+  cursor: { pal: { k: '#26262b', w: '#ffffff' }, g: [
+    '.k..........',
+    '.kk.........',
+    '.kwk........',
+    '.kwwk.......',
+    '.kwwwk......',
+    '.kwwwwk.....',
+    '.kwwwwwk....',
+    '.kwwwwwwk...',
+    '.kwwwkkkk...',
+    '.kwkwk......',
+    '.kk.kwk.....',
+    '.....kk.....' ] },
+  gemini: { pal: { b: '#4f8ef7', v: '#9b6cf0', l: '#8fc4ff' }, g: [
+    '.....b......',
+    '.....b......',
+    '....bbb.....',
+    '....bbb.....',
+    '..lbbbbbv...',
+    'lllbbbbbvvv.',
+    '..lbbbbbv...',
+    '....vvv.....',
+    '....vvv.....',
+    '.....v......',
+    '.....v......',
+    '............' ] },
+  bot: { pal: { m: '#8e8e99', d: '#6b6b76', w: '#ffffff', e: '#2a2a33', a: '#c9c9d1' }, g: [
+    '.....a......',
+    '.....m......',
+    '..mmmmmmmm..',
+    '..mmmmmmmm..',
+    '.dmwwmmwwmd.',
+    '.dmwemmwemd.',
+    '.dmmmmmmmmd.',
+    '..mmeeeemm..',
+    '..mmmmmmmm..',
+    '...dddddd...',
+    '..dd....dd..',
+    '............' ] },
+};
+
+P.opencode = { pal: { k: '#2b2b30', g: '#9fa3ad' }, g: ['............','..kkkkkkkk..','..kkkkkkkk..','..kk....kk..','..kk.gg.kk..','..kk.gg.kk..','..kk.gg.kk..','..kk....kk..','..kkkkkkkk..','..kkkkkkkk..','............','............'] };
+function sprite(name, size, tint) {
+  const a = P[name]; const w = a.g[0].length, h = a.g.length; const pal = Object.assign({}, a.pal);
+  if (tint) { pal.m = tint; pal.d = tint; }
+  let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
+  return `<svg width="${size * w / h}" height="${size}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">${r}</svg>`;
+}
+const X = {"search": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M22 22h-2v-2h2v2Zm-2-2h-2v-2h2v2Zm-6-2H6v-2h8v2Zm4 0h-2v-2h2v2ZM6 16H4v-2h2v2Zm10 0h-2v-2h2v2ZM4 14H2V6h2v8Zm14 0h-2V6h2v8ZM6 6H4V4h2v2Zm10 0h-2V4h2v2Zm-2-2H6V2h8v2Z\"/>\n</svg>", "arrow-down": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M13 12h6v2h-2v2h-2v2h-2v2h-2v-2H9v-2H7v-2H5v-2h6V4h2v8Z\"/>\n</svg>", "user": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M9 2h6v2H9zm0 8h6v2H9zm6-6h2v6h-2zM7 4h2v6H7zM4 18h2v4H4zm14 0h2v4h-2zM8 14h8v2H8zm-2 2h2v2H6zm10 0h2v2h-2z\"/>\n</svg>", "sliders": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M8 14H7v6H5v-6H2v-2h6v2Zm5 6h-2V10h2v10Zm9-2h-3v2h-2v-2h-1v-2h6v2Zm-3-4h-2V4h2v10ZM7 10H5V4h2v6Zm6-4h2v2H9V6h2V4h2v2Z\"/></svg>", "chevron-down": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z\"/>\n</svg>", "github": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M5 2h4v2H7v2H5V2Zm0 10H3V6h2v6Zm2 2H5v-2h2v2Zm2 2v-2H7v2H3v-2H1v2h2v2h4v4h2v-4h2v-2H9Zm0 0v2H7v-2h2Zm6-12v2H9V4h6Zm4 2h-2V4h-2V2h4v4Zm0 6V6h2v6h-2Zm-2 2v-2h2v2h-2Zm-2 2v-2h2v2h-2Zm0 2h-2v-2h2v2Zm0 0h2v4h-2v-4Z\"/></svg>", "sparkle": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M11 1h2v4h-2zm0 22h2v-4h-2zM9 5h2v4H9zm0 14h2v-4H9zm4-14h2v4h-2zm0 14h2v-4h-2zM5 9h4v2H5zm14 0h-4v2h4zM1 11h4v2H1zm22 0h-4v2h4zM5 13h4v2H5zm14 0h-4v2h4z\"/>\n</svg>", "inbox": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M2 4h2v16H2zm2 16h16v2H4zM20 4h2v16h-2zM4 2h16v2H4zm0 12h4v2H4zm4 2h8v2H8zm8-2h4v2h-4z\"/>\n</svg>", "terminal": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM6 16h2v2H6zm2-2h2v2H8zm-2-2h2v2H6z\"/>\n</svg>", "sparkles": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M11 1h2v4h-2zm0 22h2v-4h-2zM9 5h2v4H9zm0 14h2v-4H9zm4-14h2v4h-2zm0 14h2v-4h-2zM5 9h4v2H5zm14 0h-4v2h4zM1 11h4v2H1zm22 0h-4v2h4zM5 13h4v2H5zm14 0h-4v2h4zm0-12h2v6h-2z\"/>\n  <path d=\"M17 3h6v2h-6zM3 17h2v2H3zm-2 2h2v2H1zm2 2h2v2H3zm2-2h2v2H5z\"/>\n</svg>", "clipboard": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 6h2v14H4zm2 14h12v2H6zM18 6h2v14h-2zM6 4h2v2H6zm10 0h2v2h-2zm-6-2h4v2h-4zm0 4h4v2h-4zM8 2h2v6H8zm6 0h2v6h-2z\"/>\n</svg>", "arrow-right": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 11v2h16v-2zm12 2v2h2v-2zm-2 2v2h2v-2zm-2 2v2h2v-2zm4-6V9h2v2z\"/>\n  <path d=\"M14 15V7h2v8zm-2 2V5h2v12z\"/>\n</svg>", "archive": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M3 2h18v2H3zm0 5h18v2H3zM1 4h2v3H1zm20 0h2v3h-2zm-2 5h2v11h-2zM3 9h2v11H3zm2 11h14v2H5zm4-9h6v2H9z\"/>\n</svg>", "bell": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M9 2h6v2H9zM7 4h2v2H7zm8 0h2v2h-2zM5 6h2v7H5zm12 0h2v7h-2zM3 13h2v4H3zm16 0h2v4h-2z\"/>\n  <path d=\"M3 15h18v2H3zm5 3h2v2H8zm6 0h2v2h-2zm-4 2h4v2h-4z\"/>\n</svg>", "git-branch": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 14h4v2H4zm0 6h4v2H4zm-2-4h2v4H2zm6 0h2v4H8zm8-14h4v2h-4zm0 6h4v2h-4zm-2-4h2v4h-2zm6 0h2v4h-2zm-8 13h5v2h-5zm5-5h2v5h-2zM5 2h2v10H5z\"/>\n</svg>", "flag": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 2h2v20H4z\"/>\n  <path d=\"M4 4h16v2H4zm12 2h2v2h-2zm-2 2h2v2h-2zm2 2h2v2h-2zM4 12h16v2H4z\"/>\n</svg>", "plus": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M13 11h7v2h-7v7h-2v-7H4v-2h7V4h2v7Z\"/>\n</svg>", "check": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M10 18H8v-2h2v2Zm-2-2H6v-2h2v2Zm4-2v2h-2v-2h2Zm-6 0H4v-2h2v2Zm8 0h-2v-2h2v2Zm2-2h-2v-2h2v2Zm2-2h-2V8h2v2Zm2-2h-2V6h2v2Z\"/>\n</svg>", "gear": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M18 22H13V24H11V22H6V20H18V22ZM4 22H2V20H4V22ZM22 22H20V20H22V22ZM6 20H4V18H6V20ZM20 20H18V18H20V20ZM4 18H2V13H0V11H2V6H4V18ZM8 18H6V16H8V18ZM22 11H24V13H22V18H20V13H16V16H8V8H16V11H20V6H22V11ZM10 10V14H14V10H10ZM8 8H6V6H8V8ZM6 6H4V4H6V6ZM20 6H18V4H20V6ZM4 4H2V2H4V4ZM13 2H18V4H6V2H11V0H13V2ZM22 4H20V2H22V4Z\"/></svg>", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n<path d=\"M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z\"/>\n</svg>", "bulletlist": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M10 5h12v2H10zm0 4h8v2h-8zm0 4h12v2H10zm0 4h8v2h-8zm-4-6H4V9h2v2ZM4 9H2V7h2v2Zm4 0H6V7h2v2ZM6 7H4V5h2v2Zm-2 6h2v2H4zm0 4h2v2H4zm-2 0v-2h2v2zm4 0v-2h2v2z\"/>\n</svg>", "checkbox-on": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM7 12h2v2H7zm2 2h2v2H9zm2-2h2v2h-2zm2-2h2v2h-2zm2-2h2v2h-2z\"/>\n</svg>", "copy": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M8 6h12v2H8zM4 2h12v2H4zm2 6h2v12H6zM2 4h2v12H2zm6 16h12v2H8zM20 8h2v12h-2zm-4-4h2v2h-2zM4 16h2v2H4z\"/>\n</svg>", "reload": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M16 4h2v6h-2zm-2-2h2v2h-2zm0 2h2v8h-2zM4 8H2v5h2z\"/>\n  <path d=\"M4 6h16v2H4zm4 14H6v-6h2zm2 2H8v-2h2zm0-2H8v-8h2zm10-4h2v-5h-2z\"/>\n  <path d=\"M20 18H4v-2h16z\"/>\n</svg>", "image": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zm-4 8h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm-8 0h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2z\"/>\n  <path d=\"M20 16h2v2h-2zM8 16h2v2H8zm-2 2h2v2H6zM8 6h2v2H8zM6 8h2v2H6zm2 2h2v2H8zm2-2h2v2h-2z\"/>\n</svg>", "send": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 19h4v2H2v-8h2v6Zm8 0H8v-2h4v2Zm4-2h-4v-2h4v2Zm4-2h-4v-2h4v2Zm-10-2H4v-2h6v2Zm12 0h-2v-2h2v2ZM8 5H4v6H2V3h6v2Zm12 6h-4V9h4v2Zm-4-2h-4V7h4v2Zm-4-2H8V5h4v2Z\"/>\n</svg>", "trash": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n<path d=\"M18 22H6V20H18V22ZM9 6H15V4H17V6H22V8H20V20H18V8H6V20H4V8H2V6H7V4H9V6ZM15 4H9V2H15V4Z\"/>\n</svg>", "grid-3x2": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM4 11h16v2H4z\"/>\n  <path d=\"M8 4h2v16H8zm6 0h2v16h-2z\"/>\n</svg>", "pencil": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M4 16H6V18H8V20H10V22H2V14H4V16ZM12 20H10V18H12V20ZM14 18H12V16H14V18ZM10 16H8V14H10V16ZM16 16H14V14H16V16ZM6 14H4V12H6V14ZM12 14H10V12H12V14ZM18 14H16V12H18V14ZM8 12H6V10H8V12ZM14 12H12V10H14V12ZM20 12H18V10H20V12ZM10 10H8V8H10V10ZM18 10H16V8H18V10ZM22 10H20V8H22V10ZM12 8H10V6H12V8ZM16 8H14V6H16V8ZM20 8H18V6H20V8ZM14 6H12V4H14V6ZM18 6H16V4H18V6ZM16 4H14V2H16V4Z\"/></svg>", "clock": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M6 2h12v2H6zM2 6h2v12H2zm18 0h2v12h-2zm-2-2h2v2h-2zM4 4h2v2H4zm2 18h12v-2H6zm12-2h2v-2h-2zM4 20h2v-2H4zm7-14h2v7h-2zm2 7h2v2h-2zm2 2h2v2h-2z\"/>\n</svg>", "human": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M10 2h4v4h-4zM3 7h18v2H3zm6 2h2v7H9zm4 0h2v7h-2zm-4 7h2v6H9zm4 0h2v6h-2zm-2-2h2v2h-2z\"/>\n</svg>", "external-link": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M11 5H5v2h6V5ZM5 7H3v12h2V7Zm12 12H5v2h12v-2Zm2-6h-2v6h2v-6Zm-8 0H9v2h2v-2Zm2-2h-2v2h2v-2Zm2-2h-2v2h2V9Zm2-2h-2v2h2V7Zm2-2h-2v2h2V5Zm2-2h-2v8h2V3Z\"/>\n  <path d=\"M21 3h-8v2h8V3Z\"/>\n</svg>", "arrow-up": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M11 20h2V4h-2zm2-12h2V6h-2zm2 2h2V8h-2zm2 2h2v-2h-2zm-6-4H9V6h2z\"/>\n  <path d=\"M15 10H7V8h8zm2 2H5v-2h12z\"/>\n</svg>", "robot": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M5 7h14v2H5zm0 12h14v2H5zM3 9h2v10H3zm16 0h2v10h-2zM1 13h2v2H1zm20 0h2v2h-2zM11 5h2v2h-2zM7 3h4v2H7zm1 9h2v4H8zm6 0h2v4h-2z\"/>\n</svg>", "calendar": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M5 4h14v2H5zm0 16h14v2H5zM3 10h2v10H3zm0-4h2v2H3zm16 0h2v2h-2zm0 4h2v10h-2zM3 8h18v2H3zm12-6h2v2h-2zM7 2h2v2H7z\"/>\n</svg>", "folder": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\">\n  <path d=\"M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z\"/>\n</svg>", "layout": "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M20 20H4v-2h4v-8H4v8H2V6h2v2h16V6h2v12h-2v-8H10v8h10v2Zm0-14H4V4h16v2Z\"/></svg>"};
+const L = {"kiro": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4.594 6.677C6.67-2.226 18.746-2.211 21.16 6.632c.353 1.297 1.725 7.582-1.673 13.747-1.545 2.797-5.841 5.49-6.99 1.883C8.6 25.477 3.315 24.1 5.789 18.609l-.318.143c-3.57 1.305-3.863-1.208-3.173-2.513.45-.84.727-1.335.937-1.897.353-.975.458-1.568.593-2.498.27-1.837.277-3.607.765-5.167zm8.37.01a.92.92 0 00-.81.428c-.217.323-.33.825-.33 1.462 0 .705.15 1.89 1.14 1.89h.008c.757 0 1.214-.705 1.214-1.89 0-.622-.127-1.125-.367-1.455a1.014 1.014 0 00-.855-.435zm4.08 0a.92.92 0 00-.81.428c-.217.323-.33.825-.33 1.462 0 .705.15 1.89 1.14 1.89h.008c.757 0 1.215-.705 1.215-1.89 0-.622-.128-1.125-.368-1.455a1.014 1.014 0 00-.855-.435z\"></path></svg>", "cline": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M17.035 3.991c2.75 0 4.98 2.24 4.98 5.003v1.667l1.45 2.896a1.01 1.01 0 01-.002.909l-1.448 2.864v1.668c0 2.762-2.23 5.002-4.98 5.002H7.074c-2.751 0-4.98-2.24-4.98-5.002V17.33l-1.48-2.855a1.01 1.01 0 01-.003-.927l1.482-2.887V8.994c0-2.763 2.23-5.003 4.98-5.003h9.962zM8.265 9.6a2.274 2.274 0 00-2.274 2.274v4.042a2.274 2.274 0 004.547 0v-4.042A2.274 2.274 0 008.265 9.6zm7.326 0a2.274 2.274 0 00-2.274 2.274v4.042a2.274 2.274 0 104.548 0v-4.042A2.274 2.274 0 0015.59 9.6z\"></path><path d=\"M12.054 5.558a2.779 2.779 0 100-5.558 2.779 2.779 0 000 5.558z\"></path></svg>", "zhipu-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M11.991 23.503a.24.24 0 00-.244.248.24.24 0 00.244.249.24.24 0 00.245-.249.24.24 0 00-.22-.247l-.025-.001zM9.671 5.365a1.697 1.697 0 011.099 2.132l-.071.172-.016.04-.018.054c-.07.16-.104.32-.104.498-.035.71.47 1.279 1.186 1.314h.366c1.309.053 2.338 1.173 2.286 2.523-.052 1.332-1.152 2.38-2.478 2.327h-.174c-.715.018-1.274.64-1.239 1.368 0 .124.018.23.053.337.209.373.54.658.96.8.75.23 1.517-.125 1.9-.782l.018-.035c.402-.64 1.17-.96 1.92-.711.854.284 1.378 1.226 1.099 2.167a1.661 1.661 0 01-2.077 1.102 1.711 1.711 0 01-.907-.711l-.017-.035c-.2-.323-.463-.58-.851-.711l-.056-.018a1.646 1.646 0 00-1.954.746 1.66 1.66 0 01-1.065.764 1.677 1.677 0 01-1.989-1.279c-.209-.906.332-1.83 1.257-2.043a1.51 1.51 0 01.296-.035h.018c.68-.071 1.151-.622 1.116-1.333a1.307 1.307 0 00-.227-.693 2.515 2.515 0 01-.366-1.403 2.39 2.39 0 01.366-1.208c.14-.195.21-.444.227-.693.018-.71-.506-1.261-1.186-1.332l-.07-.018a1.43 1.43 0 01-.299-.07l-.05-.019a1.7 1.7 0 01-1.047-2.114 1.68 1.68 0 012.094-1.101zm-5.575 10.11c.26-.264.639-.367.994-.27.355.096.633.379.728.74.095.362-.007.748-.267 1.013-.402.41-1.053.41-1.455 0a1.062 1.062 0 010-1.482zm14.845-.294c.359-.09.738.024.992.297.254.274.344.665.237 1.025-.107.36-.396.634-.756.718-.551.128-1.1-.22-1.23-.781a1.05 1.05 0 01.757-1.26zm-.064-4.39c.314.32.49.753.49 1.206 0 .452-.176.886-.49 1.206-.315.32-.74.5-1.185.5-.444 0-.87-.18-1.184-.5a1.727 1.727 0 010-2.412 1.654 1.654 0 012.369 0zm-11.243.163c.364.484.447 1.128.218 1.691a1.665 1.665 0 01-2.188.923c-.855-.36-1.26-1.358-.907-2.228a1.68 1.68 0 011.33-1.038c.593-.08 1.183.169 1.547.652zm11.545-4.221c.368 0 .708.2.892.524.184.324.184.724 0 1.048a1.026 1.026 0 01-.892.524c-.568 0-1.03-.47-1.03-1.048 0-.579.462-1.048 1.03-1.048zm-14.358 0c.368 0 .707.2.891.524.184.324.184.724 0 1.048a1.026 1.026 0 01-.891.524c-.569 0-1.03-.47-1.03-1.048 0-.579.461-1.048 1.03-1.048zm10.031-1.475c.925 0 1.675.764 1.675 1.706s-.75 1.705-1.675 1.705-1.674-.763-1.674-1.705c0-.942.75-1.706 1.674-1.706zm-2.626-.684c.362-.082.653-.356.761-.718a1.062 1.062 0 00-.238-1.028 1.017 1.017 0 00-.996-.294c-.547.14-.881.7-.752 1.257.13.558.675.907 1.225.783zm0 16.876c.359-.087.644-.36.75-.72a1.062 1.062 0 00-.237-1.019 1.018 1.018 0 00-.985-.301 1.037 1.037 0 00-.762.717c-.108.361-.017.754.239 1.028.245.263.606.377.953.305l.043-.01zM17.19 3.5a.631.631 0 00.628-.64c0-.355-.279-.64-.628-.64a.631.631 0 00-.628.64c0 .355.28.64.628.64zm-10.38 0a.631.631 0 00.628-.64c0-.355-.28-.64-.628-.64a.631.631 0 00-.628.64c0 .355.279.64.628.64zm-5.182 7.852a.631.631 0 00-.628.64c0 .354.28.639.628.639a.63.63 0 00.627-.606l.001-.034a.62.62 0 00-.628-.64zm5.182 9.13a.631.631 0 00-.628.64c0 .355.279.64.628.64a.631.631 0 00.628-.64c0-.355-.28-.64-.628-.64zm10.38.018a.631.631 0 00-.628.64c0 .355.28.64.628.64a.631.631 0 00.628-.64c0-.355-.279-.64-.628-.64zm5.182-9.148a.631.631 0 00-.628.64c0 .354.279.639.628.639a.631.631 0 00.628-.64c0-.355-.28-.64-.628-.64zm-.384-4.992a.24.24 0 00.244-.249.24.24 0 00-.244-.249.24.24 0 00-.244.249c0 .142.122.249.244.249zM11.991.497a.24.24 0 00.245-.248A.24.24 0 0011.99 0a.24.24 0 00-.244.249c0 .133.108.236.223.247l.021.001zM2.011 6.36a.24.24 0 00.245-.249.24.24 0 00-.244-.249.24.24 0 00-.244.249.24.24 0 00.244.249zm0 11.263a.24.24 0 00-.243.248.24.24 0 00.244.249.24.24 0 00.244-.249.252.252 0 00-.244-.248zm19.995-.018a.24.24 0 00-.245.248.24.24 0 00.245.25.24.24 0 00.244-.25.252.252 0 00-.244-.248z\" fill=\"#3859FF\" fill-rule=\"nonzero\"></path></svg>", "deepseek-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z\" fill=\"#4D6BFE\"></path></svg>", "zed": "Couldn't find the requested file /icons/zed.svg in @lobehub/icons-static-svg.", "claude-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z\" fill=\"#D97757\" fill-rule=\"nonzero\"></path></svg>", "openai": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z\"></path></svg>", "gemini-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z\" fill=\"#3186FF\"></path><path d=\"M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z\" fill=\"url(#lobe-icons-gemini-0-_R_0_)\"></path><path d=\"M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z\" fill=\"url(#lobe-icons-gemini-1-_R_0_)\"></path><path d=\"M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z\" fill=\"url(#lobe-icons-gemini-2-_R_0_)\"></path><defs><linearGradient gradientUnits=\"userSpaceOnUse\" id=\"lobe-icons-gemini-0-_R_0_\" x1=\"7\" x2=\"11\" y1=\"15.5\" y2=\"12\"><stop stop-color=\"#08B962\"></stop><stop offset=\"1\" stop-color=\"#08B962\" stop-opacity=\"0\"></stop></linearGradient><linearGradient gradientUnits=\"userSpaceOnUse\" id=\"lobe-icons-gemini-1-_R_0_\" x1=\"8\" x2=\"11.5\" y1=\"5.5\" y2=\"11\"><stop stop-color=\"#F94543\"></stop><stop offset=\"1\" stop-color=\"#F94543\" stop-opacity=\"0\"></stop></linearGradient><linearGradient gradientUnits=\"userSpaceOnUse\" id=\"lobe-icons-gemini-2-_R_0_\" x1=\"3.5\" x2=\"17.5\" y1=\"13.5\" y2=\"12\"><stop stop-color=\"#FABC12\"></stop><stop offset=\".46\" stop-color=\"#FABC12\" stop-opacity=\"0\"></stop></linearGradient></defs></svg>", "kimi": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M21.846 0a1.923 1.923 0 110 3.846H20.15a.226.226 0 01-.227-.226V1.923C19.923.861 20.784 0 21.846 0z\"></path><path d=\"M11.065 11.199l7.257-7.2c.137-.136.06-.41-.116-.41H14.3a.164.164 0 00-.117.051l-7.82 7.756c-.122.12-.302.013-.302-.179V3.82c0-.127-.083-.23-.185-.23H3.186c-.103 0-.186.103-.186.23V19.77c0 .128.083.23.186.23h2.69c.103 0 .186-.102.186-.23v-3.25c0-.069.025-.135.069-.178l2.424-2.406a.158.158 0 01.205-.023l6.484 4.772a7.677 7.677 0 003.453 1.283c.108.012.2-.095.2-.23v-3.06c0-.117-.07-.212-.164-.227a5.028 5.028 0 01-2.027-.807l-5.613-4.064c-.117-.078-.132-.279-.028-.381z\"></path></svg>", "cursor": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M22.106 5.68L12.5.135a.998.998 0 00-.998 0L1.893 5.68a.84.84 0 00-.419.726v11.186c0 .3.16.577.42.727l9.607 5.547a.999.999 0 00.998 0l9.608-5.547a.84.84 0 00.42-.727V6.407a.84.84 0 00-.42-.726zm-.603 1.176L12.228 22.92c-.063.108-.228.064-.228-.061V12.34a.59.59 0 00-.295-.51l-9.11-5.26c-.107-.062-.063-.228.062-.228h18.55c.264 0 .428.286.296.514z\"></path></svg>", "openrouter-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18.654 3.87a5.087 5.087 0 110 10.174L23.7 19.09c.64.641.187 1.737-.72 1.737H8.48a8.479 8.479 0 010-16.958h10.175zM8.479 7.26a5.087 5.087 0 100 10.176 5.087 5.087 0 000-10.175z\" fill=\"#C8FF00\"></path></svg>", "siliconcloud-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"M22.956 6.521H12.522c-.577 0-1.044.468-1.044 1.044v3.13c0 .577-.466 1.044-1.043 1.044H1.044c-.577 0-1.044.467-1.044 1.044v4.174C0 17.533.467 18 1.044 18h10.434c.577 0 1.044-.467 1.044-1.043v-3.13c0-.578.466-1.044 1.043-1.044h9.391c.577 0 1.044-.467 1.044-1.044V7.565c0-.576-.467-1.044-1.044-1.044z\" fill=\"#6E29F6\" fill-rule=\"evenodd\"></path></svg>", "opencode": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M16 6H8v12h8V6zm4 16H4V2h16v20z\"></path></svg>", "windsurf": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"M23.78 5.004h-.228a2.187 2.187 0 00-2.18 2.196v4.912c0 .98-.804 1.775-1.76 1.775a1.818 1.818 0 01-1.472-.773L13.168 5.95a2.197 2.197 0 00-1.81-.95c-1.134 0-2.154.972-2.154 2.173v4.94c0 .98-.797 1.775-1.76 1.775-.57 0-1.136-.289-1.472-.773L.408 5.098C.282 4.918 0 5.007 0 5.228v4.284c0 .216.066.426.188.604l5.475 7.889c.324.466.8.812 1.351.938 1.377.316 2.645-.754 2.645-2.117V11.89c0-.98.787-1.775 1.76-1.775h.002c.586 0 1.135.288 1.472.773l4.972 7.163a2.15 2.15 0 001.81.95c1.158 0 2.151-.973 2.151-2.173v-4.939c0-.98.787-1.775 1.76-1.775h.194c.122 0 .22-.1.22-.222V5.225a.221.221 0 00-.22-.222z\"></path></svg>", "qwen-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12.604 1.34c.393.69.784 1.382 1.174 2.075a.18.18 0 00.157.091h5.552c.174 0 .322.11.446.327l1.454 2.57c.19.337.24.478.024.837-.26.43-.513.864-.76 1.3l-.367.658c-.106.196-.223.28-.04.512l2.652 4.637c.172.301.111.494-.043.77-.437.785-.882 1.564-1.335 2.34-.159.272-.352.375-.68.37-.777-.016-1.552-.01-2.327.016a.099.099 0 00-.081.05 575.097 575.097 0 01-2.705 4.74c-.169.293-.38.363-.725.364-.997.003-2.002.004-3.017.002a.537.537 0 01-.465-.271l-1.335-2.323a.09.09 0 00-.083-.049H4.982c-.285.03-.553-.001-.805-.092l-1.603-2.77a.543.543 0 01-.002-.54l1.207-2.12a.198.198 0 000-.197 550.951 550.951 0 01-1.875-3.272l-.79-1.395c-.16-.31-.173-.496.095-.965.465-.813.927-1.625 1.387-2.436.132-.234.304-.334.584-.335a338.3 338.3 0 012.589-.001.124.124 0 00.107-.063l2.806-4.895a.488.488 0 01.422-.246c.524-.001 1.053 0 1.583-.006L11.704 1c.341-.003.724.032.9.34zm-3.432.403a.06.06 0 00-.052.03L6.254 6.788a.157.157 0 01-.135.078H3.253c-.056 0-.07.025-.041.074l5.81 10.156c.025.042.013.062-.034.063l-2.795.015a.218.218 0 00-.2.116l-1.32 2.31c-.044.078-.021.118.068.118l5.716.008c.046 0 .08.02.104.061l1.403 2.454c.046.081.092.082.139 0l5.006-8.76.783-1.382a.055.055 0 01.096 0l1.424 2.53a.122.122 0 00.107.062l2.763-.02a.04.04 0 00.035-.02.041.041 0 000-.04l-2.9-5.086a.108.108 0 010-.113l.293-.507 1.12-1.977c.024-.041.012-.062-.035-.062H9.2c-.059 0-.073-.026-.043-.077l1.434-2.505a.107.107 0 000-.114L9.225 1.774a.06.06 0 00-.053-.031zm6.29 8.02c.046 0 .058.02.034.06l-.832 1.465-2.613 4.585a.056.056 0 01-.05.029.058.058 0 01-.05-.029L8.498 9.841c-.02-.034-.01-.052.028-.054l.216-.012 6.722-.012z\" fill=\"url(#lobe-icons-qwen-_R_0_)\" fill-rule=\"nonzero\"></path><defs><linearGradient id=\"lobe-icons-qwen-_R_0_\" x1=\"0%\" x2=\"100%\" y1=\"0%\" y2=\"0%\"><stop offset=\"0%\" stop-color=\"#6336E7\" stop-opacity=\".84\"></stop><stop offset=\"100%\" stop-color=\"#6F69F7\" stop-opacity=\".84\"></stop></linearGradient></defs></svg>", "kimi-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M21.846 0a1.923 1.923 0 110 3.846H20.15a.226.226 0 01-.227-.226V1.923C19.923.861 20.784 0 21.846 0z\" fill=\"#1783FF\"></path><path d=\"M11.065 11.199l7.257-7.2c.137-.136.06-.41-.116-.41H14.3a.164.164 0 00-.117.051l-7.82 7.756c-.122.12-.302.013-.302-.179V3.82c0-.127-.083-.23-.185-.23H3.186c-.103 0-.186.103-.186.23V19.77c0 .128.083.23.186.23h2.69c.103 0 .186-.102.186-.23v-3.25c0-.069.025-.135.069-.178l2.424-2.406a.158.158 0 01.205-.023l6.484 4.772a7.677 7.677 0 003.453 1.283c.108.012.2-.095.2-.23v-3.06c0-.117-.07-.212-.164-.227a5.028 5.028 0 01-2.027-.807l-5.613-4.064c-.117-.078-.132-.279-.028-.381z\" fill=\"#fff\"></path></svg>", "ollama": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7.905 1.09c.216.085.411.225.588.41.295.306.544.744.734 1.263.191.522.315 1.1.362 1.68a5.054 5.054 0 012.049-.636l.051-.004c.87-.07 1.73.087 2.48.474.101.053.2.11.297.17.05-.569.172-1.134.36-1.644.19-.52.439-.957.733-1.264a1.67 1.67 0 01.589-.41c.257-.1.53-.118.796-.042.401.114.745.368 1.016.737.248.337.434.769.561 1.287.23.934.27 2.163.115 3.645l.053.04.026.019c.757.576 1.284 1.397 1.563 2.35.435 1.487.216 3.155-.534 4.088l-.018.021.002.003c.417.762.67 1.567.724 2.4l.002.03c.064 1.065-.2 2.137-.814 3.19l-.007.01.01.024c.472 1.157.62 2.322.438 3.486l-.006.039a.651.651 0 01-.747.536.648.648 0 01-.54-.742c.167-1.033.01-2.069-.48-3.123a.643.643 0 01.04-.617l.004-.006c.604-.924.854-1.83.8-2.72-.046-.779-.325-1.544-.8-2.273a.644.644 0 01.18-.886l.009-.006c.243-.159.467-.565.58-1.12a4.229 4.229 0 00-.095-1.974c-.205-.7-.58-1.284-1.105-1.683-.595-.454-1.383-.673-2.38-.61a.653.653 0 01-.632-.371c-.314-.665-.772-1.141-1.343-1.436a3.288 3.288 0 00-1.772-.332c-1.245.099-2.343.801-2.67 1.686a.652.652 0 01-.61.425c-1.067.002-1.893.252-2.497.703-.522.39-.878.935-1.066 1.588a4.07 4.07 0 00-.068 1.886c.112.558.331 1.02.582 1.269l.008.007c.212.207.257.53.109.785-.36.622-.629 1.549-.673 2.44-.05 1.018.186 1.902.719 2.536l.016.019a.643.643 0 01.095.69c-.576 1.236-.753 2.252-.562 3.052a.652.652 0 01-1.269.298c-.243-1.018-.078-2.184.473-3.498l.014-.035-.008-.012a4.339 4.339 0 01-.598-1.309l-.005-.019a5.764 5.764 0 01-.177-1.785c.044-.91.278-1.842.622-2.59l.012-.026-.002-.002c-.293-.418-.51-.953-.63-1.545l-.005-.024a5.352 5.352 0 01.093-2.49c.262-.915.777-1.701 1.536-2.269.06-.045.123-.09.186-.132-.159-1.493-.119-2.73.112-3.67.127-.518.314-.95.562-1.287.27-.368.614-.622 1.015-.737.266-.076.54-.059.797.042zm4.116 9.09c.936 0 1.8.313 2.446.855.63.527 1.005 1.235 1.005 1.94 0 .888-.406 1.58-1.133 2.022-.62.375-1.451.557-2.403.557-1.009 0-1.871-.259-2.493-.734-.617-.47-.963-1.13-.963-1.845 0-.707.398-1.417 1.056-1.946.668-.537 1.55-.849 2.485-.849zm0 .896a3.07 3.07 0 00-1.916.65c-.461.37-.722.835-.722 1.25 0 .428.21.829.61 1.134.455.347 1.124.548 1.943.548.799 0 1.473-.147 1.932-.426.463-.28.7-.686.7-1.257 0-.423-.246-.89-.683-1.256-.484-.405-1.14-.643-1.864-.643zm.662 1.21l.004.004c.12.151.095.37-.056.49l-.292.23v.446a.375.375 0 01-.376.373.375.375 0 01-.376-.373v-.46l-.271-.218a.347.347 0 01-.052-.49.353.353 0 01.494-.051l.215.172.22-.174a.353.353 0 01.49.051zm-5.04-1.919c.478 0 .867.39.867.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zm8.706 0c.48 0 .868.39.868.871a.87.87 0 01-.868.871.87.87 0 01-.867-.87.87.87 0 01.867-.872zM7.44 2.3l-.003.002a.659.659 0 00-.285.238l-.005.006c-.138.189-.258.467-.348.832-.17.692-.216 1.631-.124 2.782.43-.128.899-.208 1.404-.237l.01-.001.019-.034c.046-.082.095-.161.148-.239.123-.771.022-1.692-.253-2.444-.134-.364-.297-.65-.453-.813a.628.628 0 00-.107-.09L7.44 2.3zm9.174.04l-.002.001a.628.628 0 00-.107.09c-.156.163-.32.45-.453.814-.29.794-.387 1.776-.23 2.572l.058.097.008.014h.03a5.184 5.184 0 011.466.212c.086-1.124.038-2.043-.128-2.722-.09-.365-.21-.643-.349-.832l-.004-.006a.659.659 0 00-.285-.239h-.004z\"></path></svg>", "codex-color": "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M19.503 0H4.496A4.496 4.496 0 000 4.496v15.007A4.496 4.496 0 004.496 24h15.007A4.496 4.496 0 0024 19.503V4.496A4.496 4.496 0 0019.503 0z\" fill=\"#fff\"></path><path d=\"M9.064 3.344a4.578 4.578 0 012.285-.312c1 .115 1.891.54 2.673 1.275.01.01.024.017.037.021a.09.09 0 00.043 0 4.55 4.55 0 013.046.275l.047.022.116.057a4.581 4.581 0 012.188 2.399c.209.51.313 1.041.315 1.595a4.24 4.24 0 01-.134 1.223.123.123 0 00.03.115c.594.607.988 1.33 1.183 2.17.289 1.425-.007 2.71-.887 3.854l-.136.166a4.548 4.548 0 01-2.201 1.388.123.123 0 00-.081.076c-.191.551-.383 1.023-.74 1.494-.9 1.187-2.222 1.846-3.711 1.838-1.187-.006-2.239-.44-3.157-1.302a.107.107 0 00-.105-.024c-.388.125-.78.143-1.204.138a4.441 4.441 0 01-1.945-.466 4.544 4.544 0 01-1.61-1.335c-.152-.202-.303-.392-.414-.617a5.81 5.81 0 01-.37-.961 4.582 4.582 0 01-.014-2.298.124.124 0 00.006-.056.085.085 0 00-.027-.048 4.467 4.467 0 01-1.034-1.651 3.896 3.896 0 01-.251-1.192 5.189 5.189 0 01.141-1.6c.337-1.112.982-1.985 1.933-2.618.212-.141.413-.251.601-.33.215-.089.43-.164.646-.227a.098.098 0 00.065-.066 4.51 4.51 0 01.829-1.615 4.535 4.535 0 011.837-1.388zm3.482 10.565a.637.637 0 000 1.272h3.636a.637.637 0 100-1.272h-3.636zM8.462 9.23a.637.637 0 00-1.106.631l1.272 2.224-1.266 2.136a.636.636 0 101.095.649l1.454-2.455a.636.636 0 00.005-.64L8.462 9.23z\" fill=\"url(#lobe-icons-codex-_R_0_)\"></path><defs><linearGradient gradientUnits=\"userSpaceOnUse\" id=\"lobe-icons-codex-_R_0_\" x1=\"12\" x2=\"12\" y1=\"3\" y2=\"21\"><stop stop-color=\"#B1A7FF\"></stop><stop offset=\".5\" stop-color=\"#7A9DFF\"></stop><stop offset=\"1\" stop-color=\"#3941FF\"></stop></linearGradient></defs></svg>", "amp": "<svg fill=\"currentColor\" fill-rule=\"evenodd\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M15.087 23.18L12.03 24l-2.097-7.823-5.738 5.738-2.251-2.251 5.718-5.719-7.769-2.082.82-3.057 11.294 3.08 3.08 11.295z\"></path><path d=\"M19.505 18.762l-3.057.82-2.564-9.573-9.572-2.564.819-3.057 11.295 3.079 3.08 11.295z\"></path><path d=\"M23.893 14.374l-3.057.82-2.565-9.572L8.7 3.057 9.52 0l11.295 3.08 3.079 11.294z\"></path></svg>"};
+const pxi = (name, size = 18, color = 'currentColor') => `<span class="px" style="color:${color}">${X[name].replace('<svg', `<svg width="${size}" height="${size}"`)}</span>`;
+const DISC = ['....####....','..########..','.##########.','.##########.','############','############','############','############','.##########.','.##########.','..########..','....####....'];
+const RING = ['....####....','..##....##..','.#........#.','.#........#.','#..........#','#..........#','#..........#','#..........#','.#........#.','.#........#.','..##....##..','....####....'];
+const cellsOf = rows => rows.flatMap((r, y) => [...r].map((ch, x) => ch === '#' ? [x, y] : null).filter(Boolean));
+function disc(fill) { return cellsOf(fill ? DISC : RING); }
+const rects = (cells, color) => cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}"/>`).join('');
+const svg12 = (inner, size) => `<svg width="${size}" height="${size}" viewBox="0 0 12 12" shape-rendering="crispEdges">${inner}</svg>`;
+const check = [[3,6],[3,7],[4,7],[4,8],[5,8],[5,9],[6,7],[6,8],[7,6],[7,7],[8,5],[8,6],[9,4],[9,5]];
+const bang = [[5,2],[6,2],[5,3],[6,3],[5,4],[6,4],[5,5],[6,5],[5,6],[6,6],[5,8],[6,8],[5,9],[6,9]];
+function glyph(st, size = 18) {
+  const ring = disc(false), full = disc(true);
+  switch (st) {
+    case 'todo': return svg12(rects(ring, '#8e8e93'), size);
+    case 'backlog': return svg12(rects(ring.filter((_, i) => i % 3 !== 2), '#aeaeb2'), size);
+    case 'doing': return svg12(rects(ring, '#3b82f6') + rects([[6,3],[7,3],[6,4],[7,4],[8,4],[6,5],[7,5],[8,5],[6,6],[7,6],[8,6],[6,7],[7,7],[8,7],[6,8],[7,8]], '#3b82f6'), size);
+    case 'review': return svg12(rects(ring, '#e0a800') + rects([[5,4],[6,4],[4,5],[5,5],[6,5],[7,5],[4,6],[5,6],[6,6],[7,6],[5,7],[6,7]], '#e0a800'), size);
+    case 'blocked': return svg12(rects(full, '#e5484d') + rects(bang, '#fff'), size);
+    case 'done': return svg12(rects(full, '#30a46c') + rects(check, '#fff'), size);
+    case 'cancelled': return svg12(rects(ring, '#aeaeb2') + rects([[3,8],[4,7],[5,6],[6,5],[7,4],[8,3]], '#aeaeb2'), size);
+  }
+}
+function sidebar() {
+  const nav = (sel, icon, label, n, badge) => `<div class="nav${sel ? ' sel' : ''}">${icon}${label}${badge ? `<span class="badge" style="margin-left:auto;min-width:18px;height:18px;border-radius:9px;background:var(--blocked);color:#fff;font:600 11.5px/18px -apple-system;text-align:center;padding:0 5px">${badge}</span>` : n ? `<span class="n">${n}</span>` : ''}</div>`;
+  const ico = (name, color) => pxi(name, 18, color || 'var(--text2)');
+  return `<div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <div class="search">${pxi('search', 14, 'var(--text3)')}搜索</div>
+    ${nav(0, sprite('you', 18), '我的', 7)}${nav(0, sprite('bot', 18, '#5b5bd6'), 'Agent', 2, 1)}
+    ${nav(0, ico('inbox'), '收件箱', 2)}${nav(0, ico('calendar'), '日历')}${nav(0, ico('checkbox-on'), '已完成')}
+    <div class="group">项目<span class="plus">${pxi('plus', 14, 'var(--text3)')}</span></div>
+    ${nav(1, ico('folder', '#e5484d'), 'adhd-todo', 3)}${nav(0, ico('folder', '#e0a800'), 'answer-me-with-html')}
+    <div class="nav foot">${ico('gear')}设置</div>`;
+}
+const ME = {
+  groups: [
+    ['todo', '待办', [
+      { t: '修复输入框文字无法清空的 bug', p: 'P1' },
+      { t: '加入 mcp daddy 和 mummy 的命名' },
+      { t: '给 README 补 M6 截图', due: '周五' },
+    ]],
+  ],
+  done: { n: 2, rows: [['确认 M6b 的像素图标', '昨天'], ['定 App 图标方向', '10月14日']] },
+  backlog: 1,
+};
+const AG = {
+  groups: [
+    ['blocked', '阻塞', [
+      { a: 'codex', t: '升级 mygo 到 v0.6', said: '等你决定：0.6 改了 TextInput 的回调签名，要不要一起改 composer？', age: '40 分钟' },
+    ]],
+    ['doing', '进行中', [
+      { a: 'claude', t: 'M7：关掉交过来的行、跳到 Agent、列表层级、日历当天卡片', said: '方案已获批准，开始实现 M7：先做项目页的列表层级，再改日历当天卡片', age: '刚刚', live: 1 },
+      { a: 'claude', t: '项目页拆成两列：左边人、右边 Agent', said: '出了 v7 设计稿，等你确认', age: '2 分钟', live: 1, pr: '#45' },
+    ]],
+  ],
+  done: { n: 12, rows: [['M6：子任务、你/Agent 分栏、跳跃动画、厂商图标', '今天'], ['M6b：统一像素风（图标与状态）', '昨天'], ['M6-P2：我的 / Agent 两栏、子任务、跳跃动画', '昨天']] },
+};
+const gh = (st, name, n) => `<div class="gh"><span class="g">${glyph(st, 18)}</span>${name}<span class="c">${n}</span></div>`;
+function meRow(r) {
+  const right = (r.p ? `<span class="${r.p.toLowerCase()}">${r.p}</span>` : '') + (r.due ? `<span>${r.due}</span>` : '');
+  return `<div class="row"><span class="ind"></span><div class="body"><div class="t">${r.t}</div></div><div class="r">${right}</div></div>`;
+}
+function agRow(r) {
+  const right = (r.live ? '<span class="live"></span>' : '') + `<span>${r.age}</span>`;
+  return `<div class="row agent"><span class="av">${sprite(r.a, 18)}</span><div class="body"><div class="top"><div class="t">${r.t}</div><div class="r">${right}</div></div><div class="said">${r.pr ? r.pr + ' · ' : ''}${r.said}</div></div></div>`;
+}
+const doneRow = ([t, when], who) => `<div class="row done">${who ? `<span class="av">${sprite(who, 18)}</span>` : '<span class="ind"></span>'}<div class="body"><div class="t">${t}</div></div><div class="r">${when}</div></div>`;
+function column(kind, data, opts = {}) {
+  const me = kind === 'me';
+  const active = data ? data.groups.reduce((s, g) => s + g[2].length, 0) : 0;
+  let h = `<div class="col"><div class="ch">${me ? sprite('you', 20) : sprite('bot', 20, '#5b5bd6')}<span class="nm">${me ? '我的' : 'Agent'}</span><span class="c">${active || ''}</span></div>`;
+  if (!data) {
+    h += me ? `<div class="quiet">这里还没有你要做的事 —— 在上面写一句就行</div>` : `<div class="quiet">还没有 Agent 在这个项目里汇报<a>安装 MCP →</a></div>`;
+    return h + '</div>';
+  }
+  for (const [st, name, rows] of data.groups) h += gh(st, name, rows.length) + rows.map(me ? meRow : agRow).join('');
+  if (data.done) {
+    h += gh('done', '已完成', data.done.n) + data.done.rows.map(r => doneRow(r, me ? null : 'claude')).join('');
+    if (data.done.n > data.done.rows.length) h += `<div class="more">显示全部 ${data.done.n} 项 →</div>`;
+  }
+  if (data.backlog) h += `<div class="fold"><b>未排期 ${data.backlog}</b>展开</div>`;
+  return h + '</div>';
+}
+document.getElementById('wide').innerHTML = column('me', ME) + column('ag', AG);
+document.getElementById('oneside').innerHTML = column('me', { groups: [['doing', '进行中', [{ t: '把 page.ts 拆成三个文件' }]], ['todo', '待办', [{ t: '写一份 CLI 帮助文档', p: 'P1' }, { t: '视频导出加个进度条', due: '明天' }]]], done: { n: 4, rows: [['发布 v0.3', '昨天'], ['修首页白屏', '10月13日'], ['加暗色模式', '10月12日']] } }) + column('ag', null);
+document.getElementById('narrow').innerHTML = column('me', ME) + `<div style="height:14px"></div>` + column('ag', AG);
+document.querySelectorAll('.sb').forEach(el => el.innerHTML = sidebar());
+document.querySelectorAll('[data-i]').forEach(el => el.outerHTML = pxi(el.dataset.i, +(el.dataset.s || 18), el.dataset.c));
+document.querySelectorAll('[data-st]').forEach(el => el.innerHTML = glyph(el.dataset.st, 16));
+document.querySelectorAll('.av[data-a]').forEach(el => el.innerHTML = sprite(el.dataset.a, +el.dataset.s, el.dataset.c));
+</script>
+</body>
+</html>
