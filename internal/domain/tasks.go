@@ -13,7 +13,7 @@ import (
 const (
 	taskCols = "id, project_id, milestone_id, title, notes, status, priority, due_at, remind_at, " +
 		"branch, pr_url, pr_number, source, created_at, updated_at, completed_at, reminded_at, " +
-		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id"
+		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id, handed_to, handed_at"
 	// DefaultTaskLimit is how many tasks ListTasks returns when no limit is given.
 	DefaultTaskLimit = 50
 )
@@ -51,7 +51,7 @@ func taskDest(t *Task) []any {
 	return []any{&t.ID, &t.ProjectID, &t.MilestoneID, &t.Title, &t.Notes, &t.Status, &t.Priority,
 		&t.DueAt, &t.RemindAt, &t.Branch, &t.PRURL, &t.PRNumber, &t.Source,
 		&t.CreatedAt, &t.UpdatedAt, &t.CompletedAt, &t.RemindedAt,
-		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt, &t.ParentID}
+		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt, &t.ParentID, &t.HandedTo, &t.HandedAt}
 }
 
 func getTask(ctx context.Context, q store.Querier, id int64) (*Task, error) {

@@ -75,6 +75,10 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 	if err != nil {
 		return nil, fmt.Errorf("insert report: %w", err)
 	}
+	// The first report on a task handed to an agent means the agent took it.
+	if _, err := q.ExecContext(ctx, "UPDATE tasks SET handed_to = NULL, handed_at = NULL WHERE id = ? AND handed_to IS NOT NULL", in.TaskID); err != nil {
+		return nil, fmt.Errorf("clear hand-off: %w", err)
+	}
 	return one(q.QueryRowContext(ctx, "SELECT "+reportCols+" FROM reports WHERE id = ?", id), scanReport)
 }
 
@@ -184,6 +188,8 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 	if err != nil {
 		return nil, err
 	}
+	// addReport cleared a hand-off after updated was read.
+	updated.HandedTo, updated.HandedAt = nil, nil
 	return &ProgressResult{Task: *updated, Report: *report, Created: created}, nil
 }
 

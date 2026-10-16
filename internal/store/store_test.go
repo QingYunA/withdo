@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(4),
+		"PRAGMA user_version": int64(5),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 4 {
-		t.Errorf("SchemaVersion = %d, want 4", store.SchemaVersion())
+	if store.SchemaVersion() != 5 {
+		t.Errorf("SchemaVersion = %d, want 5", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 5 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 5 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -323,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 4 {
-		t.Fatalf("user_version = %d, want 4 (migration 004 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 5 {
+		t.Fatalf("user_version = %d, want 5 (migration 005 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -363,6 +363,18 @@ func TestMigration003AddsPullRequestColumnsToExistingRows(t *testing.T) {
 		if _, err := db.ExecContext(ctx, "UPDATE tasks SET "+col+" = 'nope'"); err == nil {
 			t.Errorf("%s should reject an unknown value", col)
 		}
+	}
+}
+
+// Migration 005 adds the hand-off columns; a task that predates them is not waiting for anyone.
+func TestMigration005AddsHandOffColumnsToExistingRows(t *testing.T) {
+	db := openCopyOf(t, "testdata/ts-v2.db")
+	var to, at sql.NullString
+	if err := db.QueryRowContext(ctx, "SELECT handed_to, handed_at FROM tasks").Scan(&to, &at); err != nil {
+		t.Fatal(err)
+	}
+	if to.Valid || at.Valid {
+		t.Errorf("handed_to = %v, handed_at = %v, want NULL for a row from before the migration", to, at)
 	}
 }
 

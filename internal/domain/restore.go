@@ -47,11 +47,11 @@ func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
 		}
 		if _, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status,
 			priority, due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at,
-			reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			t.ID, t.ProjectID, t.MilestoneID, t.Title, t.Notes, t.Status, t.Priority, t.DueAt, t.RemindAt,
 			t.Branch, t.PRURL, t.PRNumber, t.Source, t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RemindedAt,
-			t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt); err != nil {
+			t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt); err != nil {
 			return fmt.Errorf("insert task: %w", err)
 		}
 		for _, r := range s.Reports {
