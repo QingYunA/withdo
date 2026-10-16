@@ -349,7 +349,8 @@ func TestAHandOffNamesNoAgentAnywhereEvenWhenCodexReportedLast(t *testing.T) {
 		t.Errorf("handed to %q, want %q", task.HandedTo, data.AnyAgent)
 	}
 	has(t, r.tt, "Handed to an agent", "Tell any agent “do #5” to pick it up")
-	hasNot(t, r.tt, "Handed to Codex", "Handed to Claude Code", "Codex", "Claude Code")
+	hasNot(t, r.tt, "Handed to Codex", "Handed to Claude Code")
+	onlyInSidebar(t, r.tt, "Codex", "Claude Code") // the sidebar lists the agents at work; no row says one
 	if paintedLeftOf(t, r.tt, 1100, "Write the release notes", 30, codexColor) {
 		t.Error("the waiting row carries the sprite of Codex")
 	}

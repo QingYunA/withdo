@@ -138,6 +138,20 @@ func (msgs Messages) A11yMenuPriority(name string) string {
 	return Catalog.Format(msgs.locale, "a11yMenuPriority", map[string]any{"name": name})
 }
 
+// A11yMenuCategory says "Set category to {name}"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of a category button in the task menu.
+func A11yMenuCategory(name string) string { return In(i18n.Locale()).A11yMenuCategory(name) }
+
+// A11yMenuCategory says "Set category to {name}"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of a category button in the task menu.
+func (msgs Messages) A11yMenuCategory(name string) string {
+	return Catalog.Format(msgs.locale, "a11yMenuCategory", map[string]any{"name": name})
+}
+
 // A11yMenuMoveTo says "Move to {name}"
 // in the language the app shows.
 //
@@ -240,6 +254,20 @@ func A11yPriority(priority string) string { return In(i18n.Locale()).A11yPriorit
 // Accessibility label of the priority value in the inspector.
 func (msgs Messages) A11yPriority(priority string) string {
 	return Catalog.Format(msgs.locale, "a11yPriority", map[string]any{"priority": priority})
+}
+
+// A11yCategory says "Category: {category}"
+// in the language the app shows.
+//
+// Accessibility label of the category value in the inspector.
+func A11yCategory(category string) string { return In(i18n.Locale()).A11yCategory(category) }
+
+// A11yCategory says "Category: {category}"
+// in the language of msgs.
+//
+// Accessibility label of the category value in the inspector.
+func (msgs Messages) A11yCategory(category string) string {
+	return Catalog.Format(msgs.locale, "a11yCategory", map[string]any{"category": category})
 }
 
 // A11yStatus says "Status: {status}"
@@ -794,6 +822,34 @@ func ChangeProject(project string) string { return In(i18n.Locale()).ChangeProje
 // A part of an update: the task moved to a project.
 func (msgs Messages) ChangeProject(project string) string {
 	return Catalog.Format(msgs.locale, "changeProject", map[string]any{"project": project})
+}
+
+// ChangeCategory says "Category: {category}"
+// in the language the app shows.
+//
+// A part of an update: the task was classified.
+func ChangeCategory(category string) string { return In(i18n.Locale()).ChangeCategory(category) }
+
+// ChangeCategory says "Category: {category}"
+// in the language of msgs.
+//
+// A part of an update: the task was classified.
+func (msgs Messages) ChangeCategory(category string) string {
+	return Catalog.Format(msgs.locale, "changeCategory", map[string]any{"category": category})
+}
+
+// ChangeCategoryCleared says "Category cleared"
+// in the language the app shows.
+//
+// A part of an update: the task is no longer classified as work or life.
+func ChangeCategoryCleared() string { return In(i18n.Locale()).ChangeCategoryCleared() }
+
+// ChangeCategoryCleared says "Category cleared"
+// in the language of msgs.
+//
+// A part of an update: the task is no longer classified as work or life.
+func (msgs Messages) ChangeCategoryCleared() string {
+	return Catalog.Format(msgs.locale, "changeCategoryCleared", nil)
 }
 
 // ChangeReminderCleared says "Reminder cleared"
@@ -3108,6 +3164,20 @@ func (msgs Messages) PropPriority() string {
 	return Catalog.Format(msgs.locale, "propPriority", nil)
 }
 
+// PropCategory says "Category"
+// in the language the app shows.
+//
+// Label of a property in the inspector: whether the task is work or life.
+func PropCategory() string { return In(i18n.Locale()).PropCategory() }
+
+// PropCategory says "Category"
+// in the language of msgs.
+//
+// Label of a property in the inspector: whether the task is work or life.
+func (msgs Messages) PropCategory() string {
+	return Catalog.Format(msgs.locale, "propCategory", nil)
+}
+
 // PropPullRequest says "Pull request"
 // in the language the app shows.
 //
@@ -4844,6 +4914,54 @@ func NavAgents() string { return In(i18n.Locale()).NavAgents() }
 // doing.
 func (msgs Messages) NavAgents() string {
 	return Catalog.Format(msgs.locale, "navAgents", nil)
+}
+
+// CategoryWork says "Work"
+// in the language the app shows.
+//
+// Name of the work category: the sidebar row under Mine, that page's title
+// and a choice of the Category property.
+func CategoryWork() string { return In(i18n.Locale()).CategoryWork() }
+
+// CategoryWork says "Work"
+// in the language of msgs.
+//
+// Name of the work category: the sidebar row under Mine, that page's title
+// and a choice of the Category property.
+func (msgs Messages) CategoryWork() string {
+	return Catalog.Format(msgs.locale, "categoryWork", nil)
+}
+
+// CategoryLife says "Life"
+// in the language the app shows.
+//
+// Name of the life category: the sidebar row under Mine, that page's title
+// and a choice of the Category property.
+func CategoryLife() string { return In(i18n.Locale()).CategoryLife() }
+
+// CategoryLife says "Life"
+// in the language of msgs.
+//
+// Name of the life category: the sidebar row under Mine, that page's title
+// and a choice of the Category property.
+func (msgs Messages) CategoryLife() string {
+	return Catalog.Format(msgs.locale, "categoryLife", nil)
+}
+
+// CategoryUnsorted says "Unsorted"
+// in the language the app shows.
+//
+// Sidebar row under Mine and title of its page: the tasks nobody classified
+// as work or life.
+func CategoryUnsorted() string { return In(i18n.Locale()).CategoryUnsorted() }
+
+// CategoryUnsorted says "Unsorted"
+// in the language of msgs.
+//
+// Sidebar row under Mine and title of its page: the tasks nobody classified
+// as work or life.
+func (msgs Messages) CategoryUnsorted() string {
+	return Catalog.Format(msgs.locale, "categoryUnsorted", nil)
 }
 
 // SectionFromAgents says "From your agents"

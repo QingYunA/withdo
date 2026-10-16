@@ -65,7 +65,7 @@ func fromTask(t domain.Task) Task {
 	out := Task{
 		ID: int(t.ID), ParentID: intPtr(t.ParentID), ProjectID: intPtr(t.ProjectID), MilestoneID: intPtr(t.MilestoneID),
 		Title: t.Title, Notes: str(t.Notes), Status: Status(t.Status), Priority: Priority(t.Priority),
-		DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
+		Category: fromCategory(t.Category), DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
 		Branch: str(t.Branch), PRURL: str(t.PRURL), Source: Source(t.Source),
 		CreatedAt: parseTime(t.CreatedAt), UpdatedAt: parseTime(t.UpdatedAt), CompletedAt: parseTimePtr(t.CompletedAt),
 		HandedTo: str(t.HandedTo), HandedAt: parseTimePtr(t.HandedAt),
@@ -76,6 +76,22 @@ func fromTask(t domain.Task) Task {
 	out.PRState, out.PRChecks, out.PRReview = pullRequestOf(t)
 	out.PRCheckedAt, out.PRClosedSeenAt = parseTimePtr(t.PRCheckedAt), parseTimePtr(t.PRClosedSeenAt)
 	return out
+}
+
+func fromCategory(c *domain.Category) Category {
+	if c == nil {
+		return ""
+	}
+	return Category(*c)
+}
+
+// toCategory maps "" to no category.
+func toCategory(c Category) *domain.Category {
+	if c == "" {
+		return nil
+	}
+	dc := domain.Category(c)
+	return &dc
 }
 
 func fromReport(r domain.Report) Report {
@@ -158,6 +174,12 @@ func toPatch(p Patch) domain.TaskPatch {
 	if p.Priority != nil {
 		pr := domain.Priority(*p.Priority)
 		out.Priority = &pr
+	}
+	if p.Category != nil {
+		out.Category = domain.Clear[domain.Category]()
+		if *p.Category != "" {
+			out.Category = domain.Set(domain.Category(*p.Category))
+		}
 	}
 	if p.ProjectID != nil {
 		out.ProjectID = domain.Clear[int64]()

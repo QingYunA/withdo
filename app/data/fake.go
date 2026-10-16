@@ -141,7 +141,7 @@ func (f *Fake) CreateTask(in CreateTaskInput) (Task, error) {
 	now := f.Now()
 	t := Task{
 		ID: f.newID(), ParentID: in.ParentID, ProjectID: in.ProjectID, Title: in.Title, Status: orStatus(in.Status, Todo),
-		Priority: orPriority(in.Priority, P2), Source: orSource(in.Source, SourceUser),
+		Priority: orPriority(in.Priority, P2), Category: in.Category, Source: orSource(in.Source, SourceUser),
 		CreatedAt: now, UpdatedAt: now, DueAt: in.DueAt,
 	}
 	if t.Status.Terminal() {
@@ -182,6 +182,12 @@ func (f *Fake) apply(t *Task, p Patch) error {
 	}
 	if p.Priority != nil {
 		t.Priority = *p.Priority
+	}
+	if p.Category != nil {
+		if *p.Category != "" && *p.Category != CategoryWork && *p.Category != CategoryLife {
+			return fmt.Errorf("category must be work or life")
+		}
+		t.Category = *p.Category
 	}
 	if p.Branch != nil {
 		t.Branch = *p.Branch

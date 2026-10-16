@@ -72,7 +72,22 @@ func (m *Main) placeOf(s surface) data.Place {
 	case screenCalendar:
 		return m.calendarPlace()
 	}
-	return data.Place{Kind: data.PlaceNow}
+	return data.Place{Kind: data.PlaceNow, Category: m.pageCategory()}
+}
+
+// pageCategory is the category of the Work or Life page of Mine, which new tasks typed there get;
+// "" on every other page, Unsorted included.
+func (m *Main) pageCategory() data.Category {
+	if m.nav.screen != screenMine {
+		return ""
+	}
+	switch m.nav.sub {
+	case subWork:
+		return data.CategoryWork
+	case subLife:
+		return data.CategoryLife
+	}
+	return ""
 }
 
 // focusPageComposer takes Cmd+K: it puts the cursor in the composer of the page, or goes to Now
@@ -193,6 +208,7 @@ func (m *Main) submit(s surface) {
 func (m *Main) addPlain(text string) {
 	cs, place := &m.cmp[surfacePage], m.placeOf(surfacePage)
 	in := data.CreateTaskInput{Title: strings.Join(strings.Fields(text), " "), Source: data.SourceUser}
+	in.Category = place.Category
 	project := ""
 	if place.Kind == data.PlaceProject {
 		in.ProjectID, project = data.IntPtr(place.ProjectID), m.app.projectName(&place.ProjectID)

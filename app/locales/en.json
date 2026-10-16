@@ -68,6 +68,16 @@
       }
     }
   },
+  "a11yMenuCategory": "Set category to {name}",
+  "@a11yMenuCategory": {
+    "description": "Accessibility label and tooltip of a category button in the task menu.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Work"
+      }
+    }
+  },
   "a11yMenuMoveTo": "Move to {name}",
   "@a11yMenuMoveTo": {
     "description": "Accessibility label of a project (or the Inbox) on the Move to page of the task menu.",
@@ -135,6 +145,16 @@
       "priority": {
         "type": "String",
         "example": "P1  High"
+      }
+    }
+  },
+  "a11yCategory": "Category: {category}",
+  "@a11yCategory": {
+    "description": "Accessibility label of the category value in the inspector.",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "Work"
       }
     }
   },
@@ -413,6 +433,20 @@
         "example": "adhd-todo"
       }
     }
+  },
+  "changeCategory": "Category: {category}",
+  "@changeCategory": {
+    "description": "A part of an update: the task was classified.",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "Work"
+      }
+    }
+  },
+  "changeCategoryCleared": "Category cleared",
+  "@changeCategoryCleared": {
+    "description": "A part of an update: the task is no longer classified as work or life."
   },
   "changeReminderCleared": "Reminder cleared",
   "@changeReminderCleared": {
@@ -1282,6 +1316,10 @@
   "@propPriority": {
     "description": "Label of a property in the inspector."
   },
+  "propCategory": "Category",
+  "@propCategory": {
+    "description": "Label of a property in the inspector: whether the task is work or life."
+  },
   "propPullRequest": "Pull request",
   "@propPullRequest": {
     "description": "Label of the pull request in the inspector. PR stays as it is."
@@ -1929,6 +1967,18 @@
   "navAgents": "Agents",
   "@navAgents": {
     "description": "Sidebar row and page title of the screen that shows what agents are doing."
+  },
+  "categoryWork": "Work",
+  "@categoryWork": {
+    "description": "Name of the work category: the sidebar row under Mine, that page's title and a choice of the Category property."
+  },
+  "categoryLife": "Life",
+  "@categoryLife": {
+    "description": "Name of the life category: the sidebar row under Mine, that page's title and a choice of the Category property."
+  },
+  "categoryUnsorted": "Unsorted",
+  "@categoryUnsorted": {
+    "description": "Sidebar row under Mine and title of its page: the tasks nobody classified as work or life."
   },
   "sectionFromAgents": "From your agents",
   "@sectionFromAgents": {

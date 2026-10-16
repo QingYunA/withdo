@@ -27,6 +27,9 @@ type Scope struct {
 	TaskID    int64 // ScopeTask
 	// Day is the selected day of the Calendar page, "2006-01-02" in the user's zone (ScopeCalendar).
 	Day string
+	// Category is the Work or Life page of Mine (ScopeNow): a new task is in that category unless
+	// the words say otherwise.
+	Category domain.Category
 }
 
 // scopeSection is the part of the prompt that states the scope. A project that is gone or
@@ -50,7 +53,19 @@ func scopeSection(now time.Time, projects []domain.Project, sc Scope, focus *dom
 	case sc.Kind == ScopeInbox:
 		return "Where the request comes from: the Inbox page. A new task goes to the Inbox unless the words name a project.\n"
 	}
+	if sc.Kind == ScopeNow && sc.Category.Valid() {
+		return fmt.Sprintf("Where the request comes from: the %s page of Mine. A new task goes to the Inbox unless the words "+
+			"name a project, and its category is %s unless the words say it is %s.\n", sc.Category, sc.Category, otherCategory(sc.Category))
+	}
 	return "Where the request comes from: the Now page. A new task goes to the Inbox unless the words name a project.\n"
+}
+
+// otherCategory is the category a page's category is not.
+func otherCategory(c domain.Category) domain.Category {
+	if c == domain.CategoryWork {
+		return domain.CategoryLife
+	}
+	return domain.CategoryWork
 }
 
 func activeProject(projects []domain.Project, id int64) (domain.Project, bool) {

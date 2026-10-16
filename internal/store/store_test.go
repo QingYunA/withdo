@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(6),
+		"PRAGMA user_version": int64(7),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 6 {
-		t.Errorf("SchemaVersion = %d, want 6", store.SchemaVersion())
+	if store.SchemaVersion() != 7 {
+		t.Errorf("SchemaVersion = %d, want 7", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 6 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 6 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -221,7 +221,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 7"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 8"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -323,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 6 {
-		t.Fatalf("user_version = %d, want 6 (migrations 005 and 006 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
+		t.Fatalf("user_version = %d, want 6 (migrations 005 to 007 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -392,6 +392,27 @@ func TestMigration006AddsHandOffColumnsToExistingRows(t *testing.T) {
 	}
 	if to.Valid || at.Valid {
 		t.Errorf("handed_to = %v, handed_at = %v, want NULL for a row from before the migration", to, at)
+	}
+}
+
+// Migration 007 adds tasks.category: a task that predates it is not classified, and only work or
+// life can be written.
+func TestMigration007AddsCategoryToExistingRows(t *testing.T) {
+	db := openCopyOf(t, "testdata/ts-v2.db")
+	var category sql.NullString
+	if err := db.QueryRowContext(ctx, "SELECT category FROM tasks").Scan(&category); err != nil {
+		t.Fatal(err)
+	}
+	if category.Valid {
+		t.Errorf("category = %q, want NULL for a row from before the migration", category.String)
+	}
+	for _, v := range []string{"work", "life"} {
+		if _, err := db.ExecContext(ctx, "UPDATE tasks SET category = ?", v); err != nil {
+			t.Errorf("category %q: %v", v, err)
+		}
+	}
+	if _, err := db.ExecContext(ctx, "UPDATE tasks SET category = 'nope'"); err == nil {
+		t.Error("category should reject an unknown value")
 	}
 }
 

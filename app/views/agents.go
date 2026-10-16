@@ -19,17 +19,17 @@ const subRail float32 = 6
 // their tasks at work with the subtasks under each, and what they finished today.
 func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 	sub := ""
-	if n := m.agents.Count(); n > 0 {
+	if n := m.agentsPage.Count(); n > 0 {
 		sub = m.say.AgentsWorking(n)
 	}
-	m.pageHeader(c, t, m.say.NavAgents(), sub, nil)
+	m.pageHeader(c, t, m.agentsTitle(), sub, nil)
 	ui.Box(c).Height(18).Shrink(0)
 	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
 	m.belowComposer(c, func() {
-		if m.agents.Empty() {
+		if m.agentsPage.Empty() {
 			emptyState(c, t, m.say.AgentsEmpty(), m.say.AgentsEmptyBody(), 72, func() {
 				if link(c, t, m.say.LinkHowToConnect()).Margin(6, 0, 0).Clicked() {
 					m.openSettings(PaneAgents)
@@ -37,9 +37,9 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 			})
 			return
 		}
-		if len(m.agents.Working) > 0 {
-			sectionHeader(c, t, m.say.SectionWorking(), len(m.agents.Working))
-			for _, r := range m.agents.Working {
+		if len(m.agentsPage.Working) > 0 {
+			sectionHeader(c, t, m.say.SectionWorking(), len(m.agentsPage.Working))
+			for _, r := range m.agentsPage.Working {
 				m.workingRow(c, t, r)
 			}
 		}
@@ -145,18 +145,18 @@ func (m *Main) pillLabel(s data.Status) string {
 // agentsDoneToday is what the agents finished since midnight: the task, how many subtasks it had, and
 // when. Its subtasks are not rows.
 func (m *Main) agentsDoneToday(c *ui.Context, t *theme.Tokens) {
-	if len(m.agents.Done) == 0 {
+	if len(m.agentsPage.Done) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionDoneToday(), len(m.agents.Done)+m.agents.MoreDone)
-	for _, r := range m.agents.Done {
+	sectionHeader(c, t, m.say.SectionDoneToday(), len(m.agentsPage.Done)+m.agentsPage.MoreDone)
+	for _, r := range m.agentsPage.Done {
 		o := finishedOpts{when: m.clock.Time(r.Since), quiet: true}
 		if n := len(r.Subs); n > 0 {
 			o.note = m.say.SubtasksCount(n)
 		}
 		m.finishedRow(c, t, r.Task, o)
 	}
-	if m.agents.MoreDone > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
+	if m.agentsPage.MoreDone > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
 		m.goTo(nav{screen: screenCompleted})
 	}
 }

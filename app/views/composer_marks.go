@@ -59,6 +59,9 @@ func markFields(d data.Detail) []string {
 	if d.Priority != "" {
 		out = append(out, "priority")
 	}
+	if d.Category != "" {
+		out = append(out, "category")
+	}
 	return out
 }
 
@@ -76,6 +79,10 @@ func changeField(c data.Change) string {
 		return "status"
 	case data.ChangePriority:
 		return "priority"
+	case data.ChangeCategory:
+		if c.Value != "" {
+			return "category"
+		}
 	case data.ChangeProject:
 		return "project"
 	}
