@@ -11,10 +11,10 @@ func TestReportProgressByTaskIDTakesAHandedOffTask(t *testing.T) {
 	r := newRig(t)
 	p := must[*domain.Project](t)(r.core.UpsertProject(ctx, domain.UpsertProjectInput{RepoSlug: "acme/widgets"}))
 	task := must[*domain.Task](t)(r.core.CreateTask(ctx, domain.CreateTaskInput{Title: "Write the plan", ProjectID: &p.ID}))
-	must[*domain.Task](t)(r.core.HandOff(ctx, task.ID, "claude"))
+	must[*domain.Task](t)(r.core.HandOff(ctx, task.ID))
 
 	waiting := r.ok("get_task", map[string]any{"task_id": task.ID}).obj("task")
-	if waiting["handed_to"] != "claude" || waiting["status"] != "todo" || waiting["source"] != "agent" {
+	if waiting["handed_to"] != domain.AnyAgent || waiting["status"] != "todo" || waiting["source"] != "agent" {
 		t.Fatalf("waiting task = %+v", waiting)
 	}
 

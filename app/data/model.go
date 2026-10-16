@@ -102,8 +102,8 @@ type Task struct {
 	PRCheckedAt    *time.Time
 	PRClosedSeenAt *time.Time // the user dismissed the closed pull request
 
-	// HandedTo is the agent the user handed the task to (an agentsetup ID: "claude", "codex"),
-	// until that agent first reports on it; empty otherwise. HandedAt is when.
+	// HandedTo says the user handed the task over, until an agent first reports on it; empty
+	// otherwise. It is "agent": any agent (older rows may hold an agent's id). HandedAt is when.
 	HandedTo string
 	HandedAt *time.Time
 }
@@ -238,24 +238,16 @@ type Store interface {
 	// merging; the task stays as it is.
 	KeepClosedPR(id int) error
 
-	// HandOff gives a task of the user's to a coding agent. The task becomes the agent's (Source
-	// agent, To do, HandedTo set) and waits there until the agent reports on it. The agent is the
-	// one that last reported in the task's project, else the first one found on this Mac. Nothing is
-	// started: the user pastes the task to the agent, or the agent finds it by itself.
-	HandOff(id int) (HandOffResult, error)
+	// HandOff gives a task of the user's to any agent. The task becomes the agents' (Source
+	// agent, To do, HandedTo "agent") and waits there until an agent reports on it. Nothing is
+	// started: the user tells an agent to take it, or an agent finds it by itself.
+	HandOff(id int) (Task, error)
 	// TakeBack makes an agent's task the user's again: Source user, HandedTo cleared. Its status
 	// stays.
 	TakeBack(id int) (Task, error)
 	// RestoreHandOff puts a task's Source and hand-off back as they were, for the Undo of TakeBack:
 	// agent "" and at nil mean "not waiting". It starts nothing and leaves the status alone.
 	RestoreHandOff(id int, agent string, at *time.Time, source Source) (Task, error)
-}
-
-// HandOffResult is what HandOff did.
-type HandOffResult struct {
-	Task      Task
-	Agent     string // the agentsetup ID, as in Task.HandedTo
-	AgentName string // as people write it: "Claude Code"
 }
 
 // IntPtr returns a pointer to v.

@@ -123,8 +123,8 @@ type Task struct {
 	// ParentID is the task this one is a subtask of: the task of the agent that started this
 	// task's subagent. Nil for a top-level task.
 	ParentID *int64 `json:"parent_id"`
-	// HandedTo is the agent (an agentsetup ID: "claude", "codex") the user handed the task to, until
-	// that agent first reports on it; HandedAt is when. Both are nil otherwise.
+	// HandedTo says the user handed the task over, until an agent first reports on it: "agent", any
+	// agent (rows of an earlier build may hold an agent's id); HandedAt is when. Both are nil otherwise.
 	HandedTo *string `json:"handed_to"`
 	HandedAt *string `json:"handed_at"`
 }

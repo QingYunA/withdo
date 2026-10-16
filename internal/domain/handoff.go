@@ -3,23 +3,22 @@ package domain
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
 
-// HandOff gives a task to an agent: it becomes the agent's (source agent), goes back to To do and
-// open, and waits there with HandedTo and HandedAt set until the agent reports on it. agentID is
-// an agentsetup ID such as "claude".
-func (c *Core) HandOff(ctx context.Context, taskID int64, agentID string) (*Task, error) {
-	if strings.TrimSpace(agentID) == "" {
-		return nil, invalid("agent", "must not be blank")
-	}
+// AnyAgent is what HandedTo holds for a task handed over: not one agent but any agent, the word
+// reports use for a client with no name. Rows written by an earlier version may hold an agent's id.
+const AnyAgent = "agent"
+
+// HandOff gives a task to any agent: it becomes the agents' (source agent), goes back to To do and
+// open, and waits there with HandedTo (AnyAgent) and HandedAt set until an agent reports on it.
+func (c *Core) HandOff(ctx context.Context, taskID int64) (*Task, error) {
 	ts := c.stamp()
 	return c.setHandOff(ctx, taskID, "hand off", func(q store.Querier) error {
 		_, err := q.ExecContext(ctx, `UPDATE tasks SET source = ?, status = ?, completed_at = NULL, handed_to = ?,
 			handed_at = ?, updated_at = ? WHERE id = ?`,
-			SourceAgent, StatusTodo, agentID, ts, ts, taskID)
+			SourceAgent, StatusTodo, AnyAgent, ts, ts, taskID)
 		return err
 	})
 }
@@ -68,20 +67,4 @@ func (c *Core) setHandOff(ctx context.Context, taskID int64, what string, change
 		return nil, fmt.Errorf("%s task %d: %w", what, taskID, err)
 	}
 	return out, nil
-}
-
-// LastReportAgent is the agent that filed the newest report on any task of the project, or "" when
-// none did. The GitHub poller is not an agent, so its reports do not count.
-func (c *Core) LastReportAgent(ctx context.Context, projectID int64) (string, error) {
-	var agent string
-	err := c.db.QueryRowContext(ctx, `SELECT r.agent FROM reports r JOIN tasks t ON t.id = r.task_id
-		WHERE t.project_id = ? AND r.agent <> '' AND r.agent <> ? ORDER BY r.created_at DESC, r.id DESC LIMIT 1`,
-		projectID, GitHubAgent).Scan(&agent)
-	if isNoRows(err) {
-		return "", nil
-	}
-	if err != nil {
-		return "", fmt.Errorf("last report agent of project %d: %w", projectID, err)
-	}
-	return agent, nil
 }
