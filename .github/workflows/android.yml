@@ -1,0 +1,148 @@
+name: Android
+
+on:
+  push:
+    branches: [main, 'codex/android-client']
+    paths: ['mobile/**', 'internal/mobilesync/**', 'cmd/adhd-sync/**', 'go.mod', 'go.sum', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['mobile/**', 'internal/mobilesync/**', 'cmd/adhd-sync/**', 'go.mod', 'go.sum', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_NO_TELEMETRY: '1'
+  CI: '1'
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '12.3.4'
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: pnpm --dir mobile install --frozen-lockfile
+      - run: pnpm --dir mobile typecheck && pnpm --dir mobile lint
+      - run: go test -race ./internal/mobilesync ./cmd/adhd-sync
+      - run: go vet ./internal/mobilesync ./cmd/adhd-sync
+      - name: Test SQLite clients against the real Go service
+        shell: bash
+        run: |
+          go build -o "$RUNNER_TEMP/adhd-sync" ./cmd/adhd-sync
+          export ADHD_SYNC_TOKEN=ci-isolated-test-token
+          "$RUNNER_TEMP/adhd-sync" -listen 127.0.0.1:18787 -db "$RUNNER_TEMP/sync.db" &
+          sync_pid=$!
+          trap 'kill "$sync_pid" 2>/dev/null || true' EXIT
+          python3 - <<'PY'
+          import time, urllib.request
+          for attempt in range(30):
+              try:
+                  urllib.request.urlopen('http://127.0.0.1:18787/healthz', timeout=1).close()
+                  break
+              except OSError:
+                  if attempt == 29:
+                      raise
+                  time.sleep(1)
+          PY
+          MOBILE_SYNC_TEST_URL=http://127.0.0.1:18787 MOBILE_SYNC_TEST_TOKEN="$ADHD_SYNC_TOKEN" pnpm --dir mobile test
+
+  apk:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '12.3.4'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: pnpm --dir mobile install --frozen-lockfile
+      - run: pnpm --dir mobile prebuild:android
+      - name: Build standalone test APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,x86_64
+      - name: Collect test build and checksum
+        run: |
+          mkdir -p mobile/dist
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/dist/ADHD-Todo-0.3.0-android.apk
+          cp mobile/THIRD_PARTY_NOTICES.txt mobile/dist/
+          cd mobile/dist
+          sha256sum ADHD-Todo-0.3.0-android.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: mobile/dist/
+          if-no-files-found: error
+
+  emulator:
+    needs: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MAESTRO_CLI_NO_ANALYTICS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: mobile/dist
+      - name: Install pinned Maestro CLI
+        run: |
+          curl --fail --location --retry 2 https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.11.0/maestro.zip -o "$RUNNER_TEMP/maestro.zip"
+          echo "5384593cb4e7a106489e75a821d157dd43f4e438df6bc308b72e82c685e1283a  $RUNNER_TEMP/maestro.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro"
+          echo "$RUNNER_TEMP/maestro/maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            mkdir -p mobile/.maestro-results
+            adb install mobile/dist/ADHD-Todo-0.3.0-android.apk
+            adb logcat -c
+            adb shell cmd connectivity airplane-mode enable
+            maestro test --debug-output mobile/.maestro-results mobile/.maestro/offline.yaml
+            adb exec-out screencap -p > mobile/.maestro-results/android-light.png
+            adb shell cmd uimode night yes
+            maestro test --debug-output mobile/.maestro-results/dark mobile/.maestro/reopen.yaml
+            adb exec-out screencap -p > mobile/.maestro-results/android-dark.png
+            adb logcat -d > mobile/.maestro-results/logcat.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-emulator-evidence
+          path: mobile/.maestro-results/
+          if-no-files-found: warn

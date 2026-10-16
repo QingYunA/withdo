@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "ADHD Todo",
+    "slug": "adhd-todo",
+    "version": "0.3.0",
+    "scheme": "adhdtodo",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "dev.adhdtodo.mobile",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": true,
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#F5F5F7"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "dev.adhdtodo.mobile",
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-localization",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "color": "#5B5BD6",
+          "defaultChannel": "reminders"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
+  }
+}

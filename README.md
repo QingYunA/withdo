@@ -18,6 +18,10 @@ More in [`docs/design/screens/`](docs/design/screens/); the design is specified 
 
 Requires Go 1.27.1 or newer (macOS for the app).
 
+The Android client lives in [`mobile/`](mobile/README.md). It uses Expo / React Native with
+on-device SQLite and an optional [Go sync service](docs/android-sync.md). Its builds and
+offline emulator checks run in the Android workflow.
+
 ```sh
 # the app: app/build/darwin-arm64/ADHD Todo.app and a .dmg
 cd app && go tool mygo build
@@ -67,4 +71,3 @@ SCREENS_OUT=$PWD/docs/design/screens go test ./app/...   # re-render the design 
 
 Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
 `app/` (mygo UI: `data`, `theme`, `views`).
-
