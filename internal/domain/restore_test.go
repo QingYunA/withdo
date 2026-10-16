@@ -15,7 +15,7 @@ func richTask(t *testing.T, c *domain.Core, projectID, milestoneID *int64) *doma
 		Title: "Port the store", Source: domain.SourceAgent, ProjectID: projectID, MilestoneID: milestoneID,
 		Status: domain.StatusReview, Priority: domain.P1, Notes: ptr("notes"), Branch: ptr("feat/store"),
 		PRURL: ptr("https://github.com/acme/widgets/pull/7"), DueAt: ptr("2026-10-20T00:00:00.000Z"),
-		RemindAt: ptr("2026-10-19T09:00:00.000Z"),
+		RemindAt: ptr("2026-10-19T09:00:00.000Z"), Category: ptr(domain.CategoryWork),
 	})
 	st := domain.StatusDoing
 	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "claude-code", Summary: "first", Status: &st, NextStep: ptr("second"), Cwd: "/work/tree"}))

@@ -13,7 +13,7 @@ import (
 const (
 	taskCols = "id, project_id, milestone_id, title, notes, status, priority, due_at, remind_at, " +
 		"branch, pr_url, pr_number, source, created_at, updated_at, completed_at, reminded_at, " +
-		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id, handed_to, handed_at"
+		"pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id, handed_to, handed_at, category"
 	// DefaultTaskLimit is how many tasks ListTasks returns when no limit is given.
 	DefaultTaskLimit = 50
 )
@@ -51,7 +51,7 @@ func taskDest(t *Task) []any {
 	return []any{&t.ID, &t.ProjectID, &t.MilestoneID, &t.Title, &t.Notes, &t.Status, &t.Priority,
 		&t.DueAt, &t.RemindAt, &t.Branch, &t.PRURL, &t.PRNumber, &t.Source,
 		&t.CreatedAt, &t.UpdatedAt, &t.CompletedAt, &t.RemindedAt,
-		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt, &t.ParentID, &t.HandedTo, &t.HandedAt}
+		&t.PRState, &t.PRChecks, &t.PRReview, &t.PRCheckedAt, &t.PRClosedSeenAt, &t.ParentID, &t.HandedTo, &t.HandedAt, &t.Category}
 }
 
 func getTask(ctx context.Context, q store.Querier, id int64) (*Task, error) {
@@ -85,6 +85,8 @@ type CreateTaskInput struct {
 	// ParentID makes the task a subtask. The parent must exist and be in the same project; a task
 	// without a project joins the parent's.
 	ParentID *int64
+	// Category is what the task is for the user; nil leaves it unclassified.
+	Category *Category
 }
 
 // CreateTask inserts a task. A milestone with no project assigns the
@@ -123,6 +125,8 @@ func withDefaults(in CreateTaskInput) (CreateTaskInput, error) {
 		return in, invalid("status", "must be one of %s", joinStatuses())
 	case !in.Priority.Valid():
 		return in, invalid("priority", "must be one of P0, P1, P2, P3")
+	case in.Category != nil && !in.Category.Valid():
+		return in, invalid("category", "must be work or life")
 	}
 	return in, nil
 }
@@ -143,10 +147,10 @@ func (c *Core) insertTask(ctx context.Context, q store.Querier, in CreateTaskInp
 		completed = &ts
 	}
 	res, err := q.ExecContext(ctx, `INSERT INTO tasks (project_id, milestone_id, title, notes, status, priority,
-		due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at, parent_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at, parent_id, category)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		projectID, in.MilestoneID, in.Title, in.Notes, in.Status, in.Priority,
-		in.DueAt, in.RemindAt, in.Branch, in.PRURL, prNumber(in.PRURL), in.Source, ts, ts, completed, in.ParentID)
+		in.DueAt, in.RemindAt, in.Branch, in.PRURL, prNumber(in.PRURL), in.Source, ts, ts, completed, in.ParentID, in.Category)
 	if err != nil {
 		return nil, fmt.Errorf("insert task: %w", err)
 	}
@@ -210,6 +214,7 @@ type TaskPatch struct {
 	Branch      Nullable[string]
 	PRURL       Nullable[string]
 	ParentID    Nullable[int64]
+	Category    Nullable[Category]
 }
 
 // UpdateTask patches a task in place. Moving to done/cancelled stamps
@@ -258,9 +263,9 @@ func (c *Core) updateTask(ctx context.Context, q store.Querier, id int64, patch 
 	}
 	_, err = q.ExecContext(ctx, `UPDATE tasks SET project_id = ?, milestone_id = ?, title = ?, notes = ?, status = ?,
 		priority = ?, due_at = ?, remind_at = ?, reminded_at = ?, branch = ?, pr_url = ?, pr_number = ?,
-		updated_at = ?, completed_at = ?, parent_id = ? WHERE id = ?`,
+		updated_at = ?, completed_at = ?, parent_id = ?, category = ? WHERE id = ?`,
 		projectID, next.MilestoneID, next.Title, next.Notes, next.Status, next.Priority, next.DueAt,
-		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, next.ParentID, id)
+		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, next.ParentID, next.Category, id)
 	if err != nil {
 		return nil, fmt.Errorf("update task: %w", err)
 	}
@@ -304,6 +309,10 @@ func applyPatch(cur Task, p TaskPatch) (Task, error) {
 	next.Branch = p.Branch.apply(cur.Branch)
 	next.PRURL = p.PRURL.apply(cur.PRURL)
 	next.ParentID = p.ParentID.apply(cur.ParentID)
+	next.Category = p.Category.apply(cur.Category)
+	if next.Category != nil && !next.Category.Valid() {
+		return cur, invalid("category", "must be work or life")
+	}
 	return next, nil
 }
 
