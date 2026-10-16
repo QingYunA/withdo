@@ -64,7 +64,7 @@ func openBackend(fake, empty bool) (*backend, error) {
 
 func openReal(path string) (*backend, error) {
 	dir := filepath.Dir(path)
-	r, err := data.OpenReal(context.Background(), path, data.RealOptions{Launcher: data.DefaultLauncher(dir)})
+	r, err := data.OpenReal(context.Background(), path, data.RealOptions{})
 	if err != nil {
 		return nil, err
 	}

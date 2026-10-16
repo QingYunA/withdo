@@ -12,21 +12,17 @@ import (
 
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/QingYunA/adhd-todo/internal/domain"
-	"github.com/QingYunA/adhd-todo/internal/handoff"
 	"github.com/QingYunA/adhd-todo/internal/store"
 	"github.com/QingYunA/adhd-todo/internal/watch"
 )
 
 // RealOptions tune a Real store. The zero value uses the wall clock and the default poll interval,
-// finds the agents on this Mac, and starts none of them: a hand-off then only reports that the
-// prompt is for the clipboard. The app passes DefaultLauncher.
+// and finds the agents on this Mac.
 type RealOptions struct {
 	Now      func() time.Time
 	Interval time.Duration
 	// Agents says which agents are installed and where; nil looks at this Mac.
 	Agents *agentsetup.Env
-	// Launcher starts an agent for HandOff; nil starts none.
-	Launcher handoff.Launcher
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and

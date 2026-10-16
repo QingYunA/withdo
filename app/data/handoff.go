@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// HandOff implements Store. The Fake hands every task to Claude Code and pretends to start it.
-func (f *Fake) HandOff(id int, prompt string) (HandOffResult, error) {
+// HandOff implements Store. The Fake hands every task to Claude Code.
+func (f *Fake) HandOff(id int) (HandOffResult, error) {
 	f.mu.Lock()
 	t, ok := f.find(id)
 	if !ok {
@@ -18,7 +18,7 @@ func (f *Fake) HandOff(id int, prompt string) (HandOffResult, error) {
 	out := *t
 	f.mu.Unlock()
 	f.notify()
-	return HandOffResult{Task: out, Agent: "claude", AgentName: "Claude Code", Launched: true}, nil
+	return HandOffResult{Task: out, Agent: "claude", AgentName: "Claude Code"}, nil
 }
 
 // TakeBack implements Store.

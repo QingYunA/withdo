@@ -57,7 +57,7 @@ func TestAWaitingTaskIsNeitherStaleNorWorking(t *testing.T) {
 func TestAWaitingTaskIsNotInTheOverview(t *testing.T) {
 	h := newHandRig(t, "claude")
 	task := must[Task](t)(h.CreateTask(CreateTaskInput{Title: "Write the plan", ProjectID: &h.project.ID, Status: Doing}))
-	must[HandOffResult](t)(h.HandOff(task.ID, "p"))
+	must[HandOffResult](t)(h.HandOff(task.ID))
 	if ov := must[Overview](t)(h.Overview()); len(ov.Groups) != 0 {
 		t.Errorf("overview = %+v, want no active task while it waits", ov.Groups)
 	}

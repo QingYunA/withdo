@@ -93,28 +93,14 @@ func (e *Env) lookPath(name string) (string, error) {
 	return "", exec.ErrNotFound
 }
 
-// Find looks for a command on PATH and in the usual places an app started from the Dock does not
-// see, and returns its full path.
-func (e *Env) Find(name string) (string, error) { return e.lookPath(name) }
-
-// ToolDirs are the folders a command at path needs on PATH: its own, then the usual places. A tool
-// installed with npm starts `node` through env, which needs its own folder.
-func (e *Env) ToolDirs(path string) []string {
-	return append([]string{filepath.Dir(path)}, e.extraDirs()...)
-}
-
-// SearchPath is the PATH to run the command at path with: its ToolDirs, then the one this process
-// has.
-func (e *Env) SearchPath(path string) string {
-	return strings.Join(e.ToolDirs(path), ":") + ":" + os.Getenv("PATH")
-}
-
 func (e *Env) run(ctx context.Context, path string, args ...string) ([]byte, error) {
 	if e.Run != nil {
 		return e.Run(ctx, path, args...)
 	}
 	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Env = append(os.Environ(), "PATH="+e.SearchPath(path))
+	// A tool installed with npm starts `node` through env, which needs its own folder on PATH.
+	dirs := append([]string{filepath.Dir(path)}, e.extraDirs()...)
+	cmd.Env = append(os.Environ(), "PATH="+strings.Join(dirs, ":")+":"+os.Getenv("PATH"))
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
 	err := cmd.Run()
