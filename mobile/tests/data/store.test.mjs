@@ -22,6 +22,22 @@ class SQLiteAdapter {
     catch (error) { this.raw.exec('ROLLBACK'); throw error; }
   }
 }
+
+// Expo withExclusiveTransactionAsync opens a separate connection for every transaction.
+class FreshConnectionAdapter extends SQLiteAdapter {
+  transactionConnections = 0;
+  constructor(path) { super(path); this.path = path; }
+  async withExclusiveTransactionAsync(work) {
+    const connection = new SQLiteAdapter(this.path);
+    this.transactionConnections++;
+    try {
+      // Emulate the native SQLITE_DEFAULT_FOREIGN_KEYS=1 build flag before BEGIN.
+      await connection.execAsync('PRAGMA foreign_keys=ON');
+      await connection.withExclusiveTransactionAsync(work);
+    } finally { connection.raw.close(); }
+  }
+}
+
 class Server {
   epoch = randomUUID();
   cursor = 0;
@@ -75,7 +91,7 @@ class Server {
     return Response.json({ results });
   }
 }
-function fixture(t, server = new Server(), extra = {}) {
+function fixture(t, server = new Server(), extra = {}, Adapter = SQLiteAdapter) {
   const directory = mkdtempSync(join(tmpdir(), 'adhd-mobile-'));
   const path = join(directory, 'tasks.db');
   const tokens = new Map();
@@ -83,7 +99,7 @@ function fixture(t, server = new Server(), extra = {}) {
   let adapter;
   function open() {
     const store = createAppStore({
-      openDatabase: async () => { adapter = new SQLiteAdapter(path); handles.push(adapter); return adapter; },
+      openDatabase: async () => { adapter = new Adapter(path); handles.push(adapter); return adapter; },
       uuid: randomUUID,
       fetch: server.fetch.bind(server),
       getToken: async url => tokens.get(url) ?? null,
@@ -558,4 +574,63 @@ test('byte-limited batches defer a child until its skipped parent create is sele
   await f.store.sync();
   assert.equal(f.store.getSnapshot().pendingCount, 0);
   assert.equal(f.server.records.get(`task:${child.id}`).data.parentId, parent.id);
+});
+
+
+test('native-style fresh transaction connections enforce deferred foreign keys and preserve shuffled parent/project/report state', async t => {
+  const server = new Server();
+  const timestamp = new Date().toISOString();
+  const project = { id: randomUUID(), name: 'native FK project', repoSlug: '', archivedAt: null, createdAt: timestamp, updatedAt: timestamp };
+  const parent = { id: randomUUID(), projectId: project.id, parentId: null, title: 'parent after child', notes: '', status: 'todo', priority: 'P2', source: 'user', dueAt: null, remindAt: null, branch: '', prUrl: '', createdAt: timestamp, updatedAt: timestamp, completedAt: null };
+  const child = { ...parent, id: randomUUID(), parentId: parent.id, title: 'child inserted before parent' };
+  const report = { id: randomUUID(), taskId: child.id, agent: 'test', status: 'doing', summary: 'report for shuffled child', nextStep: '', createdAt: timestamp };
+  server.write('task', child.id, child);
+  server.write('report', report.id, report);
+  server.write('task', parent.id, parent);
+  server.write('project', project.id, project);
+  const f = fixture(t, server, {}, FreshConnectionAdapter);
+  await f.connect();
+  await f.store.sync();
+  assert.equal(f.store.getSnapshot().pendingCount, 0);
+  assert.equal(f.store.getSnapshot().tasks.length, 2);
+  assert.equal(f.store.getSnapshot().reports[0].taskId, child.id);
+  assert.equal(f.db.raw.prepare('PRAGMA foreign_key_check').all().length, 0);
+  await assert.rejects(f.db.withExclusiveTransactionAsync(async tx => {
+    assert.equal((await tx.getAllAsync('PRAGMA foreign_keys'))[0].foreign_keys, 1);
+    await tx.runAsync('INSERT INTO tasks(id,data,project_id,parent_id) VALUES (?,?,?,?)', randomUUID(), '{}', randomUUID(), null);
+  }), /FOREIGN KEY constraint failed/);
+  assert.equal(f.db.raw.prepare('SELECT count(*) AS n FROM tasks').get().n, 2, 'failed deferred commit rolls back the fresh connection');
+  await f.store.updateTask(child.id, { notes: 'fresh connection durable outbox' });
+  assert.equal(f.store.getSnapshot().pendingCount, 1);
+  const reopened = f.open();
+  await reopened.initialize();
+  assert.equal(reopened.getSnapshot().tasks.find(task => task.id === child.id).notes, 'fresh connection durable outbox');
+  assert.equal(reopened.getSnapshot().pendingCount, 1);
+  const other = await reopened.createProject('other project');
+  await assert.rejects(reopened.updateTask(child.id, { projectId: other.id }), /same project/);
+  await reopened.sync();
+  await reopened.deleteTask(parent.id);
+  await reopened.sync();
+  assert.equal(reopened.getSnapshot().pendingCount, 0);
+  assert.equal(reopened.getSnapshot().tasks.find(task => task.id === child.id).parentId, null);
+  assert.equal(reopened.getSnapshot().reports[0].id, report.id);
+  assert.ok(f.db.transactionConnections > 2);
+  assert.equal(f.db.raw.prepare('PRAGMA foreign_key_check').all().length, 0);
+});
+
+test('store rejects a native transaction connection without foreign key enforcement', async t => {
+  class ForeignKeysOffAdapter extends SQLiteAdapter {
+    constructor(path) { super(path); this.path = path; }
+    async withExclusiveTransactionAsync(work) {
+      const connection = new SQLiteAdapter(this.path);
+      try {
+        await connection.execAsync('PRAGMA foreign_keys=OFF');
+        await connection.withExclusiveTransactionAsync(work);
+      } finally { connection.raw.close(); }
+    }
+  }
+  const f = fixture(t, new Server(), {}, ForeignKeysOffAdapter);
+  await assert.rejects(f.store.initialize(), /foreign key enforcement/i);
+  assert.equal(f.store.getSnapshot().ready, false);
+  assert.match(f.store.getSnapshot().syncError, /foreign key enforcement/i);
 });

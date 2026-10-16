@@ -139,6 +139,12 @@ export function createAppStore(deps: StoreDependencies): AppStore {
     serial = result.catch(() => undefined);
     return result;
   };
+  const transaction = (work: (tx: SqlExecutor) => Promise<void>) => db.withExclusiveTransactionAsync(async tx => {
+    // Expo opens a fresh connection here; foreign_keys is connection-local and cannot be enabled after BEGIN.
+    const enabled = (await tx.getAllAsync<{ foreign_keys: number }>('PRAGMA foreign_keys'))[0]?.foreign_keys;
+    if (enabled !== 1) throw new Error('SQLite foreign key enforcement is unavailable. Rebuild with the configured SQLite native flags.');
+    await work(tx);
+  });
   const getMeta = async (tx: SqlExecutor, name: string) =>
     (await tx.getAllAsync<{ value: string }>('SELECT value FROM metadata WHERE key = ?', name))[0]?.value ?? null;
   const setMeta = (tx: SqlExecutor, name: string, value: string) =>
@@ -230,7 +236,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
   const transact = async (work: (tx: SqlExecutor) => Promise<void>) => {
     await store.initialize();
     await locked(async () => {
-      await db.withExclusiveTransactionAsync(async tx => { await work(tx); await materialize(tx); });
+      await transaction(async tx => { await work(tx); await materialize(tx); });
       await refresh();
       localRevision++;
     });
@@ -291,7 +297,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
     const incoming = await request<SnapshotResponse>(server, token, '/v1/sync/snapshot');
     if (!incoming.epoch || !Number.isSafeInteger(incoming.cursor) || !Array.isArray(incoming.records)) throw new Error('Invalid server snapshot');
     await locked(async () => {
-      await db.withExclusiveTransactionAsync(async tx => {
+      await transaction(async tx => {
         await tx.execAsync('DELETE FROM confirmed');
         for (const record of incoming.records) await putRecord(tx, record);
         await setMeta(tx, 'epoch', incoming.epoch);
@@ -316,7 +322,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       if (!Number.isSafeInteger(incoming.cursor) || incoming.cursor < cursor || !Array.isArray(incoming.changes)
         || (incoming.hasMore && incoming.cursor === cursor)) throw new Error('Invalid server cursor');
       await locked(async () => {
-        await db.withExclusiveTransactionAsync(async tx => {
+        await transaction(async tx => {
           for (const change of incoming.changes) await putRecord(tx, change.record);
           await setMeta(tx, 'cursor', String(incoming.cursor));
           await materialize(tx);
@@ -340,7 +346,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       for (let round = 0; round < 100; round++) {
         const outgoing = await locked(async () => {
           const mutations: Mutation[] = [];
-          await db.withExclusiveTransactionAsync(async tx => {
+          await transaction(async tx => {
             const seen = new Set<string>();
             const pending = await pendingRows(tx);
             const confirmedTasks = await tx.getAllAsync<ConfirmedRow>("SELECT * FROM confirmed WHERE type='task' AND deleted=0");
@@ -416,7 +422,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
         const response = await request<{ results: PushResult[] }>(server, token, '/v1/sync/push', { deviceId, mutations: outgoing });
         if (!Array.isArray(response.results) || outgoing.some(item => !response.results.some(result => result.mutationId === item.id))) throw new Error('Incomplete push response; pending changes will be retried.');
         await locked(async () => {
-          await db.withExclusiveTransactionAsync(async tx => {
+          await transaction(async tx => {
             for (const mutation of outgoing) {
               const result = response.results.find(item => item.mutationId === mutation.id)!;
               if (result.status === 'accepted') {
@@ -453,7 +459,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
         const version = (await db.getAllAsync<{ user_version: number }>('PRAGMA user_version'))[0]?.user_version ?? 0;
         if (version > 1) throw new Error('This database requires a newer application version.');
         await db.execAsync(schema);
-        await db.withExclusiveTransactionAsync(async tx => {
+        await transaction(async tx => {
           if (!(await getMeta(tx, 'deviceId'))) await setMeta(tx, 'deviceId', deps.uuid());
           await materialize(tx);
         });
@@ -559,7 +565,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
         if (switching && (snapshot.tasks.length || snapshot.projects.length || snapshot.reports.length)) throw new Error('This workspace already contains synced data. Switching servers requires an explicit workspace migration; reconnect the original server to continue. Your local data is preserved.');
         const credentialServer = settings.serverUrl || boundServer;
         if (token !== undefined && credentialServer) await deps.setToken(credentialServer, token.trim());
-        await db.withExclusiveTransactionAsync(async tx => {
+        await transaction(async tx => {
           await setMeta(tx, 'settings', JSON.stringify(settings));
           if (settings.serverUrl || boundServer) await setMeta(tx, 'serverIdentity', settings.serverUrl || boundServer);
           // Disconnect and same-server reconnect retain confirmed data, versions and queued offline edits.
