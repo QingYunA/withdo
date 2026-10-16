@@ -111,6 +111,7 @@ type taskView struct {
 	Title    string `json:"title"`
 	Status   string `json:"status"`
 	Priority string `json:"priority"`
+	Category string `json:"category,omitempty"`
 	Project  string `json:"project"`
 	DueAt    string `json:"due_at,omitempty"`
 	RemindAt string `json:"remind_at,omitempty"`
@@ -121,9 +122,17 @@ func (tb *toolbox) view(t domain.Task) taskView {
 	loc := tb.now().Location()
 	return taskView{
 		ID: t.ID, Title: t.Title, Status: string(t.Status), Priority: string(t.Priority),
-		Project: tb.projectName(t.ProjectID), DueAt: localRFC3339(t.DueAt, loc),
+		Category: categoryName(t.Category), Project: tb.projectName(t.ProjectID), DueAt: localRFC3339(t.DueAt, loc),
 		RemindAt: localRFC3339(t.RemindAt, loc), Source: string(t.Source),
 	}
+}
+
+// categoryName is a category as the tools and receipts say it; "" for a task nobody classified.
+func categoryName(c *domain.Category) string {
+	if c == nil {
+		return ""
+	}
+	return string(*c)
 }
 
 // reply is what every tool returns. A failure is a result, not an error, so the model can read it

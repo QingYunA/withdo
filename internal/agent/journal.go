@@ -83,6 +83,7 @@ func revertPatch(before domain.Task, applied domain.TaskPatch) domain.TaskPatch 
 	if applied.Priority != nil {
 		r.Priority = &before.Priority
 	}
+	r.Category = restore(applied.Category, before.Category)
 	r.Notes = restore(applied.Notes, before.Notes)
 	r.ProjectID = restore(applied.ProjectID, before.ProjectID)
 	r.MilestoneID = restore(applied.MilestoneID, before.MilestoneID)
