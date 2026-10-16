@@ -94,7 +94,7 @@ func TestAWaitingTaskHasItsOwnGroupFirstAndLeavesTodo(t *testing.T) {
 	}
 	r.app.Refresh()
 	r.tt.Frame()
-	has(t, r.tt, "Waiting for an agent", "Write the release notes", "Handed to Claude Code")
+	has(t, r.tt, "Waiting for an agent", "Write the release notes", "Tell any agent “do #5” to pick it up")
 	if !above(t, r.tt, "Waiting for an agent", "Blocked") {
 		t.Error("Waiting for an agent comes before Blocked")
 	}

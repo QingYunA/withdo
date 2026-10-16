@@ -2186,35 +2186,23 @@
   "@listWaiting": {
     "description": "Group in the Agents column of a project: tasks the user handed to an agent that has not reported on them yet."
   },
-  "listHandedTo": "Handed to {agent}",
-  "@listHandedTo": {
-    "description": "Second line of a row waiting for an agent, when it is not known how it was handed over.",
+  "listWaitingHint": "Tell any agent “do #{id}” to pick it up",
+  "@listWaitingHint": {
+    "description": "Second line of a row waiting for an agent: how to have an agent pick it up. id is the task number.",
     "placeholders": {
-      "agent": {
-        "type": "String",
-        "example": "Claude Code"
+      "id": {
+        "type": "int",
+        "example": "44"
       }
     }
   },
-  "listDropToHand": "Drop to hand to {agent}",
+  "listDropToHand": "Drop to hand to an agent",
   "@listDropToHand": {
-    "description": "First line of the Agents column while a task of the user is dragged over it.",
-    "placeholders": {
-      "agent": {
-        "type": "String",
-        "example": "Claude Code"
-      }
-    }
+    "description": "First line of the Agents column while a task of the user is dragged over it."
   },
-  "handOffDone": "Handed to {agent}",
+  "handOffDone": "Handed to an agent",
   "@handOffDone": {
-    "description": "Toast after a task was handed to an agent. Nothing is started; the task waits for the agent.",
-    "placeholders": {
-      "agent": {
-        "type": "String",
-        "example": "Claude Code"
-      }
-    }
+    "description": "Toast after a task was handed over. Nothing is started; the task waits for any agent."
   },
   "handOffTakenBack": "Yours now",
   "@handOffTakenBack": {

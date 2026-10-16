@@ -220,7 +220,7 @@ func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, wid
 		tray.Children(func() {
 			m.columnHead(c, t, sideAgents, cm.active(sideAgents), t.Text.Alpha(0.06))
 			if over {
-				theme.Text(c, theme.Meta, t.Accent, m.say.ListDropToHand(m.handOffAgentName())).Margin(12, 0, 0, 2)
+				theme.Text(c, theme.Meta, t.Accent, m.say.ListDropToHand()).Margin(12, 0, 0, 2)
 			}
 			if cm.agents.total == 0 {
 				m.agentsEmpty(c, t)

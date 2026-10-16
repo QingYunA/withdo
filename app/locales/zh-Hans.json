@@ -370,8 +370,8 @@
   "listAgentsEmpty": "还没有 Agent 在这个项目里汇报",
   "listInstallMCP": "安装 MCP →",
   "listWaiting": "等 Agent 接手",
-  "listHandedTo": "交给 {agent}",
-  "listDropToHand": "松开，交给 {agent}",
-  "handOffDone": "已交给 {agent}",
+  "listWaitingHint": "在任意 Agent 里说「做 #{id}」就会接手",
+  "listDropToHand": "松开，交给 Agent",
+  "handOffDone": "已交给 Agent",
   "handOffTakenBack": "现在归你了"
 }

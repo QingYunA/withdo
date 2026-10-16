@@ -1,6 +1,7 @@
 package mcpserver_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
@@ -11,10 +12,10 @@ func TestReportProgressByTaskIDTakesAHandedOffTask(t *testing.T) {
 	r := newRig(t)
 	p := must[*domain.Project](t)(r.core.UpsertProject(ctx, domain.UpsertProjectInput{RepoSlug: "acme/widgets"}))
 	task := must[*domain.Task](t)(r.core.CreateTask(ctx, domain.CreateTaskInput{Title: "Write the plan", ProjectID: &p.ID}))
-	must[*domain.Task](t)(r.core.HandOff(ctx, task.ID, "claude"))
+	must[*domain.Task](t)(r.core.HandOff(ctx, task.ID))
 
 	waiting := r.ok("get_task", map[string]any{"task_id": task.ID}).obj("task")
-	if waiting["handed_to"] != "claude" || waiting["status"] != "todo" || waiting["source"] != "agent" {
+	if waiting["handed_to"] != domain.AnyAgent || waiting["status"] != "todo" || waiting["source"] != "agent" {
 		t.Fatalf("waiting task = %+v", waiting)
 	}
 
@@ -37,5 +38,16 @@ func must[T any](t *testing.T) func(T, error) T {
 			t.Fatal(err)
 		}
 		return v
+	}
+}
+
+// The waiting row tells the user to say "do #44" to any agent: the instructions say what that means.
+func TestInstructionsExplainPickingUpAHandedOverTask(t *testing.T) {
+	r := newRig(t)
+	got := r.session.InitializeResult().Instructions
+	for _, w := range []string{"#44", "get_task", "task_id"} {
+		if !strings.Contains(got, w) {
+			t.Errorf("instructions lack %q", w)
+		}
 	}
 }

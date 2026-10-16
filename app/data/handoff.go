@@ -3,22 +3,27 @@ package data
 import (
 	"fmt"
 	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
-// HandOff implements Store. The Fake hands every task to Claude Code.
-func (f *Fake) HandOff(id int) (HandOffResult, error) {
+// AnyAgent is what Task.HandedTo holds for a task handed over: any agent.
+const AnyAgent = domain.AnyAgent
+
+// HandOff implements Store. The Fake hands a task to any agent.
+func (f *Fake) HandOff(id int) (Task, error) {
 	f.mu.Lock()
 	t, ok := f.find(id)
 	if !ok {
 		f.mu.Unlock()
-		return HandOffResult{}, fmt.Errorf("task %d not found", id)
+		return Task{}, fmt.Errorf("task %d not found", id)
 	}
 	now := f.Now()
-	t.Source, t.Status, t.HandedTo, t.HandedAt, t.CompletedAt, t.UpdatedAt = SourceAgent, Todo, "claude", &now, nil, now
+	t.Source, t.Status, t.HandedTo, t.HandedAt, t.CompletedAt, t.UpdatedAt = SourceAgent, Todo, AnyAgent, &now, nil, now
 	out := *t
 	f.mu.Unlock()
 	f.notify()
-	return HandOffResult{Task: out, Agent: "claude", AgentName: "Claude Code"}, nil
+	return out, nil
 }
 
 // TakeBack implements Store.

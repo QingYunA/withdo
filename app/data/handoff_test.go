@@ -1,24 +1,20 @@
 package data
 
 import (
-	"os"
 	"path/filepath"
-	"slices"
 	"testing"
 	"time"
 
-	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
 func TestHandOffGivesTheTaskToTheAgentAndTakeBackReturnsIt(t *testing.T) {
 	eachStore(t, func(t *testing.T, s Store, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan", Status: Doing}))
-		res := must[HandOffResult](t)(s.HandOff(task.ID))
-		got := res.Task
-		if got.Source != SourceAgent || got.Status != Todo || got.HandedTo != res.Agent || got.HandedTo == "" ||
-			got.HandedAt == nil || got.CompletedAt != nil || res.AgentName == "" {
-			t.Errorf("handed task = %+v, result %+v", got, res)
+		got := must[Task](t)(s.HandOff(task.ID))
+		if got.Source != SourceAgent || got.Status != Todo || got.HandedTo != AnyAgent ||
+			got.HandedAt == nil || got.CompletedAt != nil {
+			t.Errorf("handed task = %+v", got)
 		}
 		back := must[Task](t)(s.TakeBack(task.ID))
 		if back.Source != SourceUser || back.Status != Todo || back.HandedTo != "" || back.HandedAt != nil {
@@ -36,7 +32,7 @@ func TestHandOffGivesTheTaskToTheAgentAndTakeBackReturnsIt(t *testing.T) {
 func TestRestoreHandOffUndoesATakeBack(t *testing.T) {
 	eachStore(t, func(t *testing.T, s Store, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
-		handed := must[HandOffResult](t)(s.HandOff(task.ID)).Task
+		handed := must[Task](t)(s.HandOff(task.ID))
 		must[Task](t)(s.TakeBack(task.ID))
 
 		got := must[Task](t)(s.RestoreHandOff(task.ID, handed.HandedTo, handed.HandedAt, SourceAgent))
@@ -57,7 +53,7 @@ func TestRestoreHandOffUndoesATakeBack(t *testing.T) {
 func TestAReportOnAWaitingTaskEndsTheWaiting(t *testing.T) {
 	eachStore(t, func(t *testing.T, s Store, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
-		must[HandOffResult](t)(s.HandOff(task.ID))
+		must[Task](t)(s.HandOff(task.ID))
 		reportOn(t, s, task.ID, "on it")
 		got := must[TaskDetail](t)(s.GetTask(task.ID)).Task
 		if got.HandedTo != "" || got.HandedAt != nil || got.Source != SourceAgent {
@@ -69,7 +65,7 @@ func TestAReportOnAWaitingTaskEndsTheWaiting(t *testing.T) {
 func TestRestoreTaskKeepsAWaitingTaskWaiting(t *testing.T) {
 	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
-		handed := must[HandOffResult](t)(s.HandOff(task.ID)).Task
+		handed := must[Task](t)(s.HandOff(task.ID))
 		snap := must[TaskSnapshot](t)(s.SnapshotTask(task.ID))
 		if err := s.DeleteTask(task.ID); err != nil {
 			t.Fatal(err)
@@ -81,21 +77,15 @@ func TestRestoreTaskKeepsAWaitingTaskWaiting(t *testing.T) {
 	})
 }
 
-// handRig is a Real store whose Mac has the commands in found, with a project.
+// handRig is a Real store with a project.
 type handRig struct {
 	*Real
 	project Project
 }
 
-func newHandRig(t *testing.T, found ...string) *handRig {
+func newHandRig(t *testing.T) *handRig {
 	t.Helper()
-	env := &agentsetup.Env{Home: t.TempDir(), LookPath: func(name string) (string, error) {
-		if slices.Contains(found, name) {
-			return "/opt/bin/" + name, nil
-		}
-		return "", os.ErrNotExist
-	}}
-	r, err := OpenReal(bg, filepath.Join(t.TempDir(), "t.db"), RealOptions{Agents: env})
+	r, err := OpenReal(bg, filepath.Join(t.TempDir(), "t.db"), RealOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,54 +106,28 @@ func (h *handRig) reportAs(t *testing.T, agent string) {
 	must[*domain.Report](t)(h.core.AddReport(bg, domain.AddReportInput{TaskID: int64(other.ID), Agent: agent, Summary: "hi"}))
 }
 
-func TestHandOffPicksTheAgentThatLastReportedInTheProject(t *testing.T) {
-	for reported, want := range map[string][2]string{
-		"codex":       {"codex", "Codex"},
-		"Claude Code": {"claude", "Claude Code"},
-		"gemini-cli":  {"gemini", "Gemini CLI"},
-	} {
-		h := newHandRig(t, "claude", "codex", "gemini")
-		h.reportAs(t, "claude-code")
-		h.reportAs(t, reported)
-		res := must[HandOffResult](t)(h.HandOff(h.task(t).ID))
-		if res.Agent != want[0] || res.AgentName != want[1] || res.Task.HandedTo != want[0] {
-			t.Errorf("after a report from %q: agent %q (%q), want %q", reported, res.Agent, res.AgentName, want[0])
+func TestHandOffGoesToAnyAgentWhoeverReportedLast(t *testing.T) {
+	for _, reported := range []string{"", "codex", "claude-code", "gemini-cli", "some-unknown-agent"} {
+		h := newHandRig(t)
+		if reported != "" {
+			h.reportAs(t, reported)
+		}
+		if got := must[Task](t)(h.HandOff(h.task(t).ID)); got.HandedTo != AnyAgent || got.Source != SourceAgent {
+			t.Errorf("after a report from %q: handed to %q, want %q", reported, got.HandedTo, AnyAgent)
 		}
 	}
-}
-
-func TestHandOffFallsBackToTheFirstAgentFoundThenClaude(t *testing.T) {
-	h := newHandRig(t, "gemini", "codex")
-	res := must[HandOffResult](t)(h.HandOff(h.task(t).ID))
-	if res.Agent != "codex" {
-		t.Errorf("no report yet, codex and gemini found: %q, want the first of the list (codex)", res.Agent)
-	}
-	h.reportAs(t, "some-unknown-agent")
-	h.reportAs(t, domain.GitHubAgent)
-	if res = must[HandOffResult](t)(h.HandOff(h.task(t).ID)); res.Agent != "codex" {
-		t.Errorf("a report from no known agent: %q, want codex", res.Agent)
-	}
-	none := newHandRig(t)
-	res = must[HandOffResult](t)(none.HandOff(none.task(t).ID))
-	if res.Agent != "claude" || res.AgentName != "Claude Code" {
-		t.Errorf("nothing found: %+v, want claude ", res)
-	}
-}
-
-func TestHandOffOfATaskWithoutAProjectStillPicksAnAgent(t *testing.T) {
-	h := newHandRig(t, "codex")
-	task := must[Task](t)(h.CreateTask(CreateTaskInput{Title: "loose"}))
-	res := must[HandOffResult](t)(h.HandOff(task.ID))
-	if res.Agent != "codex" {
-		t.Errorf("inbox task: %+v", res)
+	h := newHandRig(t)
+	loose := must[Task](t)(h.CreateTask(CreateTaskInput{Title: "loose"}))
+	if got := must[Task](t)(h.HandOff(loose.ID)); got.HandedTo != AnyAgent {
+		t.Errorf("a task of the Inbox: handed to %q", got.HandedTo)
 	}
 }
 
 func TestHandedOffTaskIsBackFromTheDatabaseWithItsFields(t *testing.T) {
-	h := newHandRig(t, "claude")
-	res := must[HandOffResult](t)(h.HandOff(h.task(t).ID))
+	h := newHandRig(t)
+	handed := must[Task](t)(h.HandOff(h.task(t).ID))
 	list := must[[]Task](t)(h.ListTasks(Filter{ProjectID: &h.project.ID, Source: SourceAgent}))
-	if len(list) != 1 || list[0].HandedTo != "claude" || list[0].HandedAt == nil || !list[0].HandedAt.Equal(*res.Task.HandedAt) {
+	if len(list) != 1 || list[0].HandedTo != AnyAgent || list[0].HandedAt == nil || !list[0].HandedAt.Equal(*handed.HandedAt) {
 		t.Errorf("list = %+v", list)
 	}
 }

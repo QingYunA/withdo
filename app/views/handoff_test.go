@@ -73,10 +73,10 @@ func TestDroppingMyRowOnTheAgentsTrayHandsItOverAndStartsNothing(t *testing.T) {
 	r := newHandRig(t, true)
 	r.dragOnto(t, "Write the release notes", "Port core to Go", false)
 	task, _ := r.app.Task(5)
-	if task.Source != data.SourceAgent || task.HandedTo != "claude" || task.Status != data.Todo {
+	if task.Source != data.SourceAgent || task.HandedTo != data.AnyAgent || task.Status != data.Todo {
 		t.Fatalf("task 5 after the drop: %+v", task)
 	}
-	has(t, r.tt, "Waiting for an agent", "Handed to Claude Code", "Undo")
+	has(t, r.tt, "Waiting for an agent", "Handed to an agent", "Tell any agent “do #5” to pick it up", "Undo")
 	hasNot(t, r.tt, "opened in Terminal", "prompt copied", "Prompt copied")
 	if !above(t, r.tt, "Waiting for an agent", "Fix tray race on launch") {
 		t.Error("Waiting for an agent is the first group of the Agents column")
@@ -90,15 +90,15 @@ func TestTheWaitingRowAndTheToastAreInChinese(t *testing.T) {
 	r := newHandRig(t, true)
 	inChinese(r.tt)
 	r.dragOnto(t, "Decide on the activation policy", "Port core to Go", false)
-	has(t, r.tt, "已交给 Claude Code", "等 Agent 接手", "交给 Claude Code", "撤销")
+	has(t, r.tt, "已交给 Agent", "等 Agent 接手", "在任意 Agent 里说「做 #6」就会接手", "撤销")
 }
 
-func TestTheTrayInvitesTheDropAndNamesTheAgent(t *testing.T) {
+func TestTheTrayInvitesTheDrop(t *testing.T) {
 	r := newHandRig(t, true)
 	hasNot(t, r.tt, "Drop to hand to")
 	r.dragOnto(t, "Write the release notes", "Port core to Go", true)
 	r.tt.Frame()
-	has(t, r.tt, "Drop to hand to Claude Code")
+	has(t, r.tt, "Drop to hand to an agent")
 	r.tt.Release(400, 600)
 	r.tt.Frame()
 	hasNot(t, r.tt, "Drop to hand to")
@@ -154,7 +154,7 @@ func TestDraggingAnAgentsRowOntoMineTakesItBackAndUndoRestoresIt(t *testing.T) {
 	if err := r.tt.Click("Undo"); err != nil {
 		t.Fatal(err)
 	}
-	if task, _ = r.app.Task(5); task.Source != data.SourceAgent || task.HandedTo != "claude" {
+	if task, _ = r.app.Task(5); task.Source != data.SourceAgent || task.HandedTo != data.AnyAgent {
 		t.Errorf("after Undo %+v: the hand-off was not restored", task)
 	}
 }
@@ -330,3 +330,35 @@ func TestAStillColumnsWindowAsksForNoFrames(t *testing.T) {
 		t.Errorf("a window with nothing to animate asked for %d frames", r.m.ho.asked)
 	}
 }
+
+func TestAHandOffNamesNoAgentAnywhereEvenWhenCodexReportedLast(t *testing.T) {
+	r := newHandRig(t, true)
+	r.store.ReportAs(15, "codex", "Tidying up", r.now.Add(-time.Second)) // the latest report of the project, from Codex
+	r.store.ReportAs(1, "codex", "Still at it", r.now)
+	r.app.Refresh()
+	r.tt.Frame()
+	r.dragOnto(t, "Write the release notes", "Port core to Go", true)
+	r.tt.Frame()
+	has(t, r.tt, "Drop to hand to an agent")
+	hasNot(t, r.tt, "Drop to hand to Codex", "Drop to hand to Claude Code")
+	r.tt.Release(400, 600) // let go away from the tray: nothing was handed over
+	r.tt.Frame()
+	r.dragOnto(t, "Write the release notes", "Port core to Go", false)
+	task, _ := r.app.Task(5)
+	if task.HandedTo != data.AnyAgent {
+		t.Errorf("handed to %q, want %q", task.HandedTo, data.AnyAgent)
+	}
+	has(t, r.tt, "Handed to an agent", "Tell any agent “do #5” to pick it up")
+	hasNot(t, r.tt, "Handed to Codex", "Handed to Claude Code", "Codex", "Claude Code")
+	if paintedLeftOf(t, r.tt, 1100, "Write the release notes", 30, codexColor) {
+		t.Error("the waiting row carries the sprite of Codex")
+	}
+	if !paintedLeftOf(t, r.tt, 1100, "Write the release notes", 30, accentBotColor) {
+		t.Error("the waiting row does not carry the robot of the Agents header")
+	}
+}
+
+var (
+	codexColor     = theme.AgentAvatar("codex").Sprite().Palette['b']
+	accentBotColor = theme.AccentBot(theme.For(false, ui.Transparent).Accent).Sprite().Palette['m']
+)

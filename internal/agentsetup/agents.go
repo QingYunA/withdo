@@ -7,8 +7,6 @@
 // from a button.
 package agentsetup
 
-import "strings"
-
 // kind is how an agent takes an MCP server.
 type kind int
 
@@ -63,27 +61,6 @@ var Agents = []Agent{
 func ByID(id string) (Agent, bool) {
 	for _, a := range Agents {
 		if a.ID == id {
-			return a, true
-		}
-	}
-	return Agent{}, false
-}
-
-// Match finds the agent a report's agent string names: "claude-code", "Claude Code" and "claude"
-// are all Claude Code, "Visual Studio Code" is Copilot. It matches the way the app's avatars do.
-func Match(reported string) (Agent, bool) {
-	n := strings.ToLower(reported)
-	for _, a := range Agents {
-		switch {
-		case a.ID == "zed":
-			if n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-") {
-				return a, true
-			}
-		case a.ID == "copilot":
-			if strings.Contains(n, "copilot") || strings.Contains(n, "visual studio code") {
-				return a, true
-			}
-		case strings.Contains(n, a.ID):
 			return a, true
 		}
 	}

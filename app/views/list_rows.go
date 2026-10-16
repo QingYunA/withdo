@@ -64,16 +64,17 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	})
 }
 
-// waitingRow is a task the user handed to an agent that has not reported on it yet: the agent's
-// avatar, the title and how long ago, and under it who has it.
+// waitingRow is a task the user handed over that no agent has reported on yet: the robot of the
+// Agents header (it is any agent's), the title and how long ago, and under it how to have one
+// pick it up.
 func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	_, opacity, _ := m.app.completionPhase(c, task.ID)
 	m.draggableRow(c, t, task, true, opacity, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
-			m.agentAvatar(c, theme.AgentAvatar(task.HandedTo))
+			m.agentAvatar(c, theme.AccentBot(t.Accent))
 			body(c, func() {
 				m.agentTitle(c, t, task, func() { plainText(c, t, m.clock.Age(handedAt(task), m.app.Now())) })
-				agentLine(c, t, m.say.ListHandedTo(agentName(task.HandedTo)))
+				agentLine(c, t, m.say.ListWaitingHint(task.ID))
 			})
 		})
 	})

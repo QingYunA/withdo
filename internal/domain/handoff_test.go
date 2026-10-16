@@ -7,12 +7,12 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
-// handedTask is a done task of the user's, handed to claude.
+// handedTask is a done task of the user's, handed over.
 func handedTask(t *testing.T, c *domain.Core) *domain.Task {
 	t.Helper()
 	p := mustProject(t, c, "acme/widgets")
 	task := mustTask(t, c, domain.CreateTaskInput{Title: "ship it", ProjectID: &p.ID, Status: domain.StatusDone})
-	return must[*domain.Task](t)(c.HandOff(ctx, task.ID, "claude"))
+	return must[*domain.Task](t)(c.HandOff(ctx, task.ID))
 }
 
 func TestHandOffMakesTheTaskTheAgentsAndWaiting(t *testing.T) {
@@ -23,25 +23,22 @@ func TestHandOffMakesTheTaskTheAgentsAndWaiting(t *testing.T) {
 		t.Fatal("a done task has completed_at")
 	}
 	clk.advance(time.Hour)
-	got := must[*domain.Task](t)(c.HandOff(ctx, task.ID, "codex"))
+	got := must[*domain.Task](t)(c.HandOff(ctx, task.ID))
 	eq(t, "source", got.Source, domain.SourceAgent)
 	eq(t, "status", got.Status, domain.StatusTodo)
 	if got.CompletedAt != nil {
 		t.Errorf("completed_at = %v, want nil", *got.CompletedAt)
 	}
-	eqPtr(t, "handed_to", got.HandedTo, ptr("codex"))
+	eqPtr(t, "handed_to", got.HandedTo, ptr(domain.AnyAgent))
 	eqPtr(t, "handed_at", got.HandedAt, ptr(domain.FormatTime(t0.Add(time.Hour))))
 	eq(t, "updated_at", got.UpdatedAt, domain.FormatTime(t0.Add(time.Hour)))
 	again := must[*domain.Task](t)(c.GetTask(ctx, task.ID))
-	eqPtr(t, "stored handed_to", again.HandedTo, ptr("codex"))
+	eqPtr(t, "stored handed_to", again.HandedTo, ptr(domain.AnyAgent))
 }
 
-func TestHandOffRejectsBlankAgentAndMissingTask(t *testing.T) {
+func TestHandOffRejectsAMissingTask(t *testing.T) {
 	c, _ := newCore(t)
-	task := mustTask(t, c, domain.CreateTaskInput{})
-	_, err := c.HandOff(ctx, task.ID, " ")
-	wantFieldError(t, err, "agent")
-	_, err = c.HandOff(ctx, 999, "claude")
+	_, err := c.HandOff(ctx, 999)
 	wantFieldError(t, err, "task_id")
 }
 
@@ -126,29 +123,6 @@ func TestRestoreTaskKeepsTheHandOff(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
-	eqPtr(t, "handed_to", got.HandedTo, ptr("claude"))
+	eqPtr(t, "handed_to", got.HandedTo, ptr(domain.AnyAgent))
 	eqPtr(t, "handed_at", got.HandedAt, task.HandedAt)
-}
-
-func TestLastReportAgentIsTheNewestOfTheProject(t *testing.T) {
-	c, clk := newCore(t)
-	p := mustProject(t, c, "acme/widgets")
-	other := mustProject(t, c, "acme/other")
-	a := mustTask(t, c, domain.CreateTaskInput{ProjectID: &p.ID})
-	b := mustTask(t, c, domain.CreateTaskInput{ProjectID: &p.ID})
-	o := mustTask(t, c, domain.CreateTaskInput{ProjectID: &other.ID})
-
-	got := must[string](t)(c.LastReportAgent(ctx, p.ID))
-	eq(t, "no report yet", got, "")
-
-	add := func(task *domain.Task, agent string) {
-		clk.advance(time.Minute)
-		must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: agent, Summary: "s"}))
-	}
-	add(a, "claude-code")
-	add(b, "codex")
-	add(o, "gemini")           // another project
-	add(a, domain.GitHubAgent) // the poller is not an agent
-	eq(t, "newest on any task of the project", must[string](t)(c.LastReportAgent(ctx, p.ID)), "codex")
-	eq(t, "other project", must[string](t)(c.LastReportAgent(ctx, other.ID)), "gemini")
 }
