@@ -278,15 +278,17 @@ func TestWithReduceMotionTheCardIsFullSizeAtOnce(t *testing.T) {
 	}
 }
 
-func TestTheCardGrowsInPixelStepsFromItsCornerAndThenAsksForNoFrames(t *testing.T) {
+func TestTheCardPopsOutFromItsCornerAndThenAsksForNoFrames(t *testing.T) {
 	app, _, tt, m := crowdedApp(t)
 	now := fixedNow()
 	app.Now = func() time.Time { return now }
 	tt.SetPreferences(ui.Preferences{})
 	openCrowdedCard(t, tt)
 	cell := m.cal.card.anchor
+	// Find reports the box as drawn, so the transform shows in it: the layout stays full size.
 	var widths []float32
-	for _, at := range []time.Duration{0, 60, 110, 160, 220} {
+	asked := 0
+	for _, at := range []time.Duration{0, 30, 60, 110, 139, 140, 220} {
 		now = fixedNow().Add(at * time.Millisecond)
 		tt.Frame()
 		r, _ := tt.Find(cardLabel)
@@ -294,22 +296,28 @@ func TestTheCardGrowsInPixelStepsFromItsCornerAndThenAsksForNoFrames(t *testing.
 		if r.X != cell.X || r.Y != cell.Y {
 			t.Errorf("at %d ms the card's corner is %v,%v, not the cell's %v,%v", at, r.X, r.Y, cell.X, cell.Y)
 		}
+		if at < 140 && m.cal.card.asked <= asked {
+			t.Errorf("no frame was asked for at %d ms, while the card opens", at)
+		}
+		asked = m.cal.card.asked
 	}
-	full := widths[4]
-	for i, want := range []float32{0.55, 0.7, 0.85, 1, 1} {
-		if got := widths[i] / full; got < want-0.03 || got > want+0.03 {
-			t.Errorf("step %d is %.2f of the width (%v), want %.2f", i, got, widths, want)
+	full := widths[len(widths)-1]
+	if first := widths[0] / full; first < 0.5-0.01 || first > 0.95 {
+		t.Errorf("the card starts at %.2f of its width, want 0.5 to 0.95", first)
+	}
+	for i := 1; i < len(widths); i++ {
+		if widths[i] < widths[i-1] {
+			t.Errorf("the card shrinks while it opens: %v", widths)
 		}
 	}
-	asked := m.cal.card.asked
-	if asked == 0 {
-		t.Error("no frames were asked for while the card opened")
+	if widths[5] != full {
+		t.Errorf("the card is not full size at 140 ms: %v", widths)
 	}
 	now = now.Add(time.Second)
 	tt.Frame()
 	tt.Frame()
 	if m.cal.card.asked != asked {
-		t.Errorf("frames are still asked for once the card is full size: %d, were %d", m.cal.card.asked, asked)
+		t.Errorf("frames are still asked for once the card is done: %d, were %d", m.cal.card.asked, asked)
 	}
 }
 

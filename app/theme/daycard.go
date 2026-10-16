@@ -2,27 +2,30 @@ package theme
 
 import "time"
 
-// The day card of the calendar opens one pixel step at a time: four discrete sizes, no tween, so it
-// grows the way the pixel icons are drawn. Like the hop it is a pure function of the time since it
-// opened, and nothing runs once it is full size.
+// The day card of the calendar pops out of its cell: it is laid out at its full size and grows from
+// the cell's corner while it fades in, an ease-out over a short time. Like the hop it is a pure
+// function of the time since it opened, and nothing runs once it is done.
 const (
-	// DayCardSteps is how many sizes the card shows while it opens, the last being its full size.
-	DayCardSteps = 4
-	// DayCardDuration is from opening to done: the full size is held from 150 ms, and the card asks
-	// for no more frames at DayCardDuration.
-	DayCardDuration time.Duration = 200 * time.Millisecond
-
-	dayCardStep time.Duration = 50 * time.Millisecond // how long each of the first three sizes lasts
+	// DayCardDuration is from opening to done: the card is full size from DayCardDuration and asks
+	// for no more frames then.
+	DayCardDuration time.Duration = 140 * time.Millisecond
+	// DayCardFade is how long the card takes to become opaque, within DayCardDuration.
+	DayCardFade time.Duration = 100 * time.Millisecond
 )
 
-// dayCardScales are the sizes of the card, as a share of its full width and height.
-var dayCardScales = [DayCardSteps]float32{0.55, 0.7, 0.85, 1}
-
-// DayCardAt is the size of the day card elapsed after it opened, as a share of its full size, and
-// whether the opening is over. It steps 0.55, 0.7, 0.85 every 50 ms and is 1 from 150 ms.
-func DayCardAt(elapsed time.Duration) (scale float32, done bool) {
+// DayCardAt is how far the day card has grown elapsed after it opened, from 0 to 1 along an ease-out
+// cubic, its opacity, from 0 to 1 along an ease-out over DayCardFade, and whether the opening is
+// over. A negative elapsed is 0.
+func DayCardAt(elapsed time.Duration) (progress, opacity float32, done bool) {
 	if elapsed >= DayCardDuration {
-		return 1, true
+		return 1, 1, true
 	}
-	return dayCardScales[min(max(int(elapsed/dayCardStep), 0), DayCardSteps-1)], false
+	elapsed = max(elapsed, 0)
+	return easeOut(float32(elapsed) / float32(DayCardDuration)), easeOut(min(float32(elapsed)/float32(DayCardFade), 1)), false
+}
+
+// easeOut is the ease-out cubic of t in 0..1.
+func easeOut(t float32) float32 {
+	u := 1 - t
+	return 1 - u*u*u
 }

@@ -13,9 +13,10 @@ import (
 // The day card. "N more" in a cell, a double click on the cell and the + of a hovered cell open a
 // card over the grid with every item of that day and an input that adds a task due that day. The
 // card's top left sits on the cell's, so it covers the cell and grows outward; near the right or
-// bottom edge of the window it grows left or up instead. It opens in four pixel steps
-// (theme.DayCardAt), drawn from the clock the app already has and asking for a frame every 16 ms
-// only while it opens. Esc, a click outside it, its close button and a change of month close it.
+// bottom edge of the window it grows left or up instead. It opens as a pop-out
+// (theme.DayCardAt): laid out at its full size from the first frame, then scaled up from the cell's
+// corner while it fades in, drawn from the clock the app already has and asking for a frame every
+// 16 ms only while it opens. Esc, a click outside it, its close button and a change of month close it.
 
 // dayCard is the state of the card: the day it shows (zero while closed), when it opened, the cell
 // it grew from, what is typed in its input and whether the input takes the keyboard on opening.
@@ -93,7 +94,7 @@ func (m *Main) dayCardDay() (data.CalDay, bool) {
 }
 
 // dayCardView draws the card above the window while it is open: over a backdrop that takes the
-// presses outside it, and grown in four steps unless Reduce Motion is on.
+// presses outside it, and popped out of its cell unless Reduce Motion is on.
 func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 	dc := &m.cal.card
 	if !dc.isOpen() {
@@ -106,24 +107,23 @@ func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 	}
 	winW, winH := c.Size()
 	g := dayCardPlace(dc.anchor, winW, winH, m.calendarCellWidth(c), len(day.Items))
-	scale, done := theme.DayCardAt(m.app.Now().Sub(dc.at))
+	progress, opacity, done := theme.DayCardAt(m.app.Now().Sub(dc.at))
 	if c.Preferences().ReduceMotion {
-		scale, done = 1, true
+		progress, opacity, done = 1, 1, true
 	}
 	if !done {
 		dc.asked++
 		c.After(hopFrameEvery)
 	}
-	sw, sh := g.w, g.h
-	if scale < 1 {
-		sw, sh = snap4(g.w*scale), snap4(g.h*scale)
-	}
-	x, y, offX, offY := g.x, g.y, float32(0), float32(0)
+	// It starts about the size of the cell it grows from, never under half or over 95 % of its own.
+	from := min(max(dc.anchor.W/g.w, 0.5), 0.95)
+	scale := from + (1-from)*progress
+	var ox, oy float32
 	if g.left {
-		x, offX = g.x+g.w-sw, sw-g.w
+		ox = 1
 	}
 	if g.up {
-		y, offY = g.y+g.h-sh, sh-g.h
+		oy = 1
 	}
 	ui.Overlay(c, func() {
 		back := ui.Box(c.Key("day-card-back")).Absolute().Left(0).Top(0).Right(0).Bottom(0).Modal()
@@ -132,20 +132,21 @@ func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 			return
 		}
 		back.Children(func() {
-			panel := ui.Box(c.Key("day-card")).Absolute().Left(x).Top(y).Size(sw, sh).Shrink(0).Clip().Radius(theme.RadiusPanel).
+			panel := ui.Box(c.Key("day-card")).Absolute().Left(g.x).Top(g.y).Size(g.w, g.h).Shrink(0).Clip().Radius(theme.RadiusPanel).
+				TransformOrigin(ox, oy).Scale(scale, scale).Opacity(opacity).
 				Background(t.Bg).Border(1, t.Border).Shadow(0, 20, 48, 0, t.Shadow).Role(ui.RoleDialog).
 				Label(m.say.A11yCalendarDayCard(m.clock.CalendarDay(day.Date)))
 			panel.Clicked() // presses on it stay in it
-			panel.Children(func() { m.dayCardBody(c, t, day, g, offX, offY) })
+			panel.Children(func() { m.dayCardBody(c, t, day, g) })
 		})
 	})
 }
 
-// dayCardBody is what the card holds, laid out at its full size from the corner it grows from: the
+// dayCardBody is what the card holds, laid out at its full size: the
 // header, the day's items, and the input.
-func (m *Main) dayCardBody(c *ui.Context, t *theme.Tokens, day data.CalDay, g dayCardBox, offX, offY float32) {
+func (m *Main) dayCardBody(c *ui.Context, t *theme.Tokens, day data.CalDay, g dayCardBox) {
 	dc := &m.cal.card
-	ui.Column(c.Key("day-card-body")).Absolute().Left(offX).Top(offY).Size(g.w-2, g.h-2).Padding(theme.DayCardPad).Children(func() {
+	ui.Column(c.Key("day-card-body")).Absolute().Left(0).Top(0).Size(g.w-2, g.h-2).Padding(theme.DayCardPad).Children(func() {
 		m.dayCardHeader(c, t, day)
 		if len(day.Items) > 0 {
 			ui.Box(c).Height(theme.DayCardGap).Shrink(0)
