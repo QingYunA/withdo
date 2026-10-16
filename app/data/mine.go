@@ -70,6 +70,23 @@ func (m Mine) WithoutDismissed(d Seen) Mine {
 	return m
 }
 
+// Only is m with the rows of the tasks keep rejects left out, for the counts of a slice. MoreLater
+// and MoreDone stay as they are: build the slice itself (MineInput.Keep) to have them right.
+func (m Mine) Only(keep func(Task) bool) Mine {
+	m.FromAgents, m.Today, m.Later, m.Done = only(m.FromAgents, keep), only(m.Today, keep), only(m.Later, keep), only(m.Done, keep)
+	return m
+}
+
+func only(items []Item, keep func(Task) bool) []Item {
+	var out []Item
+	for _, it := range items {
+		if keep(it.Task) {
+			out = append(out, it)
+		}
+	}
+	return out
+}
+
 // IDs lists the task ids in the order the rows are drawn.
 func (m Mine) IDs() []int {
 	ids := make([]int, 0, len(m.FromAgents)+len(m.Today)+len(m.Later)+len(m.Done))
@@ -101,6 +118,36 @@ func (a AgentsScreen) Count() int { return len(a.Working) }
 // Empty reports whether nothing is at work and nothing was finished today.
 func (a AgentsScreen) Empty() bool { return len(a.Working)+len(a.Done) == 0 }
 
+// AgentTally is one agent's share of the Agents screen.
+type AgentTally struct {
+	Name    string // the name the agent goes by
+	Task    Task   // its first task on the screen, which its avatar is drawn from
+	Working int    // how many of its tasks are at work
+}
+
+// Tally lists the agents on the screen in the order the screen shows them: those at work, newest
+// report first, then those that only finished something today. name says which agent a task is
+// of; tasks that share a name are one agent.
+func (a AgentsScreen) Tally(name func(Task) string) []AgentTally {
+	var out []AgentTally
+	at := map[string]int{}
+	for i, rows := range [][]AgentRow{a.Working, a.Done} {
+		for _, r := range rows {
+			n := name(r.Task)
+			j, ok := at[n]
+			if !ok {
+				j = len(out)
+				at[n] = j
+				out = append(out, AgentTally{Name: n, Task: r.Task})
+			}
+			if i == 0 {
+				out[j].Working++
+			}
+		}
+	}
+	return out
+}
+
 // IDs lists the task ids in the order the rows are drawn: a task, then its subtasks.
 func (a AgentsScreen) IDs() []int {
 	var ids []int
@@ -125,6 +172,9 @@ type MineInput struct {
 	Event       func(taskID int) *Report
 	StaleHours  int // DefaultStaleHours when 0
 	ProjectName func(*int) string
+	// Keep, when set, limits the screen to the top-level tasks it accepts; their subtasks go where
+	// they go. The screen is built from those tasks alone, so its counts and overflow are its own.
+	Keep func(Task) bool
 }
 
 // BuildMine sorts tasks into the sections of the Mine screen. Subtasks never get a row of their
@@ -133,7 +183,7 @@ func BuildMine(in MineInput) Mine {
 	b := newBuilder(in)
 	var out Mine
 	var mine []Task
-	for _, t := range in.Tasks {
+	for _, t := range b.Tasks {
 		switch {
 		case t.IsSubtask() || t.Status.Terminal() || t.Status == Backlog:
 		case b.handed(t, &out):
@@ -152,7 +202,7 @@ func BuildMine(in MineInput) Mine {
 func BuildAgents(in MineInput) AgentsScreen {
 	b := newBuilder(in)
 	var out AgentsScreen
-	for _, t := range in.Tasks {
+	for _, t := range b.Tasks {
 		if t.IsSubtask() || t.Source != SourceAgent || (t.Status != Doing && t.Status != Blocked) {
 			continue
 		}
@@ -170,6 +220,7 @@ func BuildAgents(in MineInput) AgentsScreen {
 type nowBuilder struct{ MineInput }
 
 func newBuilder(in MineInput) nowBuilder {
+	in.Tasks = keepSlice(in.Tasks, in.Keep)
 	b := nowBuilder{MineInput: in}
 	if b.StaleHours == 0 {
 		b.StaleHours = DefaultStaleHours
@@ -178,6 +229,27 @@ func newBuilder(in MineInput) nowBuilder {
 		b.ProjectName = func(*int) string { return "" }
 	}
 	return b
+}
+
+// keepSlice is the tasks of a slice: the top-level tasks keep accepts and their subtasks. A nil keep
+// takes them all.
+func keepSlice(tasks []Task, keep func(Task) bool) []Task {
+	if keep == nil {
+		return tasks
+	}
+	kept := map[int]bool{}
+	for _, t := range tasks {
+		if !t.IsSubtask() && keep(t) {
+			kept[t.ID] = true
+		}
+	}
+	var out []Task
+	for _, t := range tasks {
+		if kept[t.ID] || (t.IsSubtask() && kept[*t.ParentID]) {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // item fills what every row has: the project, and when the task last showed a sign of life.

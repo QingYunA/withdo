@@ -64,9 +64,15 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 	t6 := mk(6, p1, nil, "Decide on the activation policy", Doing, P1, SourceUser, ago(3*time.Hour))
 	t6.DueAt = in(5 * time.Hour)
 	t7 := mk(7, nil, nil, "Reply to design feedback", Todo, P2, SourceUser, ago(6*time.Hour))
+	t7.Category = CategoryWork
 	t7.RemindAt = in(0) // came due just now
 	t8 := mk(8, nil, nil, "Book dentist", Todo, P2, SourceUser, ago(2*day))
 	t8.DueAt = daysAhead(1, 9)
+	t8.Category = CategoryLife
+	t19 := mk(19, nil, nil, "Renew passport", Backlog, P2, SourceUser, ago(12*day))
+	t19.Category = CategoryLife
+	t21 := done(mk(21, nil, nil, "Send the packaging answer", Done, P2, SourceUser, ago(3*time.Hour)), ago(3*time.Hour))
+	t21.Category = CategoryWork
 
 	f.tasks = []Task{
 		agent(mk(1, p1, m1, "Port core to Go", Doing, P1, SourceAgent, ago(2*time.Minute)), "feat/go-core", 0),
@@ -81,12 +87,12 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		done(mk(13, p1, nil, "Draft the UI spec", Done, P2, SourceUser, ago(day)), ago(day)),
 		done(mk(14, p1, nil, "Pick a UI toolkit", Done, P2, SourceUser, ago(6*day)), ago(6*day)),
 		done(agent(mk(20, p1, m1, "Port the MCP server", Done, P2, SourceAgent, ago(40*time.Minute)), "feat/mcp", 14), ago(40*time.Minute)),
-		done(mk(21, nil, nil, "Send the packaging answer", Done, P2, SourceUser, ago(3*time.Hour)), ago(3*time.Hour)),
+		t21,
 		agent(mk(15, p2, nil, "Issue #218 adaptation", Doing, P2, SourceAgent, ago(14*time.Minute)), "claude/issue-218", 0),
 		mk(16, p2, nil, "Cover the reply parser edge cases", Backlog, P3, SourceUser, ago(8*day)),
 		mk(17, p3, nil, "Export thumbnails to HEIC", Backlog, P2, SourceUser, ago(9*day)),
 		mk(18, nil, nil, "Look into Liquid Glass for the sidebar", Todo, P2, SourceUser, ago(4*time.Hour)),
-		mk(19, nil, nil, "Renew passport", Backlog, P2, SourceUser, ago(12*day)),
+		t19,
 		// Subtasks: what the subagents of "Port core to Go" and "Port the MCP server" are doing.
 		sub(1, mk(22, p1, nil, "Port the store and migrations", Done, P2, SourceAgent, ago(8*time.Minute)), ago(8*time.Minute)),
 		sub(1, mk(23, p1, nil, "Port the MCP tools", Doing, P2, SourceAgent, ago(2*time.Minute)), time.Time{}),
