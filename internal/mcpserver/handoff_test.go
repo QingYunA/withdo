@@ -1,6 +1,7 @@
 package mcpserver_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
@@ -37,5 +38,16 @@ func must[T any](t *testing.T) func(T, error) T {
 			t.Fatal(err)
 		}
 		return v
+	}
+}
+
+// The waiting row tells the user to say "do #44" to any agent: the instructions say what that means.
+func TestInstructionsExplainPickingUpAHandedOverTask(t *testing.T) {
+	r := newRig(t)
+	got := r.session.InitializeResult().Instructions
+	for _, w := range []string{"#44", "get_task", "task_id"} {
+		if !strings.Contains(got, w) {
+			t.Errorf("instructions lack %q", w)
+		}
 	}
 }
