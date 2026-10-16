@@ -5,15 +5,23 @@ boundary, option ② chosen, and the hand-off storyboard). Match them.
 
 > **Revised 2026-10-16.** After trying it, the user does not want an agent started for now, and
 > wants the sprite during the drag instead of an animation after it. So: **no launching**: a drop only
-> moves the task to `Waiting for an agent` (no Terminal, no prompt, no clipboard; `Store.HandOff(id)`
-> takes no prompt and `HandOffResult` has no `Launched`; the launcher, `internal/handoff` and the
-> prompt strings are gone). The toast says `Handed to Claude Code` / `已交给 Claude Code`, and the
-> waiting row's second line `Handed to Claude Code` / `交给 Claude Code`. **Drag-time sprite**: the
-> `you` sprite carries the lifted row and walks while the pointer moves; the header robot hops while
-> the row is over the tray and squashes once on the drop; the row lands straight in Waiting with its
-> 8 % wash. The 1.3 s sequence below (parcel, meeting in the middle) was removed; the parcel stays as
-> the group's glyph. The sections below say what was first approved and are superseded where they
-> mention launching, prompts, the clipboard or the post-drop animation.
+> moves the task to `Waiting for an agent` (no Terminal, no prompt, no clipboard; the launcher,
+> `internal/handoff` and the prompt strings are gone). **Drag-time sprite**: the `you` sprite carries
+> the lifted row and walks while the pointer moves; the header robot hops while the row is over the
+> tray and squashes once on the drop; the row lands straight in Waiting with its 8 % wash. The 1.3 s
+> sequence below (parcel, meeting in the middle) was removed; the parcel stays as the group's glyph.
+>
+> **Revised again (round 3): a hand-off goes to any agent.** With nothing launched, picking one is
+> meaningless (the real data showed `Codex` because it reported last). `domain.HandOff(ctx, taskID)`
+> takes no agent and writes `handed_to = "agent"` (`domain.AnyAgent`, the word reports use for an
+> unnamed client); `Store.HandOff(id)` returns the `Task` (no `HandOffResult`); `pickAgent`,
+> `LastReportAgent` and `agentsetup.Match` are gone. Nothing names an agent: the tray says `Drop to
+> hand to an agent` / `松开，交给 Agent`, the toast `Handed to an agent` / `已交给 Agent`, and the
+> waiting row shows the accent robot of the Agents header and, under the title, `Tell any agent “do
+> #44” to pick it up` / `在任意 Agent 里说「做 #44」就会接手`. Rows of an earlier build that hold an
+> agent's id still read as waiting. The sections below say what was first approved and are
+> superseded where they mention launching, prompts, the clipboard, picking an agent or the
+> post-drop animation.
 
 ## What the user asked for
 

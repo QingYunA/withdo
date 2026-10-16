@@ -530,10 +530,11 @@ centred empty state.
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
   lines up with the titles.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
-  (`HandedTo` set) that the agent has not reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
-  at 20 pt, in `theme/pixel.go`). A row: the receiving agent's 18 pt avatar, the title, the age at the
-  right, and under it `Handed to Claude Code` / `交给 Claude Code`. The agent's first report moves it
-  to Doing.
+  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
+  at 20 pt, in `theme/pixel.go`). A row: the same accent robot as the column header (the task is any
+  agent's, so no agent's own sprite), the title, the age at the right, and under it how it is picked
+  up, `Tell any agent “do #44” to pick it up` / `在任意 Agent 里说「做 #44」就会接手` (the task's id).
+  An agent's first report moves it to Doing.
 - **Mine rows**: no avatar (the column says whose), the title in `body.strong` (one line), and at the
   right a `P0` or `P1` badge, then the due label. Finished rows: the title in `text.secondary` and the day.
 - **Agents rows**: the agent's 18 pt avatar, the title (one line) with the live dot and the age or stale
@@ -550,7 +551,8 @@ centred empty state.
 
 Drag a row of Mine onto the Agents tray (screens `handoff-drag-*`, `handoff-over-*`,
 `handoff-landed-*`). **Nothing is started and nothing is copied**: handing a task over only moves it to
-`Waiting for an agent`; the agent finds it through the MCP, or the user pastes it.
+`Waiting for an agent`, marked `handed_to = "agent"` (any agent, `domain.AnyAgent`); an agent finds it
+when told its number, through the MCP.
 
 - **Lift and carry.** The row drags like a board card: it lifts (a shadow, a 2 degree tilt, about 250 pt
   wide) and leaves an empty dashed slot. Only unfinished tasks of the user's drag. The user's `you`
@@ -561,14 +563,14 @@ Drag a row of Mine onto the Agents tray (screens `handoff-drag-*`, `handoff-over
   four steps a second, from the app clock; it stands still 120 ms after the pointer stops. Frames are
   asked for every 16 ms only while it walks.
 - **Over the tray.** The tray gets a 7 % accent wash and a 1.5 pt accent ring at 35 %, and a first line in
-  accent reads `Drop to hand to Claude Code` / `松开，交给 Claude Code` (the agent that last reported in the
-  project; the store picks the real one). The robot in the tray's header hops up and reaches: one short
+  accent reads `Drop to hand to an agent` / `松开，交给 Agent` (no agent is named: a hand-off goes to
+  any agent). The robot in the tray's header hops up and reaches: one short
   hop (`theme.HopAt` from and to the same spot, 10 pt high, scaled to the header's 20 pt), again every
   0.8 s while the row is over the tray.
 - **Drop.** The task becomes the agent's, To do, in `Waiting for an agent`, with no travelling in
   between. The header robot squashes once as it catches it (the landing of the hop, 250 ms), and the
-  new row keeps an 8 % accent wash that fades over 2 s. A toast says `Handed to Claude Code` /
-  `已交给 Claude Code`, with **Undo** for six seconds, and so does ⌘Z (the assistant's own ⌘Z wins while
+  new row keeps an 8 % accent wash that fades over 2 s. A toast says `Handed to an agent` /
+  `已交给 Agent`, with **Undo** for six seconds, and so does ⌘Z (the assistant's own ⌘Z wins while
   it has a change to undo): the task is taken back with its old status.
 - **Take back.** Dragging an agent's unfinished row onto Mine calls `Store.TakeBack`, with no sprite;
   the toast says `Yours now` / `现在归你了`, and Undo (or ⌘Z) restores Source and the hand-off as they
@@ -599,10 +601,11 @@ centred empty state.
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
   lines up with the titles.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
-  (`HandedTo` set) that the agent has not reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
-  at 20 pt, in `theme/pixel.go`). A row: the receiving agent's 18 pt avatar, the title, the age at the
-  right, and under it `Handed to Claude Code` / `交给 Claude Code`. The agent's first report moves it
-  to Doing.
+  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
+  at 20 pt, in `theme/pixel.go`). A row: the same accent robot as the column header (the task is any
+  agent's, so no agent's own sprite), the title, the age at the right, and under it how it is picked
+  up, `Tell any agent “do #44” to pick it up` / `在任意 Agent 里说「做 #44」就会接手` (the task's id).
+  An agent's first report moves it to Doing.
 - **Mine rows**: no avatar (the column says whose), the title in `body.strong` (one line), and at the
   right a `P0` or `P1` badge, then the due label. Finished rows: the title in `text.secondary` and the day.
 - **Agents rows**: the agent's 18 pt avatar, the title (one line) with the live dot and the age or stale
