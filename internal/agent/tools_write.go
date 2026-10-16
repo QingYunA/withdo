@@ -25,6 +25,7 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: tb.projectFor(a.ProjectID),
 		Notes: a.Notes, Priority: domain.Priority(a.Priority),
 	}
+	in.Category = tb.defaultCategory
 	if a.Category != "" {
 		c := domain.Category(a.Category)
 		in.Category = &c

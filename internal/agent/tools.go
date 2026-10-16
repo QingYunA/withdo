@@ -36,6 +36,9 @@ type toolbox struct {
 	// defaultProject is where create_task puts a task whose project the model did not name: the
 	// project whose page the request came from.
 	defaultProject *int64
+	// defaultCategory is the category create_task gives a task whose category the model did not
+	// name: the Work or Life page of Mine the request came from; nil elsewhere.
+	defaultCategory *domain.Category
 
 	mu       sync.Mutex
 	receipts []Receipt

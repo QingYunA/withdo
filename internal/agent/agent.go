@@ -171,6 +171,9 @@ func (a *Agent) prepare(ctx context.Context, scope Scope) (*toolbox, *adk.Runner
 	if p, ok := activeProject(projects, scope.ProjectID); ok && scope.Kind == ScopeProject {
 		tb.defaultProject = &p.ID
 	}
+	if scope.Kind == ScopeNow && scope.Category.Valid() {
+		tb.defaultCategory = &scope.Category
+	}
 	tools, direct, err := tb.tools()
 	if err != nil {
 		return nil, nil, err
