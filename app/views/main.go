@@ -152,7 +152,6 @@ func (m *Main) View(c *ui.Context) {
 	m.dayCardView(c, t)
 	m.taskMenuView(c, t)
 	m.hopOverlay(c)
-	m.handOffOverlay(c, t)
 }
 
 // content is the screen the sidebar chose.

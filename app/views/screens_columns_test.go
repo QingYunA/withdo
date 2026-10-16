@@ -37,7 +37,7 @@ func columnsShot(t *testing.T, name string, zh bool, app *App, dark bool, size [
 func handedApp(t *testing.T) (*App, *data.Fake) {
 	t.Helper()
 	app, store, _ := newTestApp(t)
-	if _, err := store.HandOff(5, "prompt"); err != nil {
+	if _, err := store.HandOff(5); err != nil {
 		t.Fatal(err)
 	}
 	app.Refresh()
@@ -67,7 +67,6 @@ func TestScreensColumns(t *testing.T) {
 		for _, l := range languages {
 			app, _ := handedApp(t)
 			columnsShot(t, "project-two-columns"+l.suffix+"-"+a.suffix+".png", l.tag == "zh-Hans", app, a.dark, [2]int{1100, 900}, func(tt *ui.Tester, m *Main) {
-				m.ho.how = map[int]bool{5: true}
 				toProject(1)(tt, m)
 			})
 			columnsShot(t, "project-narrow"+l.suffix+"-"+a.suffix+".png", l.tag == "zh-Hans", app, a.dark, [2]int{1100, 1100}, func(tt *ui.Tester, m *Main) {
@@ -80,13 +79,14 @@ func TestScreensColumns(t *testing.T) {
 	}
 }
 
-// TestScreensHandOff renders the hand-off: a row lifted over the tray, then frames of the motion on
-// the test's clock (the parcel carried, passed across, and opening into the new row).
+// TestScreensHandOff renders the hand-off during the drag, on the test's clock: the row carried by
+// the sprite over Mine (the sprite mid-step), the row over the tray with the agent mid-hop, and the
+// row just landed in Waiting for an agent with the agent squashing and the wash at its strongest.
 func TestScreensHandOff(t *testing.T) {
 	for _, a := range appearances() {
 		for _, l := range languages {
-			shotAt := func(name string, in time.Duration) {
-				r := newHandRig(t, false, true)
+			rig := func() *handRig {
+				r := newHandRig(t, false)
 				r.tt.SetScale(2)
 				r.tt.SetDark(a.dark)
 				if l.tag == "zh-Hans" {
@@ -94,28 +94,28 @@ func TestScreensHandOff(t *testing.T) {
 				}
 				r.tt.SetSize(1100, 820)
 				r.tt.Frame()
-				r.m.ho.how = map[int]bool{5: true}
-				r.drag(t, "Write the release notes", "Port core to Go", in < 0)
-				if in >= 0 {
-					r.after(in)
-					settleFrames(r.tt)
-				} else {
-					settle(r.tt)
-				}
-				shot(t, "handoff-"+name+l.suffix+"-"+a.suffix+".png", r.tt.Image(), false, a.dark)
+				return r
 			}
-			shotAt("lift", -1)
-			shotAt("carry", 700*time.Millisecond)
-			shotAt("catch", 850*time.Millisecond)
-			shotAt("open", 1100*time.Millisecond)
-			shotAt("wash", 1500*time.Millisecond)
-		}
-	}
-}
+			name := func(what string) string { return "handoff-" + what + l.suffix + "-" + a.suffix + ".png" }
 
-// settleFrames draws a few frames without waiting, so the clock the test set stays where it is.
-func settleFrames(tt *ui.Tester) {
-	for i := 0; i < 3; i++ {
-		tt.Frame()
+			r := rig()
+			x, y := r.grab(t, "Write the release notes")
+			for i := 1; i <= 3; i++ { // walking: the pointer keeps moving
+				r.tt.Move(x+float32(30*i), y+float32(40*i))
+				r.after(70 * time.Millisecond)
+			}
+			shot(t, name("drag"), r.tt.Image(), false, a.dark)
+
+			r = rig()
+			r.dragOnto(t, "Write the release notes", "Port core to Go", true)
+			r.after(330 * time.Millisecond) // the top of the agent's hop
+			shot(t, name("over"), r.tt.Image(), false, a.dark)
+
+			r = rig()
+			r.dragOnto(t, "Write the release notes", "Port core to Go", false)
+			r.after(110 * time.Millisecond)
+			settle(r.tt) // the toast fades in on the wall clock; the sprites and the wash are on the app's
+			shot(t, name("landed"), r.tt.Image(), false, a.dark)
+		}
 	}
 }

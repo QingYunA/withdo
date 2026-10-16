@@ -9,33 +9,21 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// unlaunched is the Fake when no agent could be started: the prompt is for the clipboard.
-type unlaunched struct{ *data.Fake }
-
-func (u unlaunched) HandOff(id int, prompt string) (data.HandOffResult, error) {
-	res, err := u.Fake.HandOff(id, prompt)
-	res.Launched = false
-	return res, err
-}
-
 // handRig is the window on project 1 with a clock the test moves.
 type handRig struct {
-	tt    *ui.Tester
-	m     *Main
-	app   *App
-	store *data.Fake
-	now   time.Time
+	reduce bool
+	tt     *ui.Tester
+	m      *Main
+	app    *App
+	store  *data.Fake
+	now    time.Time
 }
 
-func newHandRig(t *testing.T, reduceMotion, launched bool) *handRig {
+func newHandRig(t *testing.T, reduceMotion bool) *handRig {
 	t.Helper()
-	r := &handRig{now: fixedNow()}
+	r := &handRig{now: fixedNow(), reduce: reduceMotion}
 	r.store = data.NewFake(func() time.Time { return r.now })
-	var store data.Store = r.store
-	if !launched {
-		store = unlaunched{r.store}
-	}
-	r.app = NewApp(store, &recorder{}, testConfig())
+	r.app = NewApp(r.store, &recorder{}, testConfig())
 	r.app.Now = func() time.Time { return r.now }
 	r.m = NewMain(r.app)
 	r.tt = ui.NewTester(r.m.View, 1100, 720)
@@ -52,22 +40,28 @@ func (r *handRig) after(d time.Duration) {
 	r.tt.Frame()
 }
 
-// drag drops the row showing text on the row showing onto, and returns without letting go when
-// hold is set.
-func (r *handRig) drag(t *testing.T, text, onto string, hold bool) {
+// grab presses the row showing text and starts dragging it; it returns where the row was grabbed.
+func (r *handRig) grab(t *testing.T, text string) (x, y float32) {
 	t.Helper()
 	from, ok := r.tt.Find(text)
 	if !ok {
 		t.Fatalf("no row %q in %q", text, r.tt.Texts())
 	}
+	x, y = center(from)
+	r.tt.Press(x, y)
+	r.tt.Move(x+8, y+8)
+	return x + 8, y + 8
+}
+
+// dragOnto drags the row showing text to the middle of the row showing onto, and lets go unless hold.
+func (r *handRig) dragOnto(t *testing.T, text, onto string, hold bool) {
+	t.Helper()
+	r.grab(t, text)
 	to, ok := r.tt.Find(onto)
 	if !ok {
 		t.Fatalf("no %q in %q", onto, r.tt.Texts())
 	}
-	fx, fy := center(from)
 	tx, ty := center(to)
-	r.tt.Press(fx, fy)
-	r.tt.Move(fx+8, fy+8)
 	r.tt.Move(tx, ty)
 	if !hold {
 		r.tt.Release(tx, ty)
@@ -75,50 +69,34 @@ func (r *handRig) drag(t *testing.T, text, onto string, hold bool) {
 	}
 }
 
-func TestDroppingMyRowOnTheAgentsTrayHandsItOver(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
+func TestDroppingMyRowOnTheAgentsTrayHandsItOverAndStartsNothing(t *testing.T) {
+	r := newHandRig(t, true)
+	r.dragOnto(t, "Write the release notes", "Port core to Go", false)
 	task, _ := r.app.Task(5)
 	if task.Source != data.SourceAgent || task.HandedTo != "claude" || task.Status != data.Todo {
 		t.Fatalf("task 5 after the drop: %+v", task)
 	}
-	has(t, r.tt, "Waiting for an agent", "Handed to Claude Code · opened in Terminal", "Handed to Claude Code — opened in Terminal", "Undo")
+	has(t, r.tt, "Waiting for an agent", "Handed to Claude Code", "Undo")
+	hasNot(t, r.tt, "opened in Terminal", "prompt copied", "Prompt copied")
 	if !above(t, r.tt, "Waiting for an agent", "Fix tray race on launch") {
 		t.Error("Waiting for an agent is the first group of the Agents column")
 	}
 	if got := r.tt.Clipboard(); got != "" {
-		t.Errorf("the clipboard holds %q although an agent was started", got)
+		t.Errorf("the clipboard holds %q: nothing is copied", got)
 	}
 }
 
-func TestAHandOffThatStartedNothingCopiesThePromptInTheAppsLanguage(t *testing.T) {
-	r := newHandRig(t, true, false)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	want := "Please do task #5 in adhd-todo: Write the release notes\nCover the Go core, the native UI and how to register the MCP server.\n" +
-		"Start by calling report_progress (task_id: 5, status: \"doing\"), then keep reporting as adhd-todo's instructions say."
-	if got := r.tt.Clipboard(); got != want {
-		t.Errorf("clipboard %q, want %q", got, want)
-	}
-	has(t, r.tt, "Prompt copied — paste it to any agent", "Handed to Claude Code · prompt copied")
-	hasNot(t, r.tt, "opened in Terminal")
-}
-
-func TestThePromptIsInChineseAndSkipsEmptyNotes(t *testing.T) {
-	r := newHandRig(t, true, false)
+func TestTheWaitingRowAndTheToastAreInChinese(t *testing.T) {
+	r := newHandRig(t, true)
 	inChinese(r.tt)
-	r.drag(t, "Decide on the activation policy", "Port core to Go", false)
-	want := "请完成 adhd-todo 里的任务 #6：Decide on the activation policy\n" +
-		"开始时调用 report_progress（task_id: 6，status: \"doing\"），之后按 adhd-todo 的说明继续汇报。"
-	if got := r.tt.Clipboard(); got != want {
-		t.Errorf("clipboard %q, want %q", got, want)
-	}
-	has(t, r.tt, "已复制提示词，粘贴给任意 Agent", "等 Agent 接手", "交给 Claude Code · 已复制提示词")
+	r.dragOnto(t, "Decide on the activation policy", "Port core to Go", false)
+	has(t, r.tt, "已交给 Claude Code", "等 Agent 接手", "交给 Claude Code", "撤销")
 }
 
 func TestTheTrayInvitesTheDropAndNamesTheAgent(t *testing.T) {
-	r := newHandRig(t, true, true)
+	r := newHandRig(t, true)
 	hasNot(t, r.tt, "Drop to hand to")
-	r.drag(t, "Write the release notes", "Port core to Go", true)
+	r.dragOnto(t, "Write the release notes", "Port core to Go", true)
 	r.tt.Frame()
 	has(t, r.tt, "Drop to hand to Claude Code")
 	r.tt.Release(400, 600)
@@ -127,20 +105,20 @@ func TestTheTrayInvitesTheDropAndNamesTheAgent(t *testing.T) {
 }
 
 func TestOnlyTasksOfMineDragToTheTrayAndOnlyUnfinishedOnes(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Draft the UI spec", "Port core to Go", false) // done
+	r := newHandRig(t, true)
+	r.dragOnto(t, "Draft the UI spec", "Port core to Go", false) // done
 	if task, _ := r.app.Task(13); task.Source != data.SourceUser {
 		t.Errorf("a finished task was handed over: %+v", task)
 	}
-	r.drag(t, "Port core to Go", "Port core to Go", false) // an agent's row on its own column
+	r.dragOnto(t, "Port core to Go", "Port core to Go", false) // an agent's row on its own column
 	if task, _ := r.app.Task(1); task.HandedTo != "" || task.Source != data.SourceAgent {
 		t.Errorf("an agent's task changed: %+v", task)
 	}
 }
 
 func TestUndoTakesTheTaskBackWithItsStatus(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Decide on the activation policy", "Port core to Go", false) // Doing, P1
+	r := newHandRig(t, true)
+	r.dragOnto(t, "Decide on the activation policy", "Port core to Go", false) // Doing, P1
 	if task, _ := r.app.Task(6); task.Status != data.Todo || task.Source != data.SourceAgent {
 		t.Fatalf("after the hand-off %+v", task)
 	}
@@ -153,8 +131,8 @@ func TestUndoTakesTheTaskBackWithItsStatus(t *testing.T) {
 }
 
 func TestCmdZUndoesTheHandOffWhileItsToastShows(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
+	r := newHandRig(t, true)
+	r.dragOnto(t, "Write the release notes", "Port core to Go", false)
 	r.tt.Key(ui.Cmd, ui.KeyZ)
 	r.tt.Frame()
 	if task, _ := r.app.Task(5); task.Source != data.SourceUser || task.HandedTo != "" {
@@ -164,11 +142,10 @@ func TestCmdZUndoesTheHandOffWhileItsToastShows(t *testing.T) {
 }
 
 func TestDraggingAnAgentsRowOntoMineTakesItBackAndUndoRestoresIt(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false) // now waiting
-	r.now = r.now.Add(10 * time.Second)
-	r.tt.Frame()
-	r.drag(t, "Write the release notes", "Decide on the activation policy", false)
+	r := newHandRig(t, true)
+	r.dragOnto(t, "Write the release notes", "Port core to Go", false) // now waiting
+	r.after(10 * time.Second)
+	r.dragOnto(t, "Write the release notes", "Decide on the activation policy", false)
 	task, _ := r.app.Task(5)
 	if task.Source != data.SourceUser || task.HandedTo != "" {
 		t.Fatalf("after the take-back %+v", task)
@@ -182,94 +159,174 @@ func TestDraggingAnAgentsRowOntoMineTakesItBackAndUndoRestoresIt(t *testing.T) {
 	}
 }
 
-func TestAHandOffPlaysForAboutAMomentAndAsksForFramesOnlyThen(t *testing.T) {
-	r := newHandRig(t, false, true)
+// userPixels counts the bluish pixels (the shirt of the user, seen through the copy's 75 % opacity) in a
+// window of the last frame: the sprite under a carried row.
+func (r *handRig) userPixels(x, y, w, h float32) int {
+	img := r.tt.Image()
+	n := 0
+	for py := int(y); py < int(y+h); py++ {
+		for px := int(x); px < int(x+w); px++ {
+			if c := img.RGBAAt(px, py); int(c.B)-int(c.R) > 60 && int(c.B)-int(c.G) > 60 {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+func TestALiftedRowIsCarriedByTheUsersSprite(t *testing.T) {
+	r := newHandRig(t, true)
+	if r.m.ho.carry.seen {
+		t.Fatal("a sprite before anything is lifted")
+	}
+	r.tt.SetScale(1)
+	x, y := r.grab(t, "Write the release notes")
+	r.tt.Move(x+40, y+60)
+	r.tt.Frame()
+	if !r.m.ho.carry.has {
+		t.Fatal("the row is lifted and the sprite is not carrying it")
+	}
+	// The sprite stands under the left end of the card, which follows the pointer.
+	if n := r.userPixels(x-400, y-20, 700, 140); n == 0 {
+		t.Error("no pixel of the sprite's shirt near the carried row")
+	}
+	r.tt.Release(x+40, y+60)
+	r.tt.Frame()
+	r.tt.Frame()
+	if r.m.ho.carry.has {
+		t.Error("the sprite still carries a row that was dropped")
+	}
+}
+
+func TestTheCarrierWalksWhileThePointerMovesAndStandsStillWhenItStops(t *testing.T) {
+	r := newHandRig(t, false)
+	x, y := r.grab(t, "Write the release notes")
+	r.after(10 * time.Millisecond)
+	base := r.m.ho.asked
+	for i := 0; i < 5; i++ {
+		r.tt.Move(x+float32(10*i), y+float32(5*i))
+		r.after(30 * time.Millisecond)
+	}
+	if r.m.ho.asked <= base {
+		t.Fatal("the pointer moves and the sprite asks for no frame")
+	}
+	if bob := theme.CarryBob(r.now.Sub(r.m.ho.carry.since)); bob < 0 || bob > theme.CarryBobHeight {
+		t.Errorf("bob %v", bob)
+	}
+	// It stops after the pointer does.
 	r.after(time.Second)
-	if r.m.ho.asked != 0 || r.m.ho.anim != nil {
-		t.Fatalf("a still window asked for %d frames", r.m.ho.asked)
-	}
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	if r.m.ho.anim == nil {
-		t.Fatal("no hand-off is playing")
-	}
-	r.after(100 * time.Millisecond)
-	if r.m.ho.asked == 0 {
-		t.Fatal("the hand-off plays and no frame was asked for")
-	}
-	r.after(theme.HandOffEnd(false))
+	r.after(time.Second)
 	asked := r.m.ho.asked
-	if r.m.ho.anim != nil {
-		t.Fatal("the hand-off is still there when it is over")
-	}
 	for i := 0; i < 5; i++ {
 		r.after(time.Second)
 	}
 	if r.m.ho.asked != asked {
-		t.Errorf("%d frames asked for after the hand-off was over", r.m.ho.asked-asked)
+		t.Errorf("a sprite that stands still asked for %d frames", r.m.ho.asked-asked)
 	}
 }
 
-func TestTheNewRowOpensWhenTheParcelDoesAndKeepsAWashThatFades(t *testing.T) {
-	r := newHandRig(t, false, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	if got := r.m.ho.rowOpacity(5); got != 0 {
-		t.Errorf("the row shows at once with opacity %v", got)
+func TestReduceMotionKeepsTheCarrierButItDoesNotWalk(t *testing.T) {
+	r := newHandRig(t, true)
+	x, y := r.grab(t, "Write the release notes")
+	for i := 0; i < 5; i++ {
+		r.tt.Move(x+float32(10*i), y+float32(5*i))
+		r.after(30 * time.Millisecond)
 	}
-	r.after(theme.HandOffOpenAt + theme.HandOffOpenFor)
-	if got := r.m.ho.rowOpacity(5); got != 1 {
-		t.Errorf("opacity %v once the parcel opened", got)
+	if !r.m.ho.carry.has {
+		t.Fatal("the sprite does not carry the row with Reduce Motion")
 	}
-	whole := r.m.ho.rowWash(5)
-	r.after(theme.HandOffWash / 2)
-	half := r.m.ho.rowWash(5)
-	if whole < theme.HandOffWashMax-0.001 || half <= 0 || half >= whole {
-		t.Errorf("wash %v then %v: it should start at %v and fade", whole, half, theme.HandOffWashMax)
-	}
-	if got := r.m.ho.rowOpacity(6); got != 1 {
-		t.Errorf("another row has opacity %v", got)
+	if r.m.ho.asked != 0 {
+		t.Errorf("with Reduce Motion %d frames were asked for", r.m.ho.asked)
 	}
 }
 
-func TestTheSpritesLeaveTheirHeadersAndComeHome(t *testing.T) {
-	r := newHandRig(t, false, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	away := false
-	for e := time.Duration(0); e < theme.HandOffEnd(false); e += 50 * time.Millisecond {
-		r.after(50 * time.Millisecond)
-		away = away || r.m.ho.youAway()
+// agentBox is where the robot of the Agents header rests.
+func (r *handRig) agentBox() ui.Rect {
+	e, _ := r.tt.Find("Agents")
+	return ui.Rect{X: e.X - 9 - theme.ColumnAvatar, Y: e.Y + (e.H-theme.ColumnAvatar)/2, W: theme.ColumnAvatar, H: theme.ColumnAvatar}
+}
+
+func TestTheAgentHopsEveryEightHundredMillisecondsWhileARowIsOverTheTray(t *testing.T) {
+	r := newHandRig(t, false)
+	rest := r.agentBox()
+	if f := r.m.agentFrame(r.reduce, rest); f != rest {
+		t.Fatalf("at rest %+v, want %+v", f, rest)
 	}
-	if !away {
-		t.Error("the user's sprite never left its header")
+	r.dragOnto(t, "Write the release notes", "Port core to Go", true)
+	r.tt.Frame()
+	if !r.m.ho.over {
+		t.Fatal("the row is over the tray and the agent does not know")
 	}
-	if r.m.ho.youAway() {
-		t.Error("the user's sprite is still away when the hand-off is over")
+	r.after(300 * time.Millisecond)
+	up := r.m.agentFrame(r.reduce, rest)
+	if up.Y >= rest.Y-3 {
+		t.Errorf("mid hop at %v, rest %v: the agent should be up", up.Y, rest.Y)
+	}
+	r.after(theme.ReachEvery)
+	if again := r.m.agentFrame(r.reduce, rest); again != up {
+		t.Errorf("the second hop %+v differs from the first %+v", again, up)
+	}
+	asked := r.m.ho.asked
+	r.after(10 * time.Millisecond)
+	if r.m.ho.asked == asked {
+		t.Error("the agent hops and no frame was asked for")
+	}
+	r.tt.Release(400, 600) // let go away from the tray
+	r.after(10 * time.Millisecond)
+	if r.m.ho.over || r.m.agentFrame(r.reduce, rest) != rest {
+		t.Error("the agent keeps hopping after the row left")
 	}
 }
 
-func TestReduceMotionHasNoHopTheRowFadesOutAndIn(t *testing.T) {
-	r := newHandRig(t, true, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	f := r.m.ho.frame
-	if f.YouOn || f.BotOn || f.ParcelOn {
-		t.Errorf("with Reduce Motion something hops: %+v", f)
+func TestTheAgentSquashesOnceOnTheDropAndTheRowKeepsAWashThatFades(t *testing.T) {
+	r := newHandRig(t, false)
+	rest := r.agentBox()
+	r.dragOnto(t, "Write the release notes", "Port core to Go", false)
+	f := r.m.agentFrame(r.reduce, rest)
+	if f.W <= rest.W || f.H >= rest.H {
+		t.Errorf("at the drop %+v, rest %+v: wider and shorter", f, rest)
 	}
-	r.after(theme.HandOffReduceIn / 2)
-	f = r.m.ho.frame
-	if f.GhostOpacity <= 0 || f.GhostOpacity >= 1 || f.RowOpacity <= 0 || f.RowOpacity >= 1 {
-		t.Errorf("half way: ghost %v, row %v, want both fading", f.GhostOpacity, f.RowOpacity)
+	if got := r.m.ho.rowWash(5, r.now); got < theme.WashMax-0.001 {
+		t.Errorf("wash %v at the drop, want %v", got, theme.WashMax)
 	}
-	r.after(theme.HandOffReduceIn)
-	if f = r.m.ho.frame; f.GhostOpacity != 0 || f.RowOpacity != 1 {
-		t.Errorf("after the fade: ghost %v, row %v", f.GhostOpacity, f.RowOpacity)
+	r.after(theme.WashFor / 2)
+	if got := r.m.ho.rowWash(5, r.now); got <= 0 || got >= theme.WashMax {
+		t.Errorf("half way %v", got)
+	}
+	if r.m.agentFrame(r.reduce, rest) != rest {
+		t.Error("the agent is still squashed after it settled")
+	}
+	if got := r.m.ho.rowWash(6, r.now); got != 0 {
+		t.Errorf("another row has a wash of %v", got)
+	}
+	r.after(theme.WashFor)
+	asked := r.m.ho.asked
+	for i := 0; i < 5; i++ {
+		r.after(time.Second)
+	}
+	if r.m.ho.asked != asked || r.m.ho.landed.id != 0 {
+		t.Errorf("%d frames asked for after the wash was gone", r.m.ho.asked-asked)
 	}
 }
 
-func TestTheHandOffLeavesWhenTheScreenDoes(t *testing.T) {
-	r := newHandRig(t, false, true)
-	r.drag(t, "Write the release notes", "Port core to Go", false)
-	r.m.goTo(nav{})
-	r.after(50 * time.Millisecond)
-	if r.m.ho.anim != nil {
-		t.Error("the hand-off is still playing on another screen")
+func TestReduceMotionTheAgentNeitherHopsNorSquashes(t *testing.T) {
+	r := newHandRig(t, true)
+	rest := r.agentBox()
+	r.dragOnto(t, "Write the release notes", "Port core to Go", true)
+	r.after(300 * time.Millisecond)
+	if f := r.m.agentFrame(r.reduce, rest); f != rest {
+		t.Errorf("hopping with Reduce Motion: %+v", f)
+	}
+	r.tt.Release(400, 600)
+	r.tt.Frame()
+}
+
+func TestAStillColumnsWindowAsksForNoFrames(t *testing.T) {
+	r := newHandRig(t, false)
+	for i := 0; i < 5; i++ {
+		r.after(time.Second)
+	}
+	if r.m.ho.asked != 0 {
+		t.Errorf("a window with nothing to animate asked for %d frames", r.m.ho.asked)
 	}
 }

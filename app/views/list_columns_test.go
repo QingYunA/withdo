@@ -88,14 +88,13 @@ func TestTheAgentsDoneGroupShowsThreeAndShowAll(t *testing.T) {
 }
 
 func TestAWaitingTaskHasItsOwnGroupFirstAndLeavesTodo(t *testing.T) {
-	r := newHandRig(t, true, true)
-	if _, err := r.store.HandOff(5, "go"); err != nil {
+	r := newHandRig(t, true)
+	if _, err := r.store.HandOff(5); err != nil {
 		t.Fatal(err)
 	}
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Waiting for an agent", "Write the release notes", "Handed to Claude Code")
-	hasNot(t, r.tt, "opened in Terminal", "prompt copied") // a restart forgets how it was handed over
 	if !above(t, r.tt, "Waiting for an agent", "Blocked") {
 		t.Error("Waiting for an agent comes before Blocked")
 	}

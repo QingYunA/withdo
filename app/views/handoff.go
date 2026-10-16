@@ -1,25 +1,23 @@
 package views
 
 import (
-	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
 )
 
-// Handing a task to an agent: the user drags a row of Mine onto the Agents tray. The view words the
-// prompt in the app's language, asks the store to hand the task over, copies the prompt when no agent
-// could be started, and says so in a toast with Undo (and ⌘Z). Dragging an agent's row onto Mine
-// takes it back. The animation is in handoff_anim.go.
+// Handing a task to an agent: the user drags a row of Mine onto the Agents tray. The view asks the
+// store to hand the task over, which starts nothing, and says so in a toast with Undo (and ⌘Z).
+// Dragging an agent's row onto Mine takes it back. The sprites that play along are in handoff_drag.go.
 
 // handOffToast is the one toast of the hand-off, so a second one replaces the first.
 const handOffToast = "hand-off"
 
 // HandOff hands a task to an agent and refreshes. An error goes to the banner.
-func (a *App) HandOff(id int, prompt string) (data.HandOffResult, error) {
+func (a *App) HandOff(id int) (data.HandOffResult, error) {
 	var res data.HandOffResult
-	err := a.do(func() (err error) { res, err = a.Store.HandOff(id, prompt); return })
+	err := a.do(func() (err error) { res, err = a.Store.HandOff(id); return })
 	return res, a.fail(err)
 }
 
@@ -30,18 +28,9 @@ func (a *App) TakeBack(id int) (data.Task, error) {
 	return task, a.fail(err)
 }
 
-// RestoreHandOff puts a task's Source and hand-off back as they were, which starts nothing.
+// RestoreHandOff puts a task's Source and hand-off back as they were.
 func (a *App) RestoreHandOff(id int, agent string, at *time.Time, source data.Source) error {
 	return a.fail(a.do(func() error { _, err := a.Store.RestoreHandOff(id, agent, at, source); return err }))
-}
-
-// handOffPrompt is what the agent starts with, in the app's language: the task, its notes when it
-// has any, and how to report.
-func (m *Main) handOffPrompt(task data.Task) string {
-	if notes := strings.TrimSpace(task.Notes); notes != "" {
-		return m.say.HandOffPromptNotes(task.ID, task.Title, notes)
-	}
-	return m.say.HandOffPrompt(task.ID, task.Title)
 }
 
 // handOffAgentName is the agent a hand-off would go to, as far as the view can tell: the one that
@@ -63,47 +52,35 @@ func (m *Main) handOffAgentName() string {
 	return agentName(newest.Agent)
 }
 
-// handOff is the drop on the tray: the task becomes the agent's and waits for it, the prompt goes to
-// the clipboard when no agent started, and the hand-off plays.
+// handOff is the drop on the tray: the task becomes the agent's and waits for it, the agent catches
+// it, and a toast says so.
 func (m *Main) handOff(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
 	if !ok || task.Source != data.SourceUser || task.Status.Terminal() {
 		return
 	}
-	prompt := m.handOffPrompt(task)
-	res, err := m.app.HandOff(id, prompt)
+	res, err := m.app.HandOff(id)
 	if err != nil {
 		return
 	}
-	if m.ho.how == nil {
-		m.ho.how = map[int]bool{}
-	}
-	m.ho.how[id] = res.Launched
-	title := m.say.HandOffOpened(res.AgentName)
-	if !res.Launched {
-		c.WriteClipboard(prompt)
-		title = m.say.HandOffCopied()
-	}
-	m.ho.begin(m.handOffPlan(c, task), task, res, m.app.Now())
-	m.offerUndo(c, title, m.undoHandOff(id, task.Status))
+	m.ho.landed = landing{id: id, at: m.app.Now()}
+	m.offerUndo(c, m.say.HandOffDone(res.AgentName), m.undoHandOff(id, task.Status))
 }
 
-// undoHandOff takes the task back and gives it the status it had. It cannot close the Terminal
-// window the agent was started in.
+// undoHandOff takes the task back and gives it the status it had.
 func (m *Main) undoHandOff(id int, was data.Status) func() {
 	return func() {
 		if _, err := m.app.TakeBack(id); err != nil {
 			return
 		}
 		_ = m.app.Update(id, data.Patch{Status: data.StatusPtr(was)})
-		delete(m.ho.how, id)
-		if m.ho.anim != nil && m.ho.anim.id == id {
-			m.ho.anim = nil
+		if m.ho.landed.id == id {
+			m.ho.landed = landing{}
 		}
 	}
 }
 
-// takeBack is the drop of an agent's row on Mine: the task is the user's again, with no animation.
+// takeBack is the drop of an agent's row on Mine: the task is the user's again, with no sprite.
 func (m *Main) takeBack(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
 	if !ok || task.Source != data.SourceAgent || task.Status.Terminal() {
@@ -112,7 +89,6 @@ func (m *Main) takeBack(c *ui.Context, id int) {
 	if _, err := m.app.TakeBack(id); err != nil {
 		return
 	}
-	delete(m.ho.how, id)
 	m.offerUndo(c, m.say.HandOffTakenBack(), func() {
 		_ = m.app.RestoreHandOff(id, task.HandedTo, task.HandedAt, task.Source)
 	})

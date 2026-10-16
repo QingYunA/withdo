@@ -31,8 +31,11 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	}
 	_, opacity, _ := m.app.completionPhase(c, task.ID)
 	ot := m.app.overviewTask(task)
-	m.draggableRow(c, t, task, false, opacity, func(row ui.Element) {
+	m.draggableRow(c, t, task, false, opacity, func(row ui.Element, dragging bool) {
 		row.AlignItems(ui.Center).Children(func() {
+			if dragging { // the copy that follows the pointer carries the sprite of the user
+				m.carrier(c, m.ho.walk(c, row, m.app.Now()))
+			}
 			ui.Box(c.Key("indent")).Width(listIndent - rowGap).Shrink(0)
 			body(c, func() { m.titleLine(c, t, task, "", false) })
 			right(c, func() { m.listRight(c, t, task, ot) })
@@ -50,7 +53,7 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	}
 	_, opacity, _ := m.app.completionPhase(c, task.ID)
 	ot := m.app.overviewTask(task)
-	m.draggableRow(c, t, task, true, opacity, func(row ui.Element) {
+	m.draggableRow(c, t, task, true, opacity, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, m.app.taskWho(task))
 			body(c, func() {
@@ -62,32 +65,18 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 // waitingRow is a task the user handed to an agent that has not reported on it yet: the agent's
-// avatar, the title and how long ago, and under it who has it and how it was started.
+// avatar, the title and how long ago, and under it who has it.
 func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	_, opacity, _ := m.app.completionPhase(c, task.ID)
-	m.draggableRow(c, t, task, true, opacity, func(row ui.Element) {
+	m.draggableRow(c, t, task, true, opacity, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, theme.AgentAvatar(task.HandedTo))
 			body(c, func() {
 				m.agentTitle(c, t, task, func() { plainText(c, t, m.clock.Age(handedAt(task), m.app.Now())) })
-				agentLine(c, t, m.handedLine(task))
+				agentLine(c, t, m.say.ListHandedTo(agentName(task.HandedTo)))
 			})
 		})
 	})
-}
-
-// handedLine is "Handed to Claude Code · opened in Terminal", or without the second half when this
-// run does not know how it was handed over (the app was restarted since).
-func (m *Main) handedLine(task data.Task) string {
-	agent := agentName(task.HandedTo)
-	launched, known := m.ho.how[task.ID]
-	switch {
-	case !known:
-		return m.say.ListHandedTo(agent)
-	case launched:
-		return m.say.ListHandedToOpened(agent)
-	}
-	return m.say.ListHandedToCopied(agent)
 }
 
 // agentAvatar is the avatar at the start of an agent's row, level with its title.
@@ -151,10 +140,8 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 }
 
 // draggableRow is a row of a column that drags to the other one. While it is dragged it lifts (a
-// shadow, a 2 degree tilt) and leaves an empty dashed slot where it was; fill builds the row. A
-// row waiting for an agent that has just opened shows only as the hand-off lets it.
-func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, fromAgents bool, opacity float32, fill func(row ui.Element)) {
-	opacity *= m.ho.rowOpacity(task.ID)
+// shadow, a 2 degree tilt) and leaves an empty dashed slot where it was; fill builds the row.
+func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, fromAgents bool, opacity float32, fill func(row ui.Element, dragging bool)) {
 	slot := ui.Column(c.Key("slot-"+itoa(task.ID))).Shrink(0).Margin(0, -rowSlot).Padding(0, rowSlot)
 	dragging := false
 	slot.Children(func() {
@@ -162,22 +149,21 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents})
 		dragging = row.Dragging()
 		m.liftRow(c, t, row, task.ID, dragging)
-		fill(row)
+		fill(row, dragging)
 		if row.Clicked() {
 			m.openRow(task.ID)
 		}
 	})
 	if dragging {
-		m.ho.dragged = dragged{id: task.ID, rect: slot.Bounds()}
 		slot.Radius(theme.RadiusCard).Border(1, t.Border).BorderStyle(ui.BorderDashed)
 	}
 }
 
 // liftRow is the look of a row in flight, as a board card's (the copy that follows the pointer
-// ignores the opacity; the original leaves an empty slot), and the accent wash of a row the
-// hand-off just opened.
+// ignores the opacity; the original leaves an empty slot), and the accent wash of a row that just
+// landed in Waiting for an agent.
 func (m *Main) liftRow(c *ui.Context, t *theme.Tokens, row ui.Element, id int, dragging bool) {
-	if wash := m.ho.rowWash(id); wash > 0 && !dragging && !row.Hovered() && m.sel != id && m.openID != id {
+	if wash := m.ho.rowWash(id, m.app.Now()); wash > 0 && !dragging && !row.Hovered() && m.sel != id && m.openID != id {
 		row.Background(t.Accent.Alpha(wash))
 	}
 	if !c.Preferences().ReduceMotion { // with Reduce Motion the lift is the shadow alone

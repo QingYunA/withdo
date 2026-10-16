@@ -371,12 +371,7 @@
   "listInstallMCP": "安装 MCP →",
   "listWaiting": "等 Agent 接手",
   "listHandedTo": "交给 {agent}",
-  "listHandedToOpened": "交给 {agent} · 已在终端里打开",
-  "listHandedToCopied": "交给 {agent} · 已复制提示词",
   "listDropToHand": "松开，交给 {agent}",
-  "handOffOpened": "已交给 {agent}，已在终端里打开",
-  "handOffCopied": "已复制提示词，粘贴给任意 Agent",
-  "handOffTakenBack": "现在归你了",
-  "handOffPrompt": "请完成 adhd-todo 里的任务 #{id}：{title}\n开始时调用 report_progress（task_id: {id}，status: \"doing\"），之后按 adhd-todo 的说明继续汇报。",
-  "handOffPromptNotes": "请完成 adhd-todo 里的任务 #{id}：{title}\n{notes}\n开始时调用 report_progress（task_id: {id}，status: \"doing\"），之后按 adhd-todo 的说明继续汇报。"
+  "handOffDone": "已交给 {agent}",
+  "handOffTakenBack": "现在归你了"
 }

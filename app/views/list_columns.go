@@ -47,7 +47,6 @@ type columnsState struct {
 // columnsGeo are the rectangles of the frame before, in window points.
 type columnsGeo struct {
 	mine, tray ui.Rect // the Mine column and the Agents tray
-	you, bot   ui.Rect // the avatars in the two headers
 	stacked    bool
 }
 
@@ -205,10 +204,9 @@ func (m *Main) mineColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, width
 // task over.
 func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, width float32) {
 	zone := ui.Column(c.Key("col-agents")).Width(width).Shrink(0)
-	over := false
-	if d, ok := ui.DragOver[dragRow](zone); ok && !d.fromAgents {
-		over = true
-	}
+	d, over := ui.DragOver[dragRow](zone)
+	over = over && !d.fromAgents
+	m.ho.setOver(over, m.app.Now())
 	if d, ok := ui.Drop[dragRow](zone); ok && !d.fromAgents {
 		m.handOff(c, d.id)
 	}
@@ -236,20 +234,16 @@ func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, wid
 
 // columnHead is the column's avatar, name and count, and a line under them.
 func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui.Color) {
-	who, name := theme.You, m.say.NavMine()
+	name := m.say.NavMine()
 	if s == sideAgents {
-		who, name = theme.AccentBot(t.Accent), m.say.NavAgents()
+		name = m.say.NavAgents()
 	}
 	ui.Column(c.Key("head")).Shrink(0).Margin(10, 0, 0).Children(func() {
 		ui.Row(c).Height(theme.ColumnHead - 1).Gap(9).AlignItems(ui.Center).Children(func() {
-			av := theme.AvatarIcon(c.Key("avatar"), who, theme.ColumnAvatar)
 			if s == sideMine {
-				m.cols.geo.you = av.Bounds()
-				if m.ho.youAway() {
-					av.Opacity(0)
-				}
+				theme.AvatarIcon(c.Key("avatar"), theme.You, theme.ColumnAvatar)
 			} else {
-				m.cols.geo.bot = av.Bounds()
+				m.agentAvatar20(c, t)
 			}
 			theme.Text(c, theme.BodyStrong, t.Text, name)
 			if n > 0 {
@@ -257,6 +251,15 @@ func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui
 			}
 		})
 		ui.Box(c).FillWidth().Height(1).Background(line)
+	})
+}
+
+// agentAvatar20 is the robot of the Agents header. It hops while a row of Mine is over the tray and
+// squashes as it catches the row dropped on it (see agentFrame).
+func (m *Main) agentAvatar20(c *ui.Context, t *theme.Tokens) {
+	sprite := theme.AccentBot(t.Accent).Sprite()
+	ui.Box(c.Key("avatar")).Size(theme.ColumnAvatar, theme.ColumnAvatar).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+		theme.DrawSprite(p, m.agentFrame(c.Preferences().ReduceMotion, r), sprite)
 	})
 }
 

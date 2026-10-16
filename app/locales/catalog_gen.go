@@ -5506,38 +5506,6 @@ func (msgs Messages) ListHandedTo(agent string) string {
 	return Catalog.Format(msgs.locale, "listHandedTo", map[string]any{"agent": agent})
 }
 
-// ListHandedToOpened says "Handed to {agent} · opened in Terminal"
-// in the language the app shows.
-//
-// Second line of a row waiting for an agent that was started in a Terminal
-// window.
-func ListHandedToOpened(agent string) string { return In(i18n.Locale()).ListHandedToOpened(agent) }
-
-// ListHandedToOpened says "Handed to {agent} · opened in Terminal"
-// in the language of msgs.
-//
-// Second line of a row waiting for an agent that was started in a Terminal
-// window.
-func (msgs Messages) ListHandedToOpened(agent string) string {
-	return Catalog.Format(msgs.locale, "listHandedToOpened", map[string]any{"agent": agent})
-}
-
-// ListHandedToCopied says "Handed to {agent} · prompt copied"
-// in the language the app shows.
-//
-// Second line of a row waiting for an agent whose prompt was copied to the
-// clipboard.
-func ListHandedToCopied(agent string) string { return In(i18n.Locale()).ListHandedToCopied(agent) }
-
-// ListHandedToCopied says "Handed to {agent} · prompt copied"
-// in the language of msgs.
-//
-// Second line of a row waiting for an agent whose prompt was copied to the
-// clipboard.
-func (msgs Messages) ListHandedToCopied(agent string) string {
-	return Catalog.Format(msgs.locale, "listHandedToCopied", map[string]any{"agent": agent})
-}
-
 // ListDropToHand says "Drop to hand to {agent}"
 // in the language the app shows.
 //
@@ -5554,34 +5522,20 @@ func (msgs Messages) ListDropToHand(agent string) string {
 	return Catalog.Format(msgs.locale, "listDropToHand", map[string]any{"agent": agent})
 }
 
-// HandOffOpened says "Handed to {agent} — opened in Terminal"
+// HandOffDone says "Handed to {agent}"
 // in the language the app shows.
 //
-// Toast after a task was handed to an agent that started in Terminal.
-func HandOffOpened(agent string) string { return In(i18n.Locale()).HandOffOpened(agent) }
+// Toast after a task was handed to an agent. Nothing is started; the task
+// waits for the agent.
+func HandOffDone(agent string) string { return In(i18n.Locale()).HandOffDone(agent) }
 
-// HandOffOpened says "Handed to {agent} — opened in Terminal"
+// HandOffDone says "Handed to {agent}"
 // in the language of msgs.
 //
-// Toast after a task was handed to an agent that started in Terminal.
-func (msgs Messages) HandOffOpened(agent string) string {
-	return Catalog.Format(msgs.locale, "handOffOpened", map[string]any{"agent": agent})
-}
-
-// HandOffCopied says "Prompt copied — paste it to any agent"
-// in the language the app shows.
-//
-// Toast after a task was handed over but no agent could be started: the
-// prompt is on the clipboard.
-func HandOffCopied() string { return In(i18n.Locale()).HandOffCopied() }
-
-// HandOffCopied says "Prompt copied — paste it to any agent"
-// in the language of msgs.
-//
-// Toast after a task was handed over but no agent could be started: the
-// prompt is on the clipboard.
-func (msgs Messages) HandOffCopied() string {
-	return Catalog.Format(msgs.locale, "handOffCopied", nil)
+// Toast after a task was handed to an agent. Nothing is started; the task
+// waits for the agent.
+func (msgs Messages) HandOffDone(agent string) string {
+	return Catalog.Format(msgs.locale, "handOffDone", map[string]any{"agent": agent})
 }
 
 // HandOffTakenBack says "Yours now"
@@ -5596,38 +5550,4 @@ func HandOffTakenBack() string { return In(i18n.Locale()).HandOffTakenBack() }
 // Toast after an agent's task was dragged back to the Mine column.
 func (msgs Messages) HandOffTakenBack() string {
 	return Catalog.Format(msgs.locale, "handOffTakenBack", nil)
-}
-
-// HandOffPrompt says "Please do task #{id} in adhd-todo: {title}\nStart by calling report_progress (task_id: {id}, status: \"doing\"), then ke…"
-// in the language the app shows.
-//
-// The prompt an agent starts with when the user hands it a task that has no
-// notes. It is written for the agent, in the app's language.
-func HandOffPrompt(id int, title string) string { return In(i18n.Locale()).HandOffPrompt(id, title) }
-
-// HandOffPrompt says "Please do task #{id} in adhd-todo: {title}\nStart by calling report_progress (task_id: {id}, status: \"doing\"), then ke…"
-// in the language of msgs.
-//
-// The prompt an agent starts with when the user hands it a task that has no
-// notes. It is written for the agent, in the app's language.
-func (msgs Messages) HandOffPrompt(id int, title string) string {
-	return Catalog.Format(msgs.locale, "handOffPrompt", map[string]any{"id": id, "title": title})
-}
-
-// HandOffPromptNotes says "Please do task #{id} in adhd-todo: {title}\n{notes}\nStart by calling report_progress (task_id: {id}, status: \"doing\"),…"
-// in the language the app shows.
-//
-// The prompt an agent starts with when the user hands it a task that has
-// notes; notes is the task's notes.
-func HandOffPromptNotes(id int, title string, notes string) string {
-	return In(i18n.Locale()).HandOffPromptNotes(id, title, notes)
-}
-
-// HandOffPromptNotes says "Please do task #{id} in adhd-todo: {title}\n{notes}\nStart by calling report_progress (task_id: {id}, status: \"doing\"),…"
-// in the language of msgs.
-//
-// The prompt an agent starts with when the user hands it a task that has
-// notes; notes is the task's notes.
-func (msgs Messages) HandOffPromptNotes(id int, title string, notes string) string {
-	return Catalog.Format(msgs.locale, "handOffPromptNotes", map[string]any{"id": id, "title": title, "notes": notes})
 }
