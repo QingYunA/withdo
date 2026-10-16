@@ -15,10 +15,10 @@ import (
 const handOffToast = "hand-off"
 
 // HandOff hands a task to an agent and refreshes. An error goes to the banner.
-func (a *App) HandOff(id int) (data.HandOffResult, error) {
-	var res data.HandOffResult
-	err := a.do(func() (err error) { res, err = a.Store.HandOff(id); return })
-	return res, a.fail(err)
+func (a *App) HandOff(id int) (data.Task, error) {
+	var task data.Task
+	err := a.do(func() (err error) { task, err = a.Store.HandOff(id); return })
+	return task, a.fail(err)
 }
 
 // TakeBack makes an agent's task the user's again, and refreshes.
@@ -33,38 +33,18 @@ func (a *App) RestoreHandOff(id int, agent string, at *time.Time, source data.So
 	return a.fail(a.do(func() error { _, err := a.Store.RestoreHandOff(id, agent, at, source); return err }))
 }
 
-// handOffAgentName is the agent a hand-off would go to, as far as the view can tell: the one that
-// reported last in the project, else Claude Code. The store picks the agent itself; this is the name
-// the tray shows while a row is over it.
-func (m *Main) handOffAgentName() string {
-	var newest *data.Report
-	for _, t := range m.app.snap.tasks {
-		if t.ProjectID == nil || *t.ProjectID != m.nav.projectID {
-			continue
-		}
-		if r := m.app.latestReport(t.ID); r != nil && (newest == nil || r.CreatedAt.After(newest.CreatedAt)) {
-			newest = r
-		}
-	}
-	if newest == nil || newest.Agent == "" || newest.Agent == unnamedAgent {
-		return agentName("claude")
-	}
-	return agentName(newest.Agent)
-}
-
-// handOff is the drop on the tray: the task becomes the agent's and waits for it, the agent catches
-// it, and a toast says so.
+// handOff is the drop on the tray: the task becomes the agent's and waits for it, an agent's header
+// robot catches it, and a toast says so.
 func (m *Main) handOff(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
 	if !ok || task.Source != data.SourceUser || task.Status.Terminal() {
 		return
 	}
-	res, err := m.app.HandOff(id)
-	if err != nil {
+	if _, err := m.app.HandOff(id); err != nil {
 		return
 	}
 	m.ho.landed = landing{id: id, at: m.app.Now()}
-	m.offerUndo(c, m.say.HandOffDone(res.AgentName), m.undoHandOff(id, task.Status))
+	m.offerUndo(c, m.say.HandOffDone(), m.undoHandOff(id, task.Status))
 }
 
 // undoHandOff takes the task back and gives it the status it had.

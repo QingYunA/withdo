@@ -5490,52 +5490,52 @@ func (msgs Messages) ListWaiting() string {
 	return Catalog.Format(msgs.locale, "listWaiting", nil)
 }
 
-// ListHandedTo says "Handed to {agent}"
+// ListWaitingHint says "Tell any agent “do #{id}” to pick it up"
 // in the language the app shows.
 //
-// Second line of a row waiting for an agent, when it is not known how it
-// was handed over.
-func ListHandedTo(agent string) string { return In(i18n.Locale()).ListHandedTo(agent) }
+// Second line of a row waiting for an agent: how to have an agent pick it
+// up. id is the task number.
+func ListWaitingHint(id int) string { return In(i18n.Locale()).ListWaitingHint(id) }
 
-// ListHandedTo says "Handed to {agent}"
+// ListWaitingHint says "Tell any agent “do #{id}” to pick it up"
 // in the language of msgs.
 //
-// Second line of a row waiting for an agent, when it is not known how it
-// was handed over.
-func (msgs Messages) ListHandedTo(agent string) string {
-	return Catalog.Format(msgs.locale, "listHandedTo", map[string]any{"agent": agent})
+// Second line of a row waiting for an agent: how to have an agent pick it
+// up. id is the task number.
+func (msgs Messages) ListWaitingHint(id int) string {
+	return Catalog.Format(msgs.locale, "listWaitingHint", map[string]any{"id": id})
 }
 
-// ListDropToHand says "Drop to hand to {agent}"
+// ListDropToHand says "Drop to hand to an agent"
 // in the language the app shows.
 //
 // First line of the Agents column while a task of the user is dragged over
 // it.
-func ListDropToHand(agent string) string { return In(i18n.Locale()).ListDropToHand(agent) }
+func ListDropToHand() string { return In(i18n.Locale()).ListDropToHand() }
 
-// ListDropToHand says "Drop to hand to {agent}"
+// ListDropToHand says "Drop to hand to an agent"
 // in the language of msgs.
 //
 // First line of the Agents column while a task of the user is dragged over
 // it.
-func (msgs Messages) ListDropToHand(agent string) string {
-	return Catalog.Format(msgs.locale, "listDropToHand", map[string]any{"agent": agent})
+func (msgs Messages) ListDropToHand() string {
+	return Catalog.Format(msgs.locale, "listDropToHand", nil)
 }
 
-// HandOffDone says "Handed to {agent}"
+// HandOffDone says "Handed to an agent"
 // in the language the app shows.
 //
-// Toast after a task was handed to an agent. Nothing is started; the task
-// waits for the agent.
-func HandOffDone(agent string) string { return In(i18n.Locale()).HandOffDone(agent) }
+// Toast after a task was handed over. Nothing is started; the task waits
+// for any agent.
+func HandOffDone() string { return In(i18n.Locale()).HandOffDone() }
 
-// HandOffDone says "Handed to {agent}"
+// HandOffDone says "Handed to an agent"
 // in the language of msgs.
 //
-// Toast after a task was handed to an agent. Nothing is started; the task
-// waits for the agent.
-func (msgs Messages) HandOffDone(agent string) string {
-	return Catalog.Format(msgs.locale, "handOffDone", map[string]any{"agent": agent})
+// Toast after a task was handed over. Nothing is started; the task waits
+// for any agent.
+func (msgs Messages) HandOffDone() string {
+	return Catalog.Format(msgs.locale, "handOffDone", nil)
 }
 
 // HandOffTakenBack says "Yours now"
