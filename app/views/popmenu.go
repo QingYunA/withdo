@@ -25,6 +25,7 @@ const (
 	pageRemind
 	pageCalendar // Custom… of the reminders
 	pageOpenIn   // where to open an agent's work
+	pageCategory // work, life or none
 )
 
 const (
@@ -70,6 +71,8 @@ func (m *Main) openMenu(id int, page menuPage, x, y float32, back bool) {
 		m.pop.hl = slices.Index(data.Statuses, task.Status)
 	case pagePriority:
 		m.pop.hl = slices.Index(data.Priorities, task.Priority)
+	case pageCategory:
+		m.pop.hl = slices.Index(categoryChoices, task.Category)
 	}
 }
 
@@ -151,6 +154,9 @@ func (m *Main) pageBody(c *ui.Context, t *theme.Tokens, task data.Task) {
 	case pagePriority:
 		m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 		m.priorityStrip(c, t, task, true)
+	case pageCategory:
+		m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.Category))
+		m.categoryStrip(c, t, task, true)
 	case pageMove:
 		m.movePage(c, t, task)
 	case pageRemind:

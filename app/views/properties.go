@@ -18,6 +18,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.fromRow(c, t, task)
 		m.parentRow(c, t, task)
 		m.priorityRow(c, t, task)
+		m.categoryRow(c, t, task)
 		m.taskProjectRow(c, t, task)
 		m.milestoneRow(c, t, task)
 		m.dateRow(c, t, "due", m.say.PropDue(), task.DueAt, &m.inspector.dueOpen, func(tm time.Time) data.Patch { return data.Patch{DueAt: &tm} }, false)
@@ -33,7 +34,7 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // propIcons is the line icon before each property's label, by the row's key.
 var propIcons = map[string]*ui.SVG{
-	"status": theme.IconStatus, "from": theme.IconAgent, "priority": theme.IconFlag, "project": theme.IconFolder,
+	"status": theme.IconStatus, "from": theme.IconAgent, "priority": theme.IconFlag, "category": theme.IconList, "project": theme.IconFolder,
 	"milestone": theme.IconDiamond, "due": theme.IconCalendar, "remind": theme.IconBell, "branch": theme.IconBranch,
 	"pr": theme.IconPR, "parent": theme.IconBranch,
 }
@@ -93,6 +94,22 @@ func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			m.openMenuBelow(btn, task.ID, pagePriority)
 		}
 		btn.Children(func() { theme.Text(c, theme.Compact, t.Text, label) })
+	})
+}
+
+// categoryRow is the task's own category: Work, Life, or None. A task in a repository's project
+// counts as work without one; the row shows only what was set.
+func (m *Main) categoryRow(c *ui.Context, t *theme.Tokens, task data.Task) {
+	m.propRow(c, t, "category", m.say.PropCategory(), func() {
+		label, color := m.categoryText(task.Category), t.Text
+		if task.Category == "" {
+			color = t.TextTertiary
+		}
+		btn := valueButton(c, t, "category").Label(m.say.A11yCategory(label))
+		if btn.Clicked() {
+			m.openMenuBelow(btn, task.ID, pageCategory)
+		}
+		btn.Children(func() { theme.Text(c, theme.Compact, color, label) })
 	})
 }
 
