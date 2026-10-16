@@ -82,3 +82,23 @@ func TestScreensTheHop(t *testing.T) {
 		}
 	}
 }
+
+// TestScreensSubRows renders the sidebar's sub-rows: the Work page of Mine, an agent's page of Agents
+// (Codex works on one task, so there are two agents to list), and the Category row's strip open in the
+// inspector.
+func TestScreensSubRows(t *testing.T) {
+	for _, a := range appearances() {
+		app, store := mineApp(t)
+		store.ReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
+		app.Refresh()
+		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subWork}) })
+		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subLife}) })
+		mainShot(t, "agents-codex-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents, sub: "Codex"}) })
+		zhShot(t, "mine-work-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subWork}) })
+		mainShot(t, "inspector-category-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+			m.OpenTask(18)
+			tt.Frame()
+			click(t, tt, "Category: None")
+		})
+	}
+}

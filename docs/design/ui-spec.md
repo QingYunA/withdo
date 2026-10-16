@@ -169,7 +169,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 - **Inspector**: a **From** row right under Status: the 18 pt avatar and the agent's name as people
   write it (`Claude Code`, `Codex`, `Cursor`, `Gemini CLI`, `GitHub`), or `You`. Every property label
   has an 18 pt pixel icon in `text.tertiary` before it (Status `IconStatus`, From `IconAgent`, Priority
-  `IconFlag`, Project `IconFolder`, Milestone `IconDiamond`, Due `IconCalendar`, Remind `IconBell`,
+  `IconFlag`, Category `IconList`, Project `IconFolder`, Milestone `IconDiamond`, Due `IconCalendar`, Remind `IconBell`,
   Branch `IconBranch`, Pull request `IconPR`); the label and its icon share the 96 pt label column.
 - **Activity**: each report starts with its agent's 18 pt avatar (GitHub's own events with its mark)
   on the thin timeline; the name is in `meta` `text.secondary`, red for the newest report when it
@@ -179,6 +179,8 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   Receipts keep their green check.
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
+  a sub-row under them has no icon of its own: the 18 pt slot is empty (Work, Life, Unsorted) or holds
+  the agent's 12 pt avatar (`theme.AvatarSmall`), so its label lines up with the parent's;
   Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
   does not choose it).
@@ -208,13 +210,32 @@ like a document, not a spreadsheet.
 **Sidebar.** A search field first (see **Search**), then `Mine` / `我的` (a plain count: the rows
 from your agents plus Today; when the user has not seen what agents handed over, a 18 pt red badge
 with their number instead, `status.blocked` with white `badge` text) and `Agents` / `Agent` (count =
-tasks at work, never their subtasks), `Inbox` (count), `Calendar` and `Completed` (no count: it
+tasks at work, never their subtasks), each with sub-rows (below), `Inbox` (count), `Calendar` and `Completed` (no count: it
 only grows), `⌘1` to `⌘5` in that order, then `Projects` (sentence
 case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
 **on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
 task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
 (the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
+
+**Sub-rows.** Under `Mine`: `Work` / `工作` and `Life` / `生活`, always, and `Unsorted` / `未分类`
+only while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
+or finished today, named as the Agents screen names it (`claude-code` and `Claude Code` are one
+`Claude Code` row), in the order of that screen; an agent with no name is `Agent`. A sub-row is a
+normal 32 pt sidebar row (selection, hover) with its label in line with its parent's. Its count is
+the parent's count for that slice, in `text.tertiary`: the rows asking for attention (From your
+agents plus Today) for a slice of Mine, the tasks at work for an agent. The red unseen badge stays
+on `Mine` alone. A click opens the parent's screen showing only that slice: the same sections,
+built from the tasks of the slice, so their counts and the "Show all" links are the slice's; the
+page title is the slice's name (`Work`, `Claude Code`); the composer of a Mine slice files new tasks
+in its category (see **Category**). `⌘1` and `⌘2` still go to the whole of Mine and Agents. A
+subtask goes where its parent goes. The slice is `nav.sub`, a category or an agent's name.
+
+**Category.** A task is `work`, `life` or none (`tasks.category`, NULL for none; migration 007).
+The category it counts under is its own, else `work` when its project is a repository, else none
+(Unsorted): a category set by hand or by an agent always wins. The assistant classifies the tasks it
+writes from the words and leaves it out when unsure or when the task goes into a repository's project.
+A task typed in the composer of the Work or Life page gets that category, with or without a model.
 
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
@@ -716,13 +737,14 @@ No view control and no subtitle under the title; tasks with no project.
 
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
-#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Project**,
+#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
 editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
-- The **Status**, **Priority**, **Project** and **Remind** values open the pieces of the **Task
-  menu** (below) under the value, not a system menu: the status strip, the priority strip, the
-  `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+- The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
+  **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
+  category strip (`Work` `Life` `None`; the row shows only the category that was set, `None` in
+  `text.tertiary` for a task in a repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
@@ -763,29 +785,31 @@ Main page, top to bottom (10 pt padding):
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
    reads `Priority · P1 High` the same way.
-3. a hairline;
-4. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
+3. `Category` and a strip `Work` `Life` `None` in `compact` text (the current one tinted; `None`
+   unclassifies); its label reads `Category · Life` the same way. The strip takes no letter key;
+4. a hairline;
+5. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
    `Esc` goes back to the main page;
-5. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right (the time
+6. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right (the time
    alone for today and tomorrow, `Mon 9:00 AM` for the others): `Later today` (6:00 PM, only while
    that is over half an hour away), `Tomorrow` (9:00 AM), `Next Monday` (9:00 AM, left out on a
    Sunday, when it is tomorrow), `This weekend` (Saturday 10:00 AM, not from Saturday 9:30 or on
    Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day, Clear and
    `Set reminder`;
-6. `Open PR`, only when the task has a pull request;
-7. `Open in…` (`IconTerminal`), only for an agent's task: replaced by a page titled `Open in…` with a
+7. `Open PR`, only when the task has a pull request;
+8. `Open in…` (`IconTerminal`), only for an agent's task: replaced by a page titled `Open in…` with a
    back chevron and four choices, `The agent's app`, `Terminal`, `Editor`, `Finder` (see **Going to
    the agent** under Mine). A click opens that place once and closes the menu; it does not change the
    Settings choice. A choice with nowhere to go (no folder, or no app and no folder) is drawn in
    `text.tertiary`, with no hover, and does nothing;
-8. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
-9. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
+9. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
+10. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
 
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
-Priority the priority strip, Project the `Move to…` list, Remind the presets.
+Priority the priority strip, Category the category strip, Project the `Move to…` list, Remind the presets.
 
 A project's menu is in the Sidebar and stays a system menu.
 
