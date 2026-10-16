@@ -26,7 +26,12 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-sqlite",
+      [
+        "expo-sqlite",
+        {
+          "customBuildFlags": "-DSQLITE_DEFAULT_FOREIGN_KEYS=1"
+        }
+      ],
       "expo-secure-store",
       "expo-localization",
       "@react-native-community/datetimepicker",

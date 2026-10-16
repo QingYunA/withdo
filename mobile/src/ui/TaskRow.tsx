@@ -36,6 +36,10 @@ export function TaskRow({
 }) {
   const { colors, t, locale, snapshot, now } = useUI();
   const action = useAction();
+  const openDetails =
+    task.source === 'agent' || ['done', 'cancelled'].includes(task.status);
+  const openTask = () =>
+    router.push({ pathname: '/task/[id]', params: { id: task.id } });
   const project = snapshot.projects.find((p) => p.id === task.projectId);
   const report = agent ? latestReport(task.id, snapshot.reports) : undefined;
   const stale =
@@ -46,20 +50,21 @@ export function TaskRow({
     <View style={{ paddingHorizontal: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <Pressable
-          accessibilityRole="checkbox"
-          accessibilityLabel={`${task.status === 'done' ? t('reopen') : t('complete')}: ${task.title}`}
-          accessibilityState={{
-            checked: task.status === 'done',
-            disabled: action.busy,
-          }}
-          disabled={action.busy}
-          onPress={() =>
-            void action.run(() =>
-              appStore.updateTask(task.id, {
-                status: task.status === 'done' ? 'todo' : 'done',
-              }),
-            )
+          accessibilityRole={openDetails ? 'button' : 'checkbox'}
+          accessibilityLabel={`${t(openDetails ? 'openTask' : 'complete')}: ${task.title}`}
+          accessibilityState={
+            openDetails
+              ? { disabled: action.busy }
+              : { checked: false, disabled: action.busy }
           }
+          disabled={action.busy}
+          onPress={() => {
+            if (openDetails) openTask();
+            else
+              void action.run(() =>
+                appStore.updateTask(task.id, { status: 'done' }),
+              );
+          }}
           style={({ pressed }) => ({
             width: 48,
             minHeight: 64,
@@ -73,9 +78,7 @@ export function TaskRow({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${task.title}, ${t(statusKey(task.status))}${project ? `, ${project.name}` : ''}`}
-          onPress={() =>
-            router.push({ pathname: '/task/[id]', params: { id: task.id } })
-          }
+          onPress={openTask}
           style={({ pressed }) => ({
             flex: 1,
             minHeight: 64,

@@ -66,6 +66,56 @@ const schema = `
 const key = (type: EntityType, id: string) => `${type}:${id}`;
 const parse = <T>(value: string): T => JSON.parse(value) as T;
 const terminal = (status: Task['status']) => status === 'done' || status === 'cancelled';
+const maxPushBytes = 1 << 20;
+const maxEntityBytes = 64 << 10;
+const utf8Bytes = (value: string) => {
+  let bytes = 0;
+  for (const character of value) {
+    const point = character.codePointAt(0)!;
+    bytes += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
+  }
+  return bytes;
+};
+const checkText = (field: string, value: string, maxBytes: number, required = false) => {
+  if (typeof value !== 'string' || (required && !value.trim())) throw new Error(`${field} is required`);
+  if (utf8Bytes(value) > maxBytes) throw new Error(`${field} must be at most ${maxBytes} UTF-8 bytes`);
+};
+const checkDate = (field: string, value: string | null | undefined) => {
+  if (value != null && (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(value) || !Number.isFinite(Date.parse(value)))) throw new Error(`Invalid ${field}: use an RFC3339 date`);
+};
+const checkTaskPatch = (patch: NewTask | TaskPatch) => {
+  if (patch.title !== undefined) checkText('Task title', patch.title.trim(), 2000, true);
+  if (patch.notes !== undefined) checkText('Task notes', patch.notes, 50000);
+  if (patch.status !== undefined && !['backlog', 'todo', 'doing', 'blocked', 'review', 'done', 'cancelled'].includes(patch.status)) throw new Error('Invalid task status');
+  if (patch.priority !== undefined && !['P0', 'P1', 'P2', 'P3'].includes(patch.priority)) throw new Error('Invalid task priority');
+  checkDate('dueAt', patch.dueAt);
+  checkDate('remindAt', patch.remindAt);
+};
+const checkEntity = (type: EntityType, data: EntityData | null) => {
+  if (!data) return;
+  checkDate('createdAt', data.createdAt);
+  if (type === 'task') {
+    const task = data as Task;
+    checkTaskPatch(task);
+    checkText('Task branch', task.branch, 1000);
+    checkText('Task PR URL', task.prUrl, 2000);
+    checkDate('updatedAt', task.updatedAt);
+    checkDate('completedAt', task.completedAt);
+  } else if (type === 'project') {
+    const project = data as Project;
+    checkText('Project name', project.name, 500, true);
+    checkText('Project repository', project.repoSlug, 1000);
+    checkDate('updatedAt', project.updatedAt);
+    checkDate('archivedAt', project.archivedAt);
+  } else {
+    const report = data as Report;
+    checkText('Report agent', report.agent, 200, true);
+    checkText('Report summary', report.summary, 20000, true);
+    checkText('Report next step', report.nextStep, 20000);
+  }
+  if (utf8Bytes(JSON.stringify(data)) > maxEntityBytes) throw new Error('Serialized item must be at most 65536 UTF-8 bytes, including JSON escaping');
+};
+
 
 export function createAppStore(deps: StoreDependencies): AppStore {
   let db: Database;
@@ -188,6 +238,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
     autoSync();
   };
   const queue = async (tx: SqlExecutor, type: EntityType, id: string, data: EntityData | null, intent: Intent) => {
+    checkEntity(type, data);
     const version = (await confirmedRecord(tx, type, id))?.version ?? 0;
     const mutation: Mutation = { id: deps.uuid(), type, entityId: id, baseVersion: version, data };
     await tx.runAsync('INSERT INTO outbox(id,entity_type,entity_id,mutation,intent) VALUES (?,?,?,?,?)',
@@ -299,11 +350,61 @@ export function createAppStore(deps: StoreDependencies): AppStore {
               seen.add(entity);
               if (row.status === 'conflict') continue;
               const mutation = parse<Mutation>(row.mutation);
-              // A parent tombstone must follow all child detaches, including older queued child creates.
-              if (mutation.type === 'task' && mutation.data === null && (
-                confirmedTasks.some(item => item.data && parse<Task>(item.data).parentId === mutation.entityId)
-                || pending.some(item => item.entity_type === 'task' && (parse<Mutation>(item.mutation).data as Task | null)?.parentId === mutation.entityId)
-              )) continue;
+              // Wait for planned detaches, but expose newly discovered/kept children as a recoverable conflict.
+              if (mutation.type === 'task' && mutation.data === null) {
+                const children = new Map<string, Task>();
+                for (const item of confirmedTasks) if (item.data) {
+                  const task = parse<Task>(item.data);
+                  if (task.parentId === mutation.entityId) children.set(task.id, task);
+                }
+                for (const item of pending) if (item.entity_type === 'task') {
+                  const data = parse<Mutation>(item.mutation).data as Task | null;
+                  if (data?.parentId === mutation.entityId && !children.has(data.id)) children.set(data.id, data);
+                }
+                if (children.size) {
+                  let missingDetach = false;
+                  for (const child of children.values()) {
+                    const childEdits = pending.filter(item => item.entity_type === 'task' && item.entity_id === child.id);
+                    let projected: EntityData | null = child;
+                    for (const edit of childEdits) projected = apply(projected ?? undefined, edit);
+                    if (projected && (projected as Task).parentId === mutation.entityId) missingDetach = true;
+                  }
+                  if (missingDetach) await tx.runAsync("UPDATE outbox SET status='conflict',reason=? WHERE id=?",
+                    'A child was added or kept on another device. Keep local to detach current children and delete this parent, or use remote to keep it.', row.id);
+                  continue;
+                }
+              }
+              try { checkEntity(mutation.type, mutation.data); }
+              catch (error) {
+                await tx.runAsync("UPDATE outbox SET status='conflict',reason=? WHERE id=?",
+                  `${error instanceof Error ? error.message : 'Invalid item'}. Edit the item, then discard this earlier change with Use remote before syncing the corrected edit.`, row.id);
+                continue;
+              }
+              const dependencies: [EntityType, string][] = [];
+              if (mutation.type === 'task' && mutation.data) {
+                const task = mutation.data as Task;
+                if (task.projectId) dependencies.push(['project', task.projectId]);
+                if (task.parentId) dependencies.push(['task', task.parentId]);
+              } else if (mutation.type === 'report' && mutation.data) dependencies.push(['task', (mutation.data as Report).taskId]);
+              let waitingForDependency = false;
+              for (const [type, id] of dependencies) {
+                const selected = mutations.find(item => item.type === type && item.entityId === id);
+                const confirmed = await confirmedRecord(tx, type, id);
+                if (selected ? selected.data !== null : confirmed && !confirmed.deleted) continue;
+                waitingForDependency = true;
+                if (!pending.some(item => item.entity_type === type && item.entity_id === id)) {
+                  await tx.runAsync("UPDATE outbox SET status='conflict',reason=? WHERE id=?", 'The referenced project or task no longer exists. Restore it or edit this item before retrying.', row.id);
+                }
+              }
+              if (waitingForDependency) continue;
+              const bytes = utf8Bytes(JSON.stringify({ deviceId, mutations: [...mutations, mutation] }));
+              if (bytes > maxPushBytes) {
+                if (utf8Bytes(JSON.stringify({ deviceId, mutations: [mutation] })) > maxPushBytes) {
+                  await tx.runAsync("UPDATE outbox SET status='conflict',reason=? WHERE id=?", 'This change exceeds the 1 MiB sync request limit. Shorten the item and discard this earlier change with Use remote.', row.id);
+                }
+                continue;
+              }
+              // Freeze only mutations actually selected for this bounded request.
               await tx.runAsync('UPDATE outbox SET sent=1 WHERE id=?', row.id);
               mutations.push(mutation);
               if (mutations.length === 50) break;
@@ -368,6 +469,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       return initialization;
     },
     async createTask(input: NewTask) {
+      checkTaskPatch(input);
       let task!: Task;
       await transact(async tx => {
         const timestamp = now();
@@ -381,6 +483,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       return task;
     },
     async updateTask(id: string, patch: TaskPatch) {
+      checkTaskPatch(patch);
       await transact(async tx => {
         const existing = requireTask(id);
         const task: Task = { ...existing, ...patch, title: (patch.title ?? existing.title).trim(), updatedAt: now() };
@@ -420,6 +523,7 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       });
     },
     async createProject(name: string) {
+      checkText('Project name', name.trim(), 500, true);
       let project!: Project;
       await transact(async tx => {
         if (!name.trim()) throw new Error('Project name is required');
@@ -429,6 +533,8 @@ export function createAppStore(deps: StoreDependencies): AppStore {
       return project;
     },
     async updateProject(id, patch) {
+      if (patch.name !== undefined) checkText('Project name', patch.name.trim(), 500, true);
+      checkDate('archivedAt', patch.archivedAt);
       await transact(async tx => {
         const old = snapshot.projects.find(project => project.id === id);
         if (!old) throw new Error('Project no longer exists');
@@ -447,12 +553,17 @@ export function createAppStore(deps: StoreDependencies): AppStore {
           const url = new URL(settings.serverUrl);
           if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('Use an HTTP or HTTPS server URL without credentials or query parameters.');
         }
-        const changed = settings.serverUrl !== snapshot.settings.serverUrl;
-        if (changed && snapshot.settings.serverUrl && snapshot.pendingCount) throw new Error('Sync or resolve all pending changes before changing the server. Your local changes are preserved.');
-        if (token !== undefined && settings.serverUrl) await deps.setToken(settings.serverUrl, token.trim());
+        const boundServer = await getMeta(db, 'serverIdentity') ?? snapshot.settings.serverUrl;
+        const switching = !!settings.serverUrl && !!boundServer && settings.serverUrl !== boundServer;
+        if (switching && snapshot.pendingCount) throw new Error('Sync or resolve all pending changes before changing the server. Your local changes are preserved.');
+        if (switching && (snapshot.tasks.length || snapshot.projects.length || snapshot.reports.length)) throw new Error('This workspace already contains synced data. Switching servers requires an explicit workspace migration; reconnect the original server to continue. Your local data is preserved.');
+        const credentialServer = settings.serverUrl || boundServer;
+        if (token !== undefined && credentialServer) await deps.setToken(credentialServer, token.trim());
         await db.withExclusiveTransactionAsync(async tx => {
           await setMeta(tx, 'settings', JSON.stringify(settings));
-          if (changed) {
+          if (settings.serverUrl || boundServer) await setMeta(tx, 'serverIdentity', settings.serverUrl || boundServer);
+          // Disconnect and same-server reconnect retain confirmed data, versions and queued offline edits.
+          if (switching) {
             await tx.execAsync("DELETE FROM metadata WHERE key IN ('epoch','cursor','lastSyncedAt'); DELETE FROM confirmed;");
             await materialize(tx);
           }
@@ -483,6 +594,19 @@ export function createAppStore(deps: StoreDependencies): AppStore {
           mutation.id = deps.uuid();
           mutation.baseVersion = record?.version ?? 0;
           mutation.data = apply(record?.data ?? undefined, row);
+          if (mutation.type === 'task' && mutation.data === null) {
+            const pending = await pendingRows(tx);
+            for (const child of await tx.getAllAsync<ConfirmedRow>("SELECT * FROM confirmed WHERE type='task' AND deleted=0")) {
+              if (!child.data) continue;
+              const remoteChild = parse<Task>(child.data);
+              if (remoteChild.parentId !== mutation.entityId) continue;
+              let projected: EntityData | null = remoteChild;
+              for (const edit of pending.filter(item => item.entity_type === 'task' && item.entity_id === child.id)) projected = apply(projected ?? undefined, edit);
+              if (!projected || (projected as Task).parentId !== mutation.entityId) continue;
+              const patch = { parentId: null, updatedAt: now() };
+              await queue(tx, 'task', child.id, { ...projected, ...patch } as Task, patch);
+            }
+          }
           await tx.runAsync("UPDATE outbox SET id=?,mutation=?,sent=0,status='pending',remote=NULL,reason=NULL WHERE id=?", mutation.id, JSON.stringify(mutation), mutationId);
         }
         await rebaseNext(tx, row.entity_type, row.entity_id);

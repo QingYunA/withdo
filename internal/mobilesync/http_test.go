@@ -137,3 +137,73 @@ func TestHTTPInternalErrorsDoNotLeakDetails(t *testing.T) {
 		t.Fatal(w.Code, w.Body.String())
 	}
 }
+
+func TestHTTPRejectsAmbiguousAndCaseVariantIdentityFields(t *testing.T) {
+	for _, kind := range []string{"project", "task", "report"} {
+		t.Run(kind, func(t *testing.T) {
+			s := openTestStore(t)
+			h := handler(t, s)
+			// A report needs a real task reference; keep it separate from the
+			// entity whose inconsistent identity the request attempts to create.
+			push(t, s, change("task", uid(100), 0, sampleTask(100)))
+			var data any
+			switch kind {
+			case "project":
+				data = sampleProject(3)
+			case "task":
+				data = sampleTask(3)
+			case "report":
+				data = report{ID: uid(3), TaskID: uid(100), Agent: "codex", Summary: "Progress", CreatedAt: stamp}
+			}
+			original := change(kind, uid(3), 0, data)
+			for _, extraKey := range []string{"ID", "id"} {
+				m := original
+				m.ID = uid(100000 + mutationSequence.Add(1))
+				// encoding/json used to validate ID=003 while persisting raw
+				// data.id=004 when the later uppercase ID field was present.
+				m.Data = []byte(strings.Replace(string(original.Data), `"id":"`+uid(3)+`"`, `"id":"`+uid(4)+`","`+extraKey+`":"`+uid(3)+`"`, 1))
+				body, _ := json.Marshal(PushRequest{DeviceID: uid(500), Mutations: []Mutation{m}})
+				w := request(t, h, "POST", "/v1/sync/push", string(body), testToken)
+				if extraKey == "id" {
+					if w.Code != 400 {
+						t.Fatalf("duplicate identity accepted: %d %s", w.Code, w.Body.String())
+					}
+				} else {
+					var result PushResponse
+					if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &result) != nil || len(result.Results) != 1 {
+						t.Fatal(w.Code, w.Body.String())
+					}
+					wantStatus(t, result.Results[0], "rejected", "invalid_"+kind)
+				}
+			}
+			w := request(t, h, "GET", "/v1/sync/snapshot", "", testToken)
+			var snapshot SnapshotResponse
+			if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &snapshot) != nil || snapshot.Cursor != 1 || len(snapshot.Records) != 1 || snapshot.Records[0].ID != uid(100) {
+				t.Fatalf("invalid identity persisted: %d %s", w.Code, w.Body.String())
+			}
+		})
+	}
+}
+
+func TestHTTPRequiresExactEnvelopeAndMutationKeys(t *testing.T) {
+	h := handler(t, openTestStore(t))
+	m := change("task", uid(1), 0, sampleTask(1))
+	body, _ := json.Marshal(PushRequest{DeviceID: uid(500), Mutations: []Mutation{m}})
+	for _, invalid := range []string{
+		strings.Replace(string(body), `"deviceId":`, `"DeviceId":`, 1),
+		strings.Replace(string(body), `"baseVersion":`, `"BaseVersion":`, 1),
+		strings.Replace(string(body), `"entityId":`, `"entityID":`, 1),
+		strings.Replace(string(body), `"deviceId":"`+uid(500)+`"`, `"deviceId":"`+uid(500)+`","deviceId":"`+uid(500)+`"`, 1),
+	} {
+		if w := request(t, h, "POST", "/v1/sync/push", invalid, testToken); w.Code != 400 {
+			t.Fatalf("inexact fields accepted: %d %s", w.Code, w.Body.String())
+		}
+	}
+	// Ordinary camelCase records still pass the same decoder.
+	w := request(t, h, "POST", "/v1/sync/push", string(body), testToken)
+	var result PushResponse
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &result) != nil || len(result.Results) != 1 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	wantStatus(t, result.Results[0], "accepted", "")
+}

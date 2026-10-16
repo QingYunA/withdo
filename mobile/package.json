@@ -41,7 +41,7 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --test tests/data/*.test.mjs",
+    "test": "node --test tests/data/*.test.mjs tests/ui/*.test.mjs",
     "export:android": "expo export --platform android",
     "prebuild:android": "expo prebuild --platform android --no-install"
   },

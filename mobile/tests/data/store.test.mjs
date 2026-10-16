@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { test } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
@@ -247,10 +248,10 @@ test('server switches are guarded with pending/conflicted changes; token never e
   const allRows = f.db.raw.prepare('SELECT * FROM metadata').all();
   assert.equal(JSON.stringify(allRows).includes(f.server.token), false);
   await f.store.sync();
-  await f.store.updateSettings({ serverUrl: 'https://other.test' }, 'other-secret');
-  assert.equal(f.store.getSnapshot().settings.serverUrl, 'https://other.test');
-  assert.equal(f.store.getSnapshot().tasks.length, 0);
-  assert.equal(f.tokens.get('https://other.test'), 'other-secret');
+  await assert.rejects(f.store.updateSettings({ serverUrl: 'https://other.test' }, 'other-secret'), /migration/);
+  assert.equal(f.store.getSnapshot().settings.serverUrl, 'http://sync.test');
+  assert.equal(f.store.getSnapshot().tasks.length, 1);
+  assert.equal(f.tokens.has('https://other.test'), false);
 });
 
 
@@ -335,7 +336,9 @@ test('real Go sync HTTP: two SQLite devices, lost acknowledgement, projects, rep
   const token = process.env.MOBILE_SYNC_TEST_TOKEN;
   assert.ok(token, 'MOBILE_SYNC_TEST_TOKEN is required for the private integration server');
   let loseAck = true;
+  const pushSizes = [];
   const a = fixture(t, { token, fetch: async (requestUrl, options) => {
+    if (options.method === 'POST') pushSizes.push(Buffer.byteLength(options.body));
     const response = await globalThis.fetch(requestUrl, options);
     if (loseAck && options.method === 'POST' && response.ok) { loseAck = false; await response.text(); throw new TypeError('Lost HTTP ack after real server committed'); }
     return response;
@@ -367,12 +370,36 @@ test('real Go sync HTTP: two SQLite devices, lost acknowledgement, projects, rep
   assert.equal(b.store.getSnapshot().tasks.find(task => task.id === parent.id).notes, 'B remote notes');
   assert.equal(b.store.getSnapshot().tasks.find(task => task.id === child.id).status, 'done');
   assert.equal(b.store.getSnapshot().reports.filter(report => report.taskId === child.id).length, 1);
+  const preserved = a.store.getSnapshot();
+  await a.store.updateSettings({ serverUrl: '' }, '');
+  assert.deepEqual(a.store.getSnapshot().projects, preserved.projects);
+  assert.deepEqual(a.store.getSnapshot().tasks, preserved.tasks);
+  assert.deepEqual(a.store.getSnapshot().reports, preserved.reports);
+  await a.store.updateTask(child.id, { notes: 'offline after disconnect' });
+  await a.store.updateSettings({ serverUrl: url }, token);
+  await a.store.sync();
+  assert.equal(a.store.getSnapshot().pendingCount, 0);
   await a.store.deleteTask(parent.id);
+  const lateChild = await b.store.createTask({ title: 'remote child created after offline parent deletion', parentId: parent.id });
+  await b.store.sync();
+  await a.store.sync();
+  const parentConflict = a.store.getSnapshot().conflicts.find(item => item.mutation.entityId === parent.id);
+  assert.ok(parentConflict, 'new remote child must expose parent conflict on real service');
+  await a.store.resolveConflict(parentConflict.mutation.id, 'local');
   await a.store.sync();
   assert.equal(a.store.getSnapshot().pendingCount, 0);
   await b.store.sync();
   assert.equal(b.store.getSnapshot().tasks.some(task => task.id === parent.id), false);
   assert.equal(b.store.getSnapshot().tasks.find(task => task.id === child.id).parentId, null);
+  assert.equal(b.store.getSnapshot().tasks.find(task => task.id === lateChild.id).parentId, null);
+  for (let i = 0; i < 22; i++) await a.store.createTask({ title: `HTTP valid large ${i}`, notes: 'n'.repeat(50000) });
+  for (let i = 0; i < 4; i++) await a.store.createTask({ title: `HTTP valid escaped ${i}`, notes: '\u0000'.repeat(10000) });
+  const small = await a.store.createTask({ title: 'HTTP small independent edit' });
+  await a.store.sync();
+  assert.equal(a.store.getSnapshot().pendingCount, 0, a.store.getSnapshot().syncError ?? JSON.stringify(a.store.getSnapshot().conflicts.map(conflict => ({reason: conflict.reason, title: conflict.mutation.data?.title}))));
+  assert.ok(pushSizes.every(bytes => bytes <= 1048576));
+  await b.store.sync();
+  assert.ok(b.store.getSnapshot().tasks.some(task => task.id === small.id));
 });
 
 
@@ -394,4 +421,141 @@ test('database initialization failure is visible and an explicit retry recovers 
   assert.equal(store.getSnapshot().syncError, null);
   await store.createTask({ title: 'works after retry' });
   assert.equal(store.getSnapshot().pendingCount, 1);
+});
+
+test('disconnect keeps synced data and endpoint identity across reopen, offline edits and safe same-server reconnection', async t => {
+  const f = fixture(t);
+  await f.connect();
+  const project = await f.store.createProject('kept project');
+  const parent = await f.store.createTask({ title: 'kept parent', projectId: project.id });
+  const child = await f.store.createTask({ title: 'kept child', parentId: parent.id });
+  await f.store.updateTask(parent.id, { status: 'done' });
+  await f.store.sync();
+  const original = f.store.getSnapshot();
+  await f.store.updateSettings({ serverUrl: '' }, '');
+  assert.deepEqual(f.store.getSnapshot().tasks, original.tasks);
+  assert.deepEqual(f.store.getSnapshot().projects, original.projects);
+  assert.deepEqual(f.store.getSnapshot().reports, original.reports);
+  assert.equal(f.tokens.get('http://sync.test'), '');
+  await f.store.updateTask(child.id, { notes: 'edited while disconnected' });
+  const reopened = f.open();
+  await reopened.initialize();
+  assert.equal(reopened.getSnapshot().settings.serverUrl, '');
+  assert.equal(reopened.getSnapshot().tasks.find(task => task.id === child.id).notes, 'edited while disconnected');
+  await assert.rejects(reopened.updateSettings({ serverUrl: 'https://other.test' }, 'different-token'), /migration|workspace|pending/i);
+  assert.equal(reopened.getSnapshot().tasks.length, 2);
+  await reopened.updateSettings({ serverUrl: 'http://sync.test' }, f.server.token);
+  await reopened.sync();
+  assert.equal(reopened.getSnapshot().pendingCount, 0);
+  assert.equal(f.server.records.get(`task:${child.id}`).data.notes, 'edited while disconnected');
+  await assert.rejects(reopened.updateSettings({ serverUrl: 'https://other.test' }, 'different-token'), /migration|workspace/i);
+  assert.equal(reopened.getSnapshot().tasks.length, 2);
+});
+
+test('a newly discovered remote child turns parent deletion into an explicit conflict while unrelated edits sync', async t => {
+  const f = fixture(t);
+  await f.connect();
+  const parent = await f.store.createTask({ title: 'parent' });
+  await f.store.sync();
+  await f.store.deleteTask(parent.id);
+  const id = randomUUID();
+  f.server.write('task', id, { ...parent, id, title: 'remote child', parentId: parent.id });
+  const unrelated = await f.store.createTask({ title: 'unrelated still syncs' });
+  await f.store.sync();
+  await f.store.sync();
+  assert.equal(f.store.getSnapshot().conflicts.length, 1);
+  const conflict = f.store.getSnapshot().conflicts[0];
+  assert.equal(conflict.mutation.entityId, parent.id);
+  assert.equal(conflict.mutation.data, null, 'the original deletion intent is retained');
+  assert.match(conflict.reason, /child|subtask/i);
+  assert.ok(f.server.records.has(`task:${unrelated.id}`));
+  await f.store.resolveConflict(conflict.mutation.id, 'local');
+  await f.store.sync();
+  assert.equal(f.store.getSnapshot().pendingCount, 0);
+  assert.equal(f.server.records.get(`task:${parent.id}`).deleted, true);
+  assert.equal(f.server.records.get(`task:${id}`).data.parentId, null);
+});
+
+test('choosing remote on a child detach conflict exposes the dependent parent deletion instead of silently stalling', async t => {
+  const f = fixture(t);
+  await f.connect();
+  const parent = await f.store.createTask({ title: 'parent' });
+  const child = await f.store.createTask({ title: 'child', parentId: parent.id });
+  await f.store.sync();
+  await f.store.deleteTask(parent.id);
+  f.server.write('task', child.id, { ...f.server.records.get(`task:${child.id}`).data, notes: 'remote edit before detach' });
+  await f.store.sync();
+  const childConflict = f.store.getSnapshot().conflicts.find(item => item.mutation.entityId === child.id);
+  assert.ok(childConflict);
+  await f.store.resolveConflict(childConflict.mutation.id, 'remote');
+  await f.store.sync();
+  const parentConflict = f.store.getSnapshot().conflicts.find(item => item.mutation.entityId === parent.id);
+  assert.ok(parentConflict, 'the parent deletion must become explicitly recoverable');
+  await f.store.resolveConflict(parentConflict.mutation.id, 'remote');
+  assert.equal(f.store.getSnapshot().pendingCount, 0);
+  assert.ok(f.store.getSnapshot().tasks.some(task => task.id === parent.id));
+  assert.equal(f.store.getSnapshot().tasks.find(task => task.id === child.id).notes, 'remote edit before detach');
+});
+
+test('push batches honor the one MiB UTF8 JSON envelope limit, including escaped fields, without blocking small edits', async t => {
+  const server = new Server();
+  const baseFetch = server.fetch.bind(server);
+  const sizes = [];
+  server.fetch = async (url, options) => {
+    if (options.method === 'POST') {
+      const bytes = Buffer.byteLength(options.body);
+      sizes.push(bytes);
+      if (bytes > 1048576) return Response.json({ error: 'request_too_large' }, { status: 413 });
+    }
+    return baseFetch(url, options);
+  };
+  const f = fixture(t, server);
+  await f.connect();
+  for (let i = 0; i < 22; i++) await f.store.createTask({ title: `large ${i}`, notes: 'x'.repeat(50000) });
+  for (let i = 0; i < 4; i++) await f.store.createTask({ title: `escaped ${i}`, notes: '\u0000'.repeat(10000) });
+  await f.store.createTask({ title: 'small independent edit', notes: '🚀'.repeat(10) });
+  await f.store.sync();
+  assert.equal(f.store.getSnapshot().pendingCount, 0);
+  assert.ok(sizes.length > 1);
+  assert.ok(sizes.every(bytes => bytes <= 1048576));
+  assert.equal(server.records.size, 27);
+});
+
+test('field byte limits reject invalid new edits before transaction and preserve existing data/outbox', async t => {
+  const f = fixture(t);
+  const task = await f.store.createTask({ title: 'valid' });
+  const pendingCount = f.store.getSnapshot().pendingCount;
+  await assert.rejects(f.store.updateTask(task.id, { notes: '🚀'.repeat(12501) }), /notes.*50000/i);
+  await assert.rejects(f.store.createTask({ title: 't'.repeat(2001) }), /title.*2000/i);
+  await assert.rejects(f.store.createProject('名'.repeat(167)), /name.*500/i);
+  await assert.rejects(f.store.createTask({ title: 'oversized escaped JSON', notes: '\u0000'.repeat(12000) }), /65536.*JSON/i);
+  assert.equal(f.store.getSnapshot().tasks[0].notes, '');
+  assert.equal(f.store.getSnapshot().pendingCount, pendingCount);
+});
+
+test('an invalid oversized legacy mutation becomes an individual conflict and does not freeze unrelated rows', async t => {
+  const f = fixture(t);
+  await f.connect();
+  const bad = await f.store.createTask({ title: 'legacy invalid item' });
+  const row = f.db.raw.prepare('SELECT * FROM outbox WHERE entity_id=?').get(bad.id);
+  const mutation = JSON.parse(row.mutation);
+  mutation.data.notes = 'n'.repeat(1100000);
+  f.db.raw.prepare('UPDATE outbox SET mutation=?,intent=? WHERE id=?').run(JSON.stringify(mutation), JSON.stringify(mutation.data), row.id);
+  const good = await f.store.createTask({ title: 'small valid item' });
+  await f.store.sync();
+  assert.ok(f.server.records.has(`task:${good.id}`));
+  assert.equal(f.store.getSnapshot().conflicts.length, 1);
+  assert.match(f.store.getSnapshot().conflicts[0].reason, /notes|size|large/i);
+  assert.equal(f.db.raw.prepare('SELECT sent FROM outbox WHERE id=?').get(row.id).sent, 0);
+});
+
+test('byte-limited batches defer a child until its skipped parent create is selected or confirmed', async t => {
+  const f = fixture(t);
+  await f.connect();
+  for (let i = 0; i < 20; i++) await f.store.createTask({ title: `batch filler ${i}`, notes: 'x'.repeat(50000) });
+  const parent = await f.store.createTask({ title: 'large parent deferred to next batch', notes: 'y'.repeat(50000) });
+  const child = await f.store.createTask({ title: 'small child must follow parent', parentId: parent.id });
+  await f.store.sync();
+  assert.equal(f.store.getSnapshot().pendingCount, 0);
+  assert.equal(f.server.records.get(`task:${child.id}`).data.parentId, parent.id);
 });

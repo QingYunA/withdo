@@ -50,7 +50,7 @@ go run ./cmd/adhd-sync import-desktop \
 
 ## 协议
 
-JSON 类型以 [`mobile/src/model.ts`](../mobile/src/model.ts) 和 [Android 契约](plans/m7-android-contract.md) 为准，字段为 camelCase。所有实体、操作与设备 ID 必须是小写带连字符 UUID；`baseVersion` 是 JavaScript 安全整数范围内的非负整数。新增实体以 `baseVersion: 0` 提交，时间为带时区的 RFC 3339 字符串。
+JSON 类型以 [`mobile/src/model.ts`](../mobile/src/model.ts) 和 [Android 契约](plans/m7-android-contract.md) 为准，字段为 camelCase；大小写不同的字段名、未知字段和重复对象键都会拒绝，实体必须包含契约中的全部字段。所有实体、操作与设备 ID 必须是小写带连字符 UUID；`baseVersion` 是 JavaScript 安全整数范围内的非负整数。新增实体以 `baseVersion: 0` 提交，时间为带时区的 RFC 3339 字符串。
 
 | 接口 | 行为 |
 | --- | --- |

@@ -21,6 +21,7 @@ env:
 
 jobs:
   checks:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -76,6 +77,9 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v4
       - run: pnpm --dir mobile install --frozen-lockfile
       - run: pnpm --dir mobile prebuild:android

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -20,6 +21,16 @@ func validID(s string) bool   { return uuidPattern.MatchString(s) }
 func validType(s string) bool { return s == "project" || s == "task" || s == "report" }
 
 func decodeStrict(raw []byte, v any) error {
+	// encoding/json matches struct fields case-insensitively and permits
+	// duplicate object keys. Both would let stored raw data disagree with the
+	// struct we validated, so check the exact public keys before decoding.
+	keys := json.NewDecoder(bytes.NewReader(raw))
+	if err := checkJSONKeys(keys, reflect.TypeOf(v)); err != nil {
+		return err
+	}
+	if _, err := keys.Token(); err != io.EOF {
+		return errors.New("invalid JSON document")
+	}
 	d := json.NewDecoder(bytes.NewReader(raw))
 	d.DisallowUnknownFields()
 	if err := d.Decode(v); err != nil {
@@ -29,6 +40,73 @@ func decodeStrict(raw []byte, v any) error {
 		return io.ErrUnexpectedEOF
 	}
 	return nil
+}
+
+func checkJSONKeys(d *json.Decoder, schema reflect.Type) error {
+	for schema != nil && schema.Kind() == reflect.Pointer {
+		schema = schema.Elem()
+	}
+	if schema == reflect.TypeFor[json.RawMessage]() {
+		schema = nil // Its exact entity shape is checked separately by decodeEntity.
+	}
+	token, err := d.Token()
+	if err != nil {
+		return err
+	}
+	delimiter, object := token.(json.Delim)
+	if !object {
+		return nil // The normal decoder checks scalar types.
+	}
+	if delimiter == '{' {
+		var fields map[string]reflect.Type
+		if schema != nil && schema.Kind() == reflect.Struct {
+			fields = map[string]reflect.Type{}
+			for i := 0; i < schema.NumField(); i++ {
+				field := schema.Field(i)
+				name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+				if field.PkgPath != "" || name == "-" {
+					continue
+				}
+				if name == "" {
+					name = field.Name
+				}
+				fields[name] = field.Type
+			}
+		}
+		seen := map[string]bool{}
+		for d.More() {
+			keyToken, err := d.Token()
+			if err != nil {
+				return err
+			}
+			key, ok := keyToken.(string)
+			if !ok || seen[key] {
+				return errors.New("duplicate or invalid JSON key")
+			}
+			seen[key] = true
+			child, known := fields[key]
+			if fields != nil && !known {
+				return errors.New("unknown JSON key")
+			}
+			if err := checkJSONKeys(d, child); err != nil {
+				return err
+			}
+		}
+	} else if delimiter == '[' {
+		var child reflect.Type
+		if schema != nil && (schema.Kind() == reflect.Slice || schema.Kind() == reflect.Array) {
+			child = schema.Elem()
+		}
+		for d.More() {
+			if err := checkJSONKeys(d, child); err != nil {
+				return err
+			}
+		}
+	} else {
+		return errors.New("invalid JSON delimiter")
+	}
+	_, err = d.Token() // Consume the matching closing delimiter.
+	return err
 }
 
 // Require the complete public record shape, including explicit nullable fields.
