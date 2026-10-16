@@ -220,6 +220,7 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"report: unknown task_id", "report_progress", map[string]any{"summary": "s", "task_id": 999}, "task_id"},
 		{"create: missing title", "create_task", map[string]any{}, "title"},
 		{"create: bad priority", "create_task", map[string]any{"title": "x", "priority": "P9"}, "priority"},
+		{"create: bad category", "create_task", map[string]any{"title": "x", "category": "play"}, "category"},
 		{"create: bad due_at", "create_task", map[string]any{"title": "x", "due_at": "tomorrow"}, "due_at"},
 		{"create: bad remind_at", "create_task", map[string]any{"title": "x", "remind_at": "soon"}, "remind_at"},
 		{"create: unknown project", "create_task", map[string]any{"title": "x", "project_id": 999}, "project_id"},
@@ -227,6 +228,7 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"create: bad pr_url", "create_task", map[string]any{"title": "x", "pr_url": "nope"}, "pr_url"},
 		{"update: unknown task", "update_task", map[string]any{"task_id": 999}, "task_id"},
 		{"update: bad status", "update_task", map[string]any{"task_id": 1, "status": "nope"}, "status"},
+		{"update: bad category", "update_task", map[string]any{"task_id": 1, "category": "play"}, "category"},
 		{"update: bad due_at", "update_task", map[string]any{"task_id": 1, "due_at": "x"}, "due_at"},
 		{"update: bad remind_at", "update_task", map[string]any{"task_id": 1, "remind_at": "x"}, "remind_at"},
 		{"update: bad pr_url", "update_task", map[string]any{"task_id": 1, "pr_url": "x"}, "pr_url"},
@@ -304,6 +306,29 @@ func TestTaskLifecycle(t *testing.T) {
 	g := r.ok("get_task", map[string]any{"task_id": id})
 	if g.obj("task")["id"] != id || len(g.list("reports")) != 0 {
 		t.Errorf("get_task = %+v", g.Data)
+	}
+}
+
+func TestTaskCategoryIsSetAndCleared(t *testing.T) {
+	r := newRig(t)
+	if c := r.ok("create_task", map[string]any{"title": "plain"}).obj("task")["category"]; c != nil {
+		t.Errorf("category without one given = %v, want null", c)
+	}
+	task := r.ok("create_task", map[string]any{"title": "Pay rent", "category": "life"}).obj("task")
+	if task["category"] != "life" {
+		t.Fatalf("created = %+v", task)
+	}
+	same := r.ok("update_task", map[string]any{"task_id": task["id"], "title": "Pay the rent"}).obj("task")
+	if same["category"] != "life" {
+		t.Errorf("an omitted category changed: %+v", same)
+	}
+	moved := r.ok("update_task", map[string]any{"task_id": task["id"], "category": "work"}).obj("task")
+	if moved["category"] != "work" {
+		t.Errorf("set = %+v", moved)
+	}
+	cleared := r.ok("update_task", map[string]any{"task_id": task["id"], "category": nil}).obj("task")
+	if cleared["category"] != nil {
+		t.Errorf("cleared = %+v", cleared)
 	}
 }
 
