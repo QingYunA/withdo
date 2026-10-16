@@ -46,6 +46,7 @@ Neutrals are a cool gray. One accent. Status colors are muted so a board of them
 | `bg` | `#FFFFFF` | `#1C1C1E` | window content |
 | `bg.sidebar` | material (vibrancy) | material (vibrancy) | sidebar |
 | `bg.subtle` | `#F5F5F7` | `#232326` | the input at rest, finished cards, the view control's well |
+| `bg.tray` | `#F8F8FA` | `#202023` | the Agents column of a project, a tray half as dark as `bg.subtle` |
 | `bg.hover` | `#0000000A` | `#FFFFFF0F` | row hover |
 | `bg.selected` | `accent @ 12%` | `accent @ 22%` | selected row, keyboard highlight |
 | `border` | `#0000001A` | `#FFFFFF1A` | hairlines (1 px) |
@@ -476,19 +477,73 @@ view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 na
 `New milestone…`, `Rename…` and `Due date…` open the **Milestone sheet**. Closing and reopening act
 at once. A project with no milestone has no filter: `New milestone…` is in its sidebar menu.
 
-**List view.** Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
-name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
-per row; the group says the status). Row: the title (one line, `body.strong`); for an agent's task a
-quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
-agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
-at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
-or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
-The composer sits above the groups (see **Composer**): it is how a task is added here.
-After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
-its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
-Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in `accent` that expands
-the group in place. Last line: `Backlog 2 — show` in `text.tertiary` (folded: Backlog stays out of
-the way); clicking it opens the group. With no backlog the line is not drawn.
+**List view: two columns** (the Inbox keeps the single list below; the board is unchanged). A project
+with at least one task is drawn as **Mine** on the left (tasks with `Source user`) and **Agents** on the
+right (`Source agent`) under the header and the composer, as in `docs/design/mockups/v7.html` and
+`v7b.html` (screens `project-two-columns-*`, `project-list-*`). With no task at all the project keeps the
+centred empty state.
+
+- **Block.** Header, composer and columns share one block as wide as the content allows less the page's
+  side padding, up to `theme.BoardMax` (980 pt), centered. Two equal columns 28 pt apart
+  (`theme.ColumnsGap`). Below **640 pt of content** (the inspector open on a small window) they stack:
+  Mine first, the Agents tray under it, 14 pt apart.
+- **Column header.** A 20 pt avatar (`you`; the robot in the accent color for Agents), the name in
+  `body.strong` (`Mine` / `我的`, `Agents` / `Agent`), the count of its active tasks (not Done, not
+  Backlog) in `text.tertiary`, and a 1 pt line under them.
+- **The boundary is a tray** (option 2 of v7b): the Agents column sits on a faint well, `bg.tray`
+  (`#F8F8FA` light, `#202023` dark; about half as dark as `bg.subtle`), 14 pt radius, 16 pt inside on the
+  left and right, 14 pt under its last row. Mine has no background, and there is no vertical rule.
+- **Groups.** Each column groups its own tasks as the list did: Blocked, In review, Doing, To do (empty
+  groups are not drawn), then its own **Done** (the newest three and `Show all 5 →`) and its own
+  `Backlog 2 — show` line. The two columns open and close their Done and Backlog separately.
+- **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
+  (`HandedTo` set) that the agent has not reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
+  at 20 pt, in `theme/pixel.go`). A row: the receiving agent's 18 pt avatar, the title, the age at the
+  right, and under it `Handed to Claude Code · opened in Terminal` / `交给 Claude Code · 已在终端里打开`
+  (`· prompt copied` / `· 已复制提示词` when no agent could be started; the view remembers which for this
+  run and says only `Handed to Claude Code` after a restart). The agent's first report moves it to Doing.
+- **Mine rows**: no avatar (the column says whose), the title in `body.strong` (one line), and at the
+  right a `P0` or `P1` badge, then the due label. Finished rows: the title in `text.secondary` and the day.
+- **Agents rows**: the agent's 18 pt avatar, the title (one line) with the live dot and the age or stale
+  label at the right, and under it what the agent last said, **up to two lines** in `text.secondary`,
+  led by `#12 · ` when the task has a pull request (a blocked task says what it waits for). **No branch**:
+  the inspector has it. No agent name either: the avatar says it.
+- **An empty column** keeps its header and one quiet `text.tertiary` line. Mine: `Nothing for you here
+  — write one above` / `这里还没有你要做的事 —— 在上面写一句就行`. Agents: `No agent has reported in this
+  project yet` / `还没有 Agent 在这个项目里汇报` and the accent link `Install MCP →` / `安装 MCP →`, which
+  opens Settings > Agents. Screens `project-empty-agents-*`.
+- **Keyboard order**: every Mine row, then every Agents row (waiting rows first).
+
+#### Handing a task to an agent
+
+Drag a row of Mine onto the Agents tray (screens `handoff-*`, storyboard in v7b).
+
+- **Lift.** The row drags like a board card: it lifts (a shadow, a 2 degree tilt, about 250 pt wide) and
+  leaves an empty dashed slot. Only unfinished tasks of the user's drag. While it is over the tray, the
+  tray gets a 7 % accent wash and a 1.5 pt accent ring at 35 %, and a first line in accent reads `Drop to
+  hand to Claude Code` / `松开，交给 Claude Code` (the agent that last reported in the project; the store
+  picks the real one).
+- **Drop.** The view words a prompt in the app's language (`Please do task #44 in adhd-todo: <title>`,
+  the notes when there are any, and how to call `report_progress`) and calls `Store.HandOff`. The task
+  becomes the agent's, To do, in `Waiting for an agent`. When the store started the agent in Terminal,
+  a toast says `Handed to Claude Code — opened in Terminal` / `已交给 Claude Code，已在终端里打开`;
+  when it could not, the prompt is copied and the toast says `Prompt copied — paste it to any agent` /
+  `已复制提示词，粘贴给任意 Agent`. The toast has **Undo** for six seconds, and so does ⌘Z (the
+  assistant's own ⌘Z wins while it has a change to undo): the task is taken back with its old status. It
+  cannot close the Terminal window.
+- **Take back.** Dragging an agent's unfinished row onto Mine calls `Store.TakeBack`, with no animation;
+  the toast says `Yours now` / `现在归你了`, and Undo (or ⌘Z) restores Source and the hand-off as they
+  were (`Store.RestoreHandOff`), starting nothing.
+- **The motion** (`theme.HandOffAt`, about 1.3 s, a function of the app's clock like the hop; frames are
+  asked for every 16 ms only while it plays). The row folds into the parcel (0 to 250 ms); the user's
+  sprite hops down from the Mine header to catch it (100 to 400 ms), carries it to the gap between the
+  columns (520 to 820 ms) while the agent's sprite hops from the Agents header to meet it (540 to
+  820 ms); the parcel changes hands and the agent squashes as it catches (820 to 930 ms); both hop home
+  (960 to 1200 ms) and the parcel opens into the new row (1000 to 1200 ms), which keeps an 8 %
+  accent wash that fades over 2 s. While the user's sprite is away its header avatar is not drawn. The
+  hops are `theme.HopAt` stretched to each leg, so the arc, the landing squash and the settle are the
+  hop's. **Reduce Motion**: nothing hops; the row fades out where it was and in on the right (160 ms),
+  and the wash fades as above. Leaving the screen ends the motion.
 
 **Board view.** Four fixed lanes, left to right: **To do, Doing, In review, Done**. A blocked task sits
 in Doing, **first**, with the red blocked glyph at the start of its meta line. Backlog and Cancelled
@@ -534,8 +589,9 @@ Decisions made while building it (2026-10-14):
 
 ### Inbox
 
-Same list view as a project, without the view control and with no subtitle under its title; tasks
-with no project.
+One column of groups (Blocked, In review, Doing, To do, Done, Backlog), as a project's list was before
+M7b: an agent's row has the agent's name, branch, pull request and what it said in a quiet second line.
+No view control and no subtitle under the title; tasks with no project.
 
 ### Inspector (360 pt, slides in 160 ms)
 
