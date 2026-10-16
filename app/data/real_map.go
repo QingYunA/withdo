@@ -68,6 +68,7 @@ func fromTask(t domain.Task) Task {
 		DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
 		Branch: str(t.Branch), PRURL: str(t.PRURL), Source: Source(t.Source),
 		CreatedAt: parseTime(t.CreatedAt), UpdatedAt: parseTime(t.UpdatedAt), CompletedAt: parseTimePtr(t.CompletedAt),
+		HandedTo: str(t.HandedTo), HandedAt: parseTimePtr(t.HandedAt),
 	}
 	if t.PRNumber != nil {
 		out.PRNumber = int(*t.PRNumber)

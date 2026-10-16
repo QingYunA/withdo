@@ -235,6 +235,9 @@ type Store interface {
 	// TakeBack makes an agent's task the user's again: Source user, HandedTo cleared. Its status
 	// stays.
 	TakeBack(id int) (Task, error)
+	// RestoreHandOff puts a task's Source and hand-off back as they were, for the Undo of TakeBack:
+	// agent "" and at nil mean "not waiting". It starts nothing and leaves the status alone.
+	RestoreHandOff(id int, agent string, at *time.Time, source Source) (Task, error)
 }
 
 // HandOffResult is what HandOff did.

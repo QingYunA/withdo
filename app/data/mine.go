@@ -205,6 +205,9 @@ func (b nowBuilder) handed(t Task, out *Mine) bool {
 	agent := t.Source == SourceAgent
 	var kind NeedKind
 	switch {
+	case t.HandedTo != "":
+		// It waits for the agent it was given to, which is the user's own doing: nothing to hand back.
+		return false
 	case agent && t.Status == Blocked:
 		kind = NeedBlocked
 	case agent && DueReminder(t, b.Now):

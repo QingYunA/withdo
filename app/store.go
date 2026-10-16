@@ -53,11 +53,11 @@ func openBackend(fake, empty bool) (*backend, error) {
 }
 
 func openReal(path string) (*backend, error) {
-	r, err := data.OpenReal(context.Background(), path, data.RealOptions{})
+	dir := filepath.Dir(path)
+	r, err := data.OpenReal(context.Background(), path, data.RealOptions{Launcher: data.DefaultLauncher(dir)})
 	if err != nil {
 		return nil, err
 	}
-	dir := filepath.Dir(path)
 	mgr, err := providers.NewManager(providers.NewStore(filepath.Join(dir, providers.ConfigFile)), newSecretKeyring(), nil)
 	if err != nil {
 		log.Printf("model settings: %v", err) // the app still runs, with no model connected

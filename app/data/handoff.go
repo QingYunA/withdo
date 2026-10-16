@@ -1,6 +1,9 @@
 package data
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // HandOff implements Store. The Fake hands every task to Claude Code and pretends to start it.
 func (f *Fake) HandOff(id int, prompt string) (HandOffResult, error) {
@@ -27,6 +30,21 @@ func (f *Fake) TakeBack(id int) (Task, error) {
 		return Task{}, fmt.Errorf("task %d not found", id)
 	}
 	t.Source, t.HandedTo, t.HandedAt, t.UpdatedAt = SourceUser, "", nil, f.Now()
+	out := *t
+	f.mu.Unlock()
+	f.notify()
+	return out, nil
+}
+
+// RestoreHandOff implements Store.
+func (f *Fake) RestoreHandOff(id int, agent string, at *time.Time, source Source) (Task, error) {
+	f.mu.Lock()
+	t, ok := f.find(id)
+	if !ok {
+		f.mu.Unlock()
+		return Task{}, fmt.Errorf("task %d not found", id)
+	}
+	t.Source, t.HandedTo, t.HandedAt, t.UpdatedAt = source, agent, at, f.Now()
 	out := *t
 	f.mu.Unlock()
 	f.notify()
