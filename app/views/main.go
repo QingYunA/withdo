@@ -146,6 +146,7 @@ func (m *Main) View(c *ui.Context) {
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
+	m.dayCardView(c, t)
 	m.taskMenuView(c, t)
 	m.hopOverlay(c)
 }

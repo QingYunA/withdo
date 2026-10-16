@@ -5299,3 +5299,133 @@ func RowOpenNoEditor() string { return In(i18n.Locale()).RowOpenNoEditor() }
 func (msgs Messages) RowOpenNoEditor() string {
 	return Catalog.Format(msgs.locale, "rowOpenNoEditor", nil)
 }
+
+// CalendarDayCount says "{count, plural, one {# item} other {# items}}"
+// in the language the app shows.
+//
+// Quiet text beside the date in the header of the calendar's day card: how
+// many items the day has.
+func CalendarDayCount(count int) string { return In(i18n.Locale()).CalendarDayCount(count) }
+
+// CalendarDayCount says "{count, plural, one {# item} other {# items}}"
+// in the language of msgs.
+//
+// Quiet text beside the date in the header of the calendar's day card: how
+// many items the day has.
+func (msgs Messages) CalendarDayCount(count int) string {
+	return Catalog.Format(msgs.locale, "calendarDayCount", map[string]any{"count": count})
+}
+
+// CalendarDayPlaceholder says "Add to this day…"
+// in the language the app shows.
+//
+// Placeholder of the input at the foot of the calendar's day card; what is
+// typed becomes a task due that day.
+func CalendarDayPlaceholder() string { return In(i18n.Locale()).CalendarDayPlaceholder() }
+
+// CalendarDayPlaceholder says "Add to this day…"
+// in the language of msgs.
+//
+// Placeholder of the input at the foot of the calendar's day card; what is
+// typed becomes a task due that day.
+func (msgs Messages) CalendarDayPlaceholder() string {
+	return Catalog.Format(msgs.locale, "calendarDayPlaceholder", nil)
+}
+
+// CalendarDayInput says "New task for this day"
+// in the language the app shows.
+//
+// Accessibility label of the input at the foot of the calendar's day card.
+func CalendarDayInput() string { return In(i18n.Locale()).CalendarDayInput() }
+
+// CalendarDayInput says "New task for this day"
+// in the language of msgs.
+//
+// Accessibility label of the input at the foot of the calendar's day card.
+func (msgs Messages) CalendarDayInput() string {
+	return Catalog.Format(msgs.locale, "calendarDayInput", nil)
+}
+
+// A11yCalendarDayCard says "Items of {day}"
+// in the language the app shows.
+//
+// Accessibility label of the calendar's day card; day is the day in words,
+// as in "Fri, Oct 16".
+func A11yCalendarDayCard(day string) string { return In(i18n.Locale()).A11yCalendarDayCard(day) }
+
+// A11yCalendarDayCard says "Items of {day}"
+// in the language of msgs.
+//
+// Accessibility label of the calendar's day card; day is the day in words,
+// as in "Fri, Oct 16".
+func (msgs Messages) A11yCalendarDayCard(day string) string {
+	return Catalog.Format(msgs.locale, "a11yCalendarDayCard", map[string]any{"day": day})
+}
+
+// A11yCalendarShowAll says "Show all {count} on {day}"
+// in the language the app shows.
+//
+// Accessibility label of the "N more" line of a calendar day, which opens
+// the day card; day is the month and day, as in "Oct 15".
+func A11yCalendarShowAll(count int, day string) string {
+	return In(i18n.Locale()).A11yCalendarShowAll(count, day)
+}
+
+// A11yCalendarShowAll says "Show all {count} on {day}"
+// in the language of msgs.
+//
+// Accessibility label of the "N more" line of a calendar day, which opens
+// the day card; day is the month and day, as in "Oct 15".
+func (msgs Messages) A11yCalendarShowAll(count int, day string) string {
+	return Catalog.Format(msgs.locale, "a11yCalendarShowAll", map[string]any{"count": count, "day": day})
+}
+
+// A11yCalendarAddTo says "Add to {day}"
+// in the language the app shows.
+//
+// Accessibility label of the + that shows in a calendar day while the
+// pointer is over it; day is the month and day, as in "Oct 15".
+func A11yCalendarAddTo(day string) string { return In(i18n.Locale()).A11yCalendarAddTo(day) }
+
+// A11yCalendarAddTo says "Add to {day}"
+// in the language of msgs.
+//
+// Accessibility label of the + that shows in a calendar day while the
+// pointer is over it; day is the month and day, as in "Oct 15".
+func (msgs Messages) A11yCalendarAddTo(day string) string {
+	return Catalog.Format(msgs.locale, "a11yCalendarAddTo", map[string]any{"day": day})
+}
+
+// A11yCalendarDayClose says "Close"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the close button of the calendar's day
+// card.
+func A11yCalendarDayClose() string { return In(i18n.Locale()).A11yCalendarDayClose() }
+
+// A11yCalendarDayClose says "Close"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the close button of the calendar's day
+// card.
+func (msgs Messages) A11yCalendarDayClose() string {
+	return Catalog.Format(msgs.locale, "a11yCalendarDayClose", nil)
+}
+
+// CalendarDayTitle says "{weekday}, {month} {day}"
+// in the language the app shows.
+//
+// Title of the calendar's day card: the full weekday, the month as
+// calendarMonthShort says, and the day number.
+func CalendarDayTitle(weekday string, month string, day string) string {
+	return In(i18n.Locale()).CalendarDayTitle(weekday, month, day)
+}
+
+// CalendarDayTitle says "{weekday}, {month} {day}"
+// in the language of msgs.
+//
+// Title of the calendar's day card: the full weekday, the month as
+// calendarMonthShort says, and the day number.
+func (msgs Messages) CalendarDayTitle(weekday string, month string, day string) string {
+	return Catalog.Format(msgs.locale, "calendarDayTitle", map[string]any{"weekday": weekday, "month": month, "day": day})
+}

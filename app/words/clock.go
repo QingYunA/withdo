@@ -202,6 +202,11 @@ func (k Clock) CalendarDay(t time.Time) string {
 	return k.Say.CalendarDayLabel(k.Weekday(t), k.Say.CalendarMonthShort(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Day()))
 }
 
+// DayTitle is a day as the title of the calendar's day card: "Thursday, Oct 15" or "10 月 15 日 星期四".
+func (k Clock) DayTitle(t time.Time) string {
+	return k.Say.CalendarDayTitle(k.format(t, "EEEE"), k.Say.CalendarMonthShort(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Day()))
+}
+
 // MonthDay is the label of the first day of a month in the grid: "Nov 1" or "11 月 1 日".
 func (k Clock) MonthDay(t time.Time) string {
 	return k.Say.CalendarMonthDay(k.Say.CalendarMonthShort(strconv.Itoa(int(t.Month()))), strconv.Itoa(t.Day()))

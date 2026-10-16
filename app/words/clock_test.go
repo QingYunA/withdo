@@ -133,6 +133,7 @@ func TestCalendarWordsInEnglish(t *testing.T) {
 	check(t, "MonthTitle", k.MonthTitle(now), "October 2026")
 	check(t, "CalendarDay", k.CalendarDay(at(2, 0, 0)), "Fri, Oct 16")
 	check(t, "MonthDay", k.MonthDay(time.Date(2026, 11, 1, 0, 0, 0, 0, time.Local)), "Nov 1")
+	check(t, "DayTitle", k.DayTitle(at(2, 0, 0)), "Friday, Oct 16")
 	check(t, "Weekday", k.Weekday(time.Date(2026, 10, 12, 0, 0, 0, 0, time.Local)), "Mon")
 }
 
@@ -141,6 +142,7 @@ func TestCalendarWordsInChinese(t *testing.T) {
 	check(t, "MonthTitle", k.MonthTitle(now), "2026 年 10 月")
 	check(t, "CalendarDay", k.CalendarDay(at(2, 0, 0)), "10 月 16 日周五")
 	check(t, "MonthDay", k.MonthDay(time.Date(2026, 11, 1, 0, 0, 0, 0, time.Local)), "11 月 1 日")
+	check(t, "DayTitle", k.DayTitle(at(2, 0, 0)), "10 月 16 日 星期五")
 	check(t, "Weekday", k.Weekday(time.Date(2026, 10, 12, 0, 0, 0, 0, time.Local)), "周一")
 }
 

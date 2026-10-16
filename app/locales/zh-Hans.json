@@ -357,5 +357,13 @@
   "settingsOpenWithBody": "只会把 Agent 的 App 带到前面，打不开具体的那场会话。",
   "rowOpenFailed": "没能打开：{reason}",
   "rowOpenNoFolder": "没有可打开的位置：Agent 没说它在哪里工作。",
-  "rowOpenNoEditor": "没找到编辑器。请安装 Cursor、Visual Studio Code 或 Zed。"
+  "rowOpenNoEditor": "没找到编辑器。请安装 Cursor、Visual Studio Code 或 Zed。",
+  "calendarDayCount": "{count} 项",
+  "calendarDayPlaceholder": "添加到这天…",
+  "calendarDayInput": "这一天的新任务",
+  "a11yCalendarDayCard": "{day}的全部事项",
+  "a11yCalendarShowAll": "显示 {day}的全部 {count} 项",
+  "a11yCalendarAddTo": "添加到 {day}",
+  "a11yCalendarDayClose": "关闭",
+  "calendarDayTitle": "{month} {day} 日 {weekday}"
 }

@@ -712,7 +712,32 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   title in the blocked red. Cancelled tasks and closed milestones are not shown. Order within a day:
   milestones, open items by time, finished items.
 - **More**: a cell lists at most three items; when there are more (or fewer lines fit the cell's
-  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line.
+  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line. It is a link: pointer
+  cursor, `text.secondary` and underlined on hover, a11y `Show all 16 on Oct 15` / `显示 10 月 15 日的全部
+  16 项`. A click opens the **day card** and takes the click alone (the cell's own click does not fire).
+- **Add**: a hovered cell shows a 12 pt `IconPlus` (`text.tertiary`, `text.secondary` on a `bg.hover`
+  20 pt square when hovered) at the right of the day number, floating over the cell so nothing
+  moves; a11y and tooltip `Add to Oct 15` / `添加到 10 月 15 日`. A click opens the day card with its
+  input focused. A **double click** on a cell does the same (the first click selects the day).
+- **Day card** (`app/views/calendar_day.go`): one day in full, over the grid in an overlay. Its top
+  left sits on the cell's top left, so it covers the cell and grows outward; near the right or bottom
+  edge of the window it grows left or up instead and stays 8 pt inside the window. Width
+  `max(1.6 × cell, 280 pt)` on the 4 pt grid; height follows its content up to 420 pt, then the list
+  scrolls. A panel like the sheets: `bg`, `RadiusPanel`, 1 pt `border`, the sheets' shadow, 12 pt
+  padding. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
+  count `5 items` / `5 项` in `text.tertiary`, a 24 pt `IconClose` button at the right); every item of
+  the day, 28 pt rows drawn like the cell's items (avatar, a reminder's time, the title; finished items
+  struck through, milestones as the accent chip), a click opens the task in the inspector and closes
+  the card; at the foot an input in the sheets' well (`Add to this day…` / `添加到这天…`). Enter adds a
+  plain task by me, due that day at 18:00, clears the input and keeps the card open, the new item
+  joining the list; empty text does nothing. **Closing**: `Esc`, a click outside (it does nothing
+  else: it does not select the day under it), the close button, a change of month or `Today`, and
+  leaving the page. While the card is open the window's shortcuts wait, so the arrows do not move the
+  day. **Opening** is four pixel steps, no tween (`theme.DayCardAt`): 55 %, 70 %, 85 %, then full size
+  from 150 ms, done at 200 ms, scaling the card's width and height from the corner it grows from and
+  clipping the contents; opacity is 1 throughout. A frame is asked for every 16 ms only while it
+  plays; with Reduce Motion the card is full size at once. Closing has no animation. Screens
+  `calendar-day-card-{light,dark,zh-light}`.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
   month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
   16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):

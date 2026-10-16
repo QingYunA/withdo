@@ -2095,5 +2095,79 @@
   "rowOpenNoEditor": "No editor found. Install Cursor, Visual Studio Code or Zed.",
   "@rowOpenNoEditor": {
     "description": "Quiet error line under a handed-over row when none of the supported editors is installed."
+  },
+  "calendarDayCount": "{count, plural, one {# item} other {# items}}",
+  "@calendarDayCount": {
+    "description": "Quiet text beside the date in the header of the calendar's day card: how many items the day has.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "16"
+      }
+    }
+  },
+  "calendarDayPlaceholder": "Add to this day…",
+  "@calendarDayPlaceholder": {
+    "description": "Placeholder of the input at the foot of the calendar's day card; what is typed becomes a task due that day."
+  },
+  "calendarDayInput": "New task for this day",
+  "@calendarDayInput": {
+    "description": "Accessibility label of the input at the foot of the calendar's day card."
+  },
+  "a11yCalendarDayCard": "Items of {day}",
+  "@a11yCalendarDayCard": {
+    "description": "Accessibility label of the calendar's day card; day is the day in words, as in \"Fri, Oct 16\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Fri, Oct 16"
+      }
+    }
+  },
+  "a11yCalendarShowAll": "Show all {count} on {day}",
+  "@a11yCalendarShowAll": {
+    "description": "Accessibility label of the \"N more\" line of a calendar day, which opens the day card; day is the month and day, as in \"Oct 15\".",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "16"
+      },
+      "day": {
+        "type": "String",
+        "example": "Oct 15"
+      }
+    }
+  },
+  "a11yCalendarAddTo": "Add to {day}",
+  "@a11yCalendarAddTo": {
+    "description": "Accessibility label of the + that shows in a calendar day while the pointer is over it; day is the month and day, as in \"Oct 15\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Oct 15"
+      }
+    }
+  },
+  "a11yCalendarDayClose": "Close",
+  "@a11yCalendarDayClose": {
+    "description": "Tooltip and accessibility label of the close button of the calendar's day card."
+  },
+  "calendarDayTitle": "{weekday}, {month} {day}",
+  "@calendarDayTitle": {
+    "description": "Title of the calendar's day card: the full weekday, the month as calendarMonthShort says, and the day number.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Thursday"
+      },
+      "month": {
+        "type": "String",
+        "example": "Oct"
+      },
+      "day": {
+        "type": "String",
+        "example": "15"
+      }
+    }
   }
 }

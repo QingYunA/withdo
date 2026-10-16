@@ -1,6 +1,7 @@
 package views
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -113,7 +114,23 @@ func TestScreensCalendar(t *testing.T) {
 			m.nav = nav{screen: screenCalendar}
 		})
 		calendarShot(t, "calendar-tall-"+a.suffix+".png", a.dark, false, 1100, 900, pickFriday)
+		calendarShot(t, "calendar-day-card-"+a.suffix+".png", a.dark, false, 1100, 720, openDayCardOf15)
+		if !a.dark {
+			calendarShot(t, "calendar-day-card-zh-"+a.suffix+".png", false, true, 1100, 720, openDayCardOf15)
+		}
 	}
+}
+
+// openDayCardOf15 opens the day card of Thu Oct 15, the day with the most items, by its "N more"
+// line (the animation is off: the card is full size).
+func openDayCardOf15(tt *ui.Tester, m *Main) {
+	for _, s := range tt.Texts() {
+		if (strings.HasPrefix(s, "Show all ") && strings.HasSuffix(s, " on Oct 15")) || (strings.HasPrefix(s, "显示 10 月 15 日")) {
+			_ = tt.Click(s)
+			return
+		}
+	}
+	panic("no \"more\" line on the 15th in " + strings.Join(tt.Texts(), " | "))
 }
 
 func taskID(t *testing.T, m *Main, title string) int {
