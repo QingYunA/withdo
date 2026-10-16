@@ -1,5 +1,15 @@
 {
   "@@locale": "en",
+  "a11yAcceptTask": "Accept: {title}",
+  "@a11yAcceptTask": {
+    "description": "Accessibility label of the Accept button on the row of a task an agent finished and handed over for review.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yCancelTask": "Cancel task: {title}",
   "@a11yCancelTask": {
     "description": "Accessibility label of the Cancel task button on the Needs you row of a closed pull request.",
@@ -88,6 +98,16 @@
       }
     }
   },
+  "a11yNotNow": "Not now: {title}",
+  "@a11yNotNow": {
+    "description": "Accessibility label of the small x on a From your agents row that puts the row aside until the agent reports again.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yOpenPR": "Open pull request #{number}",
   "@a11yOpenPR": {
     "description": "Accessibility label of the Open PR button.",
@@ -146,6 +166,10 @@
   "@a11yViewList": {
     "description": "Accessibility label of the List segment."
   },
+  "actionAccept": "Accept",
+  "@actionAccept": {
+    "description": "Button on the row of a task an agent finished and handed over for review: accepts the work and sets the task to done."
+  },
   "actionCancelTask": "Cancel task",
   "@actionCancelTask": {
     "description": "Button on the Needs you row of a task whose pull request was closed without merging: sets the task to cancelled."
@@ -157,6 +181,10 @@
   "actionKeep": "Keep",
   "@actionKeep": {
     "description": "Button on the Needs you row of a task whose pull request was closed without merging: dismisses the row and keeps the task as it is."
+  },
+  "actionNotNow": "Not now",
+  "@actionNotNow": {
+    "description": "Tooltip of the small x on a From your agents row: puts the row aside until the agent reports again. The task itself is not changed."
   },
   "actionOpen": "Open",
   "@actionOpen": {
@@ -2021,5 +2049,125 @@
   "agentsEmptyBody": "When an agent reports its progress, it shows up here.",
   "@agentsEmptyBody": {
     "description": "Quiet line under the title of the empty Agents screen."
+  },
+  "menuOpenIn": "Open in…",
+  "@menuOpenIn": {
+    "description": "Item of the task menu of an agent's task, and the title of its page: opens where the agent works in the agent's app, a terminal, an editor or Finder."
+  },
+  "openWithAgentApp": "The agent's app",
+  "@openWithAgentApp": {
+    "description": "Choice of where to open an agent's work: the desktop app of the agent that handed the task over. Also in the Open in page of the task menu."
+  },
+  "openWithTerminal": "Terminal",
+  "@openWithTerminal": {
+    "description": "Choice of where to open an agent's work: a terminal at the folder the agent works in."
+  },
+  "openWithEditor": "Editor",
+  "@openWithEditor": {
+    "description": "Choice of where to open an agent's work: a code editor (Cursor, Visual Studio Code or Zed) on the folder the agent works in."
+  },
+  "openWithFinder": "Finder",
+  "@openWithFinder": {
+    "description": "Choice of where to open an agent's work: the folder the agent works in, shown in Finder."
+  },
+  "settingsOpenWith": "Open agent work in",
+  "@settingsOpenWith": {
+    "description": "Label of the setting in Settings > Agents that says where Review and Answer on a handed-over row take the user."
+  },
+  "settingsOpenWithBody": "Brings the agent's app forward. It cannot open the exact session.",
+  "@settingsOpenWithBody": {
+    "description": "Quiet line under the Open agent work in setting: what opening the agent's app can and cannot do."
+  },
+  "rowOpenFailed": "Couldn't open it: {reason}",
+  "@rowOpenFailed": {
+    "description": "Quiet error line under a handed-over row when opening the agent's work failed. The reason is the system's own words.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "exit status 1"
+      }
+    }
+  },
+  "rowOpenNoFolder": "Nothing to open: the agent did not say where it works.",
+  "@rowOpenNoFolder": {
+    "description": "Quiet error line under a handed-over row when there is no folder to open in a terminal, an editor or Finder."
+  },
+  "rowOpenNoEditor": "No editor found. Install Cursor, Visual Studio Code or Zed.",
+  "@rowOpenNoEditor": {
+    "description": "Quiet error line under a handed-over row when none of the supported editors is installed."
+  },
+  "calendarDayCount": "{count, plural, one {# item} other {# items}}",
+  "@calendarDayCount": {
+    "description": "Quiet text beside the date in the header of the calendar's day card: how many items the day has.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "16"
+      }
+    }
+  },
+  "calendarDayPlaceholder": "Add to this day…",
+  "@calendarDayPlaceholder": {
+    "description": "Placeholder of the input at the foot of the calendar's day card; what is typed becomes a task due that day."
+  },
+  "calendarDayInput": "New task for this day",
+  "@calendarDayInput": {
+    "description": "Accessibility label of the input at the foot of the calendar's day card."
+  },
+  "a11yCalendarDayCard": "Items of {day}",
+  "@a11yCalendarDayCard": {
+    "description": "Accessibility label of the calendar's day card; day is the day in words, as in \"Fri, Oct 16\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Fri, Oct 16"
+      }
+    }
+  },
+  "a11yCalendarShowAll": "Show all {count} on {day}",
+  "@a11yCalendarShowAll": {
+    "description": "Accessibility label of the \"N more\" line of a calendar day, which opens the day card; day is the month and day, as in \"Oct 15\".",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "16"
+      },
+      "day": {
+        "type": "String",
+        "example": "Oct 15"
+      }
+    }
+  },
+  "a11yCalendarAddTo": "Add to {day}",
+  "@a11yCalendarAddTo": {
+    "description": "Accessibility label of the + that shows in a calendar day while the pointer is over it; day is the month and day, as in \"Oct 15\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Oct 15"
+      }
+    }
+  },
+  "a11yCalendarDayClose": "Close",
+  "@a11yCalendarDayClose": {
+    "description": "Tooltip and accessibility label of the close button of the calendar's day card."
+  },
+  "calendarDayTitle": "{weekday}, {month} {day}",
+  "@calendarDayTitle": {
+    "description": "Title of the calendar's day card: the full weekday, the month as calendarMonthShort says, and the day number.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Thursday"
+      },
+      "month": {
+        "type": "String",
+        "example": "Oct"
+      },
+      "day": {
+        "type": "String",
+        "example": "15"
+      }
+    }
   }
 }

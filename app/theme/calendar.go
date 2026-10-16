@@ -16,6 +16,19 @@ const (
 	CalendarRing     float32 = 2  // the ring of the selected day
 )
 
+// The day card's metrics, in points.
+const (
+	DayCardMinWidth float32 = 280 // the card is at least this wide, or 1.6 cells when that is more
+	DayCardMaxH     float32 = 420 // taller than this the list of items scrolls
+	DayCardPad      float32 = 12  // inside the card
+	DayCardHead     float32 = 28  // the date, the count and the close button
+	DayCardRow      float32 = 28  // an item of the list
+	DayCardInput    float32 = 30  // the well at the foot
+	DayCardGap      float32 = 8   // between the header, the list and the input
+	DayCardMargin   float32 = 8   // the least room between the card and the window's edge
+	DayCardPlus     float32 = 20  // the hit target of the + in a hovered cell
+)
+
 // CalendarWeekend is the faint fill of a Saturday or a Sunday.
 func (t *Tokens) CalendarWeekend() ui.Color { return t.Bg.Mix(t.BgSubtle, 0.7) }
 

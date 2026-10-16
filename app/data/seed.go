@@ -100,9 +100,21 @@ func (f *Fake) seedReports(ago timeAgo) {
 	rep := func(task int, agent string, st Status, at time.Duration, summary, next string) Report {
 		return Report{ID: len(f.reports) + 1, TaskID: task, Agent: agent, Status: st, Summary: summary, NextStep: next, CreatedAt: ago(at)}
 	}
+	// Where the agents work: the worktree of each task they reported from. Tasks 10 to 12 left none.
+	worktree := func(name string) string { return "/Users/demo/code/" + name }
+	cwds := map[int]string{
+		1: worktree("adhd-todo/.claude/worktrees/native-ui"), 2: worktree("answer-me-with-html"),
+		3: worktree("picpocket/.claude/worktrees/tray-race"), 15: worktree("answer-me-with-html/.claude/worktrees/issue-218"),
+		20: worktree("adhd-todo/.claude/worktrees/mcp-port"), 22: worktree("adhd-todo/.claude/worktrees/store"),
+		23: worktree("adhd-todo/.claude/worktrees/mcp-tools"), 24: worktree("adhd-todo/.claude/worktrees/watcher"),
+		25: worktree("adhd-todo/.claude/worktrees/mcp-tests"),
+	}
 	add := func(rs ...Report) {
 		for _, r := range rs {
 			r.ID = len(f.reports) + 1
+			if r.Agent != GitHubAgent {
+				r.Cwd = cwds[r.TaskID]
+			}
 			f.reports = append(f.reports, r)
 		}
 	}

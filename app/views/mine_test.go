@@ -3,6 +3,7 @@ package views
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
@@ -105,9 +106,9 @@ func TestTightRowsDropTheirCompanions(t *testing.T) {
 	}
 }
 
-func TestHandedOverOpenOpensTheInspector(t *testing.T) {
+func TestClickingAHandedOverRowOpensTheInspector(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	if err := tt.Click("Open Fix tray race on launch"); err != nil {
+	if err := tt.Click("Fix tray race on launch"); err != nil {
 		t.Fatal(err)
 	}
 	if m.openID != 3 || !tt.HasText("Activity") {
@@ -126,6 +127,89 @@ func TestHandedOverOpenPRCallsOpenURL(t *testing.T) {
 	}
 	if m.openID != 0 {
 		t.Error("the action button also opened the inspector")
+	}
+}
+
+func TestNotNowPutsAHandedOverRowAsideUntilTheAgentReportsAgain(t *testing.T) {
+	app, store, _ := newTestApp(t)
+	kept := &data.MemorySeen{}
+	app.Dismissed = kept
+	tt, m, _ := newTesterFor(app, 1100)
+	before := m.mine.Count()
+	if err := tt.Click("Not now: Fix tray race on launch"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("Fix tray race on launch") || m.mine.Count() != before-1 {
+		t.Errorf("count %d, want %d, and the row gone: %q", m.mine.Count(), before-1, tt.Texts())
+	}
+	if m.openID != 0 {
+		t.Error("Not now also opened the inspector")
+	}
+	if task, _ := app.Task(3); task.Status != data.Blocked {
+		t.Errorf("status %v: putting a row aside must not change the task", task.Status)
+	}
+	if saved, _ := kept.LoadSeen(); saved[3].IsZero() {
+		t.Errorf("saved %v: the dismissal was not kept", saved)
+	}
+	// The record is read again by a new launch.
+	again := NewApp(store, &recorder{}, testConfig())
+	again.Now, again.Dismissed = fixedNow, kept
+	tt2, _, _ := newTesterFor(again, 1100)
+	if tt2.HasText("Fix tray race on launch") {
+		t.Error("a dismissed row is back after a restart")
+	}
+	// The agent reports again: the row comes back.
+	store.ReportAs(3, "claude-code", "Still stuck", fixedNow().Add(time.Minute))
+	app.Refresh()
+	tt.Frame()
+	if !tt.HasText("Fix tray race on launch") {
+		t.Errorf("a newer report should bring the row back: %q", tt.Texts())
+	}
+}
+
+func TestNotNowLeavesTheTaskOnTheAgentsScreen(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	if err := tt.Click("Not now: Fix tray race on launch"); err != nil {
+		t.Fatal(err)
+	}
+	m.goTo(nav{screen: screenAgents})
+	tt.Frame()
+	if !tt.HasText("Fix tray race on launch") {
+		t.Errorf("Agents lost the task: %q", tt.Texts())
+	}
+}
+
+func TestAcceptOnAPullRequestRowMarksTheTaskDone(t *testing.T) {
+	tt, m, app := newMainTester(t, 1100)
+	if !tt.HasText("Open PR") || !tt.HasText("Accept") {
+		t.Fatalf("a review row with a pull request offers Open PR and Accept: %q", tt.Texts())
+	}
+	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
+		t.Fatal(err)
+	}
+	if task, _ := app.Task(2); task.Status != data.Done {
+		t.Errorf("status %v, want done", task.Status)
+	}
+	if m.openID != 0 {
+		t.Error("Accept opened the inspector")
+	}
+}
+
+func TestAReviewRowWithoutAPullRequestOffersReviewAndAccept(t *testing.T) {
+	app, store, _ := newTestApp(t)
+	task, err := store.CreateTask(data.CreateTaskInput{Title: "Tidy the docs", Source: data.SourceAgent, Status: data.Review})
+	if err != nil {
+		t.Fatal(err)
+	}
+	app.Refresh()
+	tt, _, _ := newTesterFor(app, 1100)
+	has(t, tt, "Review", "Accept")
+	if err := tt.Click("Accept: Tidy the docs"); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := app.Task(task.ID); got.Status != data.Done {
+		t.Errorf("status %v, want done", got.Status)
 	}
 }
 

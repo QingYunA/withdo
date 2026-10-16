@@ -73,8 +73,9 @@ type Main struct {
 	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
 	queue   queued                       // what a text input's last key asked of the next frame
 
-	pop     popMenu // the task menu
-	selRect ui.Rect // where the selected row or card is, for the menu the S, P, M and R keys open
+	pop      popMenu     // the task menu
+	openFail openFailure // the last failure to open an agent's work, drawn under its row
+	selRect  ui.Rect     // where the selected row or card is, for the menu the S, P, M and R keys open
 
 	scroll    ui.ScrollState
 	inspector inspector
@@ -145,6 +146,7 @@ func (m *Main) View(c *ui.Context) {
 	m.newProjectSheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
+	m.dayCardView(c, t)
 	m.taskMenuView(c, t)
 	m.hopOverlay(c)
 }

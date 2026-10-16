@@ -63,6 +63,13 @@ func (m Mine) Count() int { return len(m.FromAgents) + len(m.Today) }
 // Empty reports whether the screen shows "All clear".
 func (m Mine) Empty() bool { return len(m.FromAgents)+len(m.Today)+len(m.Later) == 0 }
 
+// WithoutDismissed is m without the handed-over rows the user put aside: a row stays away until its
+// task is handed over again (a newer Since). The other sections are not the agents' to dismiss.
+func (m Mine) WithoutDismissed(d Seen) Mine {
+	m.FromAgents = Unseen(m.FromAgents, d)
+	return m
+}
+
 // IDs lists the task ids in the order the rows are drawn.
 func (m Mine) IDs() []int {
 	ids := make([]int, 0, len(m.FromAgents)+len(m.Today)+len(m.Later)+len(m.Done))

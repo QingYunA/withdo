@@ -78,3 +78,23 @@ func TestMemorySeenKeepsACopy(t *testing.T) {
 		t.Errorf("stored %v", got)
 	}
 }
+
+func TestWithoutDismissedHidesARowUntilItIsHandedOverAgain(t *testing.T) {
+	at := fixedNow()
+	m := Mine{FromAgents: []Item{handed(1, at), handed(2, at)}, Today: []Item{handed(3, at)}}
+	d := Seen{1: at, 3: at}
+	got := m.WithoutDismissed(d)
+	if len(got.FromAgents) != 1 || got.FromAgents[0].ID != 2 || got.Count() != 2 {
+		t.Errorf("from agents %v, count %d: row 1 is dismissed", got.FromAgents, got.Count())
+	}
+	if len(got.Today) != 1 {
+		t.Error("only what agents handed over can be dismissed")
+	}
+	if len(m.FromAgents) != 2 {
+		t.Error("the original was changed")
+	}
+	again := Mine{FromAgents: []Item{handed(1, at.Add(time.Minute))}}.WithoutDismissed(d)
+	if len(again.FromAgents) != 1 {
+		t.Error("an agent that reports again brings the row back")
+	}
+}

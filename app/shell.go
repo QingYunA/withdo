@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os/exec"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -70,6 +72,71 @@ func (s *shell) ShowInFinder(path string) {
 	if err := mygo.Shell.OpenPath(path); err != nil {
 		log.Printf("show %s: %v", path, err)
 	}
+}
+
+// openRunner runs the macOS open command with args. Tests replace it: they never launch an app.
+var openRunner = func(args ...string) error {
+	out, err := exec.Command("open", args...).CombinedOutput()
+	if err != nil {
+		if msg := strings.TrimSpace(string(out)); msg != "" {
+			return errors.New(msg)
+		}
+	}
+	return err
+}
+
+// folderApps are the agent apps that open a folder when given one; the others only come forward.
+var folderApps = map[string]bool{"Cursor": true, "Windsurf": true, "Zed": true, "Visual Studio Code": true}
+
+// editors are the editors an editor choice opens, the first one installed.
+var editors = []string{"Cursor", "Visual Studio Code", "Zed"}
+
+// OpenIn implements views.Actions. The agent's app is only brought forward: MCP gives no session
+// id, so the exact session cannot be opened. An agent without an app, or one that is not
+// installed, falls back to a terminal.
+func (s *shell) OpenIn(how views.OpenWith, agentApp, dir string) error {
+	switch how {
+	case views.OpenTerminal:
+		return openTerminal(dir)
+	case views.OpenEditor:
+		return openEditor(dir)
+	case views.OpenFinder:
+		if dir == "" {
+			return views.ErrNoDir
+		}
+		return openRunner(dir)
+	}
+	if agentApp != "" {
+		args := []string{"-a", agentApp}
+		if folderApps[agentApp] && dir != "" {
+			args = append(args, dir)
+		}
+		if err := openRunner(args...); err == nil {
+			return nil
+		}
+	}
+	return openTerminal(dir)
+}
+
+// openTerminal opens Terminal at dir.
+func openTerminal(dir string) error {
+	if dir == "" {
+		return views.ErrNoDir
+	}
+	return openRunner("-a", "Terminal", dir)
+}
+
+// openEditor opens the first installed editor on dir; open -Ra finds an app without launching it.
+func openEditor(dir string) error {
+	if dir == "" {
+		return views.ErrNoDir
+	}
+	for _, app := range editors {
+		if openRunner("-Ra", app) == nil {
+			return openRunner("-a", app, dir)
+		}
+	}
+	return views.ErrNoEditor
 }
 
 func (s *shell) OpenURL(url string) {

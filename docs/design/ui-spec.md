@@ -158,9 +158,10 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   the task's latest report (`agent` when it has none): Claude Code, Codex, Cursor and Gemini CLI have
   their own, any other agent a robot tinted by its name. The assistant is `theme.Assistant`, a
   purple ghost with a crown.
-- **List rows** (a project, the Inbox, the Done group): an 18 pt avatar in the column of the group
-  glyph, vertically centered on the row; the title stays on the group's title (the avatar's slot
-  gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
+- **List rows** (a project, the Inbox, the Done group): an 18 pt avatar under the group's name (the
+  rows sit 26 pt in from the header, so the header reads as their parent), vertically centered on
+  the row; the title is as far from the avatar as the header's name from its glyph (the avatar's
+  slot gives back the difference between the row's 12 pt gap and the header's 8 pt). Rows that carry the
   status glyph (Mine's Today and Later, Done today, Completed, search) keep the glyph: it is the way to complete or reopen.
 - **Board cards**: a 12 pt avatar first in the meta line, before the blocked mark, the badge, the
   branch and the age. The line is always drawn.
@@ -244,12 +245,13 @@ a row anywhere (see **Subtasks**).
    row: the agent's 18 pt avatar, the title, one reason line (`reason · project name`, the project
    dropped below 600 pt), the age, and one tinted button (`bg.selected`, accent text):
    - an agent task that is blocked: `Claude Code is stuck: "<next_step or summary>"` (`卡住了`),
-     button **Answer** / `回答` (opens the inspector); with nothing to quote, `Claude Code is stuck
-     and waits for you`;
-   - an agent task in review: with a PR `PR #12 is ready for your review`, button **Open PR**;
-     without one `Claude Code finished and is waiting for you` (`做完了，等你试用`), button
-     **Review** / `去看看`;
-   - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open**;
+     button **Answer** / `回答` (goes to where the agent is, see **Going to the agent** below); with
+     nothing to quote, `Claude Code is stuck and waits for you`;
+   - an agent task in review: with a PR `PR #12 is ready for your review`, buttons **Open PR** and
+     **Accept** / `收下`; without one `Claude Code finished and is waiting for you` (`做完了，等你试用`),
+     buttons **Review** / `去看看` (goes to where the agent is, as Answer) and **Accept**. Accept sets
+     the task to done (the row fades like any completion);
+   - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open** (the inspector);
    - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
    - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
      task** and **Keep** (the row goes away for good, until the pull request changes state again);
@@ -260,7 +262,14 @@ a row anywhere (see **Subtasks**).
    pull requests, failing checks, requested changes, review, stale; the longest wait first within a
    kind. A task shows once, under the first reason it has. Pull request rows age from GitHub's own
    report, not the agent's last word; GitHub's reports (agent `github`) show in Activity but never
-   count as the agent speaking. A row with two buttons puts them under its summary below 560 pt of
+   count as the agent speaking. **Not now.** A row can be put aside: while it is hovered or
+   keyboard-selected, a 12 pt `close` icon (`text.tertiary`, `text.secondary` on hover) shows at the
+   far right, after the buttons, in a 20 pt square slot that is always reserved so the row does
+   not shift. Tooltip `Not now` / `先放一放`, a11y `Not now: <title>`. A click hides the row without
+   opening it or changing the task (it stays in its project and on Agents); the row's `Since` is
+   kept in `dismissed.json` next to the database, so it comes back when the agent reports again
+   or GitHub files a new event, and entries of tasks that are gone are dropped. A hidden row is
+   out of the sidebar count, the badge and the hop. A row with two buttons puts them under its summary below 560 pt of
    content, and every row does below 420 pt. Screens `mine-pull-requests-*`.
 2. **Today** / `今天` — the user's tasks (a user task that is blocked or doing, too): due or
    reminded today and overdue first by time, then what is in progress. Row: the status glyph (it
@@ -282,6 +291,27 @@ here.` (zh `现在没有要你处理的事` / `Agent 们在干活，有动静会
 
 Tight rows (the inspector open on a small window): the project name goes below 600 pt of content;
 the branch, pull request and age below 460 pt.
+
+**Going to the agent.** Answer and Review do not open the inspector; they take the user to where the
+agent works, the way Settings > Agents says (default: **the agent's app**). The row itself still opens
+the inspector, as every row does. The folder the agent works in is the `cwd` it passed to
+`report_progress`, kept on each report (`reports.cwd`, migration 005; a report that passed none keeps
+`''`, the server's default folder is not stored): the newest report that has one, else the project's
+folder, else none. The places:
+- **The agent's app**: `open -a <App>` for the desktop app that matches the agent (Claude Code
+  `Claude`, Codex `Codex`, Cursor, Windsurf, Zed, Copilot `Visual Studio Code`; Gemini CLI, Qwen Code,
+  Kimi CLI, opencode, Cline and unknown agents have none). It brings the app forward, and for the
+  editors also opens the folder. **It cannot open the exact session**: MCP gives no session id, so
+  only the app is brought forward. An agent with no app, or an app that is not installed, falls back
+  to a terminal at the folder;
+- **Terminal**: `open -a Terminal <folder>`;
+- **Editor**: the first installed of Cursor, Visual Studio Code and Zed (found with `open -Ra`, which
+  does not launch it), opened on the folder;
+- **Finder**: the folder.
+Terminal, Editor and Finder need a folder. When opening fails, one quiet line in `meta` and the blocked
+red shows under the row's reason line (`Couldn't open it: …`, `Nothing to open: the agent did not
+say where it works.`, `No editor found. Install Cursor, Visual Studio Code or Zed.`); it goes away
+with the next successful open or when the row is opened.
 
 ### Agents
 
@@ -477,8 +507,9 @@ view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 na
 at once. A project with no milestone has no filter: `New milestone…` is in its sidebar menu.
 
 **List view.** Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
-name (`body.strong`) + count in `text.tertiary`. Rows indent under the header text (no glyph
-per row; the group says the status). Row: the title (one line, `body.strong`); for an agent's task a
+name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar under the
+header's name (no glyph per row; the group says the status); `Show all N →` under Done lines up
+with the rows' titles. Row: the title (one line, `body.strong`); for an agent's task a
 quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
 agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
@@ -599,8 +630,13 @@ Main page, top to bottom (10 pt padding):
    Sunday), `No reminder`, and `Custom…`, which shows a calendar with a time of day, Clear and
    `Set reminder`;
 6. `Open PR`, only when the task has a pull request;
-7. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
-8. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
+7. `Open in…` (`IconTerminal`), only for an agent's task: replaced by a page titled `Open in…` with a
+   back chevron and four choices, `The agent's app`, `Terminal`, `Editor`, `Finder` (see **Going to
+   the agent** under Mine). A click opens that place once and closes the menu; it does not change the
+   Settings choice. A choice with nowhere to go (no folder, or no app and no folder) is drawn in
+   `text.tertiary`, with no hover, and does nothing;
+8. `Ask about this task…` (`⌘J`): opens the inspector with its composer focused;
+9. a hairline and `Delete` (`⌘⌫`) in `status.blocked`, the only red.
 
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
@@ -676,7 +712,32 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   title in the blocked red. Cancelled tasks and closed milestones are not shown. Order within a day:
   milestones, open items by time, finished items.
 - **More**: a cell lists at most three items; when there are more (or fewer lines fit the cell's
-  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line.
+  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line. It is a link: pointer
+  cursor, `text.secondary` and underlined on hover, a11y `Show all 16 on Oct 15` / `显示 10 月 15 日的全部
+  16 项`. A click opens the **day card** and takes the click alone (the cell's own click does not fire).
+- **Add**: a hovered cell shows a 12 pt `IconPlus` (`text.tertiary`, `text.secondary` on a `bg.hover`
+  20 pt square when hovered) at the right of the day number, floating over the cell so nothing
+  moves; a11y and tooltip `Add to Oct 15` / `添加到 10 月 15 日`. A click opens the day card with its
+  input focused. A **double click** on a cell does the same (the first click selects the day).
+- **Day card** (`app/views/calendar_day.go`): one day in full, over the grid in an overlay. Its top
+  left sits on the cell's top left, so it covers the cell and grows outward; near the right or bottom
+  edge of the window it grows left or up instead and stays 8 pt inside the window. Width
+  `max(1.6 × cell, 280 pt)` on the 4 pt grid; height follows its content up to 420 pt, then the list
+  scrolls. A panel like the sheets: `bg`, `RadiusPanel`, 1 pt `border`, the sheets' shadow, 12 pt
+  padding. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
+  count `5 items` / `5 项` in `text.tertiary`, a 24 pt `IconClose` button at the right); every item of
+  the day, 28 pt rows drawn like the cell's items (avatar, a reminder's time, the title; finished items
+  struck through, milestones as the accent chip), a click opens the task in the inspector and closes
+  the card; at the foot an input in the sheets' well (`Add to this day…` / `添加到这天…`). Enter adds a
+  plain task by me, due that day at 18:00, clears the input and keeps the card open, the new item
+  joining the list; empty text does nothing. **Closing**: `Esc`, a click outside (it does nothing
+  else: it does not select the day under it), the close button, a change of month or `Today`, and
+  leaving the page. While the card is open the window's shortcuts wait, so the arrows do not move the
+  day. **Opening** is four pixel steps, no tween (`theme.DayCardAt`): 55 %, 70 %, 85 %, then full size
+  from 150 ms, done at 200 ms, scaling the card's width and height from the corner it grows from and
+  clipping the contents; opacity is 1 throughout. A frame is asked for every 16 ms only while it
+  plays; with Reduce Motion the card is full size at once. Closing has no animation. Screens
+  `calendar-day-card-{light,dark,zh-light}`.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
   month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
   16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):
@@ -813,7 +874,11 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   line the agent's own command printed, "adhd-core isn't at ~/.local/bin/adhd-core", a timeout).
   A config file with comments (Zed's `settings.json`) is **never rewritten**: a `Add this to
   ~/.config/zed/settings.json:` line and the snippet in the mono well with **Copy** appear under the
-  columns. At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
+  columns. Under them one group with one row, **Open agent work in** / `去看看时打开`, with the `meta`
+  line `Brings the agent's app forward. It cannot open the exact session.` and a pop-up at the right:
+  `The agent's app` (default) / `Terminal` / `Editor` / `Finder`. It is where Review and Answer on a
+  handed-over row go (see **Going to the agent** under Mine); the choice is kept in `prefs.json` next
+  to the database. Screen `settings-agents-open-with-*` (scrolled to the bottom). At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
   `claude mcp add` command in a mono well with **Copy**. "Install MCP" is the only word for this; it
   is never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
   `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's PATH
