@@ -176,6 +176,25 @@ func TestReportProgressExplicitCwdBranchAndTitle(t *testing.T) {
 	}
 }
 
+func TestReportProgressStoresOnlyTheCwdTheAgentPassed(t *testing.T) {
+	r := newRig(t)
+	a := r.ok("report_progress", map[string]any{"summary": "no cwd"})
+	b := r.ok("report_progress", map[string]any{"summary": "with cwd", "cwd": r.dir})
+	if got := a.obj("task")["id"]; got != b.obj("task")["id"] {
+		t.Fatalf("expected one task, got %v and %v", got, b.obj("task")["id"])
+	}
+	reports := r.ok("get_task", map[string]any{"task_id": a.Data["task_id"]}).list("reports")
+	if len(reports) != 2 {
+		t.Fatalf("reports = %+v", reports)
+	}
+	if got := reports[0].(map[string]any)["cwd"]; got != "" {
+		t.Errorf("report without cwd stored %v, want empty", got)
+	}
+	if got := reports[1].(map[string]any)["cwd"]; got != r.dir {
+		t.Errorf("report with cwd stored %v, want %v", got, r.dir)
+	}
+}
+
 func TestReportProgressByTaskIDIgnoresDefaultCwd(t *testing.T) {
 	r := newRig(t)
 	a := r.ok("report_progress", map[string]any{"summary": "one"})

@@ -62,6 +62,26 @@ func agentName(agent string) string {
 	return agent
 }
 
+// agentApp is the macOS app of the desktop agent behind an id agents report under, matched the way
+// agentName matches it; "" for agents that have none (they run in a terminal).
+func agentApp(agent string) string {
+	switch n := strings.ToLower(agent); {
+	case strings.Contains(n, "claude"):
+		return "Claude"
+	case strings.Contains(n, "codex"):
+		return "Codex"
+	case strings.Contains(n, "cursor"):
+		return "Cursor"
+	case strings.Contains(n, "windsurf"):
+		return "Windsurf"
+	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
+		return "Zed"
+	case strings.Contains(n, "copilot") || strings.Contains(n, "visual studio code"):
+		return "Visual Studio Code"
+	}
+	return ""
+}
+
 // whoFinished is the words at the right of a finished row: "You", or an agent's name, and with
 // summary what its closing report said ("Claude Code · PR #245 merged").
 func (m *Main) whoFinished(task data.Task, summary bool) string {
@@ -86,7 +106,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 		} else if o.quiet {
 			theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow) // as in the Working rows above
 		} else {
-			m.authorSlot(c, task) // in the glyph's column, as under a group header
+			m.authorSlot(c, task) // under the group's name, as the list's rows
 		}
 		body(c, func() {
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {

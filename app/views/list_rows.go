@@ -23,7 +23,7 @@ const rowSlot float32 = 10
 const dragCardWidth float32 = 250
 
 // myRow is a task of mine: its title, and at the right a P0 or P1 badge and when it is due. No
-// avatar: the column says whose it is. A task that is not finished drags to the Agents tray.
+// avatar: the column says whose it is; the title still lines up with the Agents column's titles. A task that is not finished drags to the Agents tray.
 func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	if task.Status.Terminal() {
 		m.doneRow(c, t, sideMine, task)

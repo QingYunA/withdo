@@ -16,6 +16,7 @@ type popSpec struct {
 	tint             ui.Color // the icon's color at rest, when it is not the text's (a project's folder)
 	mark             string   // text in that slot instead of an icon
 	checked, danger  bool
+	disabled         bool // drawn quiet; the pointer and the arrow keys pass over it
 	run              func()
 }
 
@@ -23,15 +24,20 @@ type popSpec struct {
 // the system's menus do.
 func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 	pm := &m.pop
-	idx := len(pm.items)
-	pm.items = append(pm.items, s.run)
+	idx := -1
+	if !s.disabled {
+		idx = len(pm.items)
+		pm.items = append(pm.items, s.run)
+	}
 	row := ui.ButtonBase(c.Key("pop-"+s.key)).Height(popRowH).Shrink(0).Padding(0, 8).Gap(10).Radius(7).
 		AlignItems(ui.Center).Label(cmp.Or(s.a11y, s.label)).Cursor(ui.CursorPointer)
 	ink, quiet := t.Text, t.TextTertiary
 	if s.danger {
 		ink = t.Blocked()
 	}
-	if row.Hovered() || pm.hl == idx {
+	if s.disabled {
+		ink = t.TextTertiary
+	} else if row.Hovered() || pm.hl == idx {
 		row.Background(t.Accent)
 		ink, quiet = t.AccentText, t.AccentText.Alpha(0.8)
 	}
@@ -57,7 +63,7 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 			theme.Text(c, theme.Meta, quiet, s.hint).Shrink(0)
 		}
 	})
-	if row.Clicked() {
+	if row.Clicked() && !s.disabled {
 		s.run()
 	}
 }
@@ -87,6 +93,11 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 			m.app.Act.OpenURL(task.PRURL)
 		}})
 	}
+	if task.Source == data.SourceAgent {
+		m.popRow(c, t, popSpec{key: "open-in", icon: theme.IconAgents, label: m.say.MenuOpenIn(), run: func() {
+			pm.page, pm.back, pm.hl = pageOpenIn, true, 0
+		}})
+	}
 	m.popRow(c, t, popSpec{key: "ask", icon: theme.IconSparkle, label: m.say.MenuAsk(), hint: "⌘J", run: func() {
 		m.closeMenu()
 		m.askAboutTask(task.ID)
@@ -96,6 +107,19 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.closeMenu()
 		m.deleteTask(c, task.ID)
 	}})
+}
+
+// openInPage lists where the agent's work can be opened: its app, a terminal, an editor, Finder.
+// A choice with nowhere to go (the agent never said where it works) is quiet and does nothing.
+func (m *Main) openInPage(c *ui.Context, t *theme.Tokens, task data.Task) {
+	m.menuTitle(c, t, m.say.MenuOpenIn())
+	icons := map[OpenWith]*ui.SVG{OpenAgentApp: theme.IconAgent, OpenTerminal: theme.IconAgents, OpenEditor: theme.IconArrowOut, OpenFinder: theme.IconFolder}
+	for _, how := range openWiths {
+		m.popRow(c, t, popSpec{key: "open-" + string(how), icon: icons[how], label: openWithName(m.say, how), disabled: !m.app.canOpen(how, task), run: func() {
+			m.closeMenu()
+			m.openWork(how, task)
+		}})
+	}
 }
 
 // stripButton is one choice of a strip: a tinted square that shows the current one, tints under

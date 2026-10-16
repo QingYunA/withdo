@@ -9,8 +9,8 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// listIndent is where a row's text starts: under the group header's name, past its glyph and the
-// 8 pt gap.
+// listIndent is how far a group's rows sit in from its header: under the header's name, past its
+// glyph and the 8 pt gap. A row's title is as far in again from its avatar.
 const listIndent = theme.GlyphSize + 8
 
 // listGroup is one status of a list: a header and its rows.
@@ -159,7 +159,8 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// group is a header, glyph and name and count, and its rows indented under the name.
+// group is a header, glyph and name and count, and its rows indented under the name: a row's
+// avatar starts where the header's name does, so the header reads as the parent of its rows.
 func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
 	m.groupOf(c, t, s, tasks, func(task data.Task) { m.listRow(c, t, task) })
 }
@@ -167,9 +168,11 @@ func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data
 // groupOf is group with its own way to draw a row.
 func (m *Main) groupOf(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task, row func(data.Task)) {
 	groupHeader(c, t, "group-"+string(s), len(tasks), statusLabel(m.say, s), func() { theme.StatusGlyph(c, t, s, 0) })
-	for _, task := range tasks {
-		row(task)
-	}
+	ui.Column(c.Key("rows-"+string(s))).Shrink(0).Margin(0, 0, 0, listIndent).Children(func() {
+		for _, task := range tasks {
+			row(task)
+		}
+	})
 }
 
 // groupHeader is a glyph, a name and a count.
@@ -192,7 +195,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ot := m.app.overviewTask(task)
 	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
 	row.Children(func() {
-		m.authorSlot(c, task) // in the glyph's column
+		m.authorSlot(c, task) // under the group's name
 		body(c, func() {
 			m.titleLine(c, t, task, "", false)
 			summaryLine(c, t, listMeta(task, ot))
@@ -282,7 +285,7 @@ func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
 	if m.allDone[m.nav] || len(lm.done) <= theme.DoneListRows {
 		return
 	}
-	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, listIndent).Clicked() {
+	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, 2*listIndent).Clicked() {
 		m.allDone[m.nav] = true
 	}
 }

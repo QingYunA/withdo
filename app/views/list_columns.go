@@ -299,9 +299,11 @@ func (m *Main) waitingGroup(c *ui.Context, t *theme.Tokens, tasks []data.Task) {
 		return
 	}
 	groupHeader(c, t, "group-waiting", len(tasks), m.say.ListWaiting(), func() { theme.ParcelGlyph(c) })
-	for _, task := range tasks {
-		m.waitingRow(c, t, task)
-	}
+	ui.Column(c.Key("rows-waiting")).Shrink(0).Margin(0, 0, 0, listIndent).Children(func() {
+		for _, task := range tasks {
+			m.waitingRow(c, t, task)
+		}
+	})
 }
 
 // sideDoneAndBacklog closes a column: its Done group (the newest three and "Show all"), then its
@@ -311,7 +313,7 @@ func (m *Main) sideDoneAndBacklog(c *ui.Context, t *theme.Tokens, s side, lm lis
 	if len(lm.done) > 0 {
 		m.groupOf(c, t, data.Done, m.sideDone(s, lm), func(task data.Task) { m.doneRow(c, t, s, task) })
 		if !allDone[m.nav] && len(lm.done) > theme.DoneListRows &&
-			link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, listIndent).Clicked() {
+			link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, 2*listIndent).Clicked() {
 			allDone[m.nav] = true
 		}
 	}

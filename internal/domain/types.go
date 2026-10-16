@@ -138,6 +138,8 @@ type Report struct {
 	Summary   string  `json:"summary"`
 	NextStep  *string `json:"next_step"`
 	CreatedAt string  `json:"created_at"`
+	// Cwd is the working directory the agent reported from; "" when it did not say.
+	Cwd string `json:"cwd"`
 }
 
 // timeLayout is JavaScript's Date.toISOString form, kept for database compatibility.

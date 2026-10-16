@@ -90,11 +90,11 @@ func TestAgentRowsStartWithTheirAvatarAndMineHaveNone(t *testing.T) {
 	if !paintedLeftOf(t, tt, 1100, "Port core to Go", 30, claudeColor) {
 		t.Error("an agent's task has no avatar of Claude Code before its title")
 	}
-	// The title lines up with the group's name.
+	// The rows sit in under the group's name: the title is a step further in than the name.
 	row, _ := tt.Find("Write the release notes")
 	group, _ := tt.Find("To do")
-	if absInt(int(row.X-group.X)) > 1 {
-		t.Errorf("title at %.1f, group name at %.1f", row.X, group.X)
+	if absInt(int(row.X-group.X-listIndent)) > 1 {
+		t.Errorf("title at %.1f, group name at %.1f, want the title %.0f pt further in", row.X, group.X, listIndent)
 	}
 }
 

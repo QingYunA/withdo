@@ -131,6 +131,18 @@ type Report struct {
 	Summary   string
 	NextStep  string
 	CreatedAt time.Time
+	Cwd       string // the working directory the agent reported from; empty when it did not say
+}
+
+// WorkDir is where an agent works on a task: the directory of the newest report that names one
+// (reports are newest first, as TaskDetail has them), else the project's folder, else "".
+func WorkDir(reports []Report, projectPath string) string {
+	for _, r := range reports {
+		if r.Cwd != "" {
+			return r.Cwd
+		}
+	}
+	return projectPath
 }
 
 // TaskDetail is a task with its reports, newest first.

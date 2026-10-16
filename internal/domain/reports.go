@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"unicode"
 
@@ -10,14 +11,14 @@ import (
 )
 
 const (
-	reportCols = "id, task_id, agent, status, summary, next_step, created_at"
+	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd"
 	// maxTitleRunes bounds a title derived from a summary.
 	maxTitleRunes = 60
 )
 
 func scanReport(s scanner) (Report, error) {
 	var r Report
-	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt)
+	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt, &r.Cwd)
 	return r, err
 }
 
@@ -45,6 +46,8 @@ type AddReportInput struct {
 	Status    *Status
 	NextStep  *string
 	CreatedAt string
+	// Cwd is the working directory the agent reported from; "" when it did not say.
+	Cwd string
 }
 
 // AddReport files a report against an existing task without touching the task.
@@ -66,8 +69,8 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 		in.CreatedAt = c.stamp()
 	}
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt)
+		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd))
 	if err != nil {
 		return nil, fmt.Errorf("insert report: %w", err)
 	}
@@ -94,9 +97,12 @@ type ProgressInput struct {
 	// project and Branch is used, or created.
 	TaskID *int64
 	Title  string
-	Cwd    string
-	Branch string
-	PRURL  string
+	// Cwd is where the agent works: it finds the project and is stored on the report.
+	Cwd string
+	// FallbackCwd finds the project when neither TaskID nor Cwd is given; it is not stored.
+	FallbackCwd string
+	Branch      string
+	PRURL       string
 	// ParentTaskID makes the task a subtask of that task: given by an agent that was started by
 	// another one. Without it, a report from a subagent's worktree finds its parent by itself.
 	ParentTaskID *int64
@@ -124,8 +130,9 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	branch := in.Branch
 	// mainBranch is where a subagent's parent lives; empty unless cwd is a subagent's worktree.
 	mainBranch := ""
-	if in.TaskID == nil && in.Cwd != "" {
-		resolved, err := c.ResolveProjectFromCwd(ctx, in.Cwd)
+	lookup := firstNonEmpty(in.Cwd, in.FallbackCwd)
+	if in.TaskID == nil && lookup != "" {
+		resolved, err := c.ResolveProjectFromCwd(ctx, lookup)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +190,7 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 		return nil, err
 	}
 	report, err := c.addReport(ctx, q, AddReportInput{
-		TaskID: updated.ID, Agent: in.Agent, Summary: in.Summary, Status: in.Status, NextStep: strPtr(in.NextStep),
+		TaskID: updated.ID, Agent: in.Agent, Summary: in.Summary, Status: in.Status, NextStep: strPtr(in.NextStep), Cwd: in.Cwd,
 	})
 	if err != nil {
 		return nil, err
@@ -247,6 +254,14 @@ func (c *Core) parentForNewTask(ctx context.Context, q store.Querier, in Progres
 		return nil, projectID, err
 	}
 	return &parent.ID, projectID, nil
+}
+
+// cleanCwd normalises a reported directory; "" stays "".
+func cleanCwd(cwd string) string {
+	if cwd == "" {
+		return ""
+	}
+	return filepath.Clean(cwd)
 }
 
 func strPtr(s string) *string {

@@ -74,8 +74,8 @@ func (m *Main) calendarCellHeight(c *ui.Context, weeks int) float32 {
 	return max(theme.CalendarMinCell, float32(math.Floor(float64((h-above)/float32(weeks)-1))))
 }
 
-// dayCell is one day: its number, and its items. A click selects the day, an item dropped on it
-// moves to it.
+// dayCell is one day: its number, and its items. A click selects the day, a double click opens its
+// card, an item dropped on it moves to it. "N more" and the + of a hovered cell open the card too.
 func (m *Main) dayCell(c *ui.Context, t *theme.Tokens, d data.CalDay, cellH float32) {
 	selected := d.Date.Equal(m.calendarDay())
 	cell := ui.Column(c.Key(d.Date.Format("2006-01-02"))).Height(cellH).
@@ -92,7 +92,7 @@ func (m *Main) dayCell(c *ui.Context, t *theme.Tokens, d data.CalDay, cellH floa
 		bg = bg.Mix(t.Text, 0.025)
 	}
 	ring := ui.Transparent
-	if selected {
+	if selected && !m.cal.card.isOpen() { // the open day card sits on the cell: its ring would show at the card's corner
 		ring = t.CalendarRingColor()
 	}
 	cell.Background(bg).Border(theme.CalendarRing, ring).Padding(theme.CalendarPadTop-theme.CalendarRing, theme.CalendarPadX-theme.CalendarRing, 0)
@@ -106,11 +106,53 @@ func (m *Main) dayCell(c *ui.Context, t *theme.Tokens, d data.CalDay, cellH floa
 			m.calendarItem(c, t, it)
 		}
 		if more > 0 {
-			theme.Text(c, theme.Meta, t.TextTertiary, m.say.CalendarMore(more)).Padding(0, 4).Shrink(0)
+			m.moreLine(c, t, cell, d, more)
+		}
+		if cell.Hovered() {
+			m.addButton(c, t, cell, d)
 		}
 	})
 	if cell.Clicked() {
 		m.selectDay(d.Date)
+	}
+	if cell.DoubleClicked() {
+		m.openDayCard(cell, d.Date, true)
+	}
+}
+
+// moreLine is "N more" under a cell's items, a link that opens the day's card.
+func (m *Main) moreLine(c *ui.Context, t *theme.Tokens, cell ui.Element, d data.CalDay, more int) {
+	label := m.say.A11yCalendarShowAll(len(d.Items), m.clock.MonthDay(d.Date))
+	line := ui.ButtonBase(c.Key("more")).Padding(0, 4).Shrink(0).Label(label).Cursor(ui.CursorPointer)
+	ink := t.TextTertiary
+	if line.Hovered() {
+		ink = t.TextSecondary
+	}
+	line.Children(func() {
+		text := theme.Text(c, theme.Meta, ink, m.say.CalendarMore(more))
+		if line.Hovered() {
+			text.Underline()
+		}
+	})
+	if line.Clicked() {
+		m.openDayCard(cell, d.Date, false)
+	}
+}
+
+// addButton is the + at the right of the day number of a hovered cell. It opens the day's card with
+// the input focused. It floats over the cell, so the layout does not move.
+func (m *Main) addButton(c *ui.Context, t *theme.Tokens, cell ui.Element, d data.CalDay) {
+	label := m.say.A11yCalendarAddTo(m.clock.MonthDay(d.Date))
+	btn := ui.ButtonBase(c.Key("add")).Absolute().Right(theme.CalendarPadX-2).Top(theme.CalendarPadTop-theme.CalendarRing).
+		Size(theme.DayCardPlus, theme.DayCardPlus).Center().Radius(theme.RadiusControl).Label(label).Tooltip(label).Cursor(ui.CursorPointer)
+	ink := t.TextTertiary
+	if btn.Hovered() {
+		btn.Background(t.BgHover)
+		ink = t.TextSecondary
+	}
+	btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(theme.IconSmall, theme.IconSmall).TextColor(ink) })
+	if btn.Clicked() {
+		m.openDayCard(cell, d.Date, true)
 	}
 }
 
@@ -143,8 +185,18 @@ func (m *Main) dayNumber(c *ui.Context, t *theme.Tokens, d data.CalDay) {
 // calendarItem is one thing on a day: a milestone as an accent chip, a task as its author's
 // avatar, the time of a reminder, and its title.
 func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
+	m.calendarItemIn(c, t, it, m.calendarCellWidth(c)-2*theme.CalendarPadX, false)
+}
+
+// calendarItemIn is calendarItem in a row width wide. In the day card the row is taller, does not
+// drag, and a click closes the card as it opens the task.
+func (m *Main) calendarItemIn(c *ui.Context, t *theme.Tokens, it data.CalItem, width float32, card bool) {
+	height := theme.CalendarChip
+	if card {
+		height = theme.DayCardRow
+	}
 	if it.Kind == data.CalMilestone {
-		ui.Row(c.Key("milestone-"+itoa(it.Milestone.ID))).Height(theme.CalendarChip).Shrink(0).Padding(0, 6).Gap(5).Radius(5).
+		ui.Row(c.Key("milestone-"+itoa(it.Milestone.ID))).Height(height).Shrink(0).Padding(0, 6).Gap(5).Radius(5).
 			Background(t.BgSelected).AlignItems(ui.Center).Children(func() {
 			ui.Icon(c, theme.IconFlag).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent).Shrink(0)
 			theme.Text(c, theme.MetaStrong, t.Accent, it.Milestone.Title).Shrink(1).MinWidth(0).Ellipsis("…")
@@ -152,7 +204,7 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 		return
 	}
 	id := it.Task.ID
-	row := ui.Row(c.Key("item-"+itoa(id)+"-"+itoa(int(it.Kind)))).Height(theme.CalendarChip).Shrink(0).Padding(0, calendarChipPad).Gap(5).
+	row := ui.Row(c.Key("item-"+itoa(id)+"-"+itoa(int(it.Kind)))).Height(height).Shrink(0).Padding(0, calendarChipPad).Gap(5).
 		Radius(5).AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	switch {
 	case m.openID == id:
@@ -160,7 +212,7 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 	case row.Hovered():
 		row.Background(t.BgHover)
 	}
-	if it.Kind != data.CalDone {
+	if it.Kind != data.CalDone && !card {
 		row.Drag(calDrag{id: id, kind: it.Kind})
 		if row.Dragging() {
 			row.Opacity(0.4)
@@ -169,7 +221,7 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 	row.Children(func() {
 		theme.AvatarIcon(c, m.calAvatar(it), theme.AvatarSmall)
 		if it.Kind == data.CalReminder {
-			m.reminderTime(c, t, it)
+			m.reminderTime(c, t, it, width)
 		}
 		title := theme.Text(c, theme.Meta, m.calInk(t, it), it.Task.Title).Shrink(1).MinWidth(0).Ellipsis("…")
 		if it.Kind == data.CalDone {
@@ -181,6 +233,9 @@ func (m *Main) calendarItem(c *ui.Context, t *theme.Tokens, it data.CalItem) {
 	}
 	if row.Clicked() {
 		m.openRow(id)
+		if card {
+			m.cal.card.close()
+		}
 	}
 }
 
@@ -192,11 +247,11 @@ const calendarChipPad float32 = 4
 const minTitle float32 = 36
 
 // reminderTime is the short time of a reminder before its title ("2pm", "14:00"), in
-// text.tertiary, when the cell leaves the title its room beside it.
-func (m *Main) reminderTime(c *ui.Context, t *theme.Tokens, it data.CalItem) {
+// text.tertiary, when the row, width wide, leaves the title its room beside it.
+func (m *Main) reminderTime(c *ui.Context, t *theme.Tokens, it data.CalItem, width float32) {
 	at := m.clock.ShortTime(it.At)
 	w, _ := c.MeasureText(0, ui.Span{Text: at, Size: theme.Meta.Size, Weight: theme.Meta.Weight})
-	room := m.calendarCellWidth(c) - 2*theme.CalendarPadX - 2*calendarChipPad - theme.AvatarSmall - 5
+	room := width - 2*calendarChipPad - theme.AvatarSmall - 5
 	if room-w-5 >= minTitle {
 		theme.Text(c, theme.Meta, t.TextTertiary, at).Shrink(0)
 	}

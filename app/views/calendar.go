@@ -14,6 +14,7 @@ import (
 type calendarState struct {
 	month time.Time // the first of the month, local midnight
 	day   time.Time // the selected day, local midnight
+	card  dayCard   // the card of one day, over the grid
 }
 
 // calDrag is the value an item of the calendar carries while it is dragged to another day.
@@ -50,6 +51,7 @@ func firstOfMonth(t time.Time) time.Time {
 func (m *Main) calendarToday() {
 	now := m.app.Now()
 	m.cal.day, m.cal.month = data.Midnight(now), firstOfMonth(now)
+	m.cal.card.close()
 }
 
 // selectDay selects a day. The month stays when the day is on the grid it shows (a click on a
@@ -71,6 +73,7 @@ func (m *Main) shiftMonth(n int) {
 	month := m.cal.month.AddDate(0, n, 0)
 	last := month.AddDate(0, 1, -1).Day()
 	m.cal.month = month
+	m.cal.card.close()
 	m.cal.day = time.Date(month.Year(), month.Month(), min(m.cal.day.Day(), last), 0, 0, 0, 0, month.Location())
 }
 

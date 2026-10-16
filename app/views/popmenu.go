@@ -24,6 +24,7 @@ const (
 	pageMove
 	pageRemind
 	pageCalendar // Custom… of the reminders
+	pageOpenIn   // where to open an agent's work
 )
 
 const (
@@ -156,6 +157,8 @@ func (m *Main) pageBody(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.remindPage(c, t, task)
 	case pageCalendar:
 		m.calendarPage(c, t, task)
+	case pageOpenIn:
+		m.openInPage(c, t, task)
 	default:
 		m.mainPage(c, t, task)
 	}
