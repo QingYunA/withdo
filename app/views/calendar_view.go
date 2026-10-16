@@ -92,7 +92,7 @@ func (m *Main) dayCell(c *ui.Context, t *theme.Tokens, d data.CalDay, cellH floa
 		bg = bg.Mix(t.Text, 0.025)
 	}
 	ring := ui.Transparent
-	if selected {
+	if selected && !m.cal.card.isOpen() { // the open day card sits on the cell: its ring would show at the card's corner
 		ring = t.CalendarRingColor()
 	}
 	cell.Background(bg).Border(theme.CalendarRing, ring).Padding(theme.CalendarPadTop-theme.CalendarRing, theme.CalendarPadX-theme.CalendarRing, 0)
