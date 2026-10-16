@@ -3,6 +3,18 @@
 Approved 2026-10-16. Drafts: `docs/design/mockups/v7.html` (the two columns) and `v7b.html` (the
 boundary, option ② chosen, and the hand-off storyboard). Match them.
 
+> **Revised 2026-10-16.** After trying it, the user does not want an agent started for now, and
+> wants the sprite during the drag instead of an animation after it. So: **no launching**: a drop only
+> moves the task to `Waiting for an agent` (no Terminal, no prompt, no clipboard; `Store.HandOff(id)`
+> takes no prompt and `HandOffResult` has no `Launched`; the launcher, `internal/handoff` and the
+> prompt strings are gone). The toast says `Handed to Claude Code` / `已交给 Claude Code`, and the
+> waiting row's second line `Handed to Claude Code` / `交给 Claude Code`. **Drag-time sprite**: the
+> `you` sprite carries the lifted row and walks while the pointer moves; the header robot hops while
+> the row is over the tray and squashes once on the drop; the row lands straight in Waiting with its
+> 8 % wash. The 1.3 s sequence below (parcel, meeting in the middle) was removed; the parcel stays as
+> the group's glyph. The sections below say what was first approved and are superseded where they
+> mention launching, prompts, the clipboard or the post-drop animation.
+
 ## What the user asked for
 
 > Two columns: people on the left, agents on the right. Agents are mostly for people to look at;

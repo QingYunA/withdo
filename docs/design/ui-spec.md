@@ -532,9 +532,77 @@ centred empty state.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
   (`HandedTo` set) that the agent has not reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
   at 20 pt, in `theme/pixel.go`). A row: the receiving agent's 18 pt avatar, the title, the age at the
-  right, and under it `Handed to Claude Code · opened in Terminal` / `交给 Claude Code · 已在终端里打开`
-  (`· prompt copied` / `· 已复制提示词` when no agent could be started; the view remembers which for this
-  run and says only `Handed to Claude Code` after a restart). The agent's first report moves it to Doing.
+  right, and under it `Handed to Claude Code` / `交给 Claude Code`. The agent's first report moves it
+  to Doing.
+- **Mine rows**: no avatar (the column says whose), the title in `body.strong` (one line), and at the
+  right a `P0` or `P1` badge, then the due label. Finished rows: the title in `text.secondary` and the day.
+- **Agents rows**: the agent's 18 pt avatar, the title (one line) with the live dot and the age or stale
+  label at the right, and under it what the agent last said, **up to two lines** in `text.secondary`,
+  led by `#12 · ` when the task has a pull request (a blocked task says what it waits for). **No branch**:
+  the inspector has it. No agent name either: the avatar says it.
+- **An empty column** keeps its header and one quiet `text.tertiary` line. Mine: `Nothing for you here
+  — write one above` / `这里还没有你要做的事 —— 在上面写一句就行`. Agents: `No agent has reported in this
+  project yet` / `还没有 Agent 在这个项目里汇报` and the accent link `Install MCP →` / `安装 MCP →`, which
+  opens Settings > Agents. Screens `project-empty-agents-*`.
+- **Keyboard order**: every Mine row, then every Agents row (waiting rows first).
+
+#### Handing a task to an agent
+
+Drag a row of Mine onto the Agents tray (screens `handoff-drag-*`, `handoff-over-*`,
+`handoff-landed-*`). **Nothing is started and nothing is copied**: handing a task over only moves it to
+`Waiting for an agent`; the agent finds it through the MCP, or the user pastes it.
+
+- **Lift and carry.** The row drags like a board card: it lifts (a shadow, a 2 degree tilt, about 250 pt
+  wide) and leaves an empty dashed slot. Only unfinished tasks of the user's drag. The user's `you`
+  sprite (24 pt) carries it: it stands under the left end of the lifted row, its head tucked 3 pt
+  under the card as if holding it up, and goes wherever the pointer takes the row. mygo paints the
+  dragged row itself as a copy of its element tree at 75 % opacity, so the sprite is a child of the row
+  that exists only while it is dragged. While the pointer moves the sprite walks: a bob of up to 2 pt,
+  four steps a second, from the app clock; it stands still 120 ms after the pointer stops. Frames are
+  asked for every 16 ms only while it walks.
+- **Over the tray.** The tray gets a 7 % accent wash and a 1.5 pt accent ring at 35 %, and a first line in
+  accent reads `Drop to hand to Claude Code` / `松开，交给 Claude Code` (the agent that last reported in the
+  project; the store picks the real one). The robot in the tray's header hops up and reaches: one short
+  hop (`theme.HopAt` from and to the same spot, 10 pt high, scaled to the header's 20 pt), again every
+  0.8 s while the row is over the tray.
+- **Drop.** The task becomes the agent's, To do, in `Waiting for an agent`, with no travelling in
+  between. The header robot squashes once as it catches it (the landing of the hop, 250 ms), and the
+  new row keeps an 8 % accent wash that fades over 2 s. A toast says `Handed to Claude Code` /
+  `已交给 Claude Code`, with **Undo** for six seconds, and so does ⌘Z (the assistant's own ⌘Z wins while
+  it has a change to undo): the task is taken back with its old status.
+- **Take back.** Dragging an agent's unfinished row onto Mine calls `Store.TakeBack`, with no sprite;
+  the toast says `Yours now` / `现在归你了`, and Undo (or ⌘Z) restores Source and the hand-off as they
+  were (`Store.RestoreHandOff`).
+- **Reduce Motion.** The sprite still carries the row, but does not walk; the agent neither hops nor
+  squashes. The wash fades as above.
+
+**Inbox list view** below; the board is unchanged). A project
+with at least one task is drawn as **Mine** on the left (tasks with `Source user`) and **Agents** on the
+right (`Source agent`) under the header and the composer, as in `docs/design/mockups/v7.html` and
+`v7b.html` (screens `project-two-columns-*`, `project-list-*`). With no task at all the project keeps the
+centred empty state.
+
+- **Block.** Header, composer and columns share one block as wide as the content allows less the page's
+  side padding, up to `theme.BoardMax` (980 pt), centered. Two equal columns 28 pt apart
+  (`theme.ColumnsGap`). Below **640 pt of content** (the inspector open on a small window) they stack:
+  Mine first, the Agents tray under it, 14 pt apart.
+- **Column header.** A 20 pt avatar (`you`; the robot in the accent color for Agents), the name in
+  `body.strong` (`Mine` / `我的`, `Agents` / `Agent`), the count of its active tasks (not Done, not
+  Backlog) in `text.tertiary`, and a 1 pt line under them.
+- **The boundary is a tray** (option 2 of v7b): the Agents column sits on a faint well, `bg.tray`
+  (`#F8F8FA` light, `#202023` dark; about half as dark as `bg.subtle`), 14 pt radius, 16 pt inside on the
+  left and right, 14 pt under its last row. Mine has no background, and there is no vertical rule.
+- **Groups.** Each column groups its own tasks as the list did: Blocked, In review, Doing, To do (empty
+  groups are not drawn), then its own **Done** (the newest three and `Show all 5 →`) and its own
+  `Backlog 2 — show` line. The two columns open and close their Done and Backlog separately. Rows sit
+  26 pt in from their header, as in the Inbox: an Agents row's avatar under the header's name, and the
+  titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
+  lines up with the titles.
+- **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
+  (`HandedTo` set) that the agent has not reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
+  at 20 pt, in `theme/pixel.go`). A row: the receiving agent's 18 pt avatar, the title, the age at the
+  right, and under it `Handed to Claude Code` / `交给 Claude Code`. The agent's first report moves it
+  to Doing.
 - **Mine rows**: no avatar (the column says whose), the title in `body.strong` (one line), and at the
   right a `P0` or `P1` badge, then the due label. Finished rows: the title in `text.secondary` and the day.
 - **Agents rows**: the agent's 18 pt avatar, the title (one line) with the live dot and the age or stale
@@ -811,6 +879,51 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   clipping the contents; opacity is 1 throughout. A frame is asked for every 16 ms only while it
   plays; with Reduce Motion the card is full size at once. Closing has no animation. Screens
   `calendar-day-card-{light,dark,zh-light}`.
+- **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
+  month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
+  16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):
+  a task with no time words is due that day at 18:00 local, and a day named in the words wins. With
+  no model connected a plain task is added to the Inbox with that day at 18:00 as its due date.
+- **Items**: a click opens the task in the inspector (it does not select the day); a right click opens
+  the task menu. Drag an item onto another day: a due item moves its due date there and a reminder
+  item its reminder, both keeping their time of day; the target day tints with the accent while the
+  item is over it. Finished items do not drag.
+- **Keyboard** (no text input focused): `← →` the previous and next day, `↑ ↓` the same day a week
+  earlier or later (leaving the grid turns the page), `⌘←` `⌘→` the previous and next month,
+  `⌘4` opens the page, `⌘K` the composer. Items have no keyboard focus of their own: the task menu
+  and `↵` act on the highlighted task of other pages only.
+- **Data**: the snapshot holds every task including all finished ones, so no range query is needed;
+  `data.BuildCalendar` places them (see `app/data/calendar.go`).
+
+### Calendar
+
+The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
+Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the day that matters.
+
+- **Header**: the month as the page title (`October 2026`, `2026 年 10 月`, written by `app/words`),
+  and at the right a quiet segmented control `‹ Today ›` in the well of the list and board toggle
+  (`bg.subtle`, 8 pt radius, 26 pt segments), Today raised. `‹ ›` show the previous and next month and
+  move the selected day along (the same day number, the last day of a shorter month); Today returns
+  to this month and selects today. Under it the composer, then the grid.
+- **Grid**: 7 columns, the weeks the month needs (four to six), weeks starting on the system's first
+  weekday (Monday for zh-Hans, Sunday for en when the system names none). Weekday names in `meta`,
+  `text.tertiary`, over the grid. Cells are separated by 1 pt hairlines (`border`) inside an
+  `RadiusCard` frame; Saturday and Sunday on a faint fill (`CalendarWeekend`); days of other months
+  in `text.tertiary`; the first of a month reads `Nov 1` / `11 月 1 日`. Today's number sits in an
+  accent pill (`accent`, `accent.text`); the selected day has a 2 pt ring in `accent` at 60 %. The
+  grid is at most `CalendarMax` (1240 pt) wide and takes the window's remaining height, never less
+  than `CalendarMinCell` (76 pt) a cell; below that the page scrolls.
+- **Items** (`meta`, 20 pt, 2 pt apart, ellipsized): a task starts with its author's 12 pt avatar
+  (`theme.You` for what I wrote, the assistant included; `theme.AgentAvatar(name)` for what an agent
+  wrote, by its latest report, `agent` when it has none). A task *due* that day shows its title; a
+  *reminder* shows its time in `text.tertiary` first (a small clock instead in a cell too narrow for
+  both, and nothing in a narrower one); a task *finished* that day shows its title in `text.tertiary`
+  struck through; a *milestone* due that day is an accent-tinted chip with `IconFlag`. A task due and
+  reminded the same day shows once, as the reminder. An open task whose due time has passed has its
+  title in the blocked red. Cancelled tasks and closed milestones are not shown. Order within a day:
+  milestones, open items by time, finished items.
+- **More**: a cell lists at most three items; when there are more (or fewer lines fit the cell's
+  height) the rest is `2 more` / `还有 2 项` in `text.tertiary` on the last line.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
   month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
   16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):
