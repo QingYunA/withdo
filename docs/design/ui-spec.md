@@ -867,12 +867,13 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   left sits on the cell's top left, so it covers the cell and grows outward; near the right or bottom
   edge of the window it grows left or up instead and stays 8 pt inside the window. Width
   `max(1.6 × cell, 280 pt)` on the 4 pt grid; height follows its content up to 420 pt, then the list
-  scrolls. A panel like the sheets: `bg`, `RadiusPanel`, 1 pt `border`, the sheets' shadow, 12 pt
-  padding. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
+  scrolls. A **pixel panel** (`theme.DrawPixelPanel`, `v8.html` B): `bg`, corners stepped in twice by
+  2 pt, a 2 pt edge in `PixelEdge` (`bg` a fifth of the way to `text`), and a hard shadow 4 pt right
+  and down, not blurred (black at 10 %, 50 % in dark mode); 12 pt padding inside the edge. Top to bottom: the header (`Thursday, Oct 15` / `10 月 15 日 星期四` in `body.strong`, the
   count `5 items` / `5 项` in `text.tertiary`, a 24 pt `IconClose` button at the right); every item of
   the day, 28 pt rows drawn like the cell's items (avatar, a reminder's time, the title; finished items
   struck through, milestones as the accent chip), a click opens the task in the inspector and closes
-  the card; at the foot an input in the sheets' well (`Add to this day…` / `添加到这天…`). Enter adds a
+  the card; at the foot an input in the sheets' well, its corners stepped once (`theme.DrawPixelWell`) (`Add to this day…` / `添加到这天…`). Enter adds a
   plain task by me, due that day at 18:00, clears the input and keeps the card open, the new item
   joining the list; empty text does nothing. **Closing**: `Esc`, a click outside (it does nothing
   else: it does not select the day under it), the close button, a change of month or `Today`, and
