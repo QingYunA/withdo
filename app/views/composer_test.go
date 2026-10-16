@@ -471,3 +471,27 @@ func TestInspectorBodyScrollsAboveThePinnedReply(t *testing.T) {
 		t.Errorf("the reply ends at %.0f, under the composer at %.0f", reply.Y+reply.H, composer.Y)
 	}
 }
+
+// While an input method composes (Pinyin before a candidate is chosen) the field's value is still
+// empty, but the composition is drawn: the placeholder must give way to it.
+func TestThePlaceholderGivesWayToAComposition(t *testing.T) {
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.m.goTo(nav{screen: screenProject, projectID: 1})
+	for i := 0; i < 3; i++ {
+		r.tt.Frame()
+	}
+	has(t, r.tt, "Add a task, or ask me anything")
+	if err := r.tt.Click("Ask the assistant"); err != nil {
+		t.Fatal(err)
+	}
+	r.tt.Frame()
+	if !r.tt.Focused("Ask the assistant") {
+		t.Fatal("the composer did not take the focus")
+	}
+	r.tt.Compose("sd", 2)
+	r.tt.Frame()
+	hasNot(t, r.tt, "Add a task, or ask me anything")
+	r.tt.Compose("", 0)
+	r.tt.Frame()
+	has(t, r.tt, "Add a task, or ask me anything")
+}

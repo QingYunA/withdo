@@ -124,10 +124,11 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 	}
 	box := ui.Box(c.Key(key + "-box")).Shrink(0).MinWidth(0).Grow(1)
 	box.Children(func() {
-		style.Apply(ui.TextAreaBase(c.Key(key), &cs.buf).Lines(theme.ComposerMinRows, theme.ComposerMaxRows)).
+		field := style.Apply(ui.TextAreaBase(c.Key(key), &cs.buf).Lines(theme.ComposerMinRows, theme.ComposerMaxRows)).
 			TextColor(t.Text).Label(label).Bind(&cs.ref).OnTextKey(m.composerKey(s)).OnPaste(m.pasteHook(c, s))
 		m.takeFocus(c, s)
-		if cs.buf == "" {
+		// An input method's composition is drawn before it reaches buf: the placeholder gives way to it.
+		if cs.buf == "" && !field.Composing() {
 			theme.Text(c, style, t.TextTertiary, m.placeholder(s)).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
 		}
 	})
