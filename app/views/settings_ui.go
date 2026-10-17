@@ -28,6 +28,11 @@ func settingsRow(c *ui.Context, t *theme.Tokens, key, label, sub string, first b
 
 // settingsRowLead is settingsRow with something, such as an avatar or a logo, before the label.
 func settingsRowLead(c *ui.Context, t *theme.Tokens, key, label, sub string, first bool, control, lead func()) {
+	settingsRowInk(c, t, key, label, sub, t.TextSecondary, first, control, lead)
+}
+
+// settingsRowInk is settingsRowLead with the second line in a color of its own, for a warning.
+func settingsRowInk(c *ui.Context, t *theme.Tokens, key, label, sub string, subInk ui.Color, first bool, control, lead func()) {
 	if !first {
 		ui.Box(c.Key("rule-"+key)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
@@ -40,7 +45,7 @@ func settingsRowLead(c *ui.Context, t *theme.Tokens, key, label, sub string, fir
 				theme.Text(c, theme.Body, t.Text, label).Ellipsis("…")
 			}
 			if sub != "" {
-				theme.Paragraph(c, theme.Meta, t.TextSecondary, sub, 2)
+				theme.Paragraph(c, theme.Meta, subInk, sub, 2)
 			}
 		})
 		if control != nil {

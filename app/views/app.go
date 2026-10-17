@@ -5,6 +5,7 @@ package views
 
 import (
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -29,6 +30,9 @@ type Actions interface {
 	Languages() []string
 	Language() string
 	SetLanguage(tag string)
+	// NotificationsDenied says macOS refused the last system notification, so the switch in
+	// Settings does nothing until it is allowed in System Settings.
+	NotificationsDenied() bool
 }
 
 // Config is what the Settings window shows.
@@ -67,6 +71,7 @@ type App struct {
 	seenLoaded      bool
 	dismissed       data.Seen
 	dismissedLoaded bool
+	prefsMu         sync.Mutex // the notifier reads the prefs from its own goroutine
 	prefs           data.Prefs
 	prefsLoaded     bool
 	snap            snapshot

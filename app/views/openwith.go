@@ -39,16 +39,9 @@ type openFailure struct {
 
 // OpenWith is where Review and Answer go: the choice saved in Settings, else the agent's app.
 func (a *App) OpenWith() OpenWith {
-	if !a.prefsLoaded {
-		a.prefsLoaded = true
-		if a.Prefs != nil {
-			if p, err := a.Prefs.LoadPrefs(); err != nil {
-				log.Printf("prefs: %v", err) // the defaults apply
-			} else {
-				a.prefs = p
-			}
-		}
-	}
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
 	for _, o := range openWiths {
 		if OpenWith(a.prefs.OpenWith) == o {
 			return o
@@ -59,13 +52,7 @@ func (a *App) OpenWith() OpenWith {
 
 // SetOpenWith chooses where Review and Answer go, and keeps the choice.
 func (a *App) SetOpenWith(o OpenWith) {
-	a.OpenWith() // load first, so nothing else in the file is lost
-	a.prefs.OpenWith = string(o)
-	if a.Prefs != nil {
-		if err := a.Prefs.SavePrefs(a.prefs); err != nil {
-			log.Printf("prefs: %v", err)
-		}
-	}
+	a.savePrefs(func(p *data.Prefs) { p.OpenWith = string(o) })
 }
 
 // workDir is where the agent of a task works: the folder its newest report named, else its

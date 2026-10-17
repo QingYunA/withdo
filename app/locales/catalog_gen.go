@@ -3092,6 +3092,20 @@ func (msgs Messages) SettingsNotifications() string {
 	return Catalog.Format(msgs.locale, "settingsNotifications", nil)
 }
 
+// SettingsNotifySwitch says "Allow system notifications"
+// in the language the app shows.
+//
+// Accessibility label of the switch for system notifications.
+func SettingsNotifySwitch() string { return In(i18n.Locale()).SettingsNotifySwitch() }
+
+// SettingsNotifySwitch says "Allow system notifications"
+// in the language of msgs.
+//
+// Accessibility label of the switch for system notifications.
+func (msgs Messages) SettingsNotifySwitch() string {
+	return Catalog.Format(msgs.locale, "settingsNotifySwitch", nil)
+}
+
 // SettingsNotifyTitle says "System notifications"
 // in the language the app shows.
 //

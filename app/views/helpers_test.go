@@ -34,6 +34,7 @@ type recorder struct {
 	language string     // what SetLanguage last chose
 	opens    []openCall // what OpenIn was asked for
 	openErr  error      // what OpenIn answers
+	denied   bool       // what NotificationsDenied answers
 
 	mu     sync.Mutex
 	posted []func()
@@ -53,6 +54,8 @@ func (r *recorder) OpenIn(how OpenWith, agentApp, dir string) error {
 func (r *recorder) Languages() []string    { return []string{"en", "zh-Hans"} }
 func (r *recorder) Language() string       { return r.language }
 func (r *recorder) SetLanguage(tag string) { r.language = tag }
+
+func (r *recorder) NotificationsDenied() bool { return r.denied }
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {

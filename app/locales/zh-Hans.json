@@ -205,6 +205,7 @@
   "notifyCountMerged": "{count} 个已合并",
   "notifyCountSeparator": "，",
   "settingsNotifications": "通知",
+  "settingsNotifySwitch": "允许系统通知",
   "settingsNotifyTitle": "系统通知",
   "settingsNotifyMeta": "Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你",
   "settingsNotifyDenied": "macOS 不允许 adhd-todo 发通知，开关不起作用",

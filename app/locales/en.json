@@ -1370,6 +1370,10 @@
   "@settingsNotifications": {
     "description": "Header of the notifications block in Settings > General."
   },
+  "settingsNotifySwitch": "Allow system notifications",
+  "@settingsNotifySwitch": {
+    "description": "Accessibility label of the switch for system notifications."
+  },
   "settingsNotifyTitle": "System notifications",
   "@settingsNotifyTitle": {
     "description": "Label of the switch for system notifications."
