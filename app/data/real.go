@@ -92,7 +92,6 @@ func (r *Real) Start() {
 		return
 	}
 	r.markEvents()
-	go func() { _, _ = r.CollectImages() }() // pictures that nothing links, left by another process
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancel, r.done = cancel, make(chan struct{})
 	go func() {

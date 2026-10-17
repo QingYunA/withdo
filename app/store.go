@@ -80,7 +80,7 @@ func openReal(path string) (*backend, error) {
 	return &backend{
 		store:      r,
 		dataFolder: dir,
-		start:      func(<-chan struct{}) { r.Start(); poller.Start() },
+		start:      func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
 		close:      func() error { poller.Stop(); return r.Close() },
 		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},
 		models:     &data.ProviderSettings{Provider: mgr},

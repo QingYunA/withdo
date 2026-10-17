@@ -334,3 +334,14 @@ func TestPicturesThatCannotBeKeptAreSaidButTheTasksStay(t *testing.T) {
 		t.Error("the receipt claims pictures that were not kept")
 	}
 }
+
+func TestCollectSoonTakesThePicturesAnotherProcessLetGo(t *testing.T) {
+	r := openImagesReal(t, 20*time.Millisecond)
+	task := newTask(t, r, "a")
+	link := attach(t, r, task, prepared(t, "s.png", bigPNG(t)))
+	if _, err := r.Core().DetachImage(bg, int64(task.ID), link.Hash); err != nil { // the MCP server's doing: no sweep is scheduled
+		t.Fatal(err)
+	}
+	r.CollectSoon()
+	waitFor(t, "the files to go", func() bool { return !exists(link.File) })
+}
