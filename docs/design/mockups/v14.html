@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v14 草稿 — Agent 页：本机已有 / 更多</title>
+<style>
+  :root {
+    --page-bg: #e4e4ea;
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+    --accent: #5b5bd6; --done: #30a46c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 24px 72px; background: var(--page-bg); color: var(--text);
+    font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; letter-spacing: -.2px; }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 46px 0 8px 4px; }
+  .lead { font-size: 14px; line-height: 22px; color: var(--text2); max-width: 1300px; margin: 0 4px 26px; }
+  .lead b { font-weight: 600; color: var(--text); }
+  .frames { display: flex; flex-wrap: wrap; gap: 30px 34px; justify-content: center; align-items: flex-start; }
+  .frame-wrap { width: 680px; max-width: 100%; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: var(--text2); margin: 0 0 10px 4px; display: flex; gap: 8px; align-items: center; }
+  .tag { font: 500 12px/18px -apple-system; color: #fff; background: var(--accent); border-radius: 6px; padding: 0 7px; }
+  .note { font-size: 13px; line-height: 20px; color: var(--text2); margin: 10px 4px 0; max-width: 680px; }
+  .note code, .rules code { font: 12px/18px "SF Mono", ui-monospace, monospace; background: rgba(0,0,0,.055); border-radius: 4px; padding: 0 4px; }
+
+  /* the Settings window, 680 x 520, as the app draws it */
+  .sw {
+    --pane: #f5f5f7; --group: #fff; --toolbar: #fafafa;
+    --line: rgba(0,0,0,.08); --tx: #1d1d1f; --tx2: #6e6e73; --tx3: #aeaeb2;
+    --ac: #5b5bd6; --ok: #30a46c; --tabon: rgba(0,0,0,.06);
+    width: 680px; max-width: 100%; height: 520px; overflow: hidden;
+    border-radius: 12px; background: var(--pane); color: var(--tx);
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 18px 44px rgba(0,0,0,.14);
+  }
+  .sw.dark {
+    --pane: #1c1c1e; --group: #2c2c2e; --toolbar: #252528;
+    --line: rgba(255,255,255,.10); --tx: #f5f5f7; --tx2: #a1a1a6; --tx3: #636366;
+    --ac: #7c7cf0; --ok: #3dd68c; --tabon: rgba(255,255,255,.10);
+  }
+  .sbar { position: relative; height: 86px; padding: 8px 16px 0; background: var(--toolbar); border-bottom: 1px solid var(--line); }
+  .lights { display: flex; gap: 8px; }
+  .lights i { display: block; width: 12px; height: 12px; border-radius: 50%; }
+  .ptitle { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--tx); }
+  .tabs { display: flex; justify-content: center; gap: 4px; margin-top: 16px; }
+  .tab { width: 78px; height: 50px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; line-height: 16px; color: var(--tx2); }
+  .tab svg { width: 20px; height: 20px; }
+  .tab.on { background: var(--tabon); color: var(--ac); }
+  .pane { height: 434px; padding: 14px 24px 0; overflow: hidden; }
+  .lbl { margin: 0 4px 7px; font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--tx2); }
+  .desc { margin: 0 4px 12px; font-size: 13px; line-height: 20px; color: var(--tx2); }
+  .sechead { display: flex; align-items: baseline; gap: 6px; margin: 0 4px 7px; font: 600 12.5px/16px -apple-system, "PingFang SC"; color: var(--tx2); }
+  .sechead .n { font-weight: 400; color: var(--tx3); }
+  .sechead.more { margin-top: 14px; }
+  .cols { display: flex; align-items: flex-start; gap: 12px; }
+  .col { flex: 1; min-width: 0; background: var(--group); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .arow { display: flex; align-items: center; gap: 10px; height: 50px; margin: 0 14px; }
+  .arow + .arow { border-top: 1px solid var(--line); }
+  .av { flex: none; display: block; }
+  .abody { flex: 1; min-width: 0; }
+  .aname { font-size: 14.5px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ameta { font-size: 12.5px; line-height: 17px; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .act { flex: none; display: flex; gap: 4px; align-items: center; font-size: 12.5px; white-space: nowrap; }
+  .act.ok { color: var(--ok); }
+  .act svg { width: 12px; height: 12px; flex: none; }
+  .btn { flex: none; padding: 3px 9px; border-radius: 6px; background: var(--ac); color: #fff; font-size: 12.5px; line-height: 18px; white-space: nowrap; }
+  .moregrp { padding: 0 14px; background: var(--group); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .mrow { display: flex; gap: 18px; }
+  .mrow + .mrow { border-top: 1px solid var(--line); }
+  .mitem { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 32px; }
+  .mname { flex: 1; min-width: 0; font-size: 13.5px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .get { flex: none; font-size: 12.5px; color: var(--ac); white-space: nowrap; }
+
+  /* the sheet's own notes */
+  .rules { width: 100%; max-width: 1300px; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 12px 30px rgba(0,0,0,.06); }
+  .rules th { padding: 12px 16px 8px; text-align: left; font: 500 12px/18px -apple-system, "PingFang SC"; color: var(--text3); background: #fafafb; }
+  .rules td { padding: 11px 16px; border-top: 1px solid rgba(0,0,0,.07); font-size: 13.5px; line-height: 20px; vertical-align: top; }
+  .rules td:first-child { font-weight: 600; white-space: nowrap; }
+  .list { max-width: 1300px; margin: 0 4px; padding-left: 20px; font-size: 13.5px; line-height: 21px; color: var(--text); }
+  .list li { margin: 5px 0; }
+  .list li b { font-weight: 600; }
+  .list .sub { color: var(--text2); }
+  .open { max-width: 1300px; margin: 0 4px; padding-left: 20px; font-size: 13.5px; line-height: 21px; color: var(--text); }
+  .open li { margin: 5px 0; }
+  .open .pick { color: var(--text2); }
+
+  @media (max-width: 760px) {
+    body { padding: 24px 14px 48px; }
+    .sw { height: auto; }
+    .pane { height: auto; padding-bottom: 18px; }
+  }
+</style>
+</head>
+<body>
+<h1>v14 · Agent 页：本机已有 / 更多</h1>
+<p class="lead">现在十款 harness 平铺两列，装了的和没装的交错，第一眼要逐个分辨哪一行能点。这一版分成两组：<b>本机已有</b>只放这台 Mac 上找得到的，保留汇报次数和「安装 MCP」；<b>更多</b>放还没装的，只给名字和「去下载 ↗」。同时把 DeepSeek Harness、Amp、Kiro、Cline 加进目录。两段都在第一屏；下面「去看看时打开」和终端命令照旧，往下滚才出现。</p>
+
+<div class="frames">
+  <div class="frame-wrap">
+    <div class="caption"><span class="tag">1</span>浅色 · 中文：本机已有 6，更多 8</div>
+    <div class="sw" id="win-zh"></div>
+    <p class="note">本机已有的六行保留原有信息：汇报次数、找到的路径、MCP 已安装或安装按钮。更多只留名字和去下载，不再重复「这台 Mac 上没有」。</p>
+  </div>
+  <div class="frame-wrap">
+    <div class="caption"><span class="tag">2</span>深色 · 英文：On this Mac / More</div>
+    <div class="sw dark" id="win-en"></div>
+    <p class="note">英文沿用现有的 MCP installed / Install MCP / Get it ↗，组名用 On this Mac / More。</p>
+  </div>
+</div>
+
+<h2>怎么分</h2>
+<table class="rules">
+  <tr><th>组</th><th>谁进来</th><th>每行给什么</th></tr>
+  <tr>
+    <td>本机已有</td>
+    <td>命令在 PATH、配置目录或文件在、或汇报过，任一成立。</td>
+    <td>头像、名字、汇报次数或 <code>找到了 · 路径</code>；右侧是 <code>✓ MCP 已安装</code> 或「安装 MCP」按钮。</td>
+  </tr>
+  <tr>
+    <td>更多</td>
+    <td>目录里其余的 harness，也就是这台 Mac 上没找到的。</td>
+    <td>头像、名字、<code>去下载 ↗</code>；两列紧凑排，不写状态行。</td>
+  </tr>
+</table>
+
+<h2>这一版加进来的 harness</h2>
+<ul class="list">
+  <li><b>DeepSeek Harness</b>：本机有 <code>~/.dsh</code>，但 PATH 里没有 <code>dsh</code> 命令，检测靠配置目录。它的 MCP 不是 JSON 配置，而是 Cordis 补丁（<code>~/.dsh/cordis.patch.yml</code> 或 profile 里的 patch），所以「安装 MCP」要新写一个 YAML 分支；YAML 写不了就落到现有的手动片段。</li>
+  <li><b>Amp、Kiro、Cline</b>：各查一次配置位置和安装方式。查不到自动安装的，先只进「更多」或给手动接入，不硬塞一个会失败的按钮。</li>
+</ul>
+
+<h2>几个决定</h2>
+<ul class="list">
+  <li>顺序仍按目录，不按汇报次数重排：行不会跳，肌肉记忆还在。</li>
+  <li>「更多」不折叠：一眼能看到还有哪些；等一屏放不下再考虑折成一行。</li>
+  <li>汇报过的也算「本机已有」，即使这次没扫描到：装了 MCP 但临时找不到命令的 agent 不消失。</li>
+  <li>组头带数量（6 / 8）：清单再长，也知道自己漏没漏。</li>
+  <li>一个都没找到时，「本机已有」留一行空状态：「还没在这台 Mac 上找到 Agent」，「更多」照常。空状态也带「去看看怎么接」的链接。</li>
+</ul>
+
+<h2>还等你的两个决定</h2>
+<ul class="open">
+  <li>新增范围：这一稿按 DeepSeek Harness、Amp、Kiro、Cline 四款画。先只做 DeepSeek Harness 也成立，更多会少三款。</li>
+  <li>「更多」要不要折叠？这一稿默认全部展开。</li>
+</ul>
+
+<script>
+// Pixel sprites: the same 12 x 12 grids the app draws. Tinted bots are the
+// fallback avatar the app uses for agents it has no sprite for.
+const P = {
+  claude: { pal: { o: '#d97757', d: '#b85c3e', e: '#2b1d17' }, g: [
+    '............','............','..oooooooo..','..oooooooo..','..oeooooeo..',
+    'oooeooooeooo','oooooooooooo','..oooooooo..','..oooooooo..','..d.d..d.d..',
+    '..d.d..d.d..','............' ] },
+  codex: { pal: { b: '#5b7cfa', d: '#4a5ee0', w: '#ffffff' }, g: [
+    '............','...bbb.bbb..','..bbbbbbbbb.','.bbbbbbbbbbb','.bwbbbbbbbbb',
+    'bbbwbbbbbbbb','bbbbwbbbbbbb','bbbwbbbbbbbb','bbwbbbwwwbbb','.ddddddddddd',
+    '..dddd.dddd.','............' ] },
+  cursor: { pal: { k: '#26262b', w: '#ffffff' }, g: [
+    '.k..........','.kk.........','.kwk........','.kwwk.......','.kwwwk......',
+    '.kwwwwk.....','.kwwwwwk....','.kwwwwwwk...','.kwwwkkkk...','.kwkwk......',
+    '.kk.kwk.....','.....kk.....' ] },
+  gemini: { pal: { b: '#4f8ef7', v: '#9b6cf0', l: '#8fc4ff' }, g: [
+    '.....b......','.....b......','....bbb.....','....bbb.....','..lbbbbbv...',
+    'lllbbbbbvvv.','..lbbbbbv...','....vvv.....','....vvv.....','.....v......',
+    '.....v......','............' ] },
+  opencode: { pal: { k: '#2b2b30', g: '#9fa3ad' }, dark: { k: '#d9dadf', g: '#5c606a' }, g: [
+    '............','..kkkkkkkk..','..kkkkkkkk..','..kk....kk..','..kk.gg.kk..',
+    '..kk.gg.kk..','..kk.gg.kk..','..kk....kk..','..kkkkkkkk..','..kkkkkkkk..',
+    '............','............' ] },
+  copilot: { pal: { k: '#24292f', w: '#ffffff', b: '#8250df' }, g: [
+    '............','...kkkkkk...','..kkkkkkkk..','.kkwwkkwwkk.','.kwwbwwbwwk.',
+    '.kkwwkkwwkk.','.kkkkkkkkkk.','.kkk.kk.kkk.','..kkkkkkkk..','...kkkkkk...',
+    '............','............' ] },
+  bot: { pal: { m: '#8e8e99', d: '#6b6b76', w: '#ffffff', e: '#2a2a33', a: '#c9c9d1' }, g: [
+    '.....a......','.....m......','..mmmmmmmm..','..mmmmmmmm..','.dmwwmmwwmd.',
+    '.dmwemmwemd.','.dmmmmmmmmd.','..mmeeeemm..','..mmmmmmmm..','...dddddd...',
+    '..dd....dd..','............' ] },
+};
+
+function pixel(name, s, tint, dark) {
+  const a = P[name];
+  const pal = Object.assign({}, (dark && a.dark) ? a.dark : a.pal);
+  if (tint) { pal.m = tint; pal.d = tint; }
+  let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch !== '.') r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + pal[ch] + '"/>';
+  }));
+  return '<svg width="' + (12 * s) + '" height="' + (12 * s) + '" viewBox="0 0 12 12" shape-rendering="crispEdges">' + r + '</svg>';
+}
+
+const sprite = (a, size, dark) => '<span class="av">' + pixel(a.sprite, size / 12, a.tint, dark) + '</span>';
+
+const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 3 3 6-6.6"/></svg>';
+
+const TABS_ZH = ['通用', '助手', 'Agent', 'GitHub'];
+const TABS_EN = ['General', 'Assistant', 'Agent', 'GitHub'];
+
+const ICON = {
+  general: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h6M11.5 4.5H13M3 11.5h1.5M7 11.5h6"/><circle cx="10.2" cy="4.5" r="1.4"/><circle cx="5.8" cy="11.5" r="1.4"/><path d="M3 8h10"/></svg>',
+  assistant: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2c.4 2.9 1.4 4.4 5.8 5.8-4.4 1.4-5.4 2.9-5.8 5.8-.4-2.9-1.4-4.4-5.8-5.8C6.6 6.6 7.6 5.1 8 2.2z"/></svg>',
+  terminal: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="m4.8 6.5 2 1.8-2 1.8M8.6 10.3h2.6"/></svg>',
+  github: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2a5.8 5.8 0 0 0-1.8 11.3c.3 0 .4-.1.4-.3v-1c-1.6.3-2-.7-2-.7-.3-.7-.7-.9-.7-.9-.5-.4 0-.4 0-.4.6 0 .9.6.9.6.5.9 1.4.7 1.8.5 0-.4.2-.7.4-.8-1.3-.2-2.6-.7-2.6-2.9 0-.6.2-1.2.6-1.6-.1-.1-.3-.7 0-1.6 0 0 .5-.1 1.6.6a5.4 5.4 0 0 1 2.8 0c1.1-.7 1.6-.6 1.6-.6.3.9.1 1.5 0 1.6.4.4.6 1 .6 1.6 0 2.2-1.3 2.7-2.6 2.9.2.2.4.5.4 1v1.6c0 .2.1.3.4.3A5.8 5.8 0 0 0 8 2.2z"/></svg>',
+};
+
+const STR = {
+  zh: {
+    title: '这台 Mac 上的 Agent',
+    body: '“安装 MCP”是把 adhd-todo 的 MCP 服务装进这个 Agent，装好后它干活时会自动把进度汇报到这里；不会安装或启动 Agent 本身。',
+    on: '本机已有', more: '更多',
+    install: '安装 MCP', installed: 'MCP 已安装', get: '去下载 ↗',
+    tabs: TABS_ZH,
+  },
+  en: {
+    title: 'Agents on this Mac',
+    body: "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or start the agent.",
+    on: 'On this Mac', more: 'More',
+    install: 'Install MCP', installed: 'MCP installed', get: 'Get it ↗',
+    tabs: TABS_EN,
+  },
+};
+
+// The data this Mac shows: six found, eight not. The found ones alternate left
+// and right, as the app reads them.
+const ON = [
+  { name: 'Claude Code', sprite: 'claude', action: 'installed', meta: { zh: '今天汇报 13 次', en: '13 reports today' } },
+  { name: 'Codex', sprite: 'codex', action: 'installed', meta: { zh: '今天汇报 2 次', en: '2 reports today' } },
+  { name: 'DeepSeek Harness', sprite: 'bot', tint: '#4D6BFE', action: 'install', meta: { zh: '找到了 · ~/.dsh', en: 'Found · ~/.dsh' } },
+  { name: 'Cursor', sprite: 'cursor', action: 'install', meta: { zh: '找到了 · ~/.cursor', en: 'Found · ~/.cursor' } },
+  { name: 'opencode', sprite: 'opencode', action: 'installed', meta: { zh: '今天还没汇报', en: 'No reports today' } },
+  { name: 'Copilot (VS Code)', sprite: 'copilot', action: 'install', meta: { zh: '找到了 · code', en: 'Found · code' } },
+];
+
+const MORE = [
+  { name: 'Gemini CLI', sprite: 'gemini' },
+  { name: 'Qwen Code', sprite: 'bot', tint: '#615CED' },
+  { name: 'Kimi CLI', sprite: 'bot', tint: '#1F6FEB' },
+  { name: 'Windsurf', sprite: 'bot', tint: '#0EA5A4' },
+  { name: 'Zed', sprite: 'bot', tint: '#3F9E4D' },
+  { name: 'Amp', sprite: 'bot', tint: '#6B7280' },
+  { name: 'Kiro', sprite: 'bot', tint: '#8B5CF6' },
+  { name: 'Cline', sprite: 'bot', tint: '#D9488B' },
+];
+
+function chrome(t) {
+  const tabs = t.tabs.map((label, i) => {
+    const icon = ['general', 'assistant', 'terminal', 'github'][i];
+    return '<div class="tab' + (i === 2 ? ' on' : '') + '">' + ICON[icon] + label + '</div>';
+  }).join('');
+  return '<div class="sbar"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>' +
+    '<div class="ptitle">Agent</div><div class="tabs">' + tabs + '</div></div>';
+}
+
+function row(a, t, lang, dark) {
+  const act = a.action === 'installed'
+    ? '<span class="act ok">' + CHECK + t.installed + '</span>'
+    : '<span class="btn">' + t.install + '</span>';
+  return '<div class="arow">' + sprite(a, 24, dark) +
+    '<div class="abody"><div class="aname">' + a.name + '</div><div class="ameta">' + a.meta[lang] + '</div></div>' +
+    act + '</div>';
+}
+
+function pane(t, lang, dark) {
+  const cols = ['', ''];
+  ON.forEach((a, i) => { cols[i % 2] += row(a, t, lang, dark); });
+  let more = '';
+  for (let i = 0; i < MORE.length; i += 2) {
+    const pair = MORE.slice(i, i + 2).map(a =>
+      '<div class="mitem">' + sprite(a, 18, dark) + '<div class="mname">' + a.name + '</div><span class="get">' + t.get + '</span></div>'
+    ).join('');
+    more += '<div class="mrow">' + pair + (MORE.slice(i, i + 2).length === 1 ? '<div class="mitem"></div>' : '') + '</div>';
+  }
+  return '<div class="pane">' +
+    '<div class="lbl">' + t.title + '</div>' +
+    '<div class="desc">' + t.body + '</div>' +
+    '<div class="sechead">' + t.on + '<span class="n">' + ON.length + '</span></div>' +
+    '<div class="cols"><div class="col">' + cols[0] + '</div><div class="col">' + cols[1] + '</div></div>' +
+    '<div class="sechead more">' + t.more + '<span class="n">' + MORE.length + '</span></div>' +
+    '<div class="moregrp">' + more + '</div>' +
+    '</div>';
+}
+
+document.getElementById('win-zh').innerHTML = chrome(STR.zh) + pane(STR.zh, 'zh', false);
+document.getElementById('win-en').innerHTML = chrome(STR.en) + pane(STR.en, 'en', true);
+</script>
+</body>
+</html>
