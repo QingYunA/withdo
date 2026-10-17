@@ -3,8 +3,9 @@
 // Detect says whether an agent is here (its command is on PATH, or its config folder exists) and
 // whether adhd-todo is already in its MCP config. Install adds it: through the agent's own
 // `mcp add` command where it has one, otherwise by editing its config file, after a backup,
-// leaving the rest of the file as it was. Nothing here runs on its own: the app calls Install
-// from a button.
+// leaving the rest of the file as it was. DeepSeek Harness is neither: its servers are a Cordis
+// patch list (YAML), and its own patch layer is edited instead. Nothing here runs on its own: the
+// app calls Install from a button.
 package agentsetup
 
 // kind is how an agent takes an MCP server.
@@ -13,6 +14,7 @@ type kind int
 const (
 	viaCommand kind = iota // the agent's own `mcp add` command
 	viaFile                // an entry added to the agent's JSON config
+	viaYAML                // an entry added to the agent's Cordis patch list (DeepSeek Harness)
 )
 
 // Agent is a coding agent adhd-todo knows how to set up.
@@ -39,6 +41,8 @@ var Agents = []Agent{
 		Files: []string{".claude.json"}, Key: "mcpServers", kind: viaCommand},
 	{ID: "codex", Name: "Codex", URL: "https://developers.openai.com/codex", Commands: []string{"codex"},
 		Files: []string{".codex/config.toml"}, kind: viaCommand},
+	{ID: "deepseek", Name: "DeepSeek Harness", URL: "https://www.deepseek.com/harness/", Dirs: []string{".dsh"},
+		Files: []string{".dsh/cordis.patch.yml"}, kind: viaYAML},
 	{ID: "gemini", Name: "Gemini CLI", URL: "https://geminicli.com", Commands: []string{"gemini"},
 		Files: []string{".gemini/settings.json"}, Key: "mcpServers", kind: viaCommand},
 	{ID: "cursor", Name: "Cursor", URL: "https://cursor.com", Dirs: []string{".cursor"},
@@ -55,6 +59,14 @@ var Agents = []Agent{
 		Files: []string{".codeium/windsurf/mcp_config.json"}, Key: "mcpServers", kind: viaFile},
 	{ID: "zed", Name: "Zed", URL: "https://zed.dev", Dirs: []string{".config/zed"},
 		Files: []string{".config/zed/settings.json"}, Key: "context_servers", kind: viaFile},
+	{ID: "amp", Name: "Amp", URL: "https://ampcode.com", Commands: []string{"amp"},
+		Files: []string{".config/amp/settings.json"}, Key: "amp.mcpServers", kind: viaCommand},
+	{ID: "kiro", Name: "Kiro", URL: "https://kiro.dev", Dirs: []string{".kiro"},
+		Files: []string{".kiro/settings/mcp.json"}, Key: "mcpServers", kind: viaFile},
+	{ID: "cline", Name: "Cline", URL: "https://cline.bot",
+		Dirs:  []string{"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev"},
+		Files: []string{"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"},
+		Key:   "mcpServers", kind: viaFile},
 }
 
 // ByID finds an agent.

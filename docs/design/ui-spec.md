@@ -115,11 +115,22 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
   the layout are not.
 - **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
   solid edge, a hard 4 pt shadow with no blur.
-- **Provider marks are the one picture on an 18 x 18 grid** (v11): their official shapes do not
+- **Provider marks use an 18 x 18 grid** (v11): their official shapes do not
   survive 12 x 12, and the user must recognize them. They are not redrawn: each official SVG is
   sampled onto the grid by `docs/design/tools/sample_marks.py` (a cell is lit where the mark covers
   it, in the mark's own color) into `app/theme/provider_marks.go`. Drawn only at 18 pt (1 pt a pixel)
   and 36 pt (2 pt). Anthropic is the Claude Code crab of the sidebar, the same sprite in both places.
+- **Harness marks are the second exception, on a 24 x 24 and an 18 x 18 grid** (v14): the official
+  marks of the coding agents do not survive 12 x 12 either, and the user again has to recognize
+  them. Settings > Agents draws them in the official colours, light and dark: 24 x 24 (drawn at
+  24 pt) in the rows of **On this Mac**, 18 x 18 (drawn at 18 pt) in the compact rows of **More**.
+  They are the lobe-icons / Iconify drawings the approved mockup embeds
+  (`docs/design/mockups/v14.html`, its ICONS); `docs/design/tools/harness_marks.py` quantises each
+  light and dark pixel mark to at most 24 colours and writes `app/theme/harness_marks.go`.
+  `theme.HarnessMark(c, id, size)` picks the grid and the appearance, and draws rectangles like
+  every other sprite (never `ui.Image`, which is anti-aliased at Retina scale). Claude Code is the
+  one exception inside the exception: it keeps the app's own 12 x 12 crab, the same sprite at 24 pt,
+  because it is the mascot and not the official starburst.
 
 The busy indicator (`theme.PixelSpinner`, reference `docs/design/mockups/v9.html`): eight 2 x 2
 blocks round the 12 x 12 grid, clockwise from the top (5,1), (8,2), (9,5), (8,8), (5,9), (2,8),
@@ -1077,49 +1088,80 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   Claude Code crab; Magpie is the pixel robot in teal; Custom is the pixel plus in `text.secondary`.
   Sizes, whole pixels only: `LogoCard` 36, `LogoTile` 36, `LogoRow` 18, `LogoChip` 18 (the composer's
   model chip and its menu). The provider logo is never a colored tile with letters any more.
-- **Agents** (M6, `v5.html` frame 6): the label **Agents on this Mac**, one plain `meta` line under
-  it ("Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here.
-  It does not install or start the agent."), then ten agents in **two columns**, each column a white
-  group, read left to right, top to bottom: Claude Code, Codex, Gemini CLI, Cursor, opencode,
-  Copilot (VS Code), Qwen Code, Kimi CLI, Windsurf, Zed. A row (at least 44 pt): the 24 pt pixel
-  avatar (`theme.AgentAvatar`), the name (`body`), one `meta` line, and at the right one of
-  - `✓ MCP installed` (done green): adhd-todo is in the agent's MCP config, or the agent has reported;
-  - **Install MCP** (the accent button): the agent is on this Mac (its command is on PATH, or its
-    config folder is there) and has no adhd-todo yet. While it runs the button reads `Installing…`;
-  - **Get it ↗** (a link to the agent's site): the agent is not on this Mac.
-  The line under the name is `N reports today` when the agent reported today, else `No reports
-  today` when it ever reported, else `Found · gemini` / `Found · ~/.cursor` (what was found), else
-  `Not on this Mac`. The agent that reported is matched by `agentName` (`claude-code` is Claude Code).
-  An install that fails says why in the row, in `meta` and the blocked red, in plain words (the last
-  line the agent's own command printed, "adhd-core isn't at ~/.local/bin/adhd-core", a timeout).
-  A config file with comments (Zed's `settings.json`) is **never rewritten**: a `Add this to
-  ~/.config/zed/settings.json:` line and the snippet in the mono well with **Copy** appear under the
-  columns. Under them one group with one row, **Open agent work in** / `去看看时打开`, with the `meta`
-  line `Brings the agent's app forward. It cannot open the exact session.` and a pop-up at the right:
-  `The agent's app` (default) / `Terminal` / `Editor` / `Finder`. It is where Review and Answer on a
-  handed-over row go (see **Going to the agent** under Mine); the choice is kept in `prefs.json` next
-  to the database. Screen `settings-agents-open-with-*` (scrolled to the bottom). At the bottom, the old footer: `Or run this once in a terminal, for Claude Code` and the
-  `claude mcp add` command in a mono well with **Copy**. "Install MCP" is the only word for this; it
-  is never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
-  `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's PATH
-  lacks) every 30 s and after an install; **nothing is installed without the button**.
+- **Agents** (M6, v14, `docs/design/mockups/v14.html`): the label **Agents on this Mac**, one plain
+  `meta` line under it (the M6 wording: what Install MCP does and does not do), then two sections,
+  both on the first screen of the 680 x 520 window, before the pane scrolls:
+  - **On this Mac** with its count (`On this Mac 6`, `本机已有 6`; the number is quiet, in
+    `text.tertiary`, after the section label): every agent whose command is on PATH, whose config
+    folder or file is there, or that ever reported. A report keeps an agent here even when this
+    look no longer finds its command, because its MCP is installed somewhere. The section is two
+    white group columns; rows read left to right and then top to bottom, always in catalog order,
+    never sorted by reports (the row must not move under the pointer): Claude Code, Codex, DeepSeek
+    Harness, Gemini CLI, Cursor, opencode, Copilot (VS Code), Qwen Code, Kimi CLI, Windsurf, Zed,
+    Amp, Kiro, Cline. A row (48 pt in the app; the mockup draws 50, but the app's toolbar is taller,
+    so both sections have to fit the first screen): the 24 pt official mark (`theme.HarnessMark`),
+    the name (`body`), one `meta` line, and at the right one of `✓ MCP installed` (done green;
+    also for an agent that only reported), **Install MCP** (accent; `Installing…` while it runs),
+    or nothing.
+    The line is `N reports today`, else `No reports today`, else `Found · gemini` / `Found ·
+    ~/.dsh` (what was found). An install that fails says why under the line, in `meta` and the
+    blocked red, in plain words. With no agent found and none reported, the section is one empty
+    row: `No agent found on this Mac yet` / `还没在这台 Mac 上找到 Agent`, with **See how to
+    connect** / **去看看怎么接**, which opens the README's connect section; More still lists the
+    whole catalog.
+  - **More** with its count: every catalog agent not on this Mac, one white block of compact two
+    column rows (8 in the design, four rows). A row (31 pt in the app; the mockup draws 32): the
+    18 pt official mark, the name in `meta` size and primary ink, and `Get it ↗` / `去下载 ↗` at the
+    right, which opens the agent's URL. There is no status line and no "Not on this Mac" (the
+    group says it), and More never folds.
+  Under the two sections, exactly as before: the manual snippet when a config file is not plain
+  JSON, or when a Cordis patch is not a patch list adhd-todo can append to; then the **Open agent
+  work in** / `去看看时打开` row with its pop-up (`The agent's app` default,
+  `Terminal`, `Editor`, `Finder`), and the `claude mcp add` command in a mono well with **Copy**.
+  The choice is kept in `prefs.json` next to the database. Screens `settings-agents-*`; the
+  scrolled one is `settings-agents-open-with-*`. "Install MCP" is the only word for this; it is
+  never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
+  `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's
+  PATH lacks) every 30 s and after an install; **nothing is installed without the button**.
   - Commands, run with the absolute `~/.local/bin/adhd-core` and a 30 s timeout: `claude mcp add --scope
     user adhd-todo -- <core> mcp`; `codex mcp add adhd-todo -- <core> mcp`; `gemini mcp add -s user
     adhd-todo <core> mcp`; `qwen mcp add --scope user adhd-todo <core> mcp`; `kimi mcp add --transport
-    stdio adhd-todo -- <core> mcp`; `code --add-mcp '{"name":"adhd-todo","command":"<core>","args":["mcp"]}'`.
+    stdio adhd-todo -- <core> mcp`; `amp mcp add adhd-todo -- <core> mcp`; `code --add-mcp
+    '{"name":"adhd-todo","command":"<core>","args":["mcp"]}'`.
   - Files (copied first to `<file>.adhd-todo.bak`, key order, number text and indentation kept, created
     when missing): Cursor `~/.cursor/mcp.json` `mcpServers`; opencode `~/.config/opencode/opencode.json`
     `mcp` (`type: local`, `command: [core, "mcp"]`); Windsurf `~/.codeium/windsurf/mcp_config.json`
+    `mcpServers`; Kiro `~/.kiro/settings/mcp.json` `mcpServers`; Cline `~/Library/Application
+    Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
     `mcpServers`; Zed `~/.config/zed/settings.json` `context_servers`.
+  - **DeepSeek Harness is the one that is not JSON.** It takes MCP servers as Cordis patch entries,
+    and it is detected by `~/.dsh` alone (the design's `dsh` is not on PATH). Install appends one
+    entry to `~/.dsh/cordis.patch.yml`, the home patch layer every profile reads after its own:
+    `- insert:` with `@deepseek-ai/dsh-mcp-client`, `serverName: adhd-todo`, `transport: stdio`,
+    `command: <core>`, `args: [mcp]`, `failOnStartupError: true` (the plugin's documented minimal
+    stdio configuration). A patch file that is not a patch list adhd-todo can append to (a mapping
+    or a flow sequence, for example) is not rewritten: the pane falls back to the manual snippet, as
+    for a JSON file it cannot safely edit. Installed is read from the home layer and every
+    profile's `cordis.patch.yml`.
+  - **Amp, Kiro and Cline** join the catalog in v14. Amp is found by its command and installed with
+    its own `amp mcp add`; its `~/.config/amp/settings.json` (`amp.mcpServers`) is read for the
+    installed state. Kiro and Cline are found by their folder/file and installed by adding the
+    server to their MCP JSON. Nothing was guessed: an agent whose method could not be verified is
+    listed in More only, never given a button that would fail.
   - Installed is read from `~/.claude.json`, `~/.codex/config.toml` (`[mcp_servers.adhd-todo]`),
-    `~/.gemini/settings.json`, `~/.qwen/settings.json`, `~/.kimi/mcp.json`, the files above, and VS
-    Code's user `mcp.json` (`servers`).
+    `~/.gemini/settings.json`, `~/.qwen/settings.json`, `~/.kimi/mcp.json`, the files above, VS
+    Code's user `mcp.json` (`servers`), `~/.config/amp/settings.json` (`amp.mcpServers`), and
+    DeepSeek Harness's patch layers.
 - **Avatars of agents** (M6): besides Claude Code, Codex, Cursor and Gemini CLI, a dark rounded square
   with a gray center for opencode and a dark head with white goggles and purple pupils for Copilot
   (both are lightened in dark mode); Qwen Code, Kimi CLI, Windsurf, Zed and Cline are the robot in their
   brand color. `agentName` and `theme.AgentAvatar` agree on the names agents report under
   (`Visual Studio Code` is Copilot (VS Code), `qwen-code-mcp-client` and `qwen-cli-mcp-client-*` are Qwen
-  Code); any other name gets a robot colored by the name.
+  Code); any other name gets a robot colored by the name. These are the avatars of the rest of the
+  app: the rows of Settings > Agents draw the harnesses' official marks instead, at 24 and 18 pt
+  (see **Pixel language**). The agents added in v14 (DeepSeek Harness, Amp, Kiro) have no 12 x 12
+  sprite yet, so elsewhere they get the robot colored by the name; `agentName` maps a report to
+  their catalog name so it still lands in the right Settings row.
 - **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads

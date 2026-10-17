@@ -15,8 +15,14 @@ import (
 // meanwhile shows up.
 const agentsRefreshEvery = 30 * time.Second
 
-// agentAvatarSize is the pixel avatar of an agent in the list.
-const agentAvatarSize float32 = 24
+// The sizes of the two kinds of agent row: the mark and the row itself (docs/design/mockups/v14).
+const (
+	agentMarkSize     float32 = 24
+	agentMarkSizeMore float32 = 18
+	agentRowSize      float32 = 48
+	agentMoreRowSize  float32 = 31
+	agentsMoreGap     float32 = 18
+)
 
 // agentsCache is the agents that reported, read when the data changed or the day turned rather
 // than every frame.
@@ -42,25 +48,26 @@ type manualHint struct {
 	id, file, snippet string
 }
 
-// agentsPane is the agents adhd-todo can set up, ten of them in two columns: for each, whether it
-// is on this Mac, how often it reported today, and whether adhd-todo's MCP is installed in it or
-// can be, or where to get the agent. Under them, the one command for Claude Code to copy.
+// agentsPane is the agents adhd-todo can set up, fourteen of them, in two groups: On this Mac,
+// the ones found here (two columns of rows: mark, name, how it stands, and whether the MCP is
+// installed or can be), and More, the rest, with just the name and where to get it. Both groups
+// fit the window before it scrolls; under them, the one command for Claude Code to copy.
 func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 	c.After(agentsRefreshEvery)
-	groupLabel(c, t, s.say.SettingsAgentsTitle())
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsBody(), 0).Margin(0, 4, 14)
+	// The title's margins are a little tighter than a group label's: both sections have to fit the
+	// 520 pt window before it scrolls (docs/design/mockups/v14.html).
+	theme.Text(c, theme.Section, t.TextSecondary, s.say.SettingsAgentsTitle()).Margin(0, 4, 4)
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsBody(), 0).Margin(0, 4, 4)
 	status, reported := s.scanAgents(), s.reports()
-	ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Start).Margin(0, 0, 18).Children(func() {
-		for col := 0; col < 2; col++ {
-			ui.Column(c.Key("agent-col-"+itoa(col))).Grow(1).Basis(0).MinWidth(0).Radius(theme.SettingsRadius).
-				Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(func() {
-				for i := col; i < len(agentsetup.Agents); i += 2 {
-					a := agentsetup.Agents[i]
-					s.agentRow(c, t, a, status[a.ID], reported[a.Name], i < 2)
-				}
-			})
-		}
-	})
+	local, more := splitAgents(status, reported)
+	s.agentsSectionHead(c, t, "local", s.say.SettingsAgentsLocal(), len(local), 0, 3)
+	if len(local) == 0 {
+		s.agentsEmptyLocal(c, t)
+	} else {
+		s.agentsLocal(c, t, local, status, reported)
+	}
+	s.agentsSectionHead(c, t, "more", s.say.SettingsAgentsMore(), len(more), 14, 0)
+	s.agentsMore(c, t, more)
 	if h := s.setup.manual; h != nil {
 		s.manualPanel(c, t, h)
 	}
@@ -70,6 +77,96 @@ func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c).Shrink(0).Gap(8).Margin(0, 0, 18).Children(func() {
 		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsCommand()).Margin(0, 4)
 		commandWell(c, t, s.app.Config.ConnectCommand, func() { s.copyButton(c, t, "copy", s.app.Config.ConnectCommand) })
+	})
+}
+
+// splitAgents sorts the catalog into the ones on this Mac and the ones still to get. An agent
+// that ever reported counts as here, even when this look no longer finds its command: its MCP is
+// installed somewhere. The order stays the catalog's in both groups, so rows do not jump.
+func splitAgents(status map[string]agentsetup.Status, reported map[string]agentReports) (local, more []agentsetup.Agent) {
+	for _, a := range agentsetup.Agents {
+		if status[a.ID].Found || reported[a.Name].ever {
+			local = append(local, a)
+		} else {
+			more = append(more, a)
+		}
+	}
+	return local, more
+}
+
+// agentsSectionHead is a group label with its quiet count: "On this Mac 6".
+func (s *Settings) agentsSectionHead(c *ui.Context, t *theme.Tokens, key, label string, count int, above, below float32) {
+	ui.Row(c.Key("agents-head-"+key)).Shrink(0).Gap(6).AlignItems(ui.Center).Margin(above, 4, below).Children(func() {
+		theme.Text(c, theme.Section, t.TextSecondary, label)
+		theme.Text(c, theme.Meta, t.TextTertiary, itoa(count))
+	})
+}
+
+// agentsLocal is the two white columns of On this Mac: rows read left to right, then top to
+// bottom, so the odd row of the catalog is in the left column.
+func (s *Settings) agentsLocal(c *ui.Context, t *theme.Tokens, local []agentsetup.Agent, status map[string]agentsetup.Status, reported map[string]agentReports) {
+	ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Start).Children(func() {
+		for col := 0; col < 2; col++ {
+			ui.Column(c.Key("agent-col-"+itoa(col))).Grow(1).Basis(0).MinWidth(0).Radius(theme.SettingsRadius).
+				Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(func() {
+				first := true
+				for i, a := range local {
+					if i%2 != col {
+						continue
+					}
+					s.agentRow(c, t, a, status[a.ID], reported[a.Name], first)
+					first = false
+				}
+			})
+		}
+	})
+}
+
+// agentsEmptyLocal is the one row On this Mac has when nothing was found and nothing reported:
+// what that means, and where to read how to connect an agent. More still lists the catalog.
+func (s *Settings) agentsEmptyLocal(c *ui.Context, t *theme.Tokens) {
+	ui.Column(c.Key("agent-local-empty")).Shrink(0).Radius(theme.SettingsRadius).Background(t.SettingsGroup()).
+		Border(1, t.Border.Alpha(0.08)).Children(func() {
+		ui.Row(c.Key("agent-empty")).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(10).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsEmpty()).Grow(1).MinWidth(0).Ellipsis("…")
+			if settingsLink(c, t, "connect", s.say.SettingsAgentsConnect(), s.say.SettingsAgentsConnect()).Clicked() {
+				s.app.Act.OpenURL(repoURL + "#connect-claude-code")
+			}
+		})
+	})
+}
+
+// agentsMore is the one block of More: the catalog's other agents, two to a row, compact,
+// without a status line and without a fold.
+func (s *Settings) agentsMore(c *ui.Context, t *theme.Tokens, more []agentsetup.Agent) {
+	ui.Column(c.Key("agent-more")).Shrink(0).Radius(theme.SettingsRadius).Background(t.SettingsGroup()).
+		Border(1, t.Border.Alpha(0.08)).Children(func() {
+		for i := 0; i < len(more); i += 2 {
+			if i > 0 {
+				ui.Box(c.Key("rule-more-"+itoa(i))).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+			}
+			ui.Row(c.Key("agent-more-"+itoa(i))).Height(agentMoreRowSize).Shrink(0).Gap(agentsMoreGap).Padding(0, 14).Children(func() {
+				for j := 0; j < 2; j++ {
+					if i+j < len(more) {
+						s.moreRow(c, t, more[i+j])
+					} else {
+						ui.Box(c).Grow(1).Basis(0)
+					}
+				}
+			})
+		}
+	})
+}
+
+// moreRow is one agent of More: its official mark, its name, and the link to get it. It says
+// nothing about this Mac, because the whole group is the ones not on it.
+func (s *Settings) moreRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent) {
+	ui.Row(c.Key("more-" + a.ID)).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		theme.HarnessMark(c, a.ID, agentMarkSizeMore).Shrink(0)
+		theme.Text(c, theme.Meta, t.Text, a.Name).Grow(1).MinWidth(0).Ellipsis("…")
+		if settingsLink(c, t, "get-"+a.ID, s.say.SettingsAgentGet(), s.say.A11yGetAgent(a.Name)).Clicked() {
+			s.app.Act.OpenURL(a.URL)
+		}
 	})
 }
 
@@ -135,16 +232,17 @@ func (s *Settings) agentList() []data.AgentActivity {
 	return s.agents.list
 }
 
-// agentRow is one agent: its avatar, its name, one line on how it stands and, at the right, what
-// can be done: nothing (the MCP is installed), Install MCP, or Get it.
+// agentRow is one agent of On this Mac: its official mark, its name, one line on how it stands
+// and, at the right, what can be done: nothing (the MCP is installed), Install MCP, or, for an
+// agent whose report alone put it here, nothing either.
 func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, st agentsetup.Status, rep agentReports, first bool) {
 	installed := st.Installed || rep.ever
 	sub := s.agentSub(st, rep)
 	if !first {
 		ui.Box(c.Key("rule-agent-"+a.ID)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
-	ui.Row(c.Key("agent-"+a.ID)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
-		theme.AvatarIcon(c, theme.AgentAvatar(a.Name), agentAvatarSize).Shrink(0)
+	ui.Row(c.Key("agent-"+a.ID)).MinHeight(agentRowSize).Shrink(0).Padding(0, 14).Gap(10).AlignItems(ui.Center).Children(func() {
+		theme.HarnessMark(c, a.ID, agentMarkSize).Shrink(0)
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			theme.Text(c, theme.Body, t.Text, a.Name).Ellipsis("…")
 			theme.Text(c, theme.Meta, t.TextSecondary, sub).Ellipsis("…")
@@ -164,24 +262,20 @@ func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, 
 			if settingsButton(c, t, "install-"+a.ID, s.say.SettingsAgentInstall(), true).Label(s.say.A11yInstallMCP(a.Name)).Clicked() {
 				s.install(a) // inert while another install runs
 			}
-		default:
-			if settingsLink(c, t, "get-"+a.ID, s.say.SettingsAgentGet(), s.say.A11yGetAgent(a.Name)).Clicked() {
-				s.app.Act.OpenURL(a.URL)
-			}
 		}
 	})
 }
 
+// agentSub is the line under a name of On this Mac: its reports today, that it reported before,
+// or what was found. Every row here is here because one of those is true.
 func (s *Settings) agentSub(st agentsetup.Status, rep agentReports) string {
 	switch {
 	case rep.today > 0:
 		return s.say.SettingsAgentReports(rep.today)
 	case rep.ever:
 		return s.say.SettingsAgentIdle()
-	case st.Found:
-		return s.say.SettingsAgentFound(st.Via)
 	}
-	return s.say.SettingsAgentAbsent()
+	return s.say.SettingsAgentFound(st.Via)
 }
 
 // install adds the MCP to an agent off the UI thread: its own command can take a while.

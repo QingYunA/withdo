@@ -44,7 +44,7 @@ type ManualError struct {
 }
 
 func (e *ManualError) Error() string {
-	return "cannot edit " + e.File + " safely, it is not plain JSON"
+	return "cannot edit " + e.File + " safely"
 }
 
 // Install adds adhd-todo's MCP server to the agent, unless it is there already. It runs the
@@ -55,6 +55,9 @@ func (e *Env) Install(ctx context.Context, a Agent) error {
 	}
 	if !e.exists(e.core()) {
 		return ErrNoCore
+	}
+	if a.kind == viaYAML {
+		return e.installYAML(a)
 	}
 	if a.kind == viaFile {
 		return e.installFile(a)
@@ -76,6 +79,8 @@ func (e *Env) commandLine(a Agent) (program string, args []string) {
 		return "qwen", []string{"mcp", "add", "--scope", "user", serverName, core, "mcp"}
 	case "kimi":
 		return "kimi", []string{"mcp", "add", "--transport", "stdio", serverName, "--", core, "mcp"}
+	case "amp":
+		return "amp", []string{"mcp", "add", serverName, "--", core, "mcp"}
 	case "copilot":
 		spec, _ := json.Marshal(struct {
 			Name    string   `json:"name"`
@@ -131,7 +136,7 @@ func (e *Env) entry(a Agent) []byte {
 			Command []string `json:"command"`
 			Enabled bool     `json:"enabled"`
 		}{"local", []string{core, "mcp"}, true}
-	case "windsurf":
+	case "windsurf", "kiro", "cline":
 		v = struct {
 			Command string   `json:"command"`
 			Args    []string `json:"args"`
@@ -149,6 +154,9 @@ func (e *Env) entry(a Agent) []byte {
 
 // Snippet is what to add by hand to the agent's config file: the key with adhd-todo under it.
 func (e *Env) Snippet(a Agent) string {
+	if a.kind == viaYAML {
+		return e.dshSnippet()
+	}
 	entry, err := parseJSON(e.entry(a))
 	if err != nil {
 		return ""

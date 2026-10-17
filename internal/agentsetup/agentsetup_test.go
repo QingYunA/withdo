@@ -94,7 +94,7 @@ func TestDetectFindsACommandOnPathOrAConfigFolder(t *testing.T) {
 	if s := got["cursor"]; !s.Found || s.Via != "~/.cursor" || s.Installed {
 		t.Errorf("cursor: %+v", s)
 	}
-	for _, id := range []string{"claude", "codex", "opencode", "copilot", "qwen", "kimi", "windsurf", "zed"} {
+	for _, id := range []string{"claude", "codex", "deepseek", "opencode", "copilot", "qwen", "kimi", "windsurf", "zed", "amp", "kiro", "cline"} {
 		if got[id].Found {
 			t.Errorf("%s was found on an empty Mac: %+v", id, got[id])
 		}
@@ -125,6 +125,9 @@ func TestInstalledReadsEachAgentsConfig(t *testing.T) {
 		"windsurf": {".codeium/windsurf/mcp_config.json", `{"mcpServers":{"adhd-todo":{}}}`},
 		"copilot":  {"Library/Application Support/Code/User/mcp.json", "{\n// mine\n\"servers\": {\"adhd-todo\": {\"command\": \"x\",},},\n}"},
 		"zed":      {".config/zed/settings.json", "// Zed settings\n{\n  /* servers */\n  \"context_servers\": {\n    \"adhd-todo\": { \"command\": \"x\" }, // here\n  },\n}"},
+		"amp":      {".config/amp/settings.json", `{"amp.mcpServers":{"adhd-todo":{"command":"x"}}}`},
+		"kiro":     {".kiro/settings/mcp.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
+		"cline":    {"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
 	}
 	for id, c := range cases {
 		a := r.agent(id)
@@ -162,6 +165,7 @@ func TestInstallRunsEachAgentsOwnCommandWithTheAbsolutePathOfTheCore(t *testing.
 		"gemini": {"mcp", "add", "-s", "user", "adhd-todo", "CORE", "mcp"},
 		"qwen":   {"mcp", "add", "--scope", "user", "adhd-todo", "CORE", "mcp"},
 		"kimi":   {"mcp", "add", "--transport", "stdio", "adhd-todo", "--", "CORE", "mcp"},
+		"amp":    {"mcp", "add", "adhd-todo", "--", "CORE", "mcp"},
 	} {
 		r := newRig(t)
 		core = r.core()
@@ -400,7 +404,7 @@ func TestStripJSONCKeepsCommentLikeTextInStrings(t *testing.T) {
 	}
 }
 
-func TestAgentTableIsTheTenInOrder(t *testing.T) {
+func TestAgentTableIsTheFourteenInOrder(t *testing.T) {
 	var names []string
 	for _, a := range Agents {
 		names = append(names, a.Name)
@@ -408,8 +412,171 @@ func TestAgentTableIsTheTenInOrder(t *testing.T) {
 			t.Errorf("%s: no URL or config file", a.Name)
 		}
 	}
-	want := []string{"Claude Code", "Codex", "Gemini CLI", "Cursor", "opencode", "Copilot (VS Code)", "Qwen Code", "Kimi CLI", "Windsurf", "Zed"}
+	want := []string{"Claude Code", "Codex", "DeepSeek Harness", "Gemini CLI", "Cursor", "opencode", "Copilot (VS Code)", "Qwen Code", "Kimi CLI", "Windsurf", "Zed", "Amp", "Kiro", "Cline"}
 	if !slices.Equal(names, want) {
 		t.Errorf("%q", names)
+	}
+}
+
+// DeepSeek Harness has no `dsh` command on this Mac; its config folder is what says it is here.
+func TestDeepSeekHarnessIsFoundByItsConfigFolder(t *testing.T) {
+	r := newRig(t)
+	if st := r.env.Detect(r.agent("deepseek")); st.Found {
+		t.Fatalf("found on an empty Mac: %+v", st)
+	}
+	r.write(".dsh/profiles/desktop/cordis.patch.yml", "[]\n")
+	if st := r.env.Detect(r.agent("deepseek")); !st.Found || st.Via != "~/.dsh" || st.Installed {
+		t.Errorf("deepseek: %+v", st)
+	}
+}
+
+// The reported harnesses that keep an MCP file of their own are found by it.
+func TestKiroCursorStyleAgentsAreFoundByTheirFolder(t *testing.T) {
+	r := newRig(t)
+	r.path["amp"] = "/usr/local/bin/amp"
+	r.write(".kiro/settings/mcp.json", "{}")
+	r.write("Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", "{}")
+	got := r.env.DetectAll()
+	for id, via := range map[string]string{
+		"amp":   "amp",
+		"kiro":  "~/.kiro",
+		"cline": "~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev",
+	} {
+		if st := got[id]; !st.Found || st.Via != via {
+			t.Errorf("%s: %+v, want found via %q", id, st, via)
+		}
+	}
+}
+
+// The Cordis patch layers: the machine-wide one and each profile's own all count as installed,
+// and a commented example does not.
+func TestDeepSeekHarnessInstalledReadsEveryPatchLayer(t *testing.T) {
+	r := newRig(t)
+	a := r.agent("deepseek")
+	if r.env.Installed(a) {
+		t.Fatal("installed on an empty Mac")
+	}
+	r.write(".dsh/cordis.patch.yml", "# - insert:\n#     - name: '@deepseek-ai/dsh-mcp-client'\n#       config:\n#         serverName: adhd-todo\n")
+	if r.env.Installed(a) {
+		t.Error("a commented example counted")
+	}
+	r.write(".dsh/profiles/web/cordis.patch.yml", "- insert:\n    - id: mcp-adhd-todo\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: adhd-todo\n        transport: stdio\n        command: '/x/adhd-core'\n        args: ['mcp']\n")
+	if !r.env.Installed(a) {
+		t.Error("the profile patch layer was not read")
+	}
+}
+
+func TestInstallDeepSeekHarnessAppendsACordisPatchEntry(t *testing.T) {
+	r := newRig(t)
+	orig := "# my patches\n- id: ui-chat\n  config:\n    transcriptView: standard\n"
+	r.write(".dsh/cordis.patch.yml", orig)
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
+		t.Fatal(err)
+	}
+	got := r.read(".dsh/cordis.patch.yml")
+	for _, want := range []string{
+		"# my patches", "- id: ui-chat", "    transcriptView: standard",
+		"- insert:", "id: adhd-todo-mcp", "name: '@deepseek-ai/dsh-mcp-client'",
+		"serverName: adhd-todo", "transport: stdio", "command: '" + r.core() + "'",
+		"args: ['mcp']", "failOnStartupError: true",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("the patch lacks %q:\n%s", want, got)
+		}
+	}
+	if r.read(".dsh/cordis.patch.yml.adhd-todo.bak") != orig {
+		t.Error("no backup of the patch layer")
+	}
+	if len(r.run.calls) != 0 {
+		t.Errorf("ran %q", r.run.calls)
+	}
+	if !r.env.Installed(r.agent("deepseek")) {
+		t.Error("not installed after Install")
+	}
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
+		t.Fatal(err)
+	}
+	if r.read(".dsh/cordis.patch.yml") != got {
+		t.Error("a second install appended the server again")
+	}
+}
+
+func TestInstallDeepSeekHarnessCreatesTheHomePatchOrFillsAnEmptyList(t *testing.T) {
+	r := newRig(t)
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
+		t.Fatal(err)
+	}
+	if got := r.read(".dsh/cordis.patch.yml"); !strings.HasPrefix(got, "- insert:\n") {
+		t.Errorf("a created patch starts %q", got)
+	}
+	if _, err := os.Stat(filepath.Join(r.home, ".dsh", "cordis.patch.yml.adhd-todo.bak")); err == nil {
+		t.Error("a backup of a file that was not there")
+	}
+	r.write(".dsh/cordis.patch.yml", "[]\n")
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
+		t.Fatal(err)
+	}
+	got := r.read(".dsh/cordis.patch.yml")
+	if strings.Contains(got, "[]") || !strings.Contains(got, "serverName: adhd-todo") {
+		t.Errorf("the empty list was not replaced:\n%s", got)
+	}
+}
+
+func TestInstallDeepSeekHarnessHandsBackAPatchItCannotAppendTo(t *testing.T) {
+	r := newRig(t)
+	orig := "some: mapping\n"
+	r.write(".dsh/cordis.patch.yml", orig)
+	var me *ManualError
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); !errors.As(err, &me) {
+		t.Fatalf("got %v", err)
+	}
+	if r.read(".dsh/cordis.patch.yml") != orig {
+		t.Error("the patch was rewritten")
+	}
+	for _, want := range []string{"- insert:", "@deepseek-ai/dsh-mcp-client", "serverName: adhd-todo", "command: '" + r.core() + "'"} {
+		if !strings.Contains(me.Snippet, want) {
+			t.Errorf("snippet lacks %q:\n%s", want, me.Snippet)
+		}
+	}
+	if me.File != filepath.Join(r.home, ".dsh", "cordis.patch.yml") {
+		t.Errorf("manual file %q", me.File)
+	}
+}
+
+func TestInstallKiroAndClineWriteTheirMcpJson(t *testing.T) {
+	for _, id := range []string{"kiro", "cline"} {
+		r := newRig(t)
+		a := r.agent(id)
+		if err := r.env.Install(context.Background(), a); err != nil {
+			t.Fatalf("%s: %v", id, err)
+		}
+		var got struct {
+			MCPServers map[string]struct {
+				Command string
+				Args    []string
+			} `json:"mcpServers"`
+		}
+		if err := json.Unmarshal([]byte(r.read(a.Files[0])), &got); err != nil {
+			t.Fatalf("%s wrote invalid JSON: %v", id, err)
+		}
+		e := got.MCPServers["adhd-todo"]
+		if e.Command != r.core() || !slices.Equal(e.Args, []string{"mcp"}) {
+			t.Errorf("%s entry %+v", id, e)
+		}
+		if !r.env.Installed(a) {
+			t.Errorf("%s not installed after Install", id)
+		}
+	}
+}
+
+func TestInstallAmpUsesItsOwnMCPCommand(t *testing.T) {
+	r := newRig(t)
+	r.path["amp"] = "/usr/local/bin/amp"
+	if err := r.env.Install(context.Background(), r.agent("amp")); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"/usr/local/bin/amp", "mcp", "add", "adhd-todo", "--", r.core(), "mcp"}
+	if len(r.run.calls) != 1 || !slices.Equal(r.run.calls[0], want) {
+		t.Errorf("ran %q, want %q", r.run.calls, want)
 	}
 }
