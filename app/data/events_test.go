@@ -144,14 +144,46 @@ func TestEventsGitHubChecksFailingAndMergedByTheirKind(t *testing.T) {
 	g.settled() // changes requested told nothing
 }
 
-func TestEventsAfterRowsWereDeletedStillTellNewReports(t *testing.T) {
-	g := newEventRig(t, nil)
-	res := g.report(domain.ProgressInput{Agent: "claude-code", Summary: "one", Title: "one", Status: status(domain.StatusReview), Branch: "one"})
-	g.next()
-	if err := g.r.DeleteTask(int(res.Task.ID)); err != nil {
+// A deleted report's id is reused by the next one. The reports are read by time, so the new one is
+// told even when the watcher never saw the gap, and with the clock standing still. Driven by hand,
+// not by the watcher, so that it does not depend on its timing.
+func TestEventsAReportThatReusesADeletedOnesIdIsStillTold(t *testing.T) {
+	now := func() time.Time { return time.Date(2026, 10, 17, 9, 0, 0, 0, time.UTC) }
+	r, core := realPair(t, now)
+	var got []Event
+	r.SubscribeEvents(func(e Event) { got = append(got, e) })
+	r.markEvents()
+	report := func(title string) int64 {
+		t.Helper()
+		res, err := core.ReportProgress(bg, domain.ProgressInput{Agent: "claude-code", Summary: "done", Title: title, Status: status(domain.StatusReview), Branch: title})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res.Report.ID
+	}
+
+	first := report("first")
+	r.deliverEvents()
+	if len(got) != 1 || got[0].Title != "first" {
+		t.Fatalf("events = %+v", got)
+	}
+	r.deliverEvents() // nothing new
+	if len(got) != 1 {
+		t.Fatalf("told again: %+v", got)
+	}
+	tasks, _ := r.ListTasks(Filter{})
+	if err := r.DeleteTask(tasks[0].ID); err != nil {
 		t.Fatal(err)
 	}
-	// The watcher sees the deletion, then the new report reuses the deleted one's id.
-	time.Sleep(100 * time.Millisecond)
-	g.settled()
+	if again := report("second"); again != first {
+		t.Fatalf("the new report has id %d, want the deleted one's %d to test the reuse", again, first)
+	}
+	r.deliverEvents()
+	if len(got) != 2 || got[1].Title != "second" {
+		t.Errorf("events = %+v, want the report that reused the id", got)
+	}
+	r.deliverEvents()
+	if len(got) != 2 {
+		t.Errorf("told again: %+v", got)
+	}
 }

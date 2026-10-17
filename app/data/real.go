@@ -37,9 +37,9 @@ type Real struct {
 	remSubs map[int]func(Reminder)
 	evSubs  map[int]func(Event)
 	nextSub int
-	// eventMark is the id of the newest report already told about; only the watcher's goroutine
-	// touches it, after Start.
-	eventMark int64
+	// eventMark is how far the reports were told; only the watcher's goroutine touches it, after
+	// Start.
+	eventMark eventMark
 	cancel    context.CancelFunc
 	done      chan struct{}
 }

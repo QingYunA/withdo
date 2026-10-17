@@ -15,26 +15,27 @@ type ReportEvent struct {
 	PRNumber *int64
 }
 
-// LatestReportID is the id of the newest report; 0 when there is none. A reader that starts here
-// sees only the reports that come after.
-func (c *Core) LatestReportID(ctx context.Context) (int64, error) {
-	var id int64
-	err := c.db.QueryRowContext(ctx, "SELECT COALESCE(MAX(id), 0) FROM reports").Scan(&id)
+// LatestReportAt is the created_at of the newest report; "" when there is none.
+func (c *Core) LatestReportAt(ctx context.Context) (string, error) {
+	var at string
+	err := c.db.QueryRowContext(ctx, "SELECT COALESCE(MAX(created_at), '') FROM reports").Scan(&at)
 	if err != nil {
-		return 0, fmt.Errorf("latest report id: %w", err)
+		return "", fmt.Errorf("latest report time: %w", err)
 	}
-	return id, nil
+	return at, nil
 }
 
-// ReportsAfter returns the reports with an id above after, oldest first, with their task's title,
-// project and pull request. A report of a task that was deleted since is not among them.
-func (c *Core) ReportsAfter(ctx context.Context, after int64) ([]ReportEvent, error) {
+// ReportsSince returns the reports filed at or after the time at (a created_at, as ReportEvent
+// carries it), oldest first, with their task's title, project and pull request. Reading by time,
+// not by id, keeps it right when a deleted report's id is reused. A report of a task that was
+// deleted since is not among them.
+func (c *Core) ReportsSince(ctx context.Context, at string) ([]ReportEvent, error) {
 	rows, err := c.db.QueryContext(ctx, `SELECT r.id, r.task_id, r.agent, r.status, r.summary, r.next_step,
 		r.created_at, r.cwd, r.kind, t.title, p.name, t.pr_number
 		FROM reports r JOIN tasks t ON t.id = r.task_id LEFT JOIN projects p ON p.id = t.project_id
-		WHERE r.id > ? ORDER BY r.id`, after)
+		WHERE r.created_at >= ? ORDER BY r.created_at, r.id`, at)
 	if err != nil {
-		return nil, fmt.Errorf("list reports after %d: %w", after, err)
+		return nil, fmt.Errorf("list reports since %q: %w", at, err)
 	}
 	return collect(rows, func(s scanner) (ReportEvent, error) {
 		var e ReportEvent
