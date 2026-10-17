@@ -33,7 +33,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 			} else {
 				theme.Paragraph(c, theme.BodyStrong, t.Text, task.Title, 3)
 			}
-			m.cardMeta(c, t, task, false, ph)
+			m.cardMeta(c, t, task, m.showsActions(card, task.ID, ph), ph)
 		})
 		if card.RightClicked() {
 			m.openMenuAtPointer(card, task.ID)

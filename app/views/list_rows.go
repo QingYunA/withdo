@@ -43,9 +43,9 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	})
 }
 
-// agentRow is an agent's task: its avatar, the title with the live dot and the age at the right,
-// and under it what the agent last said, two lines at most, led by the pull request. No branch:
-// the inspector has it.
+// agentRow is an agent's task: its avatar, the title with the live dot and the age at the right
+// (the buttons of its next step while it is hovered or selected, see agentActions), and under it what
+// the agent last said, two lines at most, led by the pull request. No branch: the inspector has it.
 func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	if task.Status.Terminal() {
 		m.doneRow(c, t, sideAgents, task)
@@ -57,7 +57,7 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, m.app.taskWho(task))
 			body(c, func() {
-				m.agentTitle(c, t, task, func() { m.listRight(c, t, task, ot) })
+				m.agentTitle(c, t, task, func() { m.agentRight(c, t, row, task, ot, ph) })
 				agentLine(c, t, agentSaid(task, ot))
 			})
 		})

@@ -205,7 +205,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			m.titleLine(c, t, task, "", false)
 			summaryLine(c, t, listMeta(task, ot))
 		})
-		right(c, func() { m.listRight(c, t, task, ot) })
+		right(c, func() { m.agentRight(c, t, row, task, ot, ph) })
 	})
 	if row.Clicked() {
 		m.openRow(task.ID)
