@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v9 草稿 — 输入框：服务商常驻、思考中的反馈、图片看全图</title>
+<style>
+  :root {
+    --bg: #ffffff; --subtle: #f5f5f7; --hover: rgba(0,0,0,.04); --border: rgba(0,0,0,.10);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --done: #30a46c;
+    --chip-rest: rgba(0,0,0,.05); --btn-off: rgba(0,0,0,.07);
+  }
+  .dark {
+    --bg: #1c1c1e; --subtle: #232326; --hover: rgba(255,255,255,.06); --border: rgba(255,255,255,.10);
+    --text: #f5f5f7; --text2: #a1a1a6; --text3: #636366; --accent: #7c7cf0; --done: #4cc38a;
+    --chip-rest: rgba(255,255,255,.07); --btn-off: rgba(255,255,255,.10);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  body.night { background: #111113; color: #e6e6ee; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; align-items: center; gap: 16px; }
+  h1 button, .caption button { font: 500 12px/20px -apple-system, "PingFang SC"; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  .night h1 button, .night .caption button { background: rgba(255,255,255,.12); }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 48px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1300px; margin: 0 4px 24px; }
+  .night .lead, .night .sub { color: #a1a1a6; }
+  .grid { display: grid; grid-template-columns: repeat(3, 600px); gap: 40px 32px; align-items: start; }
+  .grid.two { grid-template-columns: repeat(2, 600px); }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; display: flex; align-items: center; gap: 10px; }
+  .caption .tag { font-weight: 500; font-size: 12px; color: #fff; background: #5b5bd6; border-radius: 6px; padding: 0 7px; }
+  .caption button { margin-left: auto; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; }
+  .night .note, .night .caption { color: #a1a1a6; }
+  .frame { width: 600px; background: var(--bg); color: var(--text); border-radius: 12px; overflow: hidden; padding: 20px 24px 24px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+  .state { font-size: 11px; line-height: 16px; color: var(--text3); margin: 14px 0 6px 2px; letter-spacing: .02em; }
+  .state:first-child { margin-top: 0; }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  /* the composer */
+  .box { border-radius: 12px; background: var(--subtle); border: 1px solid transparent; padding: 0 12px 0 14px; transition: height 0s; }
+  .box.focus { background: var(--bg); border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent); }
+  .line { display: flex; align-items: center; gap: 10px; height: 48px; font-size: 17px; }
+  .box.tall .line { height: 44px; align-items: flex-end; padding-bottom: 4px; }
+  .ph { color: var(--text3); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .typed { flex: 1; white-space: nowrap; }
+  .typed::after { content: ""; display: inline-block; width: 1.5px; height: 20px; background: var(--accent); vertical-align: -4px; margin-left: 1px; }
+  .typed.dim { color: var(--text3); }
+  .typed.dim::after, .typed.shimmer::after { display: none; }
+  .typed.shimmer { background: linear-gradient(90deg, var(--text3) 0%, var(--text3) 40%, var(--text) 50%, var(--text3) 60%, var(--text3) 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sweep 1.6s linear infinite; }
+  @keyframes sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  .ph.caret::before { content: ""; display: inline-block; width: 1.5px; height: 20px; background: var(--accent); vertical-align: -4px; margin-right: 1px; }
+  .kbd { color: var(--text3); font-size: 13px; }
+  .avatar { width: 18px; height: 18px; display: grid; place-items: center; flex: none; }
+  .avatar.pulse { animation: breathe 1400ms ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  .plus { width: 22px; height: 22px; display: grid; place-items: center; color: var(--text2); border-radius: 11px; flex: none; margin-left: -2px; }
+  .row2 { display: flex; align-items: center; gap: 8px; height: 28px; margin: 0 0 10px; }
+  .chip { height: 24px; border-radius: 7px; background: var(--subtle); display: inline-flex; align-items: center; gap: 6px; padding: 0 7px 0 6px; font-size: 13px; color: var(--text2); white-space: nowrap; flex: none; }
+  .box:not(.focus) .chip { background: var(--chip-rest); }
+  .chip .dot { color: var(--text3); }
+  .grow { flex: 1; }
+  .send { width: 28px; height: 28px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: #fff; flex: none; }
+  .send.off { background: var(--btn-off); color: var(--text3); }
+  .send.stop { background: var(--btn-off); color: var(--text2); cursor: pointer; }
+  .send.stop b { width: 9px; height: 9px; background: currentColor; display: block; }
+
+  /* the line under the box: where the answer goes */
+  .answer { display: flex; align-items: center; gap: 8px; height: 26px; margin-top: 8px; padding-left: 15px; font-size: 14px; color: var(--text2); }
+  .answer .elapsed { color: var(--text3); font-variant-numeric: tabular-nums; }
+  .answer .esc { margin-left: auto; color: var(--text3); font-size: 13px; padding-right: 4px; }
+  .answer .undo { margin-left: auto; color: var(--accent); font-size: 13px; padding-right: 4px; }
+  .answer .ok { color: var(--done); }
+
+  /* the pixel spinner: eight 2 x 2 blocks on the 12 x 12 grid, the lit block steps clockwise every
+     100 ms (no rotation, no easing); a two-block tail fades behind it */
+  .spin { display: block; flex: none; color: var(--text2); shape-rendering: crispEdges; }
+  .spin rect { opacity: .25; animation: lit 800ms step-end infinite; }
+  @keyframes lit { 0% { opacity: 1; } 12.5% { opacity: .6; } 25% { opacity: .35; } 37.5%, 100% { opacity: .25; } }
+  .reduce .spin rect { animation: none; }
+  .zoom { display: flex; gap: 18px; align-items: flex-end; margin: 18px 4px 0; font-size: 12px; color: #6e6e73; }
+  .zoom figure { margin: 0; text-align: center; }
+  .zoom .cell { background: #fff; border-radius: 8px; padding: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.15); color: #6e6e73; }
+  .night .zoom .cell { background: #1c1c1e; color: #a1a1a6; }
+
+  /* rows under the composer, to show what moves */
+  .rows { margin-top: 14px; }
+  .sect { font-size: 13px; font-weight: 600; color: var(--text2); height: 28px; display: flex; align-items: center; gap: 6px; }
+  .sect i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .tr { display: flex; align-items: center; gap: 10px; height: 36px; font-size: 15px; }
+  .tr .glyph { color: var(--text3); }
+  .tr .when { margin-left: auto; color: var(--text3); font-size: 13px; }
+
+  /* thumbnails */
+  .pics { display: flex; gap: 10px; padding: 14px 0 6px; }
+  .pic { position: relative; width: 64px; height: 48px; flex: none; }
+  .pic img { width: 64px; height: 48px; border-radius: 8px; border: .5px solid var(--border); display: block; background: var(--subtle); }
+  .pic .x { position: absolute; right: -7px; top: -7px; width: 18px; height: 18px; border-radius: 9px; background: #3a3a3c; color: #fff; display: grid; place-items: center; }
+  .orig { display: flex; gap: 16px; align-items: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .orig figure { margin: 0; font-size: 11px; color: var(--text3); }
+  .orig img { display: block; border: .5px solid var(--border); border-radius: 4px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<h1>v9 · 输入框：服务商常驻、思考中的反馈、图片看全图 <button id="mode">切到深色</button></h1>
+<p class="lead">PR 1 的三件事放在一起看：一、服务商（模型 chip）不再只在打了字之后才出现（#71）；二、按下回车之后，用户能一直看到「它在干活、干了多久、怎么停」（#72）；三、拖进来的图片缩略图显示整张图，而不是中间一块（#64 的第一条）。每组的 A 都是现在的样子，作对照。所有方案里输入框的大小、颜色、头像、图标都不变；页面截取的是「我的」页顶部。</p>
+
+<h2>一 · 服务商 chip 常驻（#71）</h2>
+<p class="sub">现在第二行（+、chip、发送）只在框里有字或有图时出现，空框看不到用的是哪个模型。spec 的顾虑是：聚焦空框时框不能长高，否则页面会在一次点击下面跳动、点击落空。每块从上到下是同一个框的三种状态。</p>
+<div class="grid" id="g1"></div>
+
+<h2>二 · 按下回车之后（#72）</h2>
+<p class="sub">点每块右上角的「播放」：先是打好字的框，回车后进入思考（这里演示 4.5 秒），然后出结果。注意看框的高度和下面的行有没有跳。</p>
+<div class="grid" id="g2"></div>
+<div class="zoom" id="zoom"></div>
+<p class="sub" style="margin-top:8px">像素转圈放大看：12×12 的像素格上 8 个 2×2 的块围成一圈，亮的那块每 100 毫秒顺时针跳一格，后面拖两块渐暗的尾巴；一圈 800 毫秒。不旋转、不缓动，像游戏里的读取标志，和头像、图标同一套像素。打开「减少动态效果」时停在第一帧不动，秒数照走。停止键是同一格子上 6×6 的实心方块（18 pt 下 9 pt）。</p>
+
+<h2>三 · 图片缩略图看全图（#64 第一条）</h2>
+<p class="sub">缩略图框是 64×48（4:3）。现在用 cover：按框的比例裁掉多出来的部分，竖长的手机截图只剩中间一条，看不出是哪张图。改成 contain：整张图缩进框里，空出来的地方是浅灰底。虚线下面是拖进来的原图（缩小显示）。</p>
+<div class="grid two" id="g3"></div>
+
+<script>
+// ---- pixel art and icons, from app/theme ----
+const assistant = { pal: { a: '#F5C542', p: '#7C6CF0', d: '#5B4FD0', w: '#FFFFFF', e: '#231F3A', k: '#F0A3C0' }, g: [
+  '.....a......', '....aaa.....', '.....a......', '...pppppp...', '..pppppppp..', '.pppwwppwwp.',
+  '.pppweppwep.', '.pkpppppppk.', '.pppppddppp.', '.pppppppppp.', '.pp.pp.pp.p.', '.p..p..p..p.'] };
+function sprite(a, size) {
+  let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; }));
+  return `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12">${r}</svg>`;
+}
+const icon = (d, size) => `<svg class="px" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor"><path d="${d}"/></svg>`;
+const P = {
+  plus: 'M13 11h7v2h-7v7h-2v-7H4v-2h7V4h2v7Z',
+  up: 'M11 20h2V4h-2zm2-12h2V6h-2zm2 2h2V8h-2zm2 2h2v-2h-2zm-6-4H9V6h2zM15 10H7V8h8zm2 2H5v-2h12z',
+  chev: 'M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z',
+  close: 'M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z',
+  circle: 'M6 2h12v2H6zm0 18h12v2H6zM2 6h2v12H2zm18 0h2v12h-2zm-2-2h2v2h-2zm0 14h2v2h-2zM4 4h2v2H4zm0 14h2v2H4z',
+  check: 'M18 6h2v2h-2zm-2 4V8h2v2zm-2 2v-2h2v2zm-2 2h2v-2h-2zm-2 2h2v-2h-2zm-2 0v2h2v-2zm-2-2h2v2H6zm0 0H4v-2h2z',
+};
+const deepseek = `<svg width="16" height="16" viewBox="0 0 24 24" style="flex:none"><path fill="#4D6BFE" d="M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588z"/></svg>`;
+
+// ---- pieces ----
+const PH = '告诉我任何事，我来变成任务';
+const TEXT = '明天下午三点提醒我交房租';
+const av = (pulse) => `<span class="avatar${pulse ? ' pulse' : ''}">${sprite(assistant, 18)}</span>`;
+const plus = `<span class="plus">${icon(P.plus, 18)}</span>`;
+const chip = `<span class="chip">${deepseek}DeepSeek <span class="dot">·</span> deepseek-chat ${icon(P.chev, 12)}</span>`;
+const send = (kind) => kind === 'stop' ? `<span class="send stop" title="停止（Esc）"><b></b></span>`
+  : kind === 'spin' ? `<span class="send stop" title="停止（Esc）">${spinner()}</span>`
+  : `<span class="send${kind === 'off' ? ' off' : ''}">${icon(P.up, 18)}</span>`;
+// clockwise from the top; block k is lit in frame k
+const SPIN = [[5, 1], [8, 2], [9, 5], [8, 8], [5, 9], [2, 8], [1, 5], [2, 2]];
+function spinner(size = 18, frame = -1) {
+  const rects = SPIN.map(([x, y], k) => {
+    if (frame < 0) return `<rect x="${x}" y="${y}" width="2" height="2" fill="currentColor" style="animation-delay:${k * 100 - 800}ms"/>`;
+    const age = (frame - k + 8) % 8;
+    return `<rect x="${x}" y="${y}" width="2" height="2" fill="currentColor" style="animation:none;opacity:${[1, .6, .35][age] ?? .25}"/>`;
+  }).join('');
+  return `<svg class="spin" width="${size}" height="${size}" viewBox="0 0 12 12">${rects}</svg>`;
+}
+const rest = (right = '') => `<div class="box"><div class="line">${av()}<span class="ph">${PH}</span>${right}<span class="kbd">⌘K</span></div></div>`;
+const focusEmpty = (right = '') => `<div class="box focus"><div class="line">${plus}<span class="ph caret">${PH}</span>${right}</div></div>`;
+const typedBox = (text = TEXT, cls = '', button = send()) =>
+  `<div class="box focus tall"><div class="line"><span class="typed ${cls}">${text}</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${button}</div></div>`;
+const rows = `<div class="rows"><div class="sect">今天 <i>2</i></div>
+  <div class="tr"><span class="glyph">${icon(P.circle, 18)}</span>回复设计反馈<span class="when">下午 2:30</span></div>
+  <div class="tr"><span class="glyph">${icon(P.circle, 18)}</span>预约牙医<span class="when">明天</span></div></div>`;
+
+// ---- 一 · the chip ----
+const g1 = [
+  { id: '1A', title: 'A · 现在', note: '对照组。空框（静息和聚焦）都看不到模型；一打字，框长高一行，chip 才出现在第二行。',
+    html: `<div class="state">静息</div>${rest()}<div class="state">聚焦、空框</div>${focusEmpty()}<div class="state">有字</div>${typedBox()}` },
+  { id: '1B', title: 'B · 第一行右侧常驻', tag: '我倾向', note: '空框时 chip 放在第一行右边，⌘K 左边；框还是一行高，聚焦也不长高，不碰 spec 的顾虑。开始打字后和现在一样长出第二行，chip 下移到第二行右边（位置都在右侧，只下移一行）。静息时 chip 的底色比框深一档，免得糊在一起。检查器里的窄框放不下时，名字省略成「DeepSeek…」。',
+    html: `<div class="state">静息</div>${rest(chip)}<div class="state">聚焦、空框</div>${focusEmpty(chip)}<div class="state">有字</div>${typedBox()}` },
+  { id: '1C', title: 'C · 第二行一直在', note: '框永远是两行高（82 pt），+、chip、灰色发送键一直在第二行。最直观，chip 也不会挪；代价是静息的框从 50 pt 变成 82 pt，页面首屏少一行任务，也不再是 spec 说的「一行」。',
+    html: `<div class="state">静息</div><div class="box tall"><div class="line">${av()}<span class="ph">${PH}</span><span class="kbd">⌘K</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${send('off')}</div></div>
+      <div class="state">聚焦、空框</div><div class="box focus tall"><div class="line"><span class="ph caret">${PH}</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${send('off')}</div></div>
+      <div class="state">有字</div>${typedBox()}` },
+];
+
+// ---- 二 · thinking ----
+// each variant draws the box and the answer line for a phase: typed, thinking, done
+const reply = `<div class="answer">${av()}<span class="ok">${icon(P.check, 14)}</span>已添加「交房租」· 明天 下午 3:00<span class="undo">撤销</span></div>`;
+const g2 = [
+  { id: '2A', title: 'A · 现在', note: '回车后文字清空，第二行跟着收起：框缩回一行，下面的行往上跳。能看到的只有头像在呼吸、占位文字变成「思考中…」；要是接着打字，连这句都看不到。没有停止按钮，只能按 Esc。结果出来时下面的行又往下跳一次。',
+    draw: (ph) => ph === 'typed' ? typedBox()
+      : ph === 'thinking' ? `<div class="box focus"><div class="line">${av(true)}<span class="ph caret">思考中…</span></div></div>`
+      : `<div class="box focus"><div class="line">${plus}<span class="ph caret">${PH}</span></div></div>${reply}` },
+  { id: '2B', title: 'B · 框不收，下面一行说进度', tag: '我倾向', note: '回车后文字照常清空（可以接着写下一件事），但框保持两行高：发送键变成灰色的停止键（方块，点它等于 Esc）。框下面、将来放结果的那一行先显示像素转圈 + 「思考中 · 3 秒」（转圈在 18 pt 头像的位置，结果出来时头像正好顶替它），右边「Esc 取消」。结果出来时就替换这一行；结果显示期间框也保持两行，等结果收起时一起收回。从回车到出结果，框和下面的行都不动。秒数让人知道「还在干活、等了多久」；超过 15 秒改成「比平时慢，Esc 可以取消」。',
+    draw: (ph) => ph === 'typed' ? typedBox() + `<div class="answer" style="visibility:hidden"></div>`
+      : ph === 'thinking' ? typedBox('', '', send('stop')).replace('<span class="typed "></span>', `<span class="ph caret">${PH}</span>`) + `<div class="answer">${spinner()}<span>思考中</span><span class="elapsed">· 0 秒</span><span class="esc">Esc 取消</span></div>`
+      : `<div class="box focus tall"><div class="line"><span class="ph caret">${PH}</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${send('off')}</div></div>${reply}` },
+  { id: '2C', title: 'C · 文字留在框里，变灰扫光', note: '回车后文字不清空，变灰并有一道光扫过，表示「正在处理这句」；发送键里像素转圈，点它停止。结果出来才清空。一眼能看出在处理哪句话；代价是等待期间不能接着写下一件事，也看不到等了多久。',
+    draw: (ph) => ph === 'typed' ? typedBox() + `<div class="answer" style="visibility:hidden"></div>`
+      : ph === 'thinking' ? typedBox(TEXT, 'shimmer', send('spin')) + `<div class="answer" style="visibility:hidden"></div>`
+      : `<div class="box focus tall"><div class="line"><span class="ph caret">${PH}</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${send('off')}</div></div>${reply}` },
+];
+
+// ---- 三 · thumbnails ----
+const phone = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <rect width="390" height="844" fill="#fff"/><rect width="390" height="110" fill="#f2f2f7"/>
+  <text x="24" y="92" font-family="-apple-system,PingFang SC" font-size="34" font-weight="700" fill="#1d1d1f">周末要买的</text>
+  ${Array.from({ length: 11 }, (_, i) => `<circle cx="40" cy="${160 + i * 60}" r="11" fill="none" stroke="#c7c7cc" stroke-width="3"/><rect x="66" y="${152 + i * 60}" width="${[200, 150, 240, 120, 180, 210, 140, 230, 160, 190, 130][i]}" height="16" rx="8" fill="#d1d1d6"/>`).join('')}
+  <rect y="790" width="390" height="54" fill="#f9f9f9"/><circle cx="195" cy="814" r="16" fill="#ff9500"/></svg>`);
+const board = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600" viewBox="0 0 1600 600">
+  <rect width="1600" height="600" fill="#fdfcf7"/>
+  <rect x="60" y="80" width="300" height="200" fill="#ffe08a"/><rect x="420" y="80" width="300" height="200" fill="#a7e3c4"/>
+  <rect x="780" y="80" width="300" height="200" fill="#ffc2c7"/><rect x="1140" y="80" width="300" height="200" fill="#b9d3ff"/>
+  <rect x="60" y="340" width="300" height="200" fill="#b9d3ff"/><rect x="420" y="340" width="300" height="200" fill="#ffe08a"/>
+  <path d="M360 180 L420 180 M720 180 L780 180 M1080 180 L1140 180" stroke="#333" stroke-width="8"/>
+  <text x="80" y="140" font-family="PingFang SC" font-size="40" fill="#333">需求</text><text x="440" y="140" font-family="PingFang SC" font-size="40" fill="#333">设计</text>
+  <text x="800" y="140" font-family="PingFang SC" font-size="40" fill="#333">开发</text><text x="1160" y="140" font-family="PingFang SC" font-size="40" fill="#333">上线</text></svg>`);
+const pics = (fit) => `<div class="pics">${[phone, board].map(src => `<div class="pic"><img src="${src}" style="object-fit:${fit}"><span class="x">${icon(P.close, 10)}</span></div>`).join('')}</div>`;
+const picBox = (fit) => `<div class="box focus">${pics(fit)}<div class="line" style="height:40px"><span class="typed">把这两张图里的待办都记下来</span></div><div class="row2">${plus}<span class="grow"></span>${chip}${send()}</div></div>`;
+const origs = `<div class="orig"><figure><img src="${phone}" height="120">手机截图 390×844</figure><figure><img src="${board}" height="60">白板照片 1600×600</figure></div>`;
+const g3 = [
+  { id: '3A', title: 'A · 现在：cover，裁掉多出来的', note: '手机截图只剩中间几行灰条，白板只剩中间两张便签。拖进来几张相似的截图时，分不清哪张是哪张。', html: picBox('cover') + origs },
+  { id: '3B', title: 'B · contain，整张缩进框里', tag: '我倾向', note: '框的大小、圆角、描边、右上角的 × 都不变，只把缩放方式改成 contain（composer_pictures.go 一行）。竖图两边、横图上下露出浅灰底。整张图的轮廓（截图的标题栏、白板的四张便签）一眼能认出来。', html: picBox('contain') + origs },
+];
+
+// ---- render ----
+const panel = (p, play) => `<div><div class="caption">${p.title}${p.tag ? `<span class="tag">${p.tag}</span>` : ''}${play ? `<button data-play="${p.id}">播放</button>` : ''}</div>
+  <div class="frame" id="f${p.id}">${p.html || ''}</div><p class="note">${p.note}</p></div>`;
+document.getElementById('g1').innerHTML = g1.map(p => panel(p)).join('');
+document.getElementById('g2').innerHTML = g2.map(p => panel(p, true)).join('');
+document.getElementById('zoom').innerHTML = `<figure><div class="cell">${spinner(72)}</div>动起来 · 6 倍</figure>` +
+  Array.from({ length: 8 }, (_, f) => `<figure><div class="cell">${spinner(48, f)}</div>第 ${f + 1} 帧</figure>`).join('') +
+  `<figure><div class="cell">${spinner(18)}</div>实际 18 pt</figure>`;
+document.getElementById('g3').innerHTML = g3.map(p => panel(p)).join('');
+
+const head = `<div class="state">「我的」页顶部</div>`;
+function show(p, ph) { document.getElementById('f' + p.id).innerHTML = head + p.draw(ph) + rows; }
+// v9.html#thinking or #done opens section 二 at that phase, for screenshots
+const still = location.hash.slice(1);
+g2.forEach(p => show(p, ['thinking', 'done'].includes(still) ? still : 'typed'));
+const timers = {};
+function play(p) {
+  (timers[p.id] || []).forEach(clearTimeout);
+  clearInterval(timers[p.id + 'tick']);
+  show(p, 'typed');
+  const t0 = performance.now() + 700;
+  timers[p.id] = [
+    setTimeout(() => {
+      show(p, 'thinking');
+      timers[p.id + 'tick'] = setInterval(() => {
+        const el = document.querySelector(`#f${p.id} .elapsed`);
+        if (el) el.textContent = `· ${Math.floor((performance.now() - t0) / 1000)} 秒`;
+      }, 200);
+    }, 700),
+    setTimeout(() => { clearInterval(timers[p.id + 'tick']); show(p, 'done'); }, 700 + 4500),
+  ];
+}
+document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => play(g2.find(p => p.id === b.dataset.play)));
+
+document.getElementById('mode').onclick = (e) => {
+  const dark = document.body.classList.toggle('night');
+  document.querySelectorAll('.frame').forEach(f => f.classList.toggle('dark', dark));
+  e.target.textContent = dark ? '切到浅色' : '切到深色';
+};
+</script>
+</body>
+</html>
