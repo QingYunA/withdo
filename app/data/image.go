@@ -23,9 +23,13 @@ const (
 	MaxPictures     = 4        // at most this many ride along with a text
 	MaxPictureEdge  = 1600     // the long side, in pixels, after downscaling
 	MaxPictureSize  = 5 << 20  // bytes, after downscaling
+	MaxOriginalSize = 20 << 20 // an original up to this size is kept with a task; a larger one keeps the prepared copy
 	maxSourceSize   = 64 << 20 // a file larger than this is not even read
 	maxSourcePixels = 100_000_000
 )
+
+// originalLimit is MaxOriginalSize; tests lower it.
+var originalLimit = MaxOriginalSize
 
 var (
 	// ErrPictureFormat means the bytes are not a PNG, JPEG, GIF or WebP picture (a HEIC photo
@@ -37,8 +41,22 @@ var (
 
 // PrepareImage turns the bytes of a picture into an Attachment: downscaled to 1600 pixels on the
 // long side, as JPEG when it came as one and has no transparency, else as PNG (a PNG that is
-// still over 5 MB goes out as a JPEG on white). Nothing is written anywhere.
+// still over 5 MB goes out as a JPEG on white). The original bytes ride along when they are up to
+// 20 MB and differ from the prepared copy, for the task that keeps the picture. Nothing is
+// written anywhere.
 func PrepareImage(name string, raw []byte) (Attachment, error) {
+	att, err := prepareImage(name, raw)
+	if err != nil {
+		return att, err
+	}
+	if len(raw) <= originalLimit && !bytes.Equal(raw, att.Data) {
+		_, format, _ := image.DecodeConfig(bytes.NewReader(raw))
+		att.Original, att.OriginalMIME = raw, "image/"+format
+	}
+	return att, nil
+}
+
+func prepareImage(name string, raw []byte) (Attachment, error) {
 	cfg, format, err := image.DecodeConfig(bytes.NewReader(raw))
 	if err != nil || cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width*cfg.Height > maxSourcePixels {
 		return Attachment{}, ErrPictureFormat
@@ -84,6 +102,15 @@ func ReadImageFile(path string) (Attachment, error) {
 		return Attachment{}, ErrPictureSize
 	}
 	return PrepareImage(filepath.Base(path), raw)
+}
+
+// Stored is the picture as a task keeps it: the original when the attachment has one, else the
+// prepared copy, with its MIME type.
+func (a Attachment) Stored() (data []byte, mime string) {
+	if len(a.Original) > 0 {
+		return a.Original, a.OriginalMIME
+	}
+	return a.Data, a.MIME
 }
 
 // Thumbnail decodes a prepared picture, for drawing it small.

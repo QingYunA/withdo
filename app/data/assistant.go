@@ -47,11 +47,15 @@ type Assistant interface {
 }
 
 // Attachment is a picture sent with a request, already prepared by PrepareImage. It lives in
-// memory only: it is never written to the database or to disk.
+// memory until the turn is over; the tasks the turn creates or changes keep it (see Images).
 type Attachment struct {
 	Name string // the file's name, for the thumbnail's label
-	MIME string // image/jpeg, image/png or image/gif
+	MIME string // image/jpeg or image/png: the prepared copy the model gets
 	Data []byte
+	// Original is the file as it was read, when that is up to 20 MB and not the prepared copy
+	// already; nil otherwise. OriginalMIME is its type: image/jpeg, png, gif or webp.
+	Original     []byte
+	OriginalMIME string
 }
 
 // Reply is what one turn produced.
@@ -69,6 +73,7 @@ type Receipt struct {
 	Detail Detail // what changed, as data: the views word it
 	Status Status
 	Bell   bool // the change set a reminder
+	Images int  // how many of the turn's pictures the task kept
 }
 
 // Detail is what a receipt says about a change: a reminder at a time, a due time, the fields an

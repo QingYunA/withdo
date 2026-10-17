@@ -64,7 +64,7 @@ func openBackend(fake, empty bool) (*backend, error) {
 
 func openReal(path string) (*backend, error) {
 	dir := filepath.Dir(path)
-	r, err := data.OpenReal(context.Background(), path, data.RealOptions{})
+	r, err := data.OpenReal(context.Background(), path, data.RealOptions{DataFolder: dir})
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func openReal(path string) (*backend, error) {
 		dataFolder: dir,
 		start:      func(<-chan struct{}) { r.Start(); poller.Start() },
 		close:      func() error { poller.Stop(); return r.Close() },
-		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr},
+		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},
 		models:     &data.ProviderSettings{Provider: mgr},
 		github:     data.PollerGitHub{Poller: poller},
 		seen:       data.FileSeen{Path: filepath.Join(dir, seenFile)},
