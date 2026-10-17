@@ -632,7 +632,7 @@ centred empty state.
   and the age at the right gives way to the same tinted buttons as the row's From your agents row
   on Mine: in review, **Open PR** + **Accept** (with a pull request) or **Review** + **Accept**
   (without); blocked, **Answer**. Other rows show no buttons (a click opens the inspector, as
-  before). Accept leaves as in **Accepting** (Mine): the row folds out of In review (the group's
+  before). While the row's task menu is open the menu has the choices and the row shows its age. Accept leaves as in **Accepting** (Mine): the row folds out of In review (the group's
   header folds with it when it was the last) and opens at the top of the column's Done. The same
   holds in a project's single list and in the Inbox list.
 - **An empty column** keeps its header and one quiet `text.tertiary` line. Mine: `Nothing for you here
@@ -708,6 +708,8 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
   Doing) shows the same buttons as its Agents row in place of the age at the right of its meta
   line. Accept stamps the button as in **Accepting**, then the card leaves with the board's exit
   (`cardMotion`: it shrinks and folds) and enters at the top of Done.
+  In a lane narrower than 200 pt two buttons do not fit beside the meta line: they take a line of
+  their own under it.
 - **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
   status as before (a blocked card dropped on Doing stays blocked); there are no drop targets for
   hidden statuses.
