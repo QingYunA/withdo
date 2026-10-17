@@ -15,13 +15,13 @@ const (
 	modelPopWidth float32 = 270
 	modelChipH    float32 = 24
 	modelRowH     float32 = 32
-	modelLogo     float32 = 16
+	modelLogo     float32 = theme.LogoChip
 )
 
-// providerMark is the logo of a provider at size points. It is the one place the composer draws a
-// logo, so it takes one line to change.
-func providerMark(c *ui.Context, p data.Provider, size float32) ui.Element {
-	return theme.ProviderLogo(c, p.ID, size)
+// providerMark is the logo of a provider at size points, a one-color mark in the text color. It is
+// the one place the composer draws a logo, so it takes one line to change.
+func providerMark(c *ui.Context, t *theme.Tokens, p data.Provider, size float32) ui.Element {
+	return theme.ProviderLogo(c, p.ID, size, t.Text)
 }
 
 // modelsReady are the providers that are set up, in Settings' order, and the one in use among them.
@@ -77,7 +77,7 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell, comp
 	}
 	chip.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	chip.Children(func() {
-		providerMark(c, active, modelLogo).Shrink(0)
+		providerMark(c, t, active, modelLogo).Shrink(0)
 		if !compact {
 			theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
@@ -121,7 +121,7 @@ func (m *Main) modelRow(c *ui.Context, t *theme.Tokens, s surface, p data.Provid
 		row.Background(t.BgHover)
 	}
 	row.Children(func() {
-		providerMark(c, p, modelLogo).Shrink(0)
+		providerMark(c, t, p, modelLogo).Shrink(0)
 		theme.Text(c, theme.Compact, t.Text, p.Name).Shrink(0)
 		theme.Text(c, theme.Meta, t.TextTertiary, p.Model).Grow(1).MinWidth(0).Ellipsis("…").TextAlign(ui.End)
 		if p.Active {

@@ -7,12 +7,12 @@ import (
 	"github.com/QingYunA/adhd-todo/app/data"
 )
 
-// The inspector puts a small ✦ after a value the assistant set in the last 10 seconds.
+// The inspector puts a small pixel sparkle (labeled "Set by the assistant") after a value the assistant set in the last 10 seconds.
 
 func countMarks(r *assistRig) int {
 	n := 0
 	for _, s := range r.tt.Texts() {
-		if s == "✦" {
+		if s == "Set by the assistant" {
 			n++
 		}
 	}

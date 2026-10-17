@@ -8,7 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// markFor is how long a value the assistant set carries its ✦ in the inspector.
+// markFor is how long a value the assistant set carries its sparkle in the inspector.
 const markFor = 10 * time.Second
 
 // markReceipts notes the fields of a task the assistant just set, from what its receipts say, so
@@ -89,8 +89,8 @@ func changeField(c data.Change) string {
 	return ""
 }
 
-// assistMark is the small accent ✦ after a value of the open task that the assistant set in the
-// last 10 s.
+// assistMark is the small accent pixel sparkle after a value of the open task that the assistant
+// set in the last 10 s.
 func (m *Main) assistMark(c *ui.Context, t *theme.Tokens, key string) {
 	at, ok := m.marks[m.inspector.lastOpen][key]
 	if !ok {
@@ -104,6 +104,6 @@ func (m *Main) assistMark(c *ui.Context, t *theme.Tokens, key string) {
 	label := m.say.MarkAssistant()
 	ui.Row(c.Key("mark-"+key)).Shrink(0).Padding(0, 5).Radius(5).Background(t.BgSelected).AlignItems(ui.Center).
 		Label(label).Tooltip(label).Children(func() {
-		theme.Text(c, theme.MetaStrong, t.Accent, "✦")
+		ui.Icon(c, theme.IconSparkle).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent)
 	})
 }

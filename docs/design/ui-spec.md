@@ -115,8 +115,11 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
   the layout are not.
 - **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
   solid edge, a hard 4 pt shadow with no blur.
-- **The one exception for now** is the provider logos (lobe-icons), which keep their official
-  colors.
+- **Provider marks are the one picture on an 18 x 18 grid** (v11): their official shapes do not
+  survive 12 x 12, and the user must recognize them. They are not redrawn: each official SVG is
+  sampled onto the grid by `docs/design/tools/sample_marks.py` (a cell is lit where the mark covers
+  it, in the mark's own color) into `app/theme/provider_marks.go`. Drawn only at 18 pt (1 pt a pixel)
+  and 36 pt (2 pt). Anthropic is the Claude Code crab of the sidebar, the same sprite in both places.
 
 The busy indicator (`theme.PixelSpinner`, reference `docs/design/mockups/v9.html`): eight 2 x 2
 blocks round the 12 x 12 grid, clockwise from the top (5,1), (8,2), (9,5), (8,8), (5,9), (2,8),
@@ -161,7 +164,7 @@ rectangles, so they stay sharp at any size).
 **Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
 2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
 LICENSE and a README line, embedded with `go:embed` and tinted with the color of the surrounding
-text (`fill="currentColor"`, no strokes). Provider logos (lobe-icons) keep their own colors. Icons
+text (`fill="currentColor"`, no strokes). Provider logos are pixel marks too (see **Pixel language**). Icons
 are drawn only at whole multiples of the pixel grid: `theme.IconSmall` 12 pt (meta lines, chevrons,
 checks, clear buttons, search fields, the plus of the section header), `IconRow` 18 pt (sidebar,
 menus, inspector properties, view toggle, calendar and menu back buttons, the close button, send,
@@ -476,7 +479,7 @@ page's title already says where a task goes, so the input has no label, no chip 
   in the avatar's place so images can be added at once. (A box that grows when it is focused would
   shift the page under a press that blurs it, and the click would be lost.) Without a model there is
   no second row, no `+` and no chip.
-- **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's logo (16), `Provider · model`
+- **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's pixel mark (18), `Provider · model`
   in `meta` `text.secondary`, a 12 pt chevron. On a one-line box with no room for its words (the
   inspector's, and a page's under 720 pt of content) it is the logo and the chevron alone, its words in
   a tooltip, so the placeholder reads whole; the second row always has the words, ellipsized.
@@ -760,7 +763,7 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
   never overlap it. The answer is the one line of **Assistant**, its left edge on the properties' (24 pt),
   leaving out the title the pane already shows; the composer is the same quiet box (see **Composer**,
   without `⌘K`, placeholder `Change anything about this task`). `Ask about this task…` (⌘J) focuses it.
-  Values the assistant set in the last 10 s carry a small accent `✦` after the value. Priority reads as
+  Values the assistant set in the last 10 s carry a small accent mark after the value: the pixel `sparkle` (`IconSparkle`, 12 pt) on a `bg.selected` pill. Priority reads as
   text (`P1  High`), with no bars glyph.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
@@ -1028,14 +1031,16 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   key or model field is the same as the button. **Custom** adds **Base URL** and **Protocol**
   (OpenAI-compatible | Anthropic API) above the key, and its model is always typed. Magpie and Ollama
   have no key row. A missing key, base URL or model is said under the fields without a request.
-- **Provider logos** (M6): the official marks of lobe-icons (MIT, `@lobehub/icons-static-svg` 1.95.1),
-  vendored as SVG under `app/theme/logos/` with their LICENSE and embedded in the binary, so nothing is
-  fetched. `theme.ProviderLogo(c, presetID, size)` draws one `size` pt square: Anthropic (`claude-color`),
-  DeepSeek, 智谱, 通义千问, Gemini, OpenRouter and 硅基流动 in their own colors (`ui.Image`); OpenAI,
-  Kimi and Ollama only have one color, so they use `ui.Icon` and follow the text color (white in dark
-  mode; the caller sets it with `TextColor`, Settings uses `text`); Magpie is the pixel robot in teal;
-  Custom is a plus in `text.secondary`. Sizes: `LogoCard` 38, `LogoTile` 32, `LogoRow` 28, `LogoChip` 16
-  (for the composer's model chip). The provider logo is never a colored tile with letters any more.
+- **Provider logos** (M6, pixel since v11, `docs/design/mockups/v11.html`): the official marks of
+  lobe-icons (MIT, `@lobehub/icons-static-svg` 1.95.1) stay vendored as SVG under `app/theme/logos/`
+  with their LICENSE, as the source of the pixel marks; the app draws the 18 x 18 sprites of
+  `app/theme/provider_marks.go`, generated from them (see **Pixel language**), so nothing is fetched.
+  `theme.ProviderLogo(c, presetID, size)` draws one `size` pt square: DeepSeek, 智谱, 通义千问, Gemini,
+  OpenRouter and 硅基流动 in their own colors; OpenAI, Kimi and Ollama only have one color and follow
+  the text color (white in dark mode; the caller passes it, Settings uses `text`); Anthropic is the
+  Claude Code crab; Magpie is the pixel robot in teal; Custom is the pixel plus in `text.secondary`.
+  Sizes, whole pixels only: `LogoCard` 36, `LogoTile` 36, `LogoRow` 18, `LogoChip` 18 (the composer's
+  model chip and its menu). The provider logo is never a colored tile with letters any more.
 - **Agents** (M6, `v5.html` frame 6): the label **Agents on this Mac**, one plain `meta` line under
   it ("Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here.
   It does not install or start the agent."), then ten agents in **two columns**, each column a white
