@@ -101,7 +101,7 @@
   <div class="frame-wrap">
     <div class="caption"><span class="tag">1</span>浅色 · 中文：本机已有 6，更多 8</div>
     <div class="sw" id="win-zh"></div>
-    <p class="note">本机已有的六行保留原有信息：汇报次数、找到的路径、MCP 已安装或安装按钮。更多只留名字和去下载，不再重复「这台 Mac 上没有」。DeepSeek Harness 用仓库里已有的 18×18 DeepSeek 标记（黑色），和 provider logo 同一套采样；12×12 放不下鲸鱼的细节。深色模式自动反白。其他新 harness 先用按名字着色的机器人。</p>
+    <p class="note">本机已有的六行保留原有信息：汇报次数、找到的路径、MCP 已安装或安装按钮。更多只留名字和去下载，不再重复「这台 Mac 上没有」。DeepSeek 用 18×18 的 DeepSeek mark；Cursor/Copilot 用 24×24 的官方图标像素版（立方体、机器人脸）。Claude/Codex 等 mascot 仍是 12×12。深色模式整体反白。</p>
   </div>
   <div class="frame-wrap">
     <div class="caption"><span class="tag">2</span>深色 · 英文：On this Mac / More</div>
@@ -127,7 +127,7 @@
 
 <h2>这一版加进来的 harness</h2>
 <ul class="list">
-  <li><b>DeepSeek Harness</b>：图标用 lobe-icons 的 DeepSeek 鲸鱼；本机有 <code>~/.dsh</code>，但 PATH 里没有 <code>dsh</code> 命令，检测靠配置目录。它的 MCP 不是 JSON 配置，而是 Cordis 补丁（<code>~/.dsh/cordis.patch.yml</code> 或 profile 里的 patch），所以「安装 MCP」要新写一个 YAML 分支；YAML 写不了就落到现有的手动片段。</li>
+  <li><b>DeepSeek Harness</b>：图标用 lobe-icons 的 DeepSeek 鲸鱼（18×18 像素 mark）；本机有 <code>~/.dsh</code>，但 PATH 里没有 <code>dsh</code> 命令，检测靠配置目录。它的 MCP 不是 JSON 配置，而是 Cordis 补丁（<code>~/.dsh/cordis.patch.yml</code> 或 profile 里的 patch），所以「安装 MCP」要新写一个 YAML 分支；YAML 写不了就落到现有的手动片段。</li>
   <li><b>Amp、Kiro、Cline</b>：各查一次配置位置和安装方式。查不到自动安装的，先只进「更多」或给手动接入，不硬塞一个会失败的按钮。</li>
 </ul>
 
@@ -150,8 +150,8 @@
 <h2>图标：像素化的做法</h2>
 <ul class="list">
   <li><b>Claude Code</b>：app 里是 <code>app/theme/pixel.go</code> 的 <code>spriteClaude</code>，12×12 手画像素螃蟹，不是写实图加像素滤镜。12 行字符就是全部，放大也不会出现更多细节。lobe-icons 的官方 <code>claudecode</code> 是另一张图（终端脸）。</li>
-  <li><b>Cursor、Copilot</b>：官方图标在 lobe-icons 上都有（Cursor 是立方体、Copilot 是机器人脸）。app 现在的 Cursor 是箭头、Copilot 接近官方。要用官方 mark 的话，头像得整组一起换，风格才不打架。</li>
-  <li><b>DeepSeek Harness</b>：12×12 的鲸鱼只剩一团黑，认不出；所以用仓库里已有的 18×18 DeepSeek 标记（黑色），跟 provider logo 同一套采样。18×18 仍是像素图，不是矢量。</li>
+  <li><b>Cursor、Copilot</b>：已按 lobe-icons 的官方图重画成 24×24 像素：Cursor 是立方体，Copilot 是机器人脸。app 现在 Cursor 还是鼠标箭头；实现时换成这两个 sprite。</li>
+  <li><b>DeepSeek Harness</b>：12×12 的鲸鱼只剩一团黑，认不出；所以用仓库里已有的 18×18 DeepSeek 标记（黑色），和 provider logo 同一套采样。18×18 仍是像素图，不是矢量。</li>
 </ul>
 
 <script>
@@ -166,10 +166,32 @@ const P = {
     '............','...bbb.bbb..','..bbbbbbbbb.','.bbbbbbbbbbb','.bwbbbbbbbbb',
     'bbbwbbbbbbbb','bbbbwbbbbbbb','bbbwbbbbbbbb','bbwbbbwwwbbb','.ddddddddddd',
     '..dddd.dddd.','............' ] },
-  cursor: { pal: { k: '#26262b', w: '#ffffff' }, g: [
-    '.k..........','.kk.........','.kwk........','.kwwk.......','.kwwwk......',
-    '.kwwwwk.....','.kwwwwwk....','.kwwwwwwk...','.kwwwkkkk...','.kwkwk......',
-    '.kk.kwk.....','.....kk.....' ] },
+  cursor: { pal: { k: '#1d1d1f' }, dark: { k: '#d0d7de' }, g: [
+    '...........kk...........',
+    '.........kkkkkk.........',
+    '.......kkkkkkkkkk.......',
+    '.....kkkkkkkkkkkkkk.....',
+    '....kkkkkkkkkkkkkkkk....',
+    '..kkkkkkkkkkkkkkkkkkkk..',
+    '.kkk.................kk.',
+    '.kkk.................kk.',
+    '.kkkkk..............kkk.',
+    '.kkkkkkk............kkk.',
+    '.kkkkkkkkk.........kkkk.',
+    '.kkkkkkkkkk........kkkk.',
+    '.kkkkkkkkkkk......kkkkk.',
+    '.kkkkkkkkkkk......kkkkk.',
+    '.kkkkkkkkkkk.....kkkkkk.',
+    '.kkkkkkkkkkk....kkkkkkk.',
+    '.kkkkkkkkkkk....kkkkkkk.',
+    '.kkkkkkkkkkk...kkkkkkkk.',
+    '..kkkkkkkkkk...kkkkkkk..',
+    '....kkkkkkkk..kkkkkk....',
+    '.....kkkkkkk.kkkkkk.....',
+    '.......kkkkk.kkkk.......',
+    '.........kkkkkk.........',
+    '...........kk...........',
+  ] },
   gemini: { pal: { b: '#4f8ef7', v: '#9b6cf0', l: '#8fc4ff' }, g: [
     '.....b......','.....b......','....bbb.....','....bbb.....','..lbbbbbv...',
     'lllbbbbbvvv.','..lbbbbbv...','....vvv.....','....vvv.....','.....v......',
@@ -178,17 +200,52 @@ const P = {
     '............','..kkkkkkkk..','..kkkkkkkk..','..kk....kk..','..kk.gg.kk..',
     '..kk.gg.kk..','..kk.gg.kk..','..kk....kk..','..kkkkkkkk..','..kkkkkkkk..',
     '............','............' ] },
-  copilot: { pal: { k: '#24292f', w: '#ffffff', b: '#8250df' }, g: [
-    '............','...kkkkkk...','..kkkkkkkk..','.kkwwkkwwkk.','.kwwbwwbwwk.',
-    '.kkwwkkwwkk.','.kkkkkkkkkk.','.kkk.kk.kkk.','..kkkkkkkk..','...kkkkkk...',
-    '............','............' ] },
+  copilot: { pal: { k: '#1d1d1f' }, dark: { k: '#d0d7de' }, g: [
+    '........................',
+    '........................',
+    '..........kkkk..........',
+    '.......kkkkkkkkkk.......',
+    '......kkkkkkkkkkkk......',
+    '....kk....kkkk....kk....',
+    '....k.....kkkk.....k....',
+    '...kk.....kkkk.....kk...',
+    '...kk.....kkkk.....kk...',
+    '...kk.....kkkk.....kk...',
+    '...kkk..kkk..kkk..kkk...',
+    '.kkkkkkkkk....kkkkkkkkk.',
+    'kkkkk..............kkkkk',
+    'kkkkk..............kkkkk',
+    'kkkkk...kkk..kkk...kkkkk',
+    'kkkkk...kkk..kkk...kkkkk',
+    'kkkkk...kkk..kkk...kkkkk',
+    '.kkkk..............kkkk.',
+    '..kkkk............kkkk..',
+    '....kkkkk......kkkkk....',
+    '......kkkkkkkkkkkk......',
+    '..........kkkk..........',
+    '........................',
+    '........................',
+  ] },
   deepseek: { pal: { a: '#1d1d1f' }, dark: { a: '#f5f5f7' }, g: [
-    '..................', '..................', '..................',
-    '...aaaaaa...aa...a', '..aaaaaaaa..aaaaaa', '.aaaaaaaaaa.aaaaa.',
-    'aaaaaaaaaaaa.aaa..', 'a...aaaaaaaaaaa...', 'a.....aaaa.aaaa...',
-    'aa.....aaaa.aaa...', 'aa......aaaaaa....', '.aa......aaaaa....',
-    '.aaa..a..aaaa.....', '..aaaaaaa.aaaa....', '...aaaaaaaa.......',
-    '......aa..........', '..................', '..................' ] },
+    '..................',
+    '..................',
+    '..................',
+    '...aaaaaa...aa...a',
+    '..aaaaaaaa..aaaaaa',
+    '.aaaaaaaaaa.aaaaa.',
+    'aaaaaaaaaaaa.aaa..',
+    'a...aaaaaaaaaaa...',
+    'a.....aaaa.aaaa...',
+    'aa.....aaaa.aaa...',
+    'aa......aaaaaa....',
+    '.aa......aaaaa....',
+    '.aaa..a..aaaa.....',
+    '..aaaaaaa.aaaa....',
+    '...aaaaaaaa.......',
+    '......aa..........',
+    '..................',
+    '..................',
+  ] },
   bot: { pal: { m: '#8e8e99', d: '#6b6b76', w: '#ffffff', e: '#2a2a33', a: '#c9c9d1' }, g: [
     '.....a......','.....m......','..mmmmmmmm..','..mmmmmmmm..','.dmwwmmwwmd.',
     '.dmwemmwemd.','.dmmmmmmmmd.','..mmeeeemm..','..mmmmmmmm..','...dddddd...',
