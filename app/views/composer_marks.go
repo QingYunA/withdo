@@ -8,7 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// markFor is how long a value the assistant set carries its ✦ in the inspector.
+// markFor is how long a value the assistant set carries its sparkle in the inspector.
 const markFor = 10 * time.Second
 
 // markReceipts notes the fields of a task the assistant just set, from what its receipts say, so
