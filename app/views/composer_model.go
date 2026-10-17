@@ -6,10 +6,10 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The model chip is at the right of the composer, in the one-line box or in its second row: the logo of the provider in use and
-// "Provider · model ⌄". It opens a drawn popover (a native menu cannot show logos) that lists the
-// providers that are set up, each with its model, the one in use checked. Choosing one makes it the
-// provider in use, the same as in Settings > Assistant.
+// The model chip is at the right of the composer, in the one-line box or in its second row: the logo
+// of the provider in use and "Provider · model ⌄". It opens a drawn popover (a native menu cannot
+// show logos) that lists the providers that are set up, each with its model, the one in use checked.
+// Choosing one makes it the provider in use, the same as in Settings > Assistant.
 
 const (
 	modelPopWidth float32 = 270
