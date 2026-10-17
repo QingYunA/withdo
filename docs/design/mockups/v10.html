@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v10 草稿 — 收下：动画和项目页的入口</title>
+<style>
+  :root {
+    --bg: #ffffff; --subtle: #f5f5f7; --tray: #f8f8fa; --hover: rgba(0,0,0,.04); --border: rgba(0,0,0,.10);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --done: #30a46c; --stale: #d97706;
+  }
+  .dark {
+    --bg: #1c1c1e; --subtle: #232326; --tray: #202023; --hover: rgba(255,255,255,.06); --border: rgba(255,255,255,.10);
+    --text: #f5f5f7; --text2: #a1a1a6; --text3: #636366; --accent: #7c7cf0; --done: #4cc38a; --stale: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  body.night { background: #111113; color: #e6e6ee; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; align-items: center; gap: 16px; }
+  h1 button, .caption button { font: 500 12px/20px -apple-system, "PingFang SC"; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  .night h1 button, .night .caption button { background: rgba(255,255,255,.12); }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 48px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 24px; }
+  .night .lead, .night .sub, .night .note, .night .caption { color: #a1a1a6; }
+  .grid { display: grid; grid-template-columns: repeat(2, 600px); gap: 40px 40px; align-items: start; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; display: flex; align-items: center; gap: 10px; }
+  .caption .tag { font-weight: 500; font-size: 12px; color: #fff; background: #5b5bd6; border-radius: 6px; padding: 0 7px; }
+  .caption button:first-of-type { margin-left: auto; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; }
+  .frame { width: 600px; background: var(--bg); color: var(--text); border-radius: 12px; overflow: hidden; padding: 20px 24px 24px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+  .state { font-size: 11px; line-height: 16px; color: var(--text3); margin: 18px 0 6px 2px; }
+  .state:first-child { margin-top: 0; }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  /* sections and rows */
+  .sect { font-size: 13px; font-weight: 600; color: var(--text2); height: 28px; display: flex; align-items: center; gap: 6px; margin-top: 14px; }
+  .sect i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .panel { border: 1px solid var(--border); border-radius: 12px; padding: 4px 14px; margin-top: 4px; overflow: hidden; }
+  .rule { height: 1px; background: var(--border); margin: 0 -14px; }
+  .need { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
+  .need .av { margin-top: 2px; }
+  .body { flex: 1; min-width: 0; }
+  .title { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sum { font-size: 13px; line-height: 18px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .right { display: flex; align-items: center; gap: 8px; flex: none; align-self: center; }
+  .age { font-size: 13px; color: var(--text3); }
+  .age.stale { color: var(--stale); }
+  .btn { font-size: 13px; font-weight: 500; height: 26px; padding: 0 10px; border-radius: 7px; display: inline-flex; align-items: center; gap: 5px; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); cursor: pointer; user-select: none; white-space: nowrap; }
+  .btn.stamped { background: color-mix(in srgb, var(--done) 16%, transparent); color: var(--done); }
+  .tr { display: flex; align-items: center; gap: 10px; height: 36px; font-size: 15px; }
+  .tr .when { margin-left: auto; color: var(--text3); font-size: 13px; white-space: nowrap; }
+  .tr.done .t { color: var(--text2); }
+  .tr .meta { color: var(--text3); font-size: 13px; margin-left: auto; white-space: nowrap; }
+  .tr .meta + .when { margin-left: 10px; }
+
+  /* the agents column of a project */
+  .tray { background: var(--tray); border-radius: 12px; padding: 14px 16px 10px; }
+  .colhead { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .colhead i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .grp { display: flex; align-items: center; gap: 8px; height: 30px; font-size: 15px; font-weight: 600; margin-top: 10px; }
+  .grp i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .arow { display: flex; align-items: flex-start; gap: 10px; padding: 6px 6px 6px 32px; margin: 0 -6px; border-radius: 9px; }
+  .arow .av { margin-top: 2px; }
+  .arow .acts { display: none; }
+  .arow.live:hover, .arow.hover { background: var(--hover); }
+  .arow.live:hover .acts, .arow.hover .acts { display: flex; }
+  .arow.live:hover .age, .arow.hover .age { display: none; }
+  .arow.done .title { color: var(--text2); font-weight: 400; }
+
+  /* the board card */
+  .lane { width: 260px; }
+  .lanehead { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; height: 28px; }
+  .lanehead i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .card { position: relative; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 8px; }
+  .card .foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; height: 26px; }
+  .card .foot .acts { display: none; margin-left: auto; gap: 6px; }
+  .card.live:hover .acts, .card.hover .acts { display: flex; }
+  .card.live:hover .age, .card.hover .age { display: none; }
+  .card .age { margin-left: auto; }
+  .lanes { display: flex; gap: 20px; }
+
+  .wrap { overflow: hidden; }
+  .zoom { display: flex; gap: 14px; align-items: flex-end; margin: 18px 4px 0; font-size: 12px; color: #6e6e73; }
+  .zoom figure { margin: 0; text-align: center; }
+  .zoom .cmp { display: flex; gap: 14px; align-items: flex-end; margin-left: 24px; padding-left: 24px; border-left: 1px dashed rgba(0,0,0,.2); }
+  .zoom .cell { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.15); }
+  .night .zoom .cell { background: #1c1c1e; }
+</style>
+</head>
+<body>
+<h1>v10 · 收下：动画，以及项目页的入口 <button id="mode">切到深色</button></h1>
+<p class="lead">PR 2 的两件事：一、点「收下」以后，这一行怎么离开（#69）；二、项目页里待审查的 agent 任务，鼠标悬停时露出「收下」（#70）。按 Pixel language：按钮里的勾是像素画，逐帧画出来；行的收起、下面的行上移、进入「今天做完」是布局动画，保持平滑。每块右上角可以播放和慢放 10 倍，框里的「收下」也能直接点。</p>
+
+<h2>一 · 点「收下」之后（#69）</h2>
+<p class="sub">「我的」页顶部：Agent 交过来的两件事，下面是「今天」和「今天做完」。点「收下」之后，注意看三处：按钮、这一行、下面的行。</p>
+<div class="grid" id="g1"></div>
+<div class="zoom" id="zoom"></div>
+
+<h2>二 · 项目页：悬停露出「收下」（#70）</h2>
+<p class="sub">项目页右边的 Agent 栏。平时一行和现在一模一样；鼠标移上去（或键盘选中）时，右边的时间换成按钮：有 PR 的是「打开 PR」+「收下」，没有 PR 的是「去看看」+「收下」，和「我的」页一致。右边一块可以真的把鼠标移上去、点「收下」。</p>
+<div class="grid" id="g2"></div>
+
+<h2>三 · 看板卡片（#70）</h2>
+<p class="sub">看板里待审查的卡片也一样：悬停时卡片底部右边的时间换成按钮。拖到「已完成」那一列照旧可以完成。</p>
+<div class="grid" id="g3"></div>
+
+<script>
+// ---- pixel art, from app/theme ----
+const SPR = {
+  claude: { pal: { o: '#D97757', d: '#B85C3E', e: '#2B1D17' }, g: ['............', '............', '..oooooooo..', '..oooooooo..', '..oeooooeo..', 'oooeooooeooo', 'oooooooooooo', '..oooooooo..', '..oooooooo..', '..d.d..d.d..', '..d.d..d.d..', '............'] },
+  agent: { pal: { a: '#F5C542', p: '#7C6CF0', d: '#5B4FD0', w: '#FFFFFF', e: '#231F3A', k: '#F0A3C0' }, g: ['.....a......', '....aaa.....', '.....a......', '...pppppp...', '..pppppppp..', '.pppwwppwwp.', '.pppweppwep.', '.pkpppppppk.', '.pppppddppp.', '.pppppppppp.', '.pp.pp.pp.p.', '.p..p..p..p.'] },
+};
+function sprite(name, size) {
+  const a = SPR[name]; let r = '';
+  a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; }));
+  return `<svg class="px av" width="${size}" height="${size}" viewBox="0 0 12 12">${r}</svg>`;
+}
+const DISC = ['....####....','..########..','.##########.','.##########.','############','############','############','############','.##########.','.##########.','..########..','....####....'];
+const RING = ['....####....','..##....##..','.#........#.','.#........#.','#..........#','#..........#','#..........#','#..........#','.#........#.','.#........#.','..##....##..','....####....'];
+const cellsOf = rows => rows.flatMap((r, y) => [...r].map((ch, x) => ch === '#' ? [x, y] : null).filter(Boolean));
+const rects = (cells, color) => cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}"/>`).join('');
+const svg12 = (inner, size) => `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12">${inner}</svg>`;
+const CHECK = [[3,6],[3,7],[4,7],[4,8],[5,8],[5,9],[6,7],[6,8],[7,6],[7,7],[8,5],[8,6],[9,4],[9,5]];
+function glyph(st, size = 18) {
+  const ring = cellsOf(RING), full = cellsOf(DISC);
+  if (st === 'todo') return svg12(rects(ring, '#8e8e93'), size);
+  if (st === 'review') return svg12(rects(ring, '#e0a800') + rects([[5,4],[6,4],[4,5],[5,5],[6,5],[7,5],[4,6],[5,6],[6,6],[7,6],[5,7],[6,7]], '#e0a800'), size);
+  if (st === 'blocked') return svg12(rects(full, '#e5484d') + rects([[5,2],[6,2],[5,3],[6,3],[5,4],[6,4],[5,5],[6,5],[5,6],[6,6],[5,8],[6,8],[5,9],[6,9]], '#fff'), size);
+  return svg12(rects(full, '#30a46c') + rects(CHECK, '#fff'), size);
+}
+// the stamp: the check of the done glyph, drawn left to right in n frames, in the button's color
+const STAMP = [...CHECK].sort((a, b) => a[0] - b[0]);
+const stampFrame = (f, n = NEW.frames, size = 12) => svg12(rects(STAMP.slice(0, Math.round(STAMP.length * (f + 1) / n)), 'currentColor'), size);
+
+// ---- timing (ms) ----
+const NOW = { hold: 340, fade: 180 };                         // today: still, then a linear fade, then gone
+const NEW = { frame: 17, frames: 7, pause: 80, fade: 180, collapse: 220 }; // a frame is one refresh at 60 Hz
+const EASE = 'cubic-bezier(.33, 1, .68, 1)';                  // ease-out cubic, as the day card
+let slow = 1;
+
+// ---- markup ----
+const needRow = (id, av, title, sum, age, buttons, stale) => `<div class="wrap" data-row="${id}"><div class="need">${sprite(av, 18)}
+  <div class="body"><div class="title">${title}</div><div class="sum">${sum}</div></div>
+  <div class="right"><span class="age${stale ? ' stale' : ''}">${age}</span>${buttons}</div></div></div>`;
+const btn = (text, accept) => `<span class="btn"${accept ? ' data-accept' : ''}>${text}</span>`;
+const doneRow = (title, meta, when, cls = '') => `<div class="wrap ${cls}"><div class="tr done">${glyph('done')}<span class="t">${title}</span><span class="meta">${meta}</span><span class="when">${when}</span></div></div>`;
+function mine(id) {
+  return `<div class="sect" style="margin-top:0">Agent 交过来的 <i data-count>2</i></div>
+  <div class="panel">
+    ${needRow(id + 'a', 'claude', 'Fix tray race on launch', 'Claude Code 卡住了：“Needs a decision on the activation policy” · adhd-todo', '3 天前', btn('回答'), true)}
+    <div class="wrap" data-rule><div class="rule"></div></div>
+    ${needRow(id + 'b', 'claude', 'Native UI with mygo', 'PR #12 等你审查 · adhd-todo', '25 分钟前', btn('打开 PR') + btn('收下', true))}
+  </div>
+  <div class="sect">今天 <i>2</i></div>
+  <div class="tr">${glyph('todo')}回复设计反馈<span class="when">下午 2:30</span></div>
+  <div class="tr">${glyph('todo')}预约牙医<span class="when">明天</span></div>
+  <div class="sect">今天做完 <i data-done>1</i></div>
+  <div data-donelist>${doneRow('Port the MCP server', 'Claude Code · PR #14 merged', '下午 1:50')}</div>`;
+}
+const arow = (id, av, title, sum, age, buttons, live, hover) => `<div class="wrap" data-row="${id}"><div class="arow${live ? ' live' : ''}${hover ? ' hover' : ''}">${sprite(av, 18)}
+  <div class="body"><div class="title">${title}</div><div class="sum">${sum}</div></div>
+  <div class="right"><span class="age${age.startsWith('停滞') ? ' stale' : ''}">${age}</span><span class="acts" style="gap:6px">${buttons}</span></div></div></div>`;
+function column(id, live, hover) {
+  return `<div class="tray"><div class="colhead">${sprite('agent', 18)}Agent <i>4</i></div>
+    <div class="grp">${glyph('blocked')}已阻塞 <i>1</i></div>
+    ${arow(id + 'x', 'claude', 'Fix tray race on launch', 'Needs a decision on the activation policy', '停滞 3 天', btn('回答'), live)}
+    <div class="wrap" data-group><div class="grp">${glyph('review')}待审查 <i>1</i></div>
+    ${arow(id + 'b', 'claude', 'Native UI with mygo', '#12 · Board, lists and inspector are in; waiting for your review', '25 分钟前', btn('打开 PR') + btn('收下', true), live, hover)}</div>
+    <div class="grp">${glyph('done')}已完成 <i data-done>1</i></div>
+    <div data-donelist>${arow(id + 'd', 'claude', 'Port the MCP server', 'PR #14 merged', '今天', '', false).replace('class="arow', 'class="arow done')}</div></div>`;
+}
+const doneArow = () => arow('n', 'claude', 'Native UI with mygo', '你收下的', '刚刚', '', false).replace('class="arow', 'class="arow done');
+function card(live, hover, title, sum) {
+  return `<div class="card${live ? ' live' : ''}${hover ? ' hover' : ''}"><div class="title">${title}</div><div class="sum" style="white-space:normal">${sum}</div>
+    <div class="foot">${sprite('claude', 18)}<span class="sum">#12</span><span class="age">25 分钟前</span><span class="acts">${btn('打开 PR') + btn('收下')}</span></div></div>`;
+}
+
+// ---- motion ----
+const wait = ms => new Promise(r => setTimeout(r, ms * slow));
+function collapse(el, ms) {
+  el.style.height = el.scrollHeight + 'px'; el.offsetHeight;
+  el.style.transition = `height ${ms * slow}ms ${EASE}, opacity ${NEW.fade * slow}ms ${EASE}`;
+  el.style.height = '0px'; el.style.opacity = '0';
+}
+function enter(list, html, ms) {
+  list.insertAdjacentHTML('afterbegin', html);
+  const el = list.firstElementChild;
+  const h = el.scrollHeight;
+  el.style.height = '0px'; el.style.opacity = '0'; el.offsetHeight;
+  el.style.transition = `height ${ms * slow}ms ${EASE}, opacity ${ms * slow}ms ${EASE}`;
+  el.style.height = h + 'px'; el.style.opacity = '1';
+}
+async function stamp(button) {
+  button.classList.add('stamped');
+  for (let f = 0; f < NEW.frames; f++) { button.innerHTML = stampFrame(f) + '收下'; await wait(NEW.frame); }
+  await wait(NEW.pause);
+}
+// today: nothing for 340 ms, a linear fade, then the row is gone at once and the rows under it jump
+async function acceptNow(frame, row, doneHtml, extra = []) {
+  await wait(NOW.hold);
+  row.style.transition = `opacity ${NOW.fade * slow}ms linear`; row.style.opacity = '0';
+  await wait(NOW.fade);
+  [row, ...extra].forEach(el => el.style.display = 'none');
+  frame.querySelector('[data-donelist]').insertAdjacentHTML('afterbegin', doneHtml);
+  bump(frame);
+}
+// new: the button stamps a pixel check, then the row folds away while the done row opens
+async function acceptNew(frame, row, button, doneHtml, extra = []) {
+  await stamp(button);
+  [row, ...extra].forEach(el => collapse(el, NEW.collapse));
+  enter(frame.querySelector('[data-donelist]'), doneHtml, NEW.collapse);
+  bump(frame);
+}
+function bump(frame) {
+  const c = frame.querySelector('[data-count]'); if (c) c.textContent = '1';
+  const d = frame.querySelector('[data-done]'); if (d) d.textContent = '2';
+}
+
+// ---- panels ----
+const panel = (p) => `<div><div class="caption">${p.title}${p.tag ? `<span class="tag">${p.tag}</span>` : ''}${p.play ? `<button data-play="${p.id}">播放</button><button data-slow="${p.id}">慢放 10 倍</button>` : ''}</div>
+  <div class="frame" id="f${p.id}"></div><p class="note">${p.note}</p></div>`;
+const G1 = [
+  { id: 'A', title: 'A · 现在', play: true, note: '点下去以后 340 毫秒什么都不变（看起来像没点上），然后整行线性淡出 180 毫秒，到 520 毫秒时一下子消失：外框猛地变矮，下面「今天」的行往上跳一截，「今天做完」里那行也是一下子冒出来。' },
+  { id: 'B', title: 'B · 盖章，然后折叠', tag: '我倾向', play: true, note: '点下去立刻有回应：「收下」变成绿色，里面的像素勾从左到右一笔画出来：7 帧，每帧多亮 2 个像素，一帧 17 毫秒（60 Hz 屏幕刷新一次），共约 120 毫秒。停 80 毫秒让眼睛看到，然后这一行在 220 毫秒里淡出并收起高度（ease-out，和日卡同一条曲线），外框跟着变矮，下面的行平滑上移；同时这件事在「今天做完」顶上展开出现。全程约 420 毫秒，比现在的 520 毫秒还短。减少动态效果时：勾直接是最后一帧，行淡出后直接消失。若这是最后一件，「Agent 交过来的」整块（标题和外框）一起收起。' },
+];
+const G2 = [
+  { id: 'C', title: '平时，和鼠标悬停时', note: '上：平时，和现在一样，右边是时间。下：鼠标在「待审查」那行上（或用键盘选中它），行底变浅灰，时间换成两个按钮。只有待审查（review）的 agent 任务有「收下」；已阻塞的是「回答」；进行中、待办的悬停不出按钮，照旧点行打开检查器。' },
+  { id: 'D', title: '可以摸的版本', tag: '我倾向', play: true, note: '把鼠标移到「Native UI with mygo」上，点「收下」（或点右上角播放）。动画和一·B 完全相同：盖章、折叠、在「已完成」组顶上展开。「待审查」组空了，组标题跟着一起收起。' },
+];
+const G3 = [
+  { id: 'E', title: '看板：待审查那一列的卡片', note: '左：平时。右：悬停时底部右边的时间换成「打开 PR」+「收下」。点「收下」后卡片用看板现有的退出动画（缩小并折叠，cardMotion），出现在「已完成」列顶上；按钮里同样先盖像素章。' },
+];
+document.getElementById('g1').innerHTML = G1.map(panel).join('');
+document.getElementById('g2').innerHTML = G2.map(panel).join('');
+document.getElementById('g3').innerHTML = G3.map(panel).join('');
+document.getElementById('zoom').innerHTML = Array.from({ length: NEW.frames }, (_, f) => `<figure><div class="cell"><span class="btn stamped" style="height:auto;padding:6px 8px">${stampFrame(f, NEW.frames, 36)}</span></div>第 ${f + 1} 帧 · ${f * NEW.frame} ms</figure>`).join('')
+  + `<figure><div class="cell"><span class="btn stamped">${stampFrame(NEW.frames - 1)}收下</span></div>实际大小 12 pt</figure>`
+  + `<div class="cmp"><figure><div class="cell"><span class="btn stamped" style="height:auto;padding:6px 8px" data-loop="3,40">${stampFrame(2, 3, 36)}</span></div>3 帧 × 40 ms（上一版）</figure>
+     <figure><div class="cell"><span class="btn stamped" style="height:auto;padding:6px 8px" data-loop="7,17">${stampFrame(6, 7, 36)}</span></div>7 帧 × 17 ms（现在）</figure>
+     <figure><div class="cell"><button id="loopslow" style="font:500 12px/20px -apple-system;border:0;border-radius:6px;padding:2px 10px;background:rgba(0,0,0,.07);cursor:pointer">慢放 10 倍</button></div>两种并排循环</figure></div>`;
+// the two stamps side by side, drawn again every 1.2 s
+let loopSlow = 1;
+document.getElementById('loopslow').onclick = (e) => { loopSlow = loopSlow === 1 ? 10 : 1; e.target.textContent = loopSlow === 1 ? '慢放 10 倍' : '正常速度'; };
+async function loop(el) {
+  const [n, ms] = el.dataset.loop.split(',').map(Number);
+  for (;;) {
+    for (let f = 0; f < n; f++) { el.innerHTML = stampFrame(f, n, 36); await new Promise(r => setTimeout(r, ms * loopSlow)); }
+    await new Promise(r => setTimeout(r, 900 * loopSlow));
+    el.innerHTML = svg12('', 36);
+    await new Promise(r => setTimeout(r, 300 * loopSlow));
+  }
+}
+document.querySelectorAll('[data-loop]').forEach(loop);
+
+function reset(id) {
+  const f = document.getElementById('f' + id);
+  if (id === 'A' || id === 'B') f.innerHTML = mine(id);
+  if (id === 'C') f.innerHTML = `<div class="state">平时</div>${column('c1', false, false)}<div class="state">鼠标悬停「待审查」那一行</div>${column('c2', false, true)}`;
+  if (id === 'D') f.innerHTML = column('d', true, false);
+  if (id === 'E') f.innerHTML = `<div class="lanes"><div class="lane"><div class="lanehead">${glyph('review')}待审查 <i>1</i></div>${card(false, false, 'Native UI with mygo', 'Board, lists and inspector are in')}</div>
+    <div class="lane"><div class="lanehead">${glyph('review')}待审查 · 悬停 <i>1</i></div>${card(true, true, 'Native UI with mygo', 'Board, lists and inspector are in')}</div></div>`;
+  f.querySelectorAll('[data-accept]').forEach(b => b.onclick = () => run(id, b));
+}
+function run(id, button) {
+  const f = document.getElementById('f' + id);
+  button = button || f.querySelector('[data-accept]');
+  const row = button.closest('[data-row]');
+  if (id === 'A') return acceptNow(f, row, doneRow('Native UI with mygo', 'Claude Code · 你收下的', '刚刚'), [f.querySelector('[data-rule]')]);
+  if (id === 'B') return acceptNew(f, row, button, doneRow('Native UI with mygo', 'Claude Code · 你收下的', '刚刚'), [f.querySelector('[data-rule]')]);
+  if (id === 'D') return acceptNew(f, f.querySelector('[data-group]'), button, doneArow());
+}
+['A', 'B', 'C', 'D', 'E'].forEach(reset);
+// v10.html#played opens every playable panel after its animation, for screenshots
+if (location.hash === '#played') { slow = 0; ['A', 'B', 'D'].forEach(id => run(id)); }
+document.querySelectorAll('[data-play]').forEach(b => b.onclick = async () => { slow = 1; reset(b.dataset.play); await new Promise(r => setTimeout(r, 400)); run(b.dataset.play); });
+document.querySelectorAll('[data-slow]').forEach(b => b.onclick = async () => { slow = 10; reset(b.dataset.slow); await new Promise(r => setTimeout(r, 400)); await run(b.dataset.slow); });
+document.getElementById('mode').onclick = (e) => {
+  const dark = document.body.classList.toggle('night');
+  document.querySelectorAll('.frame').forEach(f => f.classList.toggle('dark', dark));
+  e.target.textContent = dark ? '切到浅色' : '切到深色';
+};
+</script>
+</body>
+</html>

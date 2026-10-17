@@ -105,8 +105,11 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
   Symbols, no emoji, no text glyph standing in for an icon (`✦`, `✓`). A missing picture is added as
   a pixelarticon or drawn as a sprite in `app/theme`.
 - **Pixel art moves in frames.** A picture that moves switches whole pixels on and off on a fixed
-  beat; it does not rotate, scale or ease. The busy indicator steps every 100 ms. With Reduce Motion
-  it holds its first frame.
+  beat; it does not rotate, scale or ease. Two beats (v10): a **stroke being drawn** steps once a
+  60 Hz refresh, 17 ms, a few pixels a frame, so it reads as one pen stroke (the Accept stamp: 7
+  frames, about 120 ms); a **loop** steps slowly, 100 ms, so it reads as a rhythm and not a flicker
+  (the busy indicator). No frame is shorter than 17 ms. With Reduce Motion a stroke shows its last
+  frame at once and a loop holds its first.
 - **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
   opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
   the layout are not.
@@ -304,7 +307,7 @@ a row anywhere (see **Subtasks**).
    - an agent task in review: with a PR `PR #12 is ready for your review`, buttons **Open PR** and
      **Accept** / `收下`; without one `Claude Code finished and is waiting for you` (`做完了，等你试用`),
      buttons **Review** / `去看看` (goes to where the agent is, as Answer) and **Accept**. Accept sets
-     the task to done (the row fades like any completion);
+     the task to done and the row leaves as in **Accepting** below;
    - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open** (the inspector);
    - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
    - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
@@ -337,6 +340,23 @@ a row anywhere (see **Subtasks**).
    them a `Show all in Completed` link. It does not count toward the sidebar and never makes Mine
    "not clear". Who finished a task: the agent that filed a report at the moment it closed (within
    five seconds of the completion, or later), else me.
+
+**Accepting** (v10 B, `docs/design/mockups/v10.html`). The store says done at once; the row stays
+for the animation, about 420 ms, and nothing jumps:
+
+1. **Stamp, 0–120 ms.** The Accept button turns `status.done` (its tint at 16 %, the text in
+   `status.done`) and the check of the `done` glyph is drawn in it before the word, 12 pt, left to
+   right in 7 frames of 17 ms (two pixels more a frame; see **Pixel language**).
+2. **Hold, 80 ms**, so the eye sees it.
+3. **Fold, 220 ms.** The row fades (180 ms) and its height closes to nothing, ease-out cubic (the day
+   card's curve); the hairline above it closes with it, the box of From your agents shrinks and the
+   rows under it slide up. When it was the last row, the whole section (header and box) folds
+   instead. At the same time the task opens at the top of Done today (height and opacity, 220 ms).
+
+With Reduce Motion: the stamp shows its last frame at once, the row fades 180 ms and is then gone,
+and the Done today row appears without motion. Every other completion that takes a row out of an
+active list (the status glyph, `Space`, the task menu) folds the row the same way after its glyph
+fill, instead of vanishing at the end of the fade.
 
 The sidebar count is the rows of From your agents plus Today. **Nothing needs you.** When those
 three sections are empty (Done today may still show): the empty state under the composer,
@@ -608,6 +628,13 @@ centred empty state.
   label at the right, and under it what the agent last said, **up to two lines** in `text.secondary`,
   led by `#12 · ` when the task has a pull request (a blocked task says what it waits for). **No branch**:
   the inspector has it. No agent name either: the avatar says it.
+- **Acting on an Agents row (v10).** While a row is hovered or keyboard-selected it takes `bg.hover`
+  and the age at the right gives way to the same tinted buttons as the row's From your agents row
+  on Mine: in review, **Open PR** + **Accept** (with a pull request) or **Review** + **Accept**
+  (without); blocked, **Answer**. Other rows show no buttons (a click opens the inspector, as
+  before). Accept leaves as in **Accepting** (Mine): the row folds out of In review (the group's
+  header folds with it when it was the last) and opens at the top of the column's Done. The same
+  holds in a project's single list and in the Inbox list.
 - **An empty column** keeps its header and one quiet `text.tertiary` line. Mine: `Nothing for you here
   — write one above` / `这里还没有你要做的事 —— 在上面写一句就行`. Agents: `No agent has reported in this
   project yet` / `还没有 Agent 在这个项目里汇报` and the accent link `Install MCP →` / `安装 MCP →`, which
@@ -677,6 +704,10 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
   nothing to say has no meta line. **No status glyph on a card**: its lane says it (so the way to finish
   your own task is the task menu, `Space`, or dragging it to Done). Done cards are flat `bg.subtle`
   with no ring, the title in `text.secondary` weight 400.
+- **Acting on a card (v10).** A hovered or keyboard-selected agent card in In review (or blocked in
+  Doing) shows the same buttons as its Agents row in place of the age at the right of its meta
+  line. Accept stamps the button as in **Accepting**, then the card leaves with the board's exit
+  (`cardMotion`: it shrinks and folds) and enters at the top of Done.
 - **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
   status as before (a blocked card dropped on Doing stays blocked); there are no drop targets for
   hidden statuses.
