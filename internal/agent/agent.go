@@ -104,12 +104,15 @@ func (a *Agent) Ask(ctx context.Context, text string, scope Scope, images ...Ima
 		return Result{}, err
 	}
 	defer a.finish()
-	tb, runner, err := a.prepare(ctx, scope)
+	tb, runner, err := a.prepare(ctx, scope, len(images))
 	if err != nil {
 		return Result{}, err
 	}
 	produced, runErr := collect(runner.Run(ctx, msgs))
-	res := Result{Receipts: tb.takeReceipts(), Question: tb.asked()}
+	if runErr == nil && scope.Kind == ScopeTask {
+		tb.keep(scope.TaskID, nil) // a request from the inspector's composer belongs to that task
+	}
+	res := Result{Receipts: tb.takeReceipts(), Question: tb.asked(), Images: tb.kept()}
 	if runErr != nil {
 		return res, fmt.Errorf("agent: %w", runErr)
 	}
@@ -154,7 +157,7 @@ func (a *Agent) remember(msgs []*schema.Message) {
 
 // prepare builds this turn's tools and the Eino runner. The agent is cheap, so it is rebuilt per
 // turn with a fresh prompt: the clock and the project list change between turns.
-func (a *Agent) prepare(ctx context.Context, scope Scope) (*toolbox, *adk.Runner, error) {
+func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox, *adk.Runner, error) {
 	m, err := a.cfg.Model(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -167,7 +170,7 @@ func (a *Agent) prepare(ctx context.Context, scope Scope) (*toolbox, *adk.Runner
 	if err != nil {
 		return nil, nil, err
 	}
-	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects}
+	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects, images: images}
 	if p, ok := activeProject(projects, scope.ProjectID); ok && scope.Kind == ScopeProject {
 		tb.defaultProject = &p.ID
 	}
@@ -178,7 +181,7 @@ func (a *Agent) prepare(ctx context.Context, scope Scope) (*toolbox, *adk.Runner
 	if err != nil {
 		return nil, nil, err
 	}
-	prompt := BuildPrompt(a.cfg.Now(), projects, scope, focus)
+	prompt := BuildPrompt(a.cfg.Now(), projects, scope, focus) + imageRules(images)
 	ag, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
 		Name: "adhd-todo", Description: "Turns requests into task changes.",
 		Instruction: prompt, Model: m, MaxIterations: maxIterations,

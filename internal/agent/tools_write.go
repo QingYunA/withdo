@@ -17,9 +17,13 @@ type createArgs struct {
 	Category  string  `json:"category,omitempty" jsonschema:"enum=work,enum=life,description=What the task is for the user. Leave out when unsure or when the task goes into a repository's project (that counts as work)."`
 	DueAt     string  `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
 	RemindAt  string  `json:"remind_at,omitempty" jsonschema:"description=When to remind the user as RFC 3339 with a UTC offset."`
+	Images    []int   `json:"images,omitempty" jsonschema:"description=Numbers of the request's pictures that belong to this task. Omit for all of them; an empty list for none."`
 }
 
 func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
+	if err := tb.checkImages(a.Images); err != nil {
+		return fail(ctx, err)
+	}
 	now := tb.now()
 	in := domain.CreateTaskInput{
 		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: tb.projectFor(a.ProjectID),
@@ -41,6 +45,7 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	if err != nil {
 		return fail(ctx, err)
 	}
+	tb.keep(t.ID, a.Images)
 	tb.addReceipt(Receipt{
 		TaskID: t.ID, Title: t.Title, Status: string(t.Status), Bell: t.RemindAt != nil,
 		Detail: tb.createDetail(*t),
@@ -104,9 +109,13 @@ type updateArgs struct {
 	DueAt     *string  `json:"due_at,omitempty" jsonschema:"description=RFC 3339 with a UTC offset."`
 	RemindAt  *string  `json:"remind_at,omitempty" jsonschema:"description=RFC 3339 with a UTC offset."`
 	Clear     []string `json:"clear,omitempty" jsonschema:"description=Fields to empty: notes or project or category or due_at or remind_at."`
+	Images    []int    `json:"images,omitempty" jsonschema:"description=Numbers of the request's pictures that belong to this task. Omit for all of them; an empty list for none."`
 }
 
 func (tb *toolbox) update(ctx context.Context, a updateArgs) (reply, error) {
+	if err := tb.checkImages(a.Images); err != nil {
+		return fail(ctx, err)
+	}
 	before, err := tb.core.GetTask(ctx, a.TaskID)
 	if err != nil || before == nil {
 		if err == nil {
@@ -122,6 +131,7 @@ func (tb *toolbox) update(ctx context.Context, a updateArgs) (reply, error) {
 	if err != nil {
 		return fail(ctx, err)
 	}
+	tb.keep(a.TaskID, a.Images)
 	tb.addReceipt(Receipt{
 		TaskID: after.ID, Title: after.Title, Status: string(after.Status), Bell: patch.RemindAt.Present && after.RemindAt != nil,
 		Detail: tb.changeDetail(patch, *after),
