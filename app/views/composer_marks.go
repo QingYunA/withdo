@@ -89,7 +89,7 @@ func changeField(c data.Change) string {
 	return ""
 }
 
-// assistMark is the small accent ✦ after a value of the open task that the assistant set in the
+// assistMark is the small accent pixel sparkle after a value of the open task that the assistant set in the
 // last 10 s.
 func (m *Main) assistMark(c *ui.Context, t *theme.Tokens, key string) {
 	at, ok := m.marks[m.inspector.lastOpen][key]
@@ -104,6 +104,6 @@ func (m *Main) assistMark(c *ui.Context, t *theme.Tokens, key string) {
 	label := m.say.MarkAssistant()
 	ui.Row(c.Key("mark-"+key)).Shrink(0).Padding(0, 5).Radius(5).Background(t.BgSelected).AlignItems(ui.Center).
 		Label(label).Tooltip(label).Children(func() {
-		theme.Text(c, theme.MetaStrong, t.Accent, "✦")
+		ui.Icon(c, theme.IconSparkle).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent)
 	})
 }
