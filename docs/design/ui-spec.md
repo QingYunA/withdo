@@ -1011,7 +1011,7 @@ sidebar gear open it; there is one instance, and a second request brings it to t
 asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
 under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
 the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7, and `v5.html` frames 5 and 6 (logos, Agents); screens
-`settings-general-*`, `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
+`settings-general-*` (`settings-general-denied-*`: macOS refused the notifications), `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
 `settings-change-*`, `settings-change-error-*`, `settings-custom-*`, `settings-agents-*`,
 `settings-github-*`.
 

@@ -76,6 +76,12 @@ func TestScreensSettings(t *testing.T) {
 			mustNil(t, general.ArchiveProject(3))
 			settingsShot(t, "settings-general"+sfx+".png", general, a.dark, zh, PaneGeneral, nil)
 
+			// macOS refused the last notification: the line warns, a link goes to System Settings.
+			refused := settingsApp(t, ready)
+			mustNil(t, refused.ArchiveProject(3))
+			refused.Act.(*recorder).denied = true
+			settingsShot(t, "settings-general-denied"+sfx+".png", refused, a.dark, zh, PaneGeneral, nil)
+
 			// At rest: the provider in use with the last test, the others under it.
 			settingsShot(t, "settings-assistant"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAssistant, func(r *settingsRig) {
 				r.s.runTest(currentProviderOf(r.app))
