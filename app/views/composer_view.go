@@ -25,25 +25,25 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 }
 
 // composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with the
-// assistant's avatar at its left and ⌘K at its right; focused or holding text it turns to the page's own
-// color with an accent ring and grows with its text up to six lines. With a model connected a second
-// row then shows under the text: + for images at the left, the model chip and the round send button
-// at the right; images attached sit above the text as thumbnails. Without a model the avatar and ⌘K
-// give way to the send button in the line itself. The place is named by the page's title, not by the
-// input.
+// assistant's avatar at its left and the model chip and ⌘K at its right; focused or holding text it
+// turns to the page's own color with an accent ring and grows with its text up to six lines. With a
+// model connected a second row shows under the text once there is something to send, and while the
+// assistant works on a request from the box and its answer shows: + for images at the left, the
+// model chip and the round send (or stop) button at the right; images attached sit above the text as
+// thumbnails. Without a model the avatar and ⌘K give way to the send button in the line itself. The
+// place is named by the page's title, not by the input.
 func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
 	cs := &m.cmp[s]
 	ready := m.assistReady()
 	focused, typed := cs.ref.Focused(c), cs.buf != ""
 	holds := typed || (ready && len(cs.pics) > 0) // something to send
-	thinking := m.convo.thinking && m.convo.owner == s
-	// The second row shows once there is something to send, so focusing an empty box moves nothing;
-	// an empty focused box has the + in the avatar's place instead.
-	bar := ready && (holds || cs.modelOpen || cs.ctlHover)
-	inline := ready && !bar && !thinking && (focused || cs.plusHover)
-	if !bar {
-		cs.ctlHover = false
-	}
+	// The second row shows once there is something to send and while the assistant works on a request
+	// from this box, answer included, so focusing an empty box moves nothing; an empty focused box has
+	// the + in the avatar's place instead, and the model chip is in the line.
+	working := ready && m.convo.owner == s && (m.convo.thinking || m.replyIn(s, cs.task))
+	bar := ready && (holds || working)
+	inline := ready && !bar && (focused || cs.plusHover)
+	active := focused || holds || working
 	if !inline {
 		cs.plusHover = false
 	}
@@ -57,7 +57,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 	switch {
 	case cs.dragOver:
 		box.Background(t.Accent.Alpha(0.06)).Border(1, t.Accent).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
-	case focused || holds:
+	case active:
 		box.Background(t.Bg).Border(1, t.Accent.Alpha(0.5)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
 	case box.Hovered():
 		box.Background(t.BgSubtle.Mix(t.Text, 0.03)).Border(1, ui.Transparent)
@@ -79,10 +79,13 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 			switch {
 			case inline:
 				cs.plusHover = m.attachButton(c, t, s).Hovered()
-			case !typed && (!focused || thinking) && !bar:
+			case !typed && !focused && (!bar || working):
 				m.assistantMark(c, s)
 			}
 			m.composerField(c, t, s, style)
+			if !bar {
+				m.modelChip(c, t, s, !active) // nothing without a model
+			}
 			switch {
 			case bar:
 			case typed:
@@ -100,16 +103,18 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 	}
 }
 
-// composerBar is the second row of a focused composer with a model behind it.
+// composerBar is the second row of a composer with a model behind it: + and, at the right, the model
+// chip and the send button, which is the stop button while the assistant works on a request from here.
 func (m *Main) composerBar(c *ui.Context, t *theme.Tokens, s surface) {
 	cs := &m.cmp[s]
-	row := ui.Row(c.Key("composer-bar-" + itoa(int(s)))).Shrink(0).Gap(8).AlignItems(ui.Center).Height(theme.SendSize)
-	cs.ctlHover = row.Hovered()
-	row.Children(func() {
+	ui.Row(c.Key("composer-bar-" + itoa(int(s)))).Shrink(0).Gap(8).AlignItems(ui.Center).Height(theme.SendSize).Children(func() {
 		m.attachButton(c, t, s)
 		ui.Box(c).Grow(1).MinWidth(0)
-		m.modelChip(c, t, s)
-		if strings.TrimSpace(cs.buf) != "" || len(cs.pics) > 0 {
+		m.modelChip(c, t, s, false)
+		switch {
+		case m.convo.thinking && m.convo.owner == s:
+			m.stopButton(c, t)
+		case strings.TrimSpace(cs.buf) != "" || len(cs.pics) > 0:
 			m.sendButton(c, t, s)
 		}
 	})
@@ -122,7 +127,7 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 	if s == surfaceInspector {
 		label, key = m.say.ComposerLabelTask(), "composer-input-task"
 	}
-	box := ui.Box(c.Key(key + "-box")).Shrink(0).MinWidth(0).Grow(1)
+	box := ui.Box(c.Key(key + "-box")).Shrink(0).MinWidth(composerFieldMin).Grow(1)
 	box.Children(func() {
 		field := style.Apply(ui.TextAreaBase(c.Key(key), &cs.buf).Lines(theme.ComposerMinRows, theme.ComposerMaxRows)).
 			TextColor(t.Text).Label(label).Bind(&cs.ref).OnTextKey(m.composerKey(s)).OnPaste(m.pasteHook(c, s))
@@ -134,13 +139,15 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 	})
 }
 
+// composerFieldMin is the room the field keeps in a one-line box, so the placeholder stays readable:
+// in the inspector's narrow box the model chip gives way first and ellipsizes.
+const composerFieldMin float32 = 150
+
 // placeholder is what the empty field says: where it is, or that the assistant is working, or that
 // it waits for an answer.
 func (m *Main) placeholder(s surface) string {
 	cv := &m.convo
 	switch {
-	case cv.thinking && cv.owner == s:
-		return m.say.AskThinking()
 	case cv.open && cv.owner == s && len(cv.turns) > 0 && cv.turns[len(cv.turns)-1].question != nil:
 		return m.say.AskAnswerHint()
 	}
@@ -177,6 +184,23 @@ func (m *Main) sendButton(c *ui.Context, t *theme.Tokens, s surface) {
 	btn.Children(func() { ui.Icon(c, theme.IconSend).Size(theme.IconRow, theme.IconRow).TextColor(t.AccentText) })
 	if btn.Clicked() && can {
 		m.submit(s)
+	}
+}
+
+// stopButton is the round button that takes the send button's place while the assistant works on a
+// request from the box: neutral, with the pixel stop mark. A click cancels the request, as Esc does.
+func (m *Main) stopButton(c *ui.Context, t *theme.Tokens) {
+	btn := ui.ButtonBase(c.Key("stop")).Size(theme.SendSize, theme.SendSize).Shrink(0).Center().
+		AlignSelf(ui.End).Radius(theme.SendSize / 2).Cursor(ui.CursorPointer).Label(m.say.ComposerStop())
+	if btn.Hovered() {
+		btn.Background(t.StopWell().Mix(t.Text, 0.1))
+	} else {
+		btn.Background(t.StopWell())
+	}
+	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
+	btn.Children(func() { theme.PixelStop(c, theme.IconRow, t.TextSecondary) })
+	if btn.Clicked() {
+		m.cancelAsk()
 	}
 }
 

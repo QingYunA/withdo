@@ -6,7 +6,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The model chip is at the bottom right of a focused composer: the logo of the provider in use and
+// The model chip is at the right of the composer, in the one-line box or in its second row: the logo of the provider in use and
 // "Provider · model ⌄". It opens a drawn popover (a native menu cannot show logos) that lists the
 // providers that are set up, each with its model, the one in use checked. Choosing one makes it the
 // provider in use, the same as in Settings > Assistant.
@@ -49,8 +49,9 @@ func modelText(p data.Provider) string {
 	return p.Name + " · " + p.Model
 }
 
-// modelChip is the chip and, while it is open, its popover.
-func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
+// modelChip is the chip and, while it is open, its popover. onWell says it sits on the one-line box
+// at rest, whose own well is bg.subtle: the chip's is a step darker there.
+func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell bool) {
 	cs := &m.cmp[s]
 	all, active, ok := m.modelsReady()
 	if !ok {
@@ -60,8 +61,12 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
 	text := modelText(active)
 	chip := ui.ButtonBase(c.Key("model-chip-"+itoa(int(s)))).Height(modelChipH).Shrink(1).MinWidth(0).Padding(0, 8, 0, 6).Gap(6).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ComposerModelLabel(text))
-	switch {
-	case cs.modelOpen || chip.Hovered():
+	switch lit := cs.modelOpen || chip.Hovered(); {
+	case onWell && lit:
+		chip.Background(t.Text.Alpha(0.09))
+	case onWell:
+		chip.Background(t.BgHover)
+	case lit:
 		chip.Background(t.BgSubtle.Mix(t.Text, 0.05))
 	default:
 		chip.Background(t.BgSubtle)

@@ -40,10 +40,10 @@ type composer struct {
 	// problem is the quiet line about an image that was not taken, shown for a few seconds.
 	problem   string
 	problemAt time.Time
-	// modelOpen is the model popover; ctlHover keeps the bottom row while the pointer is on it and
-	// plusHover the + of an empty focused box (a press on a button takes the focus from the field,
-	// and the box must not change under the pointer); dragOver is a file dragged over.
-	modelOpen, ctlHover, plusHover, dragOver bool
+	// modelOpen is the model popover; plusHover keeps the + of an empty focused box while the pointer
+	// is on it (a press on a button takes the focus from the field, and the box must not change under
+	// the pointer); dragOver is a file dragged over.
+	modelOpen, plusHover, dragOver bool
 }
 
 // pageHasComposer reports whether the screen shows a composer: Mine, Agents, a project, the Inbox and

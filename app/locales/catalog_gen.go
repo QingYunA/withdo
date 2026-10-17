@@ -562,20 +562,6 @@ func (msgs Messages) AskAnswerHint() string {
 	return Catalog.Format(msgs.locale, "askAnswerHint", nil)
 }
 
-// AskThinking says "Thinking…"
-// in the language the app shows.
-//
-// Placeholder of the ask field while the assistant works.
-func AskThinking() string { return In(i18n.Locale()).AskThinking() }
-
-// AskThinking says "Thinking…"
-// in the language of msgs.
-//
-// Placeholder of the ask field while the assistant works.
-func (msgs Messages) AskThinking() string {
-	return Catalog.Format(msgs.locale, "askThinking", nil)
-}
-
 // BoardShowAll says "Show all {n}"
 // in the language the app shows.
 //
@@ -906,6 +892,68 @@ func ConvoRetry() string { return In(i18n.Locale()).ConvoRetry() }
 // Link that sends a failed request again, and that loads the data again.
 func (msgs Messages) ConvoRetry() string {
 	return Catalog.Format(msgs.locale, "convoRetry", nil)
+}
+
+// ConvoThinking says "Thinking"
+// in the language the app shows.
+//
+// Under the composer while the assistant works on a request, after the busy
+// indicator and before the seconds.
+func ConvoThinking() string { return In(i18n.Locale()).ConvoThinking() }
+
+// ConvoThinking says "Thinking"
+// in the language of msgs.
+//
+// Under the composer while the assistant works on a request, after the busy
+// indicator and before the seconds.
+func (msgs Messages) ConvoThinking() string {
+	return Catalog.Format(msgs.locale, "convoThinking", nil)
+}
+
+// ConvoSlow says "Taking longer than usual"
+// in the language the app shows.
+//
+// Replaces Thinking under the composer once the assistant has worked on a
+// request for 15 seconds.
+func ConvoSlow() string { return In(i18n.Locale()).ConvoSlow() }
+
+// ConvoSlow says "Taking longer than usual"
+// in the language of msgs.
+//
+// Replaces Thinking under the composer once the assistant has worked on a
+// request for 15 seconds.
+func (msgs Messages) ConvoSlow() string {
+	return Catalog.Format(msgs.locale, "convoSlow", nil)
+}
+
+// ConvoElapsed says "· {n}s"
+// in the language the app shows.
+//
+// Seconds since the request was sent, after Thinking.
+func ConvoElapsed(n int) string { return In(i18n.Locale()).ConvoElapsed(n) }
+
+// ConvoElapsed says "· {n}s"
+// in the language of msgs.
+//
+// Seconds since the request was sent, after Thinking.
+func (msgs Messages) ConvoElapsed(n int) string {
+	return Catalog.Format(msgs.locale, "convoElapsed", map[string]any{"n": n})
+}
+
+// ConvoEscCancel says "Esc to cancel"
+// in the language the app shows.
+//
+// Hint at the right of the working line under the composer: the Esc key
+// cancels the request.
+func ConvoEscCancel() string { return In(i18n.Locale()).ConvoEscCancel() }
+
+// ConvoEscCancel says "Esc to cancel"
+// in the language of msgs.
+//
+// Hint at the right of the working line under the composer: the Esc key
+// cancels the request.
+func (msgs Messages) ConvoEscCancel() string {
+	return Catalog.Format(msgs.locale, "convoEscCancel", nil)
 }
 
 // ConvoStopped says "Stopped."
@@ -4034,6 +4082,22 @@ func ComposerSend() string { return In(i18n.Locale()).ComposerSend() }
 // Accessibility label of the round send button of the composer.
 func (msgs Messages) ComposerSend() string {
 	return Catalog.Format(msgs.locale, "composerSend", nil)
+}
+
+// ComposerStop says "Stop"
+// in the language the app shows.
+//
+// Accessibility label of the round stop button of the composer, which
+// replaces send while the assistant works on a request from it.
+func ComposerStop() string { return In(i18n.Locale()).ComposerStop() }
+
+// ComposerStop says "Stop"
+// in the language of msgs.
+//
+// Accessibility label of the round stop button of the composer, which
+// replaces send while the assistant works on a request from it.
+func (msgs Messages) ComposerStop() string {
+	return Catalog.Format(msgs.locale, "composerStop", nil)
 }
 
 // MarkAssistant says "Set by the assistant"

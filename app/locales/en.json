@@ -284,10 +284,6 @@
   "@askAnswerHint": {
     "description": "Placeholder of the ask field while the assistant waits for an answer."
   },
-  "askThinking": "Thinking…",
-  "@askThinking": {
-    "description": "Placeholder of the ask field while the assistant works."
-  },
   "boardShowAll": "Show all {n}",
   "@boardShowAll": {
     "description": "Link under the recent done tasks of a board column.",
@@ -469,6 +465,28 @@
   "convoRetry": "Retry",
   "@convoRetry": {
     "description": "Link that sends a failed request again, and that loads the data again."
+  },
+  "convoThinking": "Thinking",
+  "@convoThinking": {
+    "description": "Under the composer while the assistant works on a request, after the busy indicator and before the seconds."
+  },
+  "convoSlow": "Taking longer than usual",
+  "@convoSlow": {
+    "description": "Replaces Thinking under the composer once the assistant has worked on a request for 15 seconds."
+  },
+  "convoElapsed": "· {n}s",
+  "@convoElapsed": {
+    "description": "Seconds since the request was sent, after Thinking.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "convoEscCancel": "Esc to cancel",
+  "@convoEscCancel": {
+    "description": "Hint at the right of the working line under the composer: the Esc key cancels the request."
   },
   "convoStopped": "Stopped.",
   "@convoStopped": {
@@ -1613,6 +1631,10 @@
   "composerSend": "Send",
   "@composerSend": {
     "description": "Accessibility label of the round send button of the composer."
+  },
+  "composerStop": "Stop",
+  "@composerStop": {
+    "description": "Accessibility label of the round stop button of the composer, which replaces send while the assistant works on a request from it."
   },
   "markAssistant": "Set by the assistant",
   "@markAssistant": {
