@@ -98,11 +98,11 @@ func (m *Main) whoFinished(task data.Task, summary bool) string {
 // finishedRow is one done (or cancelled) task. Beside the inspector it keeps the title and the time
 // and drops who finished it, then the summary, as the other rows drop their companions.
 func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o finishedOpts) {
-	fill, opacity, _ := m.app.completionPhase(c, task.ID)
-	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
+	ph := m.rowPhase(c, task)
+	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
 		if o.glyph {
-			m.glyphSlot(c, t, task, fill)
+			m.glyphSlot(c, t, task, ph.fill)
 		} else if o.quiet {
 			theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow) // as in the Working rows above
 		} else {
@@ -138,10 +138,12 @@ func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, items []data.Ite
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionDoneToday(), len(items)+more)
-	for _, it := range items {
-		m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), summary: true})
-	}
+	m.section(c, "done-today", itemTasks(items), func() {
+		sectionHeader(c, t, m.say.SectionDoneToday(), len(items)+more)
+		for _, it := range items {
+			m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), summary: true})
+		}
+	})
 	if more > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
 		m.goTo(nav{screen: screenCompleted})
 	}

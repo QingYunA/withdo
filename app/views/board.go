@@ -35,7 +35,7 @@ func laneOf(s data.Status) data.Status {
 // five until "Show all" is clicked.
 func (m *Main) boardColumns() []boardColumn {
 	by := map[data.Status][]data.Task{}
-	for _, t := range m.selectionTasks() {
+	for _, t := range m.selection(m.app.withCompletingCards) {
 		by[t.Status] = append(by[t.Status], t)
 	}
 	cols := make([]boardColumn, 0, len(lanes))

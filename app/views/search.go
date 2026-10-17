@@ -210,10 +210,10 @@ func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g searchGroup) {
 // searchRow is a result: its status glyph, title with branch and pull request, and how long ago it
 // last changed.
 func (m *Main) searchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	fill, opacity, _ := m.app.completionPhase(c, task.ID)
-	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
+	ph := m.rowPhase(c, task)
+	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
-		m.glyphSlot(c, t, task, fill)
+		m.glyphSlot(c, t, task, ph.fill)
 		body(c, func() { m.titleLine(c, t, task, m.parentTitle(task), true) })
 		right(c, func() { plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now())) })
 	})

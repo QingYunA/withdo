@@ -50,8 +50,8 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 // workingRow is an agent's task at work: its avatar, title, who and where and what it said, and at
 // the right the live dot and how long ago; under it a rail with its subtasks.
 func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
-	_, opacity, _ := m.app.completionPhase(c, r.ID)
-	row := m.rowShell(c, t, r.ID, plainRow, opacity)
+	ph := m.rowPhase(c, r.Task)
+	row := m.rowShell(c, t, r.ID, plainRow, ph)
 	row.Children(func() {
 		theme.AvatarIcon(c.Key("author"), m.app.taskWho(r.Task), theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
@@ -100,8 +100,8 @@ func (m *Main) workingMeta(r data.AgentRow) string {
 // subtaskRow is a subtask under its parent: a small avatar, the title, how far along it is, and how
 // long ago it moved.
 func (m *Main) subtaskRow(c *ui.Context, t *theme.Tokens, s data.Item) {
-	_, opacity, _ := m.app.completionPhase(c, s.ID)
-	row := m.rowShell(c, t, s.ID, subRowStyle, opacity).Margin(0, -subRowStyle.horz, 0, subRail).AlignItems(ui.Center)
+	ph := m.rowPhase(c, s.Task)
+	row := m.rowShell(c, t, s.ID, subRowStyle, ph).Margin(0, -subRowStyle.horz, 0, subRail).AlignItems(ui.Center)
 	row.Children(func() {
 		theme.AvatarIcon(c.Key("author"), m.app.taskWho(s.Task), theme.AvatarSmall).Shrink(0)
 		theme.Text(c, theme.Body, t.Text, s.Title).Grow(1).Shrink(1).MinWidth(0).Ellipsis("…")

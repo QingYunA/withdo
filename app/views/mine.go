@@ -73,32 +73,41 @@ func (m *Main) fromAgentsSection(c *ui.Context, t *theme.Tokens, items []data.It
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, m.say.SectionFromAgents(), len(items))
-	ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
-		for i, it := range items {
-			if i > 0 {
-				ui.Box(c.Key("rule-"+itoa(it.ID))).Height(1).Shrink(0).Margin(0, -needRow.horz).Background(t.Border)
+	m.section(c, "from-agents", itemTasks(items), func() {
+		sectionHeader(c, t, m.say.SectionFromAgents(), len(items))
+		ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
+			phs := make([]phase, len(items))
+			for i, it := range items {
+				phs[i] = m.rowPhase(c, it.Task)
 			}
-			m.handedRow(c, t, it)
-		}
+			rules := ruleShares(phs)
+			for i, it := range items {
+				if i > 0 {
+					m.rule(c, t, it.ID, rules[i], phs[i].opacity)
+				}
+				m.handedRow(c, t, it, phs[i])
+			}
+		})
 	})
 }
 
-func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item) {
-	_, opacity, _ := m.app.completionPhase(c, it.ID)
-	row := m.rowShell(c, t, it.ID, needRow, opacity)
+// rule is the hairline above a row of From your agents, share of its height still there as it folds
+// away with its row.
+func (m *Main) rule(c *ui.Context, t *theme.Tokens, id int, share, opacity float32) {
+	line := ui.Box(c.Key("rule-"+itoa(id))).Height(share).Shrink(0).Margin(0, -needRow.horz).Background(t.Border)
+	if opacity < 1 {
+		line.Opacity(opacity)
+	}
+}
+
+func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase) {
+	row := m.rowShell(c, t, it.ID, needRow, ph)
 	actions := m.actionsFor(it)
 	showNotNow := row.Hovered() || m.sel == it.ID
 	// Two buttons beside a title in a narrow row leave it no room: they go under the summary, and
 	// in a very narrow one so does a single button.
 	stacked := (len(actions) > 1 && m.width < stackActionsBelow) || m.width < stackAllActionsBelow
-	buttons := func() {
-		for i, a := range actions {
-			if actionButtonKeyed(c, t, "action-"+itoa(i)+"-"+itoa(it.ID), a.text, a.label).Clicked() {
-				a.run()
-			}
-		}
-	}
+	buttons := func() { m.actionButtons(c, t, it.ID, actions, ph) }
 	row.Children(func() {
 		theme.AvatarIcon(c.Key("author"), m.app.taskWho(it.Task), theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
@@ -167,41 +176,29 @@ const stackActionsBelow float32 = 560
 const stackAllActionsBelow float32 = 420
 
 // rowAction is a button of a handed-over row: its text, what it says to assistive technology, and
-// what it does.
+// what it does. Accept stamps once the task is being accepted.
 type rowAction struct {
 	text, label string
+	accepts     bool
 	run         func()
 }
 
 // actionsFor names the buttons of a handed-over row, left to right. Most rows have one.
 func (m *Main) actionsFor(it data.Item) []rowAction {
-	openPR := rowAction{m.say.ActionOpenPR(), m.say.A11yOpenPR(itoa(it.PRNumber)), func() { m.app.Act.OpenURL(it.PRURL) }}
-	open := func(text string) []rowAction {
-		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openRow(it.ID) }}}
-	}
-	// goSee takes the user to where the agent is, the way Settings says, rather than to the inspector.
-	goSee := func(text string) []rowAction {
-		return []rowAction{{text, m.say.A11yOpenTask(it.Title), func() { m.openWork(m.app.OpenWith(), it.Task) }}}
-	}
-	accept := rowAction{m.say.ActionAccept(), m.say.A11yAcceptTask(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}
 	switch {
 	case it.Kind == data.NeedReminder:
-		return []rowAction{{m.say.ActionDone(), m.say.A11yMarkDone(it.Title), func() { m.app.SetStatus(it.Task, data.Done) }}}
+		return []rowAction{{text: m.say.ActionDone(), label: m.say.A11yMarkDone(it.Title), run: func() { m.app.SetStatus(it.Task, data.Done) }}}
 	case it.Kind == data.NeedPRClosed:
 		return []rowAction{
-			{m.say.ActionCancelTask(), m.say.A11yCancelTask(it.Title), func() { m.app.SetStatus(it.Task, data.Cancelled) }},
-			{m.say.ActionKeep(), m.say.A11yKeepTask(it.Title), func() { m.app.KeepClosedPR(it.ID) }},
+			{text: m.say.ActionCancelTask(), label: m.say.A11yCancelTask(it.Title), run: func() { m.app.SetStatus(it.Task, data.Cancelled) }},
+			{text: m.say.ActionKeep(), label: m.say.A11yKeepTask(it.Title), run: func() { m.app.KeepClosedPR(it.ID) }},
 		}
 	case it.Kind == data.NeedPRFailing || it.Kind == data.NeedPRChanges:
-		return []rowAction{openPR}
-	case it.Kind == data.NeedReview && it.PRURL != "":
-		return []rowAction{openPR, accept}
-	case it.Kind == data.NeedBlocked:
-		return goSee(m.say.ActionAnswer())
-	case it.Kind == data.NeedReview:
-		return append(goSee(m.say.ActionReview()), accept)
+		return []rowAction{m.openPRAction(it.Task)}
+	case it.Kind == data.NeedBlocked || it.Kind == data.NeedReview:
+		return m.agentActions(it.Task)
 	}
-	return open(m.say.ActionOpen())
+	return []rowAction{{text: m.say.ActionOpen(), label: m.say.A11yOpenTask(it.Title), run: func() { m.openRow(it.ID) }}}
 }
 
 // mineSection is a plain section of my own tasks: Today or Later. Each row has the status glyph,
@@ -210,24 +207,26 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 	if len(items) == 0 {
 		return
 	}
-	sectionHeader(c, t, title, len(items))
-	for _, it := range items {
-		fill, opacity, _ := m.app.completionPhase(c, it.ID)
-		row := m.rowShell(c, t, it.ID, plainRow, opacity).AlignItems(ui.Center)
-		row.Children(func() {
-			m.glyphSlot(c, t, it.Task, fill)
-			body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
-			right(c, func() {
-				if theme.ShowsPriority(it.Priority) {
-					theme.PriorityBadge(c, t, it.Priority)
-				}
-				if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
-					theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
-				}
+	m.section(c, "section-"+title, itemTasks(items), func() {
+		sectionHeader(c, t, title, len(items))
+		for _, it := range items {
+			ph := m.rowPhase(c, it.Task)
+			row := m.rowShell(c, t, it.ID, plainRow, ph).AlignItems(ui.Center)
+			row.Children(func() {
+				m.glyphSlot(c, t, it.Task, ph.fill)
+				body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
+				right(c, func() {
+					if theme.ShowsPriority(it.Priority) {
+						theme.PriorityBadge(c, t, it.Priority)
+					}
+					if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
+						theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
+					}
+				})
 			})
-		})
-		if row.Clicked() {
-			m.openRow(it.ID)
+			if row.Clicked() {
+				m.openRow(it.ID)
+			}
 		}
-	}
+	})
 }

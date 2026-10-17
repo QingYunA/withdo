@@ -18,9 +18,19 @@ var (
 	needRow  = rowStyle{10, 8} // inside the Needs you container
 )
 
-// rowShell is a row of the Now screen or a list: hover, the keyboard highlight, and the fade of a
-// task that was just marked done. The caller fills it and reports clicks.
-func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
+// rowShell is a row of the Now screen or a list: hover, the keyboard highlight, and the fade and
+// fold of a task that was just marked done, or the opening of one that just joined Done. The
+// caller fills it and reports clicks.
+func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, ph phase) ui.Element {
+	box := ui.Column(c.Key(foldKey(id, ph.done))).Shrink(0)
+	var row ui.Element
+	box.Children(func() { row = m.plainShell(c, t, id, st, ph.opacity) })
+	closeTo(box, row, ph.height)
+	return row
+}
+
+// plainShell is the row inside its box.
+func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
 	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(rowGap).
 		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
 	switch {
@@ -132,8 +142,25 @@ func actionButton(c *ui.Context, t *theme.Tokens, key int, text, label string) u
 
 // actionButtonKeyed is actionButton for a row with several: each takes its own key.
 func actionButtonKeyed(c *ui.Context, t *theme.Tokens, key, text, label string) ui.Element {
+	return stampButton(c, t, key, text, label, -1)
+}
+
+// stampButton is actionButtonKeyed that can be stamped: from frame 0 on it turns status.done, its
+// tint at 16 %, and draws the pixel check (12 pt) before the word, a frame at a time. A frame below 0
+// is the plain button. The change of color is at once: the stamp is a stroke, not a fade.
+func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame int) ui.Element {
 	btn := ui.ButtonBase(c.Key(key)).Padding(3, 9).Radius(theme.RadiusControl).Shrink(0).
 		Background(t.BgSelected).Label(label).Cursor(ui.CursorPointer)
+	if frame >= 0 {
+		ink := t.Status(data.Done)
+		btn.Background(ink.Alpha(0.16)).Children(func() {
+			ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+				theme.Stamp(c, ink, frame)
+				theme.Text(c, theme.MetaStrong, ink, text)
+			})
+		})
+		return btn
+	}
 	if btn.Hovered() {
 		btn.Background(t.Accent.Alpha(0.2))
 	}
