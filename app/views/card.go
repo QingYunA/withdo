@@ -16,7 +16,7 @@ var cardMotion = ui.ElementTransition{
 // card is one task on the board: its title and one line of meta. It drags to another lane; while
 // it is dragged the card lifts (a shadow, a 2 degree tilt) and leaves an empty slot where it was.
 func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
+	ph := m.app.completionPhase(c, task)
 	slot := ui.Column(c.Key(task.ID)).Transition(cardMotion)
 	dragging := false
 	slot.Children(func() {
@@ -26,14 +26,14 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if m.sel == task.ID {
 			m.selRect = card.Bounds()
 		}
-		m.styleCard(c, t, card, task, dragging, opacity)
+		m.styleCard(c, t, card, task, dragging)
 		card.Children(func() {
 			if task.Status == data.Done {
 				theme.Paragraph(c, theme.Body, t.TextSecondary, task.Title, 3)
 			} else {
 				theme.Paragraph(c, theme.BodyStrong, t.Text, task.Title, 3)
 			}
-			m.cardMeta(c, t, task)
+			m.cardMeta(c, t, task, false, ph)
 		})
 		if card.RightClicked() {
 			m.openMenuAtPointer(card, task.ID)
@@ -50,7 +50,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // styleCard is the card's look: white with a hairline ring and a soft shadow; a finished task's is
 // a flat well. The open, selected and menu'd card is tinted with the accent.
-func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task data.Task, dragging bool, opacity float32) {
+func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task data.Task, dragging bool) {
 	bg, border := t.Bg, t.Border
 	flat := task.Status == data.Done
 	if flat {
@@ -76,8 +76,6 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	if dragging {
 		// The copy that follows the pointer ignores this opacity; the original leaves an empty slot.
 		card.Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
-	} else if opacity < 1 {
-		card.Opacity(opacity)
 	}
 }
 
@@ -92,8 +90,11 @@ func boolTo(b bool) float32 {
 // right the due label or the age (or the stale label). A lane is narrow, so the branch shows only
 // when no mark or badge competes with it: cut down to "fix…" it says nothing. The author's avatar is
 // always there, so the line always is.
-func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task) {
+func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting bool, ph phase) {
 	right := m.metaRight(task)
+	if actions := m.agentActions(task); acting && len(actions) > 0 {
+		right = func(c *ui.Context, t *theme.Tokens) { m.actionButtons(c, t, task.ID, actions, ph) }
+	}
 	badge := theme.ShowsPriority(task.Priority) && !task.Status.Terminal()
 	blocked := task.Status == data.Blocked
 	branch := task.Branch

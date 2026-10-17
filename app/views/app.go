@@ -139,9 +139,19 @@ func (a *App) Update(id int, p data.Patch) error {
 }
 
 // SetStatus changes a task's status. Marking a task done starts its completion animation.
-func (a *App) SetStatus(t data.Task, s data.Status) {
+func (a *App) SetStatus(t data.Task, s data.Status) { a.setStatus(t, s, byGlyph) }
+
+// Accept marks a task done from its Accept button, which stamps before the row folds away. A task
+// already being accepted is left alone, so a second click does not start the stamp again.
+func (a *App) Accept(t data.Task) {
+	if _, busy := a.completing[t.ID]; !busy {
+		a.setStatus(t, data.Done, byAccept)
+	}
+}
+
+func (a *App) setStatus(t data.Task, s data.Status, kind completionKind) {
 	if s == data.Done && t.Status != data.Done {
-		a.startCompletion(t)
+		a.startCompletion(t, kind)
 	}
 	_ = a.Update(t.ID, data.Patch{Status: data.StatusPtr(s)})
 }

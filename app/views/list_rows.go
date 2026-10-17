@@ -29,9 +29,9 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.doneRow(c, t, sideMine, task)
 		return
 	}
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
+	ph := m.rowPhase(c, task)
 	ot := m.app.overviewTask(task)
-	m.draggableRow(c, t, task, false, opacity, func(row ui.Element, dragging bool) {
+	m.draggableRow(c, t, task, false, ph, func(row ui.Element, dragging bool) {
 		row.AlignItems(ui.Center).Children(func() {
 			if dragging { // the copy that follows the pointer carries the sprite of the user
 				m.carrier(c, m.ho.walk(c, row, m.app.Now()))
@@ -51,9 +51,9 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.doneRow(c, t, sideAgents, task)
 		return
 	}
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
+	ph := m.rowPhase(c, task)
 	ot := m.app.overviewTask(task)
-	m.draggableRow(c, t, task, true, opacity, func(row ui.Element, _ bool) {
+	m.draggableRow(c, t, task, true, ph, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, m.app.taskWho(task))
 			body(c, func() {
@@ -68,8 +68,8 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 // Agents header (it is any agent's), the title and how long ago, and under it how to have one
 // pick it up.
 func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
-	m.draggableRow(c, t, task, true, opacity, func(row ui.Element, _ bool) {
+	ph := m.rowPhase(c, task)
+	m.draggableRow(c, t, task, true, ph, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, theme.AccentBot(t.Accent))
 			body(c, func() {
@@ -122,8 +122,8 @@ func agentSaid(task data.Task, ot data.OverviewTask) string {
 
 // doneRow is a finished task of a column: its title in text.secondary and when it was finished.
 func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
-	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
+	ph := m.rowPhase(c, task)
+	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
 		if s == sideAgents {
 			m.authorSlot(c, task)
@@ -142,11 +142,11 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 
 // draggableRow is a row of a column that drags to the other one. While it is dragged it lifts (a
 // shadow, a 2 degree tilt) and leaves an empty dashed slot where it was; fill builds the row.
-func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, fromAgents bool, opacity float32, fill func(row ui.Element, dragging bool)) {
+func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, fromAgents bool, ph phase, fill func(row ui.Element, dragging bool)) {
 	slot := ui.Column(c.Key("slot-"+itoa(task.ID))).Shrink(0).Margin(0, -rowSlot).Padding(0, rowSlot)
 	dragging := false
 	slot.Children(func() {
-		row := m.rowShell(c, t, task.ID, plainRow, opacity)
+		row := m.rowShell(c, t, task.ID, plainRow, ph)
 		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents})
 		dragging = row.Dragging()
 		m.liftRow(c, t, row, task.ID, dragging)

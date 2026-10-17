@@ -37,7 +37,10 @@ type listModel struct {
 }
 
 // selectionTasks returns the tasks of the current project or the Inbox, filtered by milestone.
-func (m *Main) selectionTasks() []data.Task {
+func (m *Main) selectionTasks() []data.Task { return m.selection(m.app.withCompleting) }
+
+// selection is selectionTasks with its own way to show the tasks that are completing.
+func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []data.Task) []data.Task {
 	in := func(t data.Task) bool {
 		switch {
 		case t.IsSubtask(): // it lives under its parent
@@ -56,7 +59,7 @@ func (m *Main) selectionTasks() []data.Task {
 			out = append(out, t)
 		}
 	}
-	return m.app.withCompleting(out, in)
+	return completing(out, in)
 }
 
 func (m *Main) listModel() listModel { return buildList(m.selectionTasks()) }
@@ -167,11 +170,13 @@ func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data
 
 // groupOf is group with its own way to draw a row.
 func (m *Main) groupOf(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task, row func(data.Task)) {
-	groupHeader(c, t, "group-"+string(s), len(tasks), statusLabel(m.say, s), func() { theme.StatusGlyph(c, t, s, 0) })
-	ui.Column(c.Key("rows-"+string(s))).Shrink(0).Margin(0, 0, 0, listIndent).Children(func() {
-		for _, task := range tasks {
-			row(task)
-		}
+	m.section(c, "section-"+string(s), tasks, func() {
+		groupHeader(c, t, "group-"+string(s), len(tasks), statusLabel(m.say, s), func() { theme.StatusGlyph(c, t, s, 0) })
+		ui.Column(c.Key("rows-"+string(s))).Shrink(0).Margin(0, 0, 0, listIndent).Children(func() {
+			for _, task := range tasks {
+				row(task)
+			}
+		})
 	})
 }
 
@@ -191,9 +196,9 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.finishedRow(c, t, task, finishedOpts{when: m.clock.Day(doneAt(task), m.app.Now())})
 		return
 	}
-	_, opacity, _ := m.app.completionPhase(c, task.ID)
+	ph := m.rowPhase(c, task)
 	ot := m.app.overviewTask(task)
-	row := m.rowShell(c, t, task.ID, plainRow, opacity).AlignItems(ui.Center)
+	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
 		m.authorSlot(c, task) // under the group's name
 		body(c, func() {
