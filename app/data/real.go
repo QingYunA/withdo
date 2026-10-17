@@ -35,9 +35,13 @@ type Real struct {
 	mu      sync.Mutex
 	subs    map[int]func()
 	remSubs map[int]func(Reminder)
+	evSubs  map[int]func(Event)
 	nextSub int
-	cancel  context.CancelFunc
-	done    chan struct{}
+	// eventMark is the id of the newest report already told about; only the watcher's goroutine
+	// touches it, after Start.
+	eventMark int64
+	cancel    context.CancelFunc
+	done      chan struct{}
 }
 
 var _ Store = (*Real)(nil)
@@ -60,7 +64,7 @@ func NewReal(db *sql.DB, opts RealOptions) *Real {
 	}
 	return &Real{
 		core: domain.New(db, domain.Options{Now: opts.Now}), db: db, opts: opts,
-		subs: map[int]func(){}, remSubs: map[int]func(Reminder){},
+		subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){},
 	}
 }
 
@@ -75,13 +79,14 @@ func (r *Real) Start() {
 	if r.cancel != nil {
 		return
 	}
+	r.markEvents()
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancel, r.done = cancel, make(chan struct{})
 	go func() {
 		defer close(r.done)
 		_ = watch.Run(ctx, watch.Config{
 			DB: r.db, Core: r.core, Interval: r.opts.Interval, Now: r.opts.Now,
-			OnChange: r.notify, OnReminders: r.deliver,
+			OnChange: r.changed, OnReminders: r.deliver,
 		})
 	}()
 }
@@ -236,6 +241,12 @@ func (r *Real) SubscribeReminders(fn func(Reminder)) func() {
 		defer r.mu.Unlock()
 		delete(r.remSubs, id)
 	}
+}
+
+// changed runs from the watcher after the database changed: new events first, then the redraw.
+func (r *Real) changed() {
+	r.deliverEvents()
+	r.notify()
 }
 
 func (r *Real) notify() {

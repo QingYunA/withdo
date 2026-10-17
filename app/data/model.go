@@ -259,6 +259,10 @@ type Store interface {
 	Subscribe(fn func()) (cancel func())
 	// SubscribeReminders calls fn for every reminder that comes due, once.
 	SubscribeReminders(fn func(Reminder)) (cancel func())
+	// SubscribeEvents calls fn for every event, once, as the app first sees its report: an agent
+	// handed a task back or got stuck, a pull request's checks failed or it merged. What happened
+	// before the app started is not told, and neither is what the user did in the app.
+	SubscribeEvents(fn func(Event)) (cancel func())
 
 	// KeepClosedPR dismisses the Needs you row of a task whose pull request was closed without
 	// merging; the task stays as it is.
