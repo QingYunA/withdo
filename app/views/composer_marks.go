@@ -89,8 +89,8 @@ func changeField(c data.Change) string {
 	return ""
 }
 
-// assistMark is the small accent pixel sparkle after a value of the open task that the assistant set in the
-// last 10 s.
+// assistMark is the small accent pixel sparkle after a value of the open task that the assistant
+// set in the last 10 s.
 func (m *Main) assistMark(c *ui.Context, t *theme.Tokens, key string) {
 	at, ok := m.marks[m.inspector.lastOpen][key]
 	if !ok {
