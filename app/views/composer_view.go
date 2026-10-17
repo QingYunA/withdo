@@ -84,7 +84,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 			}
 			m.composerField(c, t, s, style)
 			if !bar {
-				m.modelChip(c, t, s, !active) // nothing without a model
+				m.modelChip(c, t, s, !active, m.compactChip(s)) // nothing without a model
 			}
 			switch {
 			case bar:
@@ -110,7 +110,7 @@ func (m *Main) composerBar(c *ui.Context, t *theme.Tokens, s surface) {
 	ui.Row(c.Key("composer-bar-" + itoa(int(s)))).Shrink(0).Gap(8).AlignItems(ui.Center).Height(theme.SendSize).Children(func() {
 		m.attachButton(c, t, s)
 		ui.Box(c).Grow(1).MinWidth(0)
-		m.modelChip(c, t, s, false)
+		m.modelChip(c, t, s, false, false)
 		switch {
 		case m.convo.thinking && m.convo.owner == s:
 			m.stopButton(c, t)

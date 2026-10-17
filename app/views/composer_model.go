@@ -50,8 +50,9 @@ func modelText(p data.Provider) string {
 }
 
 // modelChip is the chip and, while it is open, its popover. onWell says it sits on the one-line box
-// at rest, whose own well is bg.subtle: the chip's is a step darker there.
-func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell bool) {
+// at rest, whose own well is bg.subtle: the chip's is a step darker there. compact draws only the
+// logo and the chevron, the words in a tooltip.
+func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell, compact bool) {
 	cs := &m.cmp[s]
 	all, active, ok := m.modelsReady()
 	if !ok {
@@ -61,6 +62,9 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell bool)
 	text := modelText(active)
 	chip := ui.ButtonBase(c.Key("model-chip-"+itoa(int(s)))).Height(modelChipH).Shrink(1).MinWidth(0).Padding(0, 8, 0, 6).Gap(6).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ComposerModelLabel(text))
+	if compact {
+		chip.Shrink(0).Padding(0, 6).Gap(4).Tooltip(text)
+	}
 	switch lit := cs.modelOpen || chip.Hovered(); {
 	case onWell && lit:
 		chip.Background(t.Text.Alpha(0.09))
@@ -74,7 +78,9 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell bool)
 	chip.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	chip.Children(func() {
 		providerMark(c, active, modelLogo).Shrink(0)
-		theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+		if !compact {
+			theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+		}
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextTertiary).Shrink(0)
 	})
 	if chip.Clicked() {
@@ -91,6 +97,16 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell bool)
 		}
 	})
 }
+
+// compactChip says the one-line box has no room for the chip's words next to the placeholder: the
+// inspector's never has, a page's below compactChipBelow (the inspector open on a small window).
+func (m *Main) compactChip(s surface) bool {
+	return s == surfaceInspector || m.width < compactChipBelow
+}
+
+// compactChipBelow is the content width under which a page's one-line box shows the chip as its
+// logo alone.
+const compactChipBelow float32 = 720
 
 // modelRow is one provider of the popover: its logo, its name, its model and a check on the one in
 // use.

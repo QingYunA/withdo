@@ -457,7 +457,9 @@ page's title already says where a task goes, so the input has no label, no chip 
   shift the page under a press that blurs it, and the click would be lost.) Without a model there is
   no second row, no `+` and no chip.
 - **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's logo (16), `Provider · model`
-  in `meta` `text.secondary`, a 12 pt chevron; ellipsized when the box is narrow (the inspector's).
+  in `meta` `text.secondary`, a 12 pt chevron. On a one-line box with no room for its words (the
+  inspector's, and a page's under 720 pt of content) it is the logo and the chevron alone, its words in
+  a tooltip, so the placeholder reads whole; the second row always has the words, ellipsized.
   On the one-line box its well is a step darker than the box's `bg.subtle` (`bg.hover` over it).
   Hidden when no model is connected. A click opens a drawn **popover** (a native menu cannot show
   logos), 270 pt wide, hanging from the chip's right edge (above it where there is no room below):

@@ -72,13 +72,19 @@ func TestTheChipOpensItsPopoverFromTheOneLineBoxWithoutMovingThePage(t *testing.
 	has(t, r.tt, "Anthropic · claude-haiku-5-5")
 }
 
-func TestTheInspectorsBoxHasTheChipAndNoShortcut(t *testing.T) {
+func TestNarrowOneLineBoxesShowTheChipAsItsLogoAndKeepThePlaceholderWhole(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	r.withModels(t)
+	has(t, r.tt, deepseekChip) // the page alone has room for the words
 	r.m.OpenTask(5)
 	r.tt.Frame()
-	has(t, r.tt, "Change anything about this task")
-	if n := countText(r.tt, deepseekChip); n != 2 {
+	// The inspector's box, and the page's now that the inspector takes its room, keep the logo and
+	// the chevron: the placeholders read whole.
+	has(t, r.tt, "Change anything about this task", "Tell me anything — I'll turn it into tasks")
+	if n := countText(r.tt, deepseekChip); n != 0 {
+		t.Errorf("%d chips show their words, want none", n)
+	}
+	if n := countText(r.tt, "Model: "+deepseekChip); n != 2 {
 		t.Errorf("%d chips, want the page's and the inspector's", n)
 	}
 	if n := countText(r.tt, "⌘K"); n != 1 {
