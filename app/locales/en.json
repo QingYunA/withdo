@@ -1228,6 +1228,164 @@
   "@notesPlaceholder": {
     "description": "Placeholder of the empty notes field."
   },
+  "notifyHandedBack": "{agent} finished: {title}",
+  "@notifyHandedBack": {
+    "description": "Title of the system notification when an agent hands a task back for review.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "title": {
+        "type": "String",
+        "example": "Native UI with mygo"
+      }
+    }
+  },
+  "notifyStuck": "{agent} is stuck: {title}",
+  "@notifyStuck": {
+    "description": "Title of the system notification when an agent reports that it is blocked.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "title": {
+        "type": "String",
+        "example": "Native UI with mygo"
+      }
+    }
+  },
+  "notifyChecksFailing": "Checks are failing on PR #{number}: {title}",
+  "@notifyChecksFailing": {
+    "description": "Title of the system notification when the checks of a task's pull request start failing.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "12"
+      },
+      "title": {
+        "type": "String",
+        "example": "Native UI with mygo"
+      }
+    }
+  },
+  "notifyMerged": "PR #{number} merged: {title}",
+  "@notifyMerged": {
+    "description": "Title of the system notification when a task's pull request is merged and the task completes.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "12"
+      },
+      "title": {
+        "type": "String",
+        "example": "Native UI with mygo"
+      }
+    }
+  },
+  "notifyPRReady": "PR #{number} is ready for your review",
+  "@notifyPRReady": {
+    "description": "Body of the system notification of a task handed back with a pull request.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "notifyChecksBody": "Open the PR to see which one failed",
+  "@notifyChecksBody": {
+    "description": "Body of the system notification of failing checks."
+  },
+  "notifyMergedBody": "The task is done",
+  "@notifyMergedBody": {
+    "description": "Body of the system notification of a merged pull request."
+  },
+  "notifySummaryTitle": "{count} things need you",
+  "@notifySummaryTitle": {
+    "description": "Title of the one system notification that replaces a burst of three or more.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifySummaryBody": "{counts} · open Mine",
+  "@notifySummaryBody": {
+    "description": "Body of the summary notification: what happened, then where a click goes. Mine is the page named My tasks.",
+    "placeholders": {
+      "counts": {
+        "type": "String",
+        "example": "2 finished, 1 stuck"
+      }
+    }
+  },
+  "notifyCountFinished": "{count} finished",
+  "@notifyCountFinished": {
+    "description": "Part of the summary notification: how many agents handed a task back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifyCountStuck": "{count} stuck",
+  "@notifyCountStuck": {
+    "description": "Part of the summary notification: how many agents are stuck.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifyCountChecks": "{count} with failing checks",
+  "@notifyCountChecks": {
+    "description": "Part of the summary notification: how many pull requests have failing checks.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifyCountMerged": "{count} merged",
+  "@notifyCountMerged": {
+    "description": "Part of the summary notification: how many pull requests merged.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifyCountSeparator": ", ",
+  "@notifyCountSeparator": {
+    "description": "Between the parts of the summary notification's body."
+  },
+  "settingsNotifications": "Notifications",
+  "@settingsNotifications": {
+    "description": "Header of the notifications block in Settings > General."
+  },
+  "settingsNotifyTitle": "System notifications",
+  "@settingsNotifyTitle": {
+    "description": "Label of the switch for system notifications."
+  },
+  "settingsNotifyMeta": "When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due",
+  "@settingsNotifyMeta": {
+    "description": "Quiet line under the system notifications switch."
+  },
+  "settingsNotifyDenied": "macOS does not allow adhd-todo to notify",
+  "@settingsNotifyDenied": {
+    "description": "Quiet line, in the warning color, when macOS refused the last notification."
+  },
+  "settingsNotifyOpenSettings": "Open System Settings ↗",
+  "@settingsNotifyOpenSettings": {
+    "description": "Link that opens the notification settings of macOS."
+  },
   "notifyReminder": "Reminder: {title}",
   "@notifyReminder": {
     "description": "Title of the system notification of a due reminder.",
