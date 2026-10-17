@@ -256,11 +256,12 @@ function pixel(name, s, tint, dark) {
   const a = P[name];
   const pal = Object.assign({}, (dark && a.dark) ? a.dark : a.pal);
   if (tint) { pal.m = tint; pal.d = tint; }
+  const w = a.g[0].length, h = a.g.length;
   let r = '';
   a.g.forEach((row, y) => [...row].forEach((ch, x) => {
     if (ch !== '.') r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + pal[ch] + '"/>';
   }));
-  return '<svg width="' + (12 * s) + '" height="' + (12 * s) + '" viewBox="0 0 12 12" shape-rendering="crispEdges">' + r + '</svg>';
+  return '<svg width="' + (w * s) + '" height="' + (h * s) + '" viewBox="0 0 ' + w + ' ' + h + '" shape-rendering="crispEdges">' + r + '</svg>';
 }
 
 
