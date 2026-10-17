@@ -215,12 +215,13 @@ func (m *Main) thumbnails(c *ui.Context, t *theme.Tokens, s surface) {
 	})
 }
 
-// thumbnail is one picture, 64 x 48, with a round x at its corner that removes it.
+// thumbnail is one picture, 64 x 48, with a round x at its corner that removes it. The whole
+// picture shows, letterboxed on a light well, so two similar screenshots can be told apart.
 func (m *Main) thumbnail(c *ui.Context, t *theme.Tokens, s surface, i int, p picture) {
 	key := "thumb-" + itoa(int(s)) + "-" + itoa(i)
-	ui.Box(c.Key(key)).Size(thumbW, thumbH).Shrink(0).Radius(thumbRadius).Border(1, t.Border).Role(ui.RoleImage).
+	ui.Box(c.Key(key)).Size(thumbW, thumbH).Shrink(0).Radius(thumbRadius).Background(t.BgSubtle).Border(1, t.Border).Role(ui.RoleImage).
 		Label(m.say.ComposerPicture(p.att.Name)).Children(func() {
-		ui.Image(c, p.thumb).Size(thumbW, thumbH).Fit(ui.Cover).Radius(thumbRadius)
+		ui.Image(c, p.thumb).Size(thumbW, thumbH).Fit(ui.Contain).Radius(thumbRadius)
 		label := m.say.ComposerPictureRemove(p.att.Name)
 		x := ui.ButtonBase(c.Key(key+"-x")).Absolute().Top(-6).Right(-6).Size(thumbX, thumbX).Radius(thumbX / 2).
 			Background(t.Text.Alpha(0.78)).Center().Label(label).Tooltip(label).Cursor(ui.CursorPointer)
