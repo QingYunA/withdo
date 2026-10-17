@@ -2497,11 +2497,11 @@
         "example": "2"
       },
       "w": {
-        "type": "int",
+        "type": "String",
         "example": "1200"
       },
       "h": {
-        "type": "int",
+        "type": "String",
         "example": "900"
       }
     }
@@ -2532,7 +2532,7 @@
       }
     }
   },
-  "receiptImages": "{n, plural, one {with its image} other {with its images}}",
+  "receiptImages": "{n, plural, one{with its image} other{with its images}}",
   "@receiptImages": {
     "description": "Part of the line after the assistant added or changed a task: the task kept the pictures sent with the request.",
     "placeholders": {

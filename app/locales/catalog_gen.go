@@ -6123,7 +6123,7 @@ func (msgs Messages) ImageDetached(name string) string {
 //
 // The bar under the image in the viewer: its name, its place among the
 // task's images and its size in pixels.
-func ViewerPosition(name string, i int, n int, w int, h int) string {
+func ViewerPosition(name string, i int, n int, w string, h string) string {
 	return In(i18n.Locale()).ViewerPosition(name, i, n, w, h)
 }
 
@@ -6132,7 +6132,7 @@ func ViewerPosition(name string, i int, n int, w int, h int) string {
 //
 // The bar under the image in the viewer: its name, its place among the
 // task's images and its size in pixels.
-func (msgs Messages) ViewerPosition(name string, i int, n int, w int, h int) string {
+func (msgs Messages) ViewerPosition(name string, i int, n int, w string, h string) string {
 	return Catalog.Format(msgs.locale, "viewerPosition", map[string]any{"name": name, "i": i, "n": n, "w": w, "h": h})
 }
 
@@ -6206,14 +6206,14 @@ func (msgs Messages) ViewerImage(name string) string {
 	return Catalog.Format(msgs.locale, "viewerImage", map[string]any{"name": name})
 }
 
-// ReceiptImages says "{n, plural, one {with its image} other {with its images}}"
+// ReceiptImages says "{n, plural, one{with its image} other{with its images}}"
 // in the language the app shows.
 //
 // Part of the line after the assistant added or changed a task: the task
 // kept the pictures sent with the request.
 func ReceiptImages(n int) string { return In(i18n.Locale()).ReceiptImages(n) }
 
-// ReceiptImages says "{n, plural, one {with its image} other {with its images}}"
+// ReceiptImages says "{n, plural, one{with its image} other{with its images}}"
 // in the language of msgs.
 //
 // Part of the line after the assistant added or changed a task: the task

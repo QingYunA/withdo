@@ -801,6 +801,8 @@ v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user ca
   which task has which image (its name, size and when it was added). Deleting a task or detaching an
   image removes the link; a file no task links to any more is deleted. The model still gets the
   1600 px copy.
+- **Screens.** `inspector-images`, `inspector-images-none`, `inspector-images-hover`, `mine-pictures`,
+  `project-list-pictures`, `project-board-pictures`, `viewer`.
 - **Not yet.** An agent attaching a screenshot through the MCP; images in an export.
 
 ### Task menu

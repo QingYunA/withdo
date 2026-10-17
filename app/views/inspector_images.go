@@ -27,8 +27,8 @@ func (m *Main) imagesBlock(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // addImagesLine is "Add images…", quiet, like the notes' placeholder; it opens the file panel.
 func (m *Main) addImagesLine(c *ui.Context, t *theme.Tokens, task data.Task) {
-	btn := ui.ButtonBase(c.Key("add-images")).Height(theme.RowOneLine).Shrink(0).Margin(0, 0, 0, 0).Radius(theme.RadiusControl).
-		AlignItems(ui.Center).Label(m.say.ImagesAdd()).Cursor(ui.CursorPointer)
+	btn := ui.ButtonBase(c.Key("add-images")).Height(theme.RowOneLine).Shrink(0).Radius(theme.RadiusControl).
+		AlignItems(ui.Center).Justify(ui.Start).Label(m.say.ImagesAdd()).Cursor(ui.CursorPointer)
 	ink := t.TextTertiary
 	if btn.Hovered() {
 		ink = t.TextSecondary

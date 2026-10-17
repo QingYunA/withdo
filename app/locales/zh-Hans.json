@@ -417,5 +417,5 @@
   "viewerPrevious": "上一张",
   "viewerNext": "下一张",
   "viewerImage": "图片 {name}",
-  "receiptImages": "{n, plural, other {图片也挂上了}}"
+  "receiptImages": "{n, plural, other{图片也挂上了}}"
 }
