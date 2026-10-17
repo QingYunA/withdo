@@ -6,10 +6,10 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The model chip is at the bottom right of a focused composer: the logo of the provider in use and
-// "Provider · model ⌄". It opens a drawn popover (a native menu cannot show logos) that lists the
-// providers that are set up, each with its model, the one in use checked. Choosing one makes it the
-// provider in use, the same as in Settings > Assistant.
+// The model chip is at the right of the composer, in the one-line box or in its second row: the logo
+// of the provider in use and "Provider · model ⌄". It opens a drawn popover (a native menu cannot
+// show logos) that lists the providers that are set up, each with its model, the one in use checked.
+// Choosing one makes it the provider in use, the same as in Settings > Assistant.
 
 const (
 	modelPopWidth float32 = 270
@@ -49,8 +49,10 @@ func modelText(p data.Provider) string {
 	return p.Name + " · " + p.Model
 }
 
-// modelChip is the chip and, while it is open, its popover.
-func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
+// modelChip is the chip and, while it is open, its popover. onWell says it sits on the one-line box
+// at rest, whose own well is bg.subtle: the chip's is a step darker there. compact draws only the
+// logo and the chevron, the words in a tooltip.
+func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell, compact bool) {
 	cs := &m.cmp[s]
 	all, active, ok := m.modelsReady()
 	if !ok {
@@ -60,8 +62,15 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
 	text := modelText(active)
 	chip := ui.ButtonBase(c.Key("model-chip-"+itoa(int(s)))).Height(modelChipH).Shrink(1).MinWidth(0).Padding(0, 8, 0, 6).Gap(6).
 		Radius(7).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(m.say.ComposerModelLabel(text))
-	switch {
-	case cs.modelOpen || chip.Hovered():
+	if compact {
+		chip.Shrink(0).Padding(0, 6).Gap(4).Tooltip(text)
+	}
+	switch lit := cs.modelOpen || chip.Hovered(); {
+	case onWell && lit:
+		chip.Background(t.Text.Alpha(0.09))
+	case onWell:
+		chip.Background(t.BgHover)
+	case lit:
 		chip.Background(t.BgSubtle.Mix(t.Text, 0.05))
 	default:
 		chip.Background(t.BgSubtle)
@@ -69,7 +78,9 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
 	chip.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	chip.Children(func() {
 		providerMark(c, active, modelLogo).Shrink(0)
-		theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+		if !compact {
+			theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+		}
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextTertiary).Shrink(0)
 	})
 	if chip.Clicked() {
@@ -86,6 +97,16 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface) {
 		}
 	})
 }
+
+// compactChip says the one-line box has no room for the chip's words next to the placeholder: the
+// inspector's never has, a page's below compactChipBelow (the inspector open on a small window).
+func (m *Main) compactChip(s surface) bool {
+	return s == surfaceInspector || m.width < compactChipBelow
+}
+
+// compactChipBelow is the content width under which a page's one-line box shows the chip as its
+// logo alone.
+const compactChipBelow float32 = 720
 
 // modelRow is one provider of the popover: its logo, its name, its model and a check on the one in
 // use.

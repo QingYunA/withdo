@@ -24,3 +24,6 @@ func (t *Tokens) ComposerBorder() ui.Color { return t.Border.Alpha(0.2) }
 
 // SendIdle is the round send button while there is nothing to send.
 func (t *Tokens) SendIdle() ui.Color { return t.TextTertiary.Alpha(0.4) }
+
+// StopWell is the round stop button that takes the send button's place while the assistant works.
+func (t *Tokens) StopWell() ui.Color { return t.Text.Alpha(0.08) }

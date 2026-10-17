@@ -92,11 +92,11 @@ func TestAReceiptIsOneLineWithUndoAndTheUsersWordsAreNotEchoed(t *testing.T) {
 	if r.pageBuf() != "" {
 		t.Errorf("the field still holds %q", r.pageBuf())
 	}
-	has(t, r.tt, "Thinking…")
+	has(t, r.tt, "Thinking")
 	hasNot(t, r.tt, "明天九点提醒我开会")
 	r.answer(t)
 	has(t, r.tt, "Added", "Team meeting", "· Tomorrow 9:00 AM · reminder", "Undo")
-	hasNot(t, r.tt, "Thinking…", "明天九点提醒我开会", "Okay, I'll remind you tomorrow at 9.") // the line says it
+	hasNot(t, r.tt, "Thinking", "明天九点提醒我开会", "Okay, I'll remind you tomorrow at 9.") // the line says it
 	if got := r.fa.Asked(); len(got) != 1 || got[0] != "明天九点提醒我开会" {
 		t.Errorf("asked %v", got)
 	}
@@ -412,11 +412,11 @@ func TestEscCancelsARequestAndGivesTheTextBack(t *testing.T) {
 	fa := &data.FakeAssistant{Ready: true, Block: make(chan struct{})}
 	r := newAssistRig(t, fa)
 	r.ask("a slow one")
-	has(t, r.tt, "Thinking…")
+	has(t, r.tt, "Thinking")
 	r.tt.Key(ui.Cmd, ui.KeyK)
 	r.tt.Key(0, ui.KeyEscape)
 	r.answer(t) // the cancelled request returns context.Canceled
-	hasNot(t, r.tt, "Thinking…")
+	hasNot(t, r.tt, "Thinking")
 	if r.m.convo.open {
 		t.Error("the sheet stayed open after a cancelled request that changed nothing")
 	}

@@ -34,6 +34,7 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
    shows when it is due or when I asked to be reminded.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
 6. **Fast is a feature.** The composer is one keystroke away (⌘K). No spinner for local data.
+7. **Pictures are pixels; text and layout are native.** See **Pixel language**.
 
 ## Tokens
 
@@ -90,6 +91,35 @@ display. Views keep using the tokens; no literal sizes.
 - Shadows only on floating things: drag ghost, popovers, the window.
 - Motion 160 ms ease-out for hover, selection and drawer; 220 ms spring for a card
   appearing and a card settling after a drop. Respect Reduce Motion: fade only.
+
+## Pixel language
+
+Decided 2026-10-17 (M6b made the icons pixels, v8 the day card, v9 the busy indicator). Every new
+piece of UI follows it; a mockup that breaks it is redrawn before it is built.
+
+- **Every picture is pixel art on a 12 x 12 grid.** Status glyphs, interface icons, avatars,
+  empty-state art, busy and progress indicators, the stop mark: filled squares only, no strokes,
+  no curves, no anti-aliased edges. They are drawn only at whole multiples of the grid (12, 18, 24,
+  36 pt) so no pixel is split.
+- **No system indicators or symbol fonts.** No `ui.Spinner`, no `NSProgressIndicator`, no SF
+  Symbols, no emoji, no text glyph standing in for an icon (`✦`, `✓`). A missing picture is added as
+  a pixelarticon or drawn as a sprite in `app/theme`.
+- **Pixel art moves in frames.** A picture that moves switches whole pixels on and off on a fixed
+  beat; it does not rotate, scale or ease. The busy indicator steps every 100 ms. With Reduce Motion
+  it holds its first frame.
+- **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
+  opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
+  the layout are not.
+- **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
+  solid edge, a hard 4 pt shadow with no blur.
+- **The one exception for now** is the provider logos (lobe-icons), which keep their official
+  colors.
+
+The busy indicator (`theme.PixelSpinner`, reference `docs/design/mockups/v9.html`): eight 2 x 2
+blocks round the 12 x 12 grid, clockwise from the top (5,1), (8,2), (9,5), (8,8), (5,9), (2,8),
+(1,5), (2,2). One block is lit at full opacity and steps clockwise every 100 ms (800 ms a turn);
+the two behind it are at 60 % and 35 %, the rest at 25 %, all in the color of the text beside it.
+The stop mark is a solid 6 x 6 square in the middle of the same grid (9 pt at 18 pt).
 
 ## Glyphs
 
@@ -404,26 +434,33 @@ page's title already says where a task goes, so the input has no label, no chip 
 
 - **At rest.** One line, 50 pt tall, 12 pt radius, `bg.subtle`, **no border, no shadow**; a 16 pt
   assistant avatar (18 pt) at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
-  `text.tertiary`; `⌘K` in `meta` `text.tertiary` at the right (not in the inspector's). The
+  `text.tertiary`; with a model connected the **model chip** at the right; `⌘K` in `meta`
+`text.tertiary` after it (not in the inspector's). The
   placeholder is short: Mine `Tell me anything — I'll turn it into tasks`, Agents `Ask what your agents are doing`; a project and the Inbox
   `Add a task, or ask me anything`; the inspector `Change anything about this task`.
 - **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
   ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the avatar and `⌘K` give
   way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text, absent while
-  the field is empty; neutral while the assistant is still working on the last request). Without a
+  the field is empty; a neutral **stop** button while the assistant works on a request from this box,
+  see **Assistant**). Without a
   model the box keeps its 50 pt from rest to one line of text; with one, the second row below adds
   its height once there is text. Focusing it moves nothing either way. Empty and focused it
-  shows only the cursor and the placeholder (and a `+`, below). No `↵ to send` or `⇧↵ new line` text: the button is the
+  shows only the cursor, the placeholder, the `+` (below) and the model chip at the right. No `↵ to send` or `⇧↵ new line` text: the button is the
   hint.
-- **Second row (M6, with a model connected).** Once the box holds text or an image, a 28 pt row shows
+- **Second row (M6, with a model connected).** While the box holds text or an image, while the
+  assistant works on a request sent from it, and while that request's answer shows, a 28 pt row shows
   under the text: `+` (18 pt plus icon, `text.secondary`, round hover well) at the left, then the
-  **model chip**, then the send button, which moves down into this row. Focusing an *empty* box still
-  moves nothing: it shows only the cursor and the placeholder, with the `+` in the avatar's place so
-  images can be added at once. (A box that grows when it is focused would shift the page under a
-  press that blurs it, and the click would be lost; the second row appears with text, and stays
-  while there is text, focused or not.) Without a model there is no second row, no `+` and no chip.
+  **model chip**, then the send (or stop) button, which moves down into this row. Otherwise the box
+  is one line and the chip sits at the right of it (v9 B, so the model in use is always in sight).
+  Focusing an *empty* box still moves nothing: it shows the cursor and the placeholder, with the `+`
+  in the avatar's place so images can be added at once. (A box that grows when it is focused would
+  shift the page under a press that blurs it, and the click would be lost.) Without a model there is
+  no second row, no `+` and no chip.
 - **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's logo (16), `Provider · model`
-  in `meta` `text.secondary`, a 12 pt chevron; ellipsized when the box is narrow (the inspector's).
+  in `meta` `text.secondary`, a 12 pt chevron. On a one-line box with no room for its words (the
+  inspector's, and a page's under 720 pt of content) it is the logo and the chevron alone, its words in
+  a tooltip, so the placeholder reads whole; the second row always has the words, ellipsized.
+  On the one-line box its well is a step darker than the box's `bg.subtle` (`bg.hover` over it).
   Hidden when no model is connected. A click opens a drawn **popover** (a native menu cannot show
   logos), 270 pt wide, hanging from the chip's right edge (above it where there is no room below):
   the heading `Switch model` in `meta` `text.tertiary`, then one 32 pt row per provider that is set up
@@ -434,7 +471,8 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **Images.** Pasted with `⌘V` (the pasteboard holds an image or image files), dropped on the box (it
   takes an accent ring and a faint accent tint while files are dragged over it), or chosen with `+`
   (the system's file panel). A paste of text is untouched. Each image shows as a 64 x 48 thumbnail
-  (8 pt radius, hairline border, cover-fit) in a row above the text, with an 18 pt round `x` at its
+  (8 pt radius, hairline border, contain-fit on `bg.subtle`, so the whole picture shows and two
+  similar screenshots can be told apart) in a row above the text, with an 18 pt round `x` at its
   top-right corner that removes it. At most 4; a fifth, a file that is not a PNG, JPEG, GIF or
   WebP image (a HEIC photo, a PDF), one still over 5 MB after shrinking, or an unreadable file
   shows a quiet `compact` `text.secondary` line under the box for 4 s and is not taken. Images are
@@ -466,8 +504,14 @@ reports what it did with an Undo; it asks only when an action would be wrong wit
 Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-sentence`,
 `now-question`, `now-no-model` (light and dark), `now-composer-*`.
 
-- **Working.** The avatar pulses (plain with Reduce Motion) and the empty field's
-  placeholder reads `Thinking…`. One request at a time: Enter while it works keeps what is typed.
+- **Working (v9 B).** Sending empties the field as before, so the next thought can be typed, but the
+  box keeps its second row and the send button becomes a neutral **stop** button (the pixel stop
+  mark; a click is `Esc`). The answer line under the box shows the pixel busy indicator (see **Pixel
+  language**) in the avatar's place, `Thinking` and `· 3s` (`meta`; the seconds in `text.tertiary`,
+  counted from the send), and `Esc to cancel` in `text.tertiary` at the right. After 15 s the words
+  read `Taking longer than usual`. The answer replaces this line in place, so from the send to the
+  answer nothing under the box moves. The box's avatar, when the box is at rest, still pulses (plain
+  with Reduce Motion). One request at a time: Enter while it works keeps what is typed.
   **Esc cancels** the request (its context is cancelled); with nothing changed yet the text returns
   to the field.
 - **The answer is never an echo of the user.** The user's own words are not shown again, and there

@@ -27,6 +27,7 @@ func (m *Main) answerView(c *ui.Context, t *theme.Tokens, compact bool) {
 	fade, gone := m.answerFade(c)
 	if gone {
 		cv.open = false // the turn is kept for Cmd+Z, only its line goes
+		c.Invalidate()  // and the box gives its second row back
 		return
 	}
 	turn, left := cv.turns[len(cv.turns)-1], float32(16)
@@ -36,7 +37,7 @@ func (m *Main) answerView(c *ui.Context, t *theme.Tokens, compact bool) {
 	ui.Column(c.Key("answer")).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, left).Opacity(fade).Children(func() {
 		switch {
 		case m.convo.thinking && turn.reply == "":
-			// The composer already says Thinking….
+			m.workingLine(c, t)
 		case turn.question != nil:
 			m.questionView(c, t, *turn.question, !cv.thinking)
 		case len(turn.receipts) > 0:
@@ -52,6 +53,32 @@ func (m *Main) answerView(c *ui.Context, t *theme.Tokens, compact bool) {
 		}
 	})
 }
+
+// workingLine is what stands where the answer will: the pixel busy indicator in the avatar's place,
+// Thinking and the seconds since the send, and Esc to cancel at the right. After slowAfter the words
+// say it is taking longer. The answer replaces the line in place.
+func (m *Main) workingLine(c *ui.Context, t *theme.Tokens) {
+	now, reduce := m.app.Now(), c.Preferences().ReduceMotion
+	elapsed, words := max(now.Sub(m.convo.sentAt), 0), m.say.ConvoThinking()
+	if reduce {
+		c.After(time.Second - elapsed%time.Second) // the picture holds still, the seconds count
+	} else {
+		c.After(theme.SpinnerStep)
+	}
+	if elapsed >= slowAfter {
+		words = m.say.ConvoSlow()
+	}
+	ui.Row(c.Key("working")).Height(answerLineHeight).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		theme.PixelSpinner(c, theme.AvatarRow, t.TextSecondary, theme.SpinnerFrame(now, reduce))
+		theme.Text(c, theme.Meta, t.TextSecondary, words).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoElapsed(int(elapsed/time.Second))).Shrink(0)
+		ui.Spacer(c)
+		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoEscCancel()).Shrink(0)
+	})
+}
+
+// slowAfter is how long a request runs before the working line says it is taking longer than usual.
+const slowAfter = 15 * time.Second
 
 // answerFade says how visible the line of a turn that asked nothing still is, and when it is gone:
 // it shows for 6 s, then fades in 400 ms, and goes at once when the composer it came from holds

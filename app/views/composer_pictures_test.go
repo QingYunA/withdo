@@ -257,9 +257,12 @@ func TestThePlusOpensTheFilePanelAndTakesWhatIsChosen(t *testing.T) {
 func TestTheChipNamesTheModelInUseAndSwitchesIt(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	r.withModels(t)
+	if !r.tt.HasText("DeepSeek · deepseek-chat") {
+		t.Error("no chip on the empty box at rest")
+	}
 	r.tt.Key(ui.Cmd, ui.KeyK)
-	if r.tt.HasText("DeepSeek · deepseek-chat") {
-		t.Error("the chip shows in an empty box: focusing it should move nothing")
+	if !r.tt.HasText("DeepSeek · deepseek-chat") {
+		t.Error("no chip on the empty focused box")
 	}
 	r.tt.Type("hello")
 	if !r.tt.HasText("DeepSeek · deepseek-chat") {

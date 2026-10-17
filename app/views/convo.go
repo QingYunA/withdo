@@ -39,6 +39,7 @@ type convo struct {
 	thinking bool
 	stopping bool // Esc was pressed; the answer that comes back is only read for receipts
 	cancel   context.CancelFunc
+	sentAt   time.Time    // when the request in flight was sent, for the seconds of the working line
 	doneAt   time.Time    // when the last turn came back, for the 6 s of its line
 	typed    string       // what the composer held then: typing anything else ends the line
 	undone   map[int]bool // receipts that were undone
@@ -60,6 +61,7 @@ func (m *Main) sendToAssistant(text string, place data.Place, s surface, pics ..
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cv.cancel, cv.thinking, cv.stopping, cv.open = cancel, true, false, true
+	cv.sentAt = m.app.Now()
 	if cv.owner != s || cv.nav != m.nav || cv.place != place {
 		cv.turns = nil // another composer, page or task: a new sheet
 	}

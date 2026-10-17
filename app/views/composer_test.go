@@ -237,15 +237,15 @@ func TestThePlaceholderIsShortAndTheTitleNamesThePlace(t *testing.T) {
 	has(t, r.tt, "Change anything about this task")
 }
 
-func TestTheComposerHasNoChipAndNoHintText(t *testing.T) {
+func TestTheComposerHasNoHintText(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	mustNil(t, r.app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-x"}))
 	mustNil(t, r.app.Models.SetActive("anthropic"))
 	r.tt.Frame()
-	hasNot(t, r.tt, "Assistant · Haiku 5.5", "Set up the assistant", "↵")
+	hasNot(t, r.tt, "Set up the assistant", "↵")
 	r.tt.Key(ui.Cmd, ui.KeyK)
 	r.tt.Type("review PR 12")
-	hasNot(t, r.tt, "↵ send", "↵ to send", "⇧↵", "Assistant ·")
+	hasNot(t, r.tt, "↵ send", "↵ to send", "⇧↵")
 }
 
 func TestWithoutAModelOnlyTheQuietSetUpLineIsExtraAndOnlyWhileFocusedAndEmpty(t *testing.T) {
