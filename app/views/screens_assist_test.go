@@ -33,11 +33,35 @@ func sendAnd(t *testing.T, rec *recorder, text string, answer bool) func(*ui.Tes
 	}
 }
 
+// TestScreensAssistThinking renders the working state (v9 B): the second row with the stop button and
+// the working line under it, 3 s after the send and past 15 s, in English and Chinese.
 func TestScreensAssistThinking(t *testing.T) {
 	for _, a := range appearances() {
-		fa := &data.FakeAssistant{Ready: true, Block: make(chan struct{})}
-		app, _, rec := assistApp(t, fa)
-		mainShot(t, "mine-thinking-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", false))
+		for _, w := range []struct {
+			name string
+			wait time.Duration
+			zh   bool
+		}{
+			{"mine-thinking", 3 * time.Second, false},
+			{"mine-thinking-slow", 16 * time.Second, false},
+			{"mine-thinking-zh", 3 * time.Second, true},
+		} {
+			fa := &data.FakeAssistant{Ready: true, Block: make(chan struct{})}
+			app, _, rec := readyApp(t, fa)
+			now := fixedNow()
+			app.Now = func() time.Time { return now }
+			send := sendAnd(t, rec, "remind me about the team meeting tomorrow at 9", false)
+			setup := func(tt *ui.Tester, m *Main) {
+				send(tt, m)
+				now = now.Add(w.wait)
+				tt.Frame()
+			}
+			if w.zh {
+				zhShot(t, w.name+"-"+a.suffix+".png", app, a.dark, setup)
+				continue
+			}
+			mainShot(t, w.name+"-"+a.suffix+".png", app, a.dark, setup)
+		}
 	}
 }
 
