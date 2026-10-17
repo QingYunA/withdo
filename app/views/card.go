@@ -92,12 +92,19 @@ func boolTo(b bool) float32 {
 // always there, so the line always is.
 func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting bool, ph phase) {
 	right := m.metaRight(task)
+	var under func() // the buttons, when two do not fit beside the avatar in a narrow lane
+	branch := task.Branch
 	if actions := m.agentActions(task); acting && len(actions) > 0 {
-		right = func(c *ui.Context, t *theme.Tokens) { m.actionButtons(c, t, task.ID, actions, ph) }
+		buttons := func() { m.actionButtons(c, t, task.ID, actions, ph) }
+		branch, right = "", nil
+		if len(actions) > 1 && m.boardLayout(c).col < cardActionsInlineFrom {
+			under = buttons
+		} else {
+			right = func(*ui.Context, *theme.Tokens) { buttons() }
+		}
 	}
 	badge := theme.ShowsPriority(task.Priority) && !task.Status.Terminal()
 	blocked := task.Status == data.Blocked
-	branch := task.Branch
 	if badge || blocked {
 		branch = ""
 	}
@@ -117,7 +124,14 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 			right(c, t)
 		}
 	})
+	if under != nil {
+		ui.Row(c).Gap(8).Margin(4, 0, 0).Children(under)
+	}
 }
+
+// cardActionsInlineFrom is the lane width from which Open PR and Accept fit in a card's meta line;
+// in a narrower lane they take a line of their own under it.
+const cardActionsInlineFrom float32 = 200
 
 // metaRight builds the right end of the second line, or returns nil when there is nothing to say.
 func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
