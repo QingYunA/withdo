@@ -127,6 +127,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 				who := m.whoFinished(task, o.summary && m.width >= dropProjectBelow)
 				theme.Text(c, theme.Meta, t.TextTertiary, who).MaxWidth(300).Shrink(2).MinWidth(0).Ellipsis("…")
 			}
+			m.rowThumb(c, t, task.ID)
 			plainText(c, t, o.when)
 		})
 	})

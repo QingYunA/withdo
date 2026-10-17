@@ -16,6 +16,9 @@ type inspector struct {
 	dueOpen  bool
 	remOpen  bool
 	when     time.Time // the date being picked
+	// imgProblem is the line under the images block about a file that was not taken, and when.
+	imgProblem   string
+	imgProblemAt time.Time
 }
 
 // editing reports whether a text field of the inspector has the keyboard.
@@ -41,6 +44,7 @@ func (i *inspector) reverted() bool {
 func (i *inspector) reset() {
 	i.fields = fields{}
 	i.dueOpen, i.remOpen = false, false
+	i.imgProblem = ""
 }
 
 // inspectorPane slides open at 360 pt when a task is open, and shuts again on Esc.
@@ -62,13 +66,21 @@ func (m *Main) inspectorPane(c *ui.Context, t *theme.Tokens) {
 		if !ok {
 			return
 		}
-		ui.Column(c).Width(theme.InspectorWidth).Shrink(0).Background(t.Bg).Children(func() {
+		pane := ui.Column(c).Width(theme.InspectorWidth).Shrink(0).Background(t.Bg)
+		if files := pane.DroppedFiles(); len(files) > 0 {
+			m.attachToTask(task.ID, files) // image files dropped on the pane belong to the task
+		}
+		pane.Children(func() {
+			if pane.FileDragOver() {
+				dropOverlay(c, t)
+			}
 			m.inspectorHeader(c, t, task)
 			hairline(c, t)
 			ui.Scroll(c).Grow(1).MinHeight(0).Children(func() {
 				ui.Column(c).Padding(20, 24, 32).Gap(20).Children(func() {
 					m.titleField(c, t, task)
 					m.properties(c, t, task)
+					m.imagesBlock(c, t, task)
 					m.subtasks(c, t, task)
 					m.notesField(c, t, task)
 					m.activity(c, t, task)

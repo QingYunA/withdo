@@ -405,5 +405,17 @@
   "listWaitingHint": "在任意 Agent 里说「做 #{id}」就会接手",
   "listDropToHand": "松开，交给 Agent",
   "handOffDone": "已交给 Agent",
-  "handOffTakenBack": "现在归你了"
+  "handOffTakenBack": "现在归你了",
+  "imagesAdd": "添加图片…",
+  "imagesAddTile": "添加图片",
+  "imageOpen": "打开 {name}",
+  "imageDetach": "从任务中移除 {name}",
+  "imageDetached": "已移除 {name}",
+  "viewerPosition": "{name} · {i} / {n} · {w} × {h}",
+  "viewerOpenInPreview": "在预览中打开 ↗",
+  "viewerClose": "关闭",
+  "viewerPrevious": "上一张",
+  "viewerNext": "下一张",
+  "viewerImage": "图片 {name}",
+  "receiptImages": "{n, plural, other {图片也挂上了}}"
 }

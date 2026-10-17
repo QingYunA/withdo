@@ -78,6 +78,13 @@ func (s *shell) ShowInFinder(path string) {
 	}
 }
 
+// OpenFile implements views.Actions.
+func (s *shell) OpenFile(path string) {
+	if err := mygo.Shell.OpenPath(path); err != nil {
+		log.Printf("open %s: %v", path, err)
+	}
+}
+
 // openRunner runs the macOS open command with args. Tests replace it: they never launch an app.
 var openRunner = func(args ...string) error {
 	out, err := exec.Command("open", args...).CombinedOutput()

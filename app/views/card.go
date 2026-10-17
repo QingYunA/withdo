@@ -20,20 +20,34 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 	slot := ui.Column(c.Key(task.ID)).Transition(cardMotion)
 	dragging := false
 	slot.Children(func() {
-		card := ui.Column(c.Key("card")).Padding(12).Gap(4).Radius(theme.RadiusTile).Cursor(ui.CursorPointer)
+		card := ui.Column(c.Key("card")).Radius(theme.RadiusTile).Cursor(ui.CursorPointer)
+		banded := len(m.app.Images(task.ID)) > 0 // the first picture runs across the top, to the card's edges
+		if banded {
+			card.Clip()
+		} else {
+			card.Padding(12).Gap(4)
+		}
 		card.Drag(dragCard{id: task.ID})
 		dragging = card.Dragging()
 		if m.sel == task.ID {
 			m.selRect = card.Bounds()
 		}
 		m.styleCard(c, t, card, task, dragging)
-		card.Children(func() {
+		inside := func() {
 			if task.Status == data.Done {
 				theme.Paragraph(c, theme.Body, t.TextSecondary, task.Title, 3)
 			} else {
 				theme.Paragraph(c, theme.BodyStrong, t.Text, task.Title, 3)
 			}
 			m.cardMeta(c, t, task, m.showsActions(card, task.ID, ph), ph)
+		}
+		card.Children(func() {
+			if !banded {
+				inside()
+				return
+			}
+			m.cardBand(c, t, task.ID)
+			ui.Column(c.Key("card-body")).Padding(12).Gap(4).Children(inside)
 		})
 		if card.RightClicked() {
 			m.openMenuAtPointer(card, task.ID)

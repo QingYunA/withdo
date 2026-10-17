@@ -124,7 +124,11 @@ func TestTheInspectorSaysWhoWroteTheTask(t *testing.T) {
 }
 
 func TestEachReportOfTheActivityStartsWithItsAgentsAvatar(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	app, _, _ := newTestApp(t)
+	m := NewMain(app)
+	tt := ui.NewTester(m.View, 1100, 800) // the line for images pushes the activity down
+	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
+	still(tt)
 	m.OpenTask(3)
 	tt.Frame()
 	if !paintedLeftOf(t, tt, 1100, "Reproduced the race with a slow launch", 40, claudeColor) {

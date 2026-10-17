@@ -6039,3 +6039,185 @@ func HandOffTakenBack() string { return In(i18n.Locale()).HandOffTakenBack() }
 func (msgs Messages) HandOffTakenBack() string {
 	return Catalog.Format(msgs.locale, "handOffTakenBack", nil)
 }
+
+// ImagesAdd says "Add images…"
+// in the language the app shows.
+//
+// The quiet line in the inspector of a task with no images; it opens the
+// file panel.
+func ImagesAdd() string { return In(i18n.Locale()).ImagesAdd() }
+
+// ImagesAdd says "Add images…"
+// in the language of msgs.
+//
+// The quiet line in the inspector of a task with no images; it opens the
+// file panel.
+func (msgs Messages) ImagesAdd() string {
+	return Catalog.Format(msgs.locale, "imagesAdd", nil)
+}
+
+// ImagesAddTile says "Add images"
+// in the language the app shows.
+//
+// Accessibility label of the dashed + tile after the images of a task in
+// the inspector.
+func ImagesAddTile() string { return In(i18n.Locale()).ImagesAddTile() }
+
+// ImagesAddTile says "Add images"
+// in the language of msgs.
+//
+// Accessibility label of the dashed + tile after the images of a task in
+// the inspector.
+func (msgs Messages) ImagesAddTile() string {
+	return Catalog.Format(msgs.locale, "imagesAddTile", nil)
+}
+
+// ImageOpen says "Open {name}"
+// in the language the app shows.
+//
+// Accessibility label of the thumbnail of an image of a task; a click opens
+// it in the viewer.
+func ImageOpen(name string) string { return In(i18n.Locale()).ImageOpen(name) }
+
+// ImageOpen says "Open {name}"
+// in the language of msgs.
+//
+// Accessibility label of the thumbnail of an image of a task; a click opens
+// it in the viewer.
+func (msgs Messages) ImageOpen(name string) string {
+	return Catalog.Format(msgs.locale, "imageOpen", map[string]any{"name": name})
+}
+
+// ImageDetach says "Remove {name} from this task"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the x on an image tile in the
+// inspector.
+func ImageDetach(name string) string { return In(i18n.Locale()).ImageDetach(name) }
+
+// ImageDetach says "Remove {name} from this task"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the x on an image tile in the
+// inspector.
+func (msgs Messages) ImageDetach(name string) string {
+	return Catalog.Format(msgs.locale, "imageDetach", map[string]any{"name": name})
+}
+
+// ImageDetached says "Removed {name}"
+// in the language the app shows.
+//
+// Toast after an image was taken off a task, with Undo.
+func ImageDetached(name string) string { return In(i18n.Locale()).ImageDetached(name) }
+
+// ImageDetached says "Removed {name}"
+// in the language of msgs.
+//
+// Toast after an image was taken off a task, with Undo.
+func (msgs Messages) ImageDetached(name string) string {
+	return Catalog.Format(msgs.locale, "imageDetached", map[string]any{"name": name})
+}
+
+// ViewerPosition says "{name} · {i} / {n} · {w} × {h}"
+// in the language the app shows.
+//
+// The bar under the image in the viewer: its name, its place among the
+// task's images and its size in pixels.
+func ViewerPosition(name string, i int, n int, w int, h int) string {
+	return In(i18n.Locale()).ViewerPosition(name, i, n, w, h)
+}
+
+// ViewerPosition says "{name} · {i} / {n} · {w} × {h}"
+// in the language of msgs.
+//
+// The bar under the image in the viewer: its name, its place among the
+// task's images and its size in pixels.
+func (msgs Messages) ViewerPosition(name string, i int, n int, w int, h int) string {
+	return Catalog.Format(msgs.locale, "viewerPosition", map[string]any{"name": name, "i": i, "n": n, "w": w, "h": h})
+}
+
+// ViewerOpenInPreview says "Open in Preview ↗"
+// in the language the app shows.
+//
+// Button in the viewer's bar that opens the image file in macOS Preview.
+func ViewerOpenInPreview() string { return In(i18n.Locale()).ViewerOpenInPreview() }
+
+// ViewerOpenInPreview says "Open in Preview ↗"
+// in the language of msgs.
+//
+// Button in the viewer's bar that opens the image file in macOS Preview.
+func (msgs Messages) ViewerOpenInPreview() string {
+	return Catalog.Format(msgs.locale, "viewerOpenInPreview", nil)
+}
+
+// ViewerClose says "Close"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the x of the image viewer.
+func ViewerClose() string { return In(i18n.Locale()).ViewerClose() }
+
+// ViewerClose says "Close"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the x of the image viewer.
+func (msgs Messages) ViewerClose() string {
+	return Catalog.Format(msgs.locale, "viewerClose", nil)
+}
+
+// ViewerPrevious says "Previous image"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the left chevron of the image viewer.
+func ViewerPrevious() string { return In(i18n.Locale()).ViewerPrevious() }
+
+// ViewerPrevious says "Previous image"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the left chevron of the image viewer.
+func (msgs Messages) ViewerPrevious() string {
+	return Catalog.Format(msgs.locale, "viewerPrevious", nil)
+}
+
+// ViewerNext says "Next image"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the right chevron of the image viewer.
+func ViewerNext() string { return In(i18n.Locale()).ViewerNext() }
+
+// ViewerNext says "Next image"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the right chevron of the image viewer.
+func (msgs Messages) ViewerNext() string {
+	return Catalog.Format(msgs.locale, "viewerNext", nil)
+}
+
+// ViewerImage says "Image {name}"
+// in the language the app shows.
+//
+// Accessibility label of the image shown in the viewer.
+func ViewerImage(name string) string { return In(i18n.Locale()).ViewerImage(name) }
+
+// ViewerImage says "Image {name}"
+// in the language of msgs.
+//
+// Accessibility label of the image shown in the viewer.
+func (msgs Messages) ViewerImage(name string) string {
+	return Catalog.Format(msgs.locale, "viewerImage", map[string]any{"name": name})
+}
+
+// ReceiptImages says "{n, plural, one {with its image} other {with its images}}"
+// in the language the app shows.
+//
+// Part of the line after the assistant added or changed a task: the task
+// kept the pictures sent with the request.
+func ReceiptImages(n int) string { return In(i18n.Locale()).ReceiptImages(n) }
+
+// ReceiptImages says "{n, plural, one {with its image} other {with its images}}"
+// in the language of msgs.
+//
+// Part of the line after the assistant added or changed a task: the task
+// kept the pictures sent with the request.
+func (msgs Messages) ReceiptImages(n int) string {
+	return Catalog.Format(msgs.locale, "receiptImages", map[string]any{"n": n})
+}

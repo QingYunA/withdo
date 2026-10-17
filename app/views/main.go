@@ -93,6 +93,8 @@ type Main struct {
 
 	scroll    ui.ScrollState
 	inspector inspector
+	thumbs    thumbCache // the pictures of tasks, decoded once
+	viewer    viewer     // the picture viewer over the window
 	copied    time.Time
 
 	// onMine tells the notifier, from its own goroutine, whether the window shows all of Mine.
@@ -174,6 +176,7 @@ func (m *Main) View(c *ui.Context) {
 	m.confirmSheet(c, t)
 	m.dayCardView(c, t)
 	m.taskMenuView(c, t)
+	m.viewerView(c, t)
 	m.hopOverlay(c)
 }
 
