@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd"
+	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd, kind"
 	// maxTitleRunes bounds a title derived from a summary.
 	maxTitleRunes = 60
 )
 
 func scanReport(s scanner) (Report, error) {
 	var r Report
-	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt, &r.Cwd)
+	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt, &r.Cwd, &r.Kind)
 	return r, err
 }
 
@@ -48,6 +48,8 @@ type AddReportInput struct {
 	CreatedAt string
 	// Cwd is the working directory the agent reported from; "" when it did not say.
 	Cwd string
+	// Kind says what a report of the poller is about; "" for any other.
+	Kind ReportKind
 }
 
 // AddReport files a report against an existing task without touching the task.
@@ -69,8 +71,8 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 		in.CreatedAt = c.stamp()
 	}
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd))
+		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd), in.Kind)
 	if err != nil {
 		return nil, fmt.Errorf("insert report: %w", err)
 	}

@@ -11,7 +11,7 @@ import (
 type Plan struct {
 	Snapshot domain.PRSnapshot
 	Done     bool
-	Reports  []string
+	Reports  []domain.PRReport
 }
 
 // Decide compares what was stored (the zero snapshot before the first check) with what was seen.
@@ -27,16 +27,16 @@ func Decide(old, seen domain.PRSnapshot, number int64) Plan {
 	plan := Plan{Snapshot: seen}
 	if seen.State == domain.PRMerged && old.State != domain.PRMerged {
 		plan.Done = true
-		plan.Reports = append(plan.Reports, fmt.Sprintf("PR #%d merged", number))
+		plan.Reports = append(plan.Reports, domain.PRReport{Kind: domain.KindPRMerged, Summary: fmt.Sprintf("PR #%d merged", number)})
 	}
 	if seen.State == domain.PRClosed && old.State != domain.PRClosed {
-		plan.Reports = append(plan.Reports, fmt.Sprintf("PR #%d was closed without merging", number))
+		plan.Reports = append(plan.Reports, domain.PRReport{Kind: domain.KindPRClosed, Summary: fmt.Sprintf("PR #%d was closed without merging", number)})
 	}
 	if checksFailing(seen) && !checksFailing(old) {
-		plan.Reports = append(plan.Reports, fmt.Sprintf("Checks are failing on PR #%d", number))
+		plan.Reports = append(plan.Reports, domain.PRReport{Kind: domain.KindChecksFailing, Summary: fmt.Sprintf("Checks are failing on PR #%d", number)})
 	}
 	if changesRequested(seen) && !changesRequested(old) {
-		plan.Reports = append(plan.Reports, fmt.Sprintf("Changes were requested on PR #%d", number))
+		plan.Reports = append(plan.Reports, domain.PRReport{Kind: domain.KindChangesRequested, Summary: fmt.Sprintf("Changes were requested on PR #%d", number)})
 	}
 	return plan
 }
