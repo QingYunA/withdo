@@ -1026,8 +1026,8 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   optional `meta` line left, the control right; hairlines between rows; an optional group label
   above the block in `section` style (13 / 18, 600, `text.secondary`).
 - **General**: Language (a pop-up: System / English / 简体中文); **Notifications** (v12): a group of one
-  row, **System notifications** (`系统通知`) with the `meta` line `When an agent hands back or gets stuck,
-  a PR's checks fail or it merges, and a reminder is due` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
+  row, **System notifications** (`系统通知`) with the `meta` line `Agents done or stuck, failing or merged
+  PRs, and reminders` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
   and a switch at the right, on by default. When the last notification was refused by macOS
   (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
   notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings ↗** link

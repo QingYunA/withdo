@@ -3120,13 +3120,13 @@ func (msgs Messages) SettingsNotifyTitle() string {
 	return Catalog.Format(msgs.locale, "settingsNotifyTitle", nil)
 }
 
-// SettingsNotifyMeta says "When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due"
+// SettingsNotifyMeta says "Agents done or stuck, failing or merged PRs, and reminders"
 // in the language the app shows.
 //
 // Quiet line under the system notifications switch.
 func SettingsNotifyMeta() string { return In(i18n.Locale()).SettingsNotifyMeta() }
 
-// SettingsNotifyMeta says "When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due"
+// SettingsNotifyMeta says "Agents done or stuck, failing or merged PRs, and reminders"
 // in the language of msgs.
 //
 // Quiet line under the system notifications switch.

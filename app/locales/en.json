@@ -1378,7 +1378,7 @@
   "@settingsNotifyTitle": {
     "description": "Label of the switch for system notifications."
   },
-  "settingsNotifyMeta": "When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due",
+  "settingsNotifyMeta": "Agents done or stuck, failing or merged PRs, and reminders",
   "@settingsNotifyMeta": {
     "description": "Quiet line under the system notifications switch."
   },

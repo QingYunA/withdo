@@ -10,7 +10,7 @@ import (
 func TestGeneralPaneHasTheNotificationsSwitchOnByDefault(t *testing.T) {
 	r := newSettingsRig(t)
 	has(t, r.tt, "Notifications", "System notifications",
-		"When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due")
+		"Agents done or stuck, failing or merged PRs, and reminders")
 	hasNot(t, r.tt, "macOS does not allow adhd-todo to notify", "Open System Settings ↗")
 	if !r.app.Notifications() {
 		t.Error("notifications should be on until the user switches them off")
@@ -58,7 +58,7 @@ func TestSwitchingNotificationsKeepsTheOtherPrefs(t *testing.T) {
 func TestWhenMacOSRefusedTheLineWarnsAndALinkOpensSystemSettings(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.Act.(*recorder).denied = true })
 	has(t, r.tt, "System notifications", "macOS does not allow adhd-todo to notify", "Open System Settings ↗")
-	hasNot(t, r.tt, "When an agent hands back or gets stuck, a PR's checks fail or it merges, and a reminder is due")
+	hasNot(t, r.tt, "Agents done or stuck, failing or merged PRs, and reminders")
 	if err := r.tt.Click("Open System Settings ↗"); err != nil {
 		t.Fatal(err)
 	}
