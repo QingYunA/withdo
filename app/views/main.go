@@ -1,6 +1,7 @@
 package views
 
 import (
+	"sync/atomic"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -93,6 +94,9 @@ type Main struct {
 	scroll    ui.ScrollState
 	inspector inspector
 	copied    time.Time
+
+	// onMine tells the notifier, from its own goroutine, whether the window shows all of Mine.
+	onMine atomic.Bool
 }
 
 // NewMain opens on Mine.
@@ -112,6 +116,13 @@ func (m *Main) OpenTask(id int) {
 	m.openID, m.sel = id, id
 	m.inspector.reset()
 }
+
+// ShowMine opens the Mine screen, whole.
+func (m *Main) ShowMine() { m.goTo(nav{}) }
+
+// ShowingMine says whether the window, as last drawn, shows all of Mine: no other page, no slice of
+// it, no search over it. Safe to call from any goroutine.
+func (m *Main) ShowingMine() bool { return m.onMine.Load() }
 
 // openSettings asks the shell for the Settings window, on a pane.
 func (m *Main) openSettings(p Pane) { m.app.Act.OpenSettings(p) }
@@ -143,6 +154,7 @@ func (m *Main) View(c *ui.Context) {
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 	}
+	m.onMine.Store(m.nav == nav{} && !m.searching())
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)

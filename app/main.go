@@ -40,6 +40,7 @@ func main() {
 	app.Prefs = be.prefs
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
+	s.notifier = s.newNotifier()
 
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
 	// Hiding the main window must not end the app.
@@ -63,7 +64,8 @@ func main() {
 		s.setMenu()
 		s.createMain()
 		be.store.Subscribe(s.storeChanged)
-		be.store.SubscribeReminders(func(r data.Reminder) { go notifyReminder(r) })
+		be.store.SubscribeReminders(func(r data.Reminder) { go s.notifier.Reminder(r) })
+		be.store.SubscribeEvents(func(e data.Event) { go s.notifier.Event(e) })
 		if be.github != nil {
 			be.github.Subscribe(s.githubChanged)
 		}

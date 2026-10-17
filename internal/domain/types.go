@@ -164,6 +164,8 @@ type Report struct {
 	CreatedAt string  `json:"created_at"`
 	// Cwd is the working directory the agent reported from; "" when it did not say.
 	Cwd string `json:"cwd"`
+	// Kind says what a report of the GitHub poller is about; "" for any other report.
+	Kind ReportKind `json:"kind,omitempty"`
 }
 
 // timeLayout is JavaScript's Date.toISOString form, kept for database compatibility.

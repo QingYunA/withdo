@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v12 草稿 — 系统通知</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 44px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 20px; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; display: flex; gap: 10px; align-items: center; }
+  .caption .tag { font-weight: 500; font-size: 12px; color: #fff; background: #5b5bd6; border-radius: 6px; padding: 0 7px; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; max-width: 600px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 600px); gap: 32px 40px; align-items: start; }
+
+  /* a macOS desktop corner with banners */
+  .desk { width: 600px; border-radius: 12px; padding: 18px; background: linear-gradient(135deg, #b9c3dd, #d8c7d9 60%, #e9d6c8); box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+  .desk.dark { background: linear-gradient(135deg, #2b2f45, #3a2d3d 60%, #3d332c); }
+  .banner { display: flex; gap: 10px; align-items: flex-start; width: 360px; margin: 0 0 10px auto; padding: 11px 12px; border-radius: 18px; background: rgba(246,246,248,.82); backdrop-filter: blur(20px); box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.12); color: #1d1d1f; }
+  .dark .banner { background: rgba(40,40,44,.82); color: #f5f5f7; box-shadow: 0 0 0 .5px rgba(255,255,255,.12), 0 8px 24px rgba(0,0,0,.4); }
+  .banner img { width: 34px; height: 34px; border-radius: 8px; flex: none; image-rendering: pixelated; }
+  .banner .b { flex: 1; min-width: 0; font-size: 13px; line-height: 17px; }
+  .banner .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .banner .s { font-weight: 500; }
+  .banner .x { color: #6e6e73; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dark .banner .x { color: #a1a1a6; }
+  .banner .when { font-size: 12px; color: #8e8e93; flex: none; }
+  .stack { position: relative; width: 360px; margin: 6px 0 10px auto; }
+  .stack .banner { margin: 0; position: relative; z-index: 2; }
+  .stack .under { position: absolute; left: 10px; right: 10px; bottom: -6px; height: 20px; border-radius: 14px; background: rgba(246,246,248,.6); z-index: 1; }
+  .dark .stack .under { background: rgba(40,40,44,.6); }
+
+  table.kinds { border-collapse: collapse; width: 1240px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.08); }
+  .kinds th { font-size: 12px; font-weight: 500; color: #aeaeb2; text-align: left; padding: 14px 16px 8px; }
+  .kinds td { padding: 10px 16px; border-top: 1px solid rgba(0,0,0,.08); font-size: 13px; line-height: 19px; vertical-align: top; }
+  .kinds td:first-child { font-weight: 600; white-space: nowrap; }
+  .kinds code { font: 12px/18px "SF Mono", ui-monospace, monospace; background: #f5f5f7; padding: 1px 4px; border-radius: 4px; }
+  .new { font-size: 11px; font-weight: 600; color: #5b5bd6; background: rgba(91,91,214,.12); border-radius: 4px; padding: 0 5px; margin-left: 6px; }
+
+  /* settings, as the General pane */
+  .win { width: 600px; border-radius: 12px; overflow: hidden; background: #f4f4f6; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); padding: 20px 24px 24px; }
+  .glabel { font-size: 13px; font-weight: 600; color: #6e6e73; margin: 18px 4px 8px; }
+  .grp { background: #fff; border-radius: 12px; padding: 0 16px; }
+  .srow { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 0; }
+  .srow + .srow { border-top: 1px solid rgba(0,0,0,.08); }
+  .srow .l { flex: 1; }
+  .srow .l b { font-weight: 400; font-size: 15px; display: block; }
+  .srow .l i { font-style: normal; font-size: 13px; line-height: 18px; color: #6e6e73; display: block; }
+  .sw { width: 38px; height: 22px; border-radius: 11px; background: #5b5bd6; position: relative; flex: none; }
+  .sw::after { content: ""; position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 9px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .sw.off { background: #d1d1d6; }
+  .sw.off::after { right: auto; left: 2px; }
+  .link { color: #5b5bd6; font-size: 14px; white-space: nowrap; }
+  .warn { color: #d97706; }
+</style>
+</head>
+<body>
+<h1>v12 · 系统通知（#68）</h1>
+<p class="lead">现在只有「提醒到点」会弹系统通知。这一版加四种：agent 交回任务、agent 卡住、PR 检查没过、PR 合并，再在设置里加一个总开关。通知是 macOS 自己画的，app 能定的只有文字、声音、分组和点开去哪：所以这份稿子主要定这四样，外加什么时候发、什么时候不发。</p>
+
+<h2>一 · 五种通知长什么样</h2>
+<p class="sub">标题先说发生了什么，再说是哪件事；副标题是项目；正文是 agent 最后一句话或者原因。点开都是打开这件任务的检查器（现在提醒就是这样）。同一个项目的通知在通知中心里叠成一摞。</p>
+<div class="grid">
+  <div><div class="caption">浅色</div><div class="desk" id="d1"></div></div>
+  <div><div class="caption">深色，以及一次来了好几条</div><div class="desk dark" id="d2"></div>
+    <p class="note">10 秒内来了 3 条或更多，只弹一条汇总（下面那条），不刷屏；点开去「我的」页。少于 3 条照常一条一条弹。</p></div>
+</div>
+
+<h2>二 · 规则</h2>
+<p class="sub">什么时候发、文字、声音。英文版同样的结构。</p>
+<table class="kinds">
+  <tr><th>种类</th><th>什么时候发</th><th>标题 / 副标题 / 正文</th><th>声音</th><th>点开</th></tr>
+  <tr><td>Agent 交回<span class="new">新</span></td><td>agent 汇报把任务改成「待审查」（review）的那一刻，每次只发一次</td><td>「Claude Code 做完了：<i>任务名</i>」/ 项目 / 有 PR：「PR #12 等你审查」，没有：agent 的最后一句</td><td>有</td><td>任务检查器</td></tr>
+  <tr><td>Agent 卡住<span class="new">新</span></td><td>agent 汇报把任务改成「已阻塞」（blocked）的那一刻</td><td>「Claude Code 卡住了：<i>任务名</i>」/ 项目 / 它在等什么（next_step，没有就用 summary）</td><td>有</td><td>任务检查器</td></tr>
+  <tr><td>PR 检查没过<span class="new">新</span></td><td>GitHub 轮询发现检查从通过变成失败（和「我的」页那一行同一个时刻）</td><td>「PR #12 检查没过：<i>任务名</i>」/ 项目 / 「打开 PR 看看哪一项失败」</td><td>有</td><td>任务检查器</td></tr>
+  <tr><td>PR 合并<span class="new">新</span></td><td>GitHub 轮询发现 PR 合并、任务自动完成</td><td>「PR #14 已合并：<i>任务名</i>」/ 项目 / 「任务已自动完成」</td><td><b>无</b>（好消息，不用你动手）</td><td>任务检查器</td></tr>
+  <tr><td>提醒到点</td><td>不变：remind_at 到了，只发一次，app 关着的时候到点的下次打开补发</td><td>「提醒：<i>任务名</i>」/ — / 项目名或「收件箱」</td><td>有</td><td>任务检查器</td></tr>
+</table>
+<p class="note" style="max-width:1240px">不发的情况：总开关关着；这件事是你自己在 app 里改的（比如你手动把任务标成已阻塞）；app 正在最前面并且你正看着「我的」页（那一行已经出现在眼前，不再打扰；app 在后台或者在别的页面照常发）。app 关着时发生的交回、卡住、PR 事件不补发，打开后在「我的」页能看到；只有提醒照旧补发。</p>
+
+<h2>三 · 设置里的总开关</h2>
+<p class="sub">放在「通用」里语言下面，一个开关管所有通知（包括提醒），默认开。</p>
+<div class="grid">
+  <div><div class="caption">开着<span class="tag">新</span></div><div class="win">
+    <div class="grp"><div class="srow"><span class="l"><b>语言</b></span><span class="link" style="color:#1d1d1f">跟随系统 ⌄</span></div></div>
+    <div class="glabel">通知</div>
+    <div class="grp"><div class="srow"><span class="l"><b>系统通知</b><i>Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你</i></span><span class="sw"></span></div></div>
+    <div class="glabel">已归档的项目</div>
+    <div class="grp"><div class="srow"><span class="l"><b>picpocket</b><i>QingYunA/picpocket</i></span><span class="link">恢复</span></div></div>
+  </div></div>
+  <div><div class="caption">macOS 里关掉了 adhd-todo 的通知</div><div class="win">
+    <div class="grp"><div class="srow"><span class="l"><b>语言</b></span><span class="link" style="color:#1d1d1f">跟随系统 ⌄</span></div></div>
+    <div class="glabel">通知</div>
+    <div class="grp"><div class="srow"><span class="l"><b>系统通知</b><i class="warn">macOS 不允许 adhd-todo 发通知，开关不起作用</i></span><span class="link">打开系统设置 ↗</span><span class="sw"></span></div></div>
+    <div class="glabel">已归档的项目</div>
+    <div class="grp"><div class="srow"><span class="l"><b>picpocket</b><i>QingYunA/picpocket</i></span><span class="link">恢复</span></div></div>
+  </div>
+  <p class="note">第一次发通知时 macOS 会问要不要允许（现在提醒就是这样）。macOS 只在发通知时告诉 app 被拒绝了（ErrNotificationsDenied），所以这行橙色说明在最近一次发通知被拒之后才出现，并给一个去系统设置的链接。</p></div>
+</div>
+
+<script>
+const ICON = '../../../app/resources/icon.png';
+const banner = (t, s, x, when = '刚刚') => `<div class="banner"><img src="${ICON}"><div class="b"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ''}<div class="x">${x}</div></div><span class="when">${when}</span></div>`;
+document.getElementById('d1').innerHTML =
+  banner('Claude Code 做完了：Native UI with mygo', 'adhd-todo', 'PR #12 等你审查') +
+  banner('Claude Code 卡住了：Fix tray race on launch', 'adhd-todo', '“需要你决定 activation policy：启动时是否抢焦点”') +
+  banner('PR #12 检查没过：Native UI with mygo', 'adhd-todo', '打开 PR 看看哪一项失败', '2 分钟前') +
+  banner('PR #14 已合并：Port the MCP server', 'adhd-todo', '任务已自动完成', '5 分钟前') +
+  banner('提醒：交房租', '', '收件箱', '1 小时前');
+document.getElementById('d2').innerHTML =
+  banner('Codex 做完了：Map worktrees to the main repo', 'picpocket', '把 worktree 映射回主仓库，测试都过了') +
+  `<div class="stack">${banner('3 件事等你', '', '2 个做完了，1 个卡住了 · 点开去「我的」')}<div class="under"></div></div>`;
+</script>
+</body>
+</html>

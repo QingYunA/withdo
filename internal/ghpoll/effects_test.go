@@ -22,11 +22,11 @@ var (
 	closed   = snap(domain.PRClosed, domain.PRChecksNone, domain.PRReviewNone)
 )
 
-const (
-	repMerged  = "PR #12 merged"
-	repClosed  = "PR #12 was closed without merging"
-	repFailing = "Checks are failing on PR #12"
-	repChanges = "Changes were requested on PR #12"
+var (
+	repMerged  = domain.PRReport{Kind: domain.KindPRMerged, Summary: "PR #12 merged"}
+	repClosed  = domain.PRReport{Kind: domain.KindPRClosed, Summary: "PR #12 was closed without merging"}
+	repFailing = domain.PRReport{Kind: domain.KindChecksFailing, Summary: "Checks are failing on PR #12"}
+	repChanges = domain.PRReport{Kind: domain.KindChangesRequested, Summary: "Changes were requested on PR #12"}
 )
 
 // The effects of a check are a function of what was stored and what was seen: each report fires
@@ -36,39 +36,39 @@ func TestDecide(t *testing.T) {
 		name     string
 		old, new domain.PRSnapshot
 		done     bool
-		reports  []string
+		reports  []domain.PRReport
 	}{
 		{"first look, nothing special", never, openOK, false, nil},
-		{"open to merged", openOK, merged, true, []string{repMerged}},
-		{"first look finds it merged", never, merged, true, []string{repMerged}},
-		{"draft to merged", draftBad, merged, true, []string{repMerged}},
+		{"open to merged", openOK, merged, true, []domain.PRReport{repMerged}},
+		{"first look finds it merged", never, merged, true, []domain.PRReport{repMerged}},
+		{"draft to merged", draftBad, merged, true, []domain.PRReport{repMerged}},
 		{"merged stays merged", merged, merged, false, nil},
-		{"merged with an old failing state files only the merge", openFail, snap(domain.PRMerged, domain.PRChecksFailing, domain.PRReviewChangesRequested), true, []string{repMerged}},
+		{"merged with an old failing state files only the merge", openFail, snap(domain.PRMerged, domain.PRChecksFailing, domain.PRReviewChangesRequested), true, []domain.PRReport{repMerged}},
 
-		{"open to closed", openOK, closed, false, []string{repClosed}},
-		{"draft to closed", draftBad, closed, false, []string{repClosed}},
-		{"first look finds it closed", never, closed, false, []string{repClosed}},
+		{"open to closed", openOK, closed, false, []domain.PRReport{repClosed}},
+		{"draft to closed", draftBad, closed, false, []domain.PRReport{repClosed}},
+		{"first look finds it closed", never, closed, false, []domain.PRReport{repClosed}},
 		{"closed stays closed", closed, closed, false, nil},
 		{"reopened", closed, openOK, false, nil},
-		{"reopened and closed again", openOK, closed, false, []string{repClosed}},
+		{"reopened and closed again", openOK, closed, false, []domain.PRReport{repClosed}},
 
-		{"checks start failing", openPend, openFail, false, []string{repFailing}},
-		{"first look finds checks failing", never, openFail, false, []string{repFailing}},
+		{"checks start failing", openPend, openFail, false, []domain.PRReport{repFailing}},
+		{"first look finds checks failing", never, openFail, false, []domain.PRReport{repFailing}},
 		{"checks keep failing", openFail, openFail, false, nil},
 		{"checks recover", openFail, openOK, false, nil},
-		{"checks fail again after a rerun", openPend, openFail, false, []string{repFailing}},
+		{"checks fail again after a rerun", openPend, openFail, false, []domain.PRReport{repFailing}},
 		{"failing checks of a draft say nothing", openOK, draftBad, false, nil},
-		{"draft marked ready while failing", draftBad, openFail, false, []string{repFailing}},
-		{"failing checks of a closed pull request say nothing", openFail, snap(domain.PRClosed, domain.PRChecksFailing, domain.PRReviewNone), false, []string{repClosed}},
+		{"draft marked ready while failing", draftBad, openFail, false, []domain.PRReport{repFailing}},
+		{"failing checks of a closed pull request say nothing", openFail, snap(domain.PRClosed, domain.PRChecksFailing, domain.PRReviewNone), false, []domain.PRReport{repClosed}},
 
-		{"changes requested", openOK, openChg, false, []string{repChanges}},
-		{"first look finds changes requested", never, openChg, false, []string{repChanges}},
+		{"changes requested", openOK, openChg, false, []domain.PRReport{repChanges}},
+		{"first look finds changes requested", never, openChg, false, []domain.PRReport{repChanges}},
 		{"changes still requested", openChg, openChg, false, nil},
 		{"changes addressed", openChg, openOK, false, nil},
-		{"changes requested again after approval", snap(domain.PROpen, domain.PRChecksPassing, domain.PRReviewApproved), openChg, false, []string{repChanges}},
+		{"changes requested again after approval", snap(domain.PROpen, domain.PRChecksPassing, domain.PRReviewApproved), openChg, false, []domain.PRReport{repChanges}},
 
-		{"failing and changes together, failing first", openOK, snap(domain.PROpen, domain.PRChecksFailing, domain.PRReviewChangesRequested), false, []string{repFailing, repChanges}},
-		{"one of two persists", openFail, snap(domain.PROpen, domain.PRChecksFailing, domain.PRReviewChangesRequested), false, []string{repChanges}},
+		{"failing and changes together, failing first", openOK, snap(domain.PROpen, domain.PRChecksFailing, domain.PRReviewChangesRequested), false, []domain.PRReport{repFailing, repChanges}},
+		{"one of two persists", openFail, snap(domain.PROpen, domain.PRChecksFailing, domain.PRReviewChangesRequested), false, []domain.PRReport{repChanges}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestDecide(t *testing.T) {
 				t.Errorf("done = %v, want %v", got.Done, tt.done)
 			}
 			if !reflect.DeepEqual(got.Reports, tt.reports) {
-				t.Errorf("reports = %q, want %q", got.Reports, tt.reports)
+				t.Errorf("reports = %+v, want %+v", got.Reports, tt.reports)
 			}
 		})
 	}

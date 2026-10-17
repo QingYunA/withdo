@@ -56,8 +56,8 @@ func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
 		}
 		for _, r := range s.Reports {
 			if _, err := q.ExecContext(ctx,
-				"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-				r.ID, t.ID, r.Agent, r.Status, r.Summary, r.NextStep, r.CreatedAt, r.Cwd); err != nil {
+				"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				r.ID, t.ID, r.Agent, r.Status, r.Summary, r.NextStep, r.CreatedAt, r.Cwd, r.Kind); err != nil {
 				return fmt.Errorf("insert report: %w", err)
 			}
 		}

@@ -17,7 +17,7 @@ func TestRealReadsPullRequestStateAndKeepsAClosedOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	snap := domain.PRSnapshot{State: domain.PRClosed, Checks: domain.PRChecksNone, Review: domain.PRReviewNone}
-	if _, err := core.RecordPR(bg, made.ID, domain.PRUpdate{URL: prLink, Snapshot: snap, Reports: []string{"PR #12 was closed without merging"}}); err != nil {
+	if _, err := core.RecordPR(bg, made.ID, domain.PRUpdate{URL: prLink, Snapshot: snap, Reports: []domain.PRReport{{Kind: domain.KindPRClosed, Summary: "PR #12 was closed without merging"}}}); err != nil {
 		t.Fatal(err)
 	}
 

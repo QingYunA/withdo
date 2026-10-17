@@ -22,19 +22,20 @@ type Fake struct {
 	nextID     int
 	subs       map[int]func()
 	remSubs    map[int]func(Reminder)
+	evSubs     map[int]func(Event)
 	nextSub    int
 }
 
 // NewFake returns a Fake filled with the seed data, relative to now().
 func NewFake(now func() time.Time) *Fake {
-	f := &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, nextID: 1000}
+	f := &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){}, nextID: 1000}
 	f.seed()
 	return f
 }
 
 // NewEmptyFake returns a Fake with no data at all, for the empty states.
 func NewEmptyFake(now func() time.Time) *Fake {
-	return &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, nextID: 1000}
+	return &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){}, nextID: 1000}
 }
 
 // AddProject adds a project with no tasks, for demos and tests of the empty states.
@@ -330,6 +331,34 @@ func (f *Fake) SubscribeReminders(fn func(Reminder)) func() {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		delete(f.remSubs, id)
+	}
+}
+
+// SubscribeEvents implements Store.
+func (f *Fake) SubscribeEvents(fn func(Event)) func() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.nextSub++
+	id := f.nextSub
+	f.evSubs[id] = fn
+	return func() {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		delete(f.evSubs, id)
+	}
+}
+
+// Publish tells the subscribers of an event, for demos and tests: the fake has no reports to read
+// events from.
+func (f *Fake) Publish(e Event) {
+	f.mu.Lock()
+	fns := make([]func(Event), 0, len(f.evSubs))
+	for _, fn := range f.evSubs {
+		fns = append(fns, fn)
+	}
+	f.mu.Unlock()
+	for _, fn := range fns {
+		fn(e)
 	}
 }
 

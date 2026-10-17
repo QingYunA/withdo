@@ -28,6 +28,9 @@ func (a *App) completedBy(t data.Task) (by, said string) {
 	return data.CompletedBy(t, a.latestReport(t.ID), a.githubReport(t.ID))
 }
 
+// AgentName is an agent as people write it, for the words outside the windows.
+func AgentName(agent string) string { return agentName(agent) }
+
 // agentName is an agent as people write it: the ids agents report under become their product's
 // name, matched the way theme.AgentAvatar matches them, so a name and its avatar always agree.
 func agentName(agent string) string {

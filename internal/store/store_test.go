@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(7),
+		"PRAGMA user_version": int64(8),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 7 {
-		t.Errorf("SchemaVersion = %d, want 7", store.SchemaVersion())
+	if store.SchemaVersion() != 8 {
+		t.Errorf("SchemaVersion = %d, want 8", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -221,7 +221,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 8"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 9"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -323,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 7 {
-		t.Fatalf("user_version = %d, want 6 (migrations 005 to 007 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
+		t.Fatalf("user_version = %d, want 8 (migrations 005 to 008 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -433,4 +433,16 @@ func openCopyOf(t *testing.T, file string) *sql.DB {
 	}
 	t.Cleanup(func() { _ = db.Close() })
 	return db
+}
+
+// Migration 008 adds reports.kind: a report that predates it has none.
+func TestMigration008AddsKindToExistingReports(t *testing.T) {
+	db := openCopyOf(t, "testdata/ts-v2.db")
+	var kind string
+	if err := db.QueryRowContext(ctx, "SELECT kind FROM reports LIMIT 1").Scan(&kind); err != nil {
+		t.Fatal(err)
+	}
+	if kind != "" {
+		t.Errorf("kind = %q, want empty for a report from before the migration", kind)
+	}
 }

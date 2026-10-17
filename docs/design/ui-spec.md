@@ -977,6 +977,36 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Rename project (sidebar) | saves | puts the old name back | |
 | New project, milestone sheets | creates / saves | closes the sheet | |
 
+### Notifications
+
+System notifications (v12, `docs/design/mockups/v12.html`). macOS draws them; the app chooses the words,
+the sound, the stack and where a click goes. Every kind opens its task in the inspector over Mine, and
+the notifications of one project stack together in Notification Center (`Group` = the project; the
+Inbox is one stack).
+
+| Kind | When | Title / subtitle / body | Sound |
+|---|---|---|---|
+| Handed back | an agent's report moves the task to In review | `Claude Code finished: <title>` (`Claude Code 做完了：<title>`) / project / with a PR `PR #12 is ready for your review`, else the agent's last summary | yes |
+| Stuck | an agent's report moves the task to Blocked | `Claude Code is stuck: <title>` (`Claude Code 卡住了：<title>`) / project / what it waits for (`next_step`, else `summary`) | yes |
+| Checks failing | the GitHub poller finds a PR's checks newly failing (the moment Mine's row appears) | `Checks are failing on PR #12: <title>` (`PR #12 检查没过：<title>`) / project / `Open the PR to see which one failed` | yes |
+| Merged | the GitHub poller finds the PR merged and completes the task | `PR #14 merged: <title>` (`PR #14 已合并：<title>`) / project / `The task is done` | **silent** |
+| Reminder | unchanged: `remind_at` passes, once; due while the app was closed, at the next launch | `Reminder: <title>` / — / project or Inbox | yes |
+
+The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the inspector's From.
+
+- **Once.** Each report or GitHub event notifies once, when the app first sees it.
+- **Not what you did.** A change the user made in the app (a status set by hand) notifies nothing.
+- **Not what you are looking at.** While the app is frontmost and its window shows Mine, a new
+  handed-back, stuck or pull request event does not notify: its row is already on screen. In the
+  background, or on another page, it does. Reminders always notify.
+- **No catch-up** for agent and GitHub events: what happened while the app was closed is on Mine at the
+  next launch. Only reminders catch up, as before.
+- **A burst becomes one.** When a third event arrives within 10 s of the first one still shown, one
+  summary notification takes their place: `3 things need you` (`3 件事等你`), body `2 finished, 1 stuck
+  · open Mine` (`2 个做完了，1 个卡住了 · 点开去「我的」`), counting each kind that occurred; a click opens
+  Mine. Further events in the burst update the summary (same notification ID) until 10 s pass with none.
+- **The switch.** Settings > General > Notifications (below). Off, nothing notifies, reminders included.
+
 ### Settings
 
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
@@ -984,7 +1014,7 @@ sidebar gear open it; there is one instance, and a second request brings it to t
 asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
 under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
 the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7, and `v5.html` frames 5 and 6 (logos, Agents); screens
-`settings-general-*`, `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
+`settings-general-*` (`settings-general-denied-*`: macOS refused the notifications), `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
 `settings-change-*`, `settings-change-error-*`, `settings-custom-*`, `settings-agents-*`,
 `settings-github-*`.
 
@@ -998,7 +1028,13 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   rounded 10 pt blocks with a 0.5 pt hairline; rows are at least 44 pt, the label (`body`) and an
   optional `meta` line left, the control right; hairlines between rows; an optional group label
   above the block in `section` style (13 / 18, 600, `text.secondary`).
-- **General**: Language (a pop-up: System / English / 简体中文); **Archived projects** (a row per
+- **General**: Language (a pop-up: System / English / 简体中文); **Notifications** (v12): a group of one
+  row, **System notifications** (`系统通知`) with the `meta` line `Agents done or stuck, failing or merged
+  PRs, and reminders` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
+  and a switch at the right, on by default. When the last notification was refused by macOS
+  (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
+  notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings ↗** link
+  (`打开系统设置 ↗`) opens the Notifications settings; **Archived projects** (a row per
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub

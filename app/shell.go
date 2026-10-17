@@ -2,18 +2,20 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os/exec"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/locales"
+	"github.com/QingYunA/adhd-todo/app/notify"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -27,6 +29,8 @@ type shell struct {
 	settings *views.Settings
 	// github is the pull request poller; nil when there is none.
 	github data.GitHub
+	// notifier shows the system notifications.
+	notifier *notify.Notifier
 
 	mu      sync.Mutex
 	mainWin *mygo.Window
@@ -313,37 +317,53 @@ func (s *shell) storeChanged() {
 // shows it. The tasks it changed arrive through storeChanged.
 func (s *shell) githubChanged() { s.Post(func() {}) }
 
-// notifyReminder shows a system notification for a due reminder. The first one asks the user for
-// permission and blocks until they answer, so it must not run on the main thread.
-func notifyReminder(r data.Reminder) {
-	if !mygo.NotificationsSupported() {
-		log.Printf("notifications are not available (is the app packaged?)")
-		return
-	}
-	body := r.ProjectName
-	if body == "" {
-		body = locales.NavInbox()
-	}
-	n := mygo.NewNotification(mygo.NotificationOptions{ID: notificationID(r.TaskID), Title: locales.NotifyReminder(r.Title), Body: body})
-	if err := n.Show(); err != nil {
-		log.Printf("notification: %v", err)
+// errNotificationsUnavailable is what showing a notification answers when there is no packaged app
+// to show it from, as under go run.
+var errNotificationsUnavailable = errors.New("notifications are not available (is the app packaged?)")
+
+// newNotifier is the notifier of the app: it shows through mygo, in the language the app shows, and
+// asks the shell whether the user is looking at Mine. The first notification asks the user for
+// permission and blocks until they answer, so events reach it on a goroutine of their own.
+func (s *shell) newNotifier() *notify.Notifier {
+	return &notify.Notifier{
+		Now:      time.Now,
+		Enabled:  s.app.Notifications,
+		Watching: s.watchingMine,
+		Say:      func() locales.Messages { return locales.In(i18n.Locale()) },
+		Show: func(o mygo.NotificationOptions) error {
+			if !mygo.NotificationsSupported() {
+				return errNotificationsUnavailable
+			}
+			return mygo.NewNotification(o).Show()
+		},
+		Close:         func(id string) { mygo.NewNotification(mygo.NotificationOptions{ID: id}).Close() },
+		DeniedChanged: func() { s.Post(func() {}) }, // Settings shows it
 	}
 }
 
-func notificationID(taskID int) string { return fmt.Sprintf("task/%d", taskID) }
-
-// taskFromNotification reverses notificationID.
-func taskFromNotification(id string) (int, bool) {
-	var n int
-	if _, err := fmt.Sscanf(id, "task/%d", &n); err != nil || n <= 0 {
-		return 0, false
-	}
-	return n, true
+// watchingMine says whether the app is in front with its window on Mine: what happens on Mine is
+// already on screen.
+func (s *shell) watchingMine() bool {
+	win := s.window()
+	return win != nil && win.IsFocused() && !win.IsMinimized() && s.main.ShowingMine()
 }
 
-// openFromNotification handles a click on a reminder, also one from an earlier run.
+// NotificationsDenied implements views.Actions.
+func (s *shell) NotificationsDenied() bool { return s.notifier.Denied() }
+
+// OpenMine shows the main window on Mine.
+func (s *shell) OpenMine() {
+	s.showMain()
+	s.main.ShowMine()
+	s.invalidateMain()
+}
+
+// openFromNotification handles a click on a notification, also one from an earlier run: the summary
+// opens Mine, the others their task.
 func (s *shell) openFromNotification(id string) {
-	if task, ok := taskFromNotification(id); ok {
+	if id == notify.SummaryID {
+		s.OpenMine()
+	} else if task, ok := notify.ParseTaskID(id); ok {
 		s.OpenTask(task)
 	}
 }

@@ -15,6 +15,9 @@ type Prefs struct {
 	// OpenWith is where "go see" on a handed-over row takes the user: "agentApp", "terminal",
 	// "editor" or "finder". Empty means the agent's app.
 	OpenWith string `json:"openWith,omitempty"`
+	// NotificationsOff is set when the user switched the system notifications off; they are on by
+	// default, so a file without it, or none, means on.
+	NotificationsOff bool `json:"notificationsOff,omitempty"`
 }
 
 // PrefsStore keeps Prefs between runs.

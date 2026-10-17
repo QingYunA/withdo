@@ -42,7 +42,7 @@ func TestRecordPRStoresStateAndFilesReports(t *testing.T) {
 	task := prTask(t, c, domain.StatusReview)
 	clk.advance(5 * time.Minute)
 	snap := domain.PRSnapshot{State: domain.PROpen, Checks: domain.PRChecksFailing, Review: domain.PRReviewNone}
-	applied := must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{URL: prURL, Snapshot: snap, Reports: []string{"Checks are failing on PR #12"}}))
+	applied := must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{URL: prURL, Snapshot: snap, Reports: []domain.PRReport{{Kind: domain.KindChecksFailing, Summary: "Checks are failing on PR #12"}}}))
 	if !applied {
 		t.Fatal("update was not applied")
 	}
@@ -59,6 +59,7 @@ func TestRecordPRStoresStateAndFilesReports(t *testing.T) {
 	}
 	eq(t, "agent", reports[0].Agent, domain.GitHubAgent)
 	eq(t, "summary", reports[0].Summary, "Checks are failing on PR #12")
+	eq(t, "kind", reports[0].Kind, domain.KindChecksFailing)
 	if reports[0].Status != nil {
 		t.Errorf("a plain report has no status, got %v", *reports[0].Status)
 	}
@@ -69,7 +70,7 @@ func TestRecordPRDoneClosesTheTask(t *testing.T) {
 	task := prTask(t, c, domain.StatusReview)
 	clk.advance(time.Minute)
 	snap := domain.PRSnapshot{State: domain.PRMerged, Checks: domain.PRChecksPassing, Review: domain.PRReviewApproved}
-	must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{URL: prURL, Snapshot: snap, Done: true, Reports: []string{"PR #12 merged"}}))
+	must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{URL: prURL, Snapshot: snap, Done: true, Reports: []domain.PRReport{{Kind: domain.KindPRMerged, Summary: "PR #12 merged"}}}))
 	got := must[*domain.Task](t)(c.GetTask(ctx, task.ID))
 	eq(t, "status", got.Status, domain.StatusDone)
 	eqPtr(t, "completed_at", got.CompletedAt, ptr("2026-10-01T00:01:00.000Z"))
@@ -92,7 +93,7 @@ func TestRecordPRSkipsWhatChangedUnderneath(t *testing.T) {
 	must[*domain.Task](t)(c.UpdateTask(ctx, finished.ID, domain.TaskPatch{Status: ptr(domain.StatusDone)}))
 
 	for name, id := range map[string]int64{"pr_url edited": changed.ID, "task finished": finished.ID} {
-		applied := must[bool](t)(c.RecordPR(ctx, id, domain.PRUpdate{URL: prURL, Snapshot: snap, Reports: []string{"x"}}))
+		applied := must[bool](t)(c.RecordPR(ctx, id, domain.PRUpdate{URL: prURL, Snapshot: snap, Reports: []domain.PRReport{{Summary: "x"}}}))
 		if applied {
 			t.Errorf("%s: update was applied", name)
 		}

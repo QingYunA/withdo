@@ -43,6 +43,23 @@ const (
 // GitHubAgent is the source of the reports the poller files.
 const GitHubAgent = "github"
 
+// ReportKind says what a report of the poller is about, so that a reader need not parse its text.
+type ReportKind string
+
+// Report kinds; every other report has none.
+const (
+	KindPRMerged         ReportKind = "pr_merged"
+	KindPRClosed         ReportKind = "pr_closed"
+	KindChecksFailing    ReportKind = "checks_failing"
+	KindChangesRequested ReportKind = "changes_requested"
+)
+
+// PRReport is a report the poller files: its text and what it is about.
+type PRReport struct {
+	Kind    ReportKind
+	Summary string
+}
+
 // PRSnapshot is what was seen of a pull request. The zero value means it was never checked.
 type PRSnapshot struct {
 	State  PRState
@@ -82,7 +99,7 @@ type PRUpdate struct {
 	// Done marks the task done: its pull request was merged.
 	Done bool
 	// Reports are summaries to file as reports from GitHubAgent, oldest first.
-	Reports []string
+	Reports []PRReport
 }
 
 // RecordPR stores what a check saw, in one transaction with its effects: the task becomes done and
@@ -113,8 +130,8 @@ func (c *Core) RecordPR(ctx context.Context, taskID int64, u PRUpdate) (bool, er
 				return err
 			}
 		}
-		for _, summary := range u.Reports {
-			in := AddReportInput{TaskID: taskID, Agent: GitHubAgent, Summary: summary}
+		for _, r := range u.Reports {
+			in := AddReportInput{TaskID: taskID, Agent: GitHubAgent, Summary: r.Summary, Kind: r.Kind}
 			if u.Done {
 				in.Status = &done
 			}

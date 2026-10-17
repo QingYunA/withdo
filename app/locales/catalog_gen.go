@@ -2858,6 +2858,312 @@ func (msgs Messages) NotesPlaceholder() string {
 	return Catalog.Format(msgs.locale, "notesPlaceholder", nil)
 }
 
+// NotifyHandedBack says "{agent} finished: {title}"
+// in the language the app shows.
+//
+// Title of the system notification when an agent hands a task back for
+// review.
+func NotifyHandedBack(agent string, title string) string {
+	return In(i18n.Locale()).NotifyHandedBack(agent, title)
+}
+
+// NotifyHandedBack says "{agent} finished: {title}"
+// in the language of msgs.
+//
+// Title of the system notification when an agent hands a task back for
+// review.
+func (msgs Messages) NotifyHandedBack(agent string, title string) string {
+	return Catalog.Format(msgs.locale, "notifyHandedBack", map[string]any{"agent": agent, "title": title})
+}
+
+// NotifyStuck says "{agent} is stuck: {title}"
+// in the language the app shows.
+//
+// Title of the system notification when an agent reports that it is
+// blocked.
+func NotifyStuck(agent string, title string) string {
+	return In(i18n.Locale()).NotifyStuck(agent, title)
+}
+
+// NotifyStuck says "{agent} is stuck: {title}"
+// in the language of msgs.
+//
+// Title of the system notification when an agent reports that it is
+// blocked.
+func (msgs Messages) NotifyStuck(agent string, title string) string {
+	return Catalog.Format(msgs.locale, "notifyStuck", map[string]any{"agent": agent, "title": title})
+}
+
+// NotifyChecksFailing says "Checks are failing on PR #{number}: {title}"
+// in the language the app shows.
+//
+// Title of the system notification when the checks of a task's pull request
+// start failing.
+func NotifyChecksFailing(number int, title string) string {
+	return In(i18n.Locale()).NotifyChecksFailing(number, title)
+}
+
+// NotifyChecksFailing says "Checks are failing on PR #{number}: {title}"
+// in the language of msgs.
+//
+// Title of the system notification when the checks of a task's pull request
+// start failing.
+func (msgs Messages) NotifyChecksFailing(number int, title string) string {
+	return Catalog.Format(msgs.locale, "notifyChecksFailing", map[string]any{"number": number, "title": title})
+}
+
+// NotifyMerged says "PR #{number} merged: {title}"
+// in the language the app shows.
+//
+// Title of the system notification when a task's pull request is merged and
+// the task completes.
+func NotifyMerged(number int, title string) string {
+	return In(i18n.Locale()).NotifyMerged(number, title)
+}
+
+// NotifyMerged says "PR #{number} merged: {title}"
+// in the language of msgs.
+//
+// Title of the system notification when a task's pull request is merged and
+// the task completes.
+func (msgs Messages) NotifyMerged(number int, title string) string {
+	return Catalog.Format(msgs.locale, "notifyMerged", map[string]any{"number": number, "title": title})
+}
+
+// NotifyPRReady says "PR #{number} is ready for your review"
+// in the language the app shows.
+//
+// Body of the system notification of a task handed back with a pull
+// request.
+func NotifyPRReady(number int) string { return In(i18n.Locale()).NotifyPRReady(number) }
+
+// NotifyPRReady says "PR #{number} is ready for your review"
+// in the language of msgs.
+//
+// Body of the system notification of a task handed back with a pull
+// request.
+func (msgs Messages) NotifyPRReady(number int) string {
+	return Catalog.Format(msgs.locale, "notifyPRReady", map[string]any{"number": number})
+}
+
+// NotifyChecksBody says "Open the PR to see which one failed"
+// in the language the app shows.
+//
+// Body of the system notification of failing checks.
+func NotifyChecksBody() string { return In(i18n.Locale()).NotifyChecksBody() }
+
+// NotifyChecksBody says "Open the PR to see which one failed"
+// in the language of msgs.
+//
+// Body of the system notification of failing checks.
+func (msgs Messages) NotifyChecksBody() string {
+	return Catalog.Format(msgs.locale, "notifyChecksBody", nil)
+}
+
+// NotifyMergedBody says "The task is done"
+// in the language the app shows.
+//
+// Body of the system notification of a merged pull request.
+func NotifyMergedBody() string { return In(i18n.Locale()).NotifyMergedBody() }
+
+// NotifyMergedBody says "The task is done"
+// in the language of msgs.
+//
+// Body of the system notification of a merged pull request.
+func (msgs Messages) NotifyMergedBody() string {
+	return Catalog.Format(msgs.locale, "notifyMergedBody", nil)
+}
+
+// NotifySummaryTitle says "{count} things need you"
+// in the language the app shows.
+//
+// Title of the one system notification that replaces a burst of three or
+// more.
+func NotifySummaryTitle(count int) string { return In(i18n.Locale()).NotifySummaryTitle(count) }
+
+// NotifySummaryTitle says "{count} things need you"
+// in the language of msgs.
+//
+// Title of the one system notification that replaces a burst of three or
+// more.
+func (msgs Messages) NotifySummaryTitle(count int) string {
+	return Catalog.Format(msgs.locale, "notifySummaryTitle", map[string]any{"count": count})
+}
+
+// NotifySummaryBody says "{counts} · open Mine"
+// in the language the app shows.
+//
+// Body of the summary notification: what happened, then where a click goes.
+// Mine is the page named My tasks.
+func NotifySummaryBody(counts string) string { return In(i18n.Locale()).NotifySummaryBody(counts) }
+
+// NotifySummaryBody says "{counts} · open Mine"
+// in the language of msgs.
+//
+// Body of the summary notification: what happened, then where a click goes.
+// Mine is the page named My tasks.
+func (msgs Messages) NotifySummaryBody(counts string) string {
+	return Catalog.Format(msgs.locale, "notifySummaryBody", map[string]any{"counts": counts})
+}
+
+// NotifyCountFinished says "{count} finished"
+// in the language the app shows.
+//
+// Part of the summary notification: how many agents handed a task back.
+func NotifyCountFinished(count int) string { return In(i18n.Locale()).NotifyCountFinished(count) }
+
+// NotifyCountFinished says "{count} finished"
+// in the language of msgs.
+//
+// Part of the summary notification: how many agents handed a task back.
+func (msgs Messages) NotifyCountFinished(count int) string {
+	return Catalog.Format(msgs.locale, "notifyCountFinished", map[string]any{"count": count})
+}
+
+// NotifyCountStuck says "{count} stuck"
+// in the language the app shows.
+//
+// Part of the summary notification: how many agents are stuck.
+func NotifyCountStuck(count int) string { return In(i18n.Locale()).NotifyCountStuck(count) }
+
+// NotifyCountStuck says "{count} stuck"
+// in the language of msgs.
+//
+// Part of the summary notification: how many agents are stuck.
+func (msgs Messages) NotifyCountStuck(count int) string {
+	return Catalog.Format(msgs.locale, "notifyCountStuck", map[string]any{"count": count})
+}
+
+// NotifyCountChecks says "{count} with failing checks"
+// in the language the app shows.
+//
+// Part of the summary notification: how many pull requests have failing
+// checks.
+func NotifyCountChecks(count int) string { return In(i18n.Locale()).NotifyCountChecks(count) }
+
+// NotifyCountChecks says "{count} with failing checks"
+// in the language of msgs.
+//
+// Part of the summary notification: how many pull requests have failing
+// checks.
+func (msgs Messages) NotifyCountChecks(count int) string {
+	return Catalog.Format(msgs.locale, "notifyCountChecks", map[string]any{"count": count})
+}
+
+// NotifyCountMerged says "{count} merged"
+// in the language the app shows.
+//
+// Part of the summary notification: how many pull requests merged.
+func NotifyCountMerged(count int) string { return In(i18n.Locale()).NotifyCountMerged(count) }
+
+// NotifyCountMerged says "{count} merged"
+// in the language of msgs.
+//
+// Part of the summary notification: how many pull requests merged.
+func (msgs Messages) NotifyCountMerged(count int) string {
+	return Catalog.Format(msgs.locale, "notifyCountMerged", map[string]any{"count": count})
+}
+
+// NotifyCountSeparator says ", "
+// in the language the app shows.
+//
+// Between the parts of the summary notification's body.
+func NotifyCountSeparator() string { return In(i18n.Locale()).NotifyCountSeparator() }
+
+// NotifyCountSeparator says ", "
+// in the language of msgs.
+//
+// Between the parts of the summary notification's body.
+func (msgs Messages) NotifyCountSeparator() string {
+	return Catalog.Format(msgs.locale, "notifyCountSeparator", nil)
+}
+
+// SettingsNotifications says "Notifications"
+// in the language the app shows.
+//
+// Header of the notifications block in Settings > General.
+func SettingsNotifications() string { return In(i18n.Locale()).SettingsNotifications() }
+
+// SettingsNotifications says "Notifications"
+// in the language of msgs.
+//
+// Header of the notifications block in Settings > General.
+func (msgs Messages) SettingsNotifications() string {
+	return Catalog.Format(msgs.locale, "settingsNotifications", nil)
+}
+
+// SettingsNotifySwitch says "Allow system notifications"
+// in the language the app shows.
+//
+// Accessibility label of the switch for system notifications.
+func SettingsNotifySwitch() string { return In(i18n.Locale()).SettingsNotifySwitch() }
+
+// SettingsNotifySwitch says "Allow system notifications"
+// in the language of msgs.
+//
+// Accessibility label of the switch for system notifications.
+func (msgs Messages) SettingsNotifySwitch() string {
+	return Catalog.Format(msgs.locale, "settingsNotifySwitch", nil)
+}
+
+// SettingsNotifyTitle says "System notifications"
+// in the language the app shows.
+//
+// Label of the switch for system notifications.
+func SettingsNotifyTitle() string { return In(i18n.Locale()).SettingsNotifyTitle() }
+
+// SettingsNotifyTitle says "System notifications"
+// in the language of msgs.
+//
+// Label of the switch for system notifications.
+func (msgs Messages) SettingsNotifyTitle() string {
+	return Catalog.Format(msgs.locale, "settingsNotifyTitle", nil)
+}
+
+// SettingsNotifyMeta says "Agents done or stuck, failing or merged PRs, and reminders"
+// in the language the app shows.
+//
+// Quiet line under the system notifications switch.
+func SettingsNotifyMeta() string { return In(i18n.Locale()).SettingsNotifyMeta() }
+
+// SettingsNotifyMeta says "Agents done or stuck, failing or merged PRs, and reminders"
+// in the language of msgs.
+//
+// Quiet line under the system notifications switch.
+func (msgs Messages) SettingsNotifyMeta() string {
+	return Catalog.Format(msgs.locale, "settingsNotifyMeta", nil)
+}
+
+// SettingsNotifyDenied says "macOS does not allow adhd-todo to notify"
+// in the language the app shows.
+//
+// Quiet line, in the warning color, when macOS refused the last
+// notification.
+func SettingsNotifyDenied() string { return In(i18n.Locale()).SettingsNotifyDenied() }
+
+// SettingsNotifyDenied says "macOS does not allow adhd-todo to notify"
+// in the language of msgs.
+//
+// Quiet line, in the warning color, when macOS refused the last
+// notification.
+func (msgs Messages) SettingsNotifyDenied() string {
+	return Catalog.Format(msgs.locale, "settingsNotifyDenied", nil)
+}
+
+// SettingsNotifyOpenSettings says "Open System Settings ↗"
+// in the language the app shows.
+//
+// Link that opens the notification settings of macOS.
+func SettingsNotifyOpenSettings() string { return In(i18n.Locale()).SettingsNotifyOpenSettings() }
+
+// SettingsNotifyOpenSettings says "Open System Settings ↗"
+// in the language of msgs.
+//
+// Link that opens the notification settings of macOS.
+func (msgs Messages) SettingsNotifyOpenSettings() string {
+	return Catalog.Format(msgs.locale, "settingsNotifyOpenSettings", nil)
+}
+
 // NotifyReminder says "Reminder: {title}"
 // in the language the app shows.
 //

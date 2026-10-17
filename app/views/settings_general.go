@@ -12,11 +12,16 @@ const repoURL = "https://github.com/QingYunA/adhd-todo"
 // archivedRows is how many archived projects the pane shows before the list scrolls.
 const archivedRows = 5
 
-// generalPane is the language, the archived projects, and where the data lives.
+// settingsURLNotifications opens the Notifications pane of System Settings.
+const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
+
+// generalPane is the language, the notifications, the archived projects, and where the data lives.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
 	})
+	groupLabel(c, t, s.say.SettingsNotifications())
+	group(c, t, "notifications", func() { s.notificationsRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
@@ -31,6 +36,31 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 			}
 		})
 	})
+}
+
+// notificationsRow is the switch for every system notification. When macOS refused the last one the
+// quiet line says so in the warning color, with a link to where it is allowed again.
+func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
+	on := s.app.Notifications()
+	meta, ink := s.say.SettingsNotifyMeta(), t.TextSecondary
+	denied := s.app.Act.NotificationsDenied()
+	if denied {
+		meta, ink = s.say.SettingsNotifyDenied(), t.Stale
+	}
+	settingsRowInk(c, t, "notify", s.say.SettingsNotifyTitle(), meta, ink, true, func() {
+		ui.Row(c.Key("notify-controls")).Shrink(0).Gap(12).AlignItems(ui.Center).Children(func() {
+			if denied {
+				link := s.say.SettingsNotifyOpenSettings()
+				if settingsLink(c, t, "notify-open-settings", link, link).Clicked() {
+					s.app.Act.OpenURL(settingsURLNotifications)
+				}
+			}
+			ui.Switch(c.Key("notify-switch"), &on).Label(s.say.SettingsNotifySwitch())
+		})
+	}, nil)
+	if on != s.app.Notifications() {
+		s.app.SetNotifications(on)
+	}
 }
 
 // languageControl chooses the language of the interface: the system's, or one the app is written
