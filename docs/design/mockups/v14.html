@@ -101,7 +101,7 @@
   <div class="frame-wrap">
     <div class="caption"><span class="tag">1</span>浅色 · 中文：本机已有 6，更多 8</div>
     <div class="sw" id="win-zh"></div>
-    <p class="note">本机已有的六行保留原有信息：汇报次数、找到的路径、MCP 已安装或安装按钮。更多只留名字和去下载，不再重复「这台 Mac 上没有」。所有 harness 图标都换成 lobe-icons / Iconify 的官方 mark：本机已有 24×24，更多 18×18；按官方配色，深色模式用深色版。</p>
+    <p class="note">本机已有的六行保留原有信息：汇报次数、找到的路径、MCP 已安装或安装按钮。更多只留名字和去下载，不再重复「这台 Mac 上没有」。除 Claude Code 保留 app 的 12×12 螃蟹 mascot 外，其他 harness 图标都换成 lobe-icons / Iconify 的官方 mark：本机已有 24×24，更多 18×18；按官方配色，深色模式用深色版。</p>
   </div>
   <div class="frame-wrap">
     <div class="caption"><span class="tag">2</span>深色 · 英文：On this Mac / More</div>
@@ -148,10 +148,10 @@
 
 <h2>图标：全部对齐官方 mark</h2>
 <ul class="list">
-  <li><b>Claude Code</b>：app 里现在是 <code>app/theme/pixel.go</code> 的 <code>spriteClaude</code>，12×12 手画像素螃蟹，不是写实图加像素滤镜；12 行字符就是全部。这一版换成 lobe-icons 的官方 Claude 橙色 starburst。</li>
+  <li><b>Claude Code</b>：app 里现在是 <code>app/theme/pixel.go</code> 的 <code>spriteClaude</code>，12×12 手画像素螃蟹，不是写实图加像素滤镜；12 行字符就是全部。这一版保留这只 12×12 螃蟹（mascot），不换官方 starburst。</li>
   <li><b>Codex、Cursor、Copilot</b>：Codex 的蓝色官方 mark、Cursor 的立方体、Copilot 的机器人脸；不再用 app 的蓝色机器人/鼠标箭头/近似机器人。</li>
   <li><b>更多里的 Kimi、Qwen、Windsurf、Zed、Amp、Kiro、Cline</b>：官方 mark 按官方配色——Kimi 是黑 K + 蓝点（深色白 K + 蓝点）、Qwen 紫、Windsurf 黑白、Zed 黑白、Amp 红、Kiro 紫、Cline 黑白；不再用按名字着色的机器人。</li>
-  <li><b>做法</b>：官方 SVG 栅格化到 24×24（本机已有）和 18×18（更多），按官方配色；DeepSeek 是黑色鲸鱼；Cursor/opencode/Copilot/Windsurf/Zed/Cline 是官方黑白 mark；深色模式用深色版（黑白反白，彩色保持/调整）。</li>
+  <li><b>做法</b>：除 Claude 的螃蟹外，官方 SVG 栅格化到 24×24（本机已有）和 18×18（更多），按官方配色；DeepSeek 是黑色鲸鱼；Cursor/opencode/Copilot/Windsurf/Zed/Cline 是官方黑白 mark；深色模式用深色版（黑白反白，彩色保持/调整）。</li>
 </ul>
 
 <script>
@@ -248,7 +248,25 @@ const ICON_ALIAS = { copilot: 'githubcopilot' };
 
 // The harness marks are the official lobe-icons / Iconify drawings, rasterised
 // to the avatar's grid: 24 pt rows use 24 x 24, the compact More rows 18 x 18.
+const CRAB_ROWS = [
+  '............', '............', '..oooooooo..', '..oooooooo..',
+  '..oeooooeo..', 'oooeooooeooo', 'oooooooooooo', '..oooooooo..',
+  '..oooooooo..', '..d.d..d.d..', '..d.d..d.d..', '............',
+];
+const CRAB_PAL = { o: '#D97757', d: '#B85C3E', e: '#2B1D17' };
+
+// Claude Code keeps the app's own 12 x 12 crab mascot; every other harness uses
+// its official mark.
+function crab(size) {
+  let r = '';
+  CRAB_ROWS.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch !== '.') r += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + CRAB_PAL[ch] + '"/>';
+  }));
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 12 12" shape-rendering="crispEdges">' + r + '</svg>';
+}
+
 function sprite(a, size, dark) {
+  if (a.sprite === 'claude') return '<span class="av">' + crab(size) + '</span>';
   const key = ICON_ALIAS[a.sprite] || a.sprite;
   const set = ICONS[key];
   if (!set) return '<span class="av"></span>';
