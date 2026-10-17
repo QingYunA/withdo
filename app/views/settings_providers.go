@@ -101,7 +101,7 @@ func providerLogo(c *ui.Context, t *theme.Tokens, id string, size float32) ui.El
 	if id == "custom" {
 		ink = t.TextSecondary
 	}
-	return theme.ProviderLogo(c, id, size).TextColor(ink)
+	return theme.ProviderLogo(c, id, size, ink)
 }
 
 // formLabelWidth is the width of the labels at the left of the fields.
