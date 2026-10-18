@@ -34,6 +34,9 @@ Register the MCP server once (user scope):
 claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp
 ```
 
+Other agents can add the server themselves: paste them the output of `adhd-core guide` (or use
+Settings > Agents > Copy setup guide in the app).
+
 Agents then report progress to the app. To see what they are doing from a terminal:
 
 ```sh

@@ -54,6 +54,7 @@ func TestUsageAndHelp(t *testing.T) {
 		{"serve is gone", []string{"serve"}, 2, "", "Unknown command: serve"},
 		{"--help", []string{"--help"}, 0, "overview", ""},
 		{"-h", []string{"-h"}, 0, "mcp", ""},
+		{"--help lists guide", []string{"--help"}, 0, "guide ", ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -68,6 +69,25 @@ func TestUsageAndHelp(t *testing.T) {
 				t.Errorf("usage errors must not write stdout: %q", h.out.String())
 			}
 		})
+	}
+}
+
+func TestGuidePrintsTheSetupGuideWithTheCorePath(t *testing.T) {
+	h := newHarness(t, filepath.Join(t.TempDir(), "never-opened.db"))
+	if code := run(context.Background(), []string{"guide"}, h.d); code != 0 {
+		t.Fatalf("exit code %d: %s", code, h.err.String())
+	}
+	out := h.out.String()
+	for _, want := range []string{filepath.Join(h.d.home, ".local", "bin", "adhd-core"), `"mcp"`, "get_overview", "report_progress"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stdout lacks %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "{{") || h.err.Len() != 0 {
+		t.Errorf("placeholder left or stderr %q", h.err.String())
+	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(h.d.getenv("ADHD_TODO_DB")), "never-opened.db")); err == nil {
+		t.Error("guide opened the database")
 	}
 }
 
