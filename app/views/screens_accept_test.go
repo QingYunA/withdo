@@ -29,6 +29,7 @@ func acceptShot(t *testing.T, name string, zh, dark bool, in time.Duration, setu
 	tt.Frame()
 	setup(tt, m, app)
 	at(tt, app, in)
+	settle(tt) // the hover and color transitions run on the wall clock; let them end
 	shot(t, name, tt.Image(), false, dark)
 }
 
