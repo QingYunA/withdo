@@ -100,6 +100,29 @@ func TestChangesFromAnotherConnectionAreReported(t *testing.T) {
 	}
 }
 
+// Open takes the baseline before it returns, so a change committed right after it is told even
+// when Run has not polled yet.
+func TestAChangeRightAfterOpenIsReported(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "w.db")
+	watcherDB, _ := testutil.OpenDBAt(t, path)
+	writerDB, _ := testutil.OpenDBAt(t, path)
+	rec := &recorder{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	w, err := watch.Open(ctx, watch.Config{DB: watcherDB, Interval: fast, OnChange: rec.onChange})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := domain.New(writerDB, domain.Options{}).CreateTask(ctx, domain.CreateTaskInput{Title: "at once"}); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	go func() { defer close(done); w.Run(ctx) }()
+	eventually(t, "OnChange for the write made before Run", func() bool { n, _, _ := rec.snapshot(); return n >= 1 })
+	cancel()
+	<-done
+}
+
 func TestDueReminderIsClaimedOnceEvenWithTwoWatchers(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "w.db")
 	dbA, _ := testutil.OpenDBAt(t, path)
