@@ -42,31 +42,55 @@ type Config struct {
 // Run polls until ctx is cancelled, then returns nil. It returns an error only
 // when it cannot start (no connection or no baseline version).
 func Run(ctx context.Context, cfg Config) error {
+	w, err := Open(ctx, cfg)
+	if err != nil || w == nil {
+		return err
+	}
+	w.Run(ctx)
+	return nil
+}
+
+// Watcher is a watcher whose baseline is taken: a change committed after Open
+// returns is reported by Run, even before its first poll.
+type Watcher struct {
+	cfg  Config
+	conn *sql.Conn
+	last int64
+}
+
+// Open pins a connection and takes the baseline version. It returns nil and no
+// error when ctx is cancelled first. Call Run to poll and release the connection.
+func Open(ctx context.Context, cfg Config) (*Watcher, error) {
 	if cfg.DB == nil {
-		return fmt.Errorf("watch: Config.DB is required")
+		return nil, fmt.Errorf("watch: Config.DB is required")
 	}
 	conn, err := cfg.DB.Conn(ctx)
 	if err != nil {
 		if ctx.Err() != nil {
-			return nil // cancelled before it started: nothing to watch
+			return nil, nil // cancelled before it started: nothing to watch
 		}
-		return fmt.Errorf("watch: acquire connection: %w", err)
+		return nil, fmt.Errorf("watch: acquire connection: %w", err)
 	}
-	defer func() { _ = conn.Close() }()
 	last, err := dataVersion(ctx, conn)
 	if err != nil {
+		_ = conn.Close()
 		if ctx.Err() != nil {
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
-	w := &poller{cfg: cfg, conn: conn, last: last}
-	if w.cfg.Interval <= 0 {
-		w.cfg.Interval = DefaultInterval
+	if cfg.Interval <= 0 {
+		cfg.Interval = DefaultInterval
 	}
-	if w.cfg.Now == nil {
-		w.cfg.Now = time.Now
+	if cfg.Now == nil {
+		cfg.Now = time.Now
 	}
+	return &Watcher{cfg: cfg, conn: conn, last: last}, nil
+}
+
+// Run polls until ctx is cancelled, then releases the connection.
+func (w *Watcher) Run(ctx context.Context) {
+	defer func() { _ = w.conn.Close() }()
 	// A reminder may have come due while nothing was running.
 	w.claimReminders(ctx)
 	ticker := time.NewTicker(w.cfg.Interval)
@@ -74,20 +98,14 @@ func Run(ctx context.Context, cfg Config) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		case <-ticker.C:
 			w.poll(ctx)
 		}
 	}
 }
 
-type poller struct {
-	cfg  Config
-	conn *sql.Conn
-	last int64
-}
-
-func (p *poller) poll(ctx context.Context) {
+func (p *Watcher) poll(ctx context.Context) {
 	p.claimReminders(ctx)
 	v, err := dataVersion(ctx, p.conn)
 	if err != nil {
@@ -102,7 +120,7 @@ func (p *poller) poll(ctx context.Context) {
 	}
 }
 
-func (p *poller) claimReminders(ctx context.Context) {
+func (p *Watcher) claimReminders(ctx context.Context) {
 	if p.cfg.Core == nil || p.cfg.OnReminders == nil {
 		return
 	}
@@ -123,7 +141,7 @@ func (p *poller) claimReminders(ctx context.Context) {
 }
 
 // fail reports err unless it is nil or only the result of shutting down.
-func (p *poller) fail(ctx context.Context, err error) {
+func (p *Watcher) fail(ctx context.Context, err error) {
 	if err != nil && ctx.Err() == nil && p.cfg.OnError != nil {
 		p.cfg.OnError(err)
 	}

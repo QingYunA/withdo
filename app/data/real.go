@@ -91,15 +91,20 @@ func (r *Real) Start() {
 	if r.cancel != nil {
 		return
 	}
-	r.markEvents()
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancel, r.done = cancel, make(chan struct{})
+	// The watcher's baseline comes before the mark, so a report filed once Start returns, or in
+	// between, changes the database after the baseline and is not lost.
+	w, _ := watch.Open(ctx, watch.Config{
+		DB: r.db, Core: r.core, Interval: r.opts.Interval, Now: r.opts.Now,
+		OnChange: r.changed, OnReminders: r.deliver,
+	})
+	r.markEvents()
 	go func() {
 		defer close(r.done)
-		_ = watch.Run(ctx, watch.Config{
-			DB: r.db, Core: r.core, Interval: r.opts.Interval, Now: r.opts.Now,
-			OnChange: r.changed, OnReminders: r.deliver,
-		})
+		if w != nil {
+			w.Run(ctx)
+		}
 	}()
 }
 
