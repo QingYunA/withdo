@@ -155,7 +155,7 @@ func TestChineseAgentsPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.pane(t, "Agent")
-	has(t, r.tt, "这台 Mac 上的 Agent", "Claude Code", "拷贝")
+	has(t, r.tt, "编程 Agent", "Claude Code", "拷贝")
 	hasNot(t, r.tt, "连接 Claude Code")
 }
 

@@ -110,7 +110,7 @@
 </head>
 <body>
 <h1>v15 · 日报周报的三种画法（#67）<button id="mode">切到深色</button><button id="replay">全部重播</button></h1>
-<p class="lead">在 v14 的基础上加两样东西：顶上一条像素小场景，把「做完一件事」画出来；场景下面是助手写的两三句话。场景有三种画法：砌砖、出货、上架，下面都画了日报和周报，方便对比。点任意一个窗口可以重播动画。</p>
+<p class="lead">在 v14b 的基础上加两样东西：顶上一条像素小场景，把「做完一件事」画出来；场景下面是助手写的两三句话。场景有三种画法：砌砖、出货、上架，下面都画了日报和周报，方便对比。点任意一个窗口可以重播动画。</p>
 
 <h2>先并排看三条场景（日报）</h2>
 <div class="strip" id="strip"></div>
@@ -343,7 +343,7 @@ const ledger = (rows, total) => `<div class="ledger">${rows.map(([a, name, n, x]
 const views = {
   'a-day': () => ({ html: `${head(false)}<div class="band">${sceneA()}</div>${ai(AI_DAY)}<div class="hero">今天砌了<b class="tick" data-n="7" data-step="350" data-delay="800">0</b>块砖 · 你 2，Agent 5 · 合并了 3 个 PR</div>${list()}`, note: '砖从天上一块块掉下来，每落一块，标题里的数字加 1。场景左边站着今天干过活的人（你和 agent），没干活的不站。' }),
   'a-week': () => { const lb = WEEK.map(([d], i) => [d, 12 + i * 30, 30]); return { html: `${head(true)}<div class="band">${sceneAWeek()}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}<div class="hero">这周砌了<b class="tick" data-n="25" data-step="120" data-delay="700">0</b>块砖 · 你 8，Agent 17 · 合并了 9 个 PR</div>${cards()}`, note: '从周一砌到周日，一天一段。周末没事就是平地，长几根草，不扣分。下面三张小卡，再往下是和 v14 一样的分组清单（这里省略）。' }; },
-  'b-day': () => ({ html: `${head(false)}<div class="band">${sceneB()}</div>${ai(AI_DAY)}${ledger([['you', '你', 2, ''], ['claude', 'Claude Code', 3, '合并 2 个 PR'], ['codex', 'Codex', 2, '合并 1 个 PR']], '今天出货')}`, note: '包裹按做完的顺序，从做的人手里抛进箱子，箱子里越堆越高。包裹全落完后，结算单一行行亮起，数字往上跳；点一行展开那个人做完的事（和 v14 的清单一样）。' }),
+  'b-day': () => ({ html: `${head(false)}<div class="band">${sceneB()}</div>${ai(AI_DAY)}${ledger([['you', '你', 2, ''], ['claude', 'Claude Code', 3, '合并 2 个 PR'], ['codex', 'Codex', 2, '合并 1 个 PR']], '今天出货')}`, note: '包裹按做完的顺序，从做的人手里抛进箱子，箱子里越堆越高。包裹全落完后，结算单一行行亮起，数字往上跳；点一行展开那个人做完的事（和 v14b 的清单一样）。' }),
   'b-week': () => { const lb = WEEK.map(([d], i) => [d, 6 + i * 32, 27]); return { html: `${head(true)}<div class="band">${sceneBWeek()}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}${ledger([['you', '你', 8, ''], ['claude', 'Claude Code', 11, '合并 6 个 PR'], ['codex', 'Codex', 6, '合并 3 个 PR']], '本周出货')}`, note: '一天一个出货箱，包裹堆得越高那天越忙。周末的箱子盖着盖子。结算单按人汇总这一周。' }; },
   'c-day': () => ({ html: `${head(false)}<div class="band">${sceneC()}</div>${ai(AI_DAY)}<div class="hero">今天上架<b class="tick" data-n="7" data-step="350" data-delay="800">0</b>本 · 你 2，Agent 5 · 合并了 3 个 PR</div>${list()}`, note: '书一本本插上架，书挡跟着往右挪。书脊颜色是谁做的；合并了 PR 的书上下各一道金边。鼠标停在一本书上显示标题，点它打开检查器。' }),
   'c-week': () => { const lb = []; const sc = sceneCWeek(lb); return { html: `${head(true)}<div class="band">${sc}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}<div class="hero">这周上架<b class="tick" data-n="25" data-step="120" data-delay="700">0</b>本 · 你 8，Agent 17 · 合并了 9 个 PR</div>${cards()}`, note: '一整排书架，每天之间一个书挡。周末只有书挡，中间空着。书多了以后一排放不下，就只画最近的、左边写「之前 N 本」。' }; },

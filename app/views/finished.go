@@ -43,6 +43,10 @@ func agentName(agent string) string {
 		return "Claude Code"
 	case strings.Contains(n, "codex"):
 		return "Codex"
+	case strings.Contains(n, "deepseek"):
+		return "DeepSeek Harness"
+	case n == "dsh" || strings.HasPrefix(n, "dsh-") || strings.HasPrefix(n, "dsh "):
+		return "DeepSeek Harness"
 	case strings.Contains(n, "cursor"):
 		return "Cursor"
 	case strings.Contains(n, "gemini"):
@@ -59,6 +63,10 @@ func agentName(agent string) string {
 		return "Windsurf"
 	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
 		return "Zed"
+	case n == "amp" || strings.HasPrefix(n, "amp ") || strings.HasPrefix(n, "amp-"):
+		return "Amp"
+	case strings.Contains(n, "kiro"):
+		return "Kiro"
 	case strings.Contains(n, "cline"):
 		return "Cline"
 	}
