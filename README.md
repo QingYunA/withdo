@@ -59,10 +59,12 @@ half a second.
 ## Develop
 
 ```sh
-go test -race -cover ./...                       # all packages
+scripts/check.sh                                 # while working: gofmt, vet, i18n, short tests
+scripts/check.sh full                            # before a PR: all tests, race on the core (CI runs this)
+scripts/screens.sh                               # re-render the design screenshots
+git config core.hooksPath .githooks              # once: the static checks run on every commit
 cd app && go tool mygo dev                       # run the app against the real database (.dev identifier)
 go run ./app -fake                               # demo data instead of the database (-empty: none)
-SCREENS_OUT=$PWD/docs/design/screens go test ./app/...   # re-render the design screenshots
 ```
 
 Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
