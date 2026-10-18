@@ -50,7 +50,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 			ui.Column(c.Key("card-body")).Padding(12).Gap(4).Children(inside)
 		})
 		if card.RightClicked() {
-			m.openMenuAtPointer(card, task.ID)
+			m.rowMenu(card, task.ID)
 		}
 		if m.rowClicked(card, task.ID) {
 			m.openRow(task.ID)

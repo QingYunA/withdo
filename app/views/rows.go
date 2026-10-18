@@ -54,7 +54,7 @@ func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, o
 		row.Opacity(opacity)
 	}
 	if row.RightClicked() {
-		m.openMenuAtPointer(row, id)
+		m.rowMenu(row, id)
 	}
 	return row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 }

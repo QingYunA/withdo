@@ -30,6 +30,16 @@ func (m *Main) openManyMenuAbove(el ui.Element, ids []int, page menuPage) {
 	m.openManyMenu(ids, page, b.X, b.Y-6, false)
 }
 
+// rowMenu is the right-click on a row: on one of the rows selected together the menu is for all of
+// them; on any other row it is for that row alone, and the selection stays as it is.
+func (m *Main) rowMenu(row ui.Element, id int) {
+	if m.multi.has(id) && m.multi.count() >= 2 {
+		m.openManyMenuAtPointer(row, m.selectedRows())
+		return
+	}
+	m.openMenuAtPointer(row, id)
+}
+
 // openManyMenuAtPointer is the right-click on a selected row.
 func (m *Main) openManyMenuAtPointer(el ui.Element, ids []int) {
 	px, py, _ := el.PointerPosition()
@@ -119,6 +129,21 @@ func (m *Main) manyLetters(c *ui.Context, panel ui.Element) {
 		m.handOffMany(c, ids)
 	case panel.OverlayShortcut(ui.Cmd, ui.KeyBackspace):
 		m.closeMenu()
+		m.askBulkDelete(ids)
+	}
+}
+
+// manyTaskKeys are the keys of the rows selected together, in place of a single row's: P and M open
+// the menu on that piece, under the keyboard row, and ⌘⌫ asks before deleting them all.
+func (m *Main) manyTaskKeys(c *ui.Context) {
+	ids := m.selectedRows()
+	r := m.selRect
+	switch {
+	case c.Shortcut(0, ui.KeyP):
+		m.openManyMenu(ids, pagePriority, r.X+24, r.Y+r.H, false)
+	case c.Shortcut(0, ui.KeyM):
+		m.openManyMenu(ids, pageMove, r.X+24, r.Y+r.H, false)
+	case c.Shortcut(ui.Cmd, ui.KeyBackspace):
 		m.askBulkDelete(ids)
 	}
 }

@@ -47,6 +47,10 @@ func (m *Main) askAboutTask(id int) {
 // row, and Cmd+J and Cmd+Backspace ask about the task and delete it. ⌘J works while typing
 // elsewhere; the plain letters do not.
 func (m *Main) taskKeys(c *ui.Context, typing bool) {
+	if m.multi.count() >= 2 && !typing {
+		m.manyTaskKeys(c)
+		return
+	}
 	id := m.sel
 	if id == 0 {
 		id = m.openID
