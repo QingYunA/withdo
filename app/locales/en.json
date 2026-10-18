@@ -2903,5 +2903,195 @@
   "notifyDayNothingBody": "That's it for today. See you tomorrow.",
   "@notifyDayNothingBody": {
     "description": "Body of the end-of-day notification on a day nothing was finished."
+  },
+  "selectButton": "Select",
+  "@selectButton": {
+    "description": "Button at the right of a page title that turns on select mode, where a click ticks a row instead of opening it."
+  },
+  "a11ySelectButton": "Select tasks",
+  "@a11ySelectButton": {
+    "description": "Accessibility label of the Select button beside a page title."
+  },
+  "selectCount": "{count} selected",
+  "@selectCount": {
+    "description": "Quiet text in the title row while the page is in select mode: how many rows are ticked.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "selectAll": "Select all",
+  "@selectAll": {
+    "description": "Link in the title row of select mode that ticks every row of the page."
+  },
+  "bulkDoneToast": "Marked {count, plural, one {# task} other {# tasks}} done",
+  "@bulkDoneToast": {
+    "description": "Toast after Done was chosen for the rows selected together; its Undo puts them back. count is how many tasks changed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkCancelToast": "Cancelled {count, plural, one {# task} other {# tasks}}",
+  "@bulkCancelToast": {
+    "description": "Toast after the rows selected together were cancelled; its Undo puts them back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkMoveToast": "Moved {count, plural, one {# task} other {# tasks}} to {where}",
+  "@bulkMoveToast": {
+    "description": "Toast after the rows selected together were moved to a project or the Inbox; its Undo moves them back. where is the project's name, or Inbox.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "where": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "bulkPriorityToast": "Set {count, plural, one {# task} other {# tasks}} to {priority}",
+  "@bulkPriorityToast": {
+    "description": "Toast after a priority was chosen for the rows selected together; its Undo puts the old priorities back. priority is P0 to P3.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "priority": {
+        "type": "String",
+        "example": "P1"
+      }
+    }
+  },
+  "bulkDeleteToast": "Deleted {count, plural, one {# task} other {# tasks}}",
+  "@bulkDeleteToast": {
+    "description": "Toast after the rows selected together were deleted; its Undo puts them back with their reports.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkDeleteTitle": "Delete {count, plural, one {# task} other {# tasks}}?",
+  "@bulkDeleteTitle": {
+    "description": "Title of the sheet that asks before the rows selected together are deleted.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkDeleteBody": "Their progress reports go with them.",
+  "@bulkDeleteBody": {
+    "description": "Body of the sheet that asks before the rows selected together are deleted."
+  },
+  "handOffMany": "Handed {count} tasks to an agent",
+  "@handOffMany": {
+    "description": "Toast after several tasks were handed over, by the bulk bar or by dragging a stack of rows to the Agents tray. Nothing is started; the tasks wait for an agent.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "handOffManySkipped": "Handed {count} to an agent · {skipped} skipped",
+  "@handOffManySkipped": {
+    "description": "Toast after tasks were handed over when some of the selected ones could not be: only the user's own unfinished tasks can be. skipped is how many were left out.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "skipped": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "handOffNone": "Only your own unfinished tasks can be handed to an agent",
+  "@handOffNone": {
+    "description": "Toast when Hand to an agent was chosen and none of the selected rows could be handed over."
+  },
+  "a11yBulkBar": "Actions for the selected tasks",
+  "@a11yBulkBar": {
+    "description": "Accessibility label of the toolbar that floats at the bottom of a list while several tasks are selected."
+  },
+  "bulkCount": "{count} selected",
+  "@bulkCount": {
+    "description": "Count at the left of the bulk bar: how many tasks are selected.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkHandOff": "Hand to an agent",
+  "@bulkHandOff": {
+    "description": "Button of the bulk bar and item of the selection's task menu that hands the selected tasks to any agent. Nothing is started."
+  },
+  "bulkClear": "Clear selection",
+  "@bulkClear": {
+    "description": "Accessibility label and tooltip of the × at the right of the bulk bar, which unselects every row."
+  },
+  "bulkCancel": "Cancel",
+  "@bulkCancel": {
+    "description": "Item of the selection's task menu that cancels the selected tasks (status Cancelled), as opposed to dismissing the menu."
+  },
+  "bulkMarkDone": "Mark done",
+  "@bulkMarkDone": {
+    "description": "Item of the selection's task menu that marks the selected tasks done."
+  },
+  "bulkDeleteMenu": "Delete {count}…",
+  "@bulkDeleteMenu": {
+    "description": "Item of the selection's task menu that deletes the selected tasks, after a question. count is how many.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "menuManyHeader": "{count} tasks",
+  "@menuManyHeader": {
+    "description": "Quiet header at the top of the task menu opened on several selected rows: how many tasks it acts on.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "listDropToHandMany": "Drop to hand to an agent ({count})",
+  "@listDropToHandMany": {
+    "description": "First line of the Agents tray while a stack of several of the user's rows is dragged over it; the stack is handed over together. count is how many rows are carried.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "handOffCopy": "Copy for the agent",
+  "@handOffCopy": {
+    "description": "Button of the hand-off toast. It puts a sentence on the clipboard to paste into an agent so it picks up the handed tasks, such as: Do adhd-todo task #12."
+  },
+  "handOffCopied": "Copied",
+  "@handOffCopied": {
+    "description": "What the Copy for the agent button of the hand-off toast reads for a moment after it was clicked."
   }
 }

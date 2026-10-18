@@ -13,6 +13,10 @@ import (
 type dragRow struct {
 	id         int
 	fromAgents bool
+	// n is how many rows go with it, and stack their ids (see stackKey): a row of several selected
+	// ones takes them all.
+	n     int
+	stack string
 }
 
 // rowSlot is how far a row's highlight bleeds past its column; the slot of a dragged row bleeds the
@@ -35,8 +39,9 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		row.AlignItems(ui.Center).Children(func() {
 			if dragging { // the copy that follows the pointer carries the sprite of the user
 				m.carrier(c, m.ho.walk(c, row, m.app.Now()))
+				m.stackBadge(c, t)
 			}
-			ui.Box(c.Key("indent")).Width(listIndent - rowGap).Shrink(0)
+			m.indentSlot(c, t, task.ID)
 			body(c, func() { m.titleLine(c, t, task, "", false) })
 			right(c, func() { m.listRight(c, t, task, ot) })
 		})
@@ -55,7 +60,7 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ot := m.app.overviewTask(task)
 	m.draggableRow(c, t, task, true, ph, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
-			m.agentAvatar(c, m.app.taskWho(task))
+			m.agentAvatar(c, t, task.ID, m.app.taskWho(task))
 			body(c, func() {
 				m.agentTitle(c, t, task, func() { m.agentRight(c, t, row, task, ot, ph) })
 				agentLine(c, t, agentSaid(task, ot))
@@ -71,7 +76,7 @@ func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ph := m.rowPhase(c, task)
 	m.draggableRow(c, t, task, true, ph, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
-			m.agentAvatar(c, theme.AccentBot(t.Accent))
+			m.agentAvatar(c, t, task.ID, theme.AccentBot(t.Accent))
 			body(c, func() {
 				m.agentTitle(c, t, task, func() {
 					m.rowThumb(c, t, task.ID)
@@ -84,8 +89,8 @@ func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 // agentAvatar is the avatar at the start of an agent's row, level with its title.
-func (m *Main) agentAvatar(c *ui.Context, who theme.Who) {
-	theme.AvatarIcon(c.Key("author"), who, theme.AvatarRow).Margin(2, listIndent-theme.AvatarRow-rowGap, 0, 0)
+func (m *Main) agentAvatar(c *ui.Context, t *theme.Tokens, id int, who theme.Who) {
+	m.lead(c, t, "author", id, who, theme.AvatarRow).Margin(2, listIndent-theme.AvatarRow-rowGap, 0, 0)
 }
 
 // agentTitle is the title line of an agent's row, and what goes at its right.
@@ -138,9 +143,9 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
 		if s == sideAgents {
-			m.authorSlot(c, task)
+			m.authorSlot(c, t, task)
 		} else {
-			ui.Box(c.Key("indent")).Width(listIndent - rowGap).Shrink(0)
+			m.indentSlot(c, t, task.ID)
 		}
 		body(c, func() {
 			theme.Text(c, theme.Body, t.TextSecondary, task.Title).Shrink(1).MinWidth(0).Ellipsis("…")
@@ -150,7 +155,7 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 			plainText(c, t, m.clock.Day(doneAt(task), m.app.Now()))
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, task.ID) {
 		m.openRow(task.ID)
 	}
 }
@@ -162,11 +167,20 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 	dragging := false
 	slot.Children(func() {
 		row := m.rowShell(c, t, task.ID, plainRow, ph)
-		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents})
+		stack := []int{task.ID}
+		if !fromAgents {
+			stack = m.stackOf(task)
+		}
+		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents, n: len(stack), stack: stackKey(stack)})
 		dragging = row.Dragging()
+		if dragging {
+			m.startedDrag(task.ID, stack)
+		} else if m.fadesInStack(task.ID) {
+			row.Opacity(stackFade)
+		}
 		m.liftRow(c, t, row, task.ID, dragging)
 		fill(row, dragging)
-		if row.Clicked() {
+		if m.rowClicked(row, task.ID) {
 			m.openRow(task.ID)
 		}
 	})
@@ -187,7 +201,14 @@ func (m *Main) liftRow(c *ui.Context, t *theme.Tokens, row ui.Element, id int, d
 		row.Rotate(2*tilt).Scale(1+0.025*tilt, 1+0.025*tilt)
 	}
 	if dragging { // the copy in flight is a card, not the width of a column
-		row.MaxWidth(dragCardWidth).Background(t.Bg).Border(1, t.TextTertiary).
+		row.MaxWidth(dragCardWidth).Radius(theme.RadiusCard).Border(1, t.TextTertiary).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
+		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
+			lifted := !c.Preferences().ReduceMotion
+			row.Background(ui.Transparent).Border(1, ui.Transparent).
+				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusCard, lifted) })
+		} else {
+			row.Background(t.Bg)
+		}
 	}
 }

@@ -40,7 +40,7 @@ func TestEveryIconVariableIsSet(t *testing.T) {
 		"Check": IconCheck, "Copy": IconCopy, "Milestone": IconMilestone, "Plus": IconPlus, "Sparkle": IconSparkle,
 		"Bell": IconBell, "Now": IconNow, "Close": IconClose, "Search": IconSearch, "Move": IconMove, "Clock": IconClock,
 		"Trash": IconTrash, "List": IconList, "Board": IconBoard, "Back": IconBack, "Forward": IconForward,
-		"Done": IconDone, "Status": IconStatus, "Agent": IconAgent, "Branch": IconBranch, "General": IconGeneral,
+		"Done": IconDone, "Box": IconBox, "Status": IconStatus, "Agent": IconAgent, "Branch": IconBranch, "General": IconGeneral,
 		"Terminal": IconTerminal, "Star": IconStar, "Octocat": IconOctocat, "Flag": IconFlag, "Diamond": IconDiamond,
 		"PR": IconPR, "Send": IconSend, "Agents": IconAgents, "GitHub": IconGitHub, "Folder": IconFolder,
 	}

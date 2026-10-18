@@ -27,8 +27,17 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		} else {
 			card.Padding(12).Gap(4)
 		}
-		card.Drag(dragCard{id: task.ID})
+		stack := []int{task.ID}
+		if m.multi.has(task.ID) && m.multi.count() >= 2 {
+			stack = m.selectedRows()
+		}
+		card.Drag(dragCard{id: task.ID, stack: stackKey(stack)})
 		dragging = card.Dragging()
+		if dragging {
+			m.startedDrag(task.ID, stack)
+		} else if m.fadesInStack(task.ID) {
+			card.Opacity(stackFade)
+		}
 		if m.sel == task.ID {
 			m.selRect = card.Bounds()
 		}
@@ -42,6 +51,9 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 			m.cardMeta(c, t, task, m.showsActions(card, task.ID, ph), ph)
 		}
 		card.Children(func() {
+			if dragging {
+				m.stackBadge(c, t)
+			}
 			if !banded {
 				inside()
 				return
@@ -50,11 +62,10 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 			ui.Column(c.Key("card-body")).Padding(12).Gap(4).Children(inside)
 		})
 		if card.RightClicked() {
-			m.openMenuAtPointer(card, task.ID)
+			m.rowMenu(card, task.ID)
 		}
-		if card.Clicked() {
-			m.openID = task.ID
-			m.inspector.reset()
+		if m.rowClicked(card, task.ID) {
+			m.openRow(task.ID)
 		}
 	})
 	if dragging {
@@ -73,6 +84,12 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	switch {
 	case dragging:
 		border = t.TextTertiary
+	case m.multi.has(task.ID):
+		bg, border = t.Bg.Mix(t.Accent, 0.12), t.Accent.Alpha(0.6)
+		if m.sel == task.ID { // the keyboard card has the ring
+			border = t.Accent.Alpha(0.9)
+		}
+		card.Checked(true)
 	case m.openID == task.ID || m.sel == task.ID || (m.pop.open && m.pop.task == task.ID):
 		bg, border = t.Bg.Mix(t.Accent, 0.07), t.Accent.Alpha(0.6)
 	case card.Hovered():
@@ -90,6 +107,11 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	if dragging {
 		// The copy that follows the pointer ignores this opacity; the original leaves an empty slot.
 		card.Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
+		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
+			lifted := !c.Preferences().ReduceMotion
+			card.Background(ui.Transparent).Border(1, ui.Transparent).
+				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusTile, lifted) })
+		}
 	}
 }
 
@@ -123,7 +145,7 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 		branch = ""
 	}
 	ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(func() {
-		theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarSmall).Shrink(0)
+		m.leadOf(c, t, task, theme.AvatarSmall).Shrink(0)
 		if blocked {
 			theme.StatusGlyphSized(c, t, data.Blocked, theme.IconSmall, 0)
 		}

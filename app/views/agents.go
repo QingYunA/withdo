@@ -53,7 +53,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 	ph := m.rowPhase(c, r.Task)
 	row := m.rowShell(c, t, r.ID, plainRow, ph)
 	row.Children(func() {
-		theme.AvatarIcon(c.Key("author"), m.app.taskWho(r.Task), theme.AvatarRow).Margin(2, 0, 0, 0)
+		m.leadOf(c, t, r.Task, theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
 			m.titleLine(c, t, r.Task, "", false)
 			summaryLine(c, t, m.workingMeta(r))
@@ -69,7 +69,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 			m.ageLabel(c, t, r.Item)
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, r.ID) {
 		m.openRow(r.ID)
 	}
 	if len(r.Subs) == 0 {
@@ -108,7 +108,7 @@ func (m *Main) subtaskRow(c *ui.Context, t *theme.Tokens, s data.Item) {
 	ph := m.rowPhase(c, s.Task)
 	row := m.rowShell(c, t, s.ID, subRowStyle, ph).Margin(0, -subRowStyle.horz, 0, subRail).AlignItems(ui.Center)
 	row.Children(func() {
-		theme.AvatarIcon(c.Key("author"), m.app.taskWho(s.Task), theme.AvatarSmall).Shrink(0)
+		m.leadOf(c, t, s.Task, theme.AvatarSmall).Shrink(0)
 		theme.Text(c, theme.Body, t.Text, s.Title).Grow(1).Shrink(1).MinWidth(0).Ellipsis("…")
 		right(c, func() {
 			m.statusPill(c, t, "pill", s.Status)
@@ -117,7 +117,7 @@ func (m *Main) subtaskRow(c *ui.Context, t *theme.Tokens, s data.Item) {
 			}
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, s.ID) {
 		m.openRow(s.ID)
 	}
 }

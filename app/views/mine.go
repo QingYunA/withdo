@@ -44,6 +44,7 @@ func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, con
 			theme.Text(c, theme.Body, t.TextTertiary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
 		ui.Spacer(c)
+		m.selectControls(c, t)
 		if controls != nil {
 			controls()
 		}
@@ -109,7 +110,7 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 	stacked := (len(actions) > 1 && m.width < stackActionsBelow) || m.width < stackAllActionsBelow
 	buttons := func() { m.actionButtons(c, t, it.ID, actions, ph) }
 	row.Children(func() {
-		theme.AvatarIcon(c.Key("author"), m.app.taskWho(it.Task), theme.AvatarRow).Margin(2, 0, 0, 0)
+		m.leadOf(c, t, it.Task, theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
 			m.titleLine(c, t, it.Task, "", false)
 			summaryLine(c, t, m.handedSummary(it))
@@ -133,7 +134,7 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 			}
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, it.ID) {
 		m.openRow(it.ID)
 	}
 }
@@ -227,7 +228,7 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 					}
 				})
 			})
-			if row.Clicked() {
+			if m.rowClicked(row, it.ID) {
 				m.openRow(it.ID)
 			}
 		}

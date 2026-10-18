@@ -171,6 +171,14 @@ func (m *Main) statusStrip(c *ui.Context, t *theme.Tokens, task data.Task, keybo
 
 // priorityStrip is P0 to P3 in a row, P0 in the one red; one click sets the priority.
 func (m *Main) priorityStrip(c *ui.Context, t *theme.Tokens, task data.Task, keyboard bool) {
+	m.priorityStripOf(c, t, func(p data.Priority) bool { return task.Priority == p }, keyboard, func(p data.Priority) {
+		m.closeMenu()
+		_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})
+	})
+}
+
+// priorityStripOf is the strip with its own idea of which choice is current and what a click does.
+func (m *Main) priorityStripOf(c *ui.Context, t *theme.Tokens, current func(data.Priority) bool, keyboard bool, choose func(data.Priority)) {
 	ui.Row(c.Key("pop-priority")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
 		for _, p := range data.Priorities {
 			name := priorityName(m.say, p)
@@ -178,11 +186,8 @@ func (m *Main) priorityStrip(c *ui.Context, t *theme.Tokens, task data.Task, key
 			if p == data.P0 {
 				ink = t.Blocked()
 			}
-			m.stripButton(c, t, "priority", "pop-priority-"+string(p), m.say.A11yMenuPriority(name), m.priorityText(p), task.Priority == p, keyboard,
-				func() {
-					m.closeMenu()
-					_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(p)})
-				},
+			m.stripButton(c, t, "priority", "pop-priority-"+string(p), m.say.A11yMenuPriority(name), m.priorityText(p), current(p), keyboard,
+				func() { choose(p) },
 				func() { theme.Text(c, theme.CompactStrong, ink, string(p)) })
 		}
 	})

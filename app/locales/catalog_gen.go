@@ -7085,3 +7085,409 @@ func NotifyDayNothingBody() string { return In(i18n.Locale()).NotifyDayNothingBo
 func (msgs Messages) NotifyDayNothingBody() string {
 	return Catalog.Format(msgs.locale, "notifyDayNothingBody", nil)
 }
+
+// SelectButton says "Select"
+// in the language the app shows.
+//
+// Button at the right of a page title that turns on select mode, where a
+// click ticks a row instead of opening it.
+func SelectButton() string { return In(i18n.Locale()).SelectButton() }
+
+// SelectButton says "Select"
+// in the language of msgs.
+//
+// Button at the right of a page title that turns on select mode, where a
+// click ticks a row instead of opening it.
+func (msgs Messages) SelectButton() string {
+	return Catalog.Format(msgs.locale, "selectButton", nil)
+}
+
+// A11ySelectButton says "Select tasks"
+// in the language the app shows.
+//
+// Accessibility label of the Select button beside a page title.
+func A11ySelectButton() string { return In(i18n.Locale()).A11ySelectButton() }
+
+// A11ySelectButton says "Select tasks"
+// in the language of msgs.
+//
+// Accessibility label of the Select button beside a page title.
+func (msgs Messages) A11ySelectButton() string {
+	return Catalog.Format(msgs.locale, "a11ySelectButton", nil)
+}
+
+// SelectCount says "{count} selected"
+// in the language the app shows.
+//
+// Quiet text in the title row while the page is in select mode: how many
+// rows are ticked.
+func SelectCount(count int) string { return In(i18n.Locale()).SelectCount(count) }
+
+// SelectCount says "{count} selected"
+// in the language of msgs.
+//
+// Quiet text in the title row while the page is in select mode: how many
+// rows are ticked.
+func (msgs Messages) SelectCount(count int) string {
+	return Catalog.Format(msgs.locale, "selectCount", map[string]any{"count": count})
+}
+
+// SelectAll says "Select all"
+// in the language the app shows.
+//
+// Link in the title row of select mode that ticks every row of the page.
+func SelectAll() string { return In(i18n.Locale()).SelectAll() }
+
+// SelectAll says "Select all"
+// in the language of msgs.
+//
+// Link in the title row of select mode that ticks every row of the page.
+func (msgs Messages) SelectAll() string {
+	return Catalog.Format(msgs.locale, "selectAll", nil)
+}
+
+// BulkDoneToast says "Marked {count, plural, one {# task} other {# tasks}} done"
+// in the language the app shows.
+//
+// Toast after Done was chosen for the rows selected together; its Undo puts
+// them back. count is how many tasks changed.
+func BulkDoneToast(count int) string { return In(i18n.Locale()).BulkDoneToast(count) }
+
+// BulkDoneToast says "Marked {count, plural, one {# task} other {# tasks}} done"
+// in the language of msgs.
+//
+// Toast after Done was chosen for the rows selected together; its Undo puts
+// them back. count is how many tasks changed.
+func (msgs Messages) BulkDoneToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkDoneToast", map[string]any{"count": count})
+}
+
+// BulkCancelToast says "Cancelled {count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Toast after the rows selected together were cancelled; its Undo puts them
+// back.
+func BulkCancelToast(count int) string { return In(i18n.Locale()).BulkCancelToast(count) }
+
+// BulkCancelToast says "Cancelled {count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Toast after the rows selected together were cancelled; its Undo puts them
+// back.
+func (msgs Messages) BulkCancelToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkCancelToast", map[string]any{"count": count})
+}
+
+// BulkMoveToast says "Moved {count, plural, one {# task} other {# tasks}} to {where}"
+// in the language the app shows.
+//
+// Toast after the rows selected together were moved to a project or the
+// Inbox; its Undo moves them back. where is the project's name, or Inbox.
+func BulkMoveToast(count int, where string) string {
+	return In(i18n.Locale()).BulkMoveToast(count, where)
+}
+
+// BulkMoveToast says "Moved {count, plural, one {# task} other {# tasks}} to {where}"
+// in the language of msgs.
+//
+// Toast after the rows selected together were moved to a project or the
+// Inbox; its Undo moves them back. where is the project's name, or Inbox.
+func (msgs Messages) BulkMoveToast(count int, where string) string {
+	return Catalog.Format(msgs.locale, "bulkMoveToast", map[string]any{"count": count, "where": where})
+}
+
+// BulkPriorityToast says "Set {count, plural, one {# task} other {# tasks}} to {priority}"
+// in the language the app shows.
+//
+// Toast after a priority was chosen for the rows selected together; its
+// Undo puts the old priorities back. priority is P0 to P3.
+func BulkPriorityToast(count int, priority string) string {
+	return In(i18n.Locale()).BulkPriorityToast(count, priority)
+}
+
+// BulkPriorityToast says "Set {count, plural, one {# task} other {# tasks}} to {priority}"
+// in the language of msgs.
+//
+// Toast after a priority was chosen for the rows selected together; its
+// Undo puts the old priorities back. priority is P0 to P3.
+func (msgs Messages) BulkPriorityToast(count int, priority string) string {
+	return Catalog.Format(msgs.locale, "bulkPriorityToast", map[string]any{"count": count, "priority": priority})
+}
+
+// BulkDeleteToast says "Deleted {count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Toast after the rows selected together were deleted; its Undo puts them
+// back with their reports.
+func BulkDeleteToast(count int) string { return In(i18n.Locale()).BulkDeleteToast(count) }
+
+// BulkDeleteToast says "Deleted {count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Toast after the rows selected together were deleted; its Undo puts them
+// back with their reports.
+func (msgs Messages) BulkDeleteToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkDeleteToast", map[string]any{"count": count})
+}
+
+// BulkDeleteTitle says "Delete {count, plural, one {# task} other {# tasks}}?"
+// in the language the app shows.
+//
+// Title of the sheet that asks before the rows selected together are
+// deleted.
+func BulkDeleteTitle(count int) string { return In(i18n.Locale()).BulkDeleteTitle(count) }
+
+// BulkDeleteTitle says "Delete {count, plural, one {# task} other {# tasks}}?"
+// in the language of msgs.
+//
+// Title of the sheet that asks before the rows selected together are
+// deleted.
+func (msgs Messages) BulkDeleteTitle(count int) string {
+	return Catalog.Format(msgs.locale, "bulkDeleteTitle", map[string]any{"count": count})
+}
+
+// BulkDeleteBody says "Their progress reports go with them."
+// in the language the app shows.
+//
+// Body of the sheet that asks before the rows selected together are
+// deleted.
+func BulkDeleteBody() string { return In(i18n.Locale()).BulkDeleteBody() }
+
+// BulkDeleteBody says "Their progress reports go with them."
+// in the language of msgs.
+//
+// Body of the sheet that asks before the rows selected together are
+// deleted.
+func (msgs Messages) BulkDeleteBody() string {
+	return Catalog.Format(msgs.locale, "bulkDeleteBody", nil)
+}
+
+// HandOffMany says "Handed {count} tasks to an agent"
+// in the language the app shows.
+//
+// Toast after several tasks were handed over, by the bulk bar or by
+// dragging a stack of rows to the Agents tray. Nothing is started; the
+// tasks wait for an agent.
+func HandOffMany(count int) string { return In(i18n.Locale()).HandOffMany(count) }
+
+// HandOffMany says "Handed {count} tasks to an agent"
+// in the language of msgs.
+//
+// Toast after several tasks were handed over, by the bulk bar or by
+// dragging a stack of rows to the Agents tray. Nothing is started; the
+// tasks wait for an agent.
+func (msgs Messages) HandOffMany(count int) string {
+	return Catalog.Format(msgs.locale, "handOffMany", map[string]any{"count": count})
+}
+
+// HandOffManySkipped says "Handed {count} to an agent · {skipped} skipped"
+// in the language the app shows.
+//
+// Toast after tasks were handed over when some of the selected ones could
+// not be: only the user's own unfinished tasks can be. skipped is how many
+// were left out.
+func HandOffManySkipped(count int, skipped int) string {
+	return In(i18n.Locale()).HandOffManySkipped(count, skipped)
+}
+
+// HandOffManySkipped says "Handed {count} to an agent · {skipped} skipped"
+// in the language of msgs.
+//
+// Toast after tasks were handed over when some of the selected ones could
+// not be: only the user's own unfinished tasks can be. skipped is how many
+// were left out.
+func (msgs Messages) HandOffManySkipped(count int, skipped int) string {
+	return Catalog.Format(msgs.locale, "handOffManySkipped", map[string]any{"count": count, "skipped": skipped})
+}
+
+// HandOffNone says "Only your own unfinished tasks can be handed to an agent"
+// in the language the app shows.
+//
+// Toast when Hand to an agent was chosen and none of the selected rows
+// could be handed over.
+func HandOffNone() string { return In(i18n.Locale()).HandOffNone() }
+
+// HandOffNone says "Only your own unfinished tasks can be handed to an agent"
+// in the language of msgs.
+//
+// Toast when Hand to an agent was chosen and none of the selected rows
+// could be handed over.
+func (msgs Messages) HandOffNone() string {
+	return Catalog.Format(msgs.locale, "handOffNone", nil)
+}
+
+// A11yBulkBar says "Actions for the selected tasks"
+// in the language the app shows.
+//
+// Accessibility label of the toolbar that floats at the bottom of a list
+// while several tasks are selected.
+func A11yBulkBar() string { return In(i18n.Locale()).A11yBulkBar() }
+
+// A11yBulkBar says "Actions for the selected tasks"
+// in the language of msgs.
+//
+// Accessibility label of the toolbar that floats at the bottom of a list
+// while several tasks are selected.
+func (msgs Messages) A11yBulkBar() string {
+	return Catalog.Format(msgs.locale, "a11yBulkBar", nil)
+}
+
+// BulkCount says "{count} selected"
+// in the language the app shows.
+//
+// Count at the left of the bulk bar: how many tasks are selected.
+func BulkCount(count int) string { return In(i18n.Locale()).BulkCount(count) }
+
+// BulkCount says "{count} selected"
+// in the language of msgs.
+//
+// Count at the left of the bulk bar: how many tasks are selected.
+func (msgs Messages) BulkCount(count int) string {
+	return Catalog.Format(msgs.locale, "bulkCount", map[string]any{"count": count})
+}
+
+// BulkHandOff says "Hand to an agent"
+// in the language the app shows.
+//
+// Button of the bulk bar and item of the selection's task menu that hands
+// the selected tasks to any agent. Nothing is started.
+func BulkHandOff() string { return In(i18n.Locale()).BulkHandOff() }
+
+// BulkHandOff says "Hand to an agent"
+// in the language of msgs.
+//
+// Button of the bulk bar and item of the selection's task menu that hands
+// the selected tasks to any agent. Nothing is started.
+func (msgs Messages) BulkHandOff() string {
+	return Catalog.Format(msgs.locale, "bulkHandOff", nil)
+}
+
+// BulkClear says "Clear selection"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the × at the right of the bulk bar,
+// which unselects every row.
+func BulkClear() string { return In(i18n.Locale()).BulkClear() }
+
+// BulkClear says "Clear selection"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the × at the right of the bulk bar,
+// which unselects every row.
+func (msgs Messages) BulkClear() string {
+	return Catalog.Format(msgs.locale, "bulkClear", nil)
+}
+
+// BulkCancel says "Cancel"
+// in the language the app shows.
+//
+// Item of the selection's task menu that cancels the selected tasks (status
+// Cancelled), as opposed to dismissing the menu.
+func BulkCancel() string { return In(i18n.Locale()).BulkCancel() }
+
+// BulkCancel says "Cancel"
+// in the language of msgs.
+//
+// Item of the selection's task menu that cancels the selected tasks (status
+// Cancelled), as opposed to dismissing the menu.
+func (msgs Messages) BulkCancel() string {
+	return Catalog.Format(msgs.locale, "bulkCancel", nil)
+}
+
+// BulkMarkDone says "Mark done"
+// in the language the app shows.
+//
+// Item of the selection's task menu that marks the selected tasks done.
+func BulkMarkDone() string { return In(i18n.Locale()).BulkMarkDone() }
+
+// BulkMarkDone says "Mark done"
+// in the language of msgs.
+//
+// Item of the selection's task menu that marks the selected tasks done.
+func (msgs Messages) BulkMarkDone() string {
+	return Catalog.Format(msgs.locale, "bulkMarkDone", nil)
+}
+
+// BulkDeleteMenu says "Delete {count}…"
+// in the language the app shows.
+//
+// Item of the selection's task menu that deletes the selected tasks, after
+// a question. count is how many.
+func BulkDeleteMenu(count int) string { return In(i18n.Locale()).BulkDeleteMenu(count) }
+
+// BulkDeleteMenu says "Delete {count}…"
+// in the language of msgs.
+//
+// Item of the selection's task menu that deletes the selected tasks, after
+// a question. count is how many.
+func (msgs Messages) BulkDeleteMenu(count int) string {
+	return Catalog.Format(msgs.locale, "bulkDeleteMenu", map[string]any{"count": count})
+}
+
+// MenuManyHeader says "{count} tasks"
+// in the language the app shows.
+//
+// Quiet header at the top of the task menu opened on several selected rows:
+// how many tasks it acts on.
+func MenuManyHeader(count int) string { return In(i18n.Locale()).MenuManyHeader(count) }
+
+// MenuManyHeader says "{count} tasks"
+// in the language of msgs.
+//
+// Quiet header at the top of the task menu opened on several selected rows:
+// how many tasks it acts on.
+func (msgs Messages) MenuManyHeader(count int) string {
+	return Catalog.Format(msgs.locale, "menuManyHeader", map[string]any{"count": count})
+}
+
+// ListDropToHandMany says "Drop to hand to an agent ({count})"
+// in the language the app shows.
+//
+// First line of the Agents tray while a stack of several of the user's rows
+// is dragged over it; the stack is handed over together. count is how many
+// rows are carried.
+func ListDropToHandMany(count int) string { return In(i18n.Locale()).ListDropToHandMany(count) }
+
+// ListDropToHandMany says "Drop to hand to an agent ({count})"
+// in the language of msgs.
+//
+// First line of the Agents tray while a stack of several of the user's rows
+// is dragged over it; the stack is handed over together. count is how many
+// rows are carried.
+func (msgs Messages) ListDropToHandMany(count int) string {
+	return Catalog.Format(msgs.locale, "listDropToHandMany", map[string]any{"count": count})
+}
+
+// HandOffCopy says "Copy for the agent"
+// in the language the app shows.
+//
+// Button of the hand-off toast. It puts a sentence on the clipboard to
+// paste into an agent so it picks up the handed tasks, such as: Do
+// adhd-todo task #12.
+func HandOffCopy() string { return In(i18n.Locale()).HandOffCopy() }
+
+// HandOffCopy says "Copy for the agent"
+// in the language of msgs.
+//
+// Button of the hand-off toast. It puts a sentence on the clipboard to
+// paste into an agent so it picks up the handed tasks, such as: Do
+// adhd-todo task #12.
+func (msgs Messages) HandOffCopy() string {
+	return Catalog.Format(msgs.locale, "handOffCopy", nil)
+}
+
+// HandOffCopied says "Copied"
+// in the language the app shows.
+//
+// What the Copy for the agent button of the hand-off toast reads for a
+// moment after it was clicked.
+func HandOffCopied() string { return In(i18n.Locale()).HandOffCopied() }
+
+// HandOffCopied says "Copied"
+// in the language of msgs.
+//
+// What the Copy for the agent button of the hand-off toast reads for a
+// moment after it was clicked.
+func (msgs Messages) HandOffCopied() string {
+	return Catalog.Format(msgs.locale, "handOffCopied", nil)
+}

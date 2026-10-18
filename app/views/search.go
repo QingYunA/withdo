@@ -220,7 +220,7 @@ func (m *Main) searchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now()))
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, task.ID) {
 		m.openRow(task.ID)
 	}
 }
