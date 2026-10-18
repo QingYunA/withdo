@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -169,6 +170,22 @@ func TestReportProgressBumpsUpdatedAt(t *testing.T) {
 	b := progress(t, c, domain.ProgressInput{Summary: "two", TaskID: &a.Task.ID})
 	eq(t, "updated_at", b.Task.UpdatedAt, "2026-10-01T01:00:00.000Z")
 	eq(t, "report created_at", b.Report.CreatedAt, b.Task.UpdatedAt)
+}
+
+func TestReportProgressRejectsACwdThatDoesNotExist(t *testing.T) {
+	c, _ := newCore(t)
+	missing := filepath.Join(t.TempDir(), "does-not-exist")
+	_, err := c.ReportProgress(ctx, domain.ProgressInput{Summary: "s", Agent: "x", Cwd: missing})
+	wantFieldError(t, err, "cwd")
+	if !strings.Contains(err.Error(), "no such directory: "+missing) {
+		t.Errorf("error = %q", err)
+	}
+	eq(t, "tasks", len(must[[]domain.Task](t)(c.ListTasks(ctx, domain.TaskFilter{}))), 0)
+
+	// A cwd that is only a fallback, or that task_id makes irrelevant, is not checked.
+	progress(t, c, domain.ProgressInput{Summary: "s", FallbackCwd: missing})
+	a := progress(t, c, domain.ProgressInput{Summary: "one"})
+	progress(t, c, domain.ProgressInput{Summary: "two", TaskID: &a.Task.ID, Cwd: missing})
 }
 
 func TestReportProgressValidation(t *testing.T) {

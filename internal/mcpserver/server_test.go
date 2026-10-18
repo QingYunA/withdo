@@ -242,6 +242,11 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"report: bad pr_url", "report_progress", map[string]any{"summary": "s", "pr_url": "not-a-url"}, "pr_url"},
 		{"report: zero task_id", "report_progress", map[string]any{"summary": "s", "task_id": 0}, "task_id"},
 		{"report: unknown task_id", "report_progress", map[string]any{"summary": "s", "task_id": 999}, "task_id"},
+		{"report: missing cwd", "report_progress", map[string]any{"summary": "s", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"create: missing cwd", "create_task", map[string]any{"title": "x", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"list: missing cwd", "list_tasks", map[string]any{"cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"upsert: missing cwd", "upsert_project", map[string]any{"cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"milestone: missing cwd", "create_milestone", map[string]any{"title": "v1", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
 		{"create: missing title", "create_task", map[string]any{}, "title"},
 		{"create: blank title", "create_task", map[string]any{"title": "   "}, "title"},
 		{"create: bad priority", "create_task", map[string]any{"title": "x", "priority": "P9"}, "priority"},
@@ -282,6 +287,27 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 				t.Errorf("error %q does not name %q", res.Text, tt.field)
 			}
 		})
+	}
+}
+
+func TestAGivenCwdThatDoesNotExistIsRefused(t *testing.T) {
+	r := newRig(t)
+	missing := "/tmp/adhd-todo-does-not-exist"
+	for tool, args := range map[string]map[string]any{
+		"report_progress":  {"summary": "s"},
+		"create_task":      {"title": "x"},
+		"list_tasks":       {},
+		"upsert_project":   {},
+		"create_milestone": {"title": "v1"},
+	} {
+		args["cwd"] = missing
+		res := r.call(tool, args)
+		if !res.IsError || !strings.Contains(res.Text, "cwd: no such directory: "+missing) {
+			t.Errorf("%s: %+v", tool, res)
+		}
+	}
+	if tasks := r.ok("list_tasks", nil).list("tasks"); len(tasks) != 0 {
+		t.Errorf("a refused call left tasks behind: %+v", tasks)
 	}
 }
 

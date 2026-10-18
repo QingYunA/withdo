@@ -1,7 +1,9 @@
 package domain_test
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
@@ -119,6 +121,33 @@ func TestUpsertProjectErrors(t *testing.T) {
 			_, err := c.UpsertProject(ctx, tt.in)
 			wantFieldError(t, err, tt.field)
 		})
+	}
+}
+
+func TestCheckCwd(t *testing.T) {
+	dir := t.TempDir()
+	if err := domain.CheckCwd(dir); err != nil {
+		t.Errorf("existing directory: %v", err)
+	}
+	if err := domain.CheckCwd(""); err != nil {
+		t.Errorf("absent cwd: %v", err)
+	}
+	missing := dir + "/nope"
+	err := domain.CheckCwd(missing)
+	wantFieldError(t, err, "cwd")
+	if !strings.Contains(err.Error(), "no such directory: "+missing) {
+		t.Errorf("error = %q", err)
+	}
+	file := dir + "/file"
+	if werr := os.WriteFile(file, nil, 0o600); werr != nil {
+		t.Fatal(werr)
+	}
+	wantFieldError(t, domain.CheckCwd(file), "cwd")
+
+	c, _ := newCore(t)
+	_, err = c.UpsertProject(ctx, domain.UpsertProjectInput{Cwd: missing})
+	if err == nil || !strings.Contains(err.Error(), "no such directory") {
+		t.Errorf("upsert with a missing cwd: %v", err)
 	}
 }
 

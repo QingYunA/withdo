@@ -44,6 +44,9 @@ func (t *tools) listTasks(ctx context.Context, _ *mcp.CallToolRequest, a listTas
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
 		return t.fail(err)
 	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
+		return t.fail(err)
+	}
 	scope := a.ProjectID
 	if a.Cwd != "" {
 		resolved, err := t.core.ResolveProjectFromCwd(ctx, a.Cwd)
@@ -160,6 +163,9 @@ func (t *tools) registerCreateMilestone(s *mcp.Server) {
 
 func (t *tools) createMilestone(ctx context.Context, _ *mcp.CallToolRequest, a createMilestoneArgs) (*mcp.CallToolResult, any, error) {
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
+		return t.fail(err)
+	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
 		return t.fail(err)
 	}
 	due, err := timestampArg("due_at", a.DueAt)

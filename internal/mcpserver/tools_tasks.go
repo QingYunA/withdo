@@ -73,6 +73,9 @@ func (t *tools) createTaskInput(ctx context.Context, a createTaskArgs) (domain.C
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
 		return in, err
 	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
+		return in, err
+	}
 	var err error
 	if in.DueAt, err = timestampArg("due_at", a.DueAt); err != nil {
 		return in, err
