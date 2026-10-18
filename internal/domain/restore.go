@@ -39,50 +39,55 @@ func (c *Core) SnapshotTask(ctx context.Context, id int64) (*TaskSnapshot, error
 // meanwhile) is a conflict. A project or milestone that is gone since leaves the task in the Inbox
 // with no milestone.
 func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
-	t := s.Task
 	var out *Task
 	err := c.write(ctx, func(q store.Querier) error {
-		if cur, err := getTask(ctx, q, t.ID); err != nil {
-			return err
-		} else if cur != nil {
-			return conflict("task_id", "task %d already exists", t.ID)
-		}
-		if err := dropGoneRefs(ctx, q, &t); err != nil {
-			return err
-		}
-		if _, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status,
-			priority, due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at,
-			reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at, category)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			t.ID, t.ProjectID, t.MilestoneID, t.Title, t.Notes, t.Status, t.Priority, t.DueAt, t.RemindAt,
-			t.Branch, t.PRURL, t.PRNumber, t.Source, t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RemindedAt,
-			t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt, t.Category); err != nil {
-			return fmt.Errorf("insert task: %w", err)
-		}
-		for _, r := range s.Reports {
-			links, err := encodeLinks(r.Links)
-			if err != nil {
-				return err
-			}
-			if _, err := q.ExecContext(ctx,
-				"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-				r.ID, t.ID, r.Agent, r.Status, r.Summary, r.NextStep, r.CreatedAt, r.Cwd, r.Kind, links); err != nil {
-				return fmt.Errorf("insert report: %w", err)
-			}
-		}
-		for _, im := range s.Images {
-			if err := relinkImage(ctx, q, t.ID, im); err != nil {
-				return err
-			}
-		}
 		var err error
-		out, err = getTask(ctx, q, t.ID)
+		out, err = restoreTask(ctx, q, s)
 		return err
 	})
 	if err != nil {
-		return nil, fmt.Errorf("restore task %d: %w", t.ID, err)
+		return nil, fmt.Errorf("restore task %d: %w", s.Task.ID, err)
 	}
 	return out, nil
+}
+
+// restoreTask is RestoreTask inside the caller's transaction.
+func restoreTask(ctx context.Context, q store.Querier, s TaskSnapshot) (*Task, error) {
+	t := s.Task
+	if cur, err := getTask(ctx, q, t.ID); err != nil {
+		return nil, err
+	} else if cur != nil {
+		return nil, conflict("task_id", "task %d already exists", t.ID)
+	}
+	if err := dropGoneRefs(ctx, q, &t); err != nil {
+		return nil, err
+	}
+	if _, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status,
+		priority, due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at,
+		reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at, category)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.ID, t.ProjectID, t.MilestoneID, t.Title, t.Notes, t.Status, t.Priority, t.DueAt, t.RemindAt,
+		t.Branch, t.PRURL, t.PRNumber, t.Source, t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RemindedAt,
+		t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt, t.Category); err != nil {
+		return nil, fmt.Errorf("insert task: %w", err)
+	}
+	for _, r := range s.Reports {
+		links, err := encodeLinks(r.Links)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := q.ExecContext(ctx,
+			"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			r.ID, t.ID, r.Agent, r.Status, r.Summary, r.NextStep, r.CreatedAt, r.Cwd, r.Kind, links); err != nil {
+			return nil, fmt.Errorf("insert report: %w", err)
+		}
+	}
+	for _, im := range s.Images {
+		if err := relinkImage(ctx, q, t.ID, im); err != nil {
+			return nil, err
+		}
+	}
+	return getTask(ctx, q, t.ID)
 }
 
 // relinkImage puts a snapshotted link back; the picture's row is made again if it was collected

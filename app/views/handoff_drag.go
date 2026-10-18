@@ -1,6 +1,7 @@
 package views
 
 import (
+	"slices"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -46,11 +47,18 @@ type carry struct {
 	lastMove time.Time // the pointer last moved
 }
 
-// landing is the row that was just dropped on the tray, and when.
+// landing is the rows that were just dropped on the tray, in the order they land, and when. The
+// agent catches them one after the other, catchEvery apart.
 type landing struct {
-	id int
-	at time.Time
+	ids []int
+	at  time.Time
 }
+
+// catchEvery is how long after one task the robot of the tray squashes for the next of a stack.
+const catchEvery = 120 * time.Millisecond
+
+// has reports whether the row is one of those that just landed.
+func (l landing) has(id int) bool { return id != 0 && slices.Contains(l.ids, id) }
 
 // walk notes where the pointer of the carried row is and reports how far the sprite is lifted: it
 // bobs while the pointer moves and stands still a moment after it stopped.
@@ -94,10 +102,10 @@ func (m *Main) handOffTick(c *ui.Context) {
 		h.carry = carry{}
 	}
 	h.carry.seen = false
-	if h.landed.id != 0 && now.Sub(h.landed.at) >= theme.WashFor {
+	if len(h.landed.ids) > 0 && now.Sub(h.landed.at) >= theme.WashFor {
 		h.landed = landing{}
 	}
-	if h.landed.id != 0 || (h.over && !c.Preferences().ReduceMotion) {
+	if len(h.landed.ids) > 0 || (h.over && !c.Preferences().ReduceMotion) {
 		h.ask(c)
 	}
 }
@@ -117,7 +125,7 @@ func (m *Main) agentFrame(reduce bool, r ui.Rect) ui.Rect {
 	h, now := &m.ho, m.app.Now()
 	f := theme.HopFrame{W: theme.HopSize, H: theme.HopSize}
 	if !reduce {
-		if catch, ok := theme.Catch(now.Sub(h.landed.at), 0, 0); ok && h.landed.id != 0 {
+		if catch, ok := h.catching(now); ok {
 			f = catch
 		} else if h.over {
 			f = theme.Reach(now.Sub(h.overAt), 0, 0)
@@ -129,9 +137,19 @@ func (m *Main) agentFrame(reduce bool, r ui.Rect) ui.Rect {
 	return ui.Rect{X: r.X + (r.W-w)/2, Y: bottom - hh, W: w, H: hh}
 }
 
+// catching is the squash of the robot at now: that of the task it caught last, one every catchEvery.
+func (h *handOffState) catching(now time.Time) (theme.HopFrame, bool) {
+	for i := len(h.landed.ids) - 1; i >= 0; i-- {
+		if f, ok := theme.Catch(now.Sub(h.landed.at)-time.Duration(i)*catchEvery, 0, 0); ok {
+			return f, true
+		}
+	}
+	return theme.HopFrame{}, false
+}
+
 // rowWash is the strength of the accent wash of the row that just landed in Waiting for an agent.
 func (h *handOffState) rowWash(id int, now time.Time) float32 {
-	if h.landed.id != id || id == 0 {
+	if !h.landed.has(id) {
 		return 0
 	}
 	return theme.Wash(now.Sub(h.landed.at))

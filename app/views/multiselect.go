@@ -180,3 +180,9 @@ func (m *Main) selectAll() {
 		m.multi.anchor = m.order[0]
 	}
 }
+
+// barShown says whether the bulk bar is up, and with it the bulk actions' keys: two rows are
+// selected, or one in select mode.
+func (m *Main) barShown() bool {
+	return m.multi.count() >= 2 || (m.multi.mode && m.multi.count() >= 1)
+}

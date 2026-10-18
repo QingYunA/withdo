@@ -84,6 +84,10 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenCompleted})
 	case c.Shortcut(ui.Cmd, ui.Key6):
 		m.goTo(nav{screen: screenSummary})
+	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd, ui.KeyEnter):
+		m.bulkSetStatus(c, data.Done)
+	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA):
+		m.bulkHandOff(c)
 	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
 		m.undoLast()
 	case m.ho.undo != nil && m.textUndoFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
