@@ -4806,13 +4806,13 @@ func (msgs Messages) SettingsAgentReports(count int) string {
 	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
 }
 
-// SettingsAgentsTitle says "Agents on this Mac"
+// SettingsAgentsTitle says "Coding agents"
 // in the language the app shows.
 //
 // Group label above the list of coding agents in Settings > Agents.
 func SettingsAgentsTitle() string { return In(i18n.Locale()).SettingsAgentsTitle() }
 
-// SettingsAgentsTitle says "Agents on this Mac"
+// SettingsAgentsTitle says "Coding agents"
 // in the language of msgs.
 //
 // Group label above the list of coding agents in Settings > Agents.

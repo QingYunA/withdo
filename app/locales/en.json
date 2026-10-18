@@ -1942,7 +1942,7 @@
       }
     }
   },
-  "settingsAgentsTitle": "Agents on this Mac",
+  "settingsAgentsTitle": "Coding agents",
   "@settingsAgentsTitle": {
     "description": "Group label above the list of coding agents in Settings > Agents."
   },

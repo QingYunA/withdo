@@ -40,7 +40,7 @@ func emptyMacRig(t *testing.T) *settingsRig {
 
 func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
 	r := agentsRig(t)
-	has(t, r.tt, "Agents on this Mac", "On this Mac", "More", "adds adhd-todo's MCP server to that agent")
+	has(t, r.tt, "Coding agents", "On this Mac", "More", "adds adhd-todo's MCP server to that agent")
 	// The counts sit beside their labels: six on this Mac, eight in More.
 	for label, count := range map[string]string{"On this Mac": "6", "More": "8"} {
 		head, ok := r.tt.Find(label)
@@ -384,7 +384,7 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "这台 Mac 上的 Agent", "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载 ↗",
+	has(t, r.tt, "编程 Agent", "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载 ↗",
 		"也可以在终端里运行一次，给 Claude Code 安装")
 	hasNot(t, r.tt, "这台 Mac 上没有")
 	hasFold(t, r.tt, "本机已有")

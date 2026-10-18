@@ -325,7 +325,7 @@
   "settingsNeedsModel": "选一个模型，或者直接输入。",
   "settingsAgentIdle": "今天还没汇报",
   "settingsAgentReports": "今天汇报 {count} 次",
-  "settingsAgentsTitle": "这台 Mac 上的 Agent",
+  "settingsAgentsTitle": "编程 Agent",
   "settingsAgentsBody": "“安装 MCP”是把 adhd-todo 的 MCP 服务装进这个 Agent，装好后它干活时会自动把进度汇报到这里；不会安装或启动 Agent 本身。",
   "settingsAgentFound": "找到了 · {where}",
   "settingsAgentsLocal": "本机已有",
