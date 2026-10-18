@@ -7301,3 +7301,127 @@ func HandOffNone() string { return In(i18n.Locale()).HandOffNone() }
 func (msgs Messages) HandOffNone() string {
 	return Catalog.Format(msgs.locale, "handOffNone", nil)
 }
+
+// A11yBulkBar says "Actions for the selected tasks"
+// in the language the app shows.
+//
+// Accessibility label of the toolbar that floats at the bottom of a list
+// while several tasks are selected.
+func A11yBulkBar() string { return In(i18n.Locale()).A11yBulkBar() }
+
+// A11yBulkBar says "Actions for the selected tasks"
+// in the language of msgs.
+//
+// Accessibility label of the toolbar that floats at the bottom of a list
+// while several tasks are selected.
+func (msgs Messages) A11yBulkBar() string {
+	return Catalog.Format(msgs.locale, "a11yBulkBar", nil)
+}
+
+// BulkCount says "{count} selected"
+// in the language the app shows.
+//
+// Count at the left of the bulk bar: how many tasks are selected.
+func BulkCount(count int) string { return In(i18n.Locale()).BulkCount(count) }
+
+// BulkCount says "{count} selected"
+// in the language of msgs.
+//
+// Count at the left of the bulk bar: how many tasks are selected.
+func (msgs Messages) BulkCount(count int) string {
+	return Catalog.Format(msgs.locale, "bulkCount", map[string]any{"count": count})
+}
+
+// BulkHandOff says "Hand to an agent"
+// in the language the app shows.
+//
+// Button of the bulk bar and item of the selection's task menu that hands
+// the selected tasks to any agent. Nothing is started.
+func BulkHandOff() string { return In(i18n.Locale()).BulkHandOff() }
+
+// BulkHandOff says "Hand to an agent"
+// in the language of msgs.
+//
+// Button of the bulk bar and item of the selection's task menu that hands
+// the selected tasks to any agent. Nothing is started.
+func (msgs Messages) BulkHandOff() string {
+	return Catalog.Format(msgs.locale, "bulkHandOff", nil)
+}
+
+// BulkClear says "Clear selection"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the × at the right of the bulk bar,
+// which unselects every row.
+func BulkClear() string { return In(i18n.Locale()).BulkClear() }
+
+// BulkClear says "Clear selection"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the × at the right of the bulk bar,
+// which unselects every row.
+func (msgs Messages) BulkClear() string {
+	return Catalog.Format(msgs.locale, "bulkClear", nil)
+}
+
+// BulkCancel says "Cancel"
+// in the language the app shows.
+//
+// Item of the selection's task menu that cancels the selected tasks (status
+// Cancelled), as opposed to dismissing the menu.
+func BulkCancel() string { return In(i18n.Locale()).BulkCancel() }
+
+// BulkCancel says "Cancel"
+// in the language of msgs.
+//
+// Item of the selection's task menu that cancels the selected tasks (status
+// Cancelled), as opposed to dismissing the menu.
+func (msgs Messages) BulkCancel() string {
+	return Catalog.Format(msgs.locale, "bulkCancel", nil)
+}
+
+// BulkMarkDone says "Mark done"
+// in the language the app shows.
+//
+// Item of the selection's task menu that marks the selected tasks done.
+func BulkMarkDone() string { return In(i18n.Locale()).BulkMarkDone() }
+
+// BulkMarkDone says "Mark done"
+// in the language of msgs.
+//
+// Item of the selection's task menu that marks the selected tasks done.
+func (msgs Messages) BulkMarkDone() string {
+	return Catalog.Format(msgs.locale, "bulkMarkDone", nil)
+}
+
+// BulkDeleteMenu says "Delete {count}…"
+// in the language the app shows.
+//
+// Item of the selection's task menu that deletes the selected tasks, after
+// a question. count is how many.
+func BulkDeleteMenu(count int) string { return In(i18n.Locale()).BulkDeleteMenu(count) }
+
+// BulkDeleteMenu says "Delete {count}…"
+// in the language of msgs.
+//
+// Item of the selection's task menu that deletes the selected tasks, after
+// a question. count is how many.
+func (msgs Messages) BulkDeleteMenu(count int) string {
+	return Catalog.Format(msgs.locale, "bulkDeleteMenu", map[string]any{"count": count})
+}
+
+// MenuManyHeader says "{count} tasks"
+// in the language the app shows.
+//
+// Quiet header at the top of the task menu opened on several selected rows:
+// how many tasks it acts on.
+func MenuManyHeader(count int) string { return In(i18n.Locale()).MenuManyHeader(count) }
+
+// MenuManyHeader says "{count} tasks"
+// in the language of msgs.
+//
+// Quiet header at the top of the task menu opened on several selected rows:
+// how many tasks it acts on.
+func (msgs Messages) MenuManyHeader(count int) string {
+	return Catalog.Format(msgs.locale, "menuManyHeader", map[string]any{"count": count})
+}

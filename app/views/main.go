@@ -237,6 +237,7 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
+		m.bulkBar(c, t)
 	})
 }
 
@@ -285,7 +286,7 @@ func (m *Main) pageIn(c *ui.Context, t *theme.Tokens, maxWidth float32, body fun
 	pad := m.sidePad(c)
 	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
-			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, 48).Focusable().FocusRing(false)
+			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, m.pageBottom()).Focusable().FocusRing(false)
 			if !m.focusComposer && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
 				col.AutoFocus()
 			}

@@ -3021,5 +3021,55 @@
   "handOffNone": "Only your own unfinished tasks can be handed to an agent",
   "@handOffNone": {
     "description": "Toast when Hand to an agent was chosen and none of the selected rows could be handed over."
+  },
+  "a11yBulkBar": "Actions for the selected tasks",
+  "@a11yBulkBar": {
+    "description": "Accessibility label of the toolbar that floats at the bottom of a list while several tasks are selected."
+  },
+  "bulkCount": "{count} selected",
+  "@bulkCount": {
+    "description": "Count at the left of the bulk bar: how many tasks are selected.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkHandOff": "Hand to an agent",
+  "@bulkHandOff": {
+    "description": "Button of the bulk bar and item of the selection's task menu that hands the selected tasks to any agent. Nothing is started."
+  },
+  "bulkClear": "Clear selection",
+  "@bulkClear": {
+    "description": "Accessibility label and tooltip of the × at the right of the bulk bar, which unselects every row."
+  },
+  "bulkCancel": "Cancel",
+  "@bulkCancel": {
+    "description": "Item of the selection's task menu that cancels the selected tasks (status Cancelled), as opposed to dismissing the menu."
+  },
+  "bulkMarkDone": "Mark done",
+  "@bulkMarkDone": {
+    "description": "Item of the selection's task menu that marks the selected tasks done."
+  },
+  "bulkDeleteMenu": "Delete {count}…",
+  "@bulkDeleteMenu": {
+    "description": "Item of the selection's task menu that deletes the selected tasks, after a question. count is how many.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "menuManyHeader": "{count} tasks",
+  "@menuManyHeader": {
+    "description": "Quiet header at the top of the task menu opened on several selected rows: how many tasks it acts on.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   }
 }

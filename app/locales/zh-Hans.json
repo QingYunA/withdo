@@ -488,5 +488,13 @@
   "bulkDeleteBody": "它们的进度汇报也会一起删除。",
   "handOffMany": "已交给 Agent：{count} 件",
   "handOffManySkipped": "已交给 Agent：{count} 件 · 跳过 {skipped} 件",
-  "handOffNone": "只有你自己没做完的任务才能交给 Agent"
+  "handOffNone": "只有你自己没做完的任务才能交给 Agent",
+  "a11yBulkBar": "所选任务的操作",
+  "bulkCount": "{count} 件",
+  "bulkHandOff": "交给 Agent",
+  "bulkClear": "取消选择",
+  "bulkCancel": "取消",
+  "bulkMarkDone": "标为完成",
+  "bulkDeleteMenu": "删除 {count} 件…",
+  "menuManyHeader": "{count} 件任务"
 }

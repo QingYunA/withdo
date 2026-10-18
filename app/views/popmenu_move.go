@@ -21,6 +21,12 @@ func moveFullHeight(n int) float32 {
 // movePage replaces the menu with a filter field and the Inbox and the projects, the task's own
 // checked. Typing narrows the list, the arrows walk it and Enter moves the task.
 func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {
+	m.movePageOf(c, t, func() []popSpec { return m.moveChoices(task) })
+}
+
+// movePageOf is movePage for the choices choose lists: it is called once the filter field is built,
+// so it reads what is typed.
+func (m *Main) movePageOf(c *ui.Context, t *theme.Tokens, choose func() []popSpec) {
 	pm := &m.pop
 	if pm.filter != pm.seen {
 		pm.seen, pm.hl = pm.filter, 0
@@ -37,7 +43,7 @@ func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {
 			}
 		})
 	})
-	choices := m.moveChoices(task)
+	choices := choose()
 	if len(choices) == 0 {
 		theme.Text(c, theme.Meta, t.TextTertiary, m.say.MenuNoProjectMatch()).Padding(8, 10, 10)
 		return
@@ -52,22 +58,28 @@ func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {
 
 // moveChoices are the Inbox and the projects whose name holds what is typed.
 func (m *Main) moveChoices(task data.Task) []popSpec {
-	q := strings.ToLower(strings.TrimSpace(m.pop.filter))
-	hit := func(name string) bool { return q == "" || strings.Contains(strings.ToLower(name), q) }
-	move := func(project int) func() {
-		return func() {
+	return m.projectChoices(
+		func(project int) bool {
+			return (task.ProjectID == nil && project == 0) || (task.ProjectID != nil && *task.ProjectID == project)
+		},
+		func(project int) {
 			m.closeMenu()
 			m.app.MoveTask(task, project)
-		}
-	}
+		})
+}
+
+// projectChoices are the Inbox (project 0) and the projects whose name holds what is typed; on says
+// which one is checked, and run moves to the one chosen.
+func (m *Main) projectChoices(on func(project int) bool, run func(project int)) []popSpec {
+	q := strings.ToLower(strings.TrimSpace(m.pop.filter))
+	hit := func(name string) bool { return q == "" || strings.Contains(strings.ToLower(name), q) }
 	var out []popSpec
 	if inbox := m.say.NavInbox(); hit(inbox) {
-		out = append(out, popSpec{key: "move-inbox", icon: theme.IconInbox, label: inbox, a11y: m.say.A11yMenuMoveTo(inbox), checked: task.ProjectID == nil, run: move(0)})
+		out = append(out, popSpec{key: "move-inbox", icon: theme.IconInbox, label: inbox, a11y: m.say.A11yMenuMoveTo(inbox), checked: on(0), run: func() { run(0) }})
 	}
 	for _, p := range m.app.snap.projects {
 		if hit(p.Name) {
-			on := task.ProjectID != nil && *task.ProjectID == p.ID
-			out = append(out, popSpec{key: "move-" + itoa(p.ID), icon: theme.IconFolder, tint: theme.ProjectColor(p.Name), label: p.Name, a11y: m.say.A11yMenuMoveTo(p.Name), checked: on, run: move(p.ID)})
+			out = append(out, popSpec{key: "move-" + itoa(p.ID), icon: theme.IconFolder, tint: theme.ProjectColor(p.Name), label: p.Name, a11y: m.say.A11yMenuMoveTo(p.Name), checked: on(p.ID), run: func() { run(p.ID) }})
 		}
 	}
 	return out

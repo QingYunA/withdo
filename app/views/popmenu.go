@@ -39,7 +39,8 @@ const (
 // popMenu is the state of the task menu: whose it is, where it hangs, which piece it shows.
 type popMenu struct {
 	open   bool
-	task   int
+	task   int   // the task, or the first of the selected ones when many is set
+	many   []int // the rows selected together, when the menu is for all of them
 	page   menuPage
 	back   bool    // Esc goes back to the whole menu rather than closing it
 	x, y   float32 // where it hangs, in the window: the pointer, or under a glyph or a value
@@ -147,6 +148,10 @@ func (m *Main) menuTop(c *ui.Context) float32 {
 
 // pageBody builds the page the menu is on.
 func (m *Main) pageBody(c *ui.Context, t *theme.Tokens, task data.Task) {
+	if len(m.pop.many) > 0 {
+		m.manyPage(c, t)
+		return
+	}
 	switch m.pop.page {
 	case pageStatus:
 		m.stripLabel(c, t, "status", m.say.PropStatus(), statusLabel(m.say, task.Status))
@@ -201,7 +206,10 @@ func (m *Main) menuKeys(c *ui.Context, panel ui.Element) {
 	case panel.OverlayShortcut(0, ui.KeyEnter):
 		m.chooseHighlighted()
 	}
-	if pm.page == pageMain {
+	switch {
+	case pm.page == pageMain && len(pm.many) > 0:
+		m.manyLetters(c, panel)
+	case pm.page == pageMain:
 		m.menuLetters(c, panel)
 	}
 }

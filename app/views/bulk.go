@@ -11,10 +11,10 @@ import (
 // which the toast offers and ⌘Z does (offerUndo). When it has been done the page leaves select mode
 // and forgets the selection.
 
-// bulkTasks are the selected tasks, in the order the page draws them.
-func (m *Main) bulkTasks() []data.Task {
+// tasksOf are the tasks that are still there among ids.
+func (m *Main) tasksOf(ids []int) []data.Task {
 	var out []data.Task
-	for _, id := range m.selectedRows() {
+	for _, id := range ids {
 		if t, ok := m.app.Task(id); ok {
 			out = append(out, t)
 		}
@@ -67,8 +67,8 @@ func (m *Main) bulkUpdate(c *ui.Context, tasks []data.Task, p data.Patch, title 
 }
 
 // bulkSetStatus is Done and Cancel: every selected task that is not in that status yet.
-func (m *Main) bulkSetStatus(c *ui.Context, s data.Status) {
-	tasks := only(m.bulkTasks(), func(t data.Task) bool { return t.Status != s })
+func (m *Main) bulkSetStatus(c *ui.Context, ids []int, s data.Status) {
+	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return t.Status != s })
 	title := m.say.BulkDoneToast(len(tasks))
 	if s == data.Cancelled {
 		title = m.say.BulkCancelToast(len(tasks))
@@ -78,8 +78,8 @@ func (m *Main) bulkSetStatus(c *ui.Context, s data.Status) {
 
 // bulkMove moves the selected tasks to a project, or to the Inbox for project 0. A subtask stays
 // with its parent, and a task that is there already is left alone.
-func (m *Main) bulkMove(c *ui.Context, project int) {
-	tasks := only(m.bulkTasks(), func(t data.Task) bool {
+func (m *Main) bulkMove(c *ui.Context, ids []int, project int) {
+	tasks := only(m.tasksOf(ids), func(t data.Task) bool {
 		there := (t.ProjectID == nil && project == 0) || (t.ProjectID != nil && *t.ProjectID == project)
 		return !t.IsSubtask() && !there
 	})
@@ -91,18 +91,12 @@ func (m *Main) bulkMove(c *ui.Context, project int) {
 }
 
 // bulkPriority gives the selected tasks a priority.
-func (m *Main) bulkPriority(c *ui.Context, p data.Priority) {
-	tasks := only(m.bulkTasks(), func(t data.Task) bool { return t.Priority != p })
+func (m *Main) bulkPriority(c *ui.Context, ids []int, p data.Priority) {
+	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return t.Priority != p })
 	m.bulkUpdate(c, tasks, data.Patch{Priority: data.PriorityPtr(p)}, m.say.BulkPriorityToast(len(tasks), string(p)))
 }
 
-// bulkHandOff hands the selected tasks to an agent: only the user's own unfinished ones go, and the
-// toast says how many were skipped.
-func (m *Main) bulkHandOff(c *ui.Context) {
-	m.handOffMany(c, idsOf(m.bulkTasks()))
-}
-
-// handOffMany hands tasks to an agent as one change. Each waits in its own project's Waiting for an
+// handOffMany hands tasks to an agent as one change, whatever of them is the user's own and unfinished. Each waits in its own project's Waiting for an
 // agent, the Inbox's in the Inbox. The toast offers Copy for the agent and Undo.
 func (m *Main) handOffMany(c *ui.Context, ids []int) {
 	var own []data.Task
@@ -129,10 +123,10 @@ func (m *Main) handOffMany(c *ui.Context, ids []int) {
 	})
 }
 
-// askBulkDelete asks before the selected tasks are deleted.
-func (m *Main) askBulkDelete() {
-	if len(m.selectedRows()) > 0 {
-		m.manage.confirm = confirmation{open: true, tasks: m.selectedRows()}
+// askBulkDelete asks before the tasks are deleted.
+func (m *Main) askBulkDelete(ids []int) {
+	if len(ids) > 0 {
+		m.manage.confirm = confirmation{open: true, tasks: slices.Clone(ids)}
 	}
 }
 
