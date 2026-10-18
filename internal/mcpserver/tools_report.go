@@ -65,7 +65,12 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	if res.Created {
 		verb = "Created"
 	}
-	return ok(fmt.Sprintf("%s %s", verb, domain.FormatTaskLine(res.Task)), map[string]any{
+	text := fmt.Sprintf("%s %s", verb, domain.FormatTaskLine(res.Task))
+	// Without a branch the next report cannot find this task by itself.
+	if a.TaskID == nil && res.Task.Branch == nil {
+		text += fmt.Sprintf("\nNo branch here: pass task_id %d on your next reports.", res.Task.ID)
+	}
+	return ok(text, map[string]any{
 		"task_id": res.Task.ID, "status": res.Task.Status, "created": res.Created, "task": res.Task,
 	})
 }

@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -143,6 +144,18 @@ func TestReportProgressOutsideGit(t *testing.T) {
 	if again.Task.ID == r.Task.ID {
 		t.Error("branchless reports must not merge")
 	}
+}
+
+func TestReportProgressRejectsACwdThatDoesNotExist(t *testing.T) {
+	c, _ := newCore(t)
+	gone := filepath.Join(t.TempDir(), "gone")
+	_, err := c.ReportProgress(ctx, domain.ProgressInput{Summary: "s", Agent: "x", Cwd: gone})
+	wantFieldError(t, err, "cwd: no such directory")
+	eq(t, "tasks", len(must[[]domain.Task](t)(c.ListTasks(ctx, domain.TaskFilter{}))), 0)
+
+	// With task_id the cwd finds nothing, so a removed worktree can still report it is done.
+	task := progress(t, c, domain.ProgressInput{Summary: "s", Cwd: widgetsRepo(t, "feat/a")}).Task
+	progress(t, c, domain.ProgressInput{Summary: "done", TaskID: &task.ID, Cwd: gone})
 }
 
 func TestReportProgressTitleFromSummary(t *testing.T) {

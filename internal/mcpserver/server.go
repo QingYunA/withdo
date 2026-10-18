@@ -27,6 +27,7 @@ var Instructions = strings.Join([]string{
 	"Write summary, next_step and title in the language the user writes to you in (Chinese if they write Chinese), however the code and the repo are written.",
 	"Always pass cwd: your current working directory. The server process may run in a different directory, and in a git worktree cwd decides the branch.",
 	"Calls from the same repo and branch update one task, so keep each report to one or two short sentences. Pass task_id if you have it.",
+	"Without a branch (detached HEAD, or a cwd outside git) every report without task_id creates a new task, so pass the task_id of your first report on the next ones.",
 	"When the user asks you to do an adhd-todo task by its number (\"do #44\"), read it with get_task and report on it with that task_id.",
 	"When one piece of work covers several adhd-todo tasks (\"do #69 and #70\"), report on each of them with its own task_id, at least when you start and when you finish.",
 	"Please pass title on your first report: a short name for the task. Without it the title is the first sentence of the summary.",

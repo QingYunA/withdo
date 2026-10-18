@@ -3,6 +3,7 @@ package mcpserver_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"sort"
@@ -124,7 +125,7 @@ func TestInitializeAdvertisesNameAndInstructions(t *testing.T) {
 		t.Errorf("server name = %q", init.ServerInfo.Name)
 	}
 	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd",
-		"after each step", "in the language the user writes to you in"} {
+		"after each step", "in the language the user writes to you in", "detached HEAD"} {
 		if !strings.Contains(init.Instructions, w) {
 			t.Errorf("instructions lack %q", w)
 		}
@@ -153,6 +154,30 @@ func TestReportProgressCreatesThenUpdates(t *testing.T) {
 	}
 	if b.obj("task")["pr_number"] != float64(3) || !strings.HasPrefix(b.Text, "Updated") {
 		t.Errorf("pr/task: %+v / %q", b.obj("task"), b.Text)
+	}
+}
+
+func TestReportProgressWithoutABranchTellsTheAgentToPassTaskID(t *testing.T) {
+	r := newRig(t)
+	detached := testutil.NewRepo(t, t.TempDir(), "detached", testutil.RepoOptions{Commit: true})
+	testutil.Git(t, detached, "checkout", "-q", "--detach")
+	hint := func(id any) string { return fmt.Sprintf("No branch here: pass task_id %v on your next reports.", id) }
+
+	a := r.ok("report_progress", map[string]any{"summary": "one", "cwd": detached})
+	if !strings.HasSuffix(a.Text, "\n"+hint(a.Data["task_id"])) {
+		t.Errorf("text = %q, want the task_id hint", a.Text)
+	}
+	outside := r.ok("report_progress", map[string]any{"summary": "two", "cwd": t.TempDir()})
+	if !strings.Contains(outside.Text, hint(outside.Data["task_id"])) {
+		t.Errorf("outside git: text = %q, want the task_id hint", outside.Text)
+	}
+	byID := r.ok("report_progress", map[string]any{"summary": "three", "cwd": detached, "task_id": a.Data["task_id"]})
+	if byID.Data["created"] != false || strings.Contains(byID.Text, "No branch") {
+		t.Errorf("by task_id: %+v / %q", byID.Data, byID.Text)
+	}
+	onBranch := r.ok("report_progress", map[string]any{"summary": "four"})
+	if strings.Contains(onBranch.Text, "No branch") {
+		t.Errorf("on a branch: text = %q", onBranch.Text)
 	}
 }
 
@@ -218,6 +243,7 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"report: bad pr_url", "report_progress", map[string]any{"summary": "s", "pr_url": "not-a-url"}, "pr_url"},
 		{"report: zero task_id", "report_progress", map[string]any{"summary": "s", "task_id": 0}, "task_id"},
 		{"report: unknown task_id", "report_progress", map[string]any{"summary": "s", "task_id": 999}, "task_id"},
+		{"report: missing cwd", "report_progress", map[string]any{"summary": "s", "cwd": "/nonexistent/adhd-todo"}, "cwd: no such directory"},
 		{"create: missing title", "create_task", map[string]any{}, "title"},
 		{"create: bad priority", "create_task", map[string]any{"title": "x", "priority": "P9"}, "priority"},
 		{"create: bad category", "create_task", map[string]any{"title": "x", "category": "play"}, "category"},
