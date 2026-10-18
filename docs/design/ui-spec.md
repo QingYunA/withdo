@@ -736,7 +736,8 @@ name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar
 header's name (no glyph per row; the group says the status); `Show all N →` under Done lines up
 with the rows' titles. Row: the title (one line, `body.strong`); for an agent's task a
 quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
-agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
+agent's name, the branch, the pull request, then the report; for a blocked task what it waits for;
+a report that only repeats the title, as on a task made by its first report, is left out);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
 or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
 The composer sits above the groups (see **Composer**): it is how a task is added here.

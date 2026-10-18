@@ -104,6 +104,15 @@ func agentLine(c *ui.Context, t *theme.Tokens, text string) {
 	}
 }
 
+// notTheTitle is what an agent said, or nothing when that only repeats the task's title: a task
+// made by its first report takes the summary as its title.
+func notTheTitle(task data.Task, said string) string {
+	if strings.TrimSpace(said) == strings.TrimSpace(task.Title) {
+		return ""
+	}
+	return said
+}
+
 // agentSaid is what an agent last said, led by its pull request: "#12 · Board and lists are in". A
 // blocked task says what it waits for.
 func agentSaid(task data.Task, ot data.OverviewTask) string {
@@ -112,7 +121,7 @@ func agentSaid(task data.Task, ot data.OverviewTask) string {
 		parts = append(parts, "#"+itoa(task.PRNumber))
 	}
 	if r := ot.LatestReport; r != nil {
-		said := r.Summary
+		said := notTheTitle(task, r.Summary)
 		if task.Status == data.Blocked && r.NextStep != "" {
 			said = r.NextStep
 		}
