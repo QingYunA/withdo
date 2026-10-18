@@ -1081,13 +1081,28 @@ scene, the assistant's paragraph, the ledger. The page scrolls; the scene scroll
 - Three layers behind, nothing tall: the sky (an ordered-dither gradient), two rows of low hills,
   then grass and a path. Props: a fence behind the path, a lamp post at the right end. Nothing
   stands behind an actor, the bin or a stack.
+- **The ground is Kenney's** (v23, the mixed version; Kenney Tiny Town, CC0, the tiles used and its
+  License.txt in `third_party/kenney-tiny-town/`): in the day and dusk scenes the grass with its tufts
+  and flowers, the path with its grassy edge, two trees at the left edge and mushrooms at the foot of
+  the lamp post are its tiles, tinted to the scene's own grass; the sky, the hills, the fence and the
+  lamp post stay ours. `docs/design/tools/scenes-v23.py` writes `scenes/day.png` and
+  `scenes/dusk.png` from `docs/design/tools/scene-base/`. The night (the week) is left as it was: its
+  stacks stand across the whole ground.
 - **Sky by time**: day (blue with clouds) before 17:00, dusk (v18) from 17:00, night from 20:00, by
   the local time the page opens. A past day is drawn at dusk; the week at night.
 - **Actors**: everyone who finished something in the period, 24 x 24 cells
   (`actors/<who>/<pose>.png`, poses `idle`, `lift`, `throw`, `hop`; a missing pose falls back to
   `idle`; an agent with no folder is the robot, `actors/bot/`, tinted like its avatar). You first,
-  then the agents by count. Up to two stand left of the bin and two right of it; a fifth agent and
-  beyond throw from off the right edge.
+  then the agents by count. Up to three stand left of the bin and three right of it (v22); a
+  seventh agent and beyond throw from off the right edge.
+- **Agents with a figure of their own** (v22): `claude` (the crab), `codex`, `gemini`, `cursor`,
+  `copilot`, `opencode`. Each grows out of its official mark (the harness marks of Settings >
+  Agents), never out of what its name suggests: Cursor is the cube with its triangular facet, not a
+  mouse pointer; Gemini is the four-colour sparkle, red up, yellow left, green down, blue right and
+  at its heart; Copilot is the head with its goggles pushed up over a pale face; OpenCode is the
+  thick upright frame with a pale panel for a face. `docs/design/tools/actors-v22.py` draws the four
+  new ones (poses `idle`, `idle2`, `lift`, `throw`, `hop`). The same rule holds for the avatars:
+  `avatars/cursor.png` is the cube (with `cursor.dark.png`), not a pointer.
 - **Goods**: each finished task is a good, 16 x 16 cells (`goods/<kind>.png`): `gem` a feature,
   `jar` a bug fix, `gear` a refactor or migration, `book` docs or design, `flask` tests, `mail` a
   reply, `coin` money or a bill, `scroll` a plan or research, `crate` anything else. The assistant
@@ -1193,9 +1208,13 @@ turned down). The scene makes a few quiet sounds while it plays, and nothing any
   every refresh; the page asks for a frame every 16 ms while something travels and every 100 ms while
   it rests (sway, fireflies). A good in the air is its 16 x 16 body turned a quarter turn every
   100 ms (the file's shadow cell is left off while it flies).
-- People stand at x = 26, 66 (left of the bin) and 198, 160 (right of it); a person right of the bin
-  faces it (its picture is turned round), except Codex, whose `>_` is never turned. A fifth person
-  and beyond are not drawn: their goods come in from past the right edge. A pose with no file is
+- People stand at x = 26, 66 (left of the bin) and 198, 160 (right of it) when there are four or
+  fewer; with five or six, at 24, 52, 216, 188, 80, 160 in that order (three each side, 28 cells
+  apart). A person right of the bin faces it (its picture is turned round), except those whose
+  picture is a mark with a set direction: Codex (`>_`), Cursor (its facet), Gemini (its colours) and
+  OpenCode. A seventh person and beyond are not drawn: their goods come in from past the right
+  edge. A good is held up over the head of Gemini (12, 2), Cursor (12, -2), Copilot (12, 2) and
+  OpenCode (12, 2), in cells from the top left of the figure. A pose with no file is
   `idle`; `idle2` is swapped in on the sway's beat. Throws are 480 ms apart, squeezed to 120 ms at
   the least so that a long day plays in about eight seconds.
 - A week stack draws four rows of two goods (eight); more are counted in pixel digits (`+4`) above
