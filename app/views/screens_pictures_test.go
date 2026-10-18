@@ -53,6 +53,7 @@ func modelsApp(t *testing.T) (*App, *recorder) {
 }
 
 func TestScreensComposerPictures(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix + ".png"

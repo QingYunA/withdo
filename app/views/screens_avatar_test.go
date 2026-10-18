@@ -11,6 +11,7 @@ import (
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensAvatars
 
 func TestScreensAvatars(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			shot := mainShot

@@ -371,6 +371,20 @@ func TestAnthropicFailuresAreFriendly(t *testing.T) {
 	}
 }
 
+// A status in the address (a port like 40411, a path with 401 in it) is not the reply's status.
+func TestClassifyReadsTheStatusNotTheAddress(t *testing.T) {
+	cases := map[string]Kind{
+		`POST "http://127.0.0.1:40411/v1/messages": 429 Too Many Requests {"type":"error"}`: KindRateLimited,
+		`POST "http://127.0.0.1:4290/v1/messages": 404 Not Found {"type":"error"}`:          KindUnknownModel,
+		`POST "https://proxy.example/401/v1/chat/completions": 529 overloaded`:              KindRateLimited,
+	}
+	for msg, want := range cases {
+		if got := Classify(errors.New(msg)); got != want {
+			t.Errorf("Classify(%q) = %v, want %v", msg, got, want)
+		}
+	}
+}
+
 func TestMemoryKeyring(t *testing.T) {
 	m := NewMemoryKeyring()
 	if _, err := m.Get("a"); !errors.Is(err, ErrNoKey) {

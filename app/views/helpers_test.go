@@ -139,6 +139,15 @@ func newEmptyApp(t *testing.T) (*App, *recorder) {
 // still turns motion off so frames are deterministic.
 func still(tt *ui.Tester) { tt.SetPreferences(ui.Preferences{ReduceMotion: true}) }
 
+// screensTest skips a design-screenshot test under -short: they render every screen at 2x and
+// take minutes, whether or not SCREENS_OUT asks for the PNGs.
+func screensTest(t *testing.T) {
+	t.Helper()
+	if testing.Short() {
+		t.Skip("design screens; run without -short")
+	}
+}
+
 // shot renders a surface at 2x into dir, over a backdrop for floating surfaces.
 func shot(t *testing.T, name string, img *image.RGBA, float bool, dark bool) {
 	t.Helper()

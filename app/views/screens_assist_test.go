@@ -36,6 +36,7 @@ func sendAnd(t *testing.T, rec *recorder, text string, answer bool) func(*ui.Tes
 // TestScreensAssistThinking renders the working state (v9 B): the second row with the stop button and
 // the working line under it, 3 s after the send and past 15 s, in English and Chinese.
 func TestScreensAssistThinking(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, w := range []struct {
 			name string
@@ -66,6 +67,7 @@ func TestScreensAssistThinking(t *testing.T) {
 }
 
 func TestScreensAssistReplyAndReceipt(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true}
 		app, store, rec := assistApp(t, fa)
@@ -89,6 +91,7 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 // TestScreensAssistSentenceAndSeveral renders a turn that changed nothing, and one that changed
 // four tasks (three lines and "and 1 more").
 func TestScreensAssistSentenceAndSeveral(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		sentence := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)}
 		app, _, rec := assistApp(t, sentence)
@@ -118,6 +121,7 @@ func TestScreensAssistSentenceAndSeveral(t *testing.T) {
 }
 
 func TestScreensAssistQuestion(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Question: &data.Question{
 			Text:    "Two tasks match “release notes”. Which one is done?",
@@ -129,6 +133,7 @@ func TestScreensAssistQuestion(t *testing.T) {
 }
 
 func TestScreensAssistNoModel(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})
 		mainShot(t, "mine-no-model-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) })

@@ -30,6 +30,7 @@ func githubStates() []struct {
 }
 
 func TestScreensGitHub(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := prApp(t)
 		mainShot(t, "mine-pull-requests-"+a.suffix+".png", app, a.dark, nil)
@@ -41,6 +42,7 @@ func TestScreensGitHub(t *testing.T) {
 }
 
 func TestScreensGitHubChinese(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := prApp(t)
 		zhShot(t, "mine-pull-requests-zh-"+a.suffix+".png", app, a.dark, nil)

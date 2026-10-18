@@ -67,6 +67,7 @@ func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 }
 
 func TestScreensSettings(t *testing.T) {
+	screensTest(t)
 	ready := data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: fixedNow().Add(-2 * time.Minute)}
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {

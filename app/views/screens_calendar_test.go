@@ -99,6 +99,7 @@ func calendarShot(t *testing.T, name string, dark, chinese bool, w, h int, setup
 }
 
 func TestScreensCalendar(t *testing.T) {
+	screensTest(t)
 	pickFriday := func(tt *ui.Tester, m *Main) { m.selectDay(time.Date(2026, 10, 16, 0, 0, 0, 0, time.Local)) }
 	for _, a := range appearances() {
 		for _, lang := range []struct {

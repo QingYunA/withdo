@@ -20,6 +20,7 @@ func menuAt(tt *ui.Tester, text string, dx float32) {
 }
 
 func TestScreensMenu(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"

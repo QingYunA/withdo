@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"regexp"
 	"strings"
 )
 
@@ -23,12 +24,16 @@ const (
 	KindNoImages // the model does not take pictures
 )
 
+// address matches a URL in an error's text, so the digits of its port or path are not read as a
+// reply's status.
+var address = regexp.MustCompile(`https?://[^\s"]+`)
+
 // Classify says what sort of failure err is. It never looks at a key.
 func Classify(err error) Kind {
 	if err == nil {
 		return KindOther
 	}
-	low := strings.ToLower(err.Error())
+	low := strings.ToLower(address.ReplaceAllString(err.Error(), ""))
 	var netErr net.Error
 	switch {
 	case errors.Is(err, ErrNotConfigured):

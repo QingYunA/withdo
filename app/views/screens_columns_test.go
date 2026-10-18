@@ -62,6 +62,7 @@ func onlyMineApp(t *testing.T) (*App, data.Project) {
 }
 
 func TestScreensColumns(t *testing.T) {
+	screensTest(t)
 	full := [2]int{1100, 720}
 	for _, a := range appearances() {
 		for _, l := range languages {
@@ -83,6 +84,7 @@ func TestScreensColumns(t *testing.T) {
 // the sprite over Mine (the sprite mid-step), the row over the tray with the agent mid-hop, and the
 // row just landed in Waiting for an agent with the agent squashing and the wash at its strongest.
 func TestScreensHandOff(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			rig := func() *handRig {
