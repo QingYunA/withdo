@@ -945,6 +945,51 @@ Priority the priority strip, Category the category strip, Project the `Move to�
 
 A project's menu is in the Sidebar and stays a system menu.
 
+### Selecting several tasks
+
+v20 (`docs/design/mockups/v20.html`, #75). Every task list can hold several tasks at once and act on
+them together: Mine, a project (list, two columns, board cards), the Inbox, Agents, Completed and
+search results. Calendar and Summary do not select.
+
+- **Select button.** At the right of the page title, `Select` / `选择` (the pixel checkbox icon,
+  quiet like the title row's other buttons) enters select mode: each row's status glyph becomes a
+  pixel checkbox, a click ticks or unticks the row instead of opening the inspector, and the title
+  row reads `2 selected` / `已选 2 件` · `Select all` / `全选` · `Done` / `完成`. `Done`, `Esc`, or
+  finishing a bulk action leaves select mode. The first time the user ⌘-clicks in a list, the
+  Select button flashes once (two 100 ms frames), so the button is found.
+- **Without the mode**: `⌘`-click adds or removes a row, `⇧`-click selects from the last clicked row
+  to this one, `⇧↑ ⇧↓` extend from the keyboard row, `⌘A` selects every row of the page. A plain
+  click opens the inspector and makes that row the only one selected, as before. `Esc` clears the
+  selection first, then does what it did.
+- **Look.** Selected rows take `bg.selected`; neighbours join into one block (no rounded corners
+  between them). The keyboard row also has a 1.5 pt accent ring at 55 %. Selected rows are read as
+  "selected".
+- **The bulk bar.** With 2 selected (1 in select mode), a pixel panel floats at the bottom centre of
+  the list (the day card's shape: two-step corners, a 2 pt solid edge, a hard 4 pt shadow, no blur):
+  `3 selected` / `3 件`, **Done** (`⌘↵`), **Move to…** (a project or the Inbox), **Priority** (P0 to
+  P3), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
+  tasks?` / `删除 3 件任务？`), and `×` that clears the selection. When the window is narrow the
+  buttons drop their words, keeping their icons, the count and `×`. It is a toolbar: Tab reaches it.
+- **Each action is one change with one Undo** (`⌘Z`, or the toast's **Undo**). Done and cancelled
+  rows can be selected (to delete or reopen them); **Hand to an agent** takes only the user's own
+  unfinished tasks and says how many it skipped (`Handed 2 to an agent · 1 skipped`). Handed from
+  Mine or the Inbox, each task waits in its own project's `Waiting for an agent` (an Inbox task
+  waits in the Inbox's Agents).
+- **Task menu.** Right-clicking a selected row opens the menu for all of them: a header `3 tasks` /
+  `3 件任务` and the bar's actions plus **Cancel**. Right-clicking a row that is not selected acts on
+  that row only and keeps the selection.
+- **Dragging a stack** (a project's two columns): dragging a selected row takes every selected row,
+  in list order; the others fade where they were. The user's sprite carries a stack, at most three
+  cards fanned (-4°, -2°, +2°), a count badge at its top right (accent, white `badge` text). Over
+  the tray the first line reads `Drop to hand to an agent (3)` / `松开，交给 Agent（3 件）`.
+  Dropped, the rows land in `Waiting for an agent` in their order, each with the 8 % accent wash
+  fading over 2 s; the header robot squashes once per task, 120 ms apart. Dragging a row that is not
+  selected takes only that row and clears the selection. On a board, dragging selected cards to
+  another lane changes all their statuses.
+- **The hand-off toast** (one task or many): `Handed 3 tasks to an agent` / `已交给 Agent：3 件`,
+  **Copy for the agent** / `复制给 Agent` and **Undo**. Copy puts `Do adhd-todo tasks #31, #32 and
+  #33.` (`Do adhd-todo task #12.` for one) on the clipboard and reads `Copied` / `已复制` for 1.5 s.
+
 ### Search
 
 `⌘F`, or a click in the search field at the top of the sidebar, puts the cursor there. The field is a
@@ -1210,7 +1255,8 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection, then the search · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary.
+inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
+(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary.
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
