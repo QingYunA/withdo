@@ -9,8 +9,12 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// dragCard is the value a card carries while it is dragged between columns.
-type dragCard struct{ id int }
+// dragCard is the value a card carries while it is dragged between columns. A card of several
+// selected ones takes them all: stack holds their ids (see stackKey).
+type dragCard struct {
+	id    int
+	stack string
+}
 
 // lanes are the board's four fixed lanes. A blocked task sits in Doing, first; Backlog and
 // Cancelled have no lane (the list shows them).
@@ -126,7 +130,7 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width flo
 	}
 	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	if d, ok := ui.Drop[dragCard](box); ok {
-		m.dropCard(d.id, col.status)
+		m.dropCards(c, stackIDs(d.stack), col.status)
 	}
 	box.Children(func() {
 		ui.Row(c.Key("header")).Height(theme.RowOneLine).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -141,7 +145,7 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width flo
 // columnBody is the cards of a lane, or a quiet line saying what the empty lane is for.
 func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
 	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
-		ui.Column(c).Gap(8).Padding(8, 0, 16).Children(func() {
+		ui.Column(c).Gap(8).Padding(8, 0, 16+m.barInset()).Children(func() {
 			if len(col.tasks) == 0 {
 				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.laneEmpty(col.status), 2)
 			}
@@ -164,6 +168,21 @@ func (m *Main) laneEmpty(s data.Status) string {
 		return m.say.BoardEmptyReview()
 	}
 	return m.say.BoardEmptyNone()
+}
+
+// dropCards is the drop of cards on a lane: one card takes the lane's status; several selected ones
+// all do, as one change with one Undo.
+func (m *Main) dropCards(c *ui.Context, ids []int, to data.Status) {
+	if len(ids) == 1 {
+		m.dropCard(ids[0], to)
+		return
+	}
+	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return laneOf(t.Status) != to })
+	title := m.say.BulkMoveToast(len(tasks), statusLabel(m.say, to))
+	if to == data.Done {
+		title = m.say.BulkDoneToast(len(tasks))
+	}
+	m.bulkUpdate(c, tasks, data.Patch{Status: data.StatusPtr(to)}, title)
 }
 
 func (m *Main) dropCard(id int, to data.Status) {

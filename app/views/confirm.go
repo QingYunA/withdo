@@ -5,11 +5,12 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// confirmation is the question before a project is deleted with its tasks. A task is deleted at
-// once, with an Undo toast, and needs none.
+// confirmation is the question before a project is deleted with its tasks, or before several
+// selected tasks are. One task is deleted at once, with an Undo toast, and needs none.
 type confirmation struct {
-	open bool
-	id   int
+	open  bool
+	id    int   // the project
+	tasks []int // or the tasks selected together, for the question before they are deleted
 }
 
 func (m *Main) askDeleteProject(id int) {
@@ -33,6 +34,7 @@ func (m *Main) confirmSheet(c *ui.Context, t *theme.Tokens) {
 		cf.open = false // what it was about is gone
 		return
 	}
+	tasks := cf.tasks
 	sheet(c, t, &cf.open, func() {
 		theme.Paragraph(c, theme.BodyStrong, t.Text, title, 0)
 		theme.Paragraph(c, theme.Body, t.TextSecondary, body, 0)
@@ -42,6 +44,10 @@ func (m *Main) confirmSheet(c *ui.Context, t *theme.Tokens) {
 		}
 		if chosen {
 			cf.open = false
+			if len(tasks) > 0 {
+				m.bulkDelete(c, tasks)
+				return
+			}
 			m.deleteConfirmed(*cf)
 		}
 	})
@@ -50,6 +56,14 @@ func (m *Main) confirmSheet(c *ui.Context, t *theme.Tokens) {
 // confirmWords are the title and body of the question, and false when its subject no longer exists.
 func (m *Main) confirmWords() (title, body string, ok bool) {
 	cf := m.manage.confirm
+	if len(cf.tasks) > 0 {
+		found := true
+		for _, id := range cf.tasks {
+			_, ok := m.app.Task(id)
+			found = found && ok
+		}
+		return m.say.BulkDeleteTitle(len(cf.tasks)), m.say.BulkDeleteBody(), found
+	}
 	p, found := m.app.Project(cf.id)
 	if n := m.app.taskCount(cf.id); n > 0 {
 		return m.say.ManageDeleteProjectTitle(p.Name), m.say.ManageDeleteProjectBody(n), found

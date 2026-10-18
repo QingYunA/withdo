@@ -39,8 +39,8 @@ func (m *Main) taskWhoName(t data.Task) string {
 // authorSlot is a row's avatar, under the group header's name. The avatar is 18 pt like the
 // header's glyph, and the row's gap is wider than the header's, so the slot gives the difference
 // back: the title sits as far from the avatar as the header's name from its glyph.
-func (m *Main) authorSlot(c *ui.Context, task data.Task) {
-	theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow).Margin(0, listIndent-theme.AvatarRow-rowGap, 0, 0)
+func (m *Main) authorSlot(c *ui.Context, t *theme.Tokens, task data.Task) {
+	m.leadOf(c, t, task, theme.AvatarRow).Margin(0, listIndent-theme.AvatarRow-rowGap, 0, 0)
 }
 
 // emptyBodyMax is the widest the quiet line of an empty state grows before it wraps.

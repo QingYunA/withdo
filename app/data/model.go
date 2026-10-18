@@ -254,6 +254,7 @@ type Store interface {
 	Manager
 	Images
 	Summaries
+	Bulk
 
 	ListProjects() ([]Project, error)
 	Overview() (Overview, error)

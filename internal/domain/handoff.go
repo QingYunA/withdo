@@ -16,11 +16,16 @@ const AnyAgent = "agent"
 func (c *Core) HandOff(ctx context.Context, taskID int64) (*Task, error) {
 	ts := c.stamp()
 	return c.setHandOff(ctx, taskID, "hand off", func(q store.Querier) error {
-		_, err := q.ExecContext(ctx, `UPDATE tasks SET source = ?, status = ?, completed_at = NULL, handed_to = ?,
-			handed_at = ?, updated_at = ? WHERE id = ?`,
-			SourceAgent, StatusTodo, AnyAgent, ts, ts, taskID)
-		return err
+		return handOff(ctx, q, taskID, ts)
 	})
+}
+
+// handOff is the write of HandOff, stamped ts, inside the caller's transaction.
+func handOff(ctx context.Context, q store.Querier, taskID int64, ts string) error {
+	_, err := q.ExecContext(ctx, `UPDATE tasks SET source = ?, status = ?, completed_at = NULL, handed_to = ?,
+		handed_at = ?, updated_at = ? WHERE id = ?`,
+		SourceAgent, StatusTodo, AnyAgent, ts, ts, taskID)
+	return err
 }
 
 // TakeBack makes a task the user's again: source user, HandedTo and HandedAt cleared. Its status

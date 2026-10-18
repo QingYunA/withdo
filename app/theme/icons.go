@@ -59,6 +59,7 @@ var (
 // The sidebar, the inspector's properties and the Settings toolbar.
 var (
 	IconDone     = pixelIcon("checkbox-on")
+	IconBox      = pixelIcon("checkbox")
 	IconStatus   = pixelIcon("invert")
 	IconAgent    = pixelIcon("robot")
 	IconBranch   = pixelIcon("git-branch")

@@ -84,6 +84,10 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenCompleted})
 	case c.Shortcut(ui.Cmd, ui.Key6):
 		m.goTo(nav{screen: screenSummary})
+	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd, ui.KeyEnter):
+		m.bulkSetStatus(c, m.selectedRows(), data.Done)
+	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA):
+		m.handOffMany(c, m.selectedRows())
 	case m.undoKeyFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
 		m.undoLast()
 	case m.ho.undo != nil && m.textUndoFree(c) && c.Shortcut(ui.Cmd, ui.KeyZ):
@@ -100,6 +104,12 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	switch {
 	case c.Shortcut(0, ui.KeyEscape):
 		m.escape()
+	case c.Shortcut(ui.Shift, ui.KeyDown):
+		m.extendSelection(c, 1)
+	case c.Shortcut(ui.Shift, ui.KeyUp):
+		m.extendSelection(c, -1)
+	case c.Shortcut(ui.Cmd, ui.KeyA):
+		m.selectAll()
 	case c.Shortcut(0, ui.KeyDown):
 		m.move(c, ids, 1)
 	case c.Shortcut(0, ui.KeyUp):
@@ -131,11 +141,13 @@ func (m *Main) runQueued(c *ui.Context, ids []int) {
 	}
 }
 
-// escape cancels a running request, then closes the reply sheet and the inspector, then clears
-// the selection; with nothing left to close a further Esc makes the
+// escape clears the rows selected together, and leaves select mode, first; then cancels a running
+// request, closes the reply sheet and the inspector, and clears the selection; with nothing left to close a further Esc makes the
 // assistant forget the conversation.
 func (m *Main) escape() {
 	switch {
+	case m.multi.active():
+		m.clearMulti()
 	case m.convo.thinking:
 		m.cancelAsk()
 	case m.convo.open:
@@ -159,6 +171,9 @@ func (m *Main) move(c *ui.Context, ids []int, dir int) {
 		}
 	}
 	next := moveSelection(cur, dir, len(ids))
+	if !m.multi.mode { // a plain arrow leaves the rows ticked together; in select mode they stay
+		m.multi = multiSel{}
+	}
 	if next < 0 {
 		m.sel = 0
 		if m.pageHasComposer() {
@@ -167,6 +182,7 @@ func (m *Main) move(c *ui.Context, ids []int, dir int) {
 		return
 	}
 	m.sel, m.moved = ids[next], true
+	m.multi.anchor = m.sel
 	m.listRef.Focus(c) // takes the keys from the composer
 }
 
@@ -180,6 +196,12 @@ func (m *Main) openSelected() {
 
 // toggleSelected marks one of my own tasks done, or reopens it. An agent's task is left alone.
 func (m *Main) toggleSelected() {
+	if m.multi.mode { // there a row is ticked, not finished
+		if m.sel != 0 {
+			m.toggleRow(m.sel)
+		}
+		return
+	}
 	task, ok := m.app.Task(m.sel)
 	if !ok || task.Source != data.SourceUser {
 		return

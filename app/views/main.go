@@ -63,6 +63,11 @@ type Main struct {
 	ho         handOffState      // handing a task to an agent, and its motion
 	openID     int               // task open in the inspector, 0 for none
 	sel        int               // task the keyboard highlights, 0 for none
+	multi      multiSel          // the rows selected together on this page
+	hint       selectHint        // where the Select button has flashed
+	order      []int             // the rows of the page in the order they are drawn, as View found them
+	rects      map[int]ui.Rect   // where the rows were drawn this frame, and prevRects the frame before:
+	prevRects  map[int]ui.Rect   // neighbouring selected rows join into one block by them
 	moved      bool
 	width      float32 // the room the screen has this frame
 	// focusComposer is set by Cmd+K: the page's composer takes the focus once it is drawn.
@@ -108,7 +113,7 @@ type Main struct {
 // NewMain opens on Mine.
 func NewMain(a *App) *Main {
 	return &Main{
-		app: a, milestone: map[int]int{}, board: map[int]bool{},
+		app: a, milestone: map[int]int{}, board: map[int]bool{}, rects: map[int]ui.Rect{}, prevRects: map[int]ui.Rect{},
 		expanded: map[nav]bool{}, allDone: map[nav]bool{},
 	}
 }
@@ -149,6 +154,7 @@ func (m *Main) goTo(n nav) {
 	if m.nav != n {
 		m.cmp[surfacePage].keepDraft(m.nav, n)
 		m.nav, m.openID, m.sel = n, 0, 0
+		m.clearMulti()
 		m.scroll = ui.ScrollState{}
 	}
 }
@@ -171,6 +177,7 @@ func (m *Main) View(c *ui.Context) {
 	}
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
+		m.clearMulti()
 	}
 	m.onMine.Store(m.nav == nav{} && !m.searching())
 	onSummary := m.nav.screen == screenSummary && !m.searching()
@@ -185,6 +192,10 @@ func (m *Main) View(c *ui.Context) {
 	m.hopTick(c)
 	m.handOffTick(c)
 	ids := m.rowIDs()
+	m.order = ids
+	m.pruneMulti(ids)
+	m.prevRects, m.rects = m.rects, m.prevRects
+	clear(m.rects)
 	m.keys(c, ids)
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
 		m.sidebar(c, t, vibrant)
@@ -199,6 +210,7 @@ func (m *Main) View(c *ui.Context) {
 	m.taskMenuView(c, t)
 	m.viewerView(c, t)
 	m.hopOverlay(c)
+	m.toastsView(c, t)
 }
 
 // content is the screen the sidebar chose.
@@ -226,6 +238,7 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
+		m.bulkBar(c, t)
 	})
 }
 
@@ -274,7 +287,7 @@ func (m *Main) pageIn(c *ui.Context, t *theme.Tokens, maxWidth float32, body fun
 	pad := m.sidePad(c)
 	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
-			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, 48).Focusable().FocusRing(false)
+			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, m.pageBottom()).Focusable().FocusRing(false)
 			if !m.focusComposer && !m.searchRef.Focused(c) { // typing a search keeps the keyboard
 				col.AutoFocus()
 			}

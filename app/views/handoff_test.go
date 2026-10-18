@@ -304,7 +304,7 @@ func TestTheAgentSquashesOnceOnTheDropAndTheRowKeepsAWashThatFades(t *testing.T)
 	for i := 0; i < 5; i++ {
 		r.after(time.Second)
 	}
-	if r.m.ho.asked != asked || r.m.ho.landed.id != 0 {
+	if r.m.ho.asked != asked || len(r.m.ho.landed.ids) != 0 {
 		t.Errorf("%d frames asked for after the wash was gone", r.m.ho.asked-asked)
 	}
 }
