@@ -72,4 +72,14 @@ type Result struct {
 	Reply    string
 	Receipts []Receipt
 	Question *Question
+	// Images says which pictures of the turn each task keeps: the ones the model named for it,
+	// else every one. The caller attaches them; this package never touches the files.
+	Images []ImageKeep
+}
+
+// ImageKeep is the pictures of a turn that one task keeps: indexes into the images of the request,
+// 0-based, in order, each once.
+type ImageKeep struct {
+	TaskID  int64
+	Indexes []int
 }

@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(8),
+		"PRAGMA user_version": int64(9),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 8 {
-		t.Errorf("SchemaVersion = %d, want 8", store.SchemaVersion())
+	if store.SchemaVersion() != 9 {
+		t.Errorf("SchemaVersion = %d, want 9", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 9 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 9 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -221,7 +221,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 9"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 10"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -323,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 8 {
-		t.Fatalf("user_version = %d, want 8 (migrations 005 to 008 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 9 {
+		t.Fatalf("user_version = %d, want 9 (migrations 005 to 009 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -444,5 +444,33 @@ func TestMigration008AddsKindToExistingReports(t *testing.T) {
 	}
 	if kind != "" {
 		t.Errorf("kind = %q, want empty for a report from before the migration", kind)
+	}
+}
+
+func TestTaskImagesDropTheirLinksWithTheTask(t *testing.T) {
+	db, _ := open(t)
+	for _, q := range []string{
+		`INSERT INTO tasks (id, title, source, created_at, updated_at) VALUES (1, 'rent', 'user', 'x', 'x')`,
+		`INSERT INTO images (hash, ext, mime, bytes, created_at) VALUES ('ab', 'png', 'image/png', 3, 'x')`,
+		`INSERT INTO task_images (task_id, image_hash, name, width, height, added_at) VALUES (1, 'ab', 'bill.png', 4, 3, 'x')`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := db.ExecContext(ctx, `INSERT INTO task_images (task_id, image_hash, name, width, height, added_at) VALUES (1, 'ab', 'again', 4, 3, 'x')`); err == nil {
+		t.Error("a task links one picture once")
+	}
+	if _, err := db.ExecContext(ctx, `INSERT INTO task_images (task_id, image_hash, name, width, height, added_at) VALUES (1, 'zz', 'n', 1, 1, 'x')`); err == nil {
+		t.Error("a link needs its picture")
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM tasks WHERE id = 1`); err != nil {
+		t.Fatal(err)
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM task_images"); n != 0 {
+		t.Errorf("links left after the task went: %d", n)
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM images"); n != 1 {
+		t.Errorf("the picture row stays for the collector: %d", n)
 	}
 }

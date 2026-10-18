@@ -46,10 +46,15 @@ func paintedLeftOf(t *testing.T, tt *ui.Tester, width float32, text string, w fl
 }
 
 var (
-	youColor    = theme.You.Sprite().Palette['b']                        // the shirt
-	claudeColor = theme.AgentAvatar("claude-code").Sprite().Palette['o'] // the body
-	helperColor = theme.Assistant.Sprite().Palette['p']                  // the body of the assistant
+	youColor    = spritePixel(theme.You.Sprite(), 3, 8)                        // the shirt
+	claudeColor = spritePixel(theme.AgentAvatar("claude-code").Sprite(), 2, 2) // the body
+	helperColor = spritePixel(theme.Assistant.Sprite(), 3, 3)                  // the body of the assistant
 )
+
+// spritePixel is the color of the sprite's pixel at x, y.
+func spritePixel(s *theme.Sprite, x, y int) ui.Color {
+	return s.Palette[[]rune(s.Rows[y])[x]]
+}
 
 func TestTaskWhoIsYouForMyTasksAndTheAgentForItsOwn(t *testing.T) {
 	app, _, _ := newTestApp(t)
@@ -126,7 +131,11 @@ func TestTheInspectorSaysWhoWroteTheTask(t *testing.T) {
 }
 
 func TestEachReportOfTheActivityStartsWithItsAgentsAvatar(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	app, _, _ := newTestApp(t)
+	m := NewMain(app)
+	tt := ui.NewTester(m.View, 1100, 800) // the line for images pushes the activity down
+	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
+	still(tt)
 	m.OpenTask(3)
 	tt.Frame()
 	if !paintedLeftOf(t, tt, 1100, "Reproduced the race with a slow launch", 40, claudeColor) {

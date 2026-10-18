@@ -31,6 +31,7 @@ type recorder struct {
 	urls     []string
 	panes    []Pane     // what OpenSettings was asked to show
 	folders  []string   // what ShowInFinder was asked to reveal
+	files    []string   // what OpenFile was asked to open
 	language string     // what SetLanguage last chose
 	opens    []openCall // what OpenIn was asked for
 	openErr  error      // what OpenIn answers
@@ -45,6 +46,7 @@ func (r *recorder) OpenTask(id int)          { r.opened = append(r.opened, id) }
 func (r *recorder) OpenSettings(p Pane)      { r.panes = append(r.panes, p) }
 func (r *recorder) OpenURL(url string)       { r.urls = append(r.urls, url) }
 func (r *recorder) ShowInFinder(path string) { r.folders = append(r.folders, path) }
+func (r *recorder) OpenFile(path string)     { r.files = append(r.files, path) }
 
 func (r *recorder) OpenIn(how OpenWith, agentApp, dir string) error {
 	r.opens = append(r.opens, openCall{how, agentApp, dir})

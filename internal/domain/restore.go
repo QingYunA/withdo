@@ -11,6 +11,7 @@ import (
 type TaskSnapshot struct {
 	Task    Task
 	Reports []Report // oldest first
+	Images  []TaskImage
 }
 
 // SnapshotTask reads a task and its reports as they are now; a missing task is a not-found error.
@@ -26,7 +27,11 @@ func (c *Core) SnapshotTask(ctx context.Context, id int64) (*TaskSnapshot, error
 	if err != nil {
 		return nil, err
 	}
-	return &TaskSnapshot{Task: *t, Reports: rs}, nil
+	imgs, err := c.ListTaskImages(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &TaskSnapshot{Task: *t, Reports: rs, Images: imgs}, nil
 }
 
 // RestoreTask puts a snapshotted task back with its id, every field and its reports, in one
@@ -61,6 +66,11 @@ func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
 				return fmt.Errorf("insert report: %w", err)
 			}
 		}
+		for _, im := range s.Images {
+			if err := relinkImage(ctx, q, t.ID, im); err != nil {
+				return err
+			}
+		}
 		var err error
 		out, err = getTask(ctx, q, t.ID)
 		return err
@@ -69,6 +79,20 @@ func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
 		return nil, fmt.Errorf("restore task %d: %w", t.ID, err)
 	}
 	return out, nil
+}
+
+// relinkImage puts a snapshotted link back; the picture's row is made again if it was collected
+// meanwhile (its files are the caller's concern).
+func relinkImage(ctx context.Context, q store.Querier, taskID int64, im TaskImage) error {
+	if _, err := q.ExecContext(ctx, `INSERT OR IGNORE INTO images (hash, ext, mime, bytes, created_at) VALUES (?, ?, ?, ?, ?)`,
+		im.Hash, im.Ext, im.MIME, im.Bytes, im.CreatedAt); err != nil {
+		return fmt.Errorf("insert image: %w", err)
+	}
+	if _, err := q.ExecContext(ctx, `INSERT OR IGNORE INTO task_images (task_id, image_hash, name, width, height, added_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, taskID, im.Hash, im.Name, im.Width, im.Height, im.AddedAt); err != nil {
+		return fmt.Errorf("link image: %w", err)
+	}
+	return nil
 }
 
 // dropGoneRefs clears the project and milestone of t that no longer exist.

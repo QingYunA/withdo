@@ -39,10 +39,13 @@ type toolbox struct {
 	// defaultCategory is the category create_task gives a task whose category the model did not
 	// name: the Work or Life page of Mine the request came from; nil elsewhere.
 	defaultCategory *domain.Category
+	// images is how many pictures the request carries; the tools take their indexes.
+	images int
 
 	mu       sync.Mutex
 	receipts []Receipt
 	question *Question
+	keeps    []ImageKeep
 }
 
 func (tb *toolbox) projectName(id *int64) string {

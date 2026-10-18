@@ -15,6 +15,8 @@ import (
 type AgentAssistant struct {
 	Agent    *agent.Agent
 	Provider *providers.Manager
+	// Images keeps the pictures of a turn with the tasks it created or changed; nil keeps none.
+	Images Images
 }
 
 var _ Assistant = (*AgentAssistant)(nil)
@@ -38,6 +40,9 @@ func (a *AgentAssistant) Ask(ctx context.Context, text string, place Place, pict
 	if q := res.Question; q != nil {
 		out.Question = &Question{Text: q.Text, Options: q.Options}
 	}
+	if kerr := a.keepPictures(res.Images, pictures, out.Receipts); kerr != nil && err == nil {
+		return out, kerr
+	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return out, context.Canceled
@@ -45,6 +50,35 @@ func (a *AgentAssistant) Ask(ctx context.Context, text string, place Place, pict
 		return out, problemFor(err)
 	}
 	return out, nil
+}
+
+// errPicturesNotKept is the answer when the tasks were changed but their pictures could not be saved.
+var errPicturesNotKept = errors.New("The pictures could not be saved with the tasks.")
+
+// keepPictures attaches the pictures of the turn to the tasks that keep them, and marks the
+// receipts of those tasks with how many they got. The first failure stops it.
+func (a *AgentAssistant) keepPictures(keeps []agent.ImageKeep, pictures []Attachment, receipts []Receipt) error {
+	if a.Images == nil {
+		return nil
+	}
+	for _, k := range keeps {
+		pics := make([]Attachment, 0, len(k.Indexes))
+		for _, i := range k.Indexes {
+			if i >= 0 && i < len(pictures) {
+				pics = append(pics, pictures[i])
+			}
+		}
+		links, err := a.Images.AttachImages(int(k.TaskID), pics)
+		if err != nil {
+			return errPicturesNotKept
+		}
+		for i := range receipts {
+			if receipts[i].TaskID == int(k.TaskID) {
+				receipts[i].Images = len(links)
+			}
+		}
+	}
+	return nil
 }
 
 // problemFor turns a failure of the model into one the views can word, by the kind
@@ -73,7 +107,13 @@ var problemKinds = map[providers.Kind]Problem{
 }
 
 // Undo implements Assistant.
-func (a *AgentAssistant) Undo(id int) error { return a.Agent.Undo(context.Background(), id) }
+func (a *AgentAssistant) Undo(id int) error {
+	err := a.Agent.Undo(context.Background(), id)
+	if err == nil && a.Images != nil {
+		a.Images.CollectSoon() // the task the receipt made may be gone with its pictures
+	}
+	return err
+}
 
 // Reset implements Assistant.
 func (a *AgentAssistant) Reset() { a.Agent.Reset() }

@@ -48,6 +48,16 @@ Rules:
 - Reply in the language the user wrote in, in one short sentence stating what you did and what you inferred, for example "Added it to adhd-todo, due Friday, P1." No markdown.
 `
 
+// imageRules tells the model about the pictures of this request: the tasks it creates or changes keep
+// them. Without pictures the prompt says nothing about them.
+func imageRules(n int) string {
+	if n == 0 {
+		return ""
+	}
+	return fmt.Sprintf("- The request has %d picture(s), numbered 0 to %d in the order you see them. A task you create or change with create_task or update_task keeps pictures: "+
+		"pass images with the numbers of the pictures that belong to that task (an empty list for none). Leave images out when you cannot tell which belong where: the task then keeps all of them.\n", n, n-1)
+}
+
 func offsetLabel(t time.Time) string {
 	_, secs := t.Zone()
 	sign := '+'

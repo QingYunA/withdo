@@ -132,6 +132,9 @@ func (m *Main) receiptWords(r data.Receipt, here string) (verb, tail string) {
 	if place := m.inboxOr(d.Project); verb != "" && place != here && !(here == "" && d.Project == "") {
 		parts = append(parts, place) // not where the composer is; on Now the Inbox goes without saying
 	}
+	if r.Images > 0 {
+		parts = append(parts, m.say.ReceiptImages(r.Images))
+	}
 	return verb, strings.Join(parts, " · ")
 }
 

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v13 草稿 — 图片是任务的一部分</title>
+<style>
+  :root { --bg: #fff; --subtle: #f5f5f7; --hover: rgba(0,0,0,.04); --border: rgba(0,0,0,.10); --selected: rgba(91,91,214,.12);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --done: #30a46c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 44px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 20px; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; display: flex; gap: 10px; align-items: center; }
+  .caption .tag { font-weight: 500; font-size: 12px; color: #fff; background: #5b5bd6; border-radius: 6px; padding: 0 7px; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; max-width: 600px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 600px); gap: 32px 40px; align-items: start; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 400px); gap: 32px 20px; align-items: start; }
+  .frame { background: var(--bg); color: var(--text); border-radius: 12px; padding: 20px 24px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  .box { border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent); padding: 0 12px 0 14px; }
+  .pics { display: flex; gap: 10px; padding: 14px 0 6px; }
+  .pic { width: 64px; height: 48px; border-radius: 8px; border: .5px solid var(--border); background: var(--subtle); overflow: hidden; display: grid; place-items: center; flex: none; }
+  .pic img { max-width: 100%; max-height: 100%; display: block; }
+  .line { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 17px; }
+  .row2 { display: flex; align-items: center; gap: 8px; height: 28px; margin: 0 0 10px; color: var(--text2); }
+  .grow { flex: 1; }
+  .answer { display: flex; align-items: center; gap: 8px; height: 30px; margin-top: 8px; padding-left: 15px; font-size: 14px; color: var(--text2); }
+  .answer .undo { margin-left: auto; color: var(--accent); font-size: 13px; }
+
+  .sect { font-size: 13px; font-weight: 600; color: var(--text2); height: 28px; display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+  .sect i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .tr { display: flex; align-items: center; gap: 10px; height: 38px; font-size: 15px; }
+  .tr .meta { color: var(--text3); font-size: 13px; }
+  .tr .when { margin-left: auto; color: var(--text3); font-size: 13px; white-space: nowrap; }
+  .thumb { width: 32px; height: 24px; border-radius: 4px; border: .5px solid var(--border); background: var(--subtle); display: grid; place-items: center; overflow: hidden; position: relative; flex: none; }
+  .thumb img { max-width: 100%; max-height: 100%; }
+  .thumb b { position: absolute; right: 1px; bottom: 1px; font-size: 9px; line-height: 11px; font-weight: 600; color: #fff; background: rgba(0,0,0,.55); border-radius: 3px; padding: 0 2px; }
+  .cnt { display: inline-flex; align-items: center; gap: 3px; color: var(--text3); font-size: 13px; }
+
+  .card { width: 230px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card .band { height: 96px; background: var(--subtle); display: grid; place-items: center; border-bottom: .5px solid var(--border); }
+  .card .band img { max-width: 100%; max-height: 100%; }
+  .card .bd { padding: 10px 12px; }
+  .card .t { font-weight: 500; }
+  .card .m { display: flex; align-items: center; gap: 6px; color: var(--text3); font-size: 13px; margin-top: 6px; }
+
+  .insp { width: 360px; border-left: 1px solid var(--border); background: var(--bg); padding: 16px 24px 20px; }
+  .insp .top { font-size: 13px; color: var(--text2); display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin: 0 -24px 16px; padding-left: 24px; padding-right: 24px; }
+  .insp h3 { font-size: 22px; line-height: 28px; margin: 0 0 12px; }
+  .prop { display: flex; align-items: center; height: 32px; font-size: 14px; }
+  .prop .k { width: 96px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 96px); gap: 12px; margin: 14px 0 6px; }
+  .tile { width: 96px; height: 72px; border-radius: 8px; border: .5px solid var(--border); background: var(--subtle); display: grid; place-items: center; overflow: hidden; position: relative; }
+  .tile img { max-width: 100%; max-height: 100%; }
+  .tile .x { position: absolute; right: 4px; top: 4px; width: 18px; height: 18px; border-radius: 9px; background: rgba(29,29,31,.78); color: #fff; display: grid; place-items: center; }
+  .tile.add { border: 1px dashed rgba(0,0,0,.18); background: transparent; color: var(--text3); }
+  .tile.hover { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .quiet { color: var(--text3); font-size: 15px; margin: 12px 0; }
+  .act { font-size: 13px; font-weight: 600; color: var(--text2); margin-top: 16px; }
+
+  .viewer { width: 600px; height: 420px; border-radius: 12px; background: rgba(20,20,22,.92); position: relative; display: grid; place-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.25); color: #f5f5f7; }
+  .viewer img { max-width: 440px; max-height: 300px; border-radius: 4px; }
+  .viewer .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; display: flex; align-items: center; gap: 14px; padding: 0 18px; font-size: 13px; color: #c7c7cc; }
+  .viewer .bar a { color: #a5a5ff; margin-left: auto; }
+  .viewer .nav { position: absolute; top: 50%; width: 32px; height: 32px; margin-top: -16px; border-radius: 16px; background: rgba(255,255,255,.12); display: grid; place-items: center; }
+  .viewer .close { position: absolute; right: 14px; top: 14px; width: 28px; height: 28px; border-radius: 14px; background: rgba(255,255,255,.12); display: grid; place-items: center; }
+  table.store { border-collapse: collapse; width: 1240px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); }
+  .store td { padding: 10px 16px; border-top: 1px solid rgba(0,0,0,.08); font-size: 13px; line-height: 19px; vertical-align: top; }
+  .store tr:first-child td { border-top: 0; }
+  .store td:first-child { font-weight: 600; white-space: nowrap; width: 150px; }
+  .store code { font: 12px/18px "SF Mono", ui-monospace, monospace; background: #f5f5f7; padding: 1px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>v13 · 图片是任务的一部分（#64）</h1>
+<p class="lead">现在拖进输入框的图片只发给模型，用完就丢，任务里看不到。这一版让图片留下来：带图发出去的请求，生成或改动的任务都挂上这些图；任务列表、看板卡片能看到小图；检查器里看大图、加图、删图，点开看原图。缩略图都按 v9 的规则显示整张图（contain，浅灰底）。</p>
+
+<h2>一 · 从输入框带进来</h2>
+<p class="sub">左：带两张图发出请求。右：助手建了任务之后，回执里说图挂上了，任务行右边就有小图。</p>
+<div class="grid" id="g1"></div>
+
+<h2>二 · 列表和卡片里怎么看到</h2>
+<p class="sub">只给有图的任务加东西，没有图的行和现在一模一样。</p>
+<div class="grid3" id="g2"></div>
+
+<h2>三 · 检查器：看、加、删</h2>
+<p class="sub">图片放在属性下面、备注上面，一行 3 张。没有图时只有一行很淡的「添加图片…」，和「添加备注…」一样。拖图片到检查器上也能加。</p>
+<div class="grid3" id="g3"></div>
+
+<h2>四 · 点开看原图</h2>
+<p class="sub">点任何一张缩略图，在 app 里铺开看（不离开 app）；← → 切换同一任务的图，Esc 或点外面关闭；「在预览中打开」交给 macOS 的预览。</p>
+<div class="grid" id="g4"></div>
+
+<h2>五 · 存在哪、怎么存</h2>
+<p class="sub">这部分界面上看不到，但决定了图片能不能留住。</p>
+<table class="store">
+  <tr><td>文件</td><td>存在数据文件夹里：<code>~/Library/Application Support/adhd-todo/images/</code>，文件名是内容的哈希，同一张图只存一份。旁边存一份 256 px 的缩略图，列表和检查器只读缩略图，不解码大图。</td></tr>
+  <tr><td>数据库</td><td>新表记「哪个任务挂了哪张图」，加上图的名字、尺寸、添加时间。删任务时去掉关联；没有任何任务再用的图，文件一起删。</td></tr>
+  <tr><td>一张图生出多个任务</td><td>「把这两张图里的待办都记下来」生出 5 个任务：助手说得清哪张图对应哪个任务时，只挂对应的那张；说不清时，5 个任务都挂这两张图（文件仍只有一份），宁可多挂，不要漏挂。</td></tr>
+  <tr><td>改已有任务</td><td>在检查器的输入框里带图提问（比如「按这张截图改标题」），图挂到这个任务上。</td></tr>
+  <tr><td>存多大</td><td>要你定：存原图（单张上限 20 MB，超过的存缩小版），还是只存缩小到 1600 px 的版本。发给模型的仍是 1600 px 的版本，和现在一样。</td></tr>
+  <tr><td>暂不做</td><td>agent 通过 MCP 给任务挂截图；任务导出时带图。这两件以后单独做。</td></tr>
+</table>
+
+<script>
+const phone = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844"><rect width="390" height="844" fill="#fff"/><rect width="390" height="110" fill="#f2f2f7"/><text x="24" y="92" font-family="-apple-system,PingFang SC" font-size="34" font-weight="700" fill="#1d1d1f">周末要买的</text>${Array.from({ length: 11 }, (_, i) => `<circle cx="40" cy="${160 + i * 60}" r="11" fill="none" stroke="#c7c7cc" stroke-width="3"/><rect x="66" y="${152 + i * 60}" width="${[200, 150, 240, 120, 180, 210, 140, 230, 160, 190, 130][i]}" height="16" rx="8" fill="#d1d1d6"/>`).join('')}<rect y="790" width="390" height="54" fill="#f9f9f9"/><circle cx="195" cy="814" r="16" fill="#ff9500"/></svg>`);
+const bill = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><rect width="1200" height="900" fill="#fbfaf6"/><rect x="80" y="70" width="1040" height="760" fill="#fff" stroke="#ddd" stroke-width="4"/><text x="130" y="170" font-family="PingFang SC" font-size="64" font-weight="700" fill="#333">房租缴费通知</text>${[0, 1, 2, 3].map(i => `<rect x="130" y="${240 + i * 90}" width="${[700, 520, 640, 380][i]}" height="30" rx="6" fill="#e5e5ea"/>`).join('')}<rect x="130" y="640" width="300" height="80" rx="10" fill="#ff6b5e"/><text x="160" y="695" font-family="PingFang SC" font-size="44" font-weight="700" fill="#fff">¥ 4,800</text></svg>`);
+const board = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600" viewBox="0 0 1600 600"><rect width="1600" height="600" fill="#fdfcf7"/><rect x="60" y="80" width="300" height="200" fill="#ffe08a"/><rect x="420" y="80" width="300" height="200" fill="#a7e3c4"/><rect x="780" y="80" width="300" height="200" fill="#ffc2c7"/><rect x="1140" y="80" width="300" height="200" fill="#b9d3ff"/><rect x="60" y="340" width="300" height="200" fill="#b9d3ff"/><rect x="420" y="340" width="300" height="200" fill="#ffe08a"/></svg>`);
+const P = (d, s) => `<svg class="px" width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="${d}"/></svg>`;
+const CLOSE = 'M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z';
+const PLUS = 'M13 11h7v2h-7v7h-2v-7H4v-2h7V4h2v7Z';
+const UP = 'M11 20h2V4h-2zm2-12h2V6h-2zm2 2h2V8h-2zm2 2h2v-2h-2zm-6-4H9V6h2zM15 10H7V8h8zm2 2H5v-2h12z';
+const CHECK = 'M18 6h2v2h-2zm-2 4V8h2v2zm-2 2v-2h2v2zm-2 2h2v-2h-2zm-2 2h2v-2h-2zm-2 0v2h2v-2zm-2-2h2v2H6zm0 0H4v-2h2z';
+const CIRCLE = 'M6 2h12v2H6zm0 18h12v2H6zM2 6h2v12H2zm18 0h2v12h-2zm-2-2h2v2h-2zm0 14h2v2h-2zM4 4h2v2H4zm0 14h2v2H4z';
+const LEFT = 'M8 13v-2h2v2H8Zm2-2V9h2v2h-2Zm0 4v-2h2v2h-2Zm2-6V7h2v2h-2Zm0 8v-2h2v2h-2Zm2-10V5h2v2h-2Zm0 12v-2h2v2h-2Z';
+const RIGHT = 'M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z';
+// the pixelarticons 'image' icon is not vendored yet; this stands in for it
+const IMG = 'M4 3h16v2H4zm0 16h16v2H4zM2 5h2v14H2zm18 0h2v14h-2zM6 15h2v2H6zm2-2h2v2H8zm2 2h2v2h-2zm2-4h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zM7 7h3v3H7z';
+const glyph = `<span style="color:#8e8e93">${P(CIRCLE, 18)}</span>`;
+const thumb = (src, more) => `<span class="thumb"><img src="${src}">${more ? `<b>+${more}</b>` : ''}</span>`;
+
+document.getElementById('g1').innerHTML = `
+  <div><div class="caption">发出请求</div><div class="frame">
+    <div class="box"><div class="pics"><span class="pic"><img src="${bill}"></span><span class="pic"><img src="${phone}"></span></div>
+      <div class="line">月底前交房租，周末照着清单去买东西</div>
+      <div class="row2">${P(PLUS, 18)}<span class="grow"></span><span style="width:28px;height:28px;border-radius:14px;background:var(--accent);color:#fff;display:grid;place-items:center">${P(UP, 18)}</span></div></div>
+  </div><p class="note">和现在一样：图片在输入框里显示整张缩略图，一起发给模型。</p></div>
+  <div><div class="caption">回执和新任务</div><div class="frame">
+    <div class="answer" style="margin-top:0;padding-left:0"><span style="color:var(--done)">${P(CHECK, 14)}</span>已添加 2 个任务，图片也挂上了<span class="undo">撤销</span></div>
+    <div class="sect">收件箱 <i>2</i></div>
+    <div class="tr">${glyph}交房租<span class="when" style="display:flex;gap:10px;align-items:center">${thumb(bill)}10 月 31 日</span></div>
+    <div class="tr">${glyph}周末买东西<span class="when" style="display:flex;gap:10px;align-items:center">${thumb(phone)}周六</span></div>
+  </div><p class="note">回执多说一句「图片也挂上了」。这一轮带的图挂到这一轮建的每个任务上；助手能判断哪张图属于哪个任务时只挂对应的那张（右边两个任务各挂一张）。</p></div>`;
+
+document.getElementById('g2').innerHTML = `
+  <div><div class="caption">A · 行右边一张小图<span class="tag">我倾向</span></div><div class="frame" style="padding:14px 18px">
+    <div class="tr">${glyph}交房租<span class="meta">收件箱</span><span class="when" style="display:flex;gap:10px;align-items:center">${thumb(bill)}10 月 31 日</span></div>
+    <div class="tr">${glyph}整理白板上的需求<span class="meta">adhd-todo</span><span class="when" style="display:flex;gap:10px;align-items:center">${thumb(board, 2)}周五</span></div>
+    <div class="tr">${glyph}回复设计反馈<span class="when">下午 2:30</span></div>
+  </div><p class="note">32×24 的小图放在日期左边，多张时只显示第一张，右下角标「+2」。一眼能认出是哪张图，「看图更能理解」。没图的行不变。</p></div>
+  <div><div class="caption">B · 只标一个图片图标</div><div class="frame" style="padding:14px 18px">
+    <div class="tr">${glyph}交房租<span class="meta">收件箱</span><span class="when" style="display:flex;gap:10px;align-items:center"><span class="cnt">${P(IMG, 12)}1</span>10 月 31 日</span></div>
+    <div class="tr">${glyph}整理白板上的需求<span class="meta">adhd-todo</span><span class="when" style="display:flex;gap:10px;align-items:center"><span class="cnt">${P(IMG, 12)}3</span>周五</span></div>
+    <div class="tr">${glyph}回复设计反馈<span class="when">下午 2:30</span></div>
+  </div><p class="note">更安静，但只知道「有图」，不知道是什么图，要点开才看得到。</p></div>
+  <div><div class="caption">看板卡片：顶上一条图</div><div class="frame" style="padding:14px 18px;display:flex;gap:14px">
+    <div class="card"><div class="band"><img src="${board}"></div><div class="bd"><div class="t">整理白板上的需求</div><div class="m">${thumb(board, 2).replace('class="thumb"', 'class="thumb" style="display:none"')}<span class="cnt">${P(IMG, 12)}3</span><span style="margin-left:auto">周五</span></div></div></div>
+  </div><p class="note">卡片宽，放得下：第一张图在卡片顶上占一条（高 96 pt，整张显示），meta 行里标图片数。拖卡片时这条图跟着走。</p></div>`;
+
+const insp = (body) => `<div class="insp"><div class="top"><span>收件箱 · #12</span>${P(CLOSE, 12)}</div><h3>交房租</h3>
+  <div class="prop"><span class="k">状态</span>待办</div><div class="prop"><span class="k">截止</span>10 月 31 日</div><div class="prop"><span class="k">提醒</span>无</div>${body}
+  <div class="act">动态</div></div>`;
+document.getElementById('g3').innerHTML = `
+  <div><div class="caption">没有图</div><div class="frame" style="padding:0;overflow:hidden">${insp('<div class="quiet">添加图片…</div><div class="quiet">添加备注…</div>')}</div>
+    <p class="note">「添加图片…」打开系统的选文件面板；也可以把图片拖到检查器上。</p></div>
+  <div><div class="caption">有图</div><div class="frame" style="padding:0;overflow:hidden">${insp(`<div class="tiles"><span class="tile"><img src="${bill}"></span><span class="tile"><img src="${phone}"></span><span class="tile add">${P(PLUS, 18)}</span></div><div class="quiet">添加备注…</div>`)}</div>
+    <p class="note">96×72 一格，整张显示；最后一格虚线「+」继续加。一行放 3 格，多了换行。</p></div>
+  <div><div class="caption">鼠标停在一张图上</div><div class="frame" style="padding:0;overflow:hidden">${insp(`<div class="tiles"><span class="tile hover"><img src="${bill}"><span class="x">${P(CLOSE, 10)}</span></span><span class="tile"><img src="${phone}"></span><span class="tile add">${P(PLUS, 18)}</span></div><div class="quiet">添加备注…</div>`)}</div>
+    <p class="note">右上角出现「×」去掉这张图（有撤销提示，和删除任务一样）；点图本身打开大图。</p></div>`;
+
+document.getElementById('g4').innerHTML = `
+  <div><div class="caption">在 app 里看<span class="tag">我倾向</span></div>
+    <div class="viewer"><img src="${bill}"><span class="close">${P(CLOSE, 12)}</span><span class="nav" style="left:16px">${P(LEFT, 18)}</span><span class="nav" style="right:16px">${P(RIGHT, 18)}</span>
+    <div class="bar">房租通知.png · 1 / 2 · 1200 × 900<a>在预览中打开 ↗</a></div></div>
+    <p class="note">盖在窗口上，背景压暗，图片按窗口大小整张显示。按钮都是像素图标。</p></div>
+  <div><div class="caption">直接交给「预览」</div>
+    <div class="viewer" style="background:#ececf0;color:#1d1d1f"><div style="text-align:center;font-size:14px;color:#6e6e73">点缩略图 → 打开 macOS 的「预览」app<br>（离开 adhd-todo 的窗口）</div></div>
+    <p class="note">实现最省事，缩放、标注都是现成的；代价是每次都跳出 app，看完还要切回来。</p></div>`;
+</script>
+</body>
+</html>

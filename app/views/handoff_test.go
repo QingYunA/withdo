@@ -360,6 +360,6 @@ func TestAHandOffNamesNoAgentAnywhereEvenWhenCodexReportedLast(t *testing.T) {
 }
 
 var (
-	codexColor     = theme.AgentAvatar("codex").Sprite().Palette['b']
-	accentBotColor = theme.AccentBot(theme.For(false, ui.Transparent).Accent).Sprite().Palette['m']
+	codexColor     = spritePixel(theme.AgentAvatar("codex").Sprite(), 3, 2)
+	accentBotColor = spritePixel(theme.AccentBot(theme.For(false, ui.Transparent).Accent).Sprite(), 2, 2)
 )

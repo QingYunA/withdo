@@ -169,8 +169,8 @@ appears; Reduce Motion goes straight to done), then the item moves to Done. Clic
 ## Avatars and icons (M5)
 
 Reference: `docs/design/mockups/v4.html` (frames 2 to 4) and `v6.html` (M6b, one pixel style).
-The avatars and empty-state art are sprites in `app/theme/pixel.go` (12 x 12 pixels each, drawn as
-rectangles, so they stay sharp at any size).
+The avatars and empty-state art are sprites, PNG files under `app/theme/sprites/avatars/` (12 x 12
+pixels each, drawn as rectangles, so they stay sharp at any size; see **Sprites are files**).
 
 **Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
 2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
@@ -241,6 +241,31 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
   line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
   forward ("How to connect").
+
+### Sprites are files
+
+Decided 2026-10-17 (#67): the characters and objects of the app will change, so their pictures live
+in files and not in Go. Every sprite that stands for someone or something is a PNG under
+`app/theme/sprites/`, embedded with `go:embed`. No pixel grid of a character or an object is
+written in Go. To change a picture, replace its file with one of the same name and size; nothing
+else changes.
+
+- **One pixel of the file is one cell of the grid.** A fully transparent pixel is empty; any other
+  pixel is drawn in its own color, alpha kept. Draw them in any pixel editor (Aseprite, Pixelorama)
+  and export PNG at 1x.
+- **Where they go:**
+  - `avatars/<name>.png`, 12 x 12: you, the assistant, every agent (`claude`, `codex`, `cursor`,
+    `gemini`, `opencode`, `copilot`, ...) and the empty-state art (`parcel`, ...).
+  - `avatars/<name>.dark.png`, optional, the same size: drawn instead in dark mode, for a picture
+    that is itself dark and would vanish on a dark window.
+  - `actors/`, `goods/`, `props/`: the pictures of the Summary scene (see **Summary**).
+- **The code names files, not pixels.** Each avatar kind maps to a file name in `app/theme`. A test
+  loads every file the code names and fails on a missing file, a wrong size, or a file under
+  `sprites/` that nothing names.
+- `app/theme/sprites/README.md` lists every file, its size and where it is drawn.
+- Not files: the status glyphs, the busy indicator and the Accept stamp (shapes and frames that
+  carry meaning, in Go); interface icons (pixelarticons SVGs); provider marks (sampled from the
+  official SVGs).
 
 ## Surfaces
 
@@ -512,8 +537,9 @@ page's title already says where a task goes, so the input has no label, no chip 
   shows a quiet `compact` `text.secondary` line under the box for 4 s and is not taken. Images are
   shrunk to at most 1600 px on the long side and re-encoded (a JPEG stays a JPEG, the rest PNG; a
   noisy PNG over 5 MB goes out as JPEG), off the UI thread. They are sent with the text (`↵` or the
-  send button; images alone can be sent too) and live in memory only: never in the database, never on
-  disk. A turn that fails keeps its images for **Retry**, and a stopped turn puts them back in the box.
+  send button; images alone can be sent too). The model gets the shrunk copies; the tasks the turn
+  creates or changes keep the images (see **Task images**). A turn that fails keeps its images for
+  **Retry**, and a stopped turn puts them back in the box.
 - **A model that cannot read images.** The provider's refusal is classified (`providers.KindNoImages`)
   and the error line says `<model> cannot read images.` with the model chip open, to pick another;
   **Retry** then sends the same text and images to it.
@@ -631,8 +657,8 @@ centred empty state.
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
   lines up with the titles.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
-  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
-  at 20 pt, in `theme/pixel.go`). A row: the same accent robot as the column header (the task is any
+  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (`avatars/parcel.png`, 12 x 12
+  with a pixel of room all round, drawn at 24 pt). A row: the same accent robot as the column header (the task is any
   agent's, so no agent's own sprite), the title, the age at the right, and under it how it is picked
   up, `Tell any agent “do #44” to pick it up` / `在任意 Agent 里说「做 #44」就会接手` (the task's id).
   An agent's first report moves it to Doing.
@@ -761,7 +787,7 @@ Top line (the bar with the close button, `meta` `text.secondary`): where the tas
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
 #7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
-editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
+editable in place; the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
@@ -778,6 +804,42 @@ editable in place; Notes; `ACTIVITY` timeline newest first. Save on blur or Ente
   text (`P1  High`), with no bars glyph.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
+
+### Task images
+
+v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user can look at it again.
+
+- **From the composer.** The images sent with a request are attached to the tasks the turn creates or
+  changes. The assistant's task tools take the indexes of the images that belong to a task; a task the
+  model gives none for gets every image of the turn (attach too many rather than lose one). The receipt
+  line says so: `Added 2 tasks, with their images` (`已添加 2 个任务，图片也挂上了`). A request from the
+  inspector's composer attaches its images to that task.
+- **In the inspector.** Between the properties and Notes: tiles of 96 x 72 pt, three a row 12 pt apart,
+  8 pt radius, hairline, the whole picture on `bg.subtle` (contain), and a last dashed tile with a
+  pixel `+` that opens the file panel. With no image, one quiet line `Add images…` (`添加图片…`) in
+  `text.tertiary`, as `Add notes…`. Image files dropped on the inspector are attached (the same types
+  and limits as the composer's). A hovered tile shows an 18 pt round pixel `x` at its top right that
+  detaches the image, with the Undo toast; a click on the tile opens the viewer.
+- **In lists.** A row of a task with images (Mine, a project's columns and list, the Inbox, search,
+  Completed) shows its first image as a 32 x 24 pt thumbnail (4 pt radius, hairline, contain on
+  `bg.subtle`) just before the due label or the age; with more than one, a `+2` badge (9 pt, white on
+  55 % black) at its bottom right. A row without images is unchanged.
+- **On board cards.** The first image as a band across the top of the card, 96 pt tall, contain on
+  `bg.subtle`, a hairline under it, the `+2` badge at its bottom right when there are more.
+- **The viewer.** A click on any thumbnail opens the image over the window: the window dims (90 %
+  near-black), the image fits the window whole, a bottom bar says `name · 1 / 2 · 1200 × 900` and
+  offers **Open in Preview ↗** (`在预览中打开 ↗`, the file in macOS Preview). Round pixel `chevron-left`
+  / `chevron-right` and `close` buttons; `←` `→` step through the task's images, `Esc` or a click
+  outside closes.
+- **Storage.** The original file is kept (up to 20 MB; a larger one keeps the composer's shrunk copy)
+  under the data folder in `images/`, named by the hash of its content so one picture is stored once,
+  with a 256 px thumbnail beside it; lists, cards and tiles read only thumbnails. A table records
+  which task has which image (its name, size and when it was added). Deleting a task or detaching an
+  image removes the link; a file no task links to any more is deleted. The model still gets the
+  1600 px copy.
+- **Screens.** `inspector-images`, `inspector-images-none`, `inspector-images-hover`, `mine-pictures`,
+  `project-list-pictures`, `project-board-pictures`, `viewer`.
+- **Not yet.** An agent attaching a screenshot through the MCP; images in an export.
 
 ### Task menu
 

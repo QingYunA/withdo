@@ -83,10 +83,19 @@ func (r *Real) ListArchivedProjects() ([]Project, error) {
 
 func (r *Real) DeleteProject(id int) (Removed, error) {
 	d, err := r.core.DeleteProject(r.ctx(), int64(id))
+	if err == nil {
+		r.CollectSoon()
+	}
 	return Removed{Tasks: d.Tasks, Reports: d.Reports, Milestones: d.Milestones}, err
 }
 
-func (r *Real) DeleteTask(id int) error { return r.core.DeleteTask(r.ctx(), int64(id)) }
+func (r *Real) DeleteTask(id int) error {
+	err := r.core.DeleteTask(r.ctx(), int64(id))
+	if err == nil {
+		r.CollectSoon()
+	}
+	return err
+}
 
 func (r *Real) SnapshotTask(id int) (TaskSnapshot, error) {
 	snap, err := r.core.SnapshotTask(r.ctx(), int64(id))

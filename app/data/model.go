@@ -245,6 +245,7 @@ type Reminder struct {
 // Store is everything the UI needs. internal/domain and internal/watch will implement it.
 type Store interface {
 	Manager
+	Images
 
 	ListProjects() ([]Project, error)
 	Overview() (Overview, error)

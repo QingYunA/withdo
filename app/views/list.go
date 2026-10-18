@@ -242,6 +242,7 @@ func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data
 	if theme.ShowsPriority(task.Priority) && !task.Status.Terminal() {
 		theme.PriorityBadge(c, t, task.Priority)
 	}
+	m.rowThumb(c, t, task.ID)
 	switch {
 	case task.Status.Terminal():
 		plainText(c, t, m.clock.Age(doneAt(task), now))

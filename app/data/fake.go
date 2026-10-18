@@ -24,6 +24,7 @@ type Fake struct {
 	remSubs    map[int]func(Reminder)
 	evSubs     map[int]func(Event)
 	nextSub    int
+	pics       fakeImages
 }
 
 // NewFake returns a Fake filled with the seed data, relative to now().

@@ -18,6 +18,8 @@ type Actions interface {
 	OpenSettings(pane Pane) // show the Settings window on a pane
 	OpenURL(url string)
 	ShowInFinder(path string)
+	// OpenFile opens a file with the app macOS has for it: Preview, for a picture.
+	OpenFile(path string)
 	// OpenIn brings up where an agent works: its own desktop app (agentApp, "" when it has none), or
 	// a terminal, an editor or Finder at dir. The agent's app cannot be asked for the exact session,
 	// only brought forward; without that app, or when it is not installed, a terminal opens.
@@ -89,6 +91,7 @@ type snapshot struct {
 	overview   data.Overview
 	milestones map[int][]data.Milestone
 	details    map[int]data.TaskDetail
+	images     map[int][]data.TaskImage // the pictures of the tasks that have any
 }
 
 // NewApp loads the first snapshot.
@@ -120,6 +123,13 @@ func (a *App) Refresh() {
 		if d, derr := a.Store.GetTask(t.ID); derr == nil {
 			s.details[t.ID] = d
 		}
+	}
+	ids := make([]int, len(s.tasks))
+	for i, t := range s.tasks {
+		ids[i] = t.ID
+	}
+	if imgs, ierr := a.Store.ImagesOf(ids); ierr == nil { // one read for every list and card
+		s.images = imgs
 	}
 	s.loaded, s.err = true, err
 	if err != nil {
@@ -194,6 +204,9 @@ func (a *App) Task(id int) (data.Task, bool) {
 	}
 	return data.Task{}, false
 }
+
+// Images are the pictures of a task, oldest first; none for most tasks.
+func (a *App) Images(id int) []data.TaskImage { return a.snap.images[id] }
 
 // Project finds a project in the snapshot.
 func (a *App) Project(id int) (data.Project, bool) {

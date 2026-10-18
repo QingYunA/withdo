@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -129,6 +130,9 @@ func (f *Fake) DeleteProject(id int) (Removed, error) {
 		tasks = append(tasks, t)
 	}
 	f.tasks = tasks
+	for id := range gone {
+		f.pics.dropTask(id)
+	}
 	f.reports, out.Reports = dropReports(f.reports, gone)
 	var ms []Milestone
 	for _, m := range f.milestones {
@@ -175,6 +179,7 @@ func (f *Fake) DeleteTask(id int) error {
 		}
 	}
 	f.tasks = tasks
+	f.pics.dropTask(id)
 	f.reports, _ = dropReports(f.reports, map[int]bool{id: true})
 	f.mu.Unlock()
 	f.notify()
@@ -188,7 +193,7 @@ func (f *Fake) SnapshotTask(id int) (TaskSnapshot, error) {
 	if !ok {
 		return TaskSnapshot{}, fmt.Errorf("task %d not found", id)
 	}
-	return TaskSnapshot{Task: *t, Reports: f.reportsOf(id)}, nil
+	return TaskSnapshot{Task: *t, Reports: f.reportsOf(id), raw: slices.Clone(f.pics.links[id])}, nil
 }
 
 func (f *Fake) RestoreTask(s TaskSnapshot) (Task, error) {
@@ -205,6 +210,11 @@ func (f *Fake) RestoreTask(s TaskSnapshot) (Task, error) {
 	}
 	f.tasks = append(f.tasks, t)
 	f.reports = append(f.reports, s.Reports...)
+	if links, ok := s.raw.([]TaskImage); ok && len(links) > 0 {
+		for _, l := range links {
+			f.pics.add(t.ID, l)
+		}
+	}
 	f.mu.Unlock()
 	f.notify()
 	return t, nil
