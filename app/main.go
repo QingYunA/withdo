@@ -14,7 +14,7 @@ import (
 	"github.com/egoist/mygo"
 )
 
-const version = "0.3.0"
+const version = "0.4.0"
 
 // connectCommand registers the MCP server with Claude Code.
 const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp"
