@@ -91,6 +91,8 @@ func TestAFileThatIsGoneSaysSoOnClickAndOpensNothing(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	m.OpenTask(2)
 	tt.Frame()
+	tt.Scroll(950, 400, 0, 3000) // the chip and its tip at the end of Activity, on any font's line heights
+	tt.Frame()
 	hasNot(t, tt, "File not found")
 	if err := tt.Click("Import report"); err != nil {
 		t.Fatal(err)
