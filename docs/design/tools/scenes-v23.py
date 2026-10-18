@@ -44,8 +44,8 @@ def dress(name):
             r, g, b, _ = src[x, y]
             if r < 70 and g < 70 and b < 100:  # the post
                 dst[x, y] = src[x, y]
-    out.alpha_composite(tile(TREE, k), (0, 42))
-    out.alpha_composite(tile(TREE_SMALL, k), (9, 46))
+    out.alpha_composite(tile(TREE, k), (4, 42))
+    out.alpha_composite(tile(TREE_SMALL, k), (13, 46))
     out.alpha_composite(tile(MUSHROOMS, k), (243, 52))  # at the foot of the lamp post
     out.save(f'app/theme/sprites/scenes/{name}.png')
 
