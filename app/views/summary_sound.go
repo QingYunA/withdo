@@ -44,6 +44,9 @@ func (m *Main) startSound(v *summaryView, ago time.Duration, calm bool) {
 	if len(cues) == 0 {
 		return
 	}
+	if calm {
+		ago = 0 // the last frame at once: the done is now, not long past
+	}
 	tr := &m.sum.track
 	gen := tr.next()
 	began := time.Now()
@@ -93,6 +96,10 @@ func (s *soundtrack) run(f func()) {
 	go f()
 }
 
+// lateCue is how long past its time a cue still sounds: the first frame of a scene comes a little
+// after it began. A cue later than that is dropped rather than played on top of the others.
+const lateCue = 100 * time.Millisecond
+
 // schedule sets a timer for each cue, lag after the scene began; a start that is no longer the
 // current one sets none.
 func (s *soundtrack) schedule(gen int, cues []theme.Cue, lag time.Duration, play func(theme.Cue)) {
@@ -106,6 +113,9 @@ func (s *soundtrack) schedule(gen int, cues []theme.Cue, lag time.Duration, play
 		return
 	}
 	for _, c := range cues {
+		if c.At+lateCue < lag {
+			continue
+		}
 		s.timers = append(s.timers, after(max(c.At-lag, 0), func() { play(c) }))
 	}
 }

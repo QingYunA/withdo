@@ -250,3 +250,14 @@ func mustSummaryApp(t *testing.T) *App {
 	app, _, _ := summaryApp(t)
 	return app
 }
+
+func TestACueLongPastItsTimeIsDroppedNotPlayedAtOnce(t *testing.T) {
+	var s soundtrack
+	var due []time.Duration
+	s.after = func(d time.Duration, f func()) stopper { due = append(due, d); return &fakeTimer{d: d, f: f} }
+	cues := []theme.Cue{{At: 0, Sound: theme.SoundLid}, {At: 950 * time.Millisecond, Sound: theme.SoundLand}, {At: 3 * time.Second, Sound: theme.SoundDone}}
+	s.schedule(s.next(), cues, time.Second, func(theme.Cue) {})
+	if want := []time.Duration{0, 2 * time.Second}; !slices.Equal(due, want) {
+		t.Errorf("timers %v, want %v: the lid a second late is dropped, the land 50 ms late still sounds", due, want)
+	}
+}
