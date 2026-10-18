@@ -44,6 +44,9 @@ func categoryEnum(desc string) *jsonschema.Schema { return enum(desc, domain.Cat
 // timestamp is an ISO 8601 date or datetime; the handler normalises it to UTC.
 func timestamp(desc string) *jsonschema.Schema { return text(desc) }
 
+// timestampDesc is the description of the due_at and remind_at properties.
+const timestampDesc = "ISO 8601 date or datetime; a datetime without an offset is local time"
+
 // nullable lets a property be JSON null as well as its normal type. Bounds such
 // as minLength apply only to the non-null branch.
 func nullable(s *jsonschema.Schema, desc string) *jsonschema.Schema {

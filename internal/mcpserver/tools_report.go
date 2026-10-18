@@ -70,6 +70,10 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 		verb = "Created"
 	}
 	line := fmt.Sprintf("%s %s", verb, domain.FormatTaskLine(res.Task))
+	if res.Created && res.Task.Branch == nil {
+		// Without a branch the next report would not find this task again.
+		line += fmt.Sprintf("\nNo branch here: pass task_id %d on your next reports.", res.Task.ID)
+	}
 	data := map[string]any{"task_id": res.Task.ID, "status": res.Task.Status, "created": res.Created, "task": res.Task}
 	if len(res.Dropped) > 0 {
 		data["dropped_links"] = res.Dropped

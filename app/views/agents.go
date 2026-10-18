@@ -92,7 +92,11 @@ func (m *Main) workingMeta(r data.AgentRow) string {
 	if r.Branch != "" && m.width >= dropPillsBelow {
 		parts = append(parts, r.Branch)
 	}
-	if said := m.agentSummary(r.Item); said != "" {
+	said := m.agentSummary(r.Item)
+	if r.NextStep == "" {
+		said = notTheTitle(r.Task, said) // with a next step the line says more than the title does
+	}
+	if said != "" {
 		parts = append(parts, said)
 	}
 	return strings.Join(parts, " · ")

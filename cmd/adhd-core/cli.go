@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -39,6 +40,8 @@ type deps struct {
 	stderr io.Writer
 	// serve runs the MCP server until its client goes away.
 	serve func(context.Context, *mcp.Server) error
+	// location is the zone the overview prints times in; the machine's when nil.
+	location *time.Location
 }
 
 // defaultDeps wires run to the real process environment.
@@ -54,10 +57,11 @@ func run(ctx context.Context, args []string, d deps) int {
 		_, _ = io.WriteString(d.stderr, usage)
 		return exitUsage
 	}
-	switch args[0] {
-	case "--help", "-h":
+	if wantsHelp(args) {
 		_, _ = io.WriteString(d.stdout, usage)
 		return exitOK
+	}
+	switch args[0] {
 	case "guide":
 		_, _ = io.WriteString(d.stdout, agentsetup.New(d.home).Guide())
 		return exitOK
@@ -71,6 +75,18 @@ func run(ctx context.Context, args []string, d deps) int {
 		_, _ = fmt.Fprintf(d.stderr, "Unknown command: %s\n%s", args[0], usage)
 		return exitUsage
 	}
+}
+
+// wantsHelp reports whether args ask for the usage: help, --help or -h on their own, or --help or
+// -h after a command. There is one usage for all commands, so that is what each of them prints.
+func wantsHelp(args []string) bool {
+	switch args[0] {
+	case "help", "--help", "-h":
+		return true
+	case "mcp", "overview", "guide":
+		return len(args) > 1 && (args[1] == "--help" || args[1] == "-h")
+	}
+	return false
 }
 
 func execute(ctx context.Context, command string, d deps) error {
@@ -88,6 +104,10 @@ func execute(ctx context.Context, command string, d deps) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintln(d.stdout, domain.FormatOverview(overview))
+	loc := d.location
+	if loc == nil {
+		loc = time.Local
+	}
+	_, err = fmt.Fprintln(d.stdout, domain.FormatOverviewIn(overview, loc))
 	return err
 }

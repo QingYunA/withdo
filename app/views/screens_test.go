@@ -60,7 +60,10 @@ func TestScreensSeed(t *testing.T) {
 		})
 		mainShot(t, "inbox-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 		mainShot(t, "inspector-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
-		mainShot(t, "inspector-narrow-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+		longBranch, _, _ := newTestApp(t) // a branch that does not fit ends in an ellipsis
+		branch := "worktree-agent-ac6ff63e8ba29afb9-fix-the-remaining-findings"
+		_ = longBranch.Update(2, data.Patch{Branch: &branch})
+		mainShot(t, "inspector-narrow-"+a.suffix+".png", longBranch, a.dark, func(tt *ui.Tester, m *Main) {
 			tt.SetSize(860, 540)
 			m.OpenTask(2)
 		})

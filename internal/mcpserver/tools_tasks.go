@@ -42,8 +42,8 @@ func (t *tools) registerCreateTask(s *mcp.Server) {
 			"priority":     priorityEnum("P0 (urgent) to P3 (low); default P2"),
 			"category":     categoryEnum(categoryDesc),
 			"milestone_id": id(""),
-			"due_at":       timestamp("ISO 8601 date or datetime"),
-			"remind_at":    timestamp("ISO 8601 date or datetime"),
+			"due_at":       timestamp(timestampDesc),
+			"remind_at":    timestamp(timestampDesc),
 			"branch":       text(""),
 			"pr_url":       prURL,
 		}, "title"),
@@ -71,6 +71,9 @@ func (t *tools) createTaskInput(ctx context.Context, a createTaskArgs) (domain.C
 		in.Priority = *a.Priority
 	}
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
+		return in, err
+	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
 		return in, err
 	}
 	var err error

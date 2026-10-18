@@ -44,6 +44,9 @@ func (t *tools) listTasks(ctx context.Context, _ *mcp.CallToolRequest, a listTas
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
 		return t.fail(err)
 	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
+		return t.fail(err)
+	}
 	scope := a.ProjectID
 	if a.Cwd != "" {
 		resolved, err := t.core.ResolveProjectFromCwd(ctx, a.Cwd)
@@ -153,13 +156,16 @@ func (t *tools) registerCreateMilestone(s *mcp.Server) {
 			"title":      text(""),
 			"cwd":        withDesc(cwdProp, "Directory whose repo owns the milestone; defaults to the server's cwd"),
 			"project_id": id("Project id"),
-			"due_at":     timestamp("ISO 8601 date or datetime"),
+			"due_at":     timestamp(timestampDesc),
 		}, "title"),
 	}, t.createMilestone)
 }
 
 func (t *tools) createMilestone(ctx context.Context, _ *mcp.CallToolRequest, a createMilestoneArgs) (*mcp.CallToolResult, any, error) {
 	if err := scopeConflict(a.Cwd, a.ProjectID); err != nil {
+		return t.fail(err)
+	}
+	if err := domain.CheckCwd(a.Cwd); err != nil {
 		return t.fail(err)
 	}
 	due, err := timestampArg("due_at", a.DueAt)

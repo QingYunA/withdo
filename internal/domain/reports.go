@@ -141,6 +141,12 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	if in.Status != nil && !in.Status.Valid() {
 		return nil, invalid("status", "must be one of %s", joinStatuses())
 	}
+	// The cwd only matters when it finds the project; with a task_id it is just noted on the report.
+	if in.TaskID == nil {
+		if err := CheckCwd(in.Cwd); err != nil {
+			return nil, err
+		}
+	}
 	var dropped []DroppedLink
 	in.Links, dropped = CleanLinks(in.Links)
 	var projectID *int64

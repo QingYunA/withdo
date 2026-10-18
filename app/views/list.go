@@ -220,7 +220,7 @@ func listMeta(task data.Task, ot data.OverviewTask) string {
 	said := ""
 	if task.Source == data.SourceAgent && ot.LatestReport != nil && !task.Status.Terminal() {
 		parts = append(parts, agentName(ot.LatestReport.Agent))
-		said = ot.LatestReport.Summary
+		said = notTheTitle(task, ot.LatestReport.Summary)
 		if task.Status == data.Blocked && ot.LatestReport.NextStep != "" {
 			said = ot.LatestReport.NextStep
 		}

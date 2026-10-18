@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -122,6 +123,23 @@ type ResolvedProject struct {
 	Git     *gitctx.Info
 }
 
+// CheckCwd refuses a cwd that a caller gave and that is not an existing directory; "" is absent
+// and passes. Without it a mistyped path would look like "not in a repo" and land work in the Inbox.
+// Only callers that were handed the cwd use it: a default cwd is not the caller's to get wrong.
+func CheckCwd(cwd string) error {
+	if cwd == "" {
+		return nil
+	}
+	info, err := os.Stat(cwd)
+	switch {
+	case err != nil:
+		return invalid("cwd", "no such directory: %s", cwd)
+	case !info.IsDir():
+		return invalid("cwd", "not a directory: %s", cwd)
+	}
+	return nil
+}
+
 // ResolveProjectFromCwd finds or creates the project that owns cwd. A GitHub
 // remote keys the project by "owner/repo"; otherwise it is keyed by the main
 // working tree's path, so every worktree of one repo shares a project. It
@@ -189,6 +207,9 @@ func (c *Core) UpsertProject(ctx context.Context, in UpsertProjectInput) (*Proje
 	case in.Cwd != "" && in.RepoSlug != "":
 		return nil, invalid("cwd", "provide either cwd or repo_slug, not both")
 	case in.Cwd != "":
+		if err := CheckCwd(in.Cwd); err != nil {
+			return nil, err
+		}
 		resolved, err := c.ResolveProjectFromCwd(ctx, in.Cwd)
 		if err != nil {
 			return nil, err

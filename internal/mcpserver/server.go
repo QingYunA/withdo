@@ -30,6 +30,7 @@ var Instructions = strings.Join([]string{
 	"When the user asks you to do an adhd-todo task by its number (\"do #44\"), read it with get_task and report on it with that task_id.",
 	"When one piece of work covers several adhd-todo tasks (\"do #69 and #70\"), report on each of them with its own task_id, at least when you start and when you finish.",
 	"Please pass title on your first report: a short name for the task. Without it the title is the first sentence of the summary.",
+	"Reports match a task by repo and branch; with no branch (outside git, or a detached HEAD) each report without task_id creates a new task, so pass the task_id of your first report on the rest.",
 	"When you start a subagent, give it your task_id and tell it to pass parent_task_id on its reports, so its work shows under your task.",
 	"A subagent reports status \"done\" when it hands its work back: its parent reviews it, not the user.",
 	"When you made something that can be opened (a report page, a design draft), attach it to the report with links.",
@@ -72,6 +73,7 @@ func New(core *domain.Core, opts Options) *mcp.Server {
 	}
 	server := mcp.NewServer(&mcp.Implementation{Name: Name, Version: Version},
 		&mcp.ServerOptions{Instructions: Instructions, Logger: t.log})
+	server.AddReceivingMiddleware(rewriteSchemaErrors)
 	t.registerReportProgress(server)
 	t.registerCreateTask(server)
 	t.registerUpdateTask(server)

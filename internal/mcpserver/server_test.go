@@ -3,11 +3,13 @@ package mcpserver_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -124,7 +126,7 @@ func TestInitializeAdvertisesNameAndInstructions(t *testing.T) {
 		t.Errorf("server name = %q", init.ServerInfo.Name)
 	}
 	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd",
-		"after each step", "in the language the user writes to you in"} {
+		"after each step", "in the language the user writes to you in", "no branch"} {
 		if !strings.Contains(init.Instructions, w) {
 			t.Errorf("instructions lack %q", w)
 		}
@@ -195,6 +197,29 @@ func TestReportProgressStoresOnlyTheCwdTheAgentPassed(t *testing.T) {
 	}
 }
 
+func TestReportProgressWithoutABranchTellsTheAgentToPassTaskID(t *testing.T) {
+	r := newRig(t)
+	outside := t.TempDir() // exists, but is no repo: no branch to match on
+	a := r.ok("report_progress", map[string]any{"summary": "first", "cwd": outside})
+	id := int(a.Data["task_id"].(float64))
+	want := fmt.Sprintf("No branch here: pass task_id %d on your next reports.", id)
+	if !strings.HasSuffix(a.Text, want) {
+		t.Errorf("created without a branch: %q lacks the hint %q", a.Text, want)
+	}
+
+	b := r.ok("report_progress", map[string]any{"summary": "second", "cwd": outside, "task_id": id})
+	if b.Data["created"] != false || strings.Contains(b.Text, "No branch here") {
+		t.Errorf("update by task_id: %q / %+v", b.Text, b.Data)
+	}
+
+	// A task that has a branch needs no hint, and neither does one found again by it.
+	c := r.ok("report_progress", map[string]any{"summary": "on a branch"})
+	d := r.ok("report_progress", map[string]any{"summary": "on a branch again"})
+	if strings.Contains(c.Text, "No branch here") || strings.Contains(d.Text, "No branch here") {
+		t.Errorf("branch task got the hint: %q / %q", c.Text, d.Text)
+	}
+}
+
 func TestReportProgressByTaskIDIgnoresDefaultCwd(t *testing.T) {
 	r := newRig(t)
 	a := r.ok("report_progress", map[string]any{"summary": "one"})
@@ -218,6 +243,11 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"report: bad pr_url", "report_progress", map[string]any{"summary": "s", "pr_url": "not-a-url"}, "pr_url"},
 		{"report: zero task_id", "report_progress", map[string]any{"summary": "s", "task_id": 0}, "task_id"},
 		{"report: unknown task_id", "report_progress", map[string]any{"summary": "s", "task_id": 999}, "task_id"},
+		{"report: missing cwd", "report_progress", map[string]any{"summary": "s", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"create: missing cwd", "create_task", map[string]any{"title": "x", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"list: missing cwd", "list_tasks", map[string]any{"cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"upsert: missing cwd", "upsert_project", map[string]any{"cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
+		{"milestone: missing cwd", "create_milestone", map[string]any{"title": "v1", "cwd": "/tmp/adhd-todo-does-not-exist"}, "cwd"},
 		{"create: missing title", "create_task", map[string]any{}, "title"},
 		{"create: blank title", "create_task", map[string]any{"title": "   "}, "title"},
 		{"create: bad priority", "create_task", map[string]any{"title": "x", "priority": "P9"}, "priority"},
@@ -244,6 +274,12 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"milestone: non-git cwd", "create_milestone", map[string]any{"title": "v1", "cwd": t.TempDir()}, "cwd"},
 		{"milestone: unknown project", "create_milestone", map[string]any{"title": "v1", "project_id": 99}, "project_id"},
 		{"milestone: bad due_at", "create_milestone", map[string]any{"title": "v1", "due_at": "x"}, "due_at"},
+		{"get: null task_id", "get_task", map[string]any{"task_id": nil}, "task_id"},
+		{"get: string task_id", "get_task", map[string]any{"task_id": "x"}, "task_id"},
+		{"get: missing task_id", "get_task", map[string]any{}, "task_id"},
+		{"list: string limit", "list_tasks", map[string]any{"limit": "5"}, "limit"},
+		{"list: status not an array", "list_tasks", map[string]any{"status": "todo"}, "status"},
+		{"update: number notes", "update_task", map[string]any{"task_id": 1, "notes": 5}, "notes"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -257,7 +293,84 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 			if !strings.Contains(res.Text, tt.field) {
 				t.Errorf("error %q does not name %q", res.Text, tt.field)
 			}
+			for _, noise := range []string{"reflect", "validating", "/properties/"} {
+				if strings.Contains(res.Text, noise) {
+					t.Errorf("error %q leaks the schema validator (%q)", res.Text, noise)
+				}
+			}
 		})
+	}
+}
+
+func TestSchemaErrorsReadLikeDomainErrors(t *testing.T) {
+	r := newRig(t)
+	r.ok("create_task", map[string]any{"title": "seed"})
+	tests := []struct {
+		name string
+		tool string
+		args map[string]any
+		want string
+	}{
+		{"null id", "get_task", map[string]any{"task_id": nil}, "task_id: must be an integer"},
+		{"string id", "get_task", map[string]any{"task_id": "x"}, "task_id: must be an integer"},
+		{"fractional id", "get_task", map[string]any{"task_id": 1.5}, "task_id: must be an integer"},
+		{"string limit", "list_tasks", map[string]any{"limit": "5"}, "limit: must be an integer"},
+		{"number summary", "report_progress", map[string]any{"summary": 5}, "summary: must be a string"},
+		{"string for array", "list_tasks", map[string]any{"status": "todo"}, "status: must be an array"},
+		{"number in array", "list_tasks", map[string]any{"status": []any{1}}, "status: must be a string"},
+		{"number for nullable", "update_task", map[string]any{"task_id": 1, "notes": 5}, "notes: must be a string or null"},
+		{"missing required", "get_task", map[string]any{}, "task_id: is required"},
+		{"below minimum", "get_task", map[string]any{"task_id": 0}, "task_id: must be at least 1"},
+		{"above maximum", "list_tasks", map[string]any{"limit": 999}, "limit: must be at most 200"},
+		{"not positive", "get_overview", map[string]any{"stale_hours": -1}, "stale_hours: must be greater than 0"},
+		{"empty string", "report_progress", map[string]any{"summary": ""}, "summary: must not be empty"},
+		{"unknown enum", "report_progress", map[string]any{"summary": "s", "status": "weird"},
+			"status: must be one of backlog, todo, doing, blocked, review, done, cancelled"},
+		{"unknown nullable enum", "update_task", map[string]any{"task_id": 1, "category": "play"}, "category: must be one of work, life"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := r.call(tt.tool, tt.args)
+			if !res.IsError || !strings.HasPrefix(res.Text, tt.want) {
+				t.Errorf("got isError=%v %q, want it to start with %q", res.IsError, res.Text, tt.want)
+			}
+		})
+	}
+}
+
+func TestRemindAtWithoutAnOffsetIsLocalTime(t *testing.T) {
+	saved := time.Local
+	time.Local = time.FixedZone("CST", 8*3600)
+	t.Cleanup(func() { time.Local = saved })
+	r := newRig(t)
+	task := r.ok("create_task", map[string]any{"title": "x", "remind_at": "2026-10-19T09:00", "due_at": "2026-10-19T18:30:15"}).obj("task")
+	if task["remind_at"] != "2026-10-19T01:00:00.000Z" || task["due_at"] != "2026-10-19T10:30:15.000Z" {
+		t.Errorf("task = %+v", task)
+	}
+	res := r.call("create_task", map[string]any{"title": "x", "remind_at": "soon"})
+	if !res.IsError || !strings.Contains(res.Text, "remind_at") {
+		t.Errorf("bad remind_at: %+v", res)
+	}
+}
+
+func TestAGivenCwdThatDoesNotExistIsRefused(t *testing.T) {
+	r := newRig(t)
+	missing := "/tmp/adhd-todo-does-not-exist"
+	for tool, args := range map[string]map[string]any{
+		"report_progress":  {"summary": "s"},
+		"create_task":      {"title": "x"},
+		"list_tasks":       {},
+		"upsert_project":   {},
+		"create_milestone": {"title": "v1"},
+	} {
+		args["cwd"] = missing
+		res := r.call(tool, args)
+		if !res.IsError || !strings.Contains(res.Text, "cwd: no such directory: "+missing) {
+			t.Errorf("%s: %+v", tool, res)
+		}
+	}
+	if tasks := r.ok("list_tasks", nil).list("tasks"); len(tasks) != 0 {
+		t.Errorf("a refused call left tasks behind: %+v", tasks)
 	}
 }
 

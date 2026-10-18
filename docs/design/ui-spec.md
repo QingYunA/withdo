@@ -736,7 +736,8 @@ name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar
 header's name (no glyph per row; the group says the status); `Show all N →` under Done lines up
 with the rows' titles. Row: the title (one line, `body.strong`); for an agent's task a
 quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
-agent's name, the branch, the pull request, then the report; for a blocked task what it waits for);
+agent's name, the branch, the pull request, then the report; for a blocked task what it waits for;
+a report that only repeats the title, as on a task made by its first report, is left out);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
 or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
 The composer sits above the groups (see **Composer**): it is how a task is added here.
@@ -806,7 +807,7 @@ Top line (the bar with the close button, `meta` `text.secondary`): where the tas
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
 #7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
-editable in place; the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
+editable in place (a Branch longer than the pane is ellipsized like every long value, and a click turns it into the editable text); the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
