@@ -9,9 +9,11 @@ import (
 )
 
 // DeepSeek Harness takes its MCP servers as Cordis patch entries, not JSON. Its patch layers are
-// YAML lists: a machine-wide one at $DSH_HOME/cordis.patch.yml that every profile reads after its
+// YAML lists: a machine-wide one at ~/.dsh/cordis.patch.yml that every profile reads after its
 // own, and one in each profile. The home layer is the one adhd-todo edits; the profile ones are
-// only read, so an install the user made there still counts as installed.
+// only read, so an install the user made there still counts as installed. The home layer is always
+// ~/.dsh/cordis.patch.yml: DSH_HOME is not read, so a harness the user pointed elsewhere with it is
+// not found.
 //
 // The server entry follows @deepseek-ai/dsh-mcp-client's own documentation (its README's minimal
 // configuration): one insert of that plugin with serverName, transport, command and args.
@@ -65,6 +67,10 @@ func dshPatchHasServer(text string) bool {
 			client = true
 		}
 		if rest, ok := strings.CutPrefix(line, "serverName:"); ok {
+			// a trailing YAML comment (a space, then a hash) is not part of the value
+			if i := strings.Index(rest, " #"); i >= 0 {
+				rest = rest[:i]
+			}
 			if strings.Trim(strings.TrimSpace(rest), `'"`) == dshMCPServer {
 				named = true
 			}
@@ -74,7 +80,10 @@ func dshPatchHasServer(text string) bool {
 }
 
 // dshSnippet is the patch entry to add to a patch list, as a whole top-level list item. The
-// server runs adhd-core, like every other agent's.
+// server runs adhd-core, like every other agent's. failOnStartupError is false on purpose: per the
+// plugin's documentation true makes it reject activation when the server fails to start, while false
+// (its default) degrades to zero tools, and adhd-todo must never stop DeepSeek Harness from starting
+// when adhd-core is missing or broken.
 func (e *Env) dshSnippet() string {
 	command := strings.ReplaceAll(e.core(), "'", "''")
 	return strings.Join([]string{
@@ -86,20 +95,17 @@ func (e *Env) dshSnippet() string {
 		"        transport: stdio",
 		"        command: '" + command + "'",
 		"        args: ['mcp']",
-		"        failOnStartupError: true",
+		"        failOnStartupError: false",
 	}, "\n")
 }
 
 // installYAML adds adhd-todo to the home patch layer by appending one entry. It only ever writes
 // a file that is an empty patch list (or []), or one whose first line is a list item; anything
 // else is handed back as the manual snippet rather than guessed at.
+//
+// Install has already returned for an agent that is installed and for a missing adhd-core, so
+// neither is checked again here.
 func (e *Env) installYAML(a Agent) error {
-	if e.dshInstalled() {
-		return nil
-	}
-	if !e.exists(e.core()) {
-		return ErrNoCore
-	}
 	file := e.dshPatchFile()
 	old, err := os.ReadFile(file)
 	exists := err == nil
@@ -112,7 +118,9 @@ func (e *Env) installYAML(a Agent) error {
 		if strings.TrimSpace(content) == "[]" {
 			content = ""
 		} else if first != "" && !strings.HasPrefix(first, "-") {
-			// a mapping, a flow sequence, or a list with a leading anchor: not something to append to
+			// a mapping, a flow sequence, a list with a leading anchor, or a list indented from
+			// column 0 (an entry appended at column 0 would not be valid YAML): not something to
+			// append to
 			return &ManualError{File: file, Snippet: e.dshSnippet()}
 		}
 	}
@@ -136,13 +144,17 @@ func (e *Env) installYAML(a Agent) error {
 	return writeFile(file, []byte(content), mode)
 }
 
-// firstDSHLine is the first line of a patch list that is neither blank nor a comment.
+// firstDSHLine is the first line of a patch list that is neither blank, a comment nor a `---`
+// document marker, with its indentation kept so a list that does not start at column 0 can be told
+// from one that does.
 func firstDSHLine(text string) string {
 	for _, line := range strings.Split(text, "\n") {
-		line = strings.TrimSpace(line)
-		if line != "" && !strings.HasPrefix(line, "#") {
-			return line
+		line = strings.TrimRight(line, " \t\r")
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") || line == "---" {
+			continue
 		}
+		return line
 	}
 	return ""
 }

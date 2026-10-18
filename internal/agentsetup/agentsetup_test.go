@@ -478,7 +478,7 @@ func TestInstallDeepSeekHarnessAppendsACordisPatchEntry(t *testing.T) {
 		"# my patches", "- id: ui-chat", "    transcriptView: standard",
 		"- insert:", "id: adhd-todo-mcp", "name: '@deepseek-ai/dsh-mcp-client'",
 		"serverName: adhd-todo", "transport: stdio", "command: '" + r.core() + "'",
-		"args: ['mcp']", "failOnStartupError: true",
+		"args: ['mcp']", "failOnStartupError: false",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the patch lacks %q:\n%s", want, got)
@@ -540,6 +540,48 @@ func TestInstallDeepSeekHarnessHandsBackAPatchItCannotAppendTo(t *testing.T) {
 	}
 	if me.File != filepath.Join(r.home, ".dsh", "cordis.patch.yml") {
 		t.Errorf("manual file %q", me.File)
+	}
+}
+
+// A list indented from column 0 would get an entry appended at column 0, which is not valid YAML.
+func TestInstallDeepSeekHarnessHandsBackAnIndentedPatchList(t *testing.T) {
+	r := newRig(t)
+	orig := "  - insert:\n      - id: other\n"
+	r.write(".dsh/cordis.patch.yml", orig)
+	var me *ManualError
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); !errors.As(err, &me) {
+		t.Fatalf("got %v", err)
+	}
+	if r.read(".dsh/cordis.patch.yml") != orig {
+		t.Error("the patch was rewritten")
+	}
+	if !strings.Contains(me.Snippet, "- insert:") {
+		t.Errorf("no snippet:\n%s", me.Snippet)
+	}
+}
+
+// A document marker and comments before a list at column 0 do not stop the entry being appended.
+func TestInstallDeepSeekHarnessAppendsAfterADocumentMarker(t *testing.T) {
+	r := newRig(t)
+	r.write(".dsh/cordis.patch.yml", "---\n# mine\n- insert:\n    - id: other\n")
+	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(r.read(".dsh/cordis.patch.yml"), "serverName: adhd-todo") {
+		t.Error("the entry was not appended")
+	}
+}
+
+// A comment after the serverName value is not part of it.
+func TestDeepSeekHarnessServerNameMayHaveATrailingComment(t *testing.T) {
+	for _, line := range []string{"serverName: adhd-todo  # note", `serverName: "adhd-todo" # x`} {
+		text := "- insert:\n    - name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        " + line + "\n"
+		if !dshPatchHasServer(text) {
+			t.Errorf("%q did not count as installed", line)
+		}
+	}
+	if dshPatchHasServer("- insert:\n    - name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: other # adhd-todo\n") {
+		t.Error("a name in the comment counted")
 	}
 }
 
