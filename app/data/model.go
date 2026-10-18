@@ -246,6 +246,7 @@ type Reminder struct {
 type Store interface {
 	Manager
 	Images
+	Summaries
 
 	ListProjects() ([]Project, error)
 	Overview() (Overview, error)

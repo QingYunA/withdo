@@ -118,6 +118,38 @@ func (a *AgentAssistant) Undo(id int) error {
 // Reset implements Assistant.
 func (a *AgentAssistant) Reset() { a.Agent.Reset() }
 
+// Summarize implements Assistant. The error is already in plain words.
+func (a *AgentAssistant) Summarize(ctx context.Context, req SummaryRequest) (SummaryText, error) {
+	in := agent.SummaryInput{
+		Week: req.Week, Label: req.Label, Language: req.Language,
+		InProgress: req.Open.InProgress, InReview: req.Open.InReview, Blocked: req.Open.Blocked,
+	}
+	for _, t := range req.Tasks {
+		in.Tasks = append(in.Tasks, agent.SummaryTask{
+			ID: int64(t.ID), Title: t.Title, Project: t.Project, Who: t.Who, PR: t.PR, Merged: t.Merged, Said: t.Said,
+		})
+	}
+	out, err := a.Agent.Summarize(ctx, in)
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return SummaryText{}, context.Canceled
+		}
+		return SummaryText{}, problemFor(err)
+	}
+	kinds := make(map[int]string, len(out.Kinds))
+	for id, kind := range out.Kinds {
+		kinds[int(id)] = kind
+	}
+	return SummaryText{Paragraph: out.Paragraph, Kinds: kinds, Model: a.modelName()}, nil
+}
+
+// modelName is the model the next request would use, as the provider file says.
+func (a *AgentAssistant) modelName() string {
+	cfg := a.Provider.Config()
+	r, _ := cfg.Resolve(cfg.Active)
+	return r.Model
+}
+
 // ProviderSettings is the ModelSettings backed by the provider file and the keychain.
 type ProviderSettings struct {
 	Provider *providers.Manager
