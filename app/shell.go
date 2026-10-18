@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -83,6 +84,22 @@ func (s *shell) OpenFile(path string) {
 	if err := mygo.Shell.OpenPath(path); err != nil {
 		log.Printf("open %s: %v", path, err)
 	}
+}
+
+// SaveText implements views.Actions: the save panel is native and blocks, so it runs on a goroutine
+// of its own.
+func (s *shell) SaveText(name, text string) {
+	go func() {
+		path, err := mygo.Dialog.Save(mygo.SaveDialogOptions{
+			Parent: s.window(), DefaultPath: name, Filters: []mygo.FileFilter{{Name: "Markdown", Extensions: []string{"md"}}},
+		})
+		if err != nil || path == "" {
+			return // cancelled
+		}
+		if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+			log.Printf("save %s: %v", path, err)
+		}
+	}()
 }
 
 // openRunner runs the macOS open command with args. Tests replace it: they never launch an app.
@@ -358,6 +375,57 @@ func (s *shell) watchingMine() bool {
 // NotificationsDenied implements views.Actions.
 func (s *shell) NotificationsDenied() bool { return s.notifier.Denied() }
 
+// newEndOfDay is the end-of-day reminder: it asks the app's choices, counts from the store, and shows
+// through the notifier, so that macOS refusing it is noticed like any other.
+func (s *shell) newEndOfDay() *notify.EndOfDay {
+	return &notify.EndOfDay{
+		Now:     time.Now,
+		Enabled: s.app.EndOfDayEnabled,
+		At:      s.app.EndOfDayAt,
+		Last:    s.app.EndOfDayLast,
+		SetLast: s.app.SetEndOfDayLast,
+		Viewing: s.watchingSummary,
+		Count: func(now time.Time) (day, week data.SummaryCounts, err error) {
+			day, err = data.CountSummary(s.app.Store, data.DayPeriod(now, 0), nil)
+			if err != nil {
+				return
+			}
+			week, err = data.CountSummary(s.app.Store, data.WeekPeriod(now, 0, s.app.WeekStart()), nil)
+			return
+		},
+		Say:  func() locales.Messages { return locales.In(i18n.Locale()) },
+		Show: s.notifier.Announce,
+	}
+}
+
+// runEndOfDay checks every half minute whether the end-of-day reminder is due, until stop closes.
+func (s *shell) runEndOfDay(eod *notify.EndOfDay, stop <-chan struct{}) {
+	tick := time.NewTicker(30 * time.Second)
+	defer tick.Stop()
+	for {
+		eod.Tick()
+		select {
+		case <-tick.C:
+		case <-stop:
+			return
+		}
+	}
+}
+
+// watchingSummary says whether the app is in front with its window on Summary: the reminder would
+// only repeat what is on screen.
+func (s *shell) watchingSummary() bool {
+	win := s.window()
+	return win != nil && win.IsFocused() && !win.IsMinimized() && s.main.ShowingSummary()
+}
+
+// OpenSummary shows the main window on the Summary of today, or of this week.
+func (s *shell) OpenSummary(week bool) {
+	s.showMain()
+	s.main.ShowSummary(week)
+	s.invalidateMain()
+}
+
 // OpenMine shows the main window on Mine.
 func (s *shell) OpenMine() {
 	s.showMain()
@@ -370,6 +438,8 @@ func (s *shell) OpenMine() {
 func (s *shell) openFromNotification(id string) {
 	if id == notify.SummaryID {
 		s.OpenMine()
+	} else if week, ok := notify.ParseEndOfDayID(id); ok {
+		s.OpenSummary(week)
 	} else if task, ok := notify.ParseTaskID(id); ok {
 		s.OpenTask(task)
 	}

@@ -1,6 +1,9 @@
 package views
 
 import (
+	"time"
+
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
@@ -21,7 +24,10 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
 	})
 	groupLabel(c, t, s.say.SettingsNotifications())
-	group(c, t, "notifications", func() { s.notificationsRow(c, t) })
+	group(c, t, "notifications", func() {
+		s.notificationsRow(c, t)
+		s.endOfDayRows(c, t)
+	})
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
@@ -61,6 +67,62 @@ func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
 	if on != s.app.Notifications() {
 		s.app.SetNotifications(on)
 	}
+}
+
+// endOfDayRows are the end-of-day reminder's switch and the time it comes. With the reminder off, or
+// the notifications, the time is dimmed and out of reach.
+func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
+	on := s.app.EndOfDayOn()
+	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), false, func() {
+		ui.Switch(c.Key("end-of-day-switch"), &on).Label(s.say.SettingsEndOfDaySwitch())
+	})
+	if on != s.app.EndOfDayOn() {
+		s.app.SetEndOfDay(on)
+	}
+	active := on && s.app.Notifications()
+	settingsRowLead(c, t, "end-of-day-time", s.say.SettingsEndOfDayTime(), "", false, func() {
+		ui.Box(c.Key("end-of-day-time-pop")).Shrink(0).Opacity(dimmed(active)).Disabled(!active).Children(func() {
+			if at, ok := popUp(c, t, "end-of-day-time", s.app.EndOfDayAt(), s.endOfDayTimes()); ok {
+				s.app.SetEndOfDayAt(at)
+			}
+		})
+	}, func() { ui.Box(c).Width(14).Shrink(0) }) // indented under the switch
+}
+
+// dimmed is the opacity of a control that is out of reach.
+func dimmed(active bool) float32 {
+	if active {
+		return 1
+	}
+	return 0.45
+}
+
+// endOfDayTimes are the times the reminder can come: every half hour from four to nine in the
+// evening, and the one picked when it is none of them.
+func (s *Settings) endOfDayTimes() []popOption {
+	now := s.app.Now()
+	y, m, d := now.Date()
+	var opts []popOption
+	add := func(h, min int) {
+		at := time.Date(y, m, d, h, min, 0, 0, now.Location())
+		opts = append(opts, popOption{at.Format("15:04"), s.clock.Time(at)})
+	}
+	for h := 16; h <= 21; h++ {
+		add(h, 0)
+		if h < 21 {
+			add(h, 30)
+		}
+	}
+	picked := s.app.EndOfDayAt()
+	for _, o := range opts {
+		if o.value == picked {
+			return opts
+		}
+	}
+	if h, min, ok := data.ClockOf(picked); ok {
+		add(h, min)
+	}
+	return opts
 }
 
 // languageControl chooses the language of the interface: the system's, or one the app is written

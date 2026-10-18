@@ -6188,13 +6188,13 @@ func (msgs Messages) ViewerPosition(name string, i int, n int, w string, h strin
 	return Catalog.Format(msgs.locale, "viewerPosition", map[string]any{"name": name, "i": i, "n": n, "w": w, "h": h})
 }
 
-// ViewerOpenInPreview says "Open in Preview ↗"
+// ViewerOpenInPreview says "Open in Preview"
 // in the language the app shows.
 //
 // Button in the viewer's bar that opens the image file in macOS Preview.
 func ViewerOpenInPreview() string { return In(i18n.Locale()).ViewerOpenInPreview() }
 
-// ViewerOpenInPreview says "Open in Preview ↗"
+// ViewerOpenInPreview says "Open in Preview"
 // in the language of msgs.
 //
 // Button in the viewer's bar that opens the image file in macOS Preview.
@@ -6272,4 +6272,706 @@ func ReceiptImages(n int) string { return In(i18n.Locale()).ReceiptImages(n) }
 // kept the pictures sent with the request.
 func (msgs Messages) ReceiptImages(n int) string {
 	return Catalog.Format(msgs.locale, "receiptImages", map[string]any{"n": n})
+}
+
+// NavSummary says "Summary"
+// in the language the app shows.
+//
+// Sidebar item and title of the page that shows what was finished in a day
+// or a week.
+func NavSummary() string { return In(i18n.Locale()).NavSummary() }
+
+// NavSummary says "Summary"
+// in the language of msgs.
+//
+// Sidebar item and title of the page that shows what was finished in a day
+// or a week.
+func (msgs Messages) NavSummary() string {
+	return Catalog.Format(msgs.locale, "navSummary", nil)
+}
+
+// SummarySegmentDay says "Today"
+// in the language the app shows.
+//
+// Segment on the Summary page: the day.
+func SummarySegmentDay() string { return In(i18n.Locale()).SummarySegmentDay() }
+
+// SummarySegmentDay says "Today"
+// in the language of msgs.
+//
+// Segment on the Summary page: the day.
+func (msgs Messages) SummarySegmentDay() string {
+	return Catalog.Format(msgs.locale, "summarySegmentDay", nil)
+}
+
+// SummarySegmentWeek says "This week"
+// in the language the app shows.
+//
+// Segment on the Summary page: the week.
+func SummarySegmentWeek() string { return In(i18n.Locale()).SummarySegmentWeek() }
+
+// SummarySegmentWeek says "This week"
+// in the language of msgs.
+//
+// Segment on the Summary page: the week.
+func (msgs Messages) SummarySegmentWeek() string {
+	return Catalog.Format(msgs.locale, "summarySegmentWeek", nil)
+}
+
+// SummaryPrevious says "Previous"
+// in the language the app shows.
+//
+// Label and tooltip of the button that goes back a day or a week on the
+// Summary page.
+func SummaryPrevious() string { return In(i18n.Locale()).SummaryPrevious() }
+
+// SummaryPrevious says "Previous"
+// in the language of msgs.
+//
+// Label and tooltip of the button that goes back a day or a week on the
+// Summary page.
+func (msgs Messages) SummaryPrevious() string {
+	return Catalog.Format(msgs.locale, "summaryPrevious", nil)
+}
+
+// SummaryNext says "Next"
+// in the language the app shows.
+//
+// Label and tooltip of the button that goes forward a day or a week on the
+// Summary page. It stops at today.
+func SummaryNext() string { return In(i18n.Locale()).SummaryNext() }
+
+// SummaryNext says "Next"
+// in the language of msgs.
+//
+// Label and tooltip of the button that goes forward a day or a week on the
+// Summary page. It stops at today.
+func (msgs Messages) SummaryNext() string {
+	return Catalog.Format(msgs.locale, "summaryNext", nil)
+}
+
+// SummaryWeekRange says "{from} – {to}"
+// in the language the app shows.
+//
+// The week the Summary page shows, between the paging buttons.
+func SummaryWeekRange(from string, to string) string {
+	return In(i18n.Locale()).SummaryWeekRange(from, to)
+}
+
+// SummaryWeekRange says "{from} – {to}"
+// in the language of msgs.
+//
+// The week the Summary page shows, between the paging buttons.
+func (msgs Messages) SummaryWeekRange(from string, to string) string {
+	return Catalog.Format(msgs.locale, "summaryWeekRange", map[string]any{"from": from, "to": to})
+}
+
+// SummaryDayOfMonth says "{day}"
+// in the language the app shows.
+//
+// The last day of a week that ends in the same month it starts in, after
+// the first day: the 19 of "Oct 13 – 19".
+func SummaryDayOfMonth(day string) string { return In(i18n.Locale()).SummaryDayOfMonth(day) }
+
+// SummaryDayOfMonth says "{day}"
+// in the language of msgs.
+//
+// The last day of a week that ends in the same month it starts in, after
+// the first day: the 19 of "Oct 13 – 19".
+func (msgs Messages) SummaryDayOfMonth(day string) string {
+	return Catalog.Format(msgs.locale, "summaryDayOfMonth", map[string]any{"day": day})
+}
+
+// SummaryExport says "Export Markdown"
+// in the language the app shows.
+//
+// Button on the Summary page that opens the Markdown of the day or the
+// week.
+func SummaryExport() string { return In(i18n.Locale()).SummaryExport() }
+
+// SummaryExport says "Export Markdown"
+// in the language of msgs.
+//
+// Button on the Summary page that opens the Markdown of the day or the
+// week.
+func (msgs Messages) SummaryExport() string {
+	return Catalog.Format(msgs.locale, "summaryExport", nil)
+}
+
+// SummaryWritten says "{period} · written by the assistant"
+// in the language the app shows.
+//
+// Small header of the assistant's paragraph on the Summary page.
+func SummaryWritten(period string) string { return In(i18n.Locale()).SummaryWritten(period) }
+
+// SummaryWritten says "{period} · written by the assistant"
+// in the language of msgs.
+//
+// Small header of the assistant's paragraph on the Summary page.
+func (msgs Messages) SummaryWritten(period string) string {
+	return Catalog.Format(msgs.locale, "summaryWritten", map[string]any{"period": period})
+}
+
+// SummaryRewrite says "Rewrite"
+// in the language the app shows.
+//
+// Link that makes the assistant write the paragraph of the Summary page
+// again.
+func SummaryRewrite() string { return In(i18n.Locale()).SummaryRewrite() }
+
+// SummaryRewrite says "Rewrite"
+// in the language of msgs.
+//
+// Link that makes the assistant write the paragraph of the Summary page
+// again.
+func (msgs Messages) SummaryRewrite() string {
+	return Catalog.Format(msgs.locale, "summaryRewrite", nil)
+}
+
+// SummaryRewriteNew says "More was finished since this was written"
+// in the language the app shows.
+//
+// Tooltip of the dot beside Rewrite on the Summary page.
+func SummaryRewriteNew() string { return In(i18n.Locale()).SummaryRewriteNew() }
+
+// SummaryRewriteNew says "More was finished since this was written"
+// in the language of msgs.
+//
+// Tooltip of the dot beside Rewrite on the Summary page.
+func (msgs Messages) SummaryRewriteNew() string {
+	return Catalog.Format(msgs.locale, "summaryRewriteNew", nil)
+}
+
+// SummaryFailed says "Couldn't write it. Try Rewrite."
+// in the language the app shows.
+//
+// Quiet line in the place of the assistant's paragraph when writing it
+// failed.
+func SummaryFailed() string { return In(i18n.Locale()).SummaryFailed() }
+
+// SummaryFailed says "Couldn't write it. Try Rewrite."
+// in the language of msgs.
+//
+// Quiet line in the place of the assistant's paragraph when writing it
+// failed.
+func (msgs Messages) SummaryFailed() string {
+	return Catalog.Format(msgs.locale, "summaryFailed", nil)
+}
+
+// SummaryEmptyToday says "Nothing finished yet today"
+// in the language the app shows.
+//
+// Line in the place of the paragraph on the Summary page when nothing was
+// finished today.
+func SummaryEmptyToday() string { return In(i18n.Locale()).SummaryEmptyToday() }
+
+// SummaryEmptyToday says "Nothing finished yet today"
+// in the language of msgs.
+//
+// Line in the place of the paragraph on the Summary page when nothing was
+// finished today.
+func (msgs Messages) SummaryEmptyToday() string {
+	return Catalog.Format(msgs.locale, "summaryEmptyToday", nil)
+}
+
+// SummaryEmptyDay says "Nothing was finished that day"
+// in the language the app shows.
+//
+// Same, for a day that is over.
+func SummaryEmptyDay() string { return In(i18n.Locale()).SummaryEmptyDay() }
+
+// SummaryEmptyDay says "Nothing was finished that day"
+// in the language of msgs.
+//
+// Same, for a day that is over.
+func (msgs Messages) SummaryEmptyDay() string {
+	return Catalog.Format(msgs.locale, "summaryEmptyDay", nil)
+}
+
+// SummaryEmptyWeek says "Nothing finished yet this week"
+// in the language the app shows.
+//
+// Same, for the week that is not over.
+func SummaryEmptyWeek() string { return In(i18n.Locale()).SummaryEmptyWeek() }
+
+// SummaryEmptyWeek says "Nothing finished yet this week"
+// in the language of msgs.
+//
+// Same, for the week that is not over.
+func (msgs Messages) SummaryEmptyWeek() string {
+	return Catalog.Format(msgs.locale, "summaryEmptyWeek", nil)
+}
+
+// SummaryEmptyPastWeek says "Nothing was finished that week"
+// in the language the app shows.
+//
+// Same, for a week that is over.
+func SummaryEmptyPastWeek() string { return In(i18n.Locale()).SummaryEmptyPastWeek() }
+
+// SummaryEmptyPastWeek says "Nothing was finished that week"
+// in the language of msgs.
+//
+// Same, for a week that is over.
+func (msgs Messages) SummaryEmptyPastWeek() string {
+	return Catalog.Format(msgs.locale, "summaryEmptyPastWeek", nil)
+}
+
+// SummaryShippedToday says "Shipped today"
+// in the language the app shows.
+//
+// Label of the total at the foot of the ledger, for today.
+func SummaryShippedToday() string { return In(i18n.Locale()).SummaryShippedToday() }
+
+// SummaryShippedToday says "Shipped today"
+// in the language of msgs.
+//
+// Label of the total at the foot of the ledger, for today.
+func (msgs Messages) SummaryShippedToday() string {
+	return Catalog.Format(msgs.locale, "summaryShippedToday", nil)
+}
+
+// SummaryShippedDay says "Shipped that day"
+// in the language the app shows.
+//
+// Same, for a day that is over.
+func SummaryShippedDay() string { return In(i18n.Locale()).SummaryShippedDay() }
+
+// SummaryShippedDay says "Shipped that day"
+// in the language of msgs.
+//
+// Same, for a day that is over.
+func (msgs Messages) SummaryShippedDay() string {
+	return Catalog.Format(msgs.locale, "summaryShippedDay", nil)
+}
+
+// SummaryShippedWeek says "Shipped this week"
+// in the language the app shows.
+//
+// Same, for the week that is not over.
+func SummaryShippedWeek() string { return In(i18n.Locale()).SummaryShippedWeek() }
+
+// SummaryShippedWeek says "Shipped this week"
+// in the language of msgs.
+//
+// Same, for the week that is not over.
+func (msgs Messages) SummaryShippedWeek() string {
+	return Catalog.Format(msgs.locale, "summaryShippedWeek", nil)
+}
+
+// SummaryShippedPastWeek says "Shipped that week"
+// in the language the app shows.
+//
+// Same, for a week that is over.
+func SummaryShippedPastWeek() string { return In(i18n.Locale()).SummaryShippedPastWeek() }
+
+// SummaryShippedPastWeek says "Shipped that week"
+// in the language of msgs.
+//
+// Same, for a week that is over.
+func (msgs Messages) SummaryShippedPastWeek() string {
+	return Catalog.Format(msgs.locale, "summaryShippedPastWeek", nil)
+}
+
+// SummaryMerged says "{count, plural, one {# PR merged} other {# PRs merged}}"
+// in the language the app shows.
+//
+// In a row of the ledger: how many of the person's finished tasks went in
+// as a merged pull request.
+func SummaryMerged(count int) string { return In(i18n.Locale()).SummaryMerged(count) }
+
+// SummaryMerged says "{count, plural, one {# PR merged} other {# PRs merged}}"
+// in the language of msgs.
+//
+// In a row of the ledger: how many of the person's finished tasks went in
+// as a merged pull request.
+func (msgs Messages) SummaryMerged(count int) string {
+	return Catalog.Format(msgs.locale, "summaryMerged", map[string]any{"count": count})
+}
+
+// SummaryUnit says "{count, plural, one{task} other{tasks}}"
+// in the language the app shows.
+//
+// The unit after the count of finished tasks in a row of the ledger.
+func SummaryUnit(count int) string { return In(i18n.Locale()).SummaryUnit(count) }
+
+// SummaryUnit says "{count, plural, one{task} other{tasks}}"
+// in the language of msgs.
+//
+// The unit after the count of finished tasks in a row of the ledger.
+func (msgs Messages) SummaryUnit(count int) string {
+	return Catalog.Format(msgs.locale, "summaryUnit", map[string]any{"count": count})
+}
+
+// SummaryRowMerged says "PR #{number} merged"
+// in the language the app shows.
+//
+// In a task of the ledger: its pull request merged.
+func SummaryRowMerged(number string) string { return In(i18n.Locale()).SummaryRowMerged(number) }
+
+// SummaryRowMerged says "PR #{number} merged"
+// in the language of msgs.
+//
+// In a task of the ledger: its pull request merged.
+func (msgs Messages) SummaryRowMerged(number string) string {
+	return Catalog.Format(msgs.locale, "summaryRowMerged", map[string]any{"number": number})
+}
+
+// SummaryA11yRow says "{name}, {count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Accessibility label of a row of the ledger on the Summary page, which
+// opens to that person's tasks.
+func SummaryA11yRow(name string, count int) string {
+	return In(i18n.Locale()).SummaryA11yRow(name, count)
+}
+
+// SummaryA11yRow says "{name}, {count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Accessibility label of a row of the ledger on the Summary page, which
+// opens to that person's tasks.
+func (msgs Messages) SummaryA11yRow(name string, count int) string {
+	return Catalog.Format(msgs.locale, "summaryA11yRow", map[string]any{"name": name, "count": count})
+}
+
+// SummaryA11yScene says "The shipping scene. Click the sky to play it again."
+// in the language the app shows.
+//
+// Accessibility label of the pixel scene on the Summary page.
+func SummaryA11yScene() string { return In(i18n.Locale()).SummaryA11yScene() }
+
+// SummaryA11yScene says "The shipping scene. Click the sky to play it again."
+// in the language of msgs.
+//
+// Accessibility label of the pixel scene on the Summary page.
+func (msgs Messages) SummaryA11yScene() string {
+	return Catalog.Format(msgs.locale, "summaryA11yScene", nil)
+}
+
+// SummaryExportTitle says "Export Markdown"
+// in the language the app shows.
+//
+// Title of the sheet that shows the Markdown of the day or the week.
+func SummaryExportTitle() string { return In(i18n.Locale()).SummaryExportTitle() }
+
+// SummaryExportTitle says "Export Markdown"
+// in the language of msgs.
+//
+// Title of the sheet that shows the Markdown of the day or the week.
+func (msgs Messages) SummaryExportTitle() string {
+	return Catalog.Format(msgs.locale, "summaryExportTitle", nil)
+}
+
+// SummaryExportCopy says "Copy"
+// in the language the app shows.
+//
+// Button of the export sheet that copies the Markdown.
+func SummaryExportCopy() string { return In(i18n.Locale()).SummaryExportCopy() }
+
+// SummaryExportCopy says "Copy"
+// in the language of msgs.
+//
+// Button of the export sheet that copies the Markdown.
+func (msgs Messages) SummaryExportCopy() string {
+	return Catalog.Format(msgs.locale, "summaryExportCopy", nil)
+}
+
+// SummaryExportCopied says "Copied"
+// in the language the app shows.
+//
+// The Copy button for a moment after it copied.
+func SummaryExportCopied() string { return In(i18n.Locale()).SummaryExportCopied() }
+
+// SummaryExportCopied says "Copied"
+// in the language of msgs.
+//
+// The Copy button for a moment after it copied.
+func (msgs Messages) SummaryExportCopied() string {
+	return Catalog.Format(msgs.locale, "summaryExportCopied", nil)
+}
+
+// SummaryExportSave says "Save as…"
+// in the language the app shows.
+//
+// Button of the export sheet that saves the Markdown as a file.
+func SummaryExportSave() string { return In(i18n.Locale()).SummaryExportSave() }
+
+// SummaryExportSave says "Save as…"
+// in the language of msgs.
+//
+// Button of the export sheet that saves the Markdown as a file.
+func (msgs Messages) SummaryExportSave() string {
+	return Catalog.Format(msgs.locale, "summaryExportSave", nil)
+}
+
+// SummaryExportClose says "Close"
+// in the language the app shows.
+//
+// Button of the export sheet that closes it.
+func SummaryExportClose() string { return In(i18n.Locale()).SummaryExportClose() }
+
+// SummaryExportClose says "Close"
+// in the language of msgs.
+//
+// Button of the export sheet that closes it.
+func (msgs Messages) SummaryExportClose() string {
+	return Catalog.Format(msgs.locale, "summaryExportClose", nil)
+}
+
+// SummaryMdDay says "Daily summary, {date}"
+// in the language the app shows.
+//
+// Title of the exported Markdown of a day.
+func SummaryMdDay(date string) string { return In(i18n.Locale()).SummaryMdDay(date) }
+
+// SummaryMdDay says "Daily summary, {date}"
+// in the language of msgs.
+//
+// Title of the exported Markdown of a day.
+func (msgs Messages) SummaryMdDay(date string) string {
+	return Catalog.Format(msgs.locale, "summaryMdDay", map[string]any{"date": date})
+}
+
+// SummaryMdWeek says "Weekly summary, {from} – {to}"
+// in the language the app shows.
+//
+// Title of the exported Markdown of a week.
+func SummaryMdWeek(from string, to string) string { return In(i18n.Locale()).SummaryMdWeek(from, to) }
+
+// SummaryMdWeek says "Weekly summary, {from} – {to}"
+// in the language of msgs.
+//
+// Title of the exported Markdown of a week.
+func (msgs Messages) SummaryMdWeek(from string, to string) string {
+	return Catalog.Format(msgs.locale, "summaryMdWeek", map[string]any{"from": from, "to": to})
+}
+
+// SummaryMdParen says " ({detail})"
+// in the language the app shows.
+//
+// After a task title in the exported Markdown: its project and pull
+// request.
+func SummaryMdParen(detail string) string { return In(i18n.Locale()).SummaryMdParen(detail) }
+
+// SummaryMdParen says " ({detail})"
+// in the language of msgs.
+//
+// After a task title in the exported Markdown: its project and pull
+// request.
+func (msgs Messages) SummaryMdParen(detail string) string {
+	return Catalog.Format(msgs.locale, "summaryMdParen", map[string]any{"detail": detail})
+}
+
+// SummaryMdSaid says ": {said}"
+// in the language the app shows.
+//
+// After a task in the exported Markdown: what the agent's last report said.
+func SummaryMdSaid(said string) string { return In(i18n.Locale()).SummaryMdSaid(said) }
+
+// SummaryMdSaid says ": {said}"
+// in the language of msgs.
+//
+// After a task in the exported Markdown: what the agent's last report said.
+func (msgs Messages) SummaryMdSaid(said string) string {
+	return Catalog.Format(msgs.locale, "summaryMdSaid", map[string]any{"said": said})
+}
+
+// SummaryMdOpen says "Still open: {parts}"
+// in the language the app shows.
+//
+// Last line of the exported Markdown: what is still open.
+func SummaryMdOpen(parts string) string { return In(i18n.Locale()).SummaryMdOpen(parts) }
+
+// SummaryMdOpen says "Still open: {parts}"
+// in the language of msgs.
+//
+// Last line of the exported Markdown: what is still open.
+func (msgs Messages) SummaryMdOpen(parts string) string {
+	return Catalog.Format(msgs.locale, "summaryMdOpen", map[string]any{"parts": parts})
+}
+
+// SummaryOpenProgress says "{count} in progress"
+// in the language the app shows.
+//
+// Part of the still-open line: tasks an agent is working on.
+func SummaryOpenProgress(count int) string { return In(i18n.Locale()).SummaryOpenProgress(count) }
+
+// SummaryOpenProgress says "{count} in progress"
+// in the language of msgs.
+//
+// Part of the still-open line: tasks an agent is working on.
+func (msgs Messages) SummaryOpenProgress(count int) string {
+	return Catalog.Format(msgs.locale, "summaryOpenProgress", map[string]any{"count": count})
+}
+
+// SummaryOpenReview says "{count} in review"
+// in the language the app shows.
+//
+// Part of the still-open line: tasks waiting for the user's review.
+func SummaryOpenReview(count int) string { return In(i18n.Locale()).SummaryOpenReview(count) }
+
+// SummaryOpenReview says "{count} in review"
+// in the language of msgs.
+//
+// Part of the still-open line: tasks waiting for the user's review.
+func (msgs Messages) SummaryOpenReview(count int) string {
+	return Catalog.Format(msgs.locale, "summaryOpenReview", map[string]any{"count": count})
+}
+
+// SummaryOpenBlocked says "{count} blocked"
+// in the language the app shows.
+//
+// Part of the still-open line: tasks an agent is stuck on.
+func SummaryOpenBlocked(count int) string { return In(i18n.Locale()).SummaryOpenBlocked(count) }
+
+// SummaryOpenBlocked says "{count} blocked"
+// in the language of msgs.
+//
+// Part of the still-open line: tasks an agent is stuck on.
+func (msgs Messages) SummaryOpenBlocked(count int) string {
+	return Catalog.Format(msgs.locale, "summaryOpenBlocked", map[string]any{"count": count})
+}
+
+// SettingsEndOfDay says "End-of-day reminder"
+// in the language the app shows.
+//
+// Label of the switch for the end-of-day reminder in Settings > General >
+// Notifications.
+func SettingsEndOfDay() string { return In(i18n.Locale()).SettingsEndOfDay() }
+
+// SettingsEndOfDay says "End-of-day reminder"
+// in the language of msgs.
+//
+// Label of the switch for the end-of-day reminder in Settings > General >
+// Notifications.
+func (msgs Messages) SettingsEndOfDay() string {
+	return Catalog.Format(msgs.locale, "settingsEndOfDay", nil)
+}
+
+// SettingsEndOfDayMeta says "Weekdays: today's summary, and the weekly one on Friday"
+// in the language the app shows.
+//
+// Quiet line under the end-of-day reminder switch.
+func SettingsEndOfDayMeta() string { return In(i18n.Locale()).SettingsEndOfDayMeta() }
+
+// SettingsEndOfDayMeta says "Weekdays: today's summary, and the weekly one on Friday"
+// in the language of msgs.
+//
+// Quiet line under the end-of-day reminder switch.
+func (msgs Messages) SettingsEndOfDayMeta() string {
+	return Catalog.Format(msgs.locale, "settingsEndOfDayMeta", nil)
+}
+
+// SettingsEndOfDaySwitch says "Remind me at the end of the day"
+// in the language the app shows.
+//
+// Accessibility label of the end-of-day reminder switch.
+func SettingsEndOfDaySwitch() string { return In(i18n.Locale()).SettingsEndOfDaySwitch() }
+
+// SettingsEndOfDaySwitch says "Remind me at the end of the day"
+// in the language of msgs.
+//
+// Accessibility label of the end-of-day reminder switch.
+func (msgs Messages) SettingsEndOfDaySwitch() string {
+	return Catalog.Format(msgs.locale, "settingsEndOfDaySwitch", nil)
+}
+
+// SettingsEndOfDayTime says "Reminder time"
+// in the language the app shows.
+//
+// Label of the pop-up that sets when the end-of-day reminder comes.
+func SettingsEndOfDayTime() string { return In(i18n.Locale()).SettingsEndOfDayTime() }
+
+// SettingsEndOfDayTime says "Reminder time"
+// in the language of msgs.
+//
+// Label of the pop-up that sets when the end-of-day reminder comes.
+func (msgs Messages) SettingsEndOfDayTime() string {
+	return Catalog.Format(msgs.locale, "settingsEndOfDayTime", nil)
+}
+
+// NotifyDayDoneTitle says "Day's done"
+// in the language the app shows.
+//
+// Title of the end-of-day notification.
+func NotifyDayDoneTitle() string { return In(i18n.Locale()).NotifyDayDoneTitle() }
+
+// NotifyDayDoneTitle says "Day's done"
+// in the language of msgs.
+//
+// Title of the end-of-day notification.
+func (msgs Messages) NotifyDayDoneTitle() string {
+	return Catalog.Format(msgs.locale, "notifyDayDoneTitle", nil)
+}
+
+// NotifyWeekDoneTitle says "Day's done"
+// in the language the app shows.
+//
+// Title of the end-of-day notification on Friday, which is about the week.
+func NotifyWeekDoneTitle() string { return In(i18n.Locale()).NotifyWeekDoneTitle() }
+
+// NotifyWeekDoneTitle says "Day's done"
+// in the language of msgs.
+//
+// Title of the end-of-day notification on Friday, which is about the week.
+func (msgs Messages) NotifyWeekDoneTitle() string {
+	return Catalog.Format(msgs.locale, "notifyWeekDoneTitle", nil)
+}
+
+// NotifyDayDoneBody says "{count} finished today. See today's shipping?"
+// in the language the app shows.
+//
+// Body of the end-of-day notification when no pull request merged today.
+func NotifyDayDoneBody(count int) string { return In(i18n.Locale()).NotifyDayDoneBody(count) }
+
+// NotifyDayDoneBody says "{count} finished today. See today's shipping?"
+// in the language of msgs.
+//
+// Body of the end-of-day notification when no pull request merged today.
+func (msgs Messages) NotifyDayDoneBody(count int) string {
+	return Catalog.Format(msgs.locale, "notifyDayDoneBody", map[string]any{"count": count})
+}
+
+// NotifyDayDoneBodyPRs says "{count} finished today, {merged, plural, one {# PR} other {# PRs}} merged. See today's shipping?"
+// in the language the app shows.
+//
+// Body of the end-of-day notification when pull requests merged today.
+func NotifyDayDoneBodyPRs(count int, merged int) string {
+	return In(i18n.Locale()).NotifyDayDoneBodyPRs(count, merged)
+}
+
+// NotifyDayDoneBodyPRs says "{count} finished today, {merged, plural, one {# PR} other {# PRs}} merged. See today's shipping?"
+// in the language of msgs.
+//
+// Body of the end-of-day notification when pull requests merged today.
+func (msgs Messages) NotifyDayDoneBodyPRs(count int, merged int) string {
+	return Catalog.Format(msgs.locale, "notifyDayDoneBodyPRs", map[string]any{"count": count, "merged": merged})
+}
+
+// NotifyWeekDoneBody says "This week: {count} finished. The weekly summary is ready."
+// in the language the app shows.
+//
+// Body of the end-of-day notification on Friday.
+func NotifyWeekDoneBody(count int) string { return In(i18n.Locale()).NotifyWeekDoneBody(count) }
+
+// NotifyWeekDoneBody says "This week: {count} finished. The weekly summary is ready."
+// in the language of msgs.
+//
+// Body of the end-of-day notification on Friday.
+func (msgs Messages) NotifyWeekDoneBody(count int) string {
+	return Catalog.Format(msgs.locale, "notifyWeekDoneBody", map[string]any{"count": count})
+}
+
+// NotifyDayNothingBody says "That's it for today. See you tomorrow."
+// in the language the app shows.
+//
+// Body of the end-of-day notification on a day nothing was finished.
+func NotifyDayNothingBody() string { return In(i18n.Locale()).NotifyDayNothingBody() }
+
+// NotifyDayNothingBody says "That's it for today. See you tomorrow."
+// in the language of msgs.
+//
+// Body of the end-of-day notification on a day nothing was finished.
+func (msgs Messages) NotifyDayNothingBody() string {
+	return Catalog.Format(msgs.locale, "notifyDayNothingBody", nil)
 }

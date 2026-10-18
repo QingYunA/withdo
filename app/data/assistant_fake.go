@@ -15,13 +15,18 @@ type FakeAssistant struct {
 	Script func(text string) (Reply, error)
 	// Block, when non-nil, holds every Ask until it is closed or the request is cancelled.
 	Block chan struct{}
+	// SummaryScript answers a request for the paragraph of a period. Nil answers with one line.
+	SummaryScript func(SummaryRequest) (SummaryText, error)
+	// SummaryBlock, when non-nil, holds every Summarize until it is closed or the request is cancelled.
+	SummaryBlock chan struct{}
 
-	mu     sync.Mutex
-	asked  []string
-	places []Place
-	pics   [][]Attachment
-	undone []int
-	resets int
+	mu        sync.Mutex
+	asked     []string
+	places    []Place
+	pics      [][]Attachment
+	undone    []int
+	resets    int
+	summaries []SummaryRequest
 }
 
 var _ Assistant = (*FakeAssistant)(nil)
@@ -62,6 +67,35 @@ func (f *FakeAssistant) Reset() {
 	f.mu.Lock()
 	f.resets++
 	f.mu.Unlock()
+}
+
+// Summarize implements Assistant: SummaryScript answers it, or a fixed one-line paragraph when nil.
+func (f *FakeAssistant) Summarize(ctx context.Context, req SummaryRequest) (SummaryText, error) {
+	f.mu.Lock()
+	f.summaries = append(f.summaries, req)
+	script, block := f.SummaryScript, f.SummaryBlock
+	f.mu.Unlock()
+	if block != nil {
+		select {
+		case <-block:
+		case <-ctx.Done():
+			return SummaryText{}, ctx.Err()
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return SummaryText{}, err
+	}
+	if script == nil {
+		return SummaryText{Paragraph: "Done.", Model: "fake-model"}, nil
+	}
+	return script(req)
+}
+
+// Summaries is every request for a paragraph the UI made, in order.
+func (f *FakeAssistant) Summaries() []SummaryRequest {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]SummaryRequest(nil), f.summaries...)
 }
 
 // Asked is every text the UI sent, in order.

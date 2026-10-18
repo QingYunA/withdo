@@ -111,9 +111,13 @@ var avatarSprites = func() map[AvatarKind]*Sprite {
 	return out
 }()
 
-// spriteFileNames lists every file the code has loaded, sorted.
+// spriteFileNames lists every file the code names, sorted: the avatars it has loaded and the files
+// of the Summary scene.
 func spriteFileNames() []string {
 	out := append([]string(nil), spriteFiles...)
+	for name := range sceneFileSizes() {
+		out = append(out, name)
+	}
 	sort.Strings(out)
 	return out
 }

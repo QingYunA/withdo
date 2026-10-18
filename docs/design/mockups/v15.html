@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v15 草稿 — 日报周报的三种画法</title>
+<style>
+  :root { --bg: #fff; --subtle: #f5f5f7; --border: rgba(0,0,0,.10); --selected: rgba(91,91,214,.12);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --side: #ececf0; --frame: #1d1d1f; }
+  .dark { --bg: #1c1c1e; --subtle: #232326; --border: rgba(255,255,255,.10); --selected: rgba(124,124,240,.22);
+    --text: #f5f5f7; --text2: #a1a1a6; --text3: #636366; --accent: #7c7cf0; --side: #2a2a2e; --frame: #d8d8de; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  body.night { background: #111113; color: #e6e6ee; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; gap: 12px; align-items: center; }
+  h1 button { font: 500 12px/20px -apple-system; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  .night h1 button { background: rgba(255,255,255,.12); }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 44px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 18px; }
+  .night .lead, .night .sub, .night .note, .night .caption { color: #a1a1a6; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; max-width: 1000px; }
+  .pair { display: grid; grid-template-columns: 1000px 1000px; gap: 40px; align-items: start; }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  /* the window */
+  .win { display: flex; width: 1000px; height: 700px; border-radius: 12px; overflow: hidden; background: var(--bg); color: var(--text); box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); cursor: pointer; }
+  .side { width: 210px; background: var(--side); padding: 46px 10px 10px; font-size: 14px; flex: none; }
+  .side .r { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; border-radius: 7px; }
+  .side .r.on { background: var(--selected); }
+  .side .r i { margin-left: auto; font-style: normal; color: var(--text3); font-size: 13px; }
+  .side .ic { color: var(--text2); }
+  .main { flex: 1; padding: 30px 44px; overflow: hidden; }
+  .head { display: flex; align-items: center; gap: 12px; }
+  .head h3 { font-size: 26px; line-height: 32px; margin: 0; }
+  .seg { display: flex; background: var(--subtle); border-radius: 6px; padding: 2px; font-size: 13px; margin-left: 8px; }
+  .seg span { padding: 2px 12px; border-radius: 5px; color: var(--text2); }
+  .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .datenav { display: flex; align-items: center; gap: 6px; color: var(--text2); font-size: 14px; }
+  .exp { margin-left: auto; font-size: 13px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 3px 10px; border-radius: 7px; display: flex; gap: 6px; align-items: center; }
+
+  /* the scene band: pixels on a 3 pt cell, like a 12-grid sprite at 36 pt */
+  .band { margin-top: 18px; position: relative; width: 702px; }
+  .band svg { border-radius: 8px; }
+  .labels { position: relative; height: 18px; font-size: 12px; color: var(--text3); }
+  .labels span { position: absolute; top: 2px; text-align: center; }
+  .labels span.b { color: var(--text); font-weight: 600; }
+
+  /* the assistant's paragraph */
+  .ai { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; }
+  .bubble { position: relative; flex: 1; padding: 10px 14px 12px; background: var(--bg);
+    box-shadow: inset 0 0 0 3px var(--frame);
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+  .ai .av { margin-top: 2px; }
+  .ai .tail { margin-top: 14px; margin-right: -12px; z-index: 1; }
+  .ai-h { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text3); margin-bottom: 2px; }
+  .ai-h .redo { margin-left: auto; color: var(--accent); }
+  .ai-t { font-size: 14.5px; line-height: 22px; min-height: 44px; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: var(--text); vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .hero { margin: 14px 0 0; font-size: 15px; color: var(--text2); }
+  .hero b { color: var(--text); font-size: 22px; font-weight: 700; margin: 0 2px; }
+  .who { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; margin-top: 14px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  .who i { font-style: normal; font-weight: 400; color: var(--text3); }
+  .who .chev { margin-left: auto; color: var(--text3); }
+  .it { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0 2px 26px; }
+  .it .tt { font-size: 15px; }
+  .it .ss { font-size: 13px; line-height: 18px; color: var(--text2); }
+  .it .rt { margin-left: auto; color: var(--text3); font-size: 13px; white-space: nowrap; display: flex; gap: 10px; }
+  .chipp { font-size: 12px; color: var(--text2); background: var(--subtle); border-radius: 5px; padding: 0 6px; }
+  .more { color: var(--text3); font-size: 13px; padding: 10px 0 0; }
+
+  /* the shipping ledger */
+  .ledger { margin-top: 14px; font-size: 15px; }
+  .lrow { display: flex; align-items: center; gap: 8px; height: 34px; border-bottom: 1px solid var(--border); opacity: 0; }
+  .lrow.on { opacity: 1; }
+  .lrow .dots { flex: 1; border-bottom: 2px dotted var(--text3); margin: 0 6px; transform: translateY(4px); }
+  .lrow .n { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 28px; text-align: right; }
+  .lrow .x { color: var(--text2); font-size: 13px; min-width: 110px; text-align: right; }
+  .lrow.total { border-bottom: 0; font-weight: 600; }
+  .lrow.total .n { font-size: 22px; }
+
+  .cards { display: flex; gap: 12px; margin-top: 14px; }
+  .card { flex: 1; display: flex; gap: 10px; align-items: center; background: var(--subtle); border-radius: 10px; padding: 10px 12px; }
+  .card .k { font-size: 12px; color: var(--text2); }
+  .card .v { font-size: 15px; font-weight: 600; }
+
+  .strip { display: flex; gap: 24px; }
+  .strip > div { width: 351px; }
+  .strip .caption { margin-top: 8px; }
+
+  .rules, table.cmp { background: #fff; border-radius: 12px; padding: 16px 20px; font-size: 13px; line-height: 21px; color: #3a3a3c; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); }
+  .rules li { margin-bottom: 6px; }
+  table.cmp { border-collapse: separate; border-spacing: 0; width: 1000px; }
+  table.cmp th, table.cmp td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(0,0,0,.08); vertical-align: top; }
+  table.cmp th { font-weight: 600; }
+
+  .banner { width: 370px; display: flex; gap: 10px; padding: 12px; border-radius: 16px; background: rgba(246,246,248,.92); box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18); color: #1d1d1f; font-size: 13px; line-height: 18px; margin-bottom: 14px; }
+  .banner .t { font-weight: 600; } .banner .tm { margin-left: auto; color: #8e8e93; font-size: 12px; }
+  .prefs { width: 560px; background: var(--bg); color: var(--text); border-radius: 12px; padding: 6px 18px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); }
+  .pr { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .pr:last-child { border-bottom: 0; }
+  .pr .m { font-size: 12px; line-height: 17px; color: var(--text2); }
+  .sw { margin-left: auto; width: 32px; height: 19px; border-radius: 10px; background: #34c759; position: relative; flex: none; }
+  .sw::after { content: ""; position: absolute; right: 2px; top: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; }
+  .sw.off { background: #d1d1d6; } .sw.off::after { right: auto; left: 2px; }
+  .field { margin-left: auto; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: var(--subtle); }
+</style>
+<style id="kf"></style>
+</head>
+<body>
+<h1>v15 · 日报周报的三种画法（#67）<button id="mode">切到深色</button><button id="replay">全部重播</button></h1>
+<p class="lead">在 v14b 的基础上加两样东西：顶上一条像素小场景，把「做完一件事」画出来；场景下面是助手写的两三句话。场景有三种画法：砌砖、出货、上架，下面都画了日报和周报，方便对比。点任意一个窗口可以重播动画。</p>
+
+<h2>先并排看三条场景（日报）</h2>
+<div class="strip" id="strip"></div>
+
+<h2>一 · 砌砖：一件事一块砖</h2>
+<p class="sub">日报：今天做完的事一块块落下来，砌成一小截墙，砖的颜色是谁做的。周报：每天一段，连成这一周的墙，没做事的那天就是平地。</p>
+<div class="pair"><div id="a-day"></div><div id="a-week"></div></div>
+
+<h2>二 · 出货：一件事一个包裹（Stardew 收工结算）</h2>
+<p class="sub">日报：每个人把自己做完的包裹抛进出货箱，包裹上的绳子是这个人的颜色。下面是结算单，一行一个人，依次亮起、数字往上跳，点一行展开那个人做完的事。周报：一天一个箱子，周末的箱子盖着。</p>
+<div class="pair"><div id="b-day"></div><div id="b-week"></div></div>
+
+<h2>三 · 上架：一件事一本书</h2>
+<p class="sub">日报：做完的事一本本插上书架，书脊的颜色是谁做的，合并了 PR 的书有一道金边，书的高矮跟着标题长短变。周报：一整排书架，每天之间用书挡隔开。</p>
+<div class="pair"><div id="c-day"></div><div id="c-week"></div></div>
+
+<h2>四 · 三种画法对比</h2>
+<div id="cmp"></div>
+
+<h2>五 · 助手的那段话、收工提醒</h2>
+<div class="pair" style="grid-template-columns: 560px 1000px">
+  <div>
+    <div class="caption">通知</div>
+    <div id="banners"></div>
+    <div class="caption" style="margin-top:22px">设置 › 通用 › 通知</div>
+    <div class="prefs" id="prefs"></div>
+  </div>
+  <div><div class="caption">规则</div><ul class="rules">
+    <li><b>助手写什么</b>：只用这段时间做完的任务、它们的汇报和 PR 标题，看不到代码。日报 2～3 句，周报 3～5 句。说你和 agent 做了什么，不打鸡血、不说教，不编没有的事。</li>
+    <li><b>什么时候写</b>：第一次打开这一天（这一周）时写一次，存进库里，之后再打开直接显示，不再花钱。右上角「重写」再写一次。今天（本周）还没过完，有新做完的事时，「重写」旁边多一个小点提示。</li>
+    <li><b>用哪个模型</b>：设置里助手用的模型，头像跟着模型的 logo（#63）。没配模型时这一段不显示，其余照常。</li>
+    <li><b>出字</b>：一个字一个字出来，每 30 ms 一个字，后面跟一个闪烁的方块光标，写完光标消失。已经存下的那段直接整段显示。</li>
+    <li><b>导出 Markdown</b>：这段话放在最前面，下面是清单。</li>
+    <li><b>场景动画</b>：一帧 100 ms，一件事落下用 5 帧，相邻两件隔 350 ms（周报 120 ms）。打开页面播一次，之后静止；点场景重播。系统开了「减弱动态效果」时直接画最终的样子。</li>
+    <li><b>场景的天色</b>：跟着打开时的本地时间，白天、黄昏、夜里三种。看过去的日子用那天收工时的天色（黄昏）。</li>
+    <li><b>彩蛋（以后再说）</b>：合并了 PR 的日子，偶尔有只螃蟹从场景里走过去。</li>
+    <li><b>收工提醒</b>：每个工作日到点提醒一次，点开是今天的日报；周五换成周报。窗口正停在「总结」上时不提醒。今天一件没做完也提醒，只是换句话，不提「0 件」。</li>
+    <li><b>不做</b>：连续打卡、没做完的事标红、分享卡（以后再说）。</li>
+  </ul></div>
+</div>
+
+<script>
+/* ---------- sprites (12×12, same as v14) ---------- */
+const S = {
+  you: { pal: { h: '#3A3550', s: '#F3C7A0', e: '#2B2838', b: '#5B5BD6', d: '#4646B8', c: '#E88B8B' }, g: ['...hhhhhh...', '..hhhhhhhh..', '.hhhhhhhhhh.', '.hhssssssh..', '.hsesssses..', '..ssssssss..', '..scsssscs..', '...ssssss...', '..bbbbbbbb..', '.bbbbddbbbb.', '.bbbbddbbbb.', '.bbbbbbbbbb.'] },
+  crab: { pal: { o: '#D97757', d: '#B85C3E', e: '#2B1D17' }, g: ['............', '............', '..oooooooo..', '..oooooooo..', '..oeooooeo..', 'oooeooooeooo', 'oooooooooooo', '..oooooooo..', '..oooooooo..', '..d.d..d.d..', '..d.d..d.d..', '............'] },
+  codex: { pal: { b: '#5B7CFA', d: '#4A5EE0', w: '#FFFFFF' }, g: ['............', '...bbb.bbb..', '..bbbbbbbbb.', '.bbbbbbbbbbb', '.bwbbbbbbbbb', 'bbbwbbbbbbbb', 'bbbbwbbbbbbb', 'bbbwbbbbbbbb', 'bbwbbbwwwbbb', '.ddddddddddd', '..dddd.dddd.', '............'] },
+  bot: { pal: { a: '#9DB6FF', m: '#5B5BD6', w: '#FFFFFF', e: '#1D2A55', d: '#4646B8' }, g: ['.....a......', '.....m......', '..mmmmmmmm..', '.mmwwmmwwmm.', '.mmwemmwemm.', '.mmmmmmmmmm.', '..mmeeeemm..', '..mmmmmmmm..', '...dddddd...', '..dd....dd..', '............', '............'] },
+  merge: { pal: { m: '#8E4EC6' }, g: ['............', '..mm....mm..', '..mm....mm..', '...m....m...', '...m...m....', '...m..m.....', '...m.m......', '...mm.......', '...m........', '...m........', '..mm........', '..mm........'] },
+  cal: { pal: { k: '#6E6E73', r: '#E5484D' }, g: ['............', '..k.....k...', '.rrrrrrrrrr.', '.rrrrrrrrrr.', '.k........k.', '.k.kk.kk..k.', '.k........k.', '.k.kk.kk..k.', '.k........k.', '.kkkkkkkkkk.', '............', '............'] },
+};
+const cells = (n) => { const a = S[n]; let r = ''; a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; })); return r; };
+const sprite = (n, size) => `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12">${cells(n)}</svg>`;
+const P = (d, s) => `<svg class="px" width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="${d}"/></svg>`;
+const I = {
+  inbox: 'M3 3h18v2H3zm0 16h18v2H3zM1 5h2v14H1zm20 0h2v14h-2zM3 13h5v2H3zm13 0h5v2h-5zm-8 2h2v2H8zm6 0h2v2h-2zm-4 2h4v2h-4z',
+  cal: 'M5 5h14v2H5zm0 14h14v2H5zM3 7h2v12H3zm16 0h2v12h-2zM7 3h2v4H7zm8 0h2v4h-2zM5 10h14v2H5z',
+  check: 'M18 6h2v2h-2zm-2 4V8h2v2zm-2 2v-2h2v2zm-2 2h2v-2h-2zm-2 2h2v-2h-2zm-2 0v2h2v-2zm-2-2h2v2H6zm0 0H4v-2h2z',
+  list: 'M4 5h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zm-4 6h2v2H4zm4 0h12v2H8z',
+  left: 'M8 13v-2h2v2H8Zm2-2V9h2v2h-2Zm0 4v-2h2v2h-2Zm2-6V7h2v2h-2Zm0 8v-2h2v2h-2Zm2-10V5h2v2h-2Zm0 12v-2h2v2h-2Z',
+  right: 'M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z',
+  copy: 'M8 2h12v2H8zm0 14h12v2H8zM6 4h2v12H6zm14 0h2v12h-2zM2 8h2v14H2zm2 12h12v2H4zm12-2h2v2h-2z',
+};
+
+/* ---------- data ---------- */
+const SH = { you: ['#8484EC', '#5B5BD6', '#3F3FA8'], claude: ['#EC9877', '#D97757', '#A9502F'], codex: ['#86A0FD', '#5B7CFA', '#3D55CF'] };
+const SPR = { you: 'you', claude: 'crab', codex: 'codex' };
+const TODAY = [
+  { a: 'you', t: '交房租', p: '收件箱', tm: '上午 9:40' },
+  { a: 'codex', t: 'Map worktrees to the main repo', s: 'PR #31 已合并 · 把 worktree 映射回主仓库', p: 'picpocket', tm: '上午 10:20', pr: 1 },
+  { a: 'claude', t: 'Native UI with mygo', s: 'PR #12 已合并 · Board, lists and inspector are in', p: 'adhd-todo', tm: '上午 11:05', pr: 1 },
+  { a: 'claude', t: 'Port the MCP server', s: 'PR #14 已合并', p: 'adhd-todo', tm: '下午 1:50', pr: 1 },
+  { a: 'you', t: '回复设计反馈', p: 'adhd-todo', tm: '下午 2:30' },
+  { a: 'codex', t: '修复导入时的空指针', p: 'picpocket', tm: '下午 3:02' },
+  { a: 'claude', t: '收下动画改成盖章后折叠', s: 'PR #8 · 测试和截图都更新了', p: 'adhd-todo', tm: '下午 4:12' },
+];
+const WEEK = [
+  ['一', ['claude', 'you', 'codex', 'claude']],
+  ['二', ['you', 'claude', 'you']],
+  ['三', ['claude', 'codex', 'claude', 'you', 'codex', 'claude']],
+  ['四', ['you', 'claude', 'codex', 'claude', 'you']],
+  ['五', TODAY.map(x => x.a)],
+  ['六', []], ['日', []],
+];
+const AI_DAY = '今天收了 7 件。你把房租交了，设计反馈也回了；Claude Code 把原生界面和 MCP 服务送进了主干，Codex 修好了 picpocket 的 worktree 映射。#8 还在等合并，明天先看它。';
+const AI_WEEK = '这周做完 25 件，周五最忙，一天 7 件。主线是 adhd-todo 的原生界面：Claude Code 做了 11 件，9 个 PR 合了进去。你这边 8 件，房租、牙医这些生活里的事也都办了。周末两天空着。';
+
+/* ---------- pixel scene ---------- */
+const W = 234, H = 40, G = 36;
+const R = (x, y, w, h, f, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" ${extra}/>`;
+let kfs = [], kn = 0;
+// a stepped move: pts are [dx, dy] offsets from the final spot, one per frame, the last is [0, 0]
+function frames(pts, delay, frameMs = 100) {
+  const name = 'k' + (kn++), n = pts.length;
+  let s = `@keyframes ${name}{0%{opacity:0;transform:translate(${pts[0][0]}px,${pts[0][1]}px)}0.1%{opacity:1;transform:translate(${pts[0][0]}px,${pts[0][1]}px)}`;
+  pts.forEach((p, i) => { if (i) s += `${(i / (n - 1) * 100).toFixed(2)}%{opacity:1;transform:translate(${p[0]}px,${p[1]}px)}`; });
+  kfs.push(s + '}');
+  return `style="animation:${name} ${(n - 1) * frameMs}ms step-end ${delay}ms both"`;
+}
+const fall = (from, delay) => frames([0, .2, .45, .7, .9, 1].map(t => [0, Math.round(-from * (1 - t * t))]), delay);
+
+function sky(kind) {
+  const night = kind === 'night';
+  const bands = night ? ['#141631', '#1a1d40', '#21254f', '#2a2e5e'] : ['#3b2f5c', '#5b3f73', '#8a4f7d', '#c9666f', '#e98a5f'];
+  const bh = Math.ceil(G / bands.length); let s = '';
+  bands.forEach((c, i) => { s += R(0, i * bh, W, bh, c); });
+  for (let i = 1; i < bands.length; i++) { const y = i * bh - 1; for (let x = (i % 2); x < W; x += 2) s += R(x, y, 1, 1, bands[i]); }
+  if (night) {
+    for (let i = 0; i < 46; i++) { const x = (i * 53 + 7) % W, y = (i * 29 + 3) % 22; s += R(x, y, 1, 1, '#e8e6ff', i % 4 === 0 ? `class="tw" style="animation-delay:${(i % 7) * 230}ms"` : ''); }
+    for (let y = -4; y <= 4; y++) for (let x = -4; x <= 4; x++) if (x * x + y * y <= 18) s += R(205 + x, 8 + y, 1, 1, (x === 1 && y === -1) || (x === -2 && y === 1) ? '#d9cc9f' : '#f4e9c1');
+  } else {
+    for (let y = -12; y <= 0; y++) for (let x = -12; x <= 12; x++) { const d = x * x + y * y; if (d <= 144) s += R(96 + x, G - 2 + y, 1, 1, d <= 81 ? '#ffd27a' : '#f3a35f'); }
+  }
+  const bc = night ? '#0e1030' : '#2a2238', lit = night ? '#ffd27a' : '#ffcf73';
+  for (let x = 0; x < W;) {
+    const w = 8 + ((x * 5) % 9), h = 5 + ((x * 7) % 11);
+    s += R(x, G - h, w, h, bc);
+    for (let wy = G - h + 2; wy < G - 2; wy += 4) for (let wx = x + 2; wx < x + w - 1; wx += 3) if (((wx * 7 + wy * 13) % 11) < 3) s += R(wx, wy, 1, 2, lit);
+    x += w + 1;
+  }
+  s += R(0, G, W, 4, night ? '#0b0c22' : '#1f1a2b') + R(0, G, W, 1, night ? '#1d1f45' : '#3a2f4a');
+  return s;
+}
+const actor = (n, x) => `<g transform="translate(${x} ${G - 12})">${cells(n)}</g>`;
+const svg = (inner, width = 702) => `<svg class="px" width="${width}" height="${width * H / W}" viewBox="0 0 ${W} ${H}">${inner}</svg>`;
+
+/* bricks */
+function brick(x, y, w, h, a) {
+  const [l, m, d] = SH[a];
+  return R(x, y, w - 1, h - 1, m) + R(x, y, w - 1, 1, l) + R(x, y + h - 2, w - 1, 1, d) + R(x + w - 2, y, 1, h - 1, d);
+}
+// lay items on a wall segment [x0, x0 + width), courses of bw × bh, running bond
+function lay(items, x0, width, bw, bh, delay0, step) {
+  let s = '', i = 0, k = 0;
+  while (i < items.length) {
+    const off = k % 2 ? bw / 2 : 0, slots = [];
+    if (off) slots.push([x0, off]);
+    for (let x = x0 + off; x < x0 + width; x += bw) slots.push([x, Math.min(bw, x0 + width - x)]);
+    for (const [x, w] of slots) { if (i >= items.length) break; s += `<g ${fall(30, delay0 + i * step)}>${brick(x, G - (k + 1) * bh, w, bh, items[i])}</g>`; i++; }
+    k++;
+  }
+  return s;
+}
+const sceneA = (w) => svg(sky('dusk') + actor('you', 14) + actor('crab', 30) + actor('codex', 46) + lay(TODAY.map(x => x.a), 120, 44, 11, 6, 300, 350), w);
+function sceneAWeek() {
+  let s = sky('night'), seg = 30;
+  WEEK.forEach(([d, items], i) => { const x = 12 + i * seg; s += items.length ? lay(items, x, seg, 15, 6, 200 + WEEK.slice(0, i).reduce((n, w) => n + w[1].length, 0) * 120, 120) : R(x + 12, G - 2, 1, 2, '#3f7d3a') + R(x + 14, G - 3, 1, 3, '#4f9a48') + R(x + 16, G - 2, 1, 2, '#3f7d3a'); });
+  return svg(s);
+}
+
+/* parcels */
+function parcel(x, y, a) {
+  const [l, m] = SH[a];
+  return R(x, y, 6, 5, '#c8955a') + R(x, y, 6, 1, '#e2b47c') + R(x, y + 4, 6, 1, '#9c6b3c') + R(x + 2, y, 2, 5, m) + R(x + 2, y, 2, 1, l);
+}
+function bin(x, rim, w, h, closed) {
+  let s = R(x, rim, w, h, '#a86d35');
+  for (let y = rim + 3; y < rim + h; y += 3) s += R(x, y, w, 1, '#8b5a2b');
+  s += R(x, rim, w, 1, '#c98a4b') + R(x, rim, 1, h, '#5a3a1c') + R(x + w - 1, rim, 1, h, '#5a3a1c') + R(x + 3, rim + 1, 1, h - 1, '#8b5a2b') + R(x + w - 4, rim + 1, 1, h - 1, '#8b5a2b');
+  if (closed) s += R(x - 1, rim - 2, w + 2, 2, '#6b4220') + R(x - 1, rim - 2, w + 2, 1, '#8b5a2b');
+  return s;
+}
+const lid = (x, rim, w) => R(x + 1, rim - 7, w - 2, 7, '#6b4220') + R(x + 1, rim - 7, w - 2, 1, '#8b5a2b');
+const heap = (bx, rim, i) => [bx + 2 + (i % 4) * 6 + (Math.floor(i / 4) % 2) * 3, rim - 4 - Math.floor(i / 4) * 4];
+function sceneB(w) {
+  const pos = { you: 14, claude: 30, codex: 46 }, bx = 168, rim = 25;
+  let s = sky('dusk') + actor('you', 14) + actor('crab', 30) + actor('codex', 46) + lid(bx, rim, 30);
+  TODAY.forEach((it, i) => {
+    const [ex, ey] = heap(bx, rim, i), sx = pos[it.a] + 6, sy = G - 10;
+    const pts = [0, .2, .4, .6, .8, 1].map(t => [Math.round(sx + (ex - sx) * t - ex), Math.round(sy + (ey - sy) * t - 16 * 4 * t * (1 - t) - ey)]);
+    s += `<g ${frames(pts, 300 + i * 350)}>${parcel(ex, ey, it.a)}</g>`;
+  });
+  return svg(s + bin(bx, rim, 30, G - rim), w);
+}
+function sceneBWeek() {
+  let s = sky('night'), n = 0;
+  WEEK.forEach(([d, items], i) => {
+    const bx = 6 + i * 32, rim = 28;
+    if (items.length) { s += lid(bx, rim, 27); items.forEach((a, j) => { const [x, y] = heap(bx, rim, j); s += `<g ${fall(30, 200 + (n++) * 120)}>${parcel(x, y, a)}</g>`; }); }
+    s += bin(bx, rim, 27, G - rim, !items.length);
+  });
+  return svg(s);
+}
+
+/* books */
+function book(x, h, w, a, gold) {
+  const [l, m, d] = SH[a], y = G - h;
+  return R(x, y, w, h, m) + R(x, y, 1, h, l) + R(x + w - 1, y, 1, h, d) + R(x, y + 2, w, 1, gold ? '#e8c25a' : d) + R(x, G - 3, w, 1, gold ? '#e8c25a' : d) + R(x + 1, y + Math.floor(h / 2) - 2, w - 2, 3, 'rgba(255,255,255,.55)');
+}
+const bookend = (x) => R(x, G - 10, 2, 10, '#8e8e99') + R(x, G - 10, 2, 1, '#b4b4c0') + R(x - 2, G - 1, 6, 1, '#6e6e7a');
+const bh = (t) => 13 + (t.length * 3) % 10;
+function sceneC(w) {
+  let s = sky('dusk') + actor('you', 14) + actor('crab', 30) + actor('codex', 46) + bookend(100), x = 104;
+  TODAY.forEach((it, i) => { const bw = it.a === 'you' ? 6 : 5; s += `<g ${fall(30, 300 + i * 350)}>${book(x, bh(it.t), bw, it.a, it.pr)}</g>`; x += bw + 1; });
+  return svg(s + bookend(x + 1), w);
+}
+function sceneCWeek(labels) {
+  let s = sky('night'), x = 10, n = 0;
+  WEEK.forEach(([d, items], i) => {
+    const x0 = x; s += bookend(x); x += 4;
+    items.forEach((a, j) => { const h = 12 + ((i * 7 + j * 5) % 10); s += `<g ${fall(30, 200 + (n++) * 120)}>${book(x, h, 5, a, (i + j) % 4 === 1)}</g>`; x += 6; });
+    if (!items.length) x += 10;
+    labels.push([d, x0, x - x0]); x += 3;
+  });
+  return svg(s + bookend(x));
+}
+
+/* ---------- window chrome ---------- */
+const side = () => `<div class="side">
+  <div class="r">${sprite('you', 18)}我的<i>4</i></div><div class="r">${sprite('bot', 18)}Agent<i>3</i></div>
+  <div class="r"><span class="ic">${P(I.inbox, 18)}</span>收件箱<i>3</i></div><div class="r"><span class="ic">${P(I.cal, 18)}</span>日历</div>
+  <div class="r"><span class="ic">${P(I.check, 18)}</span>已完成</div><div class="r on"><span class="ic" style="color:var(--accent)">${P(I.list, 18)}</span>总结</div>
+  <div style="font-size:12px;color:var(--text3);margin:18px 8px 6px">项目</div><div class="r">adhd-todo</div><div class="r">picpocket</div></div>`;
+const head = (week) => `<div class="head"><h3>总结</h3><span class="seg"><span class="${week ? '' : 'on'}">今天</span><span class="${week ? 'on' : ''}">本周</span></span>
+  <span class="datenav">${P(I.left, 12)}${week ? '10 月 13 日 – 19 日' : '10 月 17 日 星期五'}${P(I.right, 12)}</span>
+  <span class="exp">${P(I.copy, 12)}导出 Markdown</span></div>`;
+const tail = `<svg class="px tail" width="12" height="15" viewBox="0 0 4 5">${R(0, 2, 1, 1, 'var(--frame)')}${R(1, 1, 1, 3, 'var(--frame)')}${R(2, 0, 2, 5, 'var(--frame)')}${R(2, 1, 2, 3, 'var(--bg)')}${R(1, 2, 1, 1, 'var(--bg)')}</svg>`;
+const ai = (txt, week) => `<div class="ai"><span class="av">${sprite('bot', 36)}</span>${tail}<div class="bubble"><div class="ai-h">${week ? '这一周' : '今天'} · 助手写的<span class="redo">重写</span></div><div class="ai-t" data-text="${txt}"></div></div></div>`;
+const it = (x) => `<div class="it"><div><div class="tt">${x.t}</div>${x.s ? `<div class="ss">${x.s}</div>` : ''}</div><span class="rt"><span class="chipp">${x.p}</span>${x.tm || ''}</span></div>`;
+const who = (a, name, n, open) => `<div class="who">${sprite(SPR[a], 18)}${name} <i>${n}</i><span class="chev">${P(open ? I.right : I.right, 12)}</span></div>`;
+const labelsFor = (list) => `<div class="labels">${list.map(([d, x, w]) => `<span class="${d === '五' ? 'b' : ''}" style="left:${x * 3}px;width:${w * 3}px">${d}</span>`).join('')}</div>`;
+const cards = () => `<div class="cards">
+  <div class="card">${sprite('cal', 24)}<div><div class="k">最忙的一天</div><div class="v">周五 · 7 件</div></div></div>
+  <div class="card">${sprite('crab', 24)}<div><div class="k">做得最多</div><div class="v">Claude Code · 11 件</div></div></div>
+  <div class="card">${sprite('merge', 24)}<div><div class="k">合并的 PR</div><div class="v">9 个</div></div></div></div>`;
+const list = () => `${who('you', '你', 2, 1)}${TODAY.filter(x => x.a === 'you').map(it).join('')}${who('claude', 'Claude Code', 3, 1)}${TODAY.filter(x => x.a === 'claude').map(it).join('')}${who('codex', 'Codex', 2)}`;
+const ledger = (rows, total) => `<div class="ledger">${rows.map(([a, name, n, x]) => `<div class="lrow">${sprite(SPR[a], 18)}${name}<span class="dots"></span><span class="x">${x}</span><span class="n" data-n="${n}">0</span><span style="color:var(--text3)">件</span><span class="chev" style="color:var(--text3)">${P(I.right, 12)}</span></div>`).join('')}
+  <div class="lrow total">${total}<span class="dots"></span><span class="n" data-n="${rows.reduce((s, r) => s + r[2], 0)}">0</span><span style="color:var(--text3)">件</span></div></div>`;
+
+const views = {
+  'a-day': () => ({ html: `${head(false)}<div class="band">${sceneA()}</div>${ai(AI_DAY)}<div class="hero">今天砌了<b class="tick" data-n="7" data-step="350" data-delay="800">0</b>块砖 · 你 2，Agent 5 · 合并了 3 个 PR</div>${list()}`, note: '砖从天上一块块掉下来，每落一块，标题里的数字加 1。场景左边站着今天干过活的人（你和 agent），没干活的不站。' }),
+  'a-week': () => { const lb = WEEK.map(([d], i) => [d, 12 + i * 30, 30]); return { html: `${head(true)}<div class="band">${sceneAWeek()}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}<div class="hero">这周砌了<b class="tick" data-n="25" data-step="120" data-delay="700">0</b>块砖 · 你 8，Agent 17 · 合并了 9 个 PR</div>${cards()}`, note: '从周一砌到周日，一天一段。周末没事就是平地，长几根草，不扣分。下面三张小卡，再往下是和 v14 一样的分组清单（这里省略）。' }; },
+  'b-day': () => ({ html: `${head(false)}<div class="band">${sceneB()}</div>${ai(AI_DAY)}${ledger([['you', '你', 2, ''], ['claude', 'Claude Code', 3, '合并 2 个 PR'], ['codex', 'Codex', 2, '合并 1 个 PR']], '今天出货')}`, note: '包裹按做完的顺序，从做的人手里抛进箱子，箱子里越堆越高。包裹全落完后，结算单一行行亮起，数字往上跳；点一行展开那个人做完的事（和 v14b 的清单一样）。' }),
+  'b-week': () => { const lb = WEEK.map(([d], i) => [d, 6 + i * 32, 27]); return { html: `${head(true)}<div class="band">${sceneBWeek()}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}${ledger([['you', '你', 8, ''], ['claude', 'Claude Code', 11, '合并 6 个 PR'], ['codex', 'Codex', 6, '合并 3 个 PR']], '本周出货')}`, note: '一天一个出货箱，包裹堆得越高那天越忙。周末的箱子盖着盖子。结算单按人汇总这一周。' }; },
+  'c-day': () => ({ html: `${head(false)}<div class="band">${sceneC()}</div>${ai(AI_DAY)}<div class="hero">今天上架<b class="tick" data-n="7" data-step="350" data-delay="800">0</b>本 · 你 2，Agent 5 · 合并了 3 个 PR</div>${list()}`, note: '书一本本插上架，书挡跟着往右挪。书脊颜色是谁做的；合并了 PR 的书上下各一道金边。鼠标停在一本书上显示标题，点它打开检查器。' }),
+  'c-week': () => { const lb = []; const sc = sceneCWeek(lb); return { html: `${head(true)}<div class="band">${sc}${labelsFor(lb)}</div>${ai(AI_WEEK, 1)}<div class="hero">这周上架<b class="tick" data-n="25" data-step="120" data-delay="700">0</b>本 · 你 8，Agent 17 · 合并了 9 个 PR</div>${cards()}`, note: '一整排书架，每天之间一个书挡。周末只有书挡，中间空着。书多了以后一排放不下，就只画最近的、左边写「之前 N 本」。' }; },
+};
+
+let timers = [];
+function typeIn(root) {
+  root.querySelectorAll('.ai-t').forEach(el => {
+    const t = el.dataset.text; let i = 0; el.innerHTML = '<span class="caret"></span>';
+    const tick = () => { i++; el.innerHTML = t.slice(0, i) + (i < t.length ? '<span class="caret"></span>' : ''); if (i < t.length) timers.push(setTimeout(tick, 30)); };
+    timers.push(setTimeout(tick, 500));
+  });
+}
+function count(root) {
+  root.querySelectorAll('.tick').forEach(el => { const n = +el.dataset.n; for (let i = 1; i <= n; i++) timers.push(setTimeout(() => { el.textContent = i; }, +el.dataset.delay + (i - 1) * +el.dataset.step)); });
+  const rows = root.querySelectorAll('.lrow'); if (!rows.length) return;
+  const start = root.closest('#b-week') ? 3600 : 2900;
+  rows.forEach((r, k) => timers.push(setTimeout(() => {
+    r.classList.add('on'); const n = r.querySelector('.n'), to = +n.dataset.n;
+    for (let i = 1; i <= to; i++) timers.push(setTimeout(() => { n.textContent = i; }, i * 60));
+  }, start + k * 450)));
+}
+function render(id) {
+  const el = document.getElementById(id), v = views[id]();
+  el.innerHTML = `<div class="win ${document.body.classList.contains('night') ? 'dark' : ''}">${side()}<div class="main">${v.html}</div></div><p class="note">${v.note}</p>`;
+  document.getElementById('kf').textContent = kfs.join('\n') + '\n.tw{animation:tw 1.6s steps(1) infinite}@keyframes tw{50%{opacity:.25}}';
+  typeIn(el); count(el);
+  el.querySelector('.win').onclick = () => render(id);
+}
+function renderStrip() {
+  const el = document.getElementById('strip');
+  el.innerHTML = [['砌砖', sceneA(351)], ['出货', sceneB(351)], ['上架', sceneC(351)]].map(([n, s]) => `<div>${s}<div class="caption">${n}</div></div>`).join('');
+  document.getElementById('kf').textContent = kfs.join('\n') + '\n.tw{animation:tw 1.6s steps(1) infinite}@keyframes tw{50%{opacity:.25}}';
+  el.onclick = renderStrip;
+}
+function all() { timers.forEach(clearTimeout); timers = []; renderStrip(); Object.keys(views).forEach(render); }
+all();
+
+document.getElementById('cmp').innerHTML = `<table class="cmp">
+  <tr><th></th><th>砌砖</th><th>出货</th><th>上架</th></tr>
+  <tr><th>一眼看出谁做得多</th><td>看颜色，砖混在一起，要数</td><td>结算单直接写着，最清楚</td><td>看颜色，书混在一起，要数</td></tr>
+  <tr><th>看得出单件事</th><td>不行，砖都一样</td><td>不行，包裹都一样</td><td>能：书有高矮，PR 有金边，停上去看标题</td></tr>
+  <tr><th>一天 30 件时</th><td>墙变高，场景放得下 8 层</td><td>箱子堆冒尖，要限高，多的不画</td><td>一排放不下，要折行或省略</td></tr>
+  <tr><th>动画手感</th><td>往下掉，简单利落</td><td>抛物线加结算，最有「收工」感</td><td>往下插，安静</td></tr>
+  <tr><th>周报好不好看</th><td>一面墙，像城墙，起伏明显</td><td>七个箱子，像柱状图</td><td>一排书架，最像收藏</td></tr>
+  <tr><th>实现工作量</th><td>小：一种砖</td><td>中：包裹、箱子、抛物线、结算单</td><td>小：一种书，高矮按标题算</td></tr>
+  <tr><th>我的倾向</th><td></td><td><b>选它</b>：你也喜欢；结算单把「谁做了多少」说清楚了</td><td>书「停上去看标题」可以借给出货：停在包裹上也显示标题</td></tr>
+</table>`;
+
+const tb = (title, body, tm) => `<div class="banner">${sprite('bot', 36)}<div style="flex:1"><div style="display:flex"><span class="t">${title}</span><span class="tm">${tm}</span></div><div>${body}</div></div></div>`;
+document.getElementById('banners').innerHTML = tb('收工了', '今天做完 7 件，合并了 3 个 PR。来看看今天的出货单？', '18:30') + tb('收工了，这周辛苦', '这周做完 25 件。周报写好了，来看看？', '周五 18:30') + tb('收工了', '今天先到这里，明天见。', '18:30');
+document.getElementById('prefs').innerHTML = `
+  <div class="pr"><div><div>通知</div><div class="m">Agent 做完或卡住、PR 挂了或合并了、到点的提醒</div></div><span class="sw"></span></div>
+  <div class="pr"><div><div>收工提醒</div><div class="m">工作日到点提醒看日报，周五提醒看周报</div></div><span class="sw"></span></div>
+  <div class="pr"><div><div style="padding-left:14px">提醒时间</div></div><span class="field">18:30</span></div>`;
+
+document.getElementById('replay').onclick = all;
+document.getElementById('mode').onclick = (e) => {
+  const d = document.body.classList.toggle('night');
+  document.querySelectorAll('.win').forEach(f => f.classList.toggle('dark', d));
+  e.target.textContent = d ? '切到浅色' : '切到深色';
+};
+</script>
+</body>
+</html>

@@ -109,6 +109,8 @@ func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	if !slices.Equal(r.rec.folders, []string{r.app.Config.DataFolder}) {
 		t.Errorf("revealed %v", r.rec.folders)
 	}
+	r.tt.Scroll(340, 300, 0, 3000) // the notifications group made the pane taller than the window
+	r.tt.Frame()
 	if err := r.tt.Click("GitHub ↗"); err != nil {
 		t.Fatal(err)
 	}

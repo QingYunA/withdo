@@ -44,6 +44,10 @@ type Assistant interface {
 	Undo(receiptID int) error
 	// Reset forgets the conversation.
 	Reset()
+	// Summarize writes the paragraph of a period and picks the goods of its tasks, in one call to
+	// the model of the composer; the conversation is not touched. It blocks, so the UI calls it off
+	// its thread. The error's text is fit to show.
+	Summarize(ctx context.Context, req SummaryRequest) (SummaryText, error)
 }
 
 // Attachment is a picture sent with a request, already prepared by PrepareImage. It lives in

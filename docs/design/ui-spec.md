@@ -110,6 +110,9 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
   frames, about 120 ms); a **loop** steps slowly, 100 ms, so it reads as a rhythm and not a flicker
   (the busy indicator). No frame is shorter than 17 ms. With Reduce Motion a stroke shows its last
   frame at once and a loop holds its first.
+  A third beat (v18): something that **travels across a scene** (a thrown good, a fall, a hop)
+  moves every 60 Hz refresh and snaps to whole cells, so the flight is smooth and the picture stays
+  pixels; its pose, spin and other changes keep the 100 ms loop beat.
 - **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
   opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
   the layout are not.
@@ -131,6 +134,11 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
   every other sprite (never `ui.Image`, which is anti-aliased at Retina scale). Claude Code is the
   one exception inside the exception: it keeps the app's own 12 x 12 crab, the same sprite at 24 pt,
   because it is the mascot and not the official starburst.
+- **The Summary scene has its own grids** (v18): actors 24 x 24 and goods 16 x 16, so a figure can
+  lift, throw and hop and a good reads at a glance; they carry a dark outline, three or four shades
+  lit from the top left, and a one-cell shadow. The whole scene is drawn at 3 pt a cell. Only the
+  scene uses these grids; avatars and icons stay 12 x 12. Like every character and object, they are
+  files (see **Sprites are files**).
 
 The busy indicator (`theme.PixelSpinner`, reference `docs/design/mockups/v9.html`): eight 2 x 2
 blocks round the 12 x 12 grid, clockwise from the top (5,1), (8,2), (9,5), (8,8), (5,9), (2,8),
@@ -258,7 +266,10 @@ else changes.
     `gemini`, `opencode`, `copilot`, ...) and the empty-state art (`parcel`, ...).
   - `avatars/<name>.dark.png`, optional, the same size: drawn instead in dark mode, for a picture
     that is itself dark and would vanish on a dark window.
-  - `actors/`, `goods/`, `props/`: the pictures of the Summary scene (see **Summary**).
+  - `actors/<who>/<pose>.png` (24 x 24), `goods/<kind>.png` (16 x 16 cells and the shadow cell, so
+    17 x 17), `props/` (the bin and its lids, the gold star) and `scenes/<sky>.png` (the 264 x 80
+    backdrops: `day`, `dusk`, `night`): the pictures of the Summary scene (see **Summary**). They are
+    drawn as bitmaps, not rectangle by rectangle, and the README lists each file and its size.
 - **The code names files, not pixels.** Each avatar kind maps to a file name in `app/theme`. A test
   loads every file the code names and fails on a missing file, a wrong size, or a file under
   `sprites/` that nothing names.
@@ -284,8 +295,8 @@ like a document, not a spreadsheet.
 **Sidebar.** A search field first (see **Search**), then `Mine` / `我的` (a plain count: the rows
 from your agents plus Today; when the user has not seen what agents handed over, a 18 pt red badge
 with their number instead, `status.blocked` with white `badge` text) and `Agents` / `Agent` (count =
-tasks at work, never their subtasks), each with sub-rows (below), `Inbox` (count), `Calendar` and `Completed` (no count: it
-only grows), `⌘1` to `⌘5` in that order, then `Projects` (sentence
+tasks at work, never their subtasks), each with sub-rows (below), `Inbox` (count), `Calendar`, `Completed` (no count: it
+only grows) and `Summary` (no count), `⌘1` to `⌘6` in that order, then `Projects` (sentence
 case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
 **on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
@@ -937,6 +948,136 @@ name, and at the right who finished it (`Claude Code`, `You`) and the time of da
 - 100 tasks are listed; `Show older` at the end loads 100 more.
 - The same keys as any list: `↑ ↓ ↵ Space Esc`, `⌘3` opens it.
 
+### Summary
+
+The end-of-day ledger (#67). References: `docs/design/mockups/v18.html` (the scene, decided),
+`v14b.html` (rules and export), `v15.html` (the assistant's paragraph, the end-of-day reminder);
+`v16`/`v17` are the drafts that were turned down. The page is the day (or the week) as a
+Stardew-Valley-style shipping: everyone who finished something throws it into a shipping bin, then
+a ledger counts it up.
+
+**Where.** A sidebar row `Summary` (`总结`) under Completed, icon `bulletlist`, `⌘6`. Header: the
+title, a `Today | This week` segment (`今天 | 本周`), `‹ date ›` paging back (a day or a week; `›`
+stops at today), and `Export Markdown` (`导出 Markdown`) on the right. Under it, top to bottom: the
+scene, the assistant's paragraph, the ledger. The page scrolls; the scene scrolls with it.
+
+**The scene** (pictures in `app/theme/sprites/`, see **Sprites are files**):
+
+- Edge to edge of the content column, 240 pt tall, one cell 3 pt: a grid 80 cells tall. It is laid
+  out for 264 cells; a wider column extends the sky and the ground, a narrower one crops both sides
+  equally (the actors and the bin stay inside the middle 220 cells).
+- Three layers behind, nothing tall: the sky (an ordered-dither gradient), two rows of low hills,
+  then grass and a path. Props: a fence behind the path, a lamp post at the right end. Nothing
+  stands behind an actor, the bin or a stack.
+- **Sky by time**: day (blue with clouds) before 17:00, dusk (v18) from 17:00, night from 20:00, by
+  the local time the page opens. A past day is drawn at dusk; the week at night.
+- **Actors**: everyone who finished something in the period, 24 x 24 cells
+  (`actors/<who>/<pose>.png`, poses `idle`, `lift`, `throw`, `hop`; a missing pose falls back to
+  `idle`; an agent with no folder is the robot, `actors/bot/`, tinted like its avatar). You first,
+  then the agents by count. Up to two stand left of the bin and two right of it; a fifth agent and
+  beyond throw from off the right edge.
+- **Goods**: each finished task is a good, 16 x 16 cells (`goods/<kind>.png`): `gem` a feature,
+  `jar` a bug fix, `gear` a refactor or migration, `book` docs or design, `flask` tests, `mail` a
+  reply, `coin` money or a bill, `scroll` a plan or research, `crate` anything else. The assistant
+  picks the kind when it writes the paragraph (below) and it is stored; without a model, words of
+  the title and the PR pick it, else `crate`. A task whose PR merged is **starred**.
+- **The bin**: 40 x 16 cells (`props/bin.png`, lid frames `props/lid-*.png`), centred.
+
+**The day, played once when the page opens** (the frames of v18):
+
+1. The lid opens in 3 frames and stays open.
+2. In the order the tasks were finished, 480 ms apart, each actor throws its good: you lift it over
+   your head and throw; the crab raises both claws and flings it; Codex crouches and shoots it from
+   its `>_`. Other agents use their own `lift`/`throw` poses. The good spins in the air; a starred
+   one trails gold dust.
+3. As a good lands the bin dips a cell, `+1` rises above it in pixel digits, and a starred good
+   puts up a gold star. Goods heap in the bin's mouth: 7 drawn at most, the rest only counted.
+4. When the last lands, everyone hops together once, fireflies come out at the right, and the
+   actors then sway in place (a cell, every 450 ms) while the page is open.
+5. The ledger's rows light up one by one, each count running up.
+
+**The week**: night; one stack a day, Monday to Sunday under day labels. The week's goods fall from
+the sky one by one (110 ms apart) and bounce once on landing; a stack is two goods wide. A day with
+nothing is bare grass. Last, whoever finished most hops beside the busiest day's stack, once every
+1.4 s.
+
+- **Hover** a good in the bin or a stack: a small dark tip with its title and its last report line.
+  **Click** opens the task in the inspector. **Click** the sky replays the scene.
+- **Motion**: positions (a flight, a fall, a hop) move every refresh and snap to whole cells; poses,
+  the spin of a good, the lid and `+1` step every 100 ms. The scene plays once each time the page
+  opens or the period changes, then holds its last frame. With Reduce Motion it draws the last frame
+  at once and nothing sways.
+
+**The assistant's paragraph**: the assistant's avatar (36 pt) and a pixel speech bubble (a 3 pt
+square-cornered frame with a stepped tail), header `Today · written by the assistant`
+(`今天 · 助手写的`) and `Rewrite` (`重写`) on the right.
+
+- Two or three sentences for a day, three to five for a week: what you and the agents finished,
+  which PRs went in, what is still waiting. It only sees the period's finished tasks, their
+  reports and PR titles, not code. It does not cheer, preach or invent.
+- Written once the first time a period is opened, with the model of the composer, and stored; later
+  visits show it at once. `Rewrite` writes it again. While today (this week) is not over and more
+  has been finished since it was written, a dot beside `Rewrite` says so.
+- It types in at 30 ms a character behind a blinking block caret; a stored paragraph shows whole.
+- No model set: the paragraph is not shown; everything else is.
+
+**The ledger**: one row per person, in the scene's order: avatar (18 pt), name, a dotted leader,
+`2 PRs merged` (`合并 2 个 PR`) when there are any, the count in `title` weight, `件`, a chevron. A
+row opens to that person's tasks (title, last report line with the PR number, project chip, time;
+click opens the inspector). Last row: `Shipped today` / `Shipped this week` (`今天出货` /
+`本周出货`) and the total.
+
+**What counts** (v14b): done tasks only, cancelled ones do not. Who finished one is
+`data.CompletedBy` (an agent's report within 5 s of completion, else you); a task done by a merged
+PR counts for the PR's agent. Periods are local days; a week starts on the system's first weekday.
+
+- **Empty**: no actors and no throws, just the scene with the lid shut, and the paragraph's place
+  reads `Nothing finished yet today` (`今天还没有做完的事`); Export is dimmed.
+
+**Export Markdown**: a sheet with the Markdown and `Copy` / `Save as…`. The paragraph first, then a
+section per person with a line per task (`title (project, PR #12): last report`), then what is
+still open (`3 in progress, 1 blocked`).
+
+**The end-of-day reminder**: Settings > General > Notifications gets `End-of-day reminder`
+(`收工提醒`, default on) and its time (default 18:30). Monday to Friday at that time, one
+notification: `Day's done` (`收工了`) / `7 finished today, 3 PRs merged. See today's shipping?`; on
+Friday `This week: 25 finished. The weekly summary is ready.`; a day with nothing finished `That's
+it for today. See you tomorrow.` (never "0"). A click opens Summary. Not sent while the window shows
+Summary; off with the Notifications switch too.
+
+**As built** (what the spec above leaves to the code; screens `summary-*.png`):
+
+- The scene is a pure function of its plan and the time (`theme.DayPlan`, `theme.WeekPlan`:
+  `Frame(t, calm)`), drawn by `SceneFrame.Draw` from the sprite files as pixelated bitmaps at 3 pt a
+  cell, so a frame is a few dozen images and not 21 000 rectangles. Positions snap to whole cells
+  every refresh; the page asks for a frame every 16 ms while something travels and every 100 ms while
+  it rests (sway, fireflies). A good in the air is its 16 x 16 body turned a quarter turn every
+  100 ms (the file's shadow cell is left off while it flies).
+- People stand at x = 26, 66 (left of the bin) and 198, 160 (right of it); a person right of the bin
+  faces it (its picture is turned round), except Codex, whose `>_` is never turned. A fifth person
+  and beyond are not drawn: their goods come in from past the right edge. A pose with no file is
+  `idle`; `idle2` is swapped in on the sway's beat. Throws are 480 ms apart, squeezed to 120 ms at
+  the least so that a long day plays in about eight seconds.
+- A week stack draws four rows of two goods (eight); more are counted in pixel digits (`+4`) above
+  it. The lead (whoever finished most) stands in the empty day after the busiest one, else the one
+  before it, else beside the stack itself.
+- The ledger's count is the body size at the weight of a title, with a unit (`tasks`, `件`). A past
+  day or week says `Shipped that day` / `Shipped that week`; a period with nothing says so in the
+  paragraph's place (`Nothing was finished that day`, `... that week`). Still open counts in
+  progress, in review and blocked.
+- The paragraph is asked for as soon as a period with something finished is opened, off the UI
+  thread, in the language of the window; while it is being written the first time the bubble holds
+  the caret, a rewrite keeps the old text and shows the busy indicator where Rewrite is. A failure
+  says `Couldn't write it. Try Rewrite.` and is not retried by itself. The goods change kind as the
+  kinds arrive.
+- The reminder comes up to two hours after its time (a Mac that slept through 18:30 says it at 19:00;
+  one opened at ten at night says nothing), once a day (the date is kept in `prefs.json`), and is
+  left out, for the day, while the window shows Summary. The time is a pop-up of the evening in half
+  hours in Settings. Notification ids `end-of-day/day` and `end-of-day/week` open Summary.
+
+**Stored**: a `summaries` table (migration 010): period (`day`/`week`), its first date, the
+paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting replaces the row.
+
 ### Calendar
 
 The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
@@ -1033,7 +1174,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
-inspector, then clears the selection, then the search · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed.
+inspector, then clears the selection, then the search · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary.
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant

@@ -70,6 +70,7 @@ func main() {
 			be.github.Subscribe(s.githubChanged)
 		}
 		be.start(stop)
+		go s.runEndOfDay(s.newEndOfDay(), stop)
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)

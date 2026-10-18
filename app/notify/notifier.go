@@ -78,3 +78,11 @@ func (n *Notifier) show(o mygo.NotificationOptions) {
 		n.DeniedChanged()
 	}
 }
+
+// Announce shows a notification that was decided elsewhere, such as the end-of-day reminder, and
+// keeps track of macOS refusing it like any other. It blocks while the system answers.
+func (n *Notifier) Announce(o mygo.NotificationOptions) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	n.show(o)
+}

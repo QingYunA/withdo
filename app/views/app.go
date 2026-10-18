@@ -6,6 +6,7 @@ package views
 import (
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -20,6 +21,9 @@ type Actions interface {
 	ShowInFinder(path string)
 	// OpenFile opens a file with the app macOS has for it: Preview, for a picture.
 	OpenFile(path string)
+	// SaveText asks where to save text, as a file proposed under name, and writes it there. It
+	// returns at once: the user answers in a panel of its own.
+	SaveText(name, text string)
 	// OpenIn brings up where an agent works: its own desktop app (agentApp, "" when it has none), or
 	// a terminal, an editor or Finder at dir. The agent's app cannot be asked for the exact session,
 	// only brought forward; without that app, or when it is not installed, a terminal opens.
@@ -76,6 +80,7 @@ type App struct {
 	prefsMu         sync.Mutex // the notifier reads the prefs from its own goroutine
 	prefs           data.Prefs
 	prefsLoaded     bool
+	weekStart       atomic.Int32 // the first weekday, as the window draws it
 	snap            snapshot
 	rev             int // counts the snapshots, so a search or Completed knows its answer is old
 	completing      map[int]completion

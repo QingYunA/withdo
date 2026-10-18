@@ -81,16 +81,21 @@ var (
 	// The parcel of a hand-off: a brown box with a tape across it, with a pixel of room all round.
 	spriteParcel = loadSprite("avatars/parcel")
 	// The agents without a drawing of their own get the robot in the color of their brand.
-	spriteQwen     = tintedBot("#615CED")
-	spriteKimi     = tintedBot("#1F6FEB")
-	spriteWindsurf = tintedBot("#0EA5A4")
-	spriteZed      = tintedBot("#3F9E4D")
-	spriteCline    = tintedBot("#D9488B")
+	spriteQwen     = tintedBot(brandTints[AvatarQwen])
+	spriteKimi     = tintedBot(brandTints[AvatarKimi])
+	spriteWindsurf = tintedBot(brandTints[AvatarWindsurf])
+	spriteZed      = tintedBot(brandTints[AvatarZed])
+	spriteCline    = tintedBot(brandTints[AvatarCline])
 	// botTints color the robot of an agent the app does not know, by its name, so two unknown
 	// agents still look different. The first is the gray of an agent with no name, which is the
 	// color the robot's file is drawn in.
 	botTints = []string{"#8E8E99", "#0EA5A4", "#D9488B", "#E08A1E", "#3F9E4D", "#6B7CD9"}
 )
+
+// brandTints are the colors of the robots that stand for a named agent.
+var brandTints = map[AvatarKind]string{
+	AvatarQwen: "#615CED", AvatarKimi: "#1F6FEB", AvatarWindsurf: "#0EA5A4", AvatarZed: "#3F9E4D", AvatarCline: "#D9488B",
+}
 
 var (
 	You       = Who{Kind: AvatarYou, sprite: spriteYou}
@@ -137,14 +142,26 @@ func AgentAvatar(name string) Who {
 	return Who{Kind: AvatarOther, sprite: bot(name)}
 }
 
-func bot(name string) *Sprite {
+func bot(name string) *Sprite { return botIn(unknownBotTint(name)) }
+
+// unknownBotTint is the color of the robot of an agent the app does not know, by its name.
+func unknownBotTint(name string) ui.Color {
 	tint := botTints[0]
 	if name != "" && name != "agent" {
 		h := fnv.New32a()
 		_, _ = h.Write([]byte(strings.ToLower(name)))
 		tint = botTints[1+int(h.Sum32()%uint32(len(botTints)-1))]
 	}
-	return botIn(ui.Hex(tint))
+	return ui.Hex(tint)
+}
+
+// botTint is the color the robot of an agent is drawn in, by the name it reported under: the brand
+// color of the agents that have one, else the color of its name. It is the color of the agent's avatar.
+func botTint(name string) ui.Color {
+	if hex, ok := brandTints[AgentAvatar(name).Kind]; ok {
+		return ui.Hex(hex)
+	}
+	return unknownBotTint(name)
 }
 
 // tintedBot is the robot in one color, given as hex.

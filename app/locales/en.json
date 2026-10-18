@@ -2518,7 +2518,7 @@
       }
     }
   },
-  "viewerOpenInPreview": "Open in Preview ↗",
+  "viewerOpenInPreview": "Open in Preview",
   "@viewerOpenInPreview": {
     "description": "Button in the viewer's bar that opens the image file in macOS Preview."
   },
@@ -2553,5 +2553,321 @@
         "example": "2"
       }
     }
+  },
+  "navSummary": "Summary",
+  "@navSummary": {
+    "description": "Sidebar item and title of the page that shows what was finished in a day or a week."
+  },
+  "summarySegmentDay": "Today",
+  "@summarySegmentDay": {
+    "description": "Segment on the Summary page: the day."
+  },
+  "summarySegmentWeek": "This week",
+  "@summarySegmentWeek": {
+    "description": "Segment on the Summary page: the week."
+  },
+  "summaryPrevious": "Previous",
+  "@summaryPrevious": {
+    "description": "Label and tooltip of the button that goes back a day or a week on the Summary page."
+  },
+  "summaryNext": "Next",
+  "@summaryNext": {
+    "description": "Label and tooltip of the button that goes forward a day or a week on the Summary page. It stops at today."
+  },
+  "summaryWeekRange": "{from} – {to}",
+  "@summaryWeekRange": {
+    "description": "The week the Summary page shows, between the paging buttons.",
+    "placeholders": {
+      "from": {
+        "type": "String",
+        "example": "Oct 13"
+      },
+      "to": {
+        "type": "String",
+        "example": "19"
+      }
+    }
+  },
+  "summaryDayOfMonth": "{day}",
+  "@summaryDayOfMonth": {
+    "description": "The last day of a week that ends in the same month it starts in, after the first day: the 19 of \"Oct 13 – 19\".",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "19"
+      }
+    }
+  },
+  "summaryExport": "Export Markdown",
+  "@summaryExport": {
+    "description": "Button on the Summary page that opens the Markdown of the day or the week."
+  },
+  "summaryWritten": "{period} · written by the assistant",
+  "@summaryWritten": {
+    "description": "Small header of the assistant's paragraph on the Summary page.",
+    "placeholders": {
+      "period": {
+        "type": "String",
+        "example": "Today"
+      }
+    }
+  },
+  "summaryRewrite": "Rewrite",
+  "@summaryRewrite": {
+    "description": "Link that makes the assistant write the paragraph of the Summary page again."
+  },
+  "summaryRewriteNew": "More was finished since this was written",
+  "@summaryRewriteNew": {
+    "description": "Tooltip of the dot beside Rewrite on the Summary page."
+  },
+  "summaryFailed": "Couldn't write it. Try Rewrite.",
+  "@summaryFailed": {
+    "description": "Quiet line in the place of the assistant's paragraph when writing it failed."
+  },
+  "summaryEmptyToday": "Nothing finished yet today",
+  "@summaryEmptyToday": {
+    "description": "Line in the place of the paragraph on the Summary page when nothing was finished today."
+  },
+  "summaryEmptyDay": "Nothing was finished that day",
+  "@summaryEmptyDay": {
+    "description": "Same, for a day that is over."
+  },
+  "summaryEmptyWeek": "Nothing finished yet this week",
+  "@summaryEmptyWeek": {
+    "description": "Same, for the week that is not over."
+  },
+  "summaryEmptyPastWeek": "Nothing was finished that week",
+  "@summaryEmptyPastWeek": {
+    "description": "Same, for a week that is over."
+  },
+  "summaryShippedToday": "Shipped today",
+  "@summaryShippedToday": {
+    "description": "Label of the total at the foot of the ledger, for today."
+  },
+  "summaryShippedDay": "Shipped that day",
+  "@summaryShippedDay": {
+    "description": "Same, for a day that is over."
+  },
+  "summaryShippedWeek": "Shipped this week",
+  "@summaryShippedWeek": {
+    "description": "Same, for the week that is not over."
+  },
+  "summaryShippedPastWeek": "Shipped that week",
+  "@summaryShippedPastWeek": {
+    "description": "Same, for a week that is over."
+  },
+  "summaryMerged": "{count, plural, one {# PR merged} other {# PRs merged}}",
+  "@summaryMerged": {
+    "description": "In a row of the ledger: how many of the person's finished tasks went in as a merged pull request.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "summaryUnit": "{count, plural, one{task} other{tasks}}",
+  "@summaryUnit": {
+    "description": "The unit after the count of finished tasks in a row of the ledger.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "summaryRowMerged": "PR #{number} merged",
+  "@summaryRowMerged": {
+    "description": "In a task of the ledger: its pull request merged.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "12"
+      }
+    }
+  },
+  "summaryA11yRow": "{name}, {count, plural, one {# task} other {# tasks}}",
+  "@summaryA11yRow": {
+    "description": "Accessibility label of a row of the ledger on the Summary page, which opens to that person's tasks.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "summaryA11yScene": "The shipping scene. Click the sky to play it again.",
+  "@summaryA11yScene": {
+    "description": "Accessibility label of the pixel scene on the Summary page."
+  },
+  "summaryExportTitle": "Export Markdown",
+  "@summaryExportTitle": {
+    "description": "Title of the sheet that shows the Markdown of the day or the week."
+  },
+  "summaryExportCopy": "Copy",
+  "@summaryExportCopy": {
+    "description": "Button of the export sheet that copies the Markdown."
+  },
+  "summaryExportCopied": "Copied",
+  "@summaryExportCopied": {
+    "description": "The Copy button for a moment after it copied."
+  },
+  "summaryExportSave": "Save as…",
+  "@summaryExportSave": {
+    "description": "Button of the export sheet that saves the Markdown as a file."
+  },
+  "summaryExportClose": "Close",
+  "@summaryExportClose": {
+    "description": "Button of the export sheet that closes it."
+  },
+  "summaryMdDay": "Daily summary, {date}",
+  "@summaryMdDay": {
+    "description": "Title of the exported Markdown of a day.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "2026-10-17"
+      }
+    }
+  },
+  "summaryMdWeek": "Weekly summary, {from} – {to}",
+  "@summaryMdWeek": {
+    "description": "Title of the exported Markdown of a week.",
+    "placeholders": {
+      "from": {
+        "type": "String",
+        "example": "2026-10-12"
+      },
+      "to": {
+        "type": "String",
+        "example": "2026-10-18"
+      }
+    }
+  },
+  "summaryMdParen": " ({detail})",
+  "@summaryMdParen": {
+    "description": "After a task title in the exported Markdown: its project and pull request.",
+    "placeholders": {
+      "detail": {
+        "type": "String",
+        "example": "adhd-todo, PR #12"
+      }
+    }
+  },
+  "summaryMdSaid": ": {said}",
+  "@summaryMdSaid": {
+    "description": "After a task in the exported Markdown: what the agent's last report said.",
+    "placeholders": {
+      "said": {
+        "type": "String",
+        "example": "Board, lists and inspector are in"
+      }
+    }
+  },
+  "summaryMdOpen": "Still open: {parts}",
+  "@summaryMdOpen": {
+    "description": "Last line of the exported Markdown: what is still open.",
+    "placeholders": {
+      "parts": {
+        "type": "String",
+        "example": "3 in progress, 1 blocked"
+      }
+    }
+  },
+  "summaryOpenProgress": "{count} in progress",
+  "@summaryOpenProgress": {
+    "description": "Part of the still-open line: tasks an agent is working on.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "summaryOpenReview": "{count} in review",
+  "@summaryOpenReview": {
+    "description": "Part of the still-open line: tasks waiting for the user's review.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "summaryOpenBlocked": "{count} blocked",
+  "@summaryOpenBlocked": {
+    "description": "Part of the still-open line: tasks an agent is stuck on.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "settingsEndOfDay": "End-of-day reminder",
+  "@settingsEndOfDay": {
+    "description": "Label of the switch for the end-of-day reminder in Settings > General > Notifications."
+  },
+  "settingsEndOfDayMeta": "Weekdays: today's summary, and the weekly one on Friday",
+  "@settingsEndOfDayMeta": {
+    "description": "Quiet line under the end-of-day reminder switch."
+  },
+  "settingsEndOfDaySwitch": "Remind me at the end of the day",
+  "@settingsEndOfDaySwitch": {
+    "description": "Accessibility label of the end-of-day reminder switch."
+  },
+  "settingsEndOfDayTime": "Reminder time",
+  "@settingsEndOfDayTime": {
+    "description": "Label of the pop-up that sets when the end-of-day reminder comes."
+  },
+  "notifyDayDoneTitle": "Day's done",
+  "@notifyDayDoneTitle": {
+    "description": "Title of the end-of-day notification."
+  },
+  "notifyWeekDoneTitle": "Day's done",
+  "@notifyWeekDoneTitle": {
+    "description": "Title of the end-of-day notification on Friday, which is about the week."
+  },
+  "notifyDayDoneBody": "{count} finished today. See today's shipping?",
+  "@notifyDayDoneBody": {
+    "description": "Body of the end-of-day notification when no pull request merged today.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "notifyDayDoneBodyPRs": "{count} finished today, {merged, plural, one {# PR} other {# PRs}} merged. See today's shipping?",
+  "@notifyDayDoneBodyPRs": {
+    "description": "Body of the end-of-day notification when pull requests merged today.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      },
+      "merged": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "notifyWeekDoneBody": "This week: {count} finished. The weekly summary is ready.",
+  "@notifyWeekDoneBody": {
+    "description": "Body of the end-of-day notification on Friday.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  },
+  "notifyDayNothingBody": "That's it for today. See you tomorrow.",
+  "@notifyDayNothingBody": {
+    "description": "Body of the end-of-day notification on a day nothing was finished."
   }
 }
