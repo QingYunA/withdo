@@ -158,8 +158,8 @@ appears; Reduce Motion goes straight to done), then the item moves to Done. Clic
 ## Avatars and icons (M5)
 
 Reference: `docs/design/mockups/v4.html` (frames 2 to 4) and `v6.html` (M6b, one pixel style).
-The avatars and empty-state art are sprites in `app/theme/pixel.go` (12 x 12 pixels each, drawn as
-rectangles, so they stay sharp at any size).
+The avatars and empty-state art are sprites, PNG files under `app/theme/sprites/avatars/` (12 x 12
+pixels each, drawn as rectangles, so they stay sharp at any size; see **Sprites are files**).
 
 **Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
 2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
@@ -230,6 +230,31 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
   line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
   forward ("How to connect").
+
+### Sprites are files
+
+Decided 2026-10-17 (#67): the characters and objects of the app will change, so their pictures live
+in files and not in Go. Every sprite that stands for someone or something is a PNG under
+`app/theme/sprites/`, embedded with `go:embed`. No pixel grid of a character or an object is
+written in Go. To change a picture, replace its file with one of the same name and size; nothing
+else changes.
+
+- **One pixel of the file is one cell of the grid.** A fully transparent pixel is empty; any other
+  pixel is drawn in its own color, alpha kept. Draw them in any pixel editor (Aseprite, Pixelorama)
+  and export PNG at 1x.
+- **Where they go:**
+  - `avatars/<name>.png`, 12 x 12: you, the assistant, every agent (`claude`, `codex`, `cursor`,
+    `gemini`, `opencode`, `copilot`, ...) and the empty-state art (`parcel`, ...).
+  - `avatars/<name>.dark.png`, optional, the same size: drawn instead in dark mode, for a picture
+    that is itself dark and would vanish on a dark window.
+  - `actors/`, `goods/`, `props/`: the pictures of the Summary scene (see **Summary**).
+- **The code names files, not pixels.** Each avatar kind maps to a file name in `app/theme`. A test
+  loads every file the code names and fails on a missing file, a wrong size, or a file under
+  `sprites/` that nothing names.
+- `app/theme/sprites/README.md` lists every file, its size and where it is drawn.
+- Not files: the status glyphs, the busy indicator and the Accept stamp (shapes and frames that
+  carry meaning, in Go); interface icons (pixelarticons SVGs); provider marks (sampled from the
+  official SVGs).
 
 ## Surfaces
 
@@ -621,8 +646,8 @@ centred empty state.
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
   lines up with the titles.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
-  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (10 x 10, drawn
-  at 20 pt, in `theme/pixel.go`). A row: the same accent robot as the column header (the task is any
+  (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (`avatars/parcel.png`, 12 x 12
+  with a pixel of room all round, drawn at 24 pt). A row: the same accent robot as the column header (the task is any
   agent's, so no agent's own sprite), the title, the age at the right, and under it how it is picked
   up, `Tell any agent “do #44” to pick it up` / `在任意 Agent 里说「做 #44」就会接手` (the task's id).
   An agent's first report moves it to Doing.

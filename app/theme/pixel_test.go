@@ -12,7 +12,7 @@ func TestAccentBotIsTheRobotInTheAccentColorAndIsMadeOncePerColor(t *testing.T) 
 	if a.Sprite() != b.Sprite() {
 		t.Error("the same color made two sprites")
 	}
-	if a.Sprite().Palette['m'] != accent || len(a.Sprite().Rows) != AvatarGrid {
+	if spritePixel(a.Sprite(), botBodyX, botBodyY) != accent || len(a.Sprite().Rows) != AvatarGrid {
 		t.Errorf("palette %v", a.Sprite().Palette)
 	}
 	if AccentBot(ui.Hex("#7C7CF0")).Sprite() == a.Sprite() {
@@ -58,34 +58,40 @@ func TestAgentAvatarRecognizesTheAgentsByTheirClientName(t *testing.T) {
 }
 
 func TestUnknownAgentsGetAColorByName(t *testing.T) {
-	a, b := bot("someone").Palette['m'], bot("someone").Palette['m']
+	a, b := botBody(bot("someone")), botBody(bot("someone"))
 	if a != b {
 		t.Error("the same name gave two colors")
 	}
-	if bot("agent").Palette['m'] != bot("").Palette['m'] {
+	if botBody(bot("agent")) != botBody(bot("")) {
 		t.Error("an agent with no name is not the plain gray robot")
 	}
-	if bot("someone").Palette['m'] == bot("").Palette['m'] {
+	if botBody(bot("someone")) == botBody(bot("")) {
 		t.Error("a named agent kept the gray")
 	}
 }
 
-func TestADarkSpriteOnlyRecolorsWhatItDrawsAndKeepsTheLightOneIntact(t *testing.T) {
+func TestADarkSpriteIsAnotherFileOfTheSameSizeAndTheLightOneIsIntact(t *testing.T) {
 	for name, s := range map[string]*Sprite{"opencode": spriteOpencode, "copilot": spriteCopilot} {
 		d := s.inDark()
-		if d == s || len(d.Palette) != len(s.Palette) {
+		if d == s || s.dark != d {
 			t.Fatalf("%s: no separate dark sprite", name)
 		}
-		for k := range s.Dark {
-			if _, ok := s.Palette[k]; !ok {
-				t.Errorf("%s: dark key %q is not in the palette", name, k)
-			}
+		if d.Width() != s.Width() || d.Height() != s.Height() {
+			t.Errorf("%s: dark is %d x %d, light %d x %d", name, d.Width(), d.Height(), s.Width(), s.Height())
 		}
-		if d.Palette['k'] == s.Palette['k'] {
+		if spritePixel(d, 2, 2) == spritePixel(s, 2, 2) {
 			t.Errorf("%s: the dark color is the light one", name)
 		}
 	}
 	if spriteClaude.inDark() != spriteClaude {
-		t.Error("a sprite with no dark colors was copied")
+		t.Error("a sprite with no dark file was replaced")
 	}
 }
+
+// botBodyX and botBodyY are a pixel of the robot's body, which takes its tint.
+const botBodyX, botBodyY = 2, 2
+
+func botBody(s *Sprite) ui.Color { return spritePixel(s, botBodyX, botBodyY) }
+
+// pixelAt is the color of the pixel at x, y; transparent for an empty one.
+func spritePixel(s *Sprite, x, y int) ui.Color { return s.Palette[[]rune(s.Rows[y])[x]] }
