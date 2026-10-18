@@ -156,7 +156,7 @@ func (s *Settings) keyField(c *ui.Context, t *theme.Tokens, p data.Provider, d *
 			name: p.ID + "/key", label: s.say.ModelsAPIKey(), placeholder: placeholder, secret: true,
 		}, &d.key)
 	}).Grow(1)
-	if p.KeyURL != "" && settingsLink(c, t, "get-key", s.say.SettingsGetKey(), s.say.SettingsGetKey()).Clicked() {
+	if p.KeyURL != "" && settingsOutLink(c, t, "get-key", s.say.SettingsGetKey(), s.say.SettingsGetKey()).Clicked() {
 		s.app.Act.OpenURL(p.KeyURL)
 	}
 	if key := strings.TrimSpace(d.key); (entered || left) && key != "" {

@@ -3200,13 +3200,13 @@ func (msgs Messages) SettingsNotifyDenied() string {
 	return Catalog.Format(msgs.locale, "settingsNotifyDenied", nil)
 }
 
-// SettingsNotifyOpenSettings says "Open System Settings ↗"
+// SettingsNotifyOpenSettings says "Open System Settings"
 // in the language the app shows.
 //
 // Link that opens the notification settings of macOS.
 func SettingsNotifyOpenSettings() string { return In(i18n.Locale()).SettingsNotifyOpenSettings() }
 
-// SettingsNotifyOpenSettings says "Open System Settings ↗"
+// SettingsNotifyOpenSettings says "Open System Settings"
 // in the language of msgs.
 //
 // Link that opens the notification settings of macOS.
@@ -4202,14 +4202,28 @@ func (msgs Messages) SettingsAboutLicense() string {
 	return Catalog.Format(msgs.locale, "settingsAboutLicense", nil)
 }
 
-// SettingsAboutLink says "GitHub ↗"
+// A11yAboutGitHub says "adhd-todo on GitHub"
+// in the language the app shows.
+//
+// Accessibility label of the GitHub link in Settings > General > About
+func A11yAboutGitHub() string { return In(i18n.Locale()).A11yAboutGitHub() }
+
+// A11yAboutGitHub says "adhd-todo on GitHub"
+// in the language of msgs.
+//
+// Accessibility label of the GitHub link in Settings > General > About
+func (msgs Messages) A11yAboutGitHub() string {
+	return Catalog.Format(msgs.locale, "a11yAboutGitHub", nil)
+}
+
+// SettingsAboutLink says "GitHub"
 // in the language the app shows.
 //
 // Link of the About row of Settings > General that opens the project on
 // GitHub.
 func SettingsAboutLink() string { return In(i18n.Locale()).SettingsAboutLink() }
 
-// SettingsAboutLink says "GitHub ↗"
+// SettingsAboutLink says "GitHub"
 // in the language of msgs.
 //
 // Link of the About row of Settings > General that opens the project on
@@ -4528,14 +4542,14 @@ func (msgs Messages) WindowTitle() string {
 	return Catalog.Format(msgs.locale, "windowTitle", nil)
 }
 
-// ManageOpenRepo says "Open {repo} on GitHub ↗"
+// ManageOpenRepo says "Open {repo} on GitHub"
 // in the language the app shows.
 //
 // First item of a project context menu in the sidebar, shown only when the
 // project has a repository: opens it in the browser.
 func ManageOpenRepo(repo string) string { return In(i18n.Locale()).ManageOpenRepo(repo) }
 
-// ManageOpenRepo says "Open {repo} on GitHub ↗"
+// ManageOpenRepo says "Open {repo} on GitHub"
 // in the language of msgs.
 //
 // First item of a project context menu in the sidebar, shown only when the
@@ -4740,13 +4754,13 @@ func (msgs Messages) SettingsDone() string {
 	return Catalog.Format(msgs.locale, "settingsDone", nil)
 }
 
-// SettingsGetKey says "Get a key ↗"
+// SettingsGetKey says "Get a key"
 // in the language the app shows.
 //
 // Link that opens the page where the provider hands out API keys.
 func SettingsGetKey() string { return In(i18n.Locale()).SettingsGetKey() }
 
-// SettingsGetKey says "Get a key ↗"
+// SettingsGetKey says "Get a key"
 // in the language of msgs.
 //
 // Link that opens the page where the provider hands out API keys.
@@ -5010,13 +5024,13 @@ func (msgs Messages) SettingsAgentInstalled() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstalled", nil)
 }
 
-// SettingsAgentGet says "Get it ↗"
+// SettingsAgentGet says "Get it"
 // in the language the app shows.
 //
 // Link to the website of an agent that is not on this Mac.
 func SettingsAgentGet() string { return In(i18n.Locale()).SettingsAgentGet() }
 
-// SettingsAgentGet says "Get it ↗"
+// SettingsAgentGet says "Get it"
 // in the language of msgs.
 //
 // Link to the website of an agent that is not on this Mac.

@@ -157,3 +157,20 @@ func settingsLink(c *ui.Context, t *theme.Tokens, key, text, label string) ui.El
 	btn.Children(func() { theme.Text(c, theme.Body, ink, text) })
 	return btn
 }
+
+// settingsOutLink is a settingsLink that leaves the app (a web page, System Settings): the pixel
+// external-link icon follows the words, never a text arrow.
+func settingsOutLink(c *ui.Context, t *theme.Tokens, key, text, label string) ui.Element {
+	btn := ui.ButtonBase(c.Key(key)).Padding(2, 4).Radius(theme.RadiusControl).Shrink(0).Label(label).Cursor(ui.CursorPointer)
+	ink := t.Accent
+	if btn.Hovered() {
+		ink = t.Accent.Mix(t.Text, 0.2)
+	}
+	btn.Children(func() {
+		ui.Row(c.Key(key + "-in")).Gap(4).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.Body, ink, text)
+			ui.Icon(c.Key(key+"-out"), theme.IconArrowOut).Size(theme.IconSmall, theme.IconSmall).TextColor(ink).Shrink(0)
+		})
+	})
+	return btn
+}
