@@ -1033,6 +1033,36 @@ Friday `This week: 25 finished. The weekly summary is ready.`; a day with nothin
 it for today. See you tomorrow.` (never "0"). A click opens Summary. Not sent while the window shows
 Summary; off with the Notifications switch too.
 
+**As built** (what the spec above leaves to the code; screens `summary-*.png`):
+
+- The scene is a pure function of its plan and the time (`theme.DayPlan`, `theme.WeekPlan`:
+  `Frame(t, calm)`), drawn by `SceneFrame.Draw` from the sprite files as pixelated bitmaps at 3 pt a
+  cell, so a frame is a few dozen images and not 21 000 rectangles. Positions snap to whole cells
+  every refresh; the page asks for a frame every 16 ms while something travels and every 100 ms while
+  it rests (sway, fireflies). A good in the air is its 16 x 16 body turned a quarter turn every
+  100 ms (the file's shadow cell is left off while it flies).
+- People stand at x = 26, 66 (left of the bin) and 198, 160 (right of it); a person right of the bin
+  faces it (its picture is turned round), except Codex, whose `>_` is never turned. A fifth person
+  and beyond are not drawn: their goods come in from past the right edge. A pose with no file is
+  `idle`; `idle2` is swapped in on the sway's beat. Throws are 480 ms apart, squeezed to 120 ms at
+  the least so that a long day plays in about eight seconds.
+- A week stack draws four rows of two goods (eight); more are counted in pixel digits (`+4`) above
+  it. The lead (whoever finished most) stands in the empty day after the busiest one, else the one
+  before it, else beside the stack itself.
+- The ledger's count is the body size at the weight of a title, with a unit (`tasks`, `件`). A past
+  day or week says `Shipped that day` / `Shipped that week`; a period with nothing says so in the
+  paragraph's place (`Nothing was finished that day`, `... that week`). Still open counts in
+  progress, in review and blocked.
+- The paragraph is asked for as soon as a period with something finished is opened, off the UI
+  thread, in the language of the window; while it is being written the first time the bubble holds
+  the caret, a rewrite keeps the old text and shows the busy indicator where Rewrite is. A failure
+  says `Couldn't write it. Try Rewrite.` and is not retried by itself. The goods change kind as the
+  kinds arrive.
+- The reminder comes up to two hours after its time (a Mac that slept through 18:30 says it at 19:00;
+  one opened at ten at night says nothing), once a day (the date is kept in `prefs.json`), and is
+  left out, for the day, while the window shows Summary. The time is a pop-up of the evening in half
+  hours in Settings. Notification ids `end-of-day/day` and `end-of-day/week` open Summary.
+
 **Stored**: a `summaries` table (migration 010): period (`day`/`week`), its first date, the
 paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting replaces the row.
 

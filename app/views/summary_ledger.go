@@ -48,7 +48,7 @@ func (m *Main) ledger(c *ui.Context, t *theme.Tokens, v *summaryView, now time.T
 	}
 	at, calm := m.sceneTime(c, v, now)
 	end := v.sceneEnd()
-	if calm {
+	if calm && m.sum.freeze == nil { // the last frame: every row is lit and counted
 		at = end + time.Hour
 	}
 	people := v.sum.People

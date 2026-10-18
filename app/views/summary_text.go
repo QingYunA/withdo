@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -233,17 +234,15 @@ func (m *Main) bubblePeriod(p data.Period, now time.Time) string {
 func (m *Main) bubbleText(c *ui.Context, t *theme.Tokens, para *paragraph, now time.Time) {
 	reduce := c.Preferences().ReduceMotion
 	body := func(text string, caret bool) {
-		e := theme.Paragraph(c.Key("summary-ai-text"), theme.Body, t.Text, text, 0).FillWidth().MinHeight(44)
-		if caret {
-			e.Children(func() {
-				ink := t.Text
-				if (now.UnixMilli()/caretBeat.Milliseconds())%2 == 1 {
-					ink = ui.Transparent
-				}
-				ui.Text(c.Key("caret"), " ").Background(ink)
-			})
-			c.After(typeEvery)
-		}
+		ui.Column(c.Key("summary-ai-text-wrap")).FillWidth().MinHeight(44).Shrink(0).Children(func() {
+			theme.Paragraph(c.Key("summary-ai-text"), theme.Body, t.Text, text, 0).FillWidth()
+			if caret {
+				on := (now.UnixMilli()/caretBeat.Milliseconds())%2 == 0
+				ui.Box(c.Key("summary-caret")).Absolute().Left(0).Top(0).Right(0).Bottom(0).PassThrough().
+					Draw(func(p *ui.Painter, r ui.Rect) { drawCaret(p, r, text, on, t.Text) })
+				c.After(typeEvery)
+			}
+		})
 	}
 	switch {
 	case para.stored != nil:
@@ -267,4 +266,28 @@ func drawTail(p *ui.Painter, r ui.Rect, edge, fill ui.Color) {
 	cell(2, 0, 2, 5, edge)
 	cell(2, 1, 2, 3, fill)
 	cell(1, 2, 1, 1, fill)
+}
+
+// caretW and caretH are the block caret's size in points: 7 x 14, a pixel block like the picture's.
+const (
+	caretW float32 = 7
+	caretH float32 = 14
+)
+
+// drawCaret draws the block caret where text ends in r, laid out as the paragraph above it is: the
+// body type, 22 pt lines, wrapped at r's width. It draws nothing while it blinks off.
+func drawCaret(p *ui.Painter, r ui.Rect, text string, on bool, ink ui.Color) {
+	if !on {
+		return
+	}
+	layout := ui.ShapeText(text, ui.Font{Size: theme.Body.Size, Weight: theme.Body.Weight}, r.W)
+	end := layout.CaretAt(ui.TextCaretPosition{Index: len(utf16.Encode([]rune(text))), Affinity: ui.TextDownstream})
+	x, line := end.X, float32(0)
+	if end.H > 0 {
+		line = float32(int(end.Y/end.H + 0.5))
+	}
+	if text == "" {
+		x = 0
+	}
+	p.Fill(ui.Rect{X: r.X + x + 1, Y: r.Y + line*theme.Body.Line + (theme.Body.Line-caretH)/2, W: caretW, H: caretH}, ink, 0)
 }
