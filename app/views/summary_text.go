@@ -16,14 +16,13 @@ import (
 // model of the composer; kept; shown whole on the next visit, typed in when it is new.
 
 const (
-	typeEvery   = 30 * time.Millisecond  // a character
-	caretBeat   = 500 * time.Millisecond // the caret is on, then off
-	writeLimit  = 90 * time.Second
-	bubbleEdge  = 3  // pt, the frame of the speech bubble
-	tailW       = 12 // the stepped tail, in pt
-	tailH       = 15
-	bubbleGapY  = 16
-	bubbleAvGap = 0
+	typeEvery  = 30 * time.Millisecond  // a character
+	caretBeat  = 500 * time.Millisecond // the caret is on, then off
+	writeLimit = 90 * time.Second
+	bubbleEdge = 3  // pt, the frame of the speech bubble
+	tailW      = 12 // the stepped tail, in pt
+	tailH      = 15
+	bubbleGapY = 16
 )
 
 // paragraph is the paragraph of one period.

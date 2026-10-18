@@ -22,7 +22,6 @@ type summaryState struct {
 	// playing is what the scene is showing: the period, and how many times it was replayed. start is
 	// when it began, and sky the sky it began under: it does not change while it plays.
 	playing string
-	replays int
 	start   time.Time
 	sky     theme.SkyKind
 	sceneW  float32 // the scene's width as last drawn, for the pointer
@@ -190,7 +189,6 @@ func (m *Main) beginScene(now time.Time, key string) {
 
 // replay plays the scene again.
 func (m *Main) replayScene() {
-	m.sum.replays++
 	m.sum.playing = ""
 }
 
