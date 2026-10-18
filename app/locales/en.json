@@ -2899,5 +2899,27 @@
   "notifyDayNothingBody": "That's it for today. See you tomorrow.",
   "@notifyDayNothingBody": {
     "description": "Body of the end-of-day notification on a day nothing was finished."
+  },
+  "selectButton": "Select",
+  "@selectButton": {
+    "description": "Button at the right of a page title that turns on select mode, where a click ticks a row instead of opening it."
+  },
+  "a11ySelectButton": "Select tasks",
+  "@a11ySelectButton": {
+    "description": "Accessibility label of the Select button beside a page title."
+  },
+  "selectCount": "{count} selected",
+  "@selectCount": {
+    "description": "Quiet text in the title row while the page is in select mode: how many rows are ticked.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "selectAll": "Select all",
+  "@selectAll": {
+    "description": "Link in the title row of select mode that ticks every row of the page."
   }
 }

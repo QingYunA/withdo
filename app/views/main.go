@@ -64,6 +64,7 @@ type Main struct {
 	openID     int               // task open in the inspector, 0 for none
 	sel        int               // task the keyboard highlights, 0 for none
 	multi      multiSel          // the rows selected together on this page
+	hint       selectHint        // where the Select button has flashed
 	order      []int             // the rows of the page in the order they are drawn, as View found them
 	rects      map[int]ui.Rect   // where the rows were drawn this frame, and prevRects the frame before:
 	prevRects  map[int]ui.Rect   // neighbouring selected rows join into one block by them

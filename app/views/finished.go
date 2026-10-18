@@ -115,9 +115,9 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 		if o.glyph {
 			m.glyphSlot(c, t, task, ph.fill)
 		} else if o.quiet {
-			theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarRow) // as in the Working rows above
+			m.leadOf(c, t, task, theme.AvatarRow) // as in the Working rows above
 		} else {
-			m.authorSlot(c, task) // under the group's name, as the list's rows
+			m.authorSlot(c, t, task) // under the group's name, as the list's rows
 		}
 		body(c, func() {
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {

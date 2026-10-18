@@ -180,6 +180,3 @@ func (m *Main) selectAll() {
 		m.multi.anchor = m.order[0]
 	}
 }
-
-// nudgeSelectButton is made in the next commit: the Select button flashes on the first ⌘-click.
-func (m *Main) nudgeSelectButton() {}

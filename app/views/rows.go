@@ -152,6 +152,10 @@ func right(c *ui.Context, fn func()) {
 // target reaches past the 18 pt glyph, so it takes negative margins.
 func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	if m.multi.mode {
+		m.checkSlot(c, t, task.ID).Margin(-pad)
+		return
+	}
 	m.glyphButton(c, t, task, fill).Margin(-pad)
 }
 
@@ -159,6 +163,10 @@ func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill fl
 // it): the glyph sits 2 pt lower, level with the middle of the first line.
 func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	if m.multi.mode {
+		m.checkSlot(c, t, task.ID).Margin(2-pad, -pad, -pad-2, -pad)
+		return
+	}
 	m.glyphButton(c, t, task, fill).Margin(2-pad, -pad, -pad-2, -pad)
 }
 

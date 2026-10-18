@@ -7071,3 +7071,63 @@ func NotifyDayNothingBody() string { return In(i18n.Locale()).NotifyDayNothingBo
 func (msgs Messages) NotifyDayNothingBody() string {
 	return Catalog.Format(msgs.locale, "notifyDayNothingBody", nil)
 }
+
+// SelectButton says "Select"
+// in the language the app shows.
+//
+// Button at the right of a page title that turns on select mode, where a
+// click ticks a row instead of opening it.
+func SelectButton() string { return In(i18n.Locale()).SelectButton() }
+
+// SelectButton says "Select"
+// in the language of msgs.
+//
+// Button at the right of a page title that turns on select mode, where a
+// click ticks a row instead of opening it.
+func (msgs Messages) SelectButton() string {
+	return Catalog.Format(msgs.locale, "selectButton", nil)
+}
+
+// A11ySelectButton says "Select tasks"
+// in the language the app shows.
+//
+// Accessibility label of the Select button beside a page title.
+func A11ySelectButton() string { return In(i18n.Locale()).A11ySelectButton() }
+
+// A11ySelectButton says "Select tasks"
+// in the language of msgs.
+//
+// Accessibility label of the Select button beside a page title.
+func (msgs Messages) A11ySelectButton() string {
+	return Catalog.Format(msgs.locale, "a11ySelectButton", nil)
+}
+
+// SelectCount says "{count} selected"
+// in the language the app shows.
+//
+// Quiet text in the title row while the page is in select mode: how many
+// rows are ticked.
+func SelectCount(count int) string { return In(i18n.Locale()).SelectCount(count) }
+
+// SelectCount says "{count} selected"
+// in the language of msgs.
+//
+// Quiet text in the title row while the page is in select mode: how many
+// rows are ticked.
+func (msgs Messages) SelectCount(count int) string {
+	return Catalog.Format(msgs.locale, "selectCount", map[string]any{"count": count})
+}
+
+// SelectAll says "Select all"
+// in the language the app shows.
+//
+// Link in the title row of select mode that ticks every row of the page.
+func SelectAll() string { return In(i18n.Locale()).SelectAll() }
+
+// SelectAll says "Select all"
+// in the language of msgs.
+//
+// Link in the title row of select mode that ticks every row of the page.
+func (msgs Messages) SelectAll() string {
+	return Catalog.Format(msgs.locale, "selectAll", nil)
+}

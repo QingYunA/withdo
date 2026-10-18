@@ -128,7 +128,7 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 		branch = ""
 	}
 	ui.Row(c).Gap(8).MinHeight(18).AlignItems(ui.Center).Children(func() {
-		theme.AvatarIcon(c.Key("author"), m.app.taskWho(task), theme.AvatarSmall).Shrink(0)
+		m.leadOf(c, t, task, theme.AvatarSmall).Shrink(0)
 		if blocked {
 			theme.StatusGlyphSized(c, t, data.Blocked, theme.IconSmall, 0)
 		}
