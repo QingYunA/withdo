@@ -113,6 +113,7 @@ func TestCreateTaskValidation(t *testing.T) {
 		field string
 	}{
 		{"empty title", domain.CreateTaskInput{}, "title"},
+		{"blank title", domain.CreateTaskInput{Title: " \t\n "}, "title"},
 		{"bad status", domain.CreateTaskInput{Title: "x", Status: "weird"}, "status"},
 		{"bad priority", domain.CreateTaskInput{Title: "x", Priority: "P9"}, "priority"},
 	}
@@ -125,6 +126,15 @@ func TestCreateTaskValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTitlesAreTrimmed(t *testing.T) {
+	c, _ := newCore(t)
+	task := mustTask(t, c, domain.CreateTaskInput{Title: "  Write docs\n"})
+	eq(t, "created", task.Title, "Write docs")
+	title := "\tShip it  "
+	u := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Title: &title}))
+	eq(t, "updated", u.Title, "Ship it")
 }
 
 func TestUpdateTaskPatchesFields(t *testing.T) {
@@ -175,7 +185,7 @@ func TestUpdateTaskNullableFields(t *testing.T) {
 func TestUpdateTaskErrors(t *testing.T) {
 	c, _ := newCore(t)
 	task := mustTask(t, c, domain.CreateTaskInput{Title: "a"})
-	empty, bad, badPrio := "", domain.Status("nope"), domain.Priority("P9")
+	empty, blank, bad, badPrio := "", " \t ", domain.Status("nope"), domain.Priority("P9")
 	tests := []struct {
 		name  string
 		id    int64
@@ -186,6 +196,7 @@ func TestUpdateTaskErrors(t *testing.T) {
 		{"unknown project", task.ID, domain.TaskPatch{ProjectID: domain.Set(int64(999))}, "project_id"},
 		{"unknown milestone", task.ID, domain.TaskPatch{MilestoneID: domain.Set(int64(999))}, "milestone_id"},
 		{"empty title", task.ID, domain.TaskPatch{Title: &empty}, "title"},
+		{"blank title", task.ID, domain.TaskPatch{Title: &blank}, "title"},
 		{"bad status", task.ID, domain.TaskPatch{Status: &bad}, "status"},
 		{"bad priority", task.ID, domain.TaskPatch{Priority: &badPrio}, "priority"},
 	}

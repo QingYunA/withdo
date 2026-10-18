@@ -228,7 +228,7 @@ func (c *Core) locateOrCreate(ctx context.Context, q store.Querier, in ProgressI
 		return nil, false, err
 	}
 	task, err := c.insertTask(ctx, q, CreateTaskInput{
-		Title:     firstNonEmpty(in.Title, firstSentence(in.Summary), branch, truncateTitle(in.Summary)),
+		Title:     firstNonEmpty(strings.TrimSpace(in.Title), firstSentence(in.Summary), branch, truncateTitle(in.Summary)),
 		Source:    SourceAgent,
 		Status:    status,
 		Priority:  P2,
