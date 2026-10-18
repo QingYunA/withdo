@@ -72,6 +72,30 @@ func TestUsageAndHelp(t *testing.T) {
 	}
 }
 
+func TestHelpWordAndSubcommandHelpFlagsPrintUsageAndDoNothingElse(t *testing.T) {
+	for _, args := range [][]string{
+		{"help"}, {"overview", "--help"}, {"overview", "-h"}, {"mcp", "--help"}, {"mcp", "-h"}, {"guide", "--help"}, {"guide", "-h"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			h := newHarness(t, filepath.Join(t.TempDir(), "never-opened.db"))
+			served := false
+			h.d.serve = func(context.Context, *mcp.Server) error { served = true; return nil }
+			if code := run(context.Background(), args, h.d); code != 0 {
+				t.Errorf("exit code = %d, stderr = %q", code, h.err.String())
+			}
+			if out := h.out.String(); out != usage {
+				t.Errorf("stdout = %q, want the usage", out)
+			}
+			if served || h.err.Len() != 0 {
+				t.Errorf("the command ran: served = %v, stderr = %q", served, h.err.String())
+			}
+			if _, err := os.Stat(h.d.getenv("ADHD_TODO_DB")); err == nil {
+				t.Error("the database was opened")
+			}
+		})
+	}
+}
+
 func TestGuidePrintsTheSetupGuideWithTheCorePath(t *testing.T) {
 	h := newHarness(t, filepath.Join(t.TempDir(), "never-opened.db"))
 	if code := run(context.Background(), []string{"guide"}, h.d); code != 0 {
@@ -86,7 +110,7 @@ func TestGuidePrintsTheSetupGuideWithTheCorePath(t *testing.T) {
 	if strings.Contains(out, "{{") || h.err.Len() != 0 {
 		t.Errorf("placeholder left or stderr %q", h.err.String())
 	}
-	if _, err := os.Stat(filepath.Join(filepath.Dir(h.d.getenv("ADHD_TODO_DB")), "never-opened.db")); err == nil {
+	if _, err := os.Stat(h.d.getenv("ADHD_TODO_DB")); err == nil {
 		t.Error("guide opened the database")
 	}
 }

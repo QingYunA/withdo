@@ -57,10 +57,11 @@ func run(ctx context.Context, args []string, d deps) int {
 		_, _ = io.WriteString(d.stderr, usage)
 		return exitUsage
 	}
-	switch args[0] {
-	case "--help", "-h":
+	if wantsHelp(args) {
 		_, _ = io.WriteString(d.stdout, usage)
 		return exitOK
+	}
+	switch args[0] {
 	case "guide":
 		_, _ = io.WriteString(d.stdout, agentsetup.New(d.home).Guide())
 		return exitOK
@@ -74,6 +75,18 @@ func run(ctx context.Context, args []string, d deps) int {
 		_, _ = fmt.Fprintf(d.stderr, "Unknown command: %s\n%s", args[0], usage)
 		return exitUsage
 	}
+}
+
+// wantsHelp reports whether args ask for the usage: help, --help or -h on their own, or --help or
+// -h after a command. There is one usage for all commands, so that is what each of them prints.
+func wantsHelp(args []string) bool {
+	switch args[0] {
+	case "help", "--help", "-h":
+		return true
+	case "mcp", "overview", "guide":
+		return len(args) > 1 && (args[1] == "--help" || args[1] == "-h")
+	}
+	return false
 }
 
 func execute(ctx context.Context, command string, d deps) error {
