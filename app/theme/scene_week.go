@@ -201,3 +201,16 @@ func itoa(n int) string {
 	}
 	return string(b)
 }
+
+// Moving reports whether something travels at t (a good falling or bouncing, the lead hopping), so
+// the scene wants a frame every refresh.
+func (p *WeekPlan) Moving(t time.Duration) bool {
+	now := millis(t)
+	if len(p.goods) == 0 {
+		return false
+	}
+	if now <= p.goods[len(p.goods)-1].start+weekFall*(1+weekBounce) {
+		return true
+	}
+	return now > p.end && (now-p.end)%weekHopEvery < weekHopFor
+}

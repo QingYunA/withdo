@@ -25,17 +25,21 @@ type openCall struct {
 	app, dir string
 }
 
+// savedFile is one SaveText the views asked for.
+type savedFile struct{ name, text string }
+
 // recorder is an Actions that remembers what the views asked for.
 type recorder struct {
 	opened   []int
 	urls     []string
-	panes    []Pane     // what OpenSettings was asked to show
-	folders  []string   // what ShowInFinder was asked to reveal
-	files    []string   // what OpenFile was asked to open
-	language string     // what SetLanguage last chose
-	opens    []openCall // what OpenIn was asked for
-	openErr  error      // what OpenIn answers
-	denied   bool       // what NotificationsDenied answers
+	panes    []Pane      // what OpenSettings was asked to show
+	folders  []string    // what ShowInFinder was asked to reveal
+	files    []string    // what OpenFile was asked to open
+	language string      // what SetLanguage last chose
+	opens    []openCall  // what OpenIn was asked for
+	saved    []savedFile // what SaveText was asked to save
+	openErr  error       // what OpenIn answers
+	denied   bool        // what NotificationsDenied answers
 
 	mu     sync.Mutex
 	posted []func()
@@ -47,6 +51,8 @@ func (r *recorder) OpenSettings(p Pane)      { r.panes = append(r.panes, p) }
 func (r *recorder) OpenURL(url string)       { r.urls = append(r.urls, url) }
 func (r *recorder) ShowInFinder(path string) { r.folders = append(r.folders, path) }
 func (r *recorder) OpenFile(path string)     { r.files = append(r.files, path) }
+
+func (r *recorder) SaveText(name, text string) { r.saved = append(r.saved, savedFile{name, text}) }
 
 func (r *recorder) OpenIn(how OpenWith, agentApp, dir string) error {
 	r.opens = append(r.opens, openCall{how, agentApp, dir})

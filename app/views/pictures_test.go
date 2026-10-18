@@ -231,7 +231,7 @@ func TestClickingATileOpensTheViewerThatStepsAndCloses(t *testing.T) {
 	if !r.m.viewer.open || r.m.viewer.at != 1 {
 		t.Fatalf("viewer %+v", r.m.viewer)
 	}
-	has(t, r.tt, "list.png · 2 / 2 · 120 × 90", "Open in Preview ↗", "Previous image", "Close")
+	has(t, r.tt, "list.png · 2 / 2 · 120 × 90", "Open in Preview", "Previous image", "Close")
 	hasNot(t, r.tt, "Next image") // the last one has none after it
 	r.tt.Key(0, ui.KeyLeft)
 	r.settle(t)
@@ -240,7 +240,7 @@ func TestClickingATileOpensTheViewerThatStepsAndCloses(t *testing.T) {
 	r.tt.Key(0, ui.KeyRight)
 	r.settle(t)
 	has(t, r.tt, "list.png · 2 / 2 · 120 × 90")
-	if err := r.tt.Click("Open in Preview ↗"); err != nil {
+	if err := r.tt.Click("Open in Preview"); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(r.rec.files, []string{second.File}) {
@@ -248,7 +248,7 @@ func TestClickingATileOpensTheViewerThatStepsAndCloses(t *testing.T) {
 	}
 	r.tt.Key(0, ui.KeyEscape)
 	r.tt.Frame()
-	if r.m.viewer.open || r.tt.HasText("Open in Preview ↗") {
+	if r.m.viewer.open || r.tt.HasText("Open in Preview") {
 		t.Error("Esc did not close the viewer")
 	}
 	if r.m.openID != 5 {

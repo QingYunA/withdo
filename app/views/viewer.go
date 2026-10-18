@@ -181,7 +181,10 @@ func (m *Main) viewerBar(c *ui.Context, im data.TaskImage, at, n int, w, h float
 		if open.Hovered() {
 			open.Background(viewerWell)
 		}
-		open.Children(func() { theme.Text(c, theme.Meta, viewerLink, m.say.ViewerOpenInPreview()) })
+		open.Gap(4).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.Meta, viewerLink, m.say.ViewerOpenInPreview())
+			ui.Icon(c.Key("preview-out"), theme.IconArrowOut).Size(theme.IconSmall, theme.IconSmall).TextColor(viewerLink).Shrink(0)
+		})
 		if open.Clicked() {
 			m.app.Act.OpenFile(im.File)
 		}

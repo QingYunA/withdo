@@ -425,3 +425,12 @@ func (p *DayPlan) Landed(t time.Duration) int {
 	}
 	return n
 }
+
+// Moving reports whether something travels at t (a good in the air, a hop), so the scene wants a
+// frame every refresh; at rest it only has its 100 ms loop (the sway and the fireflies).
+func (p *DayPlan) Moving(t time.Duration) bool {
+	if len(p.scene.Throws) == 0 {
+		return false
+	}
+	return millis(t) < p.jump+(len(p.scene.Actors)-1)*hopGap+hopFor
+}

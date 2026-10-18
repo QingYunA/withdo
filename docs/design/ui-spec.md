@@ -255,7 +255,10 @@ else changes.
     `gemini`, `opencode`, `copilot`, ...) and the empty-state art (`parcel`, ...).
   - `avatars/<name>.dark.png`, optional, the same size: drawn instead in dark mode, for a picture
     that is itself dark and would vanish on a dark window.
-  - `actors/`, `goods/`, `props/`: the pictures of the Summary scene (see **Summary**).
+  - `actors/<who>/<pose>.png` (24 x 24), `goods/<kind>.png` (16 x 16 cells and the shadow cell, so
+    17 x 17), `props/` (the bin and its lids, the gold star) and `scenes/<sky>.png` (the 264 x 80
+    backdrops: `day`, `dusk`, `night`): the pictures of the Summary scene (see **Summary**). They are
+    drawn as bitmaps, not rectangle by rectangle, and the README lists each file and its size.
 - **The code names files, not pixels.** Each avatar kind maps to a file name in `app/theme`. A test
   loads every file the code names and fails on a missing file, a wrong size, or a file under
   `sprites/` that nothing names.

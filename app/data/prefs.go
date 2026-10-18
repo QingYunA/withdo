@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 // Prefs are the choices the user made in Settings that the app keeps itself.
@@ -18,6 +19,25 @@ type Prefs struct {
 	// NotificationsOff is set when the user switched the system notifications off; they are on by
 	// default, so a file without it, or none, means on.
 	NotificationsOff bool `json:"notificationsOff,omitempty"`
+	// EndOfDayOff is set when the user switched the end-of-day reminder off; it is on by default.
+	EndOfDayOff bool `json:"endOfDayOff,omitempty"`
+	// EndOfDayAt is the time of the reminder as "15:04"; empty means DefaultEndOfDay.
+	EndOfDayAt string `json:"endOfDayAt,omitempty"`
+	// EndOfDayLast is the date ("2006-01-02") the reminder was last sent or left out, so that it comes
+	// once a day.
+	EndOfDayLast string `json:"endOfDayLast,omitempty"`
+}
+
+// DefaultEndOfDay is when the end-of-day reminder comes unless the user picks another time.
+const DefaultEndOfDay = "18:30"
+
+// ClockOf reads a time written "15:04" as an hour and a minute.
+func ClockOf(s string) (hour, minute int, ok bool) {
+	t, err := time.Parse("15:04", s)
+	if err != nil {
+		return 0, 0, false
+	}
+	return t.Hour(), t.Minute(), true
 }
 
 // PrefsStore keeps Prefs between runs.

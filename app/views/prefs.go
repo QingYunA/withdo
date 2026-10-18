@@ -2,6 +2,7 @@ package views
 
 import (
 	"log"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 )
@@ -50,3 +51,57 @@ func (a *App) Notifications() bool {
 func (a *App) SetNotifications(on bool) {
 	a.savePrefs(func(p *data.Prefs) { p.NotificationsOff = !on })
 }
+
+// EndOfDayOn says whether the end-of-day reminder is on (Settings > General > Notifications), which
+// it is until the user switches it off. The reminder asks from its own goroutine.
+func (a *App) EndOfDayOn() bool {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return !a.prefs.EndOfDayOff
+}
+
+// SetEndOfDay switches the end-of-day reminder, and keeps the choice.
+func (a *App) SetEndOfDay(on bool) {
+	a.savePrefs(func(p *data.Prefs) { p.EndOfDayOff = !on })
+}
+
+// EndOfDayEnabled says whether the reminder may come: it is on, and so are the notifications.
+func (a *App) EndOfDayEnabled() bool { return a.Notifications() && a.EndOfDayOn() }
+
+// EndOfDayAt is when the reminder comes, as "15:04": the user's pick, else 18:30.
+func (a *App) EndOfDayAt() string {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	if _, _, ok := data.ClockOf(a.prefs.EndOfDayAt); ok {
+		return a.prefs.EndOfDayAt
+	}
+	return data.DefaultEndOfDay
+}
+
+// SetEndOfDayAt picks when the reminder comes, as "15:04", and keeps the choice.
+func (a *App) SetEndOfDayAt(at string) {
+	if _, _, ok := data.ClockOf(at); ok {
+		a.savePrefs(func(p *data.Prefs) { p.EndOfDayAt = at })
+	}
+}
+
+// EndOfDayLast is the date the reminder last came or was left out.
+func (a *App) EndOfDayLast() string {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return a.prefs.EndOfDayLast
+}
+
+// SetEndOfDayLast keeps the date the reminder last came or was left out.
+func (a *App) SetEndOfDayLast(date string) {
+	a.savePrefs(func(p *data.Prefs) { p.EndOfDayLast = date })
+}
+
+// WeekStart is the day the weeks start on, as the window last drew them; Sunday before it has drawn.
+// The reminder asks from its own goroutine.
+func (a *App) WeekStart() time.Weekday { return time.Weekday(a.weekStart.Load()) }
+
+func (a *App) setWeekStart(d time.Weekday) { a.weekStart.Store(int32(d)) }

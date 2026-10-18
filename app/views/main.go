@@ -26,6 +26,7 @@ const (
 	screenProject
 	screenCompleted
 	screenCalendar
+	screenSummary
 )
 
 // nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
@@ -75,6 +76,7 @@ type Main struct {
 	allDone   map[nav]bool // every Done task, not the recent three or five
 
 	cal       calendarState // the Calendar page: its month and its selected day
+	sum       summaryState  // the Summary page: its period, its scene, its paragraphs
 	manage    manageState   // the sheets, renaming, search and Completed
 	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle     // the input that renames a project in the sidebar
@@ -99,6 +101,8 @@ type Main struct {
 
 	// onMine tells the notifier, from its own goroutine, whether the window shows all of Mine.
 	onMine atomic.Bool
+	// onSummary tells the reminder, from its own goroutine, whether the window shows Summary.
+	onSummary atomic.Bool
 }
 
 // NewMain opens on Mine.
@@ -122,6 +126,17 @@ func (m *Main) OpenTask(id int) {
 // ShowMine opens the Mine screen, whole.
 func (m *Main) ShowMine() { m.goTo(nav{}) }
 
+// ShowSummary opens the Summary page on today, or on this week. It plays the scene again.
+func (m *Main) ShowSummary(week bool) {
+	m.goTo(nav{screen: screenSummary})
+	m.sum.week, m.sum.back = week, 0
+	m.leaveSummary()
+}
+
+// ShowingSummary says whether the window, as last drawn, shows Summary. Safe to call from any
+// goroutine.
+func (m *Main) ShowingSummary() bool { return m.onSummary.Load() }
+
 // ShowingMine says whether the window, as last drawn, shows all of Mine: no other page, no slice of
 // it, no search over it. Safe to call from any goroutine.
 func (m *Main) ShowingMine() bool { return m.onMine.Load() }
@@ -143,6 +158,7 @@ func (m *Main) View(c *ui.Context) {
 	t := theme.Resolve(c)
 	m.say, m.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
 	m.weekStart = firstWeekday(c)
+	m.app.setWeekStart(m.weekStart)
 	vibrant := c.Vibrancy()
 	if vibrant {
 		c.Root().Background(ui.Transparent)
@@ -157,6 +173,11 @@ func (m *Main) View(c *ui.Context) {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 	}
 	m.onMine.Store(m.nav == nav{} && !m.searching())
+	onSummary := m.nav.screen == screenSummary && !m.searching()
+	m.onSummary.Store(onSummary)
+	if !onSummary {
+		m.leaveSummary()
+	}
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)
@@ -196,6 +217,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 			m.page(c, t, func() { m.completedScreen(c, t) })
 		case m.nav.screen == screenCalendar:
 			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
+		case m.nav.screen == screenSummary:
+			m.summaryScreen(c, t)
 		case m.boardActive():
 			m.boardScreen(c, t)
 		case m.columnsActive():
