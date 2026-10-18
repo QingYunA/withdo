@@ -12,6 +12,7 @@ type field struct {
 	editing bool
 	enter   bool // Enter was pressed in the field
 	revert  bool // Esc was pressed in the field: its text went back and the page takes the keys
+	wake    bool // an ellipsized field was clicked and its input takes the keyboard as it appears
 }
 
 // fields keeps a field per name, for the task in the inspector.
@@ -37,6 +38,7 @@ type fieldSpec struct {
 	escReverts  bool // Esc puts the stored text back and leaves the field
 	secret      bool // a password field: the text is hidden
 	focus       bool // the field takes the keyboard as it appears
+	ellipsis    bool // a single line that ends in … while it is not edited; a click edits it
 	minLines    int
 	maxLines    int
 }
@@ -68,6 +70,10 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 	if !f.editing {
 		f.buf = s.value
 	}
+	if s.ellipsis && !s.multiline && !f.editing && !f.wake {
+		ellipsized(c, t, f, s)
+		return "", false
+	}
 	box := ui.Box(c.Key("box-" + s.name)).MinWidth(0)
 	var el ui.Element
 	box.Children(func() {
@@ -80,7 +86,7 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 		if s.secret && !s.multiline {
 			el.Password()
 		}
-		if s.focus {
+		if s.focus || f.wake {
 			el.AutoFocus()
 		}
 		if f.buf == "" && s.placeholder != "" {
@@ -90,7 +96,7 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 	focused := el.Focused()
 	blurred := f.editing && !focused
 	if focused {
-		f.editing = true
+		f.editing, f.wake = true, false
 	}
 	if (f.enter || blurred) && f.buf != s.value {
 		saved, ok = f.buf, true
@@ -100,4 +106,21 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 	}
 	f.enter = false
 	return saved, ok
+}
+
+// ellipsized shows a single-line field's text the way every long value reads: cut to the room it
+// has and ended with an ellipsis. A text input cannot do that, so the field is this text until it
+// is clicked (or reached with Tab and Enter), and then the input takes over.
+func ellipsized(c *ui.Context, t *theme.Tokens, f *field, s fieldSpec) {
+	btn := ui.ButtonBase(c.Key("show-" + s.name)).Label(s.label).Shrink(1).MinWidth(0).Justify(ui.Start).AlignItems(ui.Center).Cursor(ui.CursorText)
+	btn.Children(func() {
+		text, color := s.value, s.color
+		if text == "" {
+			text, color = s.placeholder, t.TextTertiary
+		}
+		theme.Text(c, s.style, color, text).Shrink(1).MinWidth(0).Ellipsis("…")
+	})
+	if btn.Clicked() {
+		f.wake = true
+	}
 }

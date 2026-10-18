@@ -47,6 +47,36 @@ func TestInspectorSavesNotesOnBlur(t *testing.T) {
 	}
 }
 
+// A branch longer than the inspector ends in an ellipsis, as every other long value does, and
+// clicking it edits the whole name.
+func TestInspectorEllipsizesALongBranchAndEditsItOnClick(t *testing.T) {
+	const width = 860
+	tt, m, app := newMainTester(t, width)
+	long := "worktree-agent-ac6ff63e8ba29afb9-fix-the-remaining-dogfood-findings"
+	if err := app.Update(2, data.Patch{Branch: &long}); err != nil {
+		t.Fatal(err)
+	}
+	m.OpenTask(2)
+	tt.Frame()
+	r, ok := tt.Find(long)
+	if !ok {
+		t.Fatalf("the branch is not drawn as text: %q", tt.Texts())
+	}
+	if r.X+r.W > width {
+		t.Errorf("the branch runs to %.0f, past the window's %d: it is cut, not ellipsized", r.X+r.W, width)
+	}
+
+	if err := tt.Click(long); err != nil {
+		t.Fatal(err)
+	}
+	tt.Key(ui.Cmd, ui.KeyA)
+	tt.Type("feat/short")
+	tt.Key(0, ui.KeyEnter)
+	if got, _ := app.Task(2); got.Branch != "feat/short" {
+		t.Errorf("branch %q after the click and Enter", got.Branch)
+	}
+}
+
 func TestInspectorOpensThePullRequest(t *testing.T) {
 	app, _, rec := newTestApp(t)
 	m := NewMain(app)

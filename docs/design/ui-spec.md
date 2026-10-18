@@ -806,7 +806,7 @@ Top line (the bar with the close button, `meta` `text.secondary`): where the tas
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
 #7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
 Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
-editable in place; the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
+editable in place (a Branch longer than the pane is ellipsized like every long value, and a click turns it into the editable text); the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
