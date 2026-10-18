@@ -1327,6 +1327,12 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   JSON, or when a Cordis patch is not a patch list adhd-todo can append to; then the **Open agent
   work in** / `去看看时打开` row with its pop-up (`The agent's app` default,
   `Terminal`, `Editor`, `Finder`), and the `claude mcp add` command in a mono well with **Copy**.
+  Under it, **Another agent** / `其他 Agent`: one `meta` line and **Copy setup guide** /
+  `复制接入说明`, which copies a guide any agent can follow to add adhd-todo itself (`agentsetup`
+  Guide, also printed by `adhd-core guide`): the server, how to install it (its own command first,
+  else its config file after a backup), how to check it (`get_overview`), how to report, and an
+  offer to add the reporting rule to the agent's global instructions after asking the user. The
+  manual snippet of a failed install has the same button. (#86)
   The choice is kept in `prefs.json` next to the database. Screens `settings-agents-*`; the
   scrolled one is `settings-agents-open-with-*`. "Install MCP" is the only word for this; it is
   never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus

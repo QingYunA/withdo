@@ -78,6 +78,13 @@ func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsCommand()).Margin(0, 4)
 		commandWell(c, t, s.app.Config.ConnectCommand, func() { s.copyButton(c, t, "copy", s.app.Config.ConnectCommand) })
 	})
+	if env := s.app.Config.AgentSetup; env != nil {
+		group(c, t, "other-agent", func() {
+			settingsRow(c, t, "other-agent", s.say.SettingsAgentOther(), s.say.SettingsAgentOtherBody(), true, func() {
+				s.copyGuideButton(c, t, "copy-guide", env)
+			})
+		})
+	}
 }
 
 // splitAgents sorts the catalog into the ones on this Mac and the ones still to get. An agent
@@ -330,7 +337,12 @@ func (s *Settings) finishInstall(env *agentsetup.Env, a agentsetup.Agent, err er
 func (s *Settings) manualPanel(c *ui.Context, t *theme.Tokens, h *manualHint) {
 	ui.Column(c.Key("agent-manual")).Shrink(0).Gap(8).Margin(0, 0, 18).Children(func() {
 		theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentManual(withTilde(h.file, s.app.Config.AgentSetup.Home)), 0).Margin(0, 4)
-		commandWell(c, t, h.snippet, func() { s.copyButton(c, t, "copy-manual", h.snippet) })
+		commandWell(c, t, h.snippet, func() {
+			ui.Column(c).Shrink(0).AlignItems(ui.End).Children(func() {
+				s.copyButton(c, t, "copy-manual", h.snippet)
+				s.copyGuideButton(c, t, "copy-guide-manual", s.app.Config.AgentSetup)
+			})
+		})
 	})
 }
 
@@ -346,9 +358,19 @@ func commandWell(c *ui.Context, t *theme.Tokens, command string, beside func()) 
 
 // copyButton copies text; for copiedFor afterwards it says Copied. key tells two buttons apart.
 func (s *Settings) copyButton(c *ui.Context, t *theme.Tokens, key, text string) {
+	s.copyAs(c, t, key, text, s.say.SettingsCopy(), s.say.A11yCopyCommand())
+}
+
+// copyGuideButton copies the guide any agent can follow to add adhd-todo to itself.
+func (s *Settings) copyGuideButton(c *ui.Context, t *theme.Tokens, key string, env *agentsetup.Env) {
+	s.copyAs(c, t, key, env.Guide(), s.say.SettingsCopyGuide(), s.say.SettingsCopyGuide())
+}
+
+// copyAs is the copy button: the pixel copy icon and word, or the check and Copied after a click.
+func (s *Settings) copyAs(c *ui.Context, t *theme.Tokens, key, text, word, label string) {
 	copied := s.copiedKey == key && !s.copied.IsZero() && s.app.Now().Sub(s.copied) < copiedFor
 	btn := ui.ButtonBase(c.Key(key)).Height(theme.HitTarget).Padding(0, 6).Gap(4).Radius(theme.RadiusControl).Shrink(0).
-		AlignItems(ui.Center).Label(s.say.A11yCopyCommand()).TextColor(t.TextSecondary).Cursor(ui.CursorPointer)
+		AlignItems(ui.Center).Label(label).TextColor(t.TextSecondary).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)
 	}
@@ -359,7 +381,7 @@ func (s *Settings) copyButton(c *ui.Context, t *theme.Tokens, key, text string) 
 			return
 		}
 		ui.Icon(c, theme.IconCopy).Size(theme.IconSmall, theme.IconSmall)
-		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsCopy())
+		theme.Text(c, theme.Meta, t.TextSecondary, word)
 	})
 	if btn.Clicked() {
 		c.WriteClipboard(text)

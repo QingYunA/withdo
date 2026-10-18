@@ -5018,6 +5018,52 @@ func (msgs Messages) SettingsAgentsCommand() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsCommand", nil)
 }
 
+// SettingsAgentOther says "Another agent"
+// in the language the app shows.
+//
+// Label of the row at the bottom of Settings > Agents for an agent that is
+// not in the list.
+func SettingsAgentOther() string { return In(i18n.Locale()).SettingsAgentOther() }
+
+// SettingsAgentOther says "Another agent"
+// in the language of msgs.
+//
+// Label of the row at the bottom of Settings > Agents for an agent that is
+// not in the list.
+func (msgs Messages) SettingsAgentOther() string {
+	return Catalog.Format(msgs.locale, "settingsAgentOther", nil)
+}
+
+// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself."
+// in the language the app shows.
+//
+// Second line of the Another agent row in Settings > Agents.
+func SettingsAgentOtherBody() string { return In(i18n.Locale()).SettingsAgentOtherBody() }
+
+// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself."
+// in the language of msgs.
+//
+// Second line of the Another agent row in Settings > Agents.
+func (msgs Messages) SettingsAgentOtherBody() string {
+	return Catalog.Format(msgs.locale, "settingsAgentOtherBody", nil)
+}
+
+// SettingsCopyGuide says "Copy setup guide"
+// in the language the app shows.
+//
+// Button that copies the guide an agent follows to add adhd-todo's MCP
+// server to itself; also its accessibility label.
+func SettingsCopyGuide() string { return In(i18n.Locale()).SettingsCopyGuide() }
+
+// SettingsCopyGuide says "Copy setup guide"
+// in the language of msgs.
+//
+// Button that copies the guide an agent follows to add adhd-todo's MCP
+// server to itself; also its accessibility label.
+func (msgs Messages) SettingsCopyGuide() string {
+	return Catalog.Format(msgs.locale, "settingsCopyGuide", nil)
+}
+
 // SettingsAgentNoCore says "adhd-core isn't at {path}. Build it first, then try again."
 // in the language the app shows.
 //

@@ -9,6 +9,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/mcpserver"
 	"github.com/QingYunA/adhd-todo/internal/paths"
@@ -20,6 +21,7 @@ const usage = `Usage: adhd-core <command>
 Commands:
   mcp        Run the MCP server on stdio
   overview   Print active tasks per project, with stale flags
+  guide      Print a setup guide to paste to any coding agent, so it adds this MCP server itself
 `
 
 // Exit codes.
@@ -55,6 +57,9 @@ func run(ctx context.Context, args []string, d deps) int {
 	switch args[0] {
 	case "--help", "-h":
 		_, _ = io.WriteString(d.stdout, usage)
+		return exitOK
+	case "guide":
+		_, _ = io.WriteString(d.stdout, agentsetup.New(d.home).Guide())
 		return exitOK
 	case "mcp", "overview":
 		if err := execute(ctx, args[0], d); err != nil {

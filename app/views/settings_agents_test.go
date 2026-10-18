@@ -349,7 +349,7 @@ func TestAZedFileWithCommentsIsNotRewrittenAndTheSnippetCanBeCopied(t *testing.T
 	if string(b) != orig {
 		t.Errorf("the file was rewritten: %s", b)
 	}
-	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Scroll(340, 300, 0, 330) // the snippet's well comes into view
 	r.tt.Frame()
 	mustNil(t, r.tt.Click("Copy command"))
 	if clip := r.tt.Clipboard(); !strings.Contains(clip, `"adhd-todo": {`) || strings.Contains(clip, "claude mcp add") {

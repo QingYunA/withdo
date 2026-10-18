@@ -2016,6 +2016,18 @@
   "@settingsAgentsCommand": {
     "description": "Line above the command that installs the MCP into Claude Code, at the bottom of Settings > Agents."
   },
+  "settingsAgentOther": "Another agent",
+  "@settingsAgentOther": {
+    "description": "Label of the row at the bottom of Settings > Agents for an agent that is not in the list."
+  },
+  "settingsAgentOtherBody": "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself.",
+  "@settingsAgentOtherBody": {
+    "description": "Second line of the Another agent row in Settings > Agents."
+  },
+  "settingsCopyGuide": "Copy setup guide",
+  "@settingsCopyGuide": {
+    "description": "Button that copies the guide an agent follows to add adhd-todo's MCP server to itself; also its accessibility label."
+  },
   "settingsAgentNoCore": "adhd-core isn't at {path}. Build it first, then try again.",
   "@settingsAgentNoCore": {
     "description": "Why Install MCP did nothing: the adhd-core program the agent would run is missing.",
