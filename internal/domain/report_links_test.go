@@ -37,7 +37,6 @@ func TestCleanLinksDropsWhatItCannotKeepAndSaysWhy(t *testing.T) {
 		{"file on another host", domain.ReportLink{URL: "file://nas/share/a.html"}, "absolute path"},
 		{"empty", domain.ReportLink{URL: "  "}, "empty"},
 		{"unparsable", domain.ReportLink{URL: "https://exa mple.com/%zz"}, "not a valid URL"},
-		{"long title", domain.ReportLink{URL: "https://example.com", Title: strings.Repeat("x", 81)}, "longer than 80"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -55,6 +54,12 @@ func TestCleanLinksCountsTitleInCharactersNotBytes(t *testing.T) {
 	kept, dropped := domain.CleanLinks([]domain.ReportLink{{URL: "https://example.com", Title: strings.Repeat("页", 80)}})
 	eq(t, "kept", len(kept), 1)
 	eq(t, "dropped", len(dropped), 0)
+}
+
+func TestCleanLinksCutsALongTitle(t *testing.T) {
+	kept, dropped := domain.CleanLinks([]domain.ReportLink{{URL: "https://example.com", Title: strings.Repeat("页", 81)}})
+	eq(t, "dropped", len(dropped), 0)
+	eq(t, "title", kept[0].Title, strings.Repeat("页", 79)+"…")
 }
 
 func TestCleanLinksKeepsFiveAndDropsTheRest(t *testing.T) {

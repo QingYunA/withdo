@@ -866,8 +866,8 @@ v19 (`docs/design/mockups/v19.html`, #76). An agent can attach pages to a report
 wrote, a design draft, a document. The app shows them as links and opens them in the default
 browser; it never renders, downloads or caches them.
 
-- **MCP.** `report_progress` takes `links`: up to 5 of `{url, title}`, `title` optional (80
-  characters at most). Only `https://`, `http://` and `file://` with an absolute path are kept. A
+- **MCP.** `report_progress` takes `links`: up to 5 of `{url, title}`, `title` optional (cut to 80
+  characters, ending in `…`). Only `https://`, `http://` and `file://` with an absolute path are kept. A
   bad link never fails the report: the report is filed, the bad link is dropped, and the result
   lists it under `dropped_links` with the reason. `get_task` returns each report's links. The
   server instructions add one sentence: when you made something that can be opened (a report page,

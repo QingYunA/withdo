@@ -88,6 +88,6 @@ var linksProp = &jsonschema.Schema{
 		"https://, http:// or file:// (absolute). A link that cannot be kept is dropped and listed in dropped_links; the report is still filed",
 	Items: object(map[string]*jsonschema.Schema{
 		"url":   {Type: "string"},
-		"title": {Type: "string", Description: "optional, at most 80 characters"},
+		"title": {Type: "string", Description: "optional; a longer title is cut to 80 characters"},
 	}, "url"),
 }

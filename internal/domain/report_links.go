@@ -29,12 +29,13 @@ type DroppedLink struct {
 }
 
 // CleanLinks keeps the links a report can carry (https://, http:// with a host, file:// with an
-// absolute path; a title of at most 80 characters; five at most) and says why it dropped each of
-// the others. A bad link never fails a report. Kept links are trimmed and never nil.
+// absolute path; five at most) and says why it dropped each of the others. A title longer than 80
+// characters is cut to 80, ending in "…". A bad link never fails a report. Kept links are trimmed
+// and never nil.
 func CleanLinks(in []ReportLink) (kept []ReportLink, dropped []DroppedLink) {
 	kept = []ReportLink{}
 	for _, l := range in {
-		l.URL, l.Title = strings.TrimSpace(l.URL), strings.TrimSpace(l.Title)
+		l.URL, l.Title = strings.TrimSpace(l.URL), shortTitle(strings.TrimSpace(l.Title))
 		if reason := linkProblem(l); reason != "" {
 			dropped = append(dropped, DroppedLink{URL: l.URL, Reason: reason})
 		} else if len(kept) == MaxReportLinks {
@@ -46,13 +47,19 @@ func CleanLinks(in []ReportLink) (kept []ReportLink, dropped []DroppedLink) {
 	return kept, dropped
 }
 
+// shortTitle cuts a title longer than MaxLinkTitleRunes to that many characters, the last one "…".
+func shortTitle(title string) string {
+	r := []rune(title)
+	if len(r) <= MaxLinkTitleRunes {
+		return title
+	}
+	return strings.TrimSpace(string(r[:MaxLinkTitleRunes-1])) + "…"
+}
+
 // linkProblem says what is wrong with l, or "" when it can be kept.
 func linkProblem(l ReportLink) string {
 	if l.URL == "" {
 		return "the url is empty"
-	}
-	if len([]rune(l.Title)) > MaxLinkTitleRunes {
-		return fmt.Sprintf("the title is longer than %d characters", MaxLinkTitleRunes)
 	}
 	u, err := url.Parse(l.URL)
 	if err != nil {
