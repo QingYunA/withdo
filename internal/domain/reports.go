@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -134,12 +133,6 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	// mainBranch is where a subagent's parent lives; empty unless cwd is a subagent's worktree.
 	mainBranch := ""
 	lookup := firstNonEmpty(in.Cwd, in.FallbackCwd)
-	// A cwd that does not exist would put the task in the Inbox; one given with task_id finds nothing.
-	if in.TaskID == nil && in.Cwd != "" {
-		if fi, err := os.Stat(in.Cwd); err != nil || !fi.IsDir() {
-			return nil, invalid("cwd", "no such directory")
-		}
-	}
 	if in.TaskID == nil && lookup != "" {
 		resolved, err := c.ResolveProjectFromCwd(ctx, lookup)
 		if err != nil {

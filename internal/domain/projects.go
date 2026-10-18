@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -125,8 +126,13 @@ type ResolvedProject struct {
 // ResolveProjectFromCwd finds or creates the project that owns cwd. A GitHub
 // remote keys the project by "owner/repo"; otherwise it is keyed by the main
 // working tree's path, so every worktree of one repo shares a project. It
-// returns (nil, nil) when cwd is not inside a git repository.
+// returns (nil, nil) when cwd is not inside a git repository, and a cwd error
+// when it is not a directory.
 func (c *Core) ResolveProjectFromCwd(ctx context.Context, cwd string) (*ResolvedProject, error) {
+	// Without this a missing directory reads as "outside git", and a task lands in the Inbox.
+	if fi, err := os.Stat(cwd); err != nil || !fi.IsDir() {
+		return nil, invalid("cwd", "no such directory")
+	}
 	info, err := c.git(ctx, cwd)
 	if errors.Is(err, gitctx.ErrNotRepo) {
 		return nil, nil
