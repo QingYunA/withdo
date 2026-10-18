@@ -18,7 +18,7 @@ func TestNewRepoAndOpenDB(t *testing.T) {
 	}
 	db, _ := OpenDB(t)
 	var v int
-	if err := db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 10 {
+	if err := db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 11 {
 		t.Fatalf("user_version = %d, err %v", v, err)
 	}
 }
