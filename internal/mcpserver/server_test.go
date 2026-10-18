@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -287,6 +288,21 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 				t.Errorf("error %q does not name %q", res.Text, tt.field)
 			}
 		})
+	}
+}
+
+func TestRemindAtWithoutAnOffsetIsLocalTime(t *testing.T) {
+	saved := time.Local
+	time.Local = time.FixedZone("CST", 8*3600)
+	t.Cleanup(func() { time.Local = saved })
+	r := newRig(t)
+	task := r.ok("create_task", map[string]any{"title": "x", "remind_at": "2026-10-19T09:00", "due_at": "2026-10-19T18:30:15"}).obj("task")
+	if task["remind_at"] != "2026-10-19T01:00:00.000Z" || task["due_at"] != "2026-10-19T10:30:15.000Z" {
+		t.Errorf("task = %+v", task)
+	}
+	res := r.call("create_task", map[string]any{"title": "x", "remind_at": "soon"})
+	if !res.IsError || !strings.Contains(res.Text, "remind_at") {
+		t.Errorf("bad remind_at: %+v", res)
 	}
 }
 

@@ -3,6 +3,7 @@ package domain_test
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 )
@@ -82,6 +83,36 @@ func TestParseTimestamp(t *testing.T) {
 				t.Errorf("got (%q, %v), want (%q, ok=%v)", got, err, tt.want, tt.ok)
 			}
 		})
+	}
+}
+
+func TestParseTimestampReadsADatetimeWithoutOffsetAsLocalTime(t *testing.T) {
+	shanghai := time.FixedZone("CST", 8*3600)
+	tests := []struct{ in, want string }{
+		{"2026-10-19T09:00", "2026-10-19T01:00:00.000Z"},
+		{"2026-10-19T09:00:30", "2026-10-19T01:00:30.000Z"},
+		{"2026-10-19T09:00:30.25", "2026-10-19T01:00:30.250Z"},
+		{"2026-10-19T09:00:00Z", "2026-10-19T09:00:00.000Z"}, // an offset still wins
+		{"2026-10-19", "2026-10-19T00:00:00.000Z"},           // a date alone is unchanged
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			got, err := domain.ParseTimestampIn(tt.in, shanghai)
+			if err != nil || got != tt.want {
+				t.Errorf("got (%q, %v), want %q", got, err, tt.want)
+			}
+		})
+	}
+	// ParseTimestamp is ParseTimestampIn for the machine's time zone.
+	saved := time.Local
+	time.Local = shanghai
+	t.Cleanup(func() { time.Local = saved })
+	got, err := domain.ParseTimestamp("2026-10-19T09:00")
+	if err != nil || got != "2026-10-19T01:00:00.000Z" {
+		t.Errorf("ParseTimestamp = (%q, %v)", got, err)
+	}
+	if _, err := domain.ParseTimestamp("2026-10-19T25:00"); err == nil {
+		t.Error("hour 25 must be rejected")
 	}
 }
 

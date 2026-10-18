@@ -177,13 +177,22 @@ const timeLayout = "2006-01-02T15:04:05.000Z"
 func FormatTime(t time.Time) string { return t.UTC().Format(timeLayout) }
 
 // ParseTimestamp validates a user-supplied ISO 8601 date ("2026-12-01") or
-// datetime with an offset ("2026-12-01T09:00:00+08:00") and returns it in
-// stored form (UTC, milliseconds).
-func ParseTimestamp(s string) (string, error) {
+// datetime ("2026-12-01T09:00:00+08:00") and returns it in stored form (UTC,
+// milliseconds). A datetime without an offset is local time.
+func ParseTimestamp(s string) (string, error) { return ParseTimestampIn(s, time.Local) }
+
+// ParseTimestampIn is ParseTimestamp with the zone that a datetime without an offset is read in.
+// A date alone is UTC midnight.
+func ParseTimestampIn(s string, loc *time.Location) (string, error) {
 	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04Z07:00", "2006-01-02"} {
 		if t, err := time.Parse(layout, s); err == nil {
 			return FormatTime(t), nil
 		}
 	}
-	return "", fmt.Errorf("must be an ISO 8601 date or datetime with offset, e.g. 2026-12-01 or 2026-12-01T09:00:00Z")
+	for _, layout := range []string{"2006-01-02T15:04:05", "2006-01-02T15:04"} {
+		if t, err := time.ParseInLocation(layout, s, loc); err == nil {
+			return FormatTime(t), nil
+		}
+	}
+	return "", fmt.Errorf("must be an ISO 8601 date or datetime, e.g. 2026-12-01 or 2026-12-01T09:00 (local time) or 2026-12-01T09:00:00Z")
 }

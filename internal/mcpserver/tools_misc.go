@@ -156,7 +156,7 @@ func (t *tools) registerCreateMilestone(s *mcp.Server) {
 			"title":      text(""),
 			"cwd":        withDesc(cwdProp, "Directory whose repo owns the milestone; defaults to the server's cwd"),
 			"project_id": id("Project id"),
-			"due_at":     timestamp("ISO 8601 date or datetime"),
+			"due_at":     timestamp(timestampDesc),
 		}, "title"),
 	}, t.createMilestone)
 }
