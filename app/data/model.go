@@ -156,6 +156,13 @@ type Report struct {
 	NextStep  string
 	CreatedAt time.Time
 	Cwd       string // the working directory the agent reported from; empty when it did not say
+	Links     []Link // pages the agent attached, in the order it gave them
+}
+
+// Link is a page an agent attached to a report. Title may be empty.
+type Link struct {
+	URL   string
+	Title string
 }
 
 // WorkDir is where an agent works on a task: the directory of the newest report that names one

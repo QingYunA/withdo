@@ -146,7 +146,33 @@ func (m *Main) markdownTask(task data.SummaryTask) string {
 	if task.Said != "" {
 		line += m.say.SummaryMdSaid(task.Said)
 	}
+	for _, l := range m.taskLinks(task.ID) {
+		line += " " + markdownLink(l)
+	}
 	return line
+}
+
+// taskLinks are the pages the reports of a task attached, oldest report first, each address once.
+func (m *Main) taskLinks(id int) []data.Link {
+	reports := m.app.snap.details[id].Reports // newest first
+	var out []data.Link
+	seen := map[string]bool{}
+	for i := len(reports) - 1; i >= 0; i-- {
+		for _, l := range reports[i].Links {
+			if !seen[l.URL] {
+				seen[l.URL] = true
+				out = append(out, l)
+			}
+		}
+	}
+	return out
+}
+
+// markdownLink is a page as `[title](url)`, with what would end either part escaped.
+func markdownLink(l data.Link) string {
+	title := strings.NewReplacer("[", "\\[", "]", "\\]").Replace(linkLabel(l))
+	addr := strings.NewReplacer(" ", "%20", "(", "%28", ")", "%29").Replace(l.URL)
+	return "[" + title + "](" + addr + ")"
 }
 
 // openParts says what is still open as "3 in progress, 1 blocked", or "" when nothing is.

@@ -11,14 +11,16 @@ import (
 )
 
 const (
-	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd, kind"
+	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links"
 	// maxTitleRunes bounds a title derived from a summary.
 	maxTitleRunes = 60
 )
 
 func scanReport(s scanner) (Report, error) {
 	var r Report
-	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt, &r.Cwd, &r.Kind)
+	var links string
+	err := s.Scan(&r.ID, &r.TaskID, &r.Agent, &r.Status, &r.Summary, &r.NextStep, &r.CreatedAt, &r.Cwd, &r.Kind, &links)
+	r.Links = decodeLinks(links)
 	return r, err
 }
 
@@ -50,6 +52,8 @@ type AddReportInput struct {
 	Cwd string
 	// Kind says what a report of the poller is about; "" for any other.
 	Kind ReportKind
+	// Links are stored as given; ReportProgress cleans them first (see CleanLinks).
+	Links []ReportLink
 }
 
 // AddReport files a report against an existing task without touching the task.
@@ -70,9 +74,13 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 	if in.CreatedAt == "" {
 		in.CreatedAt = c.stamp()
 	}
+	links, err := encodeLinks(in.Links)
+	if err != nil {
+		return nil, err
+	}
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd), in.Kind)
+		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd), in.Kind, links)
 	if err != nil {
 		return nil, fmt.Errorf("insert report: %w", err)
 	}
@@ -108,6 +116,9 @@ type ProgressInput struct {
 	// ParentTaskID makes the task a subtask of that task: given by an agent that was started by
 	// another one. Without it, a report from a subagent's worktree finds its parent by itself.
 	ParentTaskID *int64
+	// Links are pages to attach to the report; the ones that cannot be kept come back in
+	// ProgressResult.Dropped and never fail the report.
+	Links []ReportLink
 }
 
 // ProgressResult is the outcome of ReportProgress.
@@ -115,6 +126,8 @@ type ProgressResult struct {
 	Task    Task
 	Report  Report
 	Created bool
+	// Dropped are the links the report did not keep, with the reason.
+	Dropped []DroppedLink
 }
 
 // ReportProgress records an agent's progress: it finds the task (by TaskID, or
@@ -128,6 +141,8 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	if in.Status != nil && !in.Status.Valid() {
 		return nil, invalid("status", "must be one of %s", joinStatuses())
 	}
+	var dropped []DroppedLink
+	in.Links, dropped = CleanLinks(in.Links)
 	var projectID *int64
 	branch := in.Branch
 	// mainBranch is where a subagent's parent lives; empty unless cwd is a subagent's worktree.
@@ -157,6 +172,7 @@ func (c *Core) ReportProgress(ctx context.Context, in ProgressInput) (*ProgressR
 	if err != nil {
 		return nil, fmt.Errorf("report progress: %w", err)
 	}
+	out.Dropped = dropped
 	return out, nil
 }
 
@@ -192,7 +208,7 @@ func (c *Core) recordProgress(ctx context.Context, q store.Querier, in ProgressI
 		return nil, err
 	}
 	report, err := c.addReport(ctx, q, AddReportInput{
-		TaskID: updated.ID, Agent: in.Agent, Summary: in.Summary, Status: in.Status, NextStep: strPtr(in.NextStep), Cwd: in.Cwd,
+		TaskID: updated.ID, Agent: in.Agent, Summary: in.Summary, Status: in.Status, NextStep: strPtr(in.NextStep), Cwd: in.Cwd, Links: in.Links,
 	})
 	if err != nil {
 		return nil, err
@@ -228,7 +244,7 @@ func (c *Core) locateOrCreate(ctx context.Context, q store.Querier, in ProgressI
 		return nil, false, err
 	}
 	task, err := c.insertTask(ctx, q, CreateTaskInput{
-		Title:     firstNonEmpty(in.Title, firstSentence(in.Summary), branch, truncateTitle(in.Summary)),
+		Title:     firstNonEmpty(strings.TrimSpace(in.Title), firstSentence(in.Summary), branch, truncateTitle(in.Summary)),
 		Source:    SourceAgent,
 		Status:    status,
 		Priority:  P2,

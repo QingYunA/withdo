@@ -228,6 +228,22 @@ func (msgs Messages) A11yOpenPR(number string) string {
 	return Catalog.Format(msgs.locale, "a11yOpenPR", map[string]any{"number": number})
 }
 
+// A11yOpenPage says "Open page: {title}"
+// in the language the app shows.
+//
+// Accessibility label of the Open page button, which opens the first page
+// the agent attached to its latest report.
+func A11yOpenPage(title string) string { return In(i18n.Locale()).A11yOpenPage(title) }
+
+// A11yOpenPage says "Open page: {title}"
+// in the language of msgs.
+//
+// Accessibility label of the Open page button, which opens the first page
+// the agent attached to its latest report.
+func (msgs Messages) A11yOpenPage(title string) string {
+	return Catalog.Format(msgs.locale, "a11yOpenPage", map[string]any{"title": title})
+}
+
 // A11yOpenTask says "Open {title}"
 // in the language the app shows.
 //
@@ -430,6 +446,24 @@ func ActionOpenPR() string { return In(i18n.Locale()).ActionOpenPR() }
 // Small button on a row whose pull request waits for review.
 func (msgs Messages) ActionOpenPR() string {
 	return Catalog.Format(msgs.locale, "actionOpenPR", nil)
+}
+
+// ActionOpenPage says "Open page"
+// in the language the app shows.
+//
+// Small button on a row of a task in review whose latest report attached a
+// page (an HTML report, a design draft): opens the first one in the default
+// browser.
+func ActionOpenPage() string { return In(i18n.Locale()).ActionOpenPage() }
+
+// ActionOpenPage says "Open page"
+// in the language of msgs.
+//
+// Small button on a row of a task in review whose latest report attached a
+// page (an HTML report, a design draft): opens the first one in the default
+// browser.
+func (msgs Messages) ActionOpenPage() string {
+	return Catalog.Format(msgs.locale, "actionOpenPage", nil)
 }
 
 // ActivityEmpty says "No reports yet. Agents file their progress here as they work."
@@ -1392,6 +1426,22 @@ func LinkHowToConnect() string { return In(i18n.Locale()).LinkHowToConnect() }
 // Link that opens Settings on how to connect Claude Code.
 func (msgs Messages) LinkHowToConnect() string {
 	return Catalog.Format(msgs.locale, "linkHowToConnect", nil)
+}
+
+// LinkNotFound says "File not found"
+// in the language the app shows.
+//
+// Tip shown when the user clicks a link to a local file that is no longer
+// there (a page an agent attached to a report).
+func LinkNotFound() string { return In(i18n.Locale()).LinkNotFound() }
+
+// LinkNotFound says "File not found"
+// in the language of msgs.
+//
+// Tip shown when the user clicks a link to a local file that is no longer
+// there (a page an agent attached to a report).
+func (msgs Messages) LinkNotFound() string {
+	return Catalog.Format(msgs.locale, "linkNotFound", nil)
 }
 
 // ListEmptyBody says "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself."

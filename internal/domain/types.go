@@ -166,6 +166,8 @@ type Report struct {
 	Cwd string `json:"cwd"`
 	// Kind says what a report of the GitHub poller is about; "" for any other report.
 	Kind ReportKind `json:"kind,omitempty"`
+	// Links are the pages the agent attached to the report; never nil.
+	Links []ReportLink `json:"links"`
 }
 
 // timeLayout is JavaScript's Date.toISOString form, kept for database compatibility.

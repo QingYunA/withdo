@@ -19,6 +19,9 @@ type inspector struct {
 	// imgProblem is the line under the images block about a file that was not taken, and when.
 	imgProblem   string
 	imgProblemAt time.Time
+	// linkTip is the chip whose "File not found" tip shows after a click, and since when.
+	linkTip   string
+	linkTipAt time.Time
 }
 
 // editing reports whether a text field of the inspector has the keyboard.
@@ -44,7 +47,7 @@ func (i *inspector) reverted() bool {
 func (i *inspector) reset() {
 	i.fields = fields{}
 	i.dueOpen, i.remOpen = false, false
-	i.imgProblem = ""
+	i.imgProblem, i.linkTip = "", ""
 }
 
 // inspectorPane slides open at 360 pt when a task is open, and shuts again on Esc.

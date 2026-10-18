@@ -128,6 +128,16 @@
       }
     }
   },
+  "a11yOpenPage": "Open page: {title}",
+  "@a11yOpenPage": {
+    "description": "Accessibility label of the Open page button, which opens the first page the agent attached to its latest report.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Rework the sync engine"
+      }
+    }
+  },
   "a11yOpenTask": "Open {title}",
   "@a11yOpenTask": {
     "description": "Accessibility label of the Open button of a row.",
@@ -213,6 +223,10 @@
   "actionOpenPR": "Open PR",
   "@actionOpenPR": {
     "description": "Small button on a row whose pull request waits for review."
+  },
+  "actionOpenPage": "Open page",
+  "@actionOpenPage": {
+    "description": "Small button on a row of a task in review whose latest report attached a page (an HTML report, a design draft): opens the first one in the default browser."
   },
   "activityEmpty": "No reports yet. Agents file their progress here as they work.",
   "@activityEmpty": {
@@ -677,6 +691,10 @@
   "linkHowToConnect": "How to connect",
   "@linkHowToConnect": {
     "description": "Link that opens Settings on how to connect Claude Code."
+  },
+  "linkNotFound": "File not found",
+  "@linkNotFound": {
+    "description": "Tip shown when the user clicks a link to a local file that is no longer there (a page an agent attached to a report)."
   },
   "listEmptyBody": "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself.",
   "@listEmptyBody": {

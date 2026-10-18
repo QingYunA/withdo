@@ -169,6 +169,10 @@ func TestReportProgressTitleFromSummary(t *testing.T) {
 	}
 	multi := progress(t, c, domain.ProgressInput{Summary: "first line\nsecond line"})
 	eq(t, "first line only", multi.Task.Title, "first line")
+	blank := progress(t, c, domain.ProgressInput{Summary: "did a thing", Title: "   "})
+	eq(t, "blank title falls back to the summary", blank.Task.Title, "did a thing")
+	padded := progress(t, c, domain.ProgressInput{Summary: "s", Title: "  Add login "})
+	eq(t, "title is trimmed", padded.Task.Title, "Add login")
 }
 
 func TestReportProgressBumpsUpdatedAt(t *testing.T) {

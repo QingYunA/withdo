@@ -69,7 +69,7 @@ func (c *Core) GetTask(ctx context.Context, id int64) (*Task, error) {
 
 // CreateTaskInput describes a new task. Zero values mean "default": status
 // todo, priority P2, no project (the inbox). DueAt and RemindAt are in stored
-// form (see ParseTimestamp).
+// form (see ParseTimestamp). Title is trimmed and must not be blank.
 type CreateTaskInput struct {
 	Title       string
 	Source      Source
@@ -108,6 +108,7 @@ func (c *Core) CreateTask(ctx context.Context, in CreateTaskInput) (*Task, error
 }
 
 func withDefaults(in CreateTaskInput) (CreateTaskInput, error) {
+	in.Title = strings.TrimSpace(in.Title)
 	if in.Title == "" {
 		return in, invalid("title", "must not be empty")
 	}
@@ -220,7 +221,7 @@ type TaskPatch struct {
 // UpdateTask patches a task in place. Moving to done/cancelled stamps
 // completed_at once; moving back to an open status clears it. Writing
 // remind_at, even to the same value, re-arms its reminder. pr_number always
-// follows pr_url.
+// follows pr_url. A new title is trimmed and must not be blank.
 func (c *Core) UpdateTask(ctx context.Context, id int64, patch TaskPatch) (*Task, error) {
 	var out *Task
 	err := c.write(ctx, func(q store.Querier) error {
@@ -288,10 +289,11 @@ func (c *Core) updateTask(ctx context.Context, q store.Querier, id int64, patch 
 func applyPatch(cur Task, p TaskPatch) (Task, error) {
 	next := cur
 	if p.Title != nil {
-		if *p.Title == "" {
+		title := strings.TrimSpace(*p.Title)
+		if title == "" {
 			return cur, invalid("title", "must not be empty")
 		}
-		next.Title = *p.Title
+		next.Title = title
 	}
 	if p.Status != nil {
 		if !p.Status.Valid() {

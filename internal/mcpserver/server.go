@@ -33,6 +33,7 @@ var Instructions = strings.Join([]string{
 	"Please pass title on your first report: a short name for the task. Without it the title is the first sentence of the summary.",
 	"When you start a subagent, give it your task_id and tell it to pass parent_task_id on its reports, so its work shows under your task.",
 	"A subagent reports status \"done\" when it hands its work back: its parent reviews it, not the user.",
+	"When you made something that can be opened (a report page, a design draft), attach it to the report with links.",
 	"Do not report trivial questions or read-only exploration.",
 }, "\n")
 
