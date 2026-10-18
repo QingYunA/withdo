@@ -75,6 +75,11 @@ type App struct {
 	// Prefs keeps the choices made in Settings that the app keeps itself; nil keeps them for this
 	// run only.
 	Prefs data.PrefsStore
+	// Sound makes the Summary scene's sounds; nil keeps the scene silent. SystemSounds says whether
+	// macOS plays user interface sound effects, asked once per play off the UI thread, and WindowKey
+	// whether the main window has keyboard focus, asked before each cue; nil means yes.
+	Sound                   CuePlayer
+	SystemSounds, WindowKey func() bool
 
 	seen            data.Seen
 	seenLoaded      bool

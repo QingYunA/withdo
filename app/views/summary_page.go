@@ -118,6 +118,10 @@ func (m *Main) summaryScene(c *ui.Context, t *theme.Tokens, v *summaryView, now 
 	st := &m.sum
 	at, calm := m.sceneTime(c, v, now)
 	frame := m.sceneFrame(v, at, calm)
+	if !st.sounding {
+		st.sounding = true
+		m.startSound(v, at, calm)
+	}
 	scene := ui.Box(c.Key("summary-scene")).FillWidth().Height(theme.SceneHeight).Shrink(0).ClipY().
 		Cursor(ui.CursorPointer).Role(ui.RoleImage).Label(m.say.SummaryA11yScene())
 	hit, hovered := m.sceneHit(scene, v, at)

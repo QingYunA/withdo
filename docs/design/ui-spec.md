@@ -1214,6 +1214,11 @@ turned down). The scene makes a few quiet sounds while it plays, and nothing any
   one opened at ten at night says nothing), once a day (the date is kept in `prefs.json`), and is
   left out, for the day, while the window shows Summary. The time is a pop-up of the evening in half
   hours in Settings. Notification ids `end-of-day/day` and `end-of-day/week` open Summary.
+- Sounds: the cues are a timer each, set once when the scene starts (`theme.DayPlan.SoundCues`,
+  `WeekPlan.SoundCues`), and goods are taken in the order they land, not the order they are
+  thrown. The macOS setting is read once per play off the UI thread; the window's focus is asked
+  before each cue, so a sound is dropped when the window loses focus mid-scene. `Sound effects` is
+  a group of its own under Notifications. `star.wav` carries its 40 ms lead in the file.
 
 **Stored**: a `summaries` table (migration 010): period (`day`/`week`), its first date, the
 paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting replaces the row.

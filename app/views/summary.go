@@ -28,6 +28,9 @@ type summaryState struct {
 	scene   ui.Rect // where it was drawn, for the tests that point at it
 	// freeze, when set, is the time of the scene in place of the clock's: the screenshots' still frames.
 	freeze *time.Duration
+	// sounding is set once the cues of the scene being played were started (summary_sound.go).
+	sounding bool
+	track    soundtrack
 
 	paras  map[string]*paragraph
 	open   map[string]bool // ledger rows that show their tasks, by period and person
@@ -176,6 +179,7 @@ func (m *Main) beginScene(now time.Time, key string) {
 	if st.playing == key {
 		return
 	}
+	m.stopSound()
 	st.playing, st.start = key, now
 	switch {
 	case m.sum.week:
@@ -193,7 +197,10 @@ func (m *Main) replayScene() {
 }
 
 // leaveSummary forgets what the scene was playing when another page opens, so the next visit plays it.
-func (m *Main) leaveSummary() { m.sum.playing = "" }
+func (m *Main) leaveSummary() {
+	m.sum.playing = ""
+	m.stopSound()
+}
 
 // sceneTime is how long the scene has been playing, and whether it is drawn calm: with Reduce Motion
 // it is the last frame at once.

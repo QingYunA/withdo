@@ -7000,6 +7000,48 @@ func (msgs Messages) SettingsEndOfDayTime() string {
 	return Catalog.Format(msgs.locale, "settingsEndOfDayTime", nil)
 }
 
+// SettingsSoundEffects says "Sound effects"
+// in the language the app shows.
+//
+// Label of the switch for the Summary scene's sounds in Settings > General.
+func SettingsSoundEffects() string { return In(i18n.Locale()).SettingsSoundEffects() }
+
+// SettingsSoundEffects says "Sound effects"
+// in the language of msgs.
+//
+// Label of the switch for the Summary scene's sounds in Settings > General.
+func (msgs Messages) SettingsSoundEffects() string {
+	return Catalog.Format(msgs.locale, "settingsSoundEffects", nil)
+}
+
+// SettingsSoundEffectsMeta says "Quiet sounds while the day is shipped in Summary"
+// in the language the app shows.
+//
+// Quiet line under the sound effects switch.
+func SettingsSoundEffectsMeta() string { return In(i18n.Locale()).SettingsSoundEffectsMeta() }
+
+// SettingsSoundEffectsMeta says "Quiet sounds while the day is shipped in Summary"
+// in the language of msgs.
+//
+// Quiet line under the sound effects switch.
+func (msgs Messages) SettingsSoundEffectsMeta() string {
+	return Catalog.Format(msgs.locale, "settingsSoundEffectsMeta", nil)
+}
+
+// SettingsSoundEffectsSwitch says "Play sound effects"
+// in the language the app shows.
+//
+// Accessibility label of the sound effects switch.
+func SettingsSoundEffectsSwitch() string { return In(i18n.Locale()).SettingsSoundEffectsSwitch() }
+
+// SettingsSoundEffectsSwitch says "Play sound effects"
+// in the language of msgs.
+//
+// Accessibility label of the sound effects switch.
+func (msgs Messages) SettingsSoundEffectsSwitch() string {
+	return Catalog.Format(msgs.locale, "settingsSoundEffectsSwitch", nil)
+}
+
 // NotifyDayDoneTitle says "Day's done"
 // in the language the app shows.
 //

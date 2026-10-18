@@ -372,6 +372,12 @@ func (s *shell) watchingMine() bool {
 	return win != nil && win.IsFocused() && !win.IsMinimized() && s.main.ShowingMine()
 }
 
+// windowKey says whether the main window has keyboard focus, which the Summary scene's sounds need.
+func (s *shell) windowKey() bool {
+	win := s.window()
+	return win != nil && win.IsFocused() && !win.IsMinimized()
+}
+
 // NotificationsDenied implements views.Actions.
 func (s *shell) NotificationsDenied() bool { return s.notifier.Denied() }
 
