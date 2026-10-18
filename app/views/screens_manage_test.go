@@ -21,6 +21,7 @@ func projectMenuAt(tt *ui.Tester, name string) *menuSpec {
 }
 
 func TestScreensManageProjects(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"
@@ -52,6 +53,7 @@ func TestScreensManageProjects(t *testing.T) {
 }
 
 func TestScreensManageTasks(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"
@@ -82,6 +84,7 @@ func TestScreensManageTasks(t *testing.T) {
 }
 
 func TestScreensManageSearch(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"
@@ -106,6 +109,7 @@ func TestScreensManageSearch(t *testing.T) {
 }
 
 func TestScreensManageCompleted(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"
@@ -127,6 +131,7 @@ func TestScreensManageCompleted(t *testing.T) {
 }
 
 func TestScreensManageMilestones(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			suffix := l.suffix + "-" + a.suffix + ".png"

@@ -33,6 +33,7 @@ func mineApp(t *testing.T) (*App, *data.Fake) {
 }
 
 func TestScreensMine(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _ := mineApp(t)
 		mainShot(t, "mine-"+a.suffix+".png", app, a.dark, nil)
@@ -59,6 +60,7 @@ func TestScreensMine(t *testing.T) {
 // TestScreensTheHop renders the sidebar with the hop in flight and after it has landed: the clock is
 // the test's, so the frame is the one at 40 % of the flight.
 func TestScreensTheHop(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, at := range []struct {
 			name string
@@ -87,6 +89,7 @@ func TestScreensTheHop(t *testing.T) {
 // (Codex works on one task, so there are two agents to list), and the Category row's strip open in the
 // inspector.
 func TestScreensSubRows(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, store := mineApp(t)
 		store.ReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))

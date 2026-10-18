@@ -49,6 +49,7 @@ func toProject(id int) func(*ui.Tester, *Main) {
 }
 
 func TestScreensSeed(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := newTestApp(t)
 		mainShot(t, "mine-"+a.suffix+".png", app, a.dark, nil)
@@ -82,6 +83,7 @@ func TestScreensSeed(t *testing.T) {
 }
 
 func TestScreensEmpty(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		empty, _ := newEmptyApp(t)
 		mainShot(t, "mine-empty-"+a.suffix+".png", empty, a.dark, nil)
@@ -92,6 +94,7 @@ func TestScreensEmpty(t *testing.T) {
 
 // TestScreensDragging renders a card in flight over the board, with the hidden statuses offered.
 func TestScreensDragging(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := newTestApp(t)
 		m := NewMain(app)
@@ -113,6 +116,7 @@ func TestScreensDragging(t *testing.T) {
 }
 
 func TestScreensRealShape(t *testing.T) {
+	screensTest(t)
 	path := os.Getenv("ADHD_REAL_DB")
 	if path == "" {
 		t.Skip("set ADHD_REAL_DB to a copy of a real database")

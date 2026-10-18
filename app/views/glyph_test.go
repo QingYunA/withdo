@@ -11,6 +11,7 @@ import (
 
 // TestScreensGlyphs renders every status glyph and the priority badges large, for the review.
 func TestScreensGlyphs(t *testing.T) {
+	screensTest(t)
 	for _, dark := range []bool{false, true} {
 		suffix := "light"
 		if dark {

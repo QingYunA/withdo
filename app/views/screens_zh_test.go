@@ -37,6 +37,7 @@ func zhShot(t *testing.T, name string, app *App, dark bool, setup func(tt *ui.Te
 }
 
 func TestScreensChineseSeed(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		app, _, _ := newTestApp(t)
 		zhShot(t, "mine-zh-"+a.suffix+".png", app, a.dark, nil)
@@ -53,6 +54,7 @@ func TestScreensChineseSeed(t *testing.T) {
 }
 
 func TestScreensChineseConversation(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		fa := &data.FakeAssistant{Ready: true}
 		app, store, rec := assistApp(t, fa)
@@ -81,6 +83,7 @@ func TestScreensChineseConversation(t *testing.T) {
 }
 
 func TestScreensChineseRealShape(t *testing.T) {
+	screensTest(t)
 	path := os.Getenv("ADHD_REAL_DB")
 	if path == "" {
 		t.Skip("set ADHD_REAL_DB to a copy of a real database")

@@ -90,6 +90,7 @@ func loadPictures(t *testing.T, rec *recorder, tt *ui.Tester, m *Main) {
 }
 
 func TestScreensTaskImages(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix + ".png"

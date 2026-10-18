@@ -33,6 +33,7 @@ func acceptShot(t *testing.T, name string, zh, dark bool, in time.Duration, setu
 }
 
 func TestScreensAccept(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, l := range languages {
 			zh := l.tag == "zh-Hans"

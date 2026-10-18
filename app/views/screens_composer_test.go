@@ -59,6 +59,7 @@ func remindsTomorrow(store *data.Fake, id int, say string) func(string) (data.Re
 }
 
 func TestScreensComposer(t *testing.T) {
+	screensTest(t)
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix + ".png"
