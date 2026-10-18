@@ -54,7 +54,7 @@ func (m *Main) toast(c *ui.Context, t *theme.Tokens, viewport ui.Element, ts ui.
 	fill, ink := t.Text, t.Bg
 	w, _ := c.Size()
 	parts := ui.ToastBase(c, ts)
-	box := parts.Root.Row().AlignItems(ui.Center).Gap(16).Padding(10, 16).Radius(8).MaxWidth(w-48).
+	box := parts.Root.Row().AlignItems(ui.Center).Gap(16).Padding(10, 16).Radius(8).MaxWidth(w - 48).
 		Background(fill).TextColor(ink)
 	box.Shadow(0, 6, 20, 0, ui.RGBA(0, 0, 0, 0.25))
 	if left := parts.Left(); left > 0 && left < toastFade && !viewport.Hovered() {

@@ -68,7 +68,9 @@ func (m *Main) startedDrag(id int, stack []int) {
 }
 
 // fadesInStack says whether the row is one of a stack in the air that is not the one in the hand.
-func (m *Main) fadesInStack(id int) bool { return len(m.ho.stack) > 1 && slices.Contains(m.ho.stack, id) }
+func (m *Main) fadesInStack(id int) bool {
+	return len(m.ho.stack) > 1 && slices.Contains(m.ho.stack, id)
+}
 
 // stackBadge is the count at the top right of the stack in the hand: accent, with white badge text.
 // It is a child of the carried row, so it exists only while it is dragged.

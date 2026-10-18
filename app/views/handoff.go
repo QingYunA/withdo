@@ -88,16 +88,18 @@ func (m *Main) offerHandOffUndo(c *ui.Context, tasks []data.Task, skipped int, u
 }
 
 // offerUndo says what happened in a toast with Undo, which ⌘Z does as well for as long as it shows.
-func (m *Main) offerUndo(c *ui.Context, title string, undo func()) { m.offerUndoWith(c, title, nil, undo) }
+func (m *Main) offerUndo(c *ui.Context, title string, undo func()) {
+	m.offerUndoWith(c, title, nil, undo)
+}
 
 // offerUndoWith is offerUndo for a toast that carries data for its look: the Copy for the agent
 // button of a hand-off.
-func (m *Main) offerUndoWith(c *ui.Context, title string, data any, undo func()) {
+func (m *Main) offerUndoWith(c *ui.Context, title string, extra any, undo func()) {
 	m.ho.undoSeq++
 	seq := m.ho.undoSeq
 	m.ho.undo = undo
 	c.AddToast(ui.Toast{
-		ID: handOffToast, Title: title, Action: m.say.MenuUndo(), Timeout: undoWithin, OnAction: undo, Data: data,
+		ID: handOffToast, Title: title, Action: m.say.MenuUndo(), Timeout: undoWithin, OnAction: undo, Data: extra,
 		OnClose: func() {
 			if m.ho.undoSeq == seq {
 				m.ho.undo = nil
