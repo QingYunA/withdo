@@ -54,6 +54,9 @@ var tomlServer = regexp.MustCompile(`(?m)^[ \t]*\[[ \t]*mcp_servers[ \t]*\.[ \t]
 // Installed reports whether adhd-todo is in the agent's MCP config. A config it cannot read or
 // parse says no.
 func (e *Env) Installed(a Agent) bool {
+	if a.kind == viaYAML {
+		return e.dshInstalled()
+	}
 	for _, f := range a.Files {
 		b, err := os.ReadFile(e.path(f))
 		if err != nil {

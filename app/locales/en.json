@@ -1942,7 +1942,7 @@
       }
     }
   },
-  "settingsAgentsTitle": "Agents on this Mac",
+  "settingsAgentsTitle": "Coding agents",
   "@settingsAgentsTitle": {
     "description": "Group label above the list of coding agents in Settings > Agents."
   },
@@ -1960,9 +1960,21 @@
       }
     }
   },
-  "settingsAgentAbsent": "Not on this Mac",
-  "@settingsAgentAbsent": {
-    "description": "Line under an agent that is not on this Mac."
+  "settingsAgentsLocal": "On this Mac",
+  "@settingsAgentsLocal": {
+    "description": "Section label above the agents found on this Mac in Settings > Agents; the count follows it quietly."
+  },
+  "settingsAgentsMore": "More",
+  "@settingsAgentsMore": {
+    "description": "Section label above the agents not on this Mac in Settings > Agents; the count follows it quietly."
+  },
+  "settingsAgentsEmpty": "No agent found on this Mac yet",
+  "@settingsAgentsEmpty": {
+    "description": "The one row under On this Mac when no agent was found on this Mac and none has reported."
+  },
+  "settingsAgentsConnect": "See how to connect",
+  "@settingsAgentsConnect": {
+    "description": "Link in the empty On this Mac row; it opens the README's section on connecting an agent."
   },
   "settingsAgentInstall": "Install MCP",
   "@settingsAgentInstall": {
@@ -2048,9 +2060,9 @@
       }
     }
   },
-  "settingsAgentManual": "{file} has comments, so adhd-todo won't rewrite it. Add this to it:",
+  "settingsAgentManual": "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:",
   "@settingsAgentManual": {
-    "description": "Shown under the agents when an agent's config file is not plain JSON; the snippet to add follows in a box.",
+    "description": "Shown under the agents when a config file cannot be edited safely (a JSON file with comments, or a Cordis patch that is not a list); the snippet to add follows in a box.",
     "placeholders": {
       "file": {
         "type": "String",

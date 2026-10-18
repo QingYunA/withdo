@@ -4806,13 +4806,13 @@ func (msgs Messages) SettingsAgentReports(count int) string {
 	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
 }
 
-// SettingsAgentsTitle says "Agents on this Mac"
+// SettingsAgentsTitle says "Coding agents"
 // in the language the app shows.
 //
 // Group label above the list of coding agents in Settings > Agents.
 func SettingsAgentsTitle() string { return In(i18n.Locale()).SettingsAgentsTitle() }
 
-// SettingsAgentsTitle says "Agents on this Mac"
+// SettingsAgentsTitle says "Coding agents"
 // in the language of msgs.
 //
 // Group label above the list of coding agents in Settings > Agents.
@@ -4852,18 +4852,68 @@ func (msgs Messages) SettingsAgentFound(where string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentFound", map[string]any{"where": where})
 }
 
-// SettingsAgentAbsent says "Not on this Mac"
+// SettingsAgentsLocal says "On this Mac"
 // in the language the app shows.
 //
-// Line under an agent that is not on this Mac.
-func SettingsAgentAbsent() string { return In(i18n.Locale()).SettingsAgentAbsent() }
+// Section label above the agents found on this Mac in Settings > Agents;
+// the count follows it quietly.
+func SettingsAgentsLocal() string { return In(i18n.Locale()).SettingsAgentsLocal() }
 
-// SettingsAgentAbsent says "Not on this Mac"
+// SettingsAgentsLocal says "On this Mac"
 // in the language of msgs.
 //
-// Line under an agent that is not on this Mac.
-func (msgs Messages) SettingsAgentAbsent() string {
-	return Catalog.Format(msgs.locale, "settingsAgentAbsent", nil)
+// Section label above the agents found on this Mac in Settings > Agents;
+// the count follows it quietly.
+func (msgs Messages) SettingsAgentsLocal() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsLocal", nil)
+}
+
+// SettingsAgentsMore says "More"
+// in the language the app shows.
+//
+// Section label above the agents not on this Mac in Settings > Agents; the
+// count follows it quietly.
+func SettingsAgentsMore() string { return In(i18n.Locale()).SettingsAgentsMore() }
+
+// SettingsAgentsMore says "More"
+// in the language of msgs.
+//
+// Section label above the agents not on this Mac in Settings > Agents; the
+// count follows it quietly.
+func (msgs Messages) SettingsAgentsMore() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsMore", nil)
+}
+
+// SettingsAgentsEmpty says "No agent found on this Mac yet"
+// in the language the app shows.
+//
+// The one row under On this Mac when no agent was found on this Mac and
+// none has reported.
+func SettingsAgentsEmpty() string { return In(i18n.Locale()).SettingsAgentsEmpty() }
+
+// SettingsAgentsEmpty says "No agent found on this Mac yet"
+// in the language of msgs.
+//
+// The one row under On this Mac when no agent was found on this Mac and
+// none has reported.
+func (msgs Messages) SettingsAgentsEmpty() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsEmpty", nil)
+}
+
+// SettingsAgentsConnect says "See how to connect"
+// in the language the app shows.
+//
+// Link in the empty On this Mac row; it opens the README's section on
+// connecting an agent.
+func SettingsAgentsConnect() string { return In(i18n.Locale()).SettingsAgentsConnect() }
+
+// SettingsAgentsConnect says "See how to connect"
+// in the language of msgs.
+//
+// Link in the empty On this Mac row; it opens the README's section on
+// connecting an agent.
+func (msgs Messages) SettingsAgentsConnect() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsConnect", nil)
 }
 
 // SettingsAgentInstall says "Install MCP"
@@ -5028,18 +5078,20 @@ func (msgs Messages) SettingsAgentFailed(agent string, said string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentFailed", map[string]any{"agent": agent, "said": said})
 }
 
-// SettingsAgentManual says "{file} has comments, so adhd-todo won't rewrite it. Add this to it:"
+// SettingsAgentManual says "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:"
 // in the language the app shows.
 //
-// Shown under the agents when an agent's config file is not plain JSON; the
-// snippet to add follows in a box.
+// Shown under the agents when a config file cannot be edited safely (a JSON
+// file with comments, or a Cordis patch that is not a list); the snippet to
+// add follows in a box.
 func SettingsAgentManual(file string) string { return In(i18n.Locale()).SettingsAgentManual(file) }
 
-// SettingsAgentManual says "{file} has comments, so adhd-todo won't rewrite it. Add this to it:"
+// SettingsAgentManual says "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:"
 // in the language of msgs.
 //
-// Shown under the agents when an agent's config file is not plain JSON; the
-// snippet to add follows in a box.
+// Shown under the agents when a config file cannot be edited safely (a JSON
+// file with comments, or a Cordis patch that is not a list); the snippet to
+// add follows in a box.
 func (msgs Messages) SettingsAgentManual(file string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentManual", map[string]any{"file": file})
 }

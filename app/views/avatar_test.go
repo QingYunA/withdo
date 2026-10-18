@@ -78,6 +78,8 @@ func TestAgentNamesAreTheProductsNames(t *testing.T) {
 		"github": "GitHub", "agent": "Agent", "": "Agent", "opencode": "opencode",
 		"Visual Studio Code": "Copilot (VS Code)", "qwen-code-mcp-client": "Qwen Code", "qwen-cli-mcp-client-x": "Qwen Code",
 		"kimi-cli": "Kimi CLI", "Zed": "Zed", "windsurf": "Windsurf", "cline": "Cline", "optimized-agent": "optimized-agent",
+		"deepseek-harness": "DeepSeek Harness", "dsh": "DeepSeek Harness", "dsh-desktop": "DeepSeek Harness",
+		"amp": "Amp", "kiro": "Kiro",
 	} {
 		if got := agentName(in); got != want {
 			t.Errorf("agentName(%q) = %q, want %q", in, got, want)
