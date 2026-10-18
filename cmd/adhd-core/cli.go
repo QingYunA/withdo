@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -39,6 +40,8 @@ type deps struct {
 	stderr io.Writer
 	// serve runs the MCP server until its client goes away.
 	serve func(context.Context, *mcp.Server) error
+	// location is the zone the overview prints times in; the machine's when nil.
+	location *time.Location
 }
 
 // defaultDeps wires run to the real process environment.
@@ -88,6 +91,10 @@ func execute(ctx context.Context, command string, d deps) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintln(d.stdout, domain.FormatOverview(overview))
+	loc := d.location
+	if loc == nil {
+		loc = time.Local
+	}
+	_, err = fmt.Fprintln(d.stdout, domain.FormatOverviewIn(overview, loc))
 	return err
 }

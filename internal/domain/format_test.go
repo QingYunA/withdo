@@ -53,6 +53,21 @@ func TestFormatOverview(t *testing.T) {
 	}
 }
 
+func TestFormatOverviewInShowsReportTimesInThatZone(t *testing.T) {
+	c, _ := newCore(t)
+	progress(t, c, domain.ProgressInput{Summary: "wiring up login", Agent: "claude-code"})
+	overview := must[*domain.Overview](t)(c.GetOverview(ctx, domain.OverviewOptions{}))
+
+	local := domain.FormatOverviewIn(overview, time.FixedZone("CST", 8*3600))
+	if !strings.Contains(local, "last: wiring up login (claude-code, 2026-10-01T08:00:00+08:00)") {
+		t.Errorf("local overview:\n%s", local)
+	}
+	// The default keeps the stored UTC form, as get_overview sends it.
+	if utc := domain.FormatOverview(overview); !strings.Contains(utc, "(claude-code, 2026-10-01T00:00:00.000Z)") {
+		t.Errorf("utc overview:\n%s", utc)
+	}
+}
+
 func TestFormatOverviewEmptyAndNamedOnly(t *testing.T) {
 	empty := domain.FormatOverview(&domain.Overview{})
 	if !strings.Contains(empty, "No active tasks") {

@@ -130,6 +130,30 @@ func TestOverviewListsActiveTasks(t *testing.T) {
 	}
 }
 
+func TestOverviewPrintsLocalTimes(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "t.db")
+	db, err := store.Open(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	at := time.Date(2026, 10, 18, 3, 55, 24, 502e6, time.UTC)
+	_, err = domain.New(db, domain.Options{Now: func() time.Time { return at }}).ReportProgress(context.Background(),
+		domain.ProgressInput{Summary: "wiring up login", Agent: "claude-code"})
+	_ = db.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := newHarness(t, path)
+	h.d.location = time.FixedZone("CST", 8*3600)
+	if code := run(context.Background(), []string{"overview"}, h.d); code != 0 {
+		t.Fatalf("exit code %d: %s", code, h.err.String())
+	}
+	if want := "(claude-code, 2026-10-18T11:55:24+08:00)"; !strings.Contains(h.out.String(), want) {
+		t.Errorf("overview lacks %q:\n%s", want, h.out.String())
+	}
+}
+
 func TestMCPCommandServesAndReportsServeErrors(t *testing.T) {
 	h := newHarness(t, filepath.Join(t.TempDir(), "m.db"))
 	served := false
