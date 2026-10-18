@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Checks before a commit or a PR.
 #   scripts/check.sh [static|fast|full]
-# static: gofmt, vet, i18n. fast (default): static + short tests. full: fast + all tests + race.
+# static: gofmt, vet, i18n. fast (default): static + short tests. full: fast + race on the core.
+# The design screens (TestScreens*, skipped under -short) are rendered by scripts/screens.sh and
+# reviewed in the PR.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -21,5 +23,4 @@ go vet ./...
 go test -short ./...
 [ "$mode" = fast ] && exit 0
 
-go test ./...
 go test -race ./internal/... ./app/data/...

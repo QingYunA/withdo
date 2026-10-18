@@ -60,8 +60,8 @@ half a second.
 
 ```sh
 scripts/check.sh                                 # while working: gofmt, vet, i18n, short tests
-scripts/check.sh full                            # before a PR: all tests, race on the core (CI runs this)
-scripts/screens.sh                               # re-render the design screenshots
+scripts/check.sh full                            # before a PR: + race on the core (CI runs this)
+scripts/screens.sh                               # re-render the design screenshots; review them in the PR
 git config core.hooksPath .githooks              # once: the static checks run on every commit
 cd app && go tool mygo dev                       # run the app against the real database (.dev identifier)
 go run ./app -fake                               # demo data instead of the database (-empty: none)
