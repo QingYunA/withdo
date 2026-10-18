@@ -223,6 +223,9 @@ func (f *Fake) apply(t *Task, p Patch) error {
 			t.CompletedAt = &now
 			f.closeSubtasks(t.ID, now)
 		}
+		if t.Status.Terminal() {
+			t.HandedTo, t.HandedAt = "", nil // a finished task is no longer waiting for an agent
+		}
 	}
 	t.UpdatedAt = now
 	return nil
@@ -237,6 +240,7 @@ func (f *Fake) closeSubtasks(parent int, now time.Time) {
 			continue
 		}
 		k.Status, k.CompletedAt, k.UpdatedAt = Done, &now, now
+		k.HandedTo, k.HandedAt = "", nil
 		f.reports = append(f.reports, Report{ID: f.newID(), TaskID: k.ID, Agent: "adhd-todo", Status: Done,
 			Summary: "Closed with its parent task", CreatedAt: now})
 		f.closeSubtasks(k.ID, now)

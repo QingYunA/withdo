@@ -84,6 +84,7 @@ func (f *Fake) CompleteAt(id int, at time.Time) {
 	f.mu.Lock()
 	if t, ok := f.find(id); ok {
 		t.Status, t.CompletedAt, t.UpdatedAt = Done, &at, at
+		t.HandedTo, t.HandedAt = "", nil
 	}
 	f.mu.Unlock()
 	f.notify()
