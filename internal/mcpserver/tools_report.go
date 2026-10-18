@@ -29,7 +29,8 @@ func (t *tools) registerReportProgress(s *mcp.Server) {
 		Title: "Report progress",
 		Description: "Report what you are working on. Finds the open task for this repo and branch (or task_id), " +
 			"creating it if needed, then records a progress report. Call when you start, get blocked, " +
-			"after each step, open a PR, and finish. Write in the user's language.",
+			"after each step, open a PR, and finish. Write in the user's language. " +
+			"When one piece of work covers several adhd-todo tasks, report on each of them with its own task_id.",
 		InputSchema: object(map[string]*jsonschema.Schema{
 			"summary":   text("One or two sentences: what you are doing or just did"),
 			"status":    statusEnum("New task status; omit to leave unchanged"),

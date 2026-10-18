@@ -158,6 +158,10 @@ type subtaskBrief struct {
 	Status domain.Status `json:"status"`
 }
 
+// waitingNote is what get_task adds to a task the user handed to an agent that no agent has taken yet.
+const waitingNote = "This task was handed to an agent and waits for one. If you take it, report on it with this task_id: " +
+	"that takes it off \"Waiting for an agent\"."
+
 type getTaskArgs struct {
 	TaskID int64 `json:"task_id"`
 }
@@ -201,7 +205,12 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 		brief[i] = subtaskBrief{ID: s.ID, Title: s.Title, Status: s.Status}
 		lines = append(lines, fmt.Sprintf("- #%d [%s] %s", s.ID, s.Status, s.Title))
 	}
-	return ok(strings.Join(lines, "\n"), map[string]any{"task": task, "reports": reports, "subtasks": brief})
+	data := map[string]any{"task": task, "reports": reports, "subtasks": brief}
+	if task.HandedTo != nil && !task.Status.Terminal() {
+		lines = append(lines, waitingNote)
+		data["note"] = waitingNote
+	}
+	return ok(strings.Join(lines, "\n"), data)
 }
 
 func firstNonEmpty(vals ...string) string {

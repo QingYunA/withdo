@@ -258,14 +258,18 @@ func (c *Core) updateTask(ctx context.Context, q store.Querier, id int64, patch 
 	ts := c.stamp()
 	next.UpdatedAt = ts
 	next.CompletedAt = completedAt(*cur, next.Status, ts)
+	if next.Status.Terminal() {
+		// A finished task is no longer waiting for an agent, however it got finished.
+		next.HandedTo, next.HandedAt = nil, nil
+	}
 	if patch.RemindAt.Present {
 		next.RemindedAt = nil
 	}
 	_, err = q.ExecContext(ctx, `UPDATE tasks SET project_id = ?, milestone_id = ?, title = ?, notes = ?, status = ?,
 		priority = ?, due_at = ?, remind_at = ?, reminded_at = ?, branch = ?, pr_url = ?, pr_number = ?,
-		updated_at = ?, completed_at = ?, parent_id = ?, category = ? WHERE id = ?`,
+		updated_at = ?, completed_at = ?, parent_id = ?, category = ?, handed_to = ?, handed_at = ? WHERE id = ?`,
 		projectID, next.MilestoneID, next.Title, next.Notes, next.Status, next.Priority, next.DueAt,
-		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, next.ParentID, next.Category, id)
+		next.RemindAt, next.RemindedAt, next.Branch, next.PRURL, prNumber(next.PRURL), ts, next.CompletedAt, next.ParentID, next.Category, next.HandedTo, next.HandedAt, id)
 	if err != nil {
 		return nil, fmt.Errorf("update task: %w", err)
 	}

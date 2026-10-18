@@ -721,6 +721,11 @@ when told its number, through the MCP.
 - **Take back.** Dragging an agent's unfinished row onto Mine calls `Store.TakeBack`, with no sprite;
   the toast says `Yours now` / `现在归你了`, and Undo (or ⌘Z) restores Source and the hand-off as they
   were (`Store.RestoreHandOff`).
+- **Taken.** An agent takes a task by reporting on it with its number; the first report moves it out
+  of `Waiting for an agent`. Reading it with `get_task` only tells the agent so, and changes nothing.
+  One piece of work that covers several handed tasks reports on each (the MCP instructions say so).
+  A task finished by any other way (by hand, a merged pull request) leaves `Waiting for an agent` too:
+  done or cancelled clears the hand-off.
 - **Reduce Motion.** The sprite still carries the row, but does not walk; the agent neither hops nor
   squashes. The wash fades as above.
 
