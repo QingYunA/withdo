@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v17 草稿 — 收工结算</title>
+<style>
+  :root { --bg: #fff; --subtle: #f5f5f7; --border: rgba(0,0,0,.10); --selected: rgba(91,91,214,.12);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --side: #ececf0; }
+  .dark { --bg: #1c1c1e; --subtle: #232326; --border: rgba(255,255,255,.10); --selected: rgba(124,124,240,.22);
+    --text: #f5f5f7; --text2: #a1a1a6; --text3: #636366; --accent: #7c7cf0; --side: #2a2a2e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  body.night { background: #111113; color: #e6e6ee; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; gap: 12px; align-items: center; }
+  h1 button { font: 500 12px/20px -apple-system; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  .night h1 button { background: rgba(255,255,255,.12); }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 44px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1300px; margin: 0 4px 18px; }
+  .night .lead, .night .sub, .night .note, .night .caption { color: #a1a1a6; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; max-width: 1000px; }
+  .pair { display: grid; grid-template-columns: 1000px 1000px; gap: 40px; align-items: start; }
+  svg.px { display: block; flex: none; shape-rendering: crispEdges; }
+
+  .win { display: flex; width: 1000px; height: 760px; border-radius: 12px; overflow: hidden; background: var(--bg); color: var(--text); box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); }
+  .side { width: 210px; background: var(--side); padding: 46px 10px 10px; font-size: 14px; flex: none; }
+  .side .r { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; border-radius: 7px; }
+  .side .r.on { background: var(--selected); }
+  .side .r i { margin-left: auto; font-style: normal; color: var(--text3); font-size: 13px; }
+  .side .ic { color: var(--text2); }
+  .main { flex: 1; padding: 24px 44px; overflow: hidden; }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .head h3 { font-size: 26px; line-height: 32px; margin: 0; }
+  .seg { display: flex; background: var(--subtle); border-radius: 6px; padding: 2px; font-size: 13px; margin-left: 8px; }
+  .seg span { padding: 2px 12px; border-radius: 5px; color: var(--text2); }
+  .seg span.on { background: var(--bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .datenav { display: flex; align-items: center; gap: 6px; color: var(--text2); font-size: 14px; }
+  .exp { margin-left: auto; font-size: 13px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 3px 10px; border-radius: 7px; display: flex; gap: 6px; align-items: center; }
+
+  /* the card: a night sky on a 3 pt cell, the ledger floats on it */
+  .card { position: relative; width: 702px; height: 612px; border-radius: 10px; overflow: hidden; cursor: pointer; }
+  .card canvas { position: absolute; inset: 0; width: 702px; height: 612px; image-rendering: pixelated; }
+  .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding-top: 18px; }
+  .panel { border: 12px solid transparent; image-rendering: pixelated; color: #5b2a14; }
+  .tile { border: 9px solid transparent; image-rendering: pixelated; width: 69px; height: 69px; display: flex; align-items: center; justify-content: center; position: relative; flex: none; }
+  .tile .star { position: absolute; left: -6px; bottom: -6px; }
+  .tile .cnt { position: absolute; right: -3px; bottom: -7px; font: 800 14px/16px -apple-system; color: #fff; text-shadow: 1px 0 #4a2318, -1px 0 #4a2318, 0 1px #4a2318, 0 -1px #4a2318; }
+  .banner { padding: 0 22px; height: 48px; display: flex; align-items: center; font-weight: 600; font-size: 15px; letter-spacing: .5px; }
+  .rows { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .prow { display: flex; gap: 6px; align-items: center; }
+  .label { width: 300px; height: 69px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 4px; font-weight: 600; font-size: 15px; flex: none; }
+  .label .dots { flex: 1; border-bottom: 3px dotted #d8b07a; margin: 0 4px; transform: translateY(3px); }
+  .label .nm { display: flex; flex-direction: column; white-space: nowrap; line-height: 19px; }
+  .label .x { font-size: 12px; line-height: 16px; font-weight: 500; color: #9a6a44; }
+  .label .n { font-size: 22px; font-weight: 800; color: #a4332a; font-variant-numeric: tabular-nums; min-width: 26px; text-align: right; }
+  .tiles { display: flex; gap: 6px; width: 294px; }
+  .plus { width: 36px; height: 36px; border: 9px solid transparent; image-rendering: pixelated; display: flex; align-items: center; justify-content: center; color: #8a4a22; }
+  .prow.total .label { font-size: 16px; }
+  .prow.total .label .n { font-size: 26px; }
+
+  .dialog { position: absolute; left: 14px; right: 14px; top: 384px; height: 136px; display: flex; gap: 10px; }
+  .dialog .panel { flex: 1; padding: 4px 10px; font-size: 14.5px; line-height: 21px; font-weight: 500; }
+  .dialog .who { font-size: 12px; color: #9a6a44; display: flex; }
+  .dialog .who span { margin-left: auto; color: #a4332a; }
+  .dialog .portrait { flex: none; width: 132px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 0; font-size: 12px; font-weight: 600; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: #5b2a14; vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .big { width: 660px; height: 400px; padding: 4px 8px; }
+  .big .top { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; padding-bottom: 6px; border-bottom: 3px dotted #d8b07a; }
+  .big .top .back { color: #8a4a22; }
+  .big .top .x { margin-left: auto; font-size: 13px; font-weight: 500; color: #9a6a44; }
+  .bi { display: flex; align-items: center; gap: 12px; padding: 8px 0 4px; }
+  .bi .t { font-weight: 600; font-size: 15px; }
+  .bi .s { font-size: 12.5px; color: #8a5a3a; }
+  .bi .tm { margin-left: auto; font-size: 13px; color: #9a6a44; white-space: nowrap; }
+  .tip { position: absolute; padding: 2px 6px; font-size: 13px; line-height: 19px; font-weight: 600; white-space: nowrap; opacity: 0; }
+  .tip .s { font-weight: 500; font-size: 12px; color: #8a5a3a; }
+
+  /* frame-stepped entrances */
+  .hide { opacity: 0; }
+  .in { animation: rowin 200ms steps(2, end) both; }
+  .drop { animation: drop 300ms steps(3, end) both; }
+  @keyframes rowin { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+  @keyframes drop { 0% { opacity: 0; transform: translateY(-18px); } 1% { opacity: 1; transform: translateY(-18px); } 100% { opacity: 1; transform: none; } }
+
+  .legend { display: grid; grid-template-columns: repeat(5, 190px); gap: 12px; }
+  .legend > div { display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 10px; padding: 8px 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18); font-size: 13px; line-height: 18px; color: #3a3a3c; }
+  .legend b { display: block; font-size: 14px; color: #1d1d1f; }
+  .rules { background: #fff; border-radius: 12px; padding: 16px 20px; font-size: 13px; line-height: 21px; color: #3a3a3c; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); max-width: 1000px; }
+  .rules li { margin-bottom: 6px; }
+</style>
+<script src="v17-kit.js"></script>
+</head>
+<body>
+<h1>v17 · 收工结算（#67）<button id="mode">切到深色</button><button id="replay">全部重播</button></h1>
+<p class="lead">照星露谷的收工画面重新画：总结页是一张夜空卡片，远处一排山、一间亮着灯的小屋；结算单浮在夜空上，木框、羊皮纸、红色的数字。每件做完的事变成一样「货物」：新功能是宝石，修 bug 是虫子罐，迁移是齿轮……由助手按内容挑，合并了 PR 的货物左下角有一颗金星。最下面是助手的对话框。卡片里所有图形都画在 3 pt 一格上。点卡片重播。</p>
+
+<h2>一 · 日报</h2>
+<div class="pair"><div id="day"></div><div id="open"></div></div>
+
+<h2>二 · 周报</h2>
+<div class="pair"><div id="week"></div><div>
+  <div class="caption">货物（16 × 16 格，画在 51 pt，带描边、四级色阶和投影）</div>
+  <div class="legend" id="legend" style="grid-template-columns: repeat(3, 300px)"></div>
+  <div class="caption" style="margin-top:24px">规则</div>
+  <ul class="rules">
+    <li><b>卡片</b>：总结页的主体。夜空用有序抖动画渐变，星星有大有小，远山两层，左下一间亮灯的小屋。天色跟打开的时间走：白天蓝天白云、黄昏橙紫、夜里这样；看过去的日子一律画夜里。</li>
+    <li><b>结算单</b>：日期横幅，下面一行一个人：头像、名字、合并几个 PR、红色的件数；右边是这个人今天的货物，最多 4 格，多了最后一格写 +N。最后一行合计。点一行或「›」翻到这个人的货物清单。</li>
+    <li><b>货物</b>：9 种，按做的是什么挑：新功能、修 bug、重构迁移、文档设计、测试、回复沟通、钱账单、计划调研、其他。由助手在写总结时一起挑，存下来；没配模型时按 PR、标题里的关键字挑，挑不出来就是木箱。合并了 PR 的加一颗金星。周报里同种货物叠成一格，右下角写数量。</li>
+    <li><b>鼠标停在货物上</b>：羊皮纸小框显示标题和最后一句汇报；点它打开检查器。</li>
+    <li><b>出场</b>：横幅先出来，然后一行一行出，每行的货物一格一格落进去（3 帧，100 ms 一帧），红字跟着跳；合计最后出；然后对话框里一个字一个字出现。只播一次，点卡片重播；系统开了减弱动态效果时直接显示最终画面。</li>
+    <li><b>对话框</b>：像星露谷的对话：左边是助手写的话，右边是助手的头像框。规则同 v15：第一次打开时写一次存下，「重写」再写。</li>
+    <li><b>彩蛋（以后）</b>：偶尔飞过一个 UFO；满月那天月亮能点。</li>
+  </ul>
+</div></div>
+
+<script>
+const S = {
+  you: { pal: { h: '#3A3550', s: '#F3C7A0', e: '#2B2838', b: '#5B5BD6', d: '#4646B8', c: '#E88B8B' }, g: ['...hhhhhh...', '..hhhhhhhh..', '.hhhhhhhhhh.', '.hhssssssh..', '.hsesssses..', '..ssssssss..', '..scsssscs..', '...ssssss...', '..bbbbbbbb..', '.bbbbddbbbb.', '.bbbbddbbbb.', '.bbbbbbbbbb.'] },
+  crab: { pal: { o: '#D97757', d: '#B85C3E', e: '#2B1D17' }, g: ['............', '............', '..oooooooo..', '..oooooooo..', '..oeooooeo..', 'oooeooooeooo', 'oooooooooooo', '..oooooooo..', '..oooooooo..', '..d.d..d.d..', '..d.d..d.d..', '............'] },
+  codex: { pal: { b: '#5B7CFA', d: '#4A5EE0', w: '#FFFFFF' }, g: ['............', '...bbb.bbb..', '..bbbbbbbbb.', '.bbbbbbbbbbb', '.bwbbbbbbbbb', 'bbbwbbbbbbbb', 'bbbbwbbbbbbb', 'bbbwbbbbbbbb', 'bbwbbbwwwbbb', '.ddddddddddd', '..dddd.dddd.', '............'] },
+  bot: { pal: { a: '#9DB6FF', m: '#5B5BD6', w: '#FFFFFF', e: '#1D2A55', d: '#4646B8' }, g: ['.....a......', '.....m......', '..mmmmmmmm..', '.mmwwmmwwmm.', '.mmwemmwemm.', '.mmmmmmmmmm.', '..mmeeeemm..', '..mmmmmmmm..', '...dddddd...', '..dd....dd..', '............', '............'] },
+};
+const sprite = (n, size) => { const a = S[n]; let r = ''; a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; })); return `<svg class="px" width="${size}" height="${size}" viewBox="0 0 12 12">${r}</svg>`; };
+const P = (d, s) => `<svg class="px" width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="${d}"/></svg>`;
+const I = {
+  inbox: 'M3 3h18v2H3zm0 16h18v2H3zM1 5h2v14H1zm20 0h2v14h-2zM3 13h5v2H3zm13 0h5v2h-5zm-8 2h2v2H8zm6 0h2v2h-2zm-4 2h4v2h-4z',
+  cal: 'M5 5h14v2H5zm0 14h14v2H5zM3 7h2v12H3zm16 0h2v12h-2zM7 3h2v4H7zm8 0h2v4h-2zM5 10h14v2H5z',
+  check: 'M18 6h2v2h-2zm-2 4V8h2v2zm-2 2v-2h2v2zm-2 2h2v-2h-2zm-2 2h2v-2h-2zm-2 0v2h2v-2zm-2-2h2v2H6zm0 0H4v-2h2z',
+  list: 'M4 5h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zm-4 6h2v2H4zm4 0h12v2H8z',
+  left: 'M8 13v-2h2v2H8Zm2-2V9h2v2h-2Zm0 4v-2h2v2h-2Zm2-6V7h2v2h-2Zm0 8v-2h2v2h-2Zm2-10V5h2v2h-2Zm0 12v-2h2v2h-2Z',
+  right: 'M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z',
+  copy: 'M8 2h12v2H8zm0 14h12v2H8zM6 4h2v12H6zm14 0h2v12h-2zM2 8h2v14H2zm2 12h12v2H4zm12-2h2v2h-2z',
+};
+const FR = { panel: PANEL(), tile: TILE() };
+const panel = (cls, inner, style = '') => `<div class="panel ${cls}" style="border-image:url(${FR.panel}) 4 fill / 12px stretch;${style}">${inner}</div>`;
+const tile = (inner, extra = '') => `<div class="tile" style="border-image:url(${FR.tile}) 3 fill / 9px stretch" ${extra}>${inner}</div>`;
+const plus = () => `<div class="plus" style="border-image:url(${FR.tile}) 3 fill / 9px stretch">${P(I.right, 12)}</div>`;
+
+const TODAY = [
+  { a: 'you', k: 'coin', t: '交房租', p: '收件箱', tm: '上午 9:40' },
+  { a: 'codex', k: 'gear', t: 'Map worktrees to the main repo', s: 'PR #31 已合并 · 把 worktree 映射回主仓库', p: 'picpocket', tm: '上午 10:20', pr: 1 },
+  { a: 'claude', k: 'gem', t: 'Native UI with mygo', s: 'PR #12 已合并 · Board, lists and inspector are in', p: 'adhd-todo', tm: '上午 11:05', pr: 1 },
+  { a: 'claude', k: 'gear', t: 'Port the MCP server', s: 'PR #14 已合并', p: 'adhd-todo', tm: '下午 1:50', pr: 1 },
+  { a: 'you', k: 'mail', t: '回复设计反馈', p: 'adhd-todo', tm: '下午 2:30' },
+  { a: 'codex', k: 'jar', t: '修复导入时的空指针', s: '空指针来自没有 EXIF 的图片', p: 'picpocket', tm: '下午 3:02' },
+  { a: 'claude', k: 'gem', t: '收下动画改成盖章后折叠', s: 'PR #8 · 测试和截图都更新了', p: 'adhd-todo', tm: '下午 4:12' },
+];
+const PEOPLE = [['you', '你', ''], ['claude', 'Claude Code', '合并 2 个 PR'], ['codex', 'Codex', '合并 1 个 PR']];
+const SPR = { you: 'you', claude: 'crab', codex: 'codex' };
+const WEEK = { you: [['coin', 2], ['mail', 3], ['crate', 3]], claude: [['gem', 4], ['gear', 3], ['book', 2], ['flask', 2]], codex: [['jar', 3], ['gear', 2], ['flask', 1]] };
+const WEEK_PR = { you: '', claude: '合并 6 个 PR', codex: '合并 3 个 PR' };
+const AI_DAY = '今天收了 7 件。你把房租交了，设计反馈也回了；Claude Code 把原生界面和 MCP 服务送进了主干，Codex 修好了 picpocket 的 worktree 映射。#8 还在等合并，明天先看它。';
+const AI_WEEK = '这周做完 25 件，周五最忙。主线是 adhd-todo 的原生界面：Claude Code 做了 11 件，9 个 PR 合了进去。你这边 8 件，房租、牙医这些生活里的事也都办了。周末两天空着。';
+
+const side = () => `<div class="side">
+  <div class="r">${sprite('you', 18)}我的<i>4</i></div><div class="r">${sprite('bot', 18)}Agent<i>3</i></div>
+  <div class="r"><span class="ic">${P(I.inbox, 18)}</span>收件箱<i>3</i></div><div class="r"><span class="ic">${P(I.cal, 18)}</span>日历</div>
+  <div class="r"><span class="ic">${P(I.check, 18)}</span>已完成</div><div class="r on"><span class="ic" style="color:var(--accent)">${P(I.list, 18)}</span>总结</div>
+  <div style="font-size:12px;color:var(--text3);margin:18px 8px 6px">项目</div><div class="r">adhd-todo</div><div class="r">picpocket</div></div>`;
+const head = (week) => `<div class="head"><h3>总结</h3><span class="seg"><span class="${week ? '' : 'on'}">今天</span><span class="${week ? 'on' : ''}">本周</span></span>
+  <span class="datenav">${P(I.left, 12)}${week ? '10 月 13 日 – 19 日' : '10 月 17 日 星期五'}${P(I.right, 12)}</span>
+  <span class="exp">${P(I.copy, 12)}导出 Markdown</span></div>`;
+
+const label = (a, name, x, n) => panel('label', `${sprite(SPR[a], 36)}<span class="nm">${name}${x ? `<span class="x">${x}</span>` : ''}</span><span class="dots"></span><span class="n" data-n="${n}">0</span>`, 'border-image-width:12px');
+const dialog = (txt, who = '写给今天的你') => `<div class="dialog hide" data-step="dialog">${panel('', `<div class="who">助手 · ${who}<span>重写</span></div><div class="t" data-text="${txt}"></div>`)}${panel('portrait', `${sprite('bot', 72)}<span>助手</span>`)}</div>`;
+
+function dayStage() {
+  const rows = PEOPLE.map(([a, name, x]) => {
+    const its = TODAY.filter(t => t.a === a);
+    return `<div class="prow hide" data-step="row">${label(a, name, x, its.length)}<div class="tiles">${its.map(t => tile(`<span class="hide" data-step="item">${itemSVG(t.k)}</span>${t.pr ? starSVG() : ''}`)).join('')}</div>${plus()}</div>`;
+  }).join('');
+  const total = `<div class="prow total hide" data-step="row">${panel('label', `今天出货<span class="dots"></span><span class="n" data-n="7">0</span>`)}<div class="tiles"></div><div style="width:36px"></div></div>`;
+  const tip = `<div class="tip panel" style="left:0;top:0;border-image:url(${FR.panel}) 4 fill / 12px stretch">Native UI with mygo<div class="s">PR #12 已合并 · Board, lists and inspector are in</div></div>`;
+  return { html: `<div class="stage">${panel('banner hide', '10 月 17 日 · 星期五', '" data-step="row')}<div class="rows">${rows}${total}</div></div>${tip}${dialog(AI_DAY)}`, sky: { seed: 11, hz: 172 } };
+}
+function openStage() {
+  const its = TODAY.filter(t => t.a === 'claude');
+  const list = its.map(t => `<div class="bi">${tile(`${itemSVG(t.k)}${t.pr ? starSVG() : ''}`)}<div><div class="t">${t.t}</div><div class="s">${t.s || ''}</div></div><span class="tm">${t.p} · ${t.tm}</span></div>`).join('');
+  return { html: `<div class="stage">${panel('banner', '10 月 17 日 · 星期五')}<div style="margin-top:14px">${panel('big', `<div class="top"><span class="back">${P(I.left, 12)}</span>${sprite('crab', 36)}Claude Code<span class="x">合并 2 个 PR · 今天 3 件</span></div>${list}`)}</div></div>`, sky: { seed: 11, hz: 172 }, still: 1 };
+}
+function weekStage() {
+  const rows = PEOPLE.map(([a, name]) => {
+    const n = WEEK[a].reduce((s, [, c]) => s + c, 0);
+    return `<div class="prow hide" data-step="row">${label(a, name, WEEK_PR[a], n)}<div class="tiles">${WEEK[a].map(([k, c]) => tile(`<span class="hide" data-step="item">${itemSVG(k)}</span><span class="cnt">${c}</span>`)).join('')}</div>${plus()}</div>`;
+  }).join('');
+  const total = `<div class="prow total hide" data-step="row">${panel('label', `本周出货<span class="dots"></span><span class="n" data-n="25">0</span>`)}<div class="tiles"></div><div style="width:36px"></div></div>`;
+  return { html: `<div class="stage">${panel('banner hide', '10 月 13 日 – 19 日 · 这一周', '" data-step="row')}<div class="rows">${rows}${total}</div></div>${dialog(AI_WEEK, '写给这一周的你')}`, sky: { seed: 5, hz: 172, moon: [204, 20] } };
+}
+
+let timers = [];
+const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+function play(card, still) {
+  const steps = [...card.querySelectorAll('[data-step]')];
+  if (still) return;
+  let t = 300;
+  steps.forEach(el => {
+    const kind = el.dataset.step;
+    if (kind === 'row') {
+      later(() => { el.classList.remove('hide'); el.classList.add('in'); }, t); t += 250;
+      const n = el.querySelector('.n'), items = el.querySelectorAll('[data-step=item]');
+      if (n && !items.length) { const to = +n.dataset.n; for (let i = 1; i <= to; i++) later(() => { n.textContent = i; }, t + i * 50); t += to * 50 + 200; }
+    } else if (kind === 'item') {
+      const n = el.closest('.prow').querySelector('.n'), c = el.parentElement.querySelector('.cnt');
+      const add = c ? +c.textContent : 1;
+      later(() => { el.classList.remove('hide'); el.classList.add('drop'); }, t);
+      later(() => { n.textContent = +n.textContent + add; }, t + 300);
+      t += 260;
+      if (!el.closest('.tile').nextElementSibling) t += 150;
+    } else if (kind === 'dialog') {
+      t += 200; later(() => { el.classList.remove('hide'); el.classList.add('in'); }, t);
+      const tx = el.querySelector('.t'), s = tx.dataset.text; let i = 0;
+      const tick = () => { i++; tx.innerHTML = s.slice(0, i) + (i < s.length ? '<span class="caret"></span>' : ''); if (i < s.length) later(tick, 30); };
+      later(tick, t + 300);
+      t += 300 + s.length * 30;
+    }
+  });
+  const tip = card.querySelector('.tip'); if (tip) later(() => { tip.style.opacity = 1; }, t + 400);
+}
+function show(card) { card.querySelectorAll('.hide').forEach(e => e.classList.remove('hide')); card.querySelectorAll('.n').forEach(n => { n.textContent = n.dataset.n; }); card.querySelectorAll('.t[data-text]').forEach(t => { t.textContent = t.dataset.text; }); }
+
+const VIEWS = {
+  day: [false, dayStage, '日报。卡片是夜空，结算单浮在上面：一行一个人，右边是这个人今天的货物，左下角有金星的是合并了的 PR。全部出完后，对话框里出现助手的话；最后演示鼠标停在宝石上的小框。'],
+  open: [false, openStage, '点「Claude Code」那行（或它的「›」）翻到它今天的货物清单：货物、标题、最后一句汇报、项目和时间。左上「‹」回结算单。'],
+  week: [true, weekStage, '周报。同样的卡片，月亮出来了。每人一行，同种货物叠成一格，右下角写数量；合计是这周一共做完几件。'],
+};
+function render(id) {
+  const [week, stage, note] = VIEWS[id], v = stage(), el = document.getElementById(id);
+  el.innerHTML = `<div class="win ${document.body.classList.contains('night') ? 'dark' : ''}">${side()}<div class="main">${head(week)}<div class="card"><canvas width="234" height="204"></canvas>${v.html}</div></div></div><p class="note">${note}</p>`;
+  const card = el.querySelector('.card');
+  const tip = card.querySelector('.tip'), gem = card.querySelectorAll('.prow')[1]?.querySelector('.tile');
+  if (tip && gem) { const c = card.getBoundingClientRect(), g = gem.getBoundingClientRect(); tip.style.left = (g.left - c.left + 30) + 'px'; tip.style.top = (g.bottom - c.top - 6) + 'px'; }
+  drawSky(card.querySelector('canvas'), v.sky);
+  if (v.still || location.hash === '#still') { show(card); const tip = card.querySelector('.tip'); if (tip) tip.style.opacity = 1; } else play(card);
+  card.onclick = () => render(id);
+}
+function all() { timers.forEach(clearTimeout); timers = []; Object.keys(VIEWS).forEach(render); }
+all();
+document.getElementById('legend').innerHTML = Object.entries(ITEMS).map(([id, it]) => `<div>${itemSVG(id)}<span><b>${it.name}</b>${it.kind}</span></div>`).join('') + `<div>${starSVG()}<span><b>金星</b>合并了的 PR</span></div>`;
+document.getElementById('replay').onclick = all;
+document.getElementById('mode').onclick = (e) => {
+  const d = document.body.classList.toggle('night');
+  document.querySelectorAll('.win').forEach(f => f.classList.toggle('dark', d));
+  e.target.textContent = d ? '切到浅色' : '切到深色';
+};
+</script>
+</body>
+</html>
