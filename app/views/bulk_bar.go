@@ -16,6 +16,9 @@ import (
 const (
 	// barNarrowBelow is the content width under which the buttons keep only their icons.
 	barNarrowBelow float32 = 640
+	// barTinyBelow is the content width under which the bar's count is the number alone: the five
+	// icons, the count and × need about 260 pt.
+	barTinyBelow float32 = 330
 	// barBottom is the room under the bar, which holds its shadow.
 	barBottom float32 = 20
 	// barButton is the height of a button of the bar.
@@ -36,7 +39,11 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 		bar := ui.Row(c.Key("bulk-bar")).Role(ui.RoleToolbar).FocusGroup(ui.Horizontal).Label(m.say.A11yBulkBar())
 		bar.Shrink(0).Padding(5, 8).Gap(2).AlignItems(ui.Center).Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelPanel(p, r, t) })
 		bar.Children(func() {
-			theme.Text(c, theme.MetaStrong, t.Text, m.say.BulkCount(len(ids))).Shrink(0).Margin(0, 6, 0, 8)
+			count := m.say.BulkCount(len(ids))
+			if m.width < barTinyBelow { // beside the inspector in a small window only the number fits
+				count = itoa(len(ids))
+			}
+			theme.Text(c, theme.MetaStrong, t.Text, count).Shrink(0).Margin(0, 6, 0, 8)
 			if m.barButton(c, t, "done", theme.IconCheck, m.say.ActionDone(), "⌘↵", false, narrow).Clicked() {
 				m.bulkSetStatus(c, ids, data.Done)
 			}

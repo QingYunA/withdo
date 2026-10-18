@@ -69,6 +69,10 @@ func TestHandOffTasksAndRestoreStates(t *testing.T) {
 				t.Errorf("handed task = %+v", got)
 			}
 		}
+		ta, tb := must[TaskDetail](t)(s.GetTask(a.ID)).Task, must[TaskDetail](t)(s.GetTask(b.ID)).Task
+		if !ta.HandedAt.After(*tb.HandedAt) {
+			t.Errorf("handed at %v and %v: the first of the tasks is the newest, so Waiting reads in their order", ta.HandedAt, tb.HandedAt)
+		}
 		if err := s.RestoreStates(before); err != nil {
 			t.Fatal(err)
 		}

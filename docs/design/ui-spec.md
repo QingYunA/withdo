@@ -991,6 +991,34 @@ search results. Calendar and Summary do not select.
   **Copy for the agent** / `复制给 Agent` and **Undo**. Copy puts `Do adhd-todo tasks #31, #32 and
   #33.` (`Do adhd-todo task #12.` for one) on the clipboard and reads `Copied` / `已复制` for 1.5 s.
 
+Decisions made while building it (2026-10-18; screens `select-*`):
+
+- **One selection per page**, in `Main.multi`: cleared when the page changes or the search starts or
+  ends, and held to the rows the page draws. While it is empty the keyboard row is the only selected
+  row, as before; a plain click or a plain arrow leaves it empty. A `⌘`-click with nothing ticked
+  counts the keyboard row as the first one. `Esc` clears the selection, and leaves select mode,
+  before it does anything else.
+- **Select button** is the first of the title row's controls, before the milestone menu and the
+  List | Board switch; not drawn on an empty page. The flash is remembered per page for the run of
+  the app, and skipped with Reduce Motion. In select mode a row without a status glyph (a list, the
+  columns, Agents, a board card) shows the checkbox where its author's avatar was (12 pt on a card);
+  `Space` ticks the keyboard row.
+- **Done** takes every selected task that is not done, an agent's too (cancelled ones reopen as
+  done); there is no bulk reopen. **Move to** leaves subtasks with their parent and tasks already
+  there. Each toast counts the tasks that really changed. A bulk **Done** plays the same fold as
+  `Space`. Undo puts back the status, priority, project, milestone, owner and hand-off of every task,
+  and of the open subtasks that closed with a parent (the reports that closing filed stay).
+- **The bar** is a row with the toolbar role and a focus group, not `ui.Toolbar` (which reserves room
+  for an overflow button). Below 640 pt of content it keeps icons; below 330 pt its count is the
+  number alone. Its pages for Move to… and Priority are the task menu's, opened above the bar.
+- **A stack in the hand** carries the user's unfinished selected rows only (the badge counts what
+  will be handed); the others fade to 50 %. The cards behind are drawn by the carried row itself (a
+  row can only paint over its own background, so it paints all its cards), 3 pt lower each.
+  Handing several tasks stamps the first of them the newest, so `Waiting for an agent` reads in the
+  order the rows were in.
+- **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
+  two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
+
 ### Search
 
 `⌘F`, or a click in the search field at the top of the sidebar, puts the cursor there. The field is a

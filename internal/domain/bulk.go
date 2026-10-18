@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
@@ -93,13 +94,15 @@ func openSubtasks(ctx context.Context, q store.Querier, id int64) ([]Task, error
 }
 
 // HandOffTasks hands every task in ids to any agent, as HandOff does, in one transaction. It returns
-// the tasks as they were before.
+// the tasks as they were before. Waiting for an agent lists the newest first, so each task is
+// stamped a millisecond after the one that follows it in ids: the list then reads in the order the
+// tasks were given.
 func (c *Core) HandOffTasks(ctx context.Context, ids []int64) ([]Task, error) {
-	ts := c.stamp()
+	now := c.now()
 	var before []Task
 	err := c.write(ctx, func(q store.Querier) error {
 		before = nil
-		for _, id := range ids {
+		for i, id := range ids {
 			cur, err := getTask(ctx, q, id)
 			if err != nil {
 				return err
@@ -108,6 +111,7 @@ func (c *Core) HandOffTasks(ctx context.Context, ids []int64) ([]Task, error) {
 				return notFound("task_id", "task", id)
 			}
 			before = append(before, *cur)
+			ts := FormatTime(now.Add(time.Duration(len(ids)-1-i) * time.Millisecond))
 			if err := handOff(ctx, q, id, ts); err != nil {
 				return err
 			}

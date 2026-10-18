@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"time"
 )
 
 // Bulk is changing several tasks as one: each call is one change that either applies to every task
@@ -146,10 +147,11 @@ func (f *Fake) HandOffTasks(ids []int) ([]Task, error) {
 		f.mu.Unlock()
 		return nil, fmt.Errorf("task %d not found", id)
 	}
-	now := f.Now()
-	for _, id := range ids {
+	base := f.Now()
+	for i, id := range ids { // the first of ids is the newest, so Waiting for an agent reads in their order
 		t, _ := f.find(id)
-		t.Source, t.Status, t.HandedTo, t.HandedAt, t.CompletedAt, t.UpdatedAt = SourceAgent, Todo, AnyAgent, &now, nil, now
+		at := base.Add(time.Duration(len(ids)-1-i) * time.Millisecond)
+		t.Source, t.Status, t.HandedTo, t.HandedAt, t.CompletedAt, t.UpdatedAt = SourceAgent, Todo, AnyAgent, &at, nil, at
 	}
 	f.mu.Unlock()
 	f.notify()
