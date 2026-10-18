@@ -20,24 +20,24 @@ const (
 	// icons, the count and × need about 260 pt.
 	barTinyBelow float32 = 330
 	// barBottom is the room under the bar, which holds its shadow.
-	barBottom float32 = 20
-	// barButton is the height of a button of the bar.
+	barBottom float32 = 22
+	// barButton is the height of a button of the bar, barPad the room above and below them inside
+	// its edge, and barHeight the whole bar.
 	barButton float32 = 28
+	barPad    float32 = 5
+	barHeight         = barButton + 2*barPad
 )
 
 // bulkBar draws the bar over the bottom of the page.
 func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
-	if !m.barShown() || !m.canSelect() {
+	if !m.barUp() {
 		return
 	}
 	ids := m.selectedRows()
-	if len(ids) == 0 {
-		return
-	}
 	narrow := m.width < barNarrowBelow
 	ui.Row(c.Key("bulk-wrap")).Absolute().Left(0).Right(0).Bottom(barBottom).Justify(ui.Center).PassThrough().Children(func() {
 		bar := ui.Row(c.Key("bulk-bar")).Role(ui.RoleToolbar).FocusGroup(ui.Horizontal).Label(m.say.A11yBulkBar())
-		bar.Shrink(0).Padding(5, 8).Gap(2).AlignItems(ui.Center).Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelPanel(p, r, t) })
+		bar.Shrink(0).Padding(barPad, 8).Gap(2).AlignItems(ui.Center).Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelPanel(p, r, t) })
 		bar.Children(func() {
 			count := m.say.BulkCount(len(ids))
 			if m.width < barTinyBelow { // beside the inspector in a small window only the number fits
@@ -112,11 +112,21 @@ func (m *Main) barClear(c *ui.Context, t *theme.Tokens) ui.Element {
 	return btn
 }
 
-// pageBottom is the room under a page's last row: more while the bulk bar floats over it, so the
-// last rows can be scrolled clear of the bar.
-func (m *Main) pageBottom() float32 {
-	if m.barShown() {
-		return 48 + barButton + 2*barBottom
-	}
-	return 48
+// barUp says whether the bar is drawn: it is wanted, the page can select, and there is something
+// selected on it.
+func (m *Main) barUp() bool {
+	return m.barShown() && m.canSelect() && len(m.selectedRows()) > 0
 }
+
+// barInset is the room the bar takes at the bottom of the page while it is up: its height and its
+// margin. Every list it floats over keeps that much under its last row, so the row can be scrolled
+// clear of it.
+func (m *Main) barInset() float32 {
+	if m.barUp() {
+		return barHeight + barBottom
+	}
+	return 0
+}
+
+// pageBottom is the room under a page's last row, and the bar's inset while it is up.
+func (m *Main) pageBottom() float32 { return 48 + m.barInset() }

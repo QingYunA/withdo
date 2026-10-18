@@ -145,7 +145,7 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col boardColumn, width flo
 // columnBody is the cards of a lane, or a quiet line saying what the empty lane is for.
 func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col boardColumn) {
 	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
-		ui.Column(c).Gap(8).Padding(8, 0, 16).Children(func() {
+		ui.Column(c).Gap(8).Padding(8, 0, 16+m.barInset()).Children(func() {
 			if len(col.tasks) == 0 {
 				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.laneEmpty(col.status), 2)
 			}

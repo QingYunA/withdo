@@ -46,13 +46,14 @@ func TestScreensSelect(t *testing.T) {
 			app, _, _ = newTestApp(t)
 			selectShot(t, name("bar"), zh, app, a.dark, full, func(tt *ui.Tester, m *Main) {
 				tick(tt, "Reply to design feedback", "Decide on the activation policy", "Book dentist")
+				scrollDown(tt, 700, 400) // the last rows scroll clear of the bar
 			})
 
 			// The menu of the selection, opened by a right-click on one of its rows.
 			app, _, _ = newTestApp(t)
 			selectShot(t, name("menu"), zh, app, a.dark, full, func(tt *ui.Tester, m *Main) {
 				tick(tt, "Reply to design feedback", "Decide on the activation policy", "Book dentist")
-				tt.Frame()
+				scrollDown(tt, 700, 400)
 				_ = tt.RightClick("Decide on the activation policy")
 			})
 

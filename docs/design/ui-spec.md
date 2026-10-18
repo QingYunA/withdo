@@ -1011,6 +1011,8 @@ Decisions made while building it (2026-10-18; screens `select-*`):
 - **The bar** is a row with the toolbar role and a focus group, not `ui.Toolbar` (which reserves room
   for an overflow button). Below 640 pt of content it keeps icons; below 330 pt its count is the
   number alone. Its pages for Move to… and Priority are the task menu's, opened above the bar.
+  While it is up, every list it floats over keeps its height (38 pt) and its 22 pt margin under its
+  last row (the page's scroller, and each lane of a board), so the last row scrolls clear of it.
 - **A stack in the hand** carries the user's unfinished selected rows only (the badge counts what
   will be handed); the others fade to 50 %. The cards behind are drawn by the carried row itself (a
   row can only paint over its own background, so it paints all its cards), 3 pt lower each.
