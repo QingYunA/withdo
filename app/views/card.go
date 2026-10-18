@@ -111,7 +111,7 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 	if actions := m.agentActions(task); acting && len(actions) > 0 {
 		buttons := func() { m.actionButtons(c, t, task.ID, actions, ph) }
 		branch, right = "", nil
-		if len(actions) > 1 && m.boardLayout(c).col < cardActionsInlineFrom {
+		if len(actions) > 1 && m.boardLayout(c).col < cardActionsInlineFrom(len(actions)) {
 			under = buttons
 		} else {
 			right = func(*ui.Context, *theme.Tokens) { buttons() }
@@ -139,13 +139,18 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 		}
 	})
 	if under != nil {
-		ui.Row(c).Gap(8).Margin(4, 0, 0).Children(under)
+		ui.Row(c).Gap(8).Wrap().Margin(4, 0, 0).Children(under)
 	}
 }
 
-// cardActionsInlineFrom is the lane width from which Open PR and Accept fit in a card's meta line;
-// in a narrower lane they take a line of their own under it.
-const cardActionsInlineFrom float32 = 200
+// cardActionsInlineFrom is the lane width from which n buttons (Open PR and Accept, or with Open page
+// three) fit in a card's meta line; in a narrower lane they take a line of their own under it.
+func cardActionsInlineFrom(n int) float32 {
+	if n > 2 {
+		return 270
+	}
+	return 200
+}
 
 // metaRight builds the right end of the second line, or returns nil when there is nothing to say.
 func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {

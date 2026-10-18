@@ -42,6 +42,9 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 			if r.NextStep != "" {
 				theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.ActivityNext(r.NextStep), 0)
 			}
+			if len(r.Links) > 0 {
+				m.linkChips(c, t, r)
+			}
 		})
 	})
 }

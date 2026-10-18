@@ -207,7 +207,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconBranch` | `git-branch` | `IconArrowOut` | `external-link` |
 | `IconTerminal` / `IconAgents` | `terminal` | `IconSparkle` / `IconStar` | `sparkle` |
 | `IconOctocat` / `IconGitHub` | `github` | `IconGeneral` | `sliders` |
-| `IconNow` | `circle` | | |
+| `IconNow` | `circle` | `IconFile` | `file-text` |
 
 - **Who wrote a task.** `Source == user` is `theme.You`, the pixel person (a task the assistant wrote
   for me counts as mine). `Source == agent` is `theme.AgentAvatar(name)`, `name` being the agent of
@@ -885,6 +885,8 @@ browser; it never renders, downloads or caches them.
   above, only for a task in review (a blocked task waits for an answer, not a look). Tight rows
   move the buttons as for two.
 - **Summary export**: a task line ends with `[title](url)` for each link of its reports.
+- **Screens.** `inspector-links`, `inspector-links-hover`, `inspector-links-missing`, `mine-open-page`,
+  `project-board-open-page`.
 
 ### Task menu
 

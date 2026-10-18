@@ -142,13 +142,14 @@ func actionButton(c *ui.Context, t *theme.Tokens, key int, text, label string) u
 
 // actionButtonKeyed is actionButton for a row with several: each takes its own key.
 func actionButtonKeyed(c *ui.Context, t *theme.Tokens, key, text, label string) ui.Element {
-	return stampButton(c, t, key, text, label, -1)
+	return stampButton(c, t, key, text, label, -1, nil)
 }
 
 // stampButton is actionButtonKeyed that can be stamped: from frame 0 on it turns status.done, its
 // tint at 16 %, and draws the pixel check (12 pt) before the word, a frame at a time. A frame below 0
-// is the plain button. The change of color is at once: the stamp is a stroke, not a fade.
-func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame int) ui.Element {
+// is the plain button. The change of color is at once: the stamp is a stroke, not a fade. A button with an
+// icon draws it (12 pt, in the color of the word) before the word.
+func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame int, icon *ui.SVG) ui.Element {
 	btn := ui.ButtonBase(c.Key(key)).Padding(3, 9).Radius(theme.RadiusControl).Shrink(0).
 		Background(t.BgSelected).Label(label).Cursor(ui.CursorPointer)
 	if frame >= 0 {
@@ -165,6 +166,15 @@ func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame 
 		btn.Background(t.Accent.Alpha(0.2))
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	btn.Children(func() { theme.Text(c, theme.MetaStrong, t.Accent, text) })
+	btn.Children(func() {
+		if icon == nil {
+			theme.Text(c, theme.MetaStrong, t.Accent, text)
+			return
+		}
+		ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, icon).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent)
+			theme.Text(c, theme.MetaStrong, t.Accent, text)
+		})
+	})
 	return btn
 }

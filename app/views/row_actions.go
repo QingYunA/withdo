@@ -22,21 +22,35 @@ func (m *Main) acceptAction(task data.Task) rowAction {
 	return rowAction{text: m.say.ActionAccept(), label: m.say.A11yAcceptTask(task.Title), accepts: true, run: func() { m.app.Accept(task) }}
 }
 
+// openPageAction opens the first page the agent attached to its latest report.
+func (m *Main) openPageAction(task data.Task, link data.Link) rowAction {
+	return rowAction{text: m.say.ActionOpenPage(), label: m.say.A11yOpenPage(task.Title), icon: theme.IconFile, run: func() { m.openLink(link) }}
+}
+
 // agentActions are the buttons of an agent's task that waits for the user: blocked, Answer; in
-// review, Open PR (or Review, without a pull request) and Accept. Any other task has none.
+// review, Open page when the latest report attached one, Open PR (or Review, without a pull request
+// and without a page) and Accept. Any other task has none.
 func (m *Main) agentActions(task data.Task) []rowAction {
 	if task.Source != data.SourceAgent {
 		return nil
 	}
-	switch {
-	case task.Status == data.Blocked:
+	if task.Status == data.Blocked {
 		return []rowAction{m.goSeeAction(m.say.ActionAnswer(), task)}
-	case task.Status == data.Review && task.PRURL != "":
-		return []rowAction{m.openPRAction(task), m.acceptAction(task)}
-	case task.Status == data.Review:
-		return []rowAction{m.goSeeAction(m.say.ActionReview(), task), m.acceptAction(task)}
 	}
-	return nil
+	if task.Status != data.Review {
+		return nil
+	}
+	var actions []rowAction
+	if r := m.app.latestReport(task.ID); r != nil && len(r.Links) > 0 {
+		actions = append(actions, m.openPageAction(task, r.Links[0]))
+	}
+	switch {
+	case task.PRURL != "":
+		actions = append(actions, m.openPRAction(task))
+	case len(actions) == 0:
+		actions = append(actions, m.goSeeAction(m.say.ActionReview(), task))
+	}
+	return append(actions, m.acceptAction(task))
 }
 
 // showsActions says whether a hovered or selected row, or one being accepted, shows its buttons
@@ -56,7 +70,7 @@ func (m *Main) actionButtons(c *ui.Context, t *theme.Tokens, id int, actions []r
 		if a.accepts {
 			stamp = ph.stamp
 		}
-		if stampButton(c, t, "action-"+itoa(i)+"-"+itoa(id), a.text, a.label, stamp).Clicked() {
+		if stampButton(c, t, "action-"+itoa(i)+"-"+itoa(id), a.text, a.label, stamp, a.icon).Clicked() {
 			a.run()
 		}
 	}
