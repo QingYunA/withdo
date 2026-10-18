@@ -73,6 +73,7 @@ func New(core *domain.Core, opts Options) *mcp.Server {
 	}
 	server := mcp.NewServer(&mcp.Implementation{Name: Name, Version: Version},
 		&mcp.ServerOptions{Instructions: Instructions, Logger: t.log})
+	server.AddReceivingMiddleware(rewriteSchemaErrors)
 	t.registerReportProgress(server)
 	t.registerCreateTask(server)
 	t.registerUpdateTask(server)

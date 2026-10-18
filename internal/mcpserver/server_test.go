@@ -274,6 +274,12 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 		{"milestone: non-git cwd", "create_milestone", map[string]any{"title": "v1", "cwd": t.TempDir()}, "cwd"},
 		{"milestone: unknown project", "create_milestone", map[string]any{"title": "v1", "project_id": 99}, "project_id"},
 		{"milestone: bad due_at", "create_milestone", map[string]any{"title": "v1", "due_at": "x"}, "due_at"},
+		{"get: null task_id", "get_task", map[string]any{"task_id": nil}, "task_id"},
+		{"get: string task_id", "get_task", map[string]any{"task_id": "x"}, "task_id"},
+		{"get: missing task_id", "get_task", map[string]any{}, "task_id"},
+		{"list: string limit", "list_tasks", map[string]any{"limit": "5"}, "limit"},
+		{"list: status not an array", "list_tasks", map[string]any{"status": "todo"}, "status"},
+		{"update: number notes", "update_task", map[string]any{"task_id": 1, "notes": 5}, "notes"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -286,6 +292,47 @@ func TestToolErrorsAreIsErrorResultsNamingTheField(t *testing.T) {
 			}
 			if !strings.Contains(res.Text, tt.field) {
 				t.Errorf("error %q does not name %q", res.Text, tt.field)
+			}
+			for _, noise := range []string{"reflect", "validating", "/properties/"} {
+				if strings.Contains(res.Text, noise) {
+					t.Errorf("error %q leaks the schema validator (%q)", res.Text, noise)
+				}
+			}
+		})
+	}
+}
+
+func TestSchemaErrorsReadLikeDomainErrors(t *testing.T) {
+	r := newRig(t)
+	r.ok("create_task", map[string]any{"title": "seed"})
+	tests := []struct {
+		name string
+		tool string
+		args map[string]any
+		want string
+	}{
+		{"null id", "get_task", map[string]any{"task_id": nil}, "task_id: must be an integer"},
+		{"string id", "get_task", map[string]any{"task_id": "x"}, "task_id: must be an integer"},
+		{"fractional id", "get_task", map[string]any{"task_id": 1.5}, "task_id: must be an integer"},
+		{"string limit", "list_tasks", map[string]any{"limit": "5"}, "limit: must be an integer"},
+		{"number summary", "report_progress", map[string]any{"summary": 5}, "summary: must be a string"},
+		{"string for array", "list_tasks", map[string]any{"status": "todo"}, "status: must be an array"},
+		{"number in array", "list_tasks", map[string]any{"status": []any{1}}, "status: must be a string"},
+		{"number for nullable", "update_task", map[string]any{"task_id": 1, "notes": 5}, "notes: must be a string or null"},
+		{"missing required", "get_task", map[string]any{}, "task_id: is required"},
+		{"below minimum", "get_task", map[string]any{"task_id": 0}, "task_id: must be at least 1"},
+		{"above maximum", "list_tasks", map[string]any{"limit": 999}, "limit: must be at most 200"},
+		{"not positive", "get_overview", map[string]any{"stale_hours": -1}, "stale_hours: must be greater than 0"},
+		{"empty string", "report_progress", map[string]any{"summary": ""}, "summary: must not be empty"},
+		{"unknown enum", "report_progress", map[string]any{"summary": "s", "status": "weird"},
+			"status: must be one of backlog, todo, doing, blocked, review, done, cancelled"},
+		{"unknown nullable enum", "update_task", map[string]any{"task_id": 1, "category": "play"}, "category: must be one of work, life"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := r.call(tt.tool, tt.args)
+			if !res.IsError || !strings.HasPrefix(res.Text, tt.want) {
+				t.Errorf("got isError=%v %q, want it to start with %q", res.IsError, res.Text, tt.want)
 			}
 		})
 	}
