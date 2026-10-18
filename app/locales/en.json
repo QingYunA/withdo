@@ -2441,5 +2441,105 @@
   "handOffTakenBack": "Yours now",
   "@handOffTakenBack": {
     "description": "Toast after an agent's task was dragged back to the Mine column."
+  },
+  "imagesAdd": "Add images…",
+  "@imagesAdd": {
+    "description": "The quiet line in the inspector of a task with no images; it opens the file panel."
+  },
+  "imagesAddTile": "Add images",
+  "@imagesAddTile": {
+    "description": "Accessibility label of the dashed + tile after the images of a task in the inspector."
+  },
+  "imageOpen": "Open {name}",
+  "@imageOpen": {
+    "description": "Accessibility label of the thumbnail of an image of a task; a click opens it in the viewer.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "bill.png"
+      }
+    }
+  },
+  "imageDetach": "Remove {name} from this task",
+  "@imageDetach": {
+    "description": "Tooltip and accessibility label of the x on an image tile in the inspector.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "bill.png"
+      }
+    }
+  },
+  "imageDetached": "Removed {name}",
+  "@imageDetached": {
+    "description": "Toast after an image was taken off a task, with Undo.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "bill.png"
+      }
+    }
+  },
+  "viewerPosition": "{name} · {i} / {n} · {w} × {h}",
+  "@viewerPosition": {
+    "description": "The bar under the image in the viewer: its name, its place among the task's images and its size in pixels.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "bill.png"
+      },
+      "i": {
+        "type": "int",
+        "example": "1"
+      },
+      "n": {
+        "type": "int",
+        "example": "2"
+      },
+      "w": {
+        "type": "String",
+        "example": "1200"
+      },
+      "h": {
+        "type": "String",
+        "example": "900"
+      }
+    }
+  },
+  "viewerOpenInPreview": "Open in Preview ↗",
+  "@viewerOpenInPreview": {
+    "description": "Button in the viewer's bar that opens the image file in macOS Preview."
+  },
+  "viewerClose": "Close",
+  "@viewerClose": {
+    "description": "Accessibility label and tooltip of the x of the image viewer."
+  },
+  "viewerPrevious": "Previous image",
+  "@viewerPrevious": {
+    "description": "Accessibility label and tooltip of the left chevron of the image viewer."
+  },
+  "viewerNext": "Next image",
+  "@viewerNext": {
+    "description": "Accessibility label and tooltip of the right chevron of the image viewer."
+  },
+  "viewerImage": "Image {name}",
+  "@viewerImage": {
+    "description": "Accessibility label of the image shown in the viewer.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "bill.png"
+      }
+    }
+  },
+  "receiptImages": "{n, plural, one{with its image} other{with its images}}",
+  "@receiptImages": {
+    "description": "Part of the line after the assistant added or changed a task: the task kept the pictures sent with the request.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   }
 }

@@ -65,6 +65,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 			case r.Live:
 				liveDot(c, t)
 			}
+			m.rowThumb(c, t, r.ID)
 			m.ageLabel(c, t, r.Item)
 		})
 	})

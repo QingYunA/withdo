@@ -91,3 +91,12 @@ func (a *App) taskCount(project int) int {
 	}
 	return n
 }
+
+// DetachImage takes a picture off a task; RestoreImage puts it back, for the Undo.
+func (a *App) DetachImage(id int, hash string) error {
+	return a.fail(a.do(func() error { return a.Store.DetachImage(id, hash) }))
+}
+
+func (a *App) RestoreImage(im data.TaskImage) error {
+	return a.fail(a.do(func() error { return a.Store.RestoreImage(im) }))
+}

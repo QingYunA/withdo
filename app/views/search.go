@@ -215,7 +215,10 @@ func (m *Main) searchRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	row.Children(func() {
 		m.glyphSlot(c, t, task, ph.fill)
 		body(c, func() { m.titleLine(c, t, task, m.parentTitle(task), true) })
-		right(c, func() { plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now())) })
+		right(c, func() {
+			m.rowThumb(c, t, task.ID)
+			plainText(c, t, m.clock.Age(task.UpdatedAt, m.app.Now()))
+		})
 	})
 	if row.Clicked() {
 		m.openRow(task.ID)

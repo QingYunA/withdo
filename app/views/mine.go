@@ -121,6 +121,7 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 			}
 		})
 		right(c, func() {
+			m.rowThumb(c, t, it.ID)
 			if m.width >= dropPillsBelow { // beside the inspector the title needs the room more
 				m.ageLabel(c, t, it)
 			}
@@ -219,6 +220,7 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 					if theme.ShowsPriority(it.Priority) {
 						theme.PriorityBadge(c, t, it.Priority)
 					}
+					m.rowThumb(c, t, it.ID)
 					if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
 						theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
 					}

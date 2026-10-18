@@ -23,6 +23,11 @@ type RealOptions struct {
 	Interval time.Duration
 	// Agents says which agents are installed and where; nil looks at this Mac.
 	Agents *agentsetup.Env
+	// DataFolder is where the pictures of tasks are kept, in images/. Empty keeps none.
+	DataFolder string
+	// ImageGrace is how long the files of a picture stay after its last task let go of it, so
+	// that Undo can bring the picture back; zero is two minutes.
+	ImageGrace time.Duration
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and
@@ -42,6 +47,12 @@ type Real struct {
 	eventMark eventMark
 	cancel    context.CancelFunc
 	done      chan struct{}
+
+	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
+	// collection in between. sweep is the pending collection after a detach or a delete.
+	images imageFiles
+	imgMu  sync.Mutex
+	sweep  *time.Timer
 }
 
 var _ Store = (*Real)(nil)
@@ -65,6 +76,7 @@ func NewReal(db *sql.DB, opts RealOptions) *Real {
 	return &Real{
 		core: domain.New(db, domain.Options{Now: opts.Now}), db: db, opts: opts,
 		subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){},
+		images: imageFiles{dir: imagesDir(opts.DataFolder)},
 	}
 }
 
@@ -96,6 +108,9 @@ func (r *Real) Close() error {
 	r.mu.Lock()
 	cancel, done := r.cancel, r.done
 	r.cancel = nil
+	if r.sweep != nil {
+		r.sweep.Stop()
+	}
 	r.mu.Unlock()
 	if cancel != nil {
 		cancel()

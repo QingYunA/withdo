@@ -29,6 +29,7 @@ var (
 	MetaStrong    = Style{Size: 13, Line: 18, Weight: 500}
 	Section       = Style{Size: 13, Line: 18, Weight: 600}   // sentence case; callers color it text.secondary
 	Badge         = Style{Size: 11.5, Line: 16, Weight: 600} // the P0 / P1 mark
+	Pico          = Style{Size: 9, Line: 11, Weight: 600}    // the +2 on a thumbnail
 	Mono          = Style{Size: 12.5, Line: 18, Weight: 400, Mono: true}
 )
 

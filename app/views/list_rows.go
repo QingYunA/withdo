@@ -73,7 +73,10 @@ func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		row.AlignItems(ui.Start).Children(func() {
 			m.agentAvatar(c, theme.AccentBot(t.Accent))
 			body(c, func() {
-				m.agentTitle(c, t, task, func() { plainText(c, t, m.clock.Age(handedAt(task), m.app.Now())) })
+				m.agentTitle(c, t, task, func() {
+					m.rowThumb(c, t, task.ID)
+					plainText(c, t, m.clock.Age(handedAt(task), m.app.Now()))
+				})
 				agentLine(c, t, m.say.ListWaitingHint(task.ID))
 			})
 		})
@@ -133,7 +136,10 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 		body(c, func() {
 			theme.Text(c, theme.Body, t.TextSecondary, task.Title).Shrink(1).MinWidth(0).Ellipsis("…")
 		})
-		right(c, func() { plainText(c, t, m.clock.Day(doneAt(task), m.app.Now())) })
+		right(c, func() {
+			m.rowThumb(c, t, task.ID)
+			plainText(c, t, m.clock.Day(doneAt(task), m.app.Now()))
+		})
 	})
 	if row.Clicked() {
 		m.openRow(task.ID)
