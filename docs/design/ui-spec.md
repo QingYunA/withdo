@@ -325,7 +325,7 @@ A task typed in the composer of the Work or Life page gets that category, with o
 
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
-- **Right-click a project**: `Open QingYunA/adhd-todo on GitHub ↗` (only with a repository: it opens
+- **Right-click a project**: `Open QingYunA/adhd-todo on GitHub` (only with a repository: it opens
   github.com in the browser), `New milestone…` (the project's only way to its first milestone), a
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
@@ -848,7 +848,7 @@ v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user ca
   `bg.subtle`, a hairline under it, the `+2` badge at its bottom right when there are more.
 - **The viewer.** A click on any thumbnail opens the image over the window: the window dims (90 %
   near-black), the image fits the window whole, a bottom bar says `name · 1 / 2 · 1200 × 900` and
-  offers **Open in Preview ↗** (`在预览中打开 ↗`, the file in macOS Preview). Round pixel `chevron-left`
+  offers **Open in Preview** (`在预览中打开` and the external-link icon, the file in macOS Preview). Round pixel `chevron-left`
   / `chevron-right` and `close` buttons; `←` `→` step through the task's images, `Esc` or a click
   outside closes.
 - **Storage.** The original file is kept (up to 20 MB; a larger one keeps the composer's shrunk copy)
@@ -1284,8 +1284,8 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   PRs, and reminders` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
   and a switch at the right, on by default. When the last notification was refused by macOS
   (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
-  notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings ↗** link
-  (`打开系统设置 ↗`) opens the Notifications settings; **Archived projects** (a row per
+  notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings** link
+  (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings; **Archived projects** (a row per
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
@@ -1306,7 +1306,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   (`meta`); a 7 pt green dot at the top right when the provider is set up; a 2 pt `accent` ring when
   picked (a 1 pt hairline ring otherwise). The provider in use is picked when Change opens. Under the
   grid, in one group, only: **API key** (a secure field, placeholder `Paste your Kimi key`, a stored
-  key shows dots and an empty field keeps it; **Get a key ↗** at the right opens the provider's key
+  key shows dots and an empty field keeps it; **Get a key** (with the external-link icon) at the right opens the provider's key
   page), and **Model** (a pop-up as wide as the field, with **Save and test**, the accent button, at
   its right). The model pop-up lists the preset's suggestions, then the models the provider says it
   has (`GET {base}/models`, or Anthropic's `/v1/models`), up to 24, with `Other…` last, which turns it
@@ -1351,7 +1351,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
     whole catalog.
   - **More** with its count: every catalog agent not on this Mac, one white block of compact two
     column rows (8 in the design, four rows). A row (31 pt in the app; the mockup draws 32): the
-    18 pt official mark, the name in `meta` size and primary ink, and `Get it ↗` / `去下载 ↗` at the
+    18 pt official mark, the name in `meta` size and primary ink, and `Get it` / `去下载` and the 12 pt pixel external-link icon at the
     right, which opens the agent's URL. There is no status line and no "Not on this Mac" (the
     group says it), and More never folds.
   Under the two sections, exactly as before: the manual snippet when a config file is not plain

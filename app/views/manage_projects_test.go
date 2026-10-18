@@ -140,7 +140,7 @@ func TestProjectContextMenu(t *testing.T) {
 	if err := tt.RightClick("picpocket"); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub ↗", "New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub", "New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu %q, want %q", got, want)
 	}
 }
@@ -150,7 +150,7 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()
 	_ = tt.RightClick("adhd-todo")
-	if err := tt.ChooseMenuItem("Open QingYunA/adhd-todo on GitHub ↗"); err != nil {
+	if err := tt.ChooseMenuItem("Open QingYunA/adhd-todo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
 	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo" {
