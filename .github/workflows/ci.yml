@@ -1,0 +1,20 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    # Linux, not macOS: the repo is private and Linux minutes cost the least. mygo is pure Go and
+    # its tester renders headless, so the app tests run here too.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # mygo loads pango at run time to shape text; without it the first test of a process fails.
+      - run: sudo apt-get update && sudo apt-get install -y libpangocairo-1.0-0
+      - run: scripts/check.sh full
