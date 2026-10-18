@@ -1157,6 +1157,34 @@ Friday `This week: 25 finished. The weekly summary is ready.`; a day with nothin
 it for today. See you tomorrow.` (never "0"). A click opens Summary. Not sent while the window shows
 Summary; off with the Notifications switch too.
 
+**Sound** (set A "wood box" of `docs/design/mockups/v21.html`; the other two sets there were
+turned down). The scene makes a few quiet sounds while it plays, and nothing anywhere else in the app.
+
+| When | Sound | File |
+| --- | --- | --- |
+| The lid opens | a soft wooden knock, sliding down | `lid.wav` |
+| A good lands in the bin | a short wooden tock; each one a step higher on the major pentatonic (0, 2, 4, 7, 9, 12, 14, 16, 19 semitones) | `land.wav` |
+| A starred good lands | a faint high ping over the tock | `star.wav` |
+| Everyone hops (the last good landed) | three marimba notes going up (C, E, G), about 0.6 s | `done.wav` |
+| The week: a good lands on its stack | a faint brushed tap, pitch varied a little | `tick.wav` |
+
+- Restraint: a `land` sounds only 150 ms or more after the last one that sounded, and 8 at most; a
+  star only on a land that sounds; a `tick` at most every 220 ms; the week ends on `done` 180 ms
+  after its last good lands. The ledger counting up and the paragraph typing are silent.
+- When: once each time the scene plays (the page opens, the period changes, the sky is clicked),
+  scheduled from the plan's times (`theme.DayPlan`, `theme.WeekPlan`), not from frames. Leaving the
+  page stops what is still to come. Not while the window is not key. With Reduce Motion (the last
+  frame drawn at once) only `done`.
+- Off when Settings > General > **Sound effects** (`音效`, a switch row under Notifications, `meta`
+  `Quiet sounds while the day is shipped in Summary` / `总结页出货时的轻微音效`, on by default, kept in
+  `prefs.json`) is off, or when macOS's "Play user interface sound effects" is off
+  (`com.apple.sound.uiaudio.enabled` = 0 in the global domain; a missing key is on).
+- Files: `app/theme/sounds/*.wav` (go:embed), mono 48 kHz 16-bit, replaceable as the sprites are; a
+  missing or bad file is silence, not an error. They are written by `app/theme/sounds/gen.go`
+  (`go run`), which synthesises set A of v21 at the level of its volume slider at 50% (peaks about
+  -18 dBFS), with a fixed noise seed so a rerun writes the same bytes. The pitch steps are the
+  player's speed (`2^(semitones/12)`), so there is one `land.wav`.
+
 **As built** (what the spec above leaves to the code; screens `summary-*.png`):
 
 - The scene is a pure function of its plan and the time (`theme.DayPlan`, `theme.WeekPlan`:
