@@ -21,6 +21,8 @@ type reportProgressArgs struct {
 	PRURL    string         `json:"pr_url"`
 	// ParentTaskID is the task of the agent that started this one as a subagent.
 	ParentTaskID *int64 `json:"parent_task_id"`
+	// Links are pages to open: a report page, a design draft.
+	Links []domain.ReportLink `json:"links"`
 }
 
 func (t *tools) registerReportProgress(s *mcp.Server) {
@@ -42,6 +44,7 @@ func (t *tools) registerReportProgress(s *mcp.Server) {
 			"pr_url":    prURL,
 			"parent_task_id": id("The task_id of the agent that started you as a subagent; makes your task its subtask. " +
 				"Pass it on every report if you were given one"),
+			"links": linksProp,
 		}, "summary"),
 	}, t.reportProgress)
 }
@@ -57,6 +60,7 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	res, err := t.core.ReportProgress(ctx, domain.ProgressInput{
 		Summary: a.Summary, Agent: agentName(req), Status: a.Status, NextStep: a.NextStep,
 		TaskID: a.TaskID, Title: a.Title, Cwd: a.Cwd, FallbackCwd: fallback, Branch: a.Branch, PRURL: a.PRURL, ParentTaskID: a.ParentTaskID,
+		Links: a.Links,
 	})
 	if err != nil {
 		return t.fail(err)
@@ -65,7 +69,25 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	if res.Created {
 		verb = "Created"
 	}
-	return ok(fmt.Sprintf("%s %s", verb, domain.FormatTaskLine(res.Task)), map[string]any{
-		"task_id": res.Task.ID, "status": res.Task.Status, "created": res.Created, "task": res.Task,
-	})
+	line := fmt.Sprintf("%s %s", verb, domain.FormatTaskLine(res.Task))
+	data := map[string]any{"task_id": res.Task.ID, "status": res.Task.Status, "created": res.Created, "task": res.Task}
+	if len(res.Dropped) > 0 {
+		data["dropped_links"] = res.Dropped
+		for _, d := range res.Dropped {
+			line += fmt.Sprintf("\nDropped link %s: %s", d.URL, d.Reason)
+		}
+	}
+	return ok(line, data)
+}
+
+// linksProp is the links argument of report_progress.
+var linksProp = &jsonschema.Schema{
+	Type:     "array",
+	MaxItems: ptr(domain.MaxReportLinks),
+	Description: "Pages to open: an HTML report, a design draft, a document. " +
+		"https://, http:// or file:// (absolute). A link that cannot be kept is dropped and listed in dropped_links; the report is still filed",
+	Items: object(map[string]*jsonschema.Schema{
+		"url":   {Type: "string"},
+		"title": {Type: "string", Description: "optional; a longer title is cut to 80 characters"},
+	}, "url"),
 }

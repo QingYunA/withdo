@@ -31,7 +31,7 @@ func (c *Core) LatestReportAt(ctx context.Context) (string, error) {
 // deleted since is not among them.
 func (c *Core) ReportsSince(ctx context.Context, at string) ([]ReportEvent, error) {
 	rows, err := c.db.QueryContext(ctx, `SELECT r.id, r.task_id, r.agent, r.status, r.summary, r.next_step,
-		r.created_at, r.cwd, r.kind, t.title, p.name, t.pr_number
+		r.created_at, r.cwd, r.kind, r.links, t.title, p.name, t.pr_number
 		FROM reports r JOIN tasks t ON t.id = r.task_id LEFT JOIN projects p ON p.id = t.project_id
 		WHERE r.created_at >= ? ORDER BY r.created_at, r.id`, at)
 	if err != nil {
@@ -39,8 +39,10 @@ func (c *Core) ReportsSince(ctx context.Context, at string) ([]ReportEvent, erro
 	}
 	return collect(rows, func(s scanner) (ReportEvent, error) {
 		var e ReportEvent
+		var links string
 		err := s.Scan(&e.ID, &e.TaskID, &e.Agent, &e.Status, &e.Summary, &e.NextStep,
-			&e.CreatedAt, &e.Cwd, &e.Kind, &e.TaskTitle, &e.ProjectName, &e.PRNumber)
+			&e.CreatedAt, &e.Cwd, &e.Kind, &links, &e.TaskTitle, &e.ProjectName, &e.PRNumber)
+		e.Links = decodeLinks(links)
 		return e, err
 	})
 }

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v19 草稿 — Agent 发来的页面链接</title>
+<style>
+  :root { --bg: #fff; --subtle: #f5f5f7; --hover: rgba(0,0,0,.04); --border: rgba(0,0,0,.10); --selected: rgba(91,91,214,.12);
+    --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2; --accent: #5b5bd6; --blocked: #e5484d; --side: #ececf0; }
+  .dark { --bg: #1c1c1e; --subtle: #232326; --hover: rgba(255,255,255,.06); --border: rgba(255,255,255,.10); --selected: rgba(124,124,240,.22);
+    --text: #f5f5f7; --text2: #a1a1a6; --text3: #636366; --accent: #7c7cf0; --blocked: #ff6369; --side: #2a2a2e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  body.night { background: #111113; color: #e6e6ee; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; gap: 16px; align-items: center; }
+  h1 button { font: 500 12px/20px -apple-system; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  .night h1 button { background: rgba(255,255,255,.12); }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 44px 0 6px 4px; }
+  .lead, .sub { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1240px; margin: 0 4px 20px; }
+  .night .lead, .night .sub, .night .note, .night .caption { color: #a1a1a6; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; }
+  .note { font-size: 13px; line-height: 20px; color: #6e6e73; margin: 10px 4px 0; max-width: 560px; }
+  .grid { display: grid; grid-template-columns: repeat(3, auto); gap: 32px 40px; align-items: start; justify-content: start; }
+  svg.px { display: inline-block; flex: none; shape-rendering: crispEdges; vertical-align: middle; }
+
+  .panel { width: 400px; background: var(--bg); color: var(--text); border-radius: 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); padding: 20px 24px 24px; }
+  .act-h { font-weight: 600; font-size: 14px; color: var(--text2); margin-bottom: 8px; }
+  .rep { display: flex; gap: 8px; margin-top: 12px; }
+  .rep .body { flex: 1; border-left: 1px solid var(--border); padding-left: 12px; margin-left: -18px; padding-top: 22px; }
+  .rep .who { position: absolute; }
+  .meta { font-size: 14px; color: var(--text2); display: flex; gap: 6px; align-items: center; }
+  .meta .name { color: var(--text); }
+  .meta.blocked .name { color: var(--blocked); }
+  .sum { font-size: 15px; line-height: 22px; margin-top: 2px; }
+  .next { font-size: 14px; line-height: 20px; color: var(--text2); margin-top: 2px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .link { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 26px; padding: 0 9px 0 7px; border-radius: 7px; background: var(--subtle); color: var(--text); font-size: 13px; cursor: pointer; }
+  .link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+  .link .ic { color: var(--accent); }
+  .link.hover { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+  .link.missing { color: var(--text3); }
+  .link.missing .ic { color: var(--text3); }
+  .tip { display: inline-block; margin-top: 6px; padding: 4px 8px; border-radius: 6px; background: rgba(20,20,24,.88); color: #fff; font-size: 12px; line-height: 17px; }
+
+  .mine { width: 640px; background: var(--bg); color: var(--text); border-radius: 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 16px 40px rgba(0,0,0,.12); padding: 20px 24px; }
+  .gh { font-weight: 600; font-size: 14px; color: var(--text2); margin-bottom: 8px; }
+  .gh i { font-style: normal; font-weight: 400; color: var(--text3); margin-left: 6px; }
+  .card { border: 1px solid var(--border); border-radius: 12px; }
+  .row { display: flex; gap: 10px; padding: 12px 14px; align-items: flex-start; }
+  .row + .row { border-top: 1px solid var(--border); }
+  .row .t { font-weight: 600; font-size: 15px; }
+  .row .s { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .main { flex: 1; min-width: 0; }
+  .row .age { color: var(--text3); font-size: 13px; margin-right: 4px; align-self: center; }
+  .btns { display: flex; gap: 6px; align-self: center; }
+  .btn { height: 24px; display: inline-flex; align-items: center; gap: 5px; padding: 0 9px; border-radius: 6px; font-size: 13px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); white-space: nowrap; }
+  .btn.p { background: var(--accent); color: #fff; }
+  .row.tight { flex-wrap: wrap; }
+  .row.tight .btns { flex-basis: 100%; padding-left: 28px; }
+
+  pre { background: #fff; border-radius: 12px; padding: 14px 16px; font: 12.5px/19px "SF Mono", ui-monospace, monospace; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); margin: 0; color: #1d1d1f; }
+  .rules { background: #fff; border-radius: 12px; padding: 16px 20px; font-size: 13px; line-height: 21px; color: #3a3a3c; box-shadow: 0 0 0 .5px rgba(0,0,0,.22); max-width: 640px; margin: 0; }
+  .rules li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<h1>v19 · Agent 发来的页面链接（#76）<button id="mode">切到深色</button></h1>
+<p class="lead">Agent 汇报时可以带上几个链接（它写的 HTML 报告、设计稿、本地页面）。链接挂在那条汇报上：检查器的动态里显示成一排小块，点开用默认浏览器；任务等你看、最新汇报带链接时，「Agent 交过来的」那一行多一个「打开页面」。app 里不渲染 HTML。</p>
+
+<h2>一 · 检查器的动态</h2>
+<div class="grid">
+  <div><div class="caption">两条汇报，各带链接</div><div class="panel" id="insp"></div>
+    <p class="note">链接在汇报文字下面，一行放不下就换行。像素文件图标（accent 色）+ 标题，标题过长省略。没给标题时显示文件名（<code>file://</code>）或域名加路径末段（<code>https://</code>）。</p></div>
+  <div><div class="caption">悬停 / 文件找不到</div><div class="panel" id="insp2"></div>
+    <p class="note">悬停：accent 浅底，提示框显示完整地址（本地文件显示成 <code>~/…</code> 路径）。本地文件不在了：图标和文字变灰，点击时提示「找不到这个文件」，不报错弹窗。</p></div>
+</div>
+
+<h2>二 · 「Agent 交过来的」那一行</h2>
+<div class="grid" style="grid-template-columns: auto">
+  <div><div class="caption">在等你看、最新汇报带链接：多一个「打开页面」，排在「打开 PR」前面</div><div class="mine" id="mine"></div>
+    <p class="note" style="max-width:640px">按钮打开最新那条汇报的第一个链接（其余的在检查器里）。没有 PR 的任务就是「打开页面」「收下」两个。卡住的任务不出这个按钮（它在等你回答，不是等你看）。窄的时候三个按钮挪到摘要下面一行，规则同现在的两个按钮。项目页 Agent 栏的行和看板卡片悬停时，按钮一样。</p></div>
+</div>
+
+<h2>三 · MCP 和规则</h2>
+<div class="grid" style="grid-template-columns: 560px 640px">
+  <div><div class="caption">report_progress 多一个参数</div><pre id="schema"></pre></div>
+  <div><div class="caption">规则</div><ul class="rules">
+    <li><b>挂在汇报上</b>：存在那条汇报里（迁移 011，<code>reports.links</code>，JSON），任务上不另存。</li>
+    <li><b>一次最多 5 个</b>；标题可省，最长 80 字。</li>
+    <li><b>只收</b> <code>https://</code>、<code>http://</code>、<code>file://</code>（必须是绝对路径）。别的协议或格式不对：整条汇报照收，坏的链接丢掉，返回结果里告诉 Agent 哪个被丢了、为什么。</li>
+    <li><b>打开</b>：系统默认浏览器（<code>file://</code> 交给系统按文件类型打开）。打开前不检查网络地址；本地文件在画的时候检查一次是否存在。</li>
+    <li><b>不在 app 里渲染</b>，不下载、不缓存页面内容。</li>
+    <li><b>总结页导出</b>：带链接的任务那一行后面加 <code>[标题](地址)</code>。</li>
+    <li><b>MCP 指引</b>加一句：你写了报告页面、设计稿这类能打开的结果时，用 links 附在汇报上。</li>
+    <li><b>get_task</b> 返回的汇报里带上 links。</li>
+  </ul></div>
+</div>
+
+<script>
+const S = {
+  crab: { pal: { o: '#D97757', d: '#B85C3E', e: '#2B1D17' }, g: ['............', '............', '..oooooooo..', '..oooooooo..', '..oeooooeo..', 'oooeooooeooo', 'oooooooooooo', '..oooooooo..', '..oooooooo..', '..d.d..d.d..', '..d.d..d.d..', '............'] },
+  codex: { pal: { b: '#5B7CFA', d: '#4A5EE0', w: '#FFFFFF' }, g: ['............', '...bbb.bbb..', '..bbbbbbbbb.', '.bbbbbbbbbbb', '.bwbbbbbbbbb', 'bbbwbbbbbbbb', 'bbbbwbbbbbbb', 'bbbwbbbbbbbb', 'bbwbbbwwwbbb', '.ddddddddddd', '..dddd.dddd.', '............'] },
+};
+const sprite = (n, s) => { const a = S[n]; let r = ''; a.g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${a.pal[ch]}"/>`; })); return `<svg class="px" width="${s}" height="${s}" viewBox="0 0 12 12">${r}</svg>`; };
+// a page with a folded corner, 12 x 12 cells (the pixelarticons "file" shape)
+const FILE = ['..xxxxxx....', '..x....xx...', '..x....x.x..', '..x....xxxx.', '..x.......x.', '..x.xxxx..x.', '..x.......x.', '..x.xxxxx.x.', '..x.......x.', '..x.xxxx..x.', '..x.......x.', '..xxxxxxxxx.'];
+const fileIcon = (s = 12) => { let r = ''; FILE.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'x') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; })); return `<svg class="px ic" width="${s}" height="${s}" viewBox="0 0 12 12" fill="currentColor">${r}</svg>`; };
+const EXT = '<svg class="px" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5H5v2h6V5ZM5 7H3v12h2V7Zm12 12H5v2h12v-2Zm2-6h-2v6h2v-6Zm-8 0H9v2h2v-2Zm2-2h-2v2h2v-2Zm2-2h-2v2h2V9Zm2-2h-2v2h2V7Zm2-2h-2v2h2V5Zm2-2h-2v8h2V3Z"/><path d="M21 3h-8v2h8V3Z"/></svg>';
+const link = (t, cls = '') => `<span class="link ${cls}">${fileIcon()}<span>${t}</span></span>`;
+const rep = (who, name, age, sum, next, links, extra = '') => `<div class="rep"><div class="who">${sprite(who, 18)}</div><div class="body" style="margin-left:9px">
+  <div class="meta" style="margin:-22px 0 0 18px"><span class="name">${name}</span>${age}</div>
+  <div class="sum">${sum}</div>${next ? `<div class="next">${next}</div>` : ''}${links ? `<div class="links">${links}</div>` : ''}${extra}</div></div>`;
+
+document.getElementById('insp').innerHTML = `<div class="act-h">动态</div>
+  ${rep('crab', 'Claude Code', '12 分钟前', 'PR #19 开好了：接入说明、adhd-core guide、设置页按钮。', '下一步：等你看完合并', link('#86 接入说明：PR #19') + link('agent-guide.md'))}
+  ${rep('crab', 'Claude Code', '1 小时前', 'v19 设计稿画好了，链接挂在汇报上。', '', link('v19 · Agent 发来的页面链接') + link('github.com › pull/19') + link('86-让任何-Agent-自己接入-todo-的-MCP-20261018-112845.html'))}`;
+
+document.getElementById('insp2').innerHTML = `<div class="act-h">动态</div>
+  ${rep('crab', 'Claude Code', '12 分钟前', 'PR #19 开好了：接入说明、adhd-core guide、设置页按钮。', '', link('#86 接入说明：PR #19', 'hover') + link('agent-guide.md'), '<div class="tip">~/.answer-me-with-html/pages/86-接入说明-PR-19.html</div>')}
+  ${rep('codex', 'Codex', '昨天', '导入流程的排查报告写好了。', '', link('import-crash-report.html', 'missing'), '<div class="tip">找不到这个文件</div>')}`;
+
+const row = (who, t, s, age, btns, cls = '') => `<div class="row ${cls}">${sprite(who, 18)}<div class="main"><div class="t">${t}</div><div class="s">${s}</div></div>${age ? `<span class="age">${age}</span>` : ''}<div class="btns">${btns}</div></div>`;
+const b = (t, p, ic = '') => `<span class="btn ${p ? 'p' : ''}">${ic}${t}</span>`;
+document.getElementById('mine').innerHTML = `<div class="gh">Agent 交过来的<i>3</i></div><div class="card">
+  ${row('crab', 'Agent 接入说明', 'PR #19 等你看 · adhd-todo', '12 分钟', b('打开页面', 0, fileIcon()) + b('打开 PR', 0) + b('收下', 1))}
+  ${row('codex', '导入崩溃排查', 'Codex 做完了，在等你 · picpocket', '1 小时', b('打开页面', 0, fileIcon()) + b('收下', 1))}
+  ${row('crab', 'Fix tray race on launch', 'Claude Code 卡住了：“Needs a decision on the activation policy”', '3 天', b('回答', 0))}
+</div>
+<div class="caption" style="margin:18px 0 8px">窄的时候（内容区不到 560 pt）</div>
+<div class="card" style="width:420px">${row('crab', 'Agent 接入说明', 'PR #19 等你看 · adhd-todo', '', b('打开页面', 0, fileIcon()) + b('打开 PR', 0) + b('收下', 1), 'tight')}</div>`;
+
+document.getElementById('schema').textContent = `"links": {
+  "type": "array",
+  "maxItems": 5,
+  "description": "Pages to open: an HTML report, a design draft,
+                  a document. https://, http:// or file:// (absolute).",
+  "items": {
+    "type": "object",
+    "properties": {
+      "url":   { "type": "string" },
+      "title": { "type": "string", "description": "optional, ≤ 80 chars" }
+    },
+    "required": ["url"]
+  }
+}
+
+// result, when one was dropped:
+"dropped_links": [
+  { "url": "ftp://…", "reason": "only https, http and file URLs" }
+]`;
+
+document.getElementById('mode').onclick = (e) => {
+  const d = document.body.classList.toggle('night');
+  document.querySelectorAll('.panel, .mine').forEach(f => f.classList.toggle('dark', d));
+  e.target.textContent = d ? '切到浅色' : '切到深色';
+};
+</script>
+</body>
+</html>

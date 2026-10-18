@@ -102,6 +102,9 @@ func fromReport(r domain.Report) Report {
 	if r.Status != nil {
 		out.Status = Status(*r.Status)
 	}
+	for _, l := range r.Links {
+		out.Links = append(out.Links, Link{URL: l.URL, Title: l.Title})
+	}
 	return out
 }
 

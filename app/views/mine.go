@@ -181,6 +181,7 @@ const stackAllActionsBelow float32 = 420
 type rowAction struct {
 	text, label string
 	accepts     bool
+	icon        *ui.SVG // drawn before the text; nil for none
 	run         func()
 }
 

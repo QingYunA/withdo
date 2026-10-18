@@ -58,6 +58,9 @@ type App struct {
 	Act    Actions
 	Config Config
 	Now    func() time.Time
+	// FileExists says whether a local file is there, for the pages agents link to; nil asks the
+	// file system.
+	FileExists func(path string) bool
 	// Assistant is the built-in agent behind the composer; nil leaves the composer adding plain
 	// tasks. Models is Settings > Assistant; nil leaves that pane empty.
 	Assistant data.Assistant
