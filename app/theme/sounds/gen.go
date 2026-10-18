@@ -133,7 +133,7 @@ func main() {
 				v.tone("sine", hz(s)*4, at, 0.12, 0.03, toneOpt{})
 			}
 		},
-		"tick": func(v *voice) { v.noise(0, 0.025, 0.07, 1500, 3) },
+		"tick": func(v *voice) { v.noise(0, 0.025, 0.74, 1500, 3) },
 	}
 	for name, build := range files {
 		var v voice

@@ -1182,7 +1182,7 @@ turned down). The scene makes a few quiet sounds while it plays, and nothing any
 - Files: `app/theme/sounds/*.wav` (go:embed), mono 48 kHz 16-bit, replaceable as the sprites are; a
   missing or bad file is silence, not an error. They are written by `app/theme/sounds/gen.go`
   (`go run`), which synthesises set A of v21 at the level of its volume slider at 50% (peaks about
-  -18 dBFS), with a fixed noise seed so a rerun writes the same bytes. The pitch steps are the
+  -18 dBFS; the week's `tick` about -30 dBFS, louder than v21 so that it is heard), with a fixed noise seed so a rerun writes the same bytes. The pitch steps are the
   player's speed (`2^(semitones/12)`), so there is one `land.wav`.
 
 **As built** (what the spec above leaves to the code; screens `summary-*.png`):
