@@ -40,6 +40,8 @@ type handOffState struct {
 	// built as the dragged row this frame, which is how the others know to fade.
 	stack     []int
 	stackSeen bool
+	// copiedAt is when the Copy for the agent button of the hand-off toast was last clicked.
+	copiedAt time.Time
 }
 
 // carry follows the pointer of the row in flight, to tell whether it walks.

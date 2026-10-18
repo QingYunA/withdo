@@ -210,6 +210,7 @@ func (m *Main) View(c *ui.Context) {
 	m.taskMenuView(c, t)
 	m.viewerView(c, t)
 	m.hopOverlay(c)
+	m.toastsView(c, t)
 }
 
 // content is the screen the sidebar chose.
