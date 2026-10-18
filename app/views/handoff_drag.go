@@ -36,6 +36,10 @@ type handOffState struct {
 	undo    func()
 	undoSeq int
 	asked   int // frames asked for, which the tests look at
+	// stack is the rows in the air while a stack is dragged, and stackSeen that one of them was
+	// built as the dragged row this frame, which is how the others know to fade.
+	stack     []int
+	stackSeen bool
 }
 
 // carry follows the pointer of the row in flight, to tell whether it walks.
@@ -102,6 +106,10 @@ func (m *Main) handOffTick(c *ui.Context) {
 		h.carry = carry{}
 	}
 	h.carry.seen = false
+	if !h.stackSeen {
+		h.stack = nil
+	}
+	h.stackSeen = false
 	if len(h.landed.ids) > 0 && now.Sub(h.landed.at) >= theme.WashFor {
 		h.landed = landing{}
 	}

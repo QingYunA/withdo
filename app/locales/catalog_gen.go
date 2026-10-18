@@ -7425,3 +7425,55 @@ func MenuManyHeader(count int) string { return In(i18n.Locale()).MenuManyHeader(
 func (msgs Messages) MenuManyHeader(count int) string {
 	return Catalog.Format(msgs.locale, "menuManyHeader", map[string]any{"count": count})
 }
+
+// ListDropToHandMany says "Drop to hand to an agent ({count})"
+// in the language the app shows.
+//
+// First line of the Agents tray while a stack of several of the user's rows
+// is dragged over it; the stack is handed over together. count is how many
+// rows are carried.
+func ListDropToHandMany(count int) string { return In(i18n.Locale()).ListDropToHandMany(count) }
+
+// ListDropToHandMany says "Drop to hand to an agent ({count})"
+// in the language of msgs.
+//
+// First line of the Agents tray while a stack of several of the user's rows
+// is dragged over it; the stack is handed over together. count is how many
+// rows are carried.
+func (msgs Messages) ListDropToHandMany(count int) string {
+	return Catalog.Format(msgs.locale, "listDropToHandMany", map[string]any{"count": count})
+}
+
+// HandOffCopy says "Copy for the agent"
+// in the language the app shows.
+//
+// Button of the hand-off toast. It puts a sentence on the clipboard to
+// paste into an agent so it picks up the handed tasks, such as: Do
+// adhd-todo task #12.
+func HandOffCopy() string { return In(i18n.Locale()).HandOffCopy() }
+
+// HandOffCopy says "Copy for the agent"
+// in the language of msgs.
+//
+// Button of the hand-off toast. It puts a sentence on the clipboard to
+// paste into an agent so it picks up the handed tasks, such as: Do
+// adhd-todo task #12.
+func (msgs Messages) HandOffCopy() string {
+	return Catalog.Format(msgs.locale, "handOffCopy", nil)
+}
+
+// HandOffCopied says "Copied"
+// in the language the app shows.
+//
+// What the Copy for the agent button of the hand-off toast reads for a
+// moment after it was clicked.
+func HandOffCopied() string { return In(i18n.Locale()).HandOffCopied() }
+
+// HandOffCopied says "Copied"
+// in the language of msgs.
+//
+// What the Copy for the agent button of the hand-off toast reads for a
+// moment after it was clicked.
+func (msgs Messages) HandOffCopied() string {
+	return Catalog.Format(msgs.locale, "handOffCopied", nil)
+}

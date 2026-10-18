@@ -208,7 +208,11 @@ func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, wid
 	over = over && !d.fromAgents
 	m.ho.setOver(over, m.app.Now())
 	if d, ok := ui.Drop[dragRow](zone); ok && !d.fromAgents {
-		m.handOff(c, d.id)
+		if d.n > 1 {
+			m.handOffMany(c, stackIDs(d.stack))
+		} else {
+			m.handOff(c, d.id)
+		}
 	}
 	zone.Children(func() {
 		tray := ui.Column(c.Key("tray")).Padding(0, theme.TrayPad-trayRing, trayPadBottom-trayRing).
@@ -220,7 +224,11 @@ func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, cm columnsModel, wid
 		tray.Children(func() {
 			m.columnHead(c, t, sideAgents, cm.active(sideAgents), t.Text.Alpha(0.06))
 			if over {
-				theme.Text(c, theme.Meta, t.Accent, m.say.ListDropToHand()).Margin(12, 0, 0, 2)
+				line := m.say.ListDropToHand()
+				if d.n > 1 {
+					line = m.say.ListDropToHandMany(d.n)
+				}
+				theme.Text(c, theme.Meta, t.Accent, line).Margin(12, 0, 0, 2)
 			}
 			if cm.agents.total == 0 {
 				m.agentsEmpty(c, t)

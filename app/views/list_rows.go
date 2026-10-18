@@ -13,6 +13,10 @@ import (
 type dragRow struct {
 	id         int
 	fromAgents bool
+	// n is how many rows go with it, and stack their ids (see stackKey): a row of several selected
+	// ones takes them all.
+	n     int
+	stack string
 }
 
 // rowSlot is how far a row's highlight bleeds past its column; the slot of a dragged row bleeds the
@@ -35,6 +39,7 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		row.AlignItems(ui.Center).Children(func() {
 			if dragging { // the copy that follows the pointer carries the sprite of the user
 				m.carrier(c, m.ho.walk(c, row, m.app.Now()))
+				m.stackBadge(c, t)
 			}
 			m.indentSlot(c, t, task.ID)
 			body(c, func() { m.titleLine(c, t, task, "", false) })
@@ -162,8 +167,17 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 	dragging := false
 	slot.Children(func() {
 		row := m.rowShell(c, t, task.ID, plainRow, ph)
-		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents})
+		stack := []int{task.ID}
+		if !fromAgents {
+			stack = m.stackOf(task)
+		}
+		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents, n: len(stack), stack: stackKey(stack)})
 		dragging = row.Dragging()
+		if dragging {
+			m.startedDrag(task.ID, stack)
+		} else if m.fadesInStack(task.ID) {
+			row.Opacity(stackFade)
+		}
 		m.liftRow(c, t, row, task.ID, dragging)
 		fill(row, dragging)
 		if m.rowClicked(row, task.ID) {
@@ -187,7 +201,14 @@ func (m *Main) liftRow(c *ui.Context, t *theme.Tokens, row ui.Element, id int, d
 		row.Rotate(2*tilt).Scale(1+0.025*tilt, 1+0.025*tilt)
 	}
 	if dragging { // the copy in flight is a card, not the width of a column
-		row.MaxWidth(dragCardWidth).Background(t.Bg).Border(1, t.TextTertiary).
+		row.MaxWidth(dragCardWidth).Radius(theme.RadiusCard).Border(1, t.TextTertiary).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
+		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
+			lifted := !c.Preferences().ReduceMotion
+			row.Background(ui.Transparent).Border(1, ui.Transparent).
+				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusCard, lifted) })
+		} else {
+			row.Background(t.Bg)
+		}
 	}
 }

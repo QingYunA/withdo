@@ -496,5 +496,8 @@
   "bulkCancel": "取消",
   "bulkMarkDone": "标为完成",
   "bulkDeleteMenu": "删除 {count} 件…",
-  "menuManyHeader": "{count} 件任务"
+  "menuManyHeader": "{count} 件任务",
+  "listDropToHandMany": "松开，交给 Agent（{count} 件）",
+  "handOffCopy": "复制给 Agent",
+  "handOffCopied": "已复制"
 }

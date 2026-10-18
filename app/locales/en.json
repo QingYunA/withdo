@@ -3071,5 +3071,23 @@
         "example": "3"
       }
     }
+  },
+  "listDropToHandMany": "Drop to hand to an agent ({count})",
+  "@listDropToHandMany": {
+    "description": "First line of the Agents tray while a stack of several of the user's rows is dragged over it; the stack is handed over together. count is how many rows are carried.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "handOffCopy": "Copy for the agent",
+  "@handOffCopy": {
+    "description": "Button of the hand-off toast. It puts a sentence on the clipboard to paste into an agent so it picks up the handed tasks, such as: Do adhd-todo task #12."
+  },
+  "handOffCopied": "Copied",
+  "@handOffCopied": {
+    "description": "What the Copy for the agent button of the hand-off toast reads for a moment after it was clicked."
   }
 }

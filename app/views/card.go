@@ -27,8 +27,17 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		} else {
 			card.Padding(12).Gap(4)
 		}
-		card.Drag(dragCard{id: task.ID})
+		stack := []int{task.ID}
+		if m.multi.has(task.ID) && m.multi.count() >= 2 {
+			stack = m.selectedRows()
+		}
+		card.Drag(dragCard{id: task.ID, stack: stackKey(stack)})
 		dragging = card.Dragging()
+		if dragging {
+			m.startedDrag(task.ID, stack)
+		} else if m.fadesInStack(task.ID) {
+			card.Opacity(stackFade)
+		}
 		if m.sel == task.ID {
 			m.selRect = card.Bounds()
 		}
@@ -42,6 +51,9 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 			m.cardMeta(c, t, task, m.showsActions(card, task.ID, ph), ph)
 		}
 		card.Children(func() {
+			if dragging {
+				m.stackBadge(c, t)
+			}
 			if !banded {
 				inside()
 				return
@@ -95,6 +107,11 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	if dragging {
 		// The copy that follows the pointer ignores this opacity; the original leaves an empty slot.
 		card.Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
+		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
+			lifted := !c.Preferences().ReduceMotion
+			card.Background(ui.Transparent).Border(1, ui.Transparent).
+				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusTile, lifted) })
+		}
 	}
 }
 
