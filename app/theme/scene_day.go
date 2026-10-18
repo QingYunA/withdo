@@ -30,8 +30,8 @@ type DayScene struct {
 
 const (
 	heapCap     = 7   // goods drawn in the bin's mouth; the rest are only counted
-	maxActors   = 4   // people who stand in the scene: two left of the bin, two right
-	offEdge     = 8   // cells past the right edge a fifth actor's goods come from
+	maxActors   = 6   // people who stand in the scene: three left of the bin, three right
+	offEdge     = 8   // cells past the right edge a seventh actor's goods come from
 	throwStart  = 700 // ms before the first throw
 	throwGap    = 480 // ms between two throws
 	throwBudget = 5760
@@ -53,9 +53,21 @@ const (
 	flies       = 7
 )
 
-// actorSlots are the left cells of the people who stand in the scene, in the order they come: you
-// and the next agent left of the bin, then two right of it.
-var actorSlots = [maxActors]int{26, 66, 198, 160}
+// actorSlots are the left cells of the people who stand in the scene, in the order they come: with
+// four or fewer, you and the next agent left of the bin, then two right of it; with five or more,
+// three on each side, 28 cells apart, outermost first.
+var (
+	actorSlots4 = []int{26, 66, 198, 160}
+	actorSlots6 = []int{24, 52, 216, 188, 80, 160}
+)
+
+// slotsFor are the places the people stand when there are n of them.
+func slotsFor(n int) []int {
+	if n <= len(actorSlots4) {
+		return actorSlots4
+	}
+	return actorSlots6
+}
 
 // heapSlots are the top left cells of the goods in the bin's mouth, the first layer of two, then a
 // layer of two, then one each, going up to a point.
@@ -83,12 +95,13 @@ type DayPlan struct {
 // NewDayPlan plans a day.
 func NewDayPlan(s DayScene) *DayPlan {
 	p := &DayPlan{scene: s, x: make([]int, len(s.Actors)), flip: make([]bool, len(s.Actors)), throwsOf: make([][]int, len(s.Actors))}
+	slots := slotsFor(len(s.Actors))
 	for i, a := range s.Actors {
 		p.x[i] = SceneW + offEdge
 		if i < maxActors {
-			p.x[i] = actorSlots[i]
+			p.x[i] = slots[i]
 		}
-		p.flip[i] = p.x[i] > binX && !a.facesLeft()
+		p.flip[i] = p.x[i] > binX && !a.neverTurned()
 	}
 	n := len(s.Throws)
 	gap := throwGap
@@ -133,7 +146,7 @@ func (p *DayPlan) plan(th DayThrow, start, i int) flight {
 }
 
 // handsOf is where a good leaves an actor, in cells from its top left: held up, or shot from Codex's
-// `>_`. The robot holds it higher, over its antenna.
+// `>_`. The robot holds it higher, over its antenna, and Cursor over the corner of its cube.
 func handsOf(a Actor) (x, y int) {
 	switch a.Folder {
 	case "codex":
@@ -142,6 +155,8 @@ func handsOf(a Actor) (x, y int) {
 		return 20, 4
 	case ActorBot:
 		return 12, -4
+	case "cursor":
+		return 12, -2
 	}
 	return 12, 2
 }
@@ -412,7 +427,7 @@ func (p *DayPlan) HitAt(t time.Duration, cx, cy int) (Hit, bool) {
 	return Hit{}, false
 }
 
-// ActorX is the left cell an actor stands on; an actor past the fourth is off the right edge.
+// ActorX is the left cell an actor stands on; an actor past the sixth is off the right edge.
 func (p *DayPlan) ActorX(i int) int { return p.x[i] }
 
 // Landed is how many goods are in the bin at t, drawn or not.
