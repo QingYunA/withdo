@@ -16,5 +16,6 @@ jobs:
         with:
           go-version-file: go.mod
       # mygo loads pango at run time to shape text; without it the first test of a process fails.
-      - run: sudo apt-get update && sudo apt-get install -y libpangocairo-1.0-0
+      # The Chinese tests measure Han glyphs, so they need a CJK font like the Mac's PingFang.
+      - run: sudo apt-get update && sudo apt-get install -y libpangocairo-1.0-0 fonts-noto-cjk
       - run: scripts/check.sh full
