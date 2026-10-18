@@ -139,7 +139,7 @@ func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 	if got := countText(r.tt, "Install MCP"); got != 4 {
 		t.Errorf("%d Install MCP buttons, want 4 (Gemini CLI, Cursor, opencode, Copilot)", got)
 	}
-	if got := countText(r.tt, "Get it ↗"); got != 8 {
+	if got := countText(r.tt, "Get it"); got != 8 {
 		t.Errorf("%d Get it links, want 8 (the whole of More)", got)
 	}
 }
@@ -177,7 +177,7 @@ func TestAnAgentThatOnlyReportedStaysOnThisMac(t *testing.T) {
 	if got := countText(r.tt, "7"); got != 2 {
 		t.Errorf("%d counts read seven, want 7 on this Mac and 7 in More", got)
 	}
-	if got := countText(r.tt, "Get it ↗"); got != 7 {
+	if got := countText(r.tt, "Get it"); got != 7 {
 		t.Errorf("%d Get it links, want 7", got)
 	}
 }
@@ -186,7 +186,7 @@ func TestAnEmptyMacShowsTheEmptyRowAndAllAgentsUnderMore(t *testing.T) {
 	r := emptyMacRig(t)
 	has(t, r.tt, "On this Mac", "No agent found on this Mac yet", "See how to connect", "More", "14")
 	hasNot(t, r.tt, "Install MCP")
-	if got := countText(r.tt, "Get it ↗"); got != 14 {
+	if got := countText(r.tt, "Get it"); got != 14 {
 		t.Errorf("%d Get it links, want 14", got)
 	}
 	mustNil(t, r.tt.Click("See how to connect"))
@@ -201,7 +201,7 @@ func TestAnEmptyMacSaysSoInChinese(t *testing.T) {
 	inChinese(r.tt)
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "本机已有", "还没在这台 Mac 上找到 Agent", "去看看怎么接", "更多", "14", "去下载 ↗")
+	has(t, r.tt, "本机已有", "还没在这台 Mac 上找到 Agent", "去看看怎么接", "更多", "14", "去下载")
 }
 
 func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
@@ -371,7 +371,7 @@ func TestAgentsPaneWithoutAnEnvFindsNothingAndDoesNotPanic(t *testing.T) {
 	r.app.Store = data.NewEmptyFake(fixedNow)
 	r.app.Refresh()
 	r.pane(t, "Agents")
-	has(t, r.tt, "No agent found on this Mac yet", "See how to connect", "Claude Code", "Get it ↗")
+	has(t, r.tt, "No agent found on this Mac yet", "See how to connect", "Claude Code", "Get it")
 	hasNot(t, r.tt, "Install MCP")
 }
 
@@ -384,7 +384,7 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "编程 Agent", "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载 ↗",
+	has(t, r.tt, "编程 Agent", "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载",
 		"也可以在终端里运行一次，给 Claude Code 安装")
 	hasNot(t, r.tt, "这台 Mac 上没有")
 	hasFold(t, r.tt, "本机已有")
@@ -395,7 +395,7 @@ func TestAgentsPaneDrawsInBothAppearances(t *testing.T) {
 	for _, dark := range []bool{false, true} {
 		r.tt.SetDark(dark)
 		r.tt.Frame()
-		has(t, r.tt, "Claude Code", "DeepSeek Harness", "MCP installed", "Install MCP", "Get it ↗")
+		has(t, r.tt, "Claude Code", "DeepSeek Harness", "MCP installed", "Install MCP", "Get it")
 	}
 }
 

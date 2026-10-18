@@ -37,7 +37,7 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 			}
 		})
 		settingsRow(c, t, "about", s.say.SettingsAboutName(s.app.Config.Version), s.say.SettingsAboutLicense(), false, func() {
-			if settingsLink(c, t, "github", s.say.SettingsAboutLink(), s.say.SettingsAboutLink()).Clicked() {
+			if settingsOutLink(c, t, "github", s.say.SettingsAboutLink(), s.say.A11yAboutGitHub()).Clicked() {
 				s.app.Act.OpenURL(repoURL)
 			}
 		})
@@ -57,7 +57,7 @@ func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
 		ui.Row(c.Key("notify-controls")).Shrink(0).Gap(12).AlignItems(ui.Center).Children(func() {
 			if denied {
 				link := s.say.SettingsNotifyOpenSettings()
-				if settingsLink(c, t, "notify-open-settings", link, link).Clicked() {
+				if settingsOutLink(c, t, "notify-open-settings", link, link).Clicked() {
 					s.app.Act.OpenURL(settingsURLNotifications)
 				}
 			}

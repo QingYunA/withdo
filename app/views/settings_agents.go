@@ -171,7 +171,7 @@ func (s *Settings) moreRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent) {
 	ui.Row(c.Key("more-" + a.ID)).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.HarnessMark(c, a.ID, agentMarkSizeMore).Shrink(0)
 		theme.Text(c, theme.Meta, t.Text, a.Name).Grow(1).MinWidth(0).Ellipsis("…")
-		if settingsLink(c, t, "get-"+a.ID, s.say.SettingsAgentGet(), s.say.A11yGetAgent(a.Name)).Clicked() {
+		if settingsOutLink(c, t, "get-"+a.ID, s.say.SettingsAgentGet(), s.say.A11yGetAgent(a.Name)).Clicked() {
 			s.app.Act.OpenURL(a.URL)
 		}
 	})

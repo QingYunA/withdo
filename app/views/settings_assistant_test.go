@@ -181,9 +181,9 @@ func TestAPickedTileShowsKeyModelAndLinkToGetAKey(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
 	mustNil(t, r.tt.Click("Kimi"))
-	has(t, r.tt, "API key", "Paste your Kimi key", "Get a key ↗", "Model", "kimi-k2-0905-preview", "Save and test")
+	has(t, r.tt, "API key", "Paste your Kimi key", "Get a key", "Model", "kimi-k2-0905-preview", "Save and test")
 	hasNot(t, r.tt, "Base URL", "Protocol")
-	mustNil(t, r.tt.Click("Get a key ↗"))
+	mustNil(t, r.tt.Click("Get a key"))
 	if !slices.Equal(r.rec.urls, []string{"https://platform.moonshot.cn/console/api-keys"}) {
 		t.Errorf("opened %v", r.rec.urls)
 	}
@@ -197,7 +197,7 @@ func TestMagpieAndOllamaHaveNoKeyField(t *testing.T) {
 	for _, name := range []string{"Magpie", "Ollama"} {
 		mustNil(t, r.tt.Click(name))
 		has(t, r.tt, "Model", "Save and test")
-		hasNot(t, r.tt, "API key", "Get a key ↗")
+		hasNot(t, r.tt, "API key", "Get a key")
 	}
 }
 

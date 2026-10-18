@@ -1404,7 +1404,7 @@
   "@settingsNotifyDenied": {
     "description": "Quiet line, in the warning color, when macOS refused the last notification."
   },
-  "settingsNotifyOpenSettings": "Open System Settings ↗",
+  "settingsNotifyOpenSettings": "Open System Settings",
   "@settingsNotifyOpenSettings": {
     "description": "Link that opens the notification settings of macOS."
   },
@@ -1742,7 +1742,11 @@
   "@settingsAboutLicense": {
     "description": "Second line of the About row of Settings > General."
   },
-  "settingsAboutLink": "GitHub ↗",
+  "a11yAboutGitHub": "adhd-todo on GitHub",
+  "@a11yAboutGitHub": {
+    "description": "Accessibility label of the GitHub link in Settings > General > About"
+  },
+  "settingsAboutLink": "GitHub",
   "@settingsAboutLink": {
     "description": "Link of the About row of Settings > General that opens the project on GitHub."
   },
@@ -1836,7 +1840,7 @@
   "@windowTitle": {
     "description": "Title of the main window."
   },
-  "manageOpenRepo": "Open {repo} on GitHub ↗",
+  "manageOpenRepo": "Open {repo} on GitHub",
   "@manageOpenRepo": {
     "description": "First item of a project context menu in the sidebar, shown only when the project has a repository: opens it in the browser.",
     "placeholders": {
@@ -1910,7 +1914,7 @@
   "@settingsDone": {
     "description": "Link that closes the grid of providers and goes back to the provider in use."
   },
-  "settingsGetKey": "Get a key ↗",
+  "settingsGetKey": "Get a key",
   "@settingsGetKey": {
     "description": "Link that opens the page where the provider hands out API keys."
   },
@@ -2006,7 +2010,7 @@
   "@settingsAgentInstalled": {
     "description": "At the right of an agent that already has adhd-todo's MCP server. A check mark comes before it."
   },
-  "settingsAgentGet": "Get it ↗",
+  "settingsAgentGet": "Get it",
   "@settingsAgentGet": {
     "description": "Link to the website of an agent that is not on this Mac."
   },
