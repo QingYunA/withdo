@@ -358,7 +358,9 @@ a row anywhere (see **Subtasks**).
    - an agent task in review: with a PR `PR #12 is ready for your review`, buttons **Open PR** and
      **Accept** / `收下`; without one `Claude Code finished and is waiting for you` (`做完了，等你试用`),
      buttons **Review** / `去看看` (goes to where the agent is, as Answer) and **Accept**. Accept sets
-     the task to done and the row leaves as in **Accepting** below;
+     the task to done and the row leaves as in **Accepting** below. When the latest report carries
+     links (see **Links from agents**), **Open page** / `打开页面` comes first and opens its first link:
+     **Open page**, **Open PR**, **Accept** with a pull request, **Open page**, **Accept** without;
    - an agent task with no report for `stale_hours`: `No update for 3d`, button **Open** (the inspector);
    - an agent task whose reminder is due: `You asked to be reminded at 4:00 PM`, button **Done**;
    - a pull request closed without merging: `PR #12 was closed without merging`, buttons **Cancel
@@ -857,6 +859,32 @@ v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user ca
 - **Screens.** `inspector-images`, `inspector-images-none`, `inspector-images-hover`, `mine-pictures`,
   `project-list-pictures`, `project-board-pictures`, `viewer`.
 - **Not yet.** An agent attaching a screenshot through the MCP; images in an export.
+
+### Links from agents
+
+v19 (`docs/design/mockups/v19.html`, #76). An agent can attach pages to a report: an HTML report it
+wrote, a design draft, a document. The app shows them as links and opens them in the default
+browser; it never renders, downloads or caches them.
+
+- **MCP.** `report_progress` takes `links`: up to 5 of `{url, title}`, `title` optional (80
+  characters at most). Only `https://`, `http://` and `file://` with an absolute path are kept. A
+  bad link never fails the report: the report is filed, the bad link is dropped, and the result
+  lists it under `dropped_links` with the reason. `get_task` returns each report's links. The
+  server instructions add one sentence: when you made something that can be opened (a report page,
+  a design draft), attach it with `links`.
+- **Stored on the report** (migration 011, `reports.links`, a JSON array), not on the task: the
+  timeline says which step made it.
+- **Inspector, Activity.** Under a report's text, one chip per link, wrapping: the 12 pt pixel file
+  icon in accent and the title (`meta`, ellipsized), on `bg.subtle`, 26 pt tall, 7 pt radius.
+  Without a title: the file name for `file://`, the host and last path segment for `https://`
+  (`github.com › pull/19`). Hover: an accent wash, the text in accent, and a tip with the full
+  address (`~/…` for a file in the home folder). A `file://` link whose file is gone (checked when
+  drawn) is drawn in `text.tertiary`; clicking it shows the tip `File not found` /
+  `找不到这个文件` and nothing else.
+- **From your agents** and the Agents rows and board cards that act like them: **Open page** as
+  above, only for a task in review (a blocked task waits for an answer, not a look). Tight rows
+  move the buttons as for two.
+- **Summary export**: a task line ends with `[title](url)` for each link of its reports.
 
 ### Task menu
 
