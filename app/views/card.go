@@ -52,9 +52,8 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if card.RightClicked() {
 			m.openMenuAtPointer(card, task.ID)
 		}
-		if card.Clicked() {
-			m.openID = task.ID
-			m.inspector.reset()
+		if m.rowClicked(card, task.ID) {
+			m.openRow(task.ID)
 		}
 	})
 	if dragging {
@@ -73,6 +72,12 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	switch {
 	case dragging:
 		border = t.TextTertiary
+	case m.multi.has(task.ID):
+		bg, border = t.Bg.Mix(t.Accent, 0.12), t.Accent.Alpha(0.6)
+		if m.sel == task.ID { // the keyboard card has the ring
+			border = t.Accent.Alpha(0.9)
+		}
+		card.Checked(true)
 	case m.openID == task.ID || m.sel == task.ID || (m.pop.open && m.pop.task == task.ID):
 		bg, border = t.Bg.Mix(t.Accent, 0.07), t.Accent.Alpha(0.6)
 	case card.Hovered():

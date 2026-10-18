@@ -139,7 +139,7 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 			plainText(c, t, o.when)
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, task.ID) {
 		m.openRow(task.ID)
 	}
 }

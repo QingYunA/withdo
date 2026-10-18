@@ -33,11 +33,15 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, ph 
 func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
 	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(rowGap).
 		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
+	picked := m.multi.has(id)
 	switch {
-	case m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):
+	case picked || m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):
 		row.Background(t.BgSelected)
 	case row.Hovered():
 		row.Background(t.BgHover)
+	}
+	if picked {
+		m.pickedRow(t, row, id)
 	}
 	if m.sel == id {
 		m.selRect = row.Bounds()
@@ -55,9 +59,49 @@ func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, o
 	return row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 }
 
+// pickedRow gives a row of the selection its look: rows next to each other in it join into one block,
+// with no rounded corners between them, the keyboard row has a ring, and assistive technology reads
+// it as selected.
+func (m *Main) pickedRow(t *theme.Tokens, row ui.Element, id int) {
+	r := row.Bounds()
+	m.rects[id] = r
+	above, below := m.joinedNeighbours(id, r)
+	top, bottom := theme.RadiusCard, theme.RadiusCard
+	if above {
+		top = 0
+	}
+	if below {
+		bottom = 0
+	}
+	row.Radius(top, top, bottom, bottom).Checked(true)
+	if m.sel == id {
+		row.DrawOver(func(p *ui.Painter, box ui.Rect) {
+			p.Stroke(box, t.Accent.Alpha(0.55), theme.RadiusCard, 1.5)
+		})
+	}
+}
+
+// joinedNeighbours says whether a selected row sits right above and right below this one, by where
+// the rows were drawn the frame before.
+func (m *Main) joinedNeighbours(id int, r ui.Rect) (above, below bool) {
+	for other, o := range m.prevRects {
+		if other == id || !m.multi.has(other) || o.X+o.W <= r.X || o.X >= r.X+r.W {
+			continue
+		}
+		if gap := r.Y - (o.Y + o.H); gap > -1.5 && gap < 1.5 {
+			above = true
+		}
+		if gap := o.Y - (r.Y + r.H); gap > -1.5 && gap < 1.5 {
+			below = true
+		}
+	}
+	return above, below
+}
+
 // openRow opens a row's task in the inspector and highlights it.
 func (m *Main) openRow(id int) {
 	m.openID, m.sel = id, id
+	m.multi = multiSel{anchor: id}
 	m.openFail = openFailure{}
 	m.inspector.reset()
 }

@@ -150,7 +150,7 @@ func (m *Main) doneRow(c *ui.Context, t *theme.Tokens, s side, task data.Task) {
 			plainText(c, t, m.clock.Day(doneAt(task), m.app.Now()))
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, task.ID) {
 		m.openRow(task.ID)
 	}
 }
@@ -166,7 +166,7 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 		dragging = row.Dragging()
 		m.liftRow(c, t, row, task.ID, dragging)
 		fill(row, dragging)
-		if row.Clicked() {
+		if m.rowClicked(row, task.ID) {
 			m.openRow(task.ID)
 		}
 	})

@@ -133,7 +133,7 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 			}
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, it.ID) {
 		m.openRow(it.ID)
 	}
 }
@@ -227,7 +227,7 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 					}
 				})
 			})
-			if row.Clicked() {
+			if m.rowClicked(row, it.ID) {
 				m.openRow(it.ID)
 			}
 		}

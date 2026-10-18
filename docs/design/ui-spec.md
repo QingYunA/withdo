@@ -195,6 +195,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
+| `IconBox` | `checkbox` | | |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |

@@ -69,7 +69,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 			m.ageLabel(c, t, r.Item)
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, r.ID) {
 		m.openRow(r.ID)
 	}
 	if len(r.Subs) == 0 {
@@ -117,7 +117,7 @@ func (m *Main) subtaskRow(c *ui.Context, t *theme.Tokens, s data.Item) {
 			}
 		})
 	})
-	if row.Clicked() {
+	if m.rowClicked(row, s.ID) {
 		m.openRow(s.ID)
 	}
 }
