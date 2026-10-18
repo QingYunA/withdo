@@ -384,7 +384,8 @@ func TestActivateChecksOnlyWhenTheLastCheckIsOlderThanAMinute(t *testing.T) {
 	w := newWorld(t)
 	w.poller.Start()
 	defer w.poller.Stop()
-	waitFor(t, func() bool { return w.runner.callsTo("auth status") == 1 }, "the launch poll")
+	// Wait for the launch poll to end: it stamps CheckedAt when it ends, and the clock moves next.
+	waitFor(t, func() bool { return !w.poller.Status().CheckedAt.IsZero() }, "the launch poll")
 
 	w.advance(30 * time.Second)
 	w.poller.Activate()
