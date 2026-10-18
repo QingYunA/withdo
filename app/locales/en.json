@@ -2858,6 +2858,18 @@
   "@settingsEndOfDayTime": {
     "description": "Label of the pop-up that sets when the end-of-day reminder comes."
   },
+  "settingsSoundEffects": "Sound effects",
+  "@settingsSoundEffects": {
+    "description": "Label of the switch for the Summary scene's sounds in Settings > General."
+  },
+  "settingsSoundEffectsMeta": "Quiet sounds while the day is shipped in Summary",
+  "@settingsSoundEffectsMeta": {
+    "description": "Quiet line under the sound effects switch."
+  },
+  "settingsSoundEffectsSwitch": "Play sound effects",
+  "@settingsSoundEffectsSwitch": {
+    "description": "Accessibility label of the sound effects switch."
+  },
   "notifyDayDoneTitle": "Day's done",
   "@notifyDayDoneTitle": {
     "description": "Title of the end-of-day notification."

@@ -52,6 +52,20 @@ func (a *App) SetNotifications(on bool) {
 	a.savePrefs(func(p *data.Prefs) { p.NotificationsOff = !on })
 }
 
+// SoundEffects says whether the Summary scene makes sounds (Settings > General), which it does until
+// the user switches them off. The cues ask from timer goroutines.
+func (a *App) SoundEffects() bool {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return !a.prefs.SoundOff
+}
+
+// SetSoundEffects switches the Summary scene's sounds, and keeps the choice.
+func (a *App) SetSoundEffects(on bool) {
+	a.savePrefs(func(p *data.Prefs) { p.SoundOff = !on })
+}
+
 // EndOfDayOn says whether the end-of-day reminder is on (Settings > General > Notifications), which
 // it is until the user switches it off. The reminder asks from its own goroutine.
 func (a *App) EndOfDayOn() bool {

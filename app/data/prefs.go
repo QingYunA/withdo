@@ -19,6 +19,8 @@ type Prefs struct {
 	// NotificationsOff is set when the user switched the system notifications off; they are on by
 	// default, so a file without it, or none, means on.
 	NotificationsOff bool `json:"notificationsOff,omitempty"`
+	// SoundOff is set when the user switched the Summary scene's sounds off; they are on by default.
+	SoundOff bool `json:"soundOff,omitempty"`
 	// EndOfDayOff is set when the user switched the end-of-day reminder off; it is on by default.
 	EndOfDayOff bool `json:"endOfDayOff,omitempty"`
 	// EndOfDayAt is the time of the reminder as "15:04"; empty means DefaultEndOfDay.

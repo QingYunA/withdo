@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/egoist/mygo"
@@ -40,6 +41,7 @@ func main() {
 	app.Prefs = be.prefs
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
+	app.Sound, app.SystemSounds, app.WindowKey = theme.LoadVoices(), uiSoundsOn, s.windowKey
 	s.notifier = s.newNotifier()
 
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })

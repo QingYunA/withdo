@@ -84,6 +84,8 @@ func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 	r.app.Config.DataFolder = "/Users/mac/Library/Application Support/adhd-todo"
 	r.app.Config.Home = "/Users/mac"
 	r.tt.Frame()
+	r.tt.Scroll(340, 300, 0, 3000) // the data folder is below the notifications and sound groups
+	r.tt.Frame()
 	has(t, r.tt, "~/Library/Application Support/adhd-todo")
 	hasNot(t, r.tt, "/Users/mac/Library/Application Support/adhd-todo")
 	if err := r.tt.Click("Show in Finder"); err != nil {
@@ -99,18 +101,19 @@ func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 
 func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "Language", "System", "No archived projects. Archive one from its menu in the sidebar.",
+	has(t, r.tt, "Language", "System")
+	hasNot(t, r.tt, "Install MCP")
+	r.tt.Scroll(340, 300, 0, 3000) // the notifications and sound groups made the pane taller than the window
+	r.tt.Frame()
+	has(t, r.tt, "No archived projects. Archive one from its menu in the sidebar.",
 		"Data folder", r.app.Config.DataFolder, "Show in Finder", "adhd-todo 0.2.0", "Open source, MIT license", "GitHub")
 	hasFold(t, r.tt, "Archived projects")
-	hasNot(t, r.tt, "Install MCP")
 	if err := r.tt.Click("Show in Finder"); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(r.rec.folders, []string{r.app.Config.DataFolder}) {
 		t.Errorf("revealed %v", r.rec.folders)
 	}
-	r.tt.Scroll(340, 300, 0, 3000) // the notifications group made the pane taller than the window
-	r.tt.Frame()
 	if err := r.tt.Click("adhd-todo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
@@ -149,6 +152,8 @@ func TestArchivedProjectsListWithRestore(t *testing.T) {
 	if err := r.app.ArchiveProject(3); err != nil {
 		t.Fatal(err)
 	}
+	r.tt.Frame()
+	r.tt.Scroll(340, 300, 0, 3000) // the archived projects are below the notifications and sound groups
 	r.tt.Frame()
 	name := r.app.snap.archived[0].Name
 	has(t, r.tt, name, "Restore")

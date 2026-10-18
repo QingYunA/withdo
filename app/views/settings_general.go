@@ -28,6 +28,7 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 		s.notificationsRow(c, t)
 		s.endOfDayRows(c, t)
 	})
+	group(c, t, "sound", func() { s.soundRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
@@ -87,6 +88,17 @@ func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
 			}
 		})
 	}, func() { ui.Box(c).Width(14).Shrink(0) }) // indented under the switch
+}
+
+// soundRow is the switch for the quiet sounds of the Summary scene.
+func (s *Settings) soundRow(c *ui.Context, t *theme.Tokens) {
+	on := s.app.SoundEffects()
+	settingsRow(c, t, "sound", s.say.SettingsSoundEffects(), s.say.SettingsSoundEffectsMeta(), true, func() {
+		ui.Switch(c.Key("sound-switch"), &on).Label(s.say.SettingsSoundEffectsSwitch())
+	})
+	if on != s.app.SoundEffects() {
+		s.app.SetSoundEffects(on)
+	}
 }
 
 // dimmed is the opacity of a control that is out of reach.
