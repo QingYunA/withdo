@@ -265,7 +265,8 @@ else changes.
 - `app/theme/sprites/README.md` lists every file, its size and where it is drawn.
 - Not files: the status glyphs, the busy indicator and the Accept stamp (shapes and frames that
   carry meaning, in Go); interface icons (pixelarticons SVGs); provider marks (sampled from the
-  official SVGs).
+  official SVGs); harness marks (the official marks of Settings > Agents, generated into
+  `app/theme/harness_marks.go`, see **Pixel language**).
 
 ## Surfaces
 
@@ -1150,7 +1151,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   Claude Code crab; Magpie is the pixel robot in teal; Custom is the pixel plus in `text.secondary`.
   Sizes, whole pixels only: `LogoCard` 36, `LogoTile` 36, `LogoRow` 18, `LogoChip` 18 (the composer's
   model chip and its menu). The provider logo is never a colored tile with letters any more.
-- **Agents** (M6, v14, `docs/design/mockups/v14.html`): the label **Agents on this Mac**, one plain
+- **Agents** (M6, v14, `docs/design/mockups/v14.html`): the label **Coding agents** (`编程 Agent`), one plain
   `meta` line under it (the M6 wording: what Install MCP does and does not do), then two sections,
   both on the first screen of the 680 x 520 window, before the pane scrolls:
   - **On this Mac** with its count (`On this Mac 6`, `本机已有 6`; the number is quiet, in
@@ -1200,9 +1201,11 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
     and it is detected by `~/.dsh` alone (the design's `dsh` is not on PATH). Install appends one
     entry to `~/.dsh/cordis.patch.yml`, the home patch layer every profile reads after its own:
     `- insert:` with `@deepseek-ai/dsh-mcp-client`, `serverName: adhd-todo`, `transport: stdio`,
-    `command: <core>`, `args: [mcp]`, `failOnStartupError: true` (the plugin's documented minimal
-    stdio configuration). A patch file that is not a patch list adhd-todo can append to (a mapping
-    or a flow sequence, for example) is not rewritten: the pane falls back to the manual snippet, as
+    `command: <core>`, `args: [mcp]`, `failOnStartupError: false` (the plugin's documented minimal
+    stdio configuration, with one change: true would make the plugin refuse to activate when
+    adhd-core fails to start, and false degrades to no tools, so adhd-todo can never stop DeepSeek
+    Harness from starting). A patch file that is not a patch list adhd-todo can append to (a mapping,
+    a flow sequence or a list indented from column 0, for example) is not rewritten: the pane falls back to the manual snippet, as
     for a JSON file it cannot safely edit. Installed is read from the home layer and every
     profile's `cordis.patch.yml`.
   - **Amp, Kiro and Cline** join the catalog in v14. Amp is found by its command and installed with
@@ -1222,7 +1225,8 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   Code); any other name gets a robot colored by the name. These are the avatars of the rest of the
   app: the rows of Settings > Agents draw the harnesses' official marks instead, at 24 and 18 pt
   (see **Pixel language**). The agents added in v14 (DeepSeek Harness, Amp, Kiro) have no 12 x 12
-  sprite yet, so elsewhere they get the robot colored by the name; `agentName` maps a report to
+  avatar yet; when it is drawn it is a file `app/theme/sprites/avatars/<name>.png` (see **Sprites are
+  files**), and until then elsewhere they get the robot colored by the name; `agentName` maps a report to
   their catalog name so it still lands in the right Settings row.
 - **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
