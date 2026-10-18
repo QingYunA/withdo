@@ -3,6 +3,7 @@ package mcpserver_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"sort"
@@ -124,7 +125,7 @@ func TestInitializeAdvertisesNameAndInstructions(t *testing.T) {
 		t.Errorf("server name = %q", init.ServerInfo.Name)
 	}
 	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd",
-		"after each step", "in the language the user writes to you in"} {
+		"after each step", "in the language the user writes to you in", "no branch"} {
 		if !strings.Contains(init.Instructions, w) {
 			t.Errorf("instructions lack %q", w)
 		}
@@ -192,6 +193,29 @@ func TestReportProgressStoresOnlyTheCwdTheAgentPassed(t *testing.T) {
 	}
 	if got := reports[1].(map[string]any)["cwd"]; got != r.dir {
 		t.Errorf("report with cwd stored %v, want %v", got, r.dir)
+	}
+}
+
+func TestReportProgressWithoutABranchTellsTheAgentToPassTaskID(t *testing.T) {
+	r := newRig(t)
+	outside := t.TempDir() // exists, but is no repo: no branch to match on
+	a := r.ok("report_progress", map[string]any{"summary": "first", "cwd": outside})
+	id := int(a.Data["task_id"].(float64))
+	want := fmt.Sprintf("No branch here: pass task_id %d on your next reports.", id)
+	if !strings.HasSuffix(a.Text, want) {
+		t.Errorf("created without a branch: %q lacks the hint %q", a.Text, want)
+	}
+
+	b := r.ok("report_progress", map[string]any{"summary": "second", "cwd": outside, "task_id": id})
+	if b.Data["created"] != false || strings.Contains(b.Text, "No branch here") {
+		t.Errorf("update by task_id: %q / %+v", b.Text, b.Data)
+	}
+
+	// A task that has a branch needs no hint, and neither does one found again by it.
+	c := r.ok("report_progress", map[string]any{"summary": "on a branch"})
+	d := r.ok("report_progress", map[string]any{"summary": "on a branch again"})
+	if strings.Contains(c.Text, "No branch here") || strings.Contains(d.Text, "No branch here") {
+		t.Errorf("branch task got the hint: %q / %q", c.Text, d.Text)
 	}
 }
 
