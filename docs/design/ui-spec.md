@@ -116,6 +116,11 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
 - **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
   opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
   the layout are not.
+- **Category icons are 12 x 12 one-bit bitmaps** (M9, v24): kept in the database as 144 characters
+  (`.` and `#`), drawn as one path of 2-unit squares in the category's color (`theme.CategoryIcon`),
+  only at 12, 18 and 36 pt. The library icons of the picker are pixelarticons reduced to that grid
+  (`scripts/category-icons.sh`); an icon that does not reduce cleanly carries a hand-drawn grid.
+  The color swatches are 12 x 12 pixel circles drawn at 18 pt. See **Categories (M9)**.
 - **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
   solid edge, a hard 4 pt shadow with no blur.
 - **Provider marks use an 18 x 18 grid** (v11): their official shapes do not
@@ -180,8 +185,9 @@ Reference: `docs/design/mockups/v4.html` (frames 2 to 4) and `v6.html` (M6b, one
 The avatars and empty-state art are sprites, PNG files under `app/theme/sprites/avatars/` (12 x 12
 pixels each, drawn as rectangles, so they stay sharp at any size; see **Sprites are files**).
 
-**Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
-2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
+**Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox whose strokes
+are mostly 2 units wide, so most sit on a 12 x 12 pixel grid; some use 1-unit coordinates and do not,
+which is why the category picker reduces them, see **Categories (M9)**), vendored under `app/theme/pixel-icons/` with their
 LICENSE and a README line, embedded with `go:embed` and tinted with the color of the surrounding
 text (`fill="currentColor"`, no strokes). Provider logos are pixel marks too (see **Pixel language**). Icons
 are drawn only at whole multiples of the pixel grid: `theme.IconSmall` 12 pt (meta lines, chevrons,
@@ -195,7 +201,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | `IconWork` / `IconLife` | `briefcase` / `home` |
+| `IconBox` | `checkbox` | `IconWork` / `IconLife` | `briefcase` / `home` (the sidebar draws the bitmaps of the categories instead, in color; these two stay for tests) |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -236,7 +242,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
   a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, holding the
-  category's icon in `text.secondary` (Work `IconWork`, Life `IconLife`), the agent's avatar
+  category's 12 x 12 icon in the category's own color, the agent's avatar
   (`theme.AvatarSmall`), or nothing (Unsorted), then its label, so the sub-rows' labels line up
   with each other;
   Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
@@ -305,8 +311,9 @@ it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A
 task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
 (the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
 
-**Sub-rows.** Under `Mine`: `Work` / `工作` and `Life` / `生活`, always, and `Unsorted` / `未分类`
-only while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
+**Sub-rows.** Under `Mine`: every category by its position, empty ones too (Work / `工作` and Life /
+`生活` first until the user moves them, then the user's own), and `Unsorted` / `未分类` last, only
+while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
 or finished today, named as the Agents screen names it (`claude-code` and `Claude Code` are one
 `Claude Code` row), in the order of that screen; an agent with no name is `Agent`. A sub-row is a
 normal 32 pt sidebar row (selection, hover) whose content is indented 28 pt (an icon and the gap),
@@ -317,13 +324,16 @@ on `Mine` alone. A click opens the parent's screen showing only that slice: the 
 built from the tasks of the slice, so their counts and the "Show all" links are the slice's; the
 page title is the slice's name (`Work`, `Claude Code`); the composer of a Mine slice files new tasks
 in its category (see **Category**). `⌘1` and `⌘2` still go to the whole of Mine and Agents. A
-subtask goes where its parent goes. The slice is `nav.sub`, a category or an agent's name.
+subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or `catUnsorted`) on
+Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
+Right-click: see **Categories (M9)**.
 
-**Category.** A task is `work`, `life` or none (`tasks.category`, NULL for none; migration 007).
-The category it counts under is its own, else `work` when its project is a repository, else none
+**Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
+before M9 only `work` and `life`, migration 007).
+The category it counts under is its own, else Work when its project is a repository, else none
 (Unsorted): a category set by hand or by an agent always wins. The assistant classifies the tasks it
 writes from the words and leaves it out when unsure or when the task goes into a repository's project.
-A task typed in the composer of the Work or Life page gets that category, with or without a model.
+A task typed in the composer of a category's page gets that category, with or without a model.
 
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
@@ -813,9 +823,9 @@ editable in place (a Branch longer than the pane is ellipsized like every long v
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
-  category strip (`Work` `Life` `None`; the row shows only the category that was set, after its
-  18 pt icon in `text.secondary`, and `None` with no icon in `text.tertiary`, for a task in a
-  repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+  Category page (a filter field and the categories; the row shows only the category that was set,
+  after its 18 pt icon in the category's color, and `None` with no icon in `text.tertiary`, for a
+  task in a repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
@@ -920,8 +930,12 @@ Main page, top to bottom (10 pt padding):
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
    reads `Priority · P1 High` the same way.
-3. `Category` and a strip `Work` `Life` `None` in `compact` text, Work and Life after their 18 pt
-   icon in `text.secondary` (the current one tinted; `None` unclassifies); its label reads `Category · Life` the same way. The strip takes no letter key;
+3. One row, `Category` with the 18 pt icon of the task's category in its color (`IconList` when it
+   has none), its name as the hint at the right and a `›`: it opens the **Category page**, which is
+   the `Move to…` page for categories (v24 frame 2): a filter field `Find a category`, a row per
+   category with its icon (the current one checked), `None` (unsorts), a hairline and `New
+   category…`, which opens the category sheet and gives the new category to the task. The row takes
+   no letter key;
 4. a hairline;
 5. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
@@ -944,7 +958,7 @@ Main page, top to bottom (10 pt padding):
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
-Priority the priority strip, Category the category strip, Project the `Move to…` list, Remind the presets.
+Priority the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
 
 A project's menu is in the Sidebar and stays a system menu.
 
@@ -1328,6 +1342,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
   Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like
   QingYunA/adhd-todo.` and `“adhd-todo” already uses this repository.` Enter in either field creates;
   the new project opens.
+- **Category sheet**: `New category` / `Edit category` (400 pt); see **Categories (M9)**.
 - **Milestone sheet**: `New milestone` (Title, Due date optional), `Rename milestone` (Title) and
   `Due date` (a calendar and a Clear link). Done is the primary button; Enter saves.
 - **Delete confirmation** (a project, a task): title `Delete “name”?`; body in `text.secondary`.
@@ -1335,6 +1350,43 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
   To keep them, archive it instead.` (`This removes the project and its milestones.` when it has no
   task.) For a task: `Its progress reports go with it. This can't be undone.` Buttons `Cancel`
   (focused, so Enter does not delete) and `Delete` (accent, not red). Esc cancels.
+
+### Categories (M9)
+
+References: `docs/design/mockups/v24.html` (frames 1 to 6 and 8 are built; frame 7, the 12 x 12
+editor and image import, is PR2). Plan: `docs/plans/m9-custom-categories.md`.
+
+The user makes categories; Work and Life are built in, always there, movable and re-iconable but
+neither renamed (their names follow the language) nor deleted. A category has a name (unique in any
+case, at most 32 characters; at most 24 categories), a 12 x 12 icon and one of eight colors, the
+project colors in order: indigo, yellow, green, red, blue, pink, teal, orange (Work blue, Life
+green). The icon is drawn in that color wherever the category shows: sidebar sub-rows (12 pt), the
+inspector's value, the Category page and the task menu's row (18 pt), the sheet's preview. In dark
+mode the colors are the project folders' (`theme.ProjectColor`); there is no second set. On an
+accent-filled menu row the icon is white, like a project folder in `Move to…`.
+
+- **Sidebar menus** (system menus, like a project's; v24 frame 1): right-click a category: `New
+  category…`, `Edit category…`, `Move up`, `Move down` (each left out at its end of the list),
+  and, for the user's own, a separator and `Delete category`. Right-click `Mine` or `Unsorted`: `New
+  category…` only.
+- **Category sheet** (frames 3 to 5, 8): title `New category` / `Edit category`; `Name` (focused;
+  Work and Life show their localized name read-only with the line `Work and Life keep their names.`);
+  `Icon`: the chosen icon at 36, 18 and 12 pt in the chosen color, on `bg.subtle`; `Color`: eight 18
+  pt pixel circles (a 24 pt target, a ring on the current one; a11y `Color: Red`); a `Search icons`
+  field; a 240 pt scroll area with a hairline border: nothing typed, the curated groups (Work, Study,
+  Health, Money, Home, Hobby, Travel, People, `meta` headings, localized), typed, the matches as one
+  flat grid, or `No icon matches`; 36 pt cells, 9 to a row, the icon at 18 pt in the text color (a11y
+  label: the icon's name); the chosen cell has a 2 pt accent ring and a faint accent fill and shows
+  its icon in the chosen color. A new category starts on the first curated icon and on the color its
+  name hashes to, which follows the name until a swatch is clicked. Create / Save is off while a new
+  name is blank; Enter in `Name` creates or saves. Problems read under the field in `text.secondary`,
+  never red. After Create the category's page opens, unless the sheet came from the task menu, which
+  gives the category to the task instead.
+- **Delete** is immediate (the list is the user's own); a toast `Deleted “Reading” · 5 tasks
+  unsorted` (no count when 0) with **Undo** for six seconds, which puts the category back with its
+  icon, color, place and tasks (only the ones still unsorted).
+- **Chinese** (frame 8): `新建类别…`, `编辑类别…`, `上移`, `下移`, `删除类别`, `名称`, `图标`, `颜色`,
+  `搜索图标`, `没有匹配的图标`, `查找类别`, `工作和生活不能改名。`.
 
 ### Keyboard
 
@@ -1357,7 +1409,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
 | Rename project (sidebar) | saves | puts the old name back | |
-| New project, milestone sheets | creates / saves | closes the sheet | |
+| New project, milestone, category sheets | creates / saves | closes the sheet | |
 
 ### Notifications
 
