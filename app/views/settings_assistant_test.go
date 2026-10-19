@@ -31,6 +31,16 @@ func (r *settingsRig) waitSaved(t *testing.T) {
 	r.tt.Frame()
 }
 
+// waitModels runs what is posted until the provider's model list has come back; a list asked
+// for another provider may come back first.
+func (r *settingsRig) waitModels(t *testing.T, id string) {
+	t.Helper()
+	for l := r.s.assist.lists[id]; l != nil && l.running; {
+		r.rec.drain(t)
+	}
+	r.tt.Frame()
+}
+
 func (r *settingsRig) assistant(t *testing.T) {
 	t.Helper()
 	r.pane(t, "Assistant")
@@ -345,8 +355,7 @@ func TestTheModelListIsFetchedForTheStoredKeyAndOffersWhatTheProviderListed(t *t
 	r.assistant(t)
 	mustNil(t, r.tt.Click("Change"))
 	mustNil(t, r.tt.Click("DeepSeek"))
-	r.rec.drain(t)
-	r.tt.Frame()
+	r.waitModels(t, "deepseek")
 	if len(asked) != 1 || asked[0].Key != "" {
 		t.Fatalf("asked %+v, want one request with the stored key", asked)
 	}
@@ -390,8 +399,7 @@ func TestAFailedModelListFallsBackToTheSuggestionsWithoutAFuss(t *testing.T) {
 	r.assistant(t)
 	mustNil(t, r.tt.Click("Change"))
 	mustNil(t, r.tt.Click("DeepSeek"))
-	r.rec.drain(t)
-	r.tt.Frame()
+	r.waitModels(t, "deepseek")
 	has(t, r.tt, "deepseek-chat")
 	if r.s.assist.err != "" {
 		t.Errorf("the list failed out loud: %q", r.s.assist.err)
