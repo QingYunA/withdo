@@ -13,7 +13,7 @@ import (
 // pageComposer is the composer at the top of Now, a project or the Inbox, with the "Added to …"
 // confirmation under it and the answer to the request it sent.
 func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
-	if !m.pageHasComposer() {
+	if !m.pg.Composer {
 		return
 	}
 	m.composerBox(c, t, surfacePage, theme.Input)

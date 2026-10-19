@@ -18,12 +18,6 @@ type completedState struct {
 	more  bool // older tasks exist than are loaded
 }
 
-// completedDay is the tasks finished on one calendar day.
-type completedDay struct {
-	label string
-	tasks []data.Task
-}
-
 // completedTasks is the finished tasks, newest first, as many as are loaded. They are read again
 // when the data changes or more is asked for.
 func (m *Main) completedTasks() []data.Task {
@@ -48,47 +42,24 @@ func (m *Main) completedTasks() []data.Task {
 	return l.tasks
 }
 
-// completedDays groups the tasks by the day they were finished, in the order they come.
-func (m *Main) completedDays() []completedDay {
-	now := m.app.Now()
-	var days []completedDay
-	last := ""
-	for _, t := range m.completedTasks() {
-		at := doneAt(t).In(now.Location())
-		if key := at.Format("2006-01-02"); key != last {
-			days, last = append(days, completedDay{label: m.clock.Day(at, now)}), key
-		}
-		days[len(days)-1].tasks = append(days[len(days)-1].tasks, t)
-	}
-	return days
-}
-
-// completedIDs is the task ids of the rows, for the arrow keys.
-func (m *Main) completedIDs() []int {
-	var ids []int
-	for _, t := range m.completedTasks() {
-		ids = append(ids, t.ID)
-	}
-	return ids
-}
-
 // completedScreen is the finished tasks, newest first, a header for each day.
 func (m *Main) completedScreen(c *ui.Context, t *theme.Tokens) {
 	m.pageHeader(c, t, m.say.ManageNavCompleted(), m.say.ManageCompletedSubtitle(), nil)
 	if !m.app.snap.loaded {
 		return
 	}
-	days := m.completedDays()
+	days, now := m.pg.Sections, m.app.Now()
 	if len(days) == 0 {
 		emptyState(c, t, m.say.ManageCompletedEmptyTitle(), m.say.ManageCompletedEmptyBody(), 56, nil)
 		return
 	}
 	for _, d := range days {
-		ui.Row(c.Key("completed-day-"+d.label)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-			theme.Text(c, theme.BodyStrong, t.Text, d.label)
-			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(d.tasks)))
+		label := m.clock.Day(d.Day, now)
+		ui.Row(c.Key("completed-day-"+label)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.BodyStrong, t.Text, label)
+			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(d.Tasks)))
 		})
-		for _, task := range d.tasks {
+		for _, task := range d.Tasks {
 			m.completedRow(c, t, task)
 		}
 	}

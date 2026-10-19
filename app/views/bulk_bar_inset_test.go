@@ -52,7 +52,7 @@ func TestTheLastRowOfALongListScrollsAboveTheBarToo(t *testing.T) {
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Frame()
 	scrollDown(tt, 700, 400)
-	ids := m.rowIDs()
+	ids := m.pg.IDs()
 	last, _ := m.app.Task(ids[len(ids)-1])
 	rect, ok := tt.Find(last.Title)
 	if !ok {
@@ -72,13 +72,13 @@ func TestTheBoardsLanesScrollTheirLastCardAboveTheBar(t *testing.T) {
 	tt.Frame()
 	cmdClick(t, tt, "Write the release notes", "Port the reminder watcher")
 	tt.Frame()
-	for _, col := range m.boardColumns() {
-		if col.status != "done" {
+	for _, col := range m.pg.Sections {
+		if col.Status != "done" {
 			continue
 		}
 		x, _ := tt.Find("Done")
 		scrollDown(tt, x.X+20, 300)
-		last := col.shown[len(col.shown)-1]
+		last := col.Tasks[len(col.Tasks)-1]
 		rect, ok := tt.Find(last.Title)
 		if !ok {
 			t.Fatalf("the last card %q is not drawn in %q", last.Title, tt.Texts())

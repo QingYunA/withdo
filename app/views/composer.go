@@ -46,19 +46,6 @@ type composer struct {
 	modelOpen, plusHover, dragOver bool
 }
 
-// pageHasComposer reports whether the screen shows a composer: Mine, Agents, a project, the Inbox and
-// the Calendar do; the Completed page and the search results do not.
-func (m *Main) pageHasComposer() bool {
-	if m.searching() {
-		return false
-	}
-	switch m.nav.screen {
-	case screenMine, screenAgents, screenInbox, screenProject, screenCalendar:
-		return true
-	}
-	return false
-}
-
 // placeOf is where a composer's requests come from.
 func (m *Main) placeOf(s surface) data.Place {
 	if s == surfaceInspector {
@@ -88,7 +75,7 @@ func (m *Main) pageCategory() int {
 // when the page has none. The composer takes the focus when it is drawn, in this frame or a few
 // later.
 func (m *Main) focusPageComposer(*ui.Context) {
-	if !m.pageHasComposer() {
+	if !m.pg.Composer {
 		m.goTo(nav{})
 	}
 	m.sel, m.focusComposer = 0, true

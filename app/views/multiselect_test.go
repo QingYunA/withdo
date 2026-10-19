@@ -72,7 +72,7 @@ func TestShiftArrowsExtendFromTheKeyboardRow(t *testing.T) {
 func TestCmdASelectsEveryRowAndEscClearsThemFirst(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyA)
-	if got, want := m.multi.Count(), len(m.rowIDs()); got != want || got < 8 {
+	if got, want := m.multi.Count(), len(m.pg.IDs()); got != want || got < 8 {
 		t.Fatalf("⌘A selected %d of %d rows", got, want)
 	}
 	if err := tt.Click("Book dentist"); err != nil { // a plain click opens it

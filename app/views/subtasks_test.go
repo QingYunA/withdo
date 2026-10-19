@@ -161,8 +161,8 @@ func TestSearchFindsSubtasksAndNamesTheirParent(t *testing.T) {
 	tt.Frame()
 	searchFor(t, tt, "MCP tools")
 	has(t, tt, "Port the MCP tools", "Port core to Go")
-	if got := m.searchModel(); got.total != 1 {
-		t.Errorf("results %+v", got)
+	if got := m.pg.Total; got != 1 {
+		t.Errorf("results %d", got)
 	}
 	if parent := m.parentTitle(data.Task{ParentID: data.IntPtr(1)}); parent != "Port core to Go" {
 		t.Errorf("parent title %q", parent)

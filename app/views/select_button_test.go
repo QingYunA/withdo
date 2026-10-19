@@ -32,8 +32,8 @@ func TestSelectButtonTurnsOnSelectModeWhereAClickTicksARow(t *testing.T) {
 	if err := tt.Click("Select all"); err != nil {
 		t.Fatal(err)
 	}
-	if m.multi.Count() != len(m.rowIDs()) {
-		t.Errorf("Select all ticked %d of %d rows", m.multi.Count(), len(m.rowIDs()))
+	if m.multi.Count() != len(m.pg.IDs()) {
+		t.Errorf("Select all ticked %d of %d rows", m.multi.Count(), len(m.pg.IDs()))
 	}
 	if err := tt.Click("Done"); err != nil {
 		t.Fatal(err)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 )
 
@@ -23,11 +24,10 @@ func TestAProjectIsTwoColumnsMineAndAgentsBySource(t *testing.T) {
 		}
 	}
 	has(t, tt, "Mine", "Agents")
-	cm := m.columnsModel()
-	if cm.active(sideMine) != 2 || cm.active(sideAgents) != 4 {
-		t.Errorf("active counts %d and %d, want 2 and 4", cm.active(sideMine), cm.active(sideAgents))
+	if a, b := m.pg.Cols[sideMine].Active, m.pg.Cols[sideAgents].Active; a != 2 || b != 4 {
+		t.Errorf("active counts %d and %d, want 2 and 4", a, b)
 	}
-	if !m.columnsActive() || m.nav.projectID != 1 {
+	if m.pg.Kind != page.KindColumns || m.nav.projectID != 1 {
 		t.Error("the project is not drawn as columns")
 	}
 }
@@ -36,13 +36,13 @@ func TestTheInboxAndTheBoardStayAsTheyWere(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	if m.columnsActive() {
+	if m.pg.Kind == page.KindColumns {
 		t.Error("the Inbox is two columns")
 	}
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	m.board[1] = true
 	tt.Frame()
-	if m.columnsActive() {
+	if m.pg.Kind == page.KindColumns {
 		t.Error("the board is two columns")
 	}
 }
@@ -82,7 +82,7 @@ func TestTheAgentsDoneGroupShowsThreeAndShowAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	hasNot(t, tt, "Show all 5 →")
-	if ids := m.columnIDs(); len(ids) != 5 {
+	if ids := m.pg.IDs(); len(ids) != 5 {
 		t.Errorf("ids %v after Show all", ids)
 	}
 }
@@ -101,9 +101,14 @@ func TestAWaitingTaskHasItsOwnGroupFirstAndLeavesTodo(t *testing.T) {
 	if above(t, r.tt, "To do", "Write the release notes") && !above(t, r.tt, "Write the release notes", "Fix tray race on launch") {
 		t.Error("the waiting task is still listed under To do")
 	}
-	cm := r.m.columnsModel()
-	if len(cm.waiting) != 1 || cm.mine.total != 5 {
-		t.Errorf("waiting %d, mine %d", len(cm.waiting), cm.mine.total)
+	waiting := 0
+	for _, s := range r.m.pg.Sections {
+		if s.Kind == page.SecWaiting {
+			waiting = len(s.Tasks)
+		}
+	}
+	if mine := r.m.pg.Cols[sideMine].Total; waiting != 1 || mine != 5 {
+		t.Errorf("waiting %d, mine %d", waiting, mine)
 	}
 	// Its first report moves it on.
 	r.now = r.now.Add(time.Minute)
@@ -151,7 +156,7 @@ func TestAProjectWithNoTaskKeepsTheCentredEmptyState(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	if m.columnsActive() {
+	if m.pg.Kind == page.KindColumns {
 		t.Error("an empty project is drawn as columns")
 	}
 	has(t, tt, "No tasks yet.")

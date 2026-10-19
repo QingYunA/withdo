@@ -161,7 +161,7 @@ const subRowIndent = theme.IconRow + sidebarRowGap
 // with the parent's label, holds what lead draws (the category's icon, the agent's avatar) or stays
 // empty when lead is nil, so the sub-rows' labels line up. menu is the row's context menu, if it has one.
 func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, lead func(), menu func(*ui.Menu)) {
-	selected := m.nav == to && !m.searching()
+	selected := m.shows(to)
 	row := sidebarRow(c, t, key, selected).Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent)
 	if menu != nil {
 		row.ContextMenu(menu)

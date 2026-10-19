@@ -6,6 +6,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/locales"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/selection"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/words"
@@ -18,17 +19,17 @@ const titleBarHeight float32 = 52
 // dragStrip is the quiet band above a page that still drags the window.
 const dragStrip float32 = 24
 
-type screen int
+type screen = page.Screen
 
 const (
-	screenMine screen = iota
-	screenAgents
-	screenInbox
-	screenProject
-	screenCompleted
-	screenCalendar
-	screenSummary
-	screenRecent
+	screenMine      = page.Mine
+	screenAgents    = page.Agents
+	screenInbox     = page.Inbox
+	screenProject   = page.Project
+	screenCompleted = page.Completed
+	screenCalendar  = page.Calendar
+	screenSummary   = page.Summary
+	screenRecent    = page.Recent
 )
 
 // nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
@@ -68,7 +69,7 @@ type Main struct {
 	sel        int                 // task the keyboard highlights, 0 for none
 	multi      selection.Selection // the rows selected together on this page
 	hint       selectHint          // where the Select button has flashed
-	order      []int               // the rows of the page in the order they are drawn, as View found them
+	pg         page.Page           // what the window shows this frame: its sections, and the rows in the order they are drawn
 	rects      map[int]ui.Rect     // where the rows were drawn this frame, and prevRects the frame before:
 	prevRects  map[int]ui.Rect     // neighbouring selected rows join into one block by them
 	moved      bool
@@ -186,26 +187,25 @@ func (m *Main) View(c *ui.Context) {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 		m.multi.Clear()
 	}
-	m.onMine.Store(m.nav == nav{} && !m.searching())
-	onSummary := m.nav.screen == screenSummary && !m.searching()
-	m.onSummary.Store(onSummary)
-	if !onSummary {
-		m.leaveSummary()
-	}
 	if m.nav.screen == screenRecent && !m.app.RecentChangesOn() {
 		m.goTo(nav{}) // switched off in Settings while it was open
-	}
-	if m.nav.screen != screenRecent || m.searching() {
-		m.recent.shown = false // the page reads GitHub when it opens
 	}
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)
 	m.buildPages()
+	m.pg = m.pageNow()
+	m.onMine.Store(m.pg.Kind == page.KindMine && m.nav.cat == 0)
+	m.onSummary.Store(m.pg.Kind == page.KindSummary)
+	if m.pg.Kind != page.KindSummary {
+		m.leaveSummary()
+	}
+	if m.pg.Kind != page.KindRecent {
+		m.recent.shown = false // the page reads GitHub when it opens
+	}
 	m.hopTick(c)
 	m.handOffTick(c)
-	ids := m.rowIDs()
-	m.order = ids
+	ids := m.pg.IDs()
 	m.multi.Sync(ids)
 	m.prevRects, m.rects = m.rects, m.prevRects
 	clear(m.rects)
@@ -232,25 +232,25 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c).Grow(1).MinWidth(0).Background(t.Bg).Children(func() {
 		ui.Box(c).Height(dragStrip).Shrink(0).DragWindow()
 		m.errorStrip(c, t)
-		switch {
-		case m.searching():
+		switch m.pg.Kind {
+		case page.KindSearch:
 			m.page(c, t, func() { m.searchScreen(c, t) })
-		case m.nav.screen == screenMine:
+		case page.KindMine:
 			m.page(c, t, func() { m.mineScreen(c, t) })
-		case m.nav.screen == screenAgents:
+		case page.KindAgents:
 			m.page(c, t, func() { m.agentsScreen(c, t) })
-		case m.nav.screen == screenCompleted:
+		case page.KindCompleted:
 			m.page(c, t, func() { m.completedScreen(c, t) })
-		case m.nav.screen == screenCalendar:
+		case page.KindCalendar:
 			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
-		case m.nav.screen == screenSummary:
+		case page.KindSummary:
 			m.summaryScreen(c, t)
-		case m.nav.screen == screenRecent:
+		case page.KindRecent:
 			m.recentScreen(c, t)
-		case m.boardActive():
+		case page.KindBoard:
 			m.boardScreen(c, t)
-		case m.columnsActive():
-			m.pageIn(c, t, theme.BoardMax+2*m.sidePad(c), func() { m.listScreen(c, t) })
+		case page.KindColumns:
+			m.pageIn(c, t, theme.BoardMax+2*m.sidePad(c), func() { m.columnsScreen(c, t) })
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
@@ -260,10 +260,34 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 
 // pageKey keys the page's scroller: the screen, or the search results over it.
 func (m *Main) pageKey() any {
-	if m.searching() {
+	if m.pg.Kind == page.KindSearch {
 		return "search"
 	}
 	return m.nav
+}
+
+// shows reports whether the sidebar row that goes to n is the open page: a search over it hides it.
+func (m *Main) shows(n nav) bool { return m.nav == n && m.pg.Kind != page.KindSearch }
+
+// pageNow is the page the window shows, from what the sidebar chose, the search, and the data.
+func (m *Main) pageNow() page.Page {
+	in := page.In{
+		Screen: m.nav.screen, Searching: m.searching(), Board: m.showsBoard(),
+		Mine: m.minePage, Agents: m.agentsPage, Now: m.app.Now(),
+		Folds: [2]page.Fold{{Backlog: m.expanded[m.nav], AllDone: m.allDone[m.nav]}, {Backlog: m.cols.expanded[m.nav], AllDone: m.cols.allDone[m.nav]}},
+	}
+	switch {
+	case in.Searching:
+		in.Found = m.searchFound()
+	case in.Screen == screenCompleted:
+		in.Done = m.completedTasks()
+	case in.Screen == screenInbox || in.Screen == screenProject:
+		in.Tasks = m.selection(m.app.withCompleting)
+		if in.Board {
+			in.Cards = m.selection(m.app.withCompletingCards)
+		}
+	}
+	return page.Build(in)
 }
 
 func (m *Main) showsBoard() bool {

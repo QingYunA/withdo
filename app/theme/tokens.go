@@ -206,6 +206,4 @@ const (
 	WindowMinHeight = 540
 	WindowWidth     = 1100
 	WindowHeight    = 720
-	DoneRecentLimit = 5 // Done cards the board's Done lane shows before "Show all"
-	DoneListRows    = 3 // Done rows a list shows before "Show all"
 )

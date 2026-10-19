@@ -127,7 +127,7 @@ func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
 
 func TestListKeyboardWalksRowsInOrder(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
-	ids := m.listIDs()
+	ids := m.pg.IDs()
 	// Mine's rows (doing, to do, done), then Agents' (blocked, review, doing, to do, done).
 	if want := []int{6, 5, 13, 14, 3, 2, 1, 10, 20, 11, 12}; !slices.Equal(ids, want) {
 		t.Fatalf("ids %v, want %v", ids, want)

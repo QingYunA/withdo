@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -102,7 +103,7 @@ func (m *Main) dayCardView(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	day, ok := m.dayCardDay()
-	if !ok || m.nav.screen != screenCalendar || m.searching() {
+	if !ok || m.pg.Kind != page.KindCalendar {
 		dc.close()
 		return
 	}

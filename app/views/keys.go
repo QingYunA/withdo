@@ -2,38 +2,9 @@ package views
 
 import (
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/egoist/mygo/ui"
 )
-
-// rowIDs lists the task ids of the current screen in the order they are drawn, which is the order
-// the arrow keys walk.
-func (m *Main) rowIDs() []int {
-	switch {
-	case m.searching():
-		return m.searchIDs()
-	case m.nav.screen == screenMine:
-		return m.minePage.IDs()
-	case m.nav.screen == screenAgents:
-		return m.agentsPage.IDs()
-	case m.nav.screen == screenCompleted:
-		return m.completedIDs()
-	case m.nav.screen == screenCalendar:
-		return nil // the arrows walk the days, not rows
-	case m.nav.screen == screenSummary:
-		return nil // the ledger opens with the mouse
-	case m.nav.screen == screenRecent:
-		return nil // so does Recent changes
-	case m.boardActive():
-		var ids []int
-		for _, col := range m.boardColumns() {
-			for _, t := range col.tasks {
-				ids = append(ids, t.ID)
-			}
-		}
-		return ids
-	}
-	return m.listIDs()
-}
 
 // moveSelection moves the highlight by dir through n rows. -1 means no row is highlighted;
 // moving up from the first row leaves the list.
@@ -101,7 +72,7 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	if typing || m.pop.open { // a key of the selected row may have opened the task menu
 		return
 	}
-	if m.nav.screen == screenCalendar && !m.searching() && m.calendarKey(c) {
+	if m.pg.Kind == page.KindCalendar && m.calendarKey(c) {
 		return
 	}
 	switch {
@@ -187,7 +158,7 @@ func (m *Main) move(c *ui.Context, ids []int, dir int) {
 	if next < 0 {
 		m.sel = 0
 		m.multi.Moved(0)
-		if m.pageHasComposer() {
+		if m.pg.Composer {
 			m.focusPageComposer(c)
 		}
 		return

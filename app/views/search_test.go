@@ -41,8 +41,8 @@ func TestSearchResultsAreGroupedByProjectAcrossEveryStatus(t *testing.T) {
 	if !above(t, tt, "Spike the mygo shell", "Cover the reply parser edge cases") && !above(t, tt, "Cover the reply parser edge cases", "Spike the mygo shell") {
 		t.Error("rows overlap")
 	}
-	if got := m.searchModel(); len(got.groups) < 2 {
-		t.Errorf("groups %+v", got.groups)
+	if got := m.pg.Sections; len(got) < 2 {
+		t.Errorf("groups %+v", got)
 	}
 	if !tt.HasText("results for “the”") {
 		t.Errorf("no count: %q", tt.Texts())
@@ -96,7 +96,7 @@ func TestSearchKeyboard(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
 	searchFor(t, tt, "port")
-	ids := m.rowIDs()
+	ids := m.pg.IDs()
 	if len(ids) < 2 {
 		t.Fatalf("results %v", ids)
 	}

@@ -49,21 +49,9 @@ func (m *Main) flashLit(c *ui.Context) bool {
 	return age < flashFrame
 }
 
-// canSelect says whether the page lists tasks that can be selected: every list but the Calendar and
-// Summary, and not an empty one.
-func (m *Main) canSelect() bool {
-	if len(m.order) == 0 {
-		return false
-	}
-	if m.searching() {
-		return true
-	}
-	return m.nav.screen != screenCalendar && m.nav.screen != screenSummary && m.nav.screen != screenRecent
-}
-
 // selectControls is the Select button, or in select mode the count, Select all and Done.
 func (m *Main) selectControls(c *ui.Context, t *theme.Tokens) {
-	if !m.canSelect() {
+	if !m.pg.Selectable() {
 		return
 	}
 	if !m.multi.Mode() {

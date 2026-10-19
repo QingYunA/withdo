@@ -1,10 +1,10 @@
 package views
 
 import (
-	"sort"
 	"strings"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -13,46 +13,9 @@ import (
 // glyph and the 8 pt gap. A row's title is as far in again from its avatar.
 const listIndent = theme.GlyphSize + 8
 
-// listGroup is one status of a list: a header and its rows.
-type listGroup struct {
-	status data.Status
-	tasks  []data.Task
-}
-
-// activeGroups are the groups every list draws, in order. A group says the status, so rows carry
-// no glyph.
-var activeGroups = []listGroup{
-	{status: data.Blocked},
-	{status: data.Review},
-	{status: data.Doing},
-	{status: data.Todo},
-}
-
-// listModel is the tasks of the current project or the Inbox, grouped. Empty groups are dropped.
-type listModel struct {
-	groups  []listGroup // Blocked, In review, Doing, To do
-	done    []data.Task // newest first
-	backlog []data.Task
-	total   int // every task of the screen, whatever its status
-}
-
-// selectionTasks returns the tasks of the current project or the Inbox, filtered by milestone.
-func (m *Main) selectionTasks() []data.Task { return m.selection(m.app.withCompleting) }
-
 // selection is selectionTasks with its own way to show the tasks that are completing.
 func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []data.Task) []data.Task {
-	in := func(t data.Task) bool {
-		switch {
-		case t.IsSubtask(): // it lives under its parent
-			return false
-		case m.nav.screen == screenInbox:
-			return t.ProjectID == nil
-		case t.ProjectID == nil || *t.ProjectID != m.nav.projectID:
-			return false
-		}
-		ms := m.milestone[m.nav.projectID]
-		return ms == 0 || (t.MilestoneID != nil && *t.MilestoneID == ms)
-	}
+	in := page.Scope{Inbox: m.nav.screen == screenInbox, Project: m.nav.projectID, Milestone: m.milestone[m.nav.projectID]}.Has
 	var out []data.Task
 	for _, t := range m.app.snap.tasks {
 		if in(t) {
@@ -62,113 +25,52 @@ func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []da
 	return completing(out, in)
 }
 
-func (m *Main) listModel() listModel { return buildList(m.selectionTasks()) }
-
-// buildList groups tasks by status.
-func buildList(tasks []data.Task) listModel {
-	var lm listModel
-	by := map[data.Status][]data.Task{}
-	for _, t := range tasks {
-		lm.total++
-		by[t.Status] = append(by[t.Status], t)
-	}
-	for _, g := range activeGroups {
-		tasks := by[g.status]
-		if len(tasks) == 0 {
-			continue
-		}
-		sortForList(tasks)
-		g.tasks = tasks
-		lm.groups = append(lm.groups, g)
-	}
-	lm.done, lm.backlog = by[data.Done], by[data.Backlog]
-	sort.SliceStable(lm.done, func(i, j int) bool { return doneAt(lm.done[i]).After(doneAt(lm.done[j])) })
-	sortForList(lm.backlog)
-	return lm
-}
-
-// sortForList puts what asks for a date first, in date order, then the most urgent, then the
-// most recently touched.
-func sortForList(ts []data.Task) {
-	sort.SliceStable(ts, func(i, j int) bool {
-		ai, iok := data.NextMoment(ts[i])
-		aj, jok := data.NextMoment(ts[j])
-		switch {
-		case iok != jok:
-			return iok
-		case iok && !ai.Equal(aj):
-			return ai.Before(aj)
-		case ts[i].Priority != ts[j].Priority:
-			return ts[i].Priority < ts[j].Priority
-		}
-		return ts[i].UpdatedAt.After(ts[j].UpdatedAt)
-	})
-}
-
-// shownDone is the Done rows drawn: the newest three, or all once "Show all" was clicked.
-func (m *Main) shownDone(lm listModel) []data.Task {
-	if m.allDone[m.nav] || len(lm.done) <= theme.DoneListRows {
-		return lm.done
-	}
-	return lm.done[:theme.DoneListRows]
-}
-
-// listIDs is the task ids of the rows the list draws, for the arrow keys: a project's Mine column,
-// then its Agents column.
-func (m *Main) listIDs() []int {
-	if m.columnsActive() {
-		return m.columnIDs()
-	}
-	lm := m.listModel()
-	var ids []int
-	add := func(ts []data.Task) {
-		for _, t := range ts {
-			ids = append(ids, t.ID)
-		}
-	}
-	for _, g := range lm.groups {
-		add(g.tasks)
-	}
-	add(m.shownDone(lm))
-	if m.expanded[m.nav] {
-		add(lm.backlog)
-	}
-	return ids
-}
-
-// listScreen is a project or the Inbox as a list grouped by status. A project with tasks is two
-// columns instead (columnsScreen).
+// listScreen is the Inbox, or an empty project, as a list grouped by status. A project with tasks is
+// two columns (columnsScreen) or a board instead.
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
-	if m.columnsActive() {
-		m.columnsScreen(c, t)
-		return
-	}
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
 	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
-	lm := m.listModel()
 	m.belowComposer(c, func() {
-		if lm.total == 0 {
+		if m.pg.Cols[0].Total == 0 {
 			m.emptyList(c, t)
 			return
 		}
-		for _, g := range lm.groups {
-			m.group(c, t, g.status, g.tasks)
-		}
-		m.doneAndBacklog(c, t, lm)
+		m.sections(c, t, sideMine, m.pg.Sections, func(_ page.Section, task data.Task) { m.listRow(c, t, task) })
 	})
 }
 
-// group is a header, glyph and name and count, and its rows indented under the name: a row's
-// avatar starts where the header's name does, so the header reads as the parent of its rows.
-func (m *Main) group(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task) {
-	m.groupOf(c, t, s, tasks, func(task data.Task) { m.listRow(c, t, task) })
+// sections draws the sections of a list or a column: a header and its rows for each status, the Done
+// group with "Show all" under it while the fold hides rows, and Backlog folded into its last line. row
+// draws a task of a section.
+func (m *Main) sections(c *ui.Context, t *theme.Tokens, s side, secs []page.Section, row func(page.Section, data.Task)) {
+	expanded, allDone := m.foldMaps(s)
+	for _, sec := range secs {
+		draw := func(task data.Task) { row(sec, task) }
+		switch {
+		case sec.Kind == page.SecWaiting:
+			m.waitingGroup(c, t, sec.Tasks)
+		case sec.Status == data.Backlog:
+			if sec.Open {
+				m.groupOf(c, t, sec.Status, sec.Tasks, draw)
+			}
+			if m.foldLine(c, t, sec.Total, sec.Open, 16) {
+				expanded[m.nav] = !sec.Open
+			}
+		default:
+			m.groupOf(c, t, sec.Status, sec.Tasks, draw)
+			if sec.Hidden() > 0 && link(c, t, m.say.ListShowAllDone(sec.Total)).Margin(6, 0, 0, 2*listIndent).Clicked() {
+				allDone[m.nav] = true
+			}
+		}
+	}
 }
 
-// groupOf is group with its own way to draw a row.
+// groupOf is a header, glyph and name and count, and its rows indented under the name: a row's
+// avatar starts where the header's name does, so the header reads as the parent of its rows.
 func (m *Main) groupOf(c *ui.Context, t *theme.Tokens, s data.Status, tasks []data.Task, row func(data.Task)) {
 	m.section(c, "section-"+string(s), tasks, func() {
 		groupHeader(c, t, "group-"+string(s), len(tasks), statusLabel(m.say, s), func() { theme.StatusGlyph(c, t, s, 0) })
@@ -267,34 +169,6 @@ func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data
 
 func plainText(c *ui.Context, t *theme.Tokens, text string) {
 	theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
-}
-
-// doneAndBacklog closes a list: the Done group, expanded, with its newest three rows; then Backlog
-// folded into the last line, "Backlog 2 — show", which opens it.
-func (m *Main) doneAndBacklog(c *ui.Context, t *theme.Tokens, lm listModel) {
-	if len(lm.done) > 0 {
-		m.group(c, t, data.Done, m.shownDone(lm))
-		m.showAllDone(c, t, lm)
-	}
-	if len(lm.backlog) == 0 {
-		return
-	}
-	open := m.expanded[m.nav]
-	if open {
-		m.group(c, t, data.Backlog, lm.backlog)
-	}
-	if m.foldLine(c, t, len(lm.backlog), open, 16) {
-		m.expanded[m.nav] = !open
-	}
-}
-
-func (m *Main) showAllDone(c *ui.Context, t *theme.Tokens, lm listModel) {
-	if m.allDone[m.nav] || len(lm.done) <= theme.DoneListRows {
-		return
-	}
-	if link(c, t, m.say.ListShowAllDone(len(lm.done))).Margin(6, 0, 0, 2*listIndent).Clicked() {
-		m.allDone[m.nav] = true
-	}
 }
 
 // foldLine is the last line of a list, which folds Backlog: "Backlog 2 — show". It reports a click.
