@@ -699,7 +699,8 @@ centred empty state.
   `Backlog 2 — show` line. The two columns open and close their Done and Backlog separately. Rows sit
   26 pt in from their header, as in the Inbox: an Agents row's avatar under the header's name, and the
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
-  lines up with the titles.
+  lines up with the titles. While the pointer is over an open row of either column, the row shows its own
+  status glyph under the header's glyph, as in the Inbox.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
   (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (`avatars/parcel.png`, 12 x 12
   with a pixel of room all round, drawn at 24 pt). A row: the same accent robot as the column header (the task is any
@@ -763,7 +764,10 @@ when told its number, through the MCP.
 
 **Inbox list view** (one column; a project's list before M7b). Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
 name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar under the
-header's name (no glyph per row; the group says the status); `Show all N →` under Done lines up
+header's name (the group says the status, so a row has no glyph at rest; while the pointer is over
+it or in the glyph column beside it, a row shows its own status glyph under the header's glyph, a button that takes no room: clicking
+it marks my own task done, and opens the task menu for an agent's task, as `glyphButton` does
+elsewhere; it stays while the row completes, and select mode shows none); `Show all N →` under Done lines up
 with the rows' titles. Row: the title (one line, `body.strong`); for an agent's task a
 quiet second line in `text.secondary`, `Claude Code · feat/native-ui · #12 · what it last said` (the
 agent's name, the branch, the pull request, then the report; for a blocked task what it waits for;

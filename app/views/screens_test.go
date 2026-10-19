@@ -54,6 +54,11 @@ func TestScreensSeed(t *testing.T) {
 		app, _, _ := newTestApp(t)
 		mainShot(t, "mine-"+a.suffix+".png", app, a.dark, nil)
 		mainShot(t, "project-list-"+a.suffix+".png", app, a.dark, toProject(1))
+		mainShot(t, "project-list-row-hover-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+			toProject(1)(tt, m)
+			tt.Frame()
+			hover(t, tt, "Write the release notes") // its own glyph shows under the header's
+		})
 		mainShot(t, "project-board-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			toProject(1)(tt, m)
 			m.board[1] = true

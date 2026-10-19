@@ -170,6 +170,39 @@ func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill
 	m.glyphButton(c, t, task, fill).Margin(2-pad, -pad, -pad-2, -pad)
 }
 
+// groupGlyph is the status glyph button of a row in a status group. The group says the status, so
+// at rest the row has none; while the pointer is over the row or in the glyph column beside it, its
+// task menu is open or its completion plays, the button shows under the header's glyph, left of the
+// row's avatar, so a task can be completed from the list. It takes no room (its margins cancel its
+// width and the row's gap), so the avatar and the title stay where they are. top is for a row whose
+// lines start at its top.
+//
+// The button lies partly left of the row, so an empty zone of its size and the row's height stands
+// there at rest, and the pointer in it counts as over the row. The zone has no handler, label or
+// focus: a click on it is the row's. It asks where the pointer is rather than for its hover, as a
+// press on the button ends the hover of the row (the pointer is not over the row) but not the fact
+// that the pointer is in the zone.
+func (m *Main) groupGlyph(c *ui.Context, t *theme.Tokens, row ui.Element, task data.Task, ph phase, top bool) {
+	if m.multi.mode || row.Dragging() {
+		return
+	}
+	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	left := -(listIndent + pad) // centered under the header's glyph
+	right := -(theme.HitTarget + rowGap) - left
+	zone := ui.Box(c.Key("glyph-zone")).Width(theme.HitTarget).AlignSelf(ui.Stretch).Shrink(0).Margin(0, right, 0, left)
+	_, _, inZone := zone.PointerPosition()
+	menu := m.pop.open && m.pop.task == task.ID
+	if !(row.Hovered() || inZone || ph.moving || menu) {
+		return
+	}
+	btn := m.glyphButton(c, t, task, ph.fill)
+	if top {
+		btn.Margin(2-pad, right, -pad-2, left)
+	} else {
+		btn.Margin(-pad, right, -pad, left)
+	}
+}
+
 // ageLabel is how long ago, in the stale color when the agent went quiet.
 func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.Item) {
 	color := t.TextTertiary
