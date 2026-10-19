@@ -28,6 +28,12 @@ type Prefs struct {
 	// EndOfDayLast is the date ("2006-01-02") the reminder was last sent or left out, so that it comes
 	// once a day.
 	EndOfDayLast string `json:"endOfDayLast,omitempty"`
+	// RecentChanges is set when the user switched the Recent changes page on; it is off by default.
+	RecentChanges bool `json:"recentChanges,omitempty"`
+	// RecentRepo is the repository the Recent changes page was last set to ("owner/name"); empty is
+	// all of them. RecentDays is its period, 7 or 30; 0 is the default, 7.
+	RecentRepo string `json:"recentRepo,omitempty"`
+	RecentDays int    `json:"recentDays,omitempty"`
 }
 
 // DefaultEndOfDay is when the end-of-day reminder comes unless the user picks another time.

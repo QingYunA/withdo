@@ -119,3 +119,35 @@ func (a *App) SetEndOfDayLast(date string) {
 func (a *App) WeekStart() time.Weekday { return time.Weekday(a.weekStart.Load()) }
 
 func (a *App) setWeekStart(d time.Weekday) { a.weekStart.Store(int32(d)) }
+
+// RecentChangesOn says whether the Recent changes page is switched on (Settings > General > Pages),
+// which it is not until the user does. Nothing of the page exists while it is off.
+func (a *App) RecentChangesOn() bool {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return a.prefs.RecentChanges
+}
+
+// SetRecentChangesOn switches the Recent changes page, and keeps the choice.
+func (a *App) SetRecentChangesOn(on bool) {
+	a.savePrefs(func(p *data.Prefs) { p.RecentChanges = on })
+}
+
+// recentChoice is the repository ("" for all) and the number of days the Recent changes page was
+// last set to: 7 or 30.
+func (a *App) recentChoice() (repo string, days int) {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	days = a.prefs.RecentDays
+	if days != 30 {
+		days = 7
+	}
+	return a.prefs.RecentRepo, days
+}
+
+// setRecentChoice keeps the repository and the period of the Recent changes page.
+func (a *App) setRecentChoice(repo string, days int) {
+	a.savePrefs(func(p *data.Prefs) { p.RecentRepo, p.RecentDays = repo, days })
+}

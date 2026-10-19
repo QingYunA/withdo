@@ -27,6 +27,7 @@ type Tokens struct {
 	AccentText    ui.Color
 	Stale         ui.Color
 	Shadow        ui.Color // floating things only
+	Merged        ui.Color // a closed issue, as GitHub paints it
 
 	status map[data.Status]ui.Color
 }
@@ -55,6 +56,7 @@ var light = &Tokens{
 	AccentText:    ui.Hex("#FFFFFF"),
 	Stale:         ui.Hex("#D97706"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.26),
+	Merged:        ui.Hex("#8E4EC6"),
 	status: map[data.Status]ui.Color{
 		data.Backlog:   ui.Hex("#AEAEB2"),
 		data.Todo:      ui.Hex("#8E8E93"),
@@ -80,6 +82,7 @@ var dark = &Tokens{
 	AccentText:    ui.Hex("#FFFFFF"),
 	Stale:         ui.Hex("#F59E0B"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.5),
+	Merged:        ui.Hex("#B388EB"),
 	status: map[data.Status]ui.Color{
 		data.Backlog:   ui.Hex("#636366"),
 		data.Todo:      ui.Hex("#8E8E93"),

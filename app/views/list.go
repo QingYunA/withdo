@@ -341,6 +341,7 @@ func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
 		title = p.Name
 	}
 	m.pageHeader(c, t, title, "", func() {
+		m.recentLink(c, t)
 		m.milestoneMenu(c, t)
 		if m.nav.screen == screenProject {
 			m.viewToggle(c, t)
