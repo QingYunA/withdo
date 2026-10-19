@@ -48,7 +48,7 @@ func handedApp(t *testing.T) (*App, *data.Fake) {
 func onlyMineApp(t *testing.T) (*App, data.Project) {
 	t.Helper()
 	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("answer-me-with-html", "me/answer-me-with-html")
+	p := f.SeedProject("answer-me-with-html", "me/answer-me-with-html")
 	for i, task := range []struct {
 		title  string
 		status data.Status

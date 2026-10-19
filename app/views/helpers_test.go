@@ -282,7 +282,7 @@ func dragTo(t *testing.T, tt *ui.Tester, text, column string) {
 func emptyProjectApp(t *testing.T) (*App, data.Project) {
 	t.Helper()
 	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	p := f.SeedProject("scratch", "me/scratch")
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	return app, p

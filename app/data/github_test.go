@@ -52,37 +52,6 @@ func mustTaskOf(t *testing.T, r *Real, id int) Task {
 	return d.Task
 }
 
-func TestFakeKeepsAClosedPullRequestAndHoldsPullRequestState(t *testing.T) {
-	f := NewFake(fixedNow)
-	if err := f.SetPullRequest(2, PRClosed, PRChecksNone, PRReviewNone); err != nil {
-		t.Fatal(err)
-	}
-	changes := 0
-	f.Subscribe(func() { changes++ })
-	if !mustFakeTask(t, f, 2).PRClosedUnseen() {
-		t.Fatal("task 2 should have an unseen closed pull request")
-	}
-	if err := f.KeepClosedPR(2); err != nil {
-		t.Fatal(err)
-	}
-	got := mustFakeTask(t, f, 2)
-	if got.PRClosedUnseen() || got.PRClosedSeenAt == nil || !got.PRClosedSeenAt.Equal(fixedNow()) || changes != 1 {
-		t.Errorf("after Keep: %+v, %d change notifications", got, changes)
-	}
-	if err := f.KeepClosedPR(999); err == nil {
-		t.Error("keeping an unknown task should fail")
-	}
-}
-
-func mustFakeTask(t *testing.T, f *Fake, id int) Task {
-	t.Helper()
-	d, err := f.GetTask(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return d.Task
-}
-
 func TestTaskPullRequestPredicates(t *testing.T) {
 	seen := fixedNow()
 	tests := []struct {

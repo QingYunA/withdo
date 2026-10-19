@@ -27,7 +27,7 @@ func linksApp(t *testing.T) (*App, *data.Fake, *recorder) {
 	app, store, rec := newTestApp(t)
 	app.Config.Home = pageHome
 	app.FileExists = func(p string) bool { return p != "/Users/demo/reports/import-report.html" }
-	store.AddReport(data.Report{
+	store.SeedReport(data.Report{
 		TaskID: 2, Agent: "claude-code", Status: data.Review, Summary: pageReport, CreatedAt: fixedNow().Add(-10 * time.Minute),
 		Links: []data.Link{
 			{URL: pageURL, Title: "Design draft"}, {URL: pageFile}, {URL: pullURL}, {URL: goneFile, Title: "Import report"},
@@ -152,7 +152,7 @@ func TestAReviewRowWithoutAPullRequestOffersOpenPageAndAcceptInsteadOfReview(t *
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.AddReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "Docs page", CreatedAt: fixedNow(), Links: []data.Link{{URL: pageURL}}})
+	store.SeedReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "Docs page", CreatedAt: fixedNow(), Links: []data.Link{{URL: pageURL}}})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	has(t, tt, "Open page", "Accept")
@@ -162,7 +162,7 @@ func TestAReviewRowWithoutAPullRequestOffersOpenPageAndAcceptInsteadOfReview(t *
 func TestOnlyATaskInReviewGetsOpenPage(t *testing.T) {
 	app, store, _ := newTestApp(t)
 	// Task 3 is blocked: it waits for an answer, not for a look.
-	store.AddReport(data.Report{TaskID: 3, Agent: "claude-code", Status: data.Blocked, Summary: "Need a call", CreatedAt: fixedNow(), Links: []data.Link{{URL: pageURL}}})
+	store.SeedReport(data.Report{TaskID: 3, Agent: "claude-code", Status: data.Blocked, Summary: "Need a call", CreatedAt: fixedNow(), Links: []data.Link{{URL: pageURL}}})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	hasNot(t, tt, "Open page")
@@ -188,11 +188,11 @@ func TestAnAgentsRowAndACardShowOpenPageWhenHovered(t *testing.T) {
 
 func TestTheSummaryExportEndsATaskLineWithItsPagesOnce(t *testing.T) {
 	app, store, _ := summaryApp(t)
-	store.AddReport(data.Report{
+	store.SeedReport(data.Report{
 		TaskID: 2, Agent: "claude-code", Summary: "Draft", CreatedAt: fixedNow().Add(-time.Hour),
 		Links: []data.Link{{URL: pageURL, Title: "Design [v2] draft"}, {URL: "file:///tmp/a b (1).html"}},
 	})
-	store.AddReport(data.Report{
+	store.SeedReport(data.Report{
 		TaskID: 2, Agent: "claude-code", Summary: "Again", CreatedAt: fixedNow().Add(-30 * time.Minute),
 		Links: []data.Link{{URL: pageURL, Title: "Design [v2] draft"}},
 	})

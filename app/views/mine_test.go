@@ -160,7 +160,7 @@ func TestNotNowPutsAHandedOverRowAsideUntilTheAgentReportsAgain(t *testing.T) {
 		t.Error("a dismissed row is back after a restart")
 	}
 	// The agent reports again: the row comes back.
-	store.ReportAs(3, "claude-code", "Still stuck", fixedNow().Add(time.Minute))
+	store.SeedReportAs(3, "claude-code", "Still stuck", fixedNow().Add(time.Minute))
 	app.Refresh()
 	tt.Frame()
 	if !tt.HasText("Fix tray race on launch") {

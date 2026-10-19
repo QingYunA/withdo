@@ -124,8 +124,8 @@ func TestBothSectionsFitTheWindowBeforeItScrolls(t *testing.T) {
 func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 	r := agentsRig(t)
 	store := r.app.Store.(*data.Fake)
-	store.ReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
-	store.ReportAs(1, "codex", "two", fixedNow().Add(-50*time.Minute))
+	store.SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
+	store.SeedReportAs(1, "codex", "two", fixedNow().Add(-50*time.Minute))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt,
@@ -146,7 +146,7 @@ func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 
 func TestAnAgentThatReportedHasItsMCPInstalledEvenIfItsConfigIsElsewhere(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).ReportAs(1, "cursor-vscode", "one", fixedNow().Add(-30*time.Hour))
+	r.app.Store.(*data.Fake).SeedReportAs(1, "cursor-vscode", "one", fixedNow().Add(-30*time.Hour))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "No reports today")
@@ -157,7 +157,7 @@ func TestAnAgentThatReportedHasItsMCPInstalledEvenIfItsConfigIsElsewhere(t *test
 
 func TestAgentsPaneCountsOneReportInTheSingular(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).ReportAs(1, "cursor-agent", "one", fixedNow().Add(-time.Minute))
+	r.app.Store.(*data.Fake).SeedReportAs(1, "cursor-agent", "one", fixedNow().Add(-time.Minute))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Cursor", "1 report today")
@@ -167,7 +167,7 @@ func TestAgentsPaneCountsOneReportInTheSingular(t *testing.T) {
 // config folder: its MCP is installed somewhere.
 func TestAnAgentThatOnlyReportedStaysOnThisMac(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).ReportAs(1, "amp", "one", fixedNow().Add(-time.Hour))
+	r.app.Store.(*data.Fake).SeedReportAs(1, "amp", "one", fixedNow().Add(-time.Hour))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Amp", "MCP installed")
@@ -380,7 +380,7 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	inChinese(r.tt)
 	r.mac.has("gemini")
 	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{}}}`)
-	r.app.Store.(*data.Fake).ReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
+	r.app.Store.(*data.Fake).SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()

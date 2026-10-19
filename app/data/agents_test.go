@@ -35,9 +35,9 @@ func TestRealAgentActivityCountsTodayAndSkipsTheGitHubPoller(t *testing.T) {
 	}
 }
 
-func TestFakeAgentActivityMatchesTheRealOne(t *testing.T) {
-	f := NewFake(fixedNow)
-	f.ReportAs(1, "codex", "x", fixedNow().Add(-6*time.Minute))
+func TestAgentActivityOfTheSeed(t *testing.T) {
+	f := seededDemo(t)
+	f.SeedReportAs(1, "codex", "x", fixedNow().Add(-6*time.Minute))
 	got, err := f.AgentActivity(fixedNow().Add(-12 * time.Hour))
 	if err != nil {
 		t.Fatal(err)

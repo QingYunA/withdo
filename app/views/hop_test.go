@@ -172,7 +172,7 @@ func TestSomethingHandedOverAgainIsNewAgain(t *testing.T) {
 	r := newHopRig(t, false)
 	r.tt.Frame()
 	r.now = r.now.Add(time.Hour)
-	r.store.ReportAs(3, "claude-code", "Still stuck, now on the keychain", r.now)
+	r.store.SeedReportAs(3, "claude-code", "Still stuck, now on the keychain", r.now)
 	r.app.Refresh()
 	r.leave()
 	if len(r.m.hop.flights) != 1 || r.m.hop.flights[0].id != 3 {
@@ -303,7 +303,7 @@ func TestHandedOverRowsHaveActionsThatDoTheNextThing(t *testing.T) {
 
 func TestAnAgentDoneWithoutAPullRequestSaysSoAndOffersReview(t *testing.T) {
 	r := newHopRig(t, false)
-	r.store.ReportAs(r.handOver("Tidy the logs").ID, "codex", "Done", r.now)
+	r.store.SeedReportAs(r.handOver("Tidy the logs").ID, "codex", "Done", r.now)
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Codex finished and is waiting for you", "Review")

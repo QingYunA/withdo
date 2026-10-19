@@ -27,7 +27,7 @@ func mineApp(t *testing.T) (*App, *data.Fake) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.ReportAs(sub.ID, "claude-code", "Handed back for review", fixedNow().Add(-time.Minute))
+	store.SeedReportAs(sub.ID, "claude-code", "Handed back for review", fixedNow().Add(-time.Minute))
 	app.Refresh()
 	return app, store
 }
@@ -92,7 +92,7 @@ func TestScreensSubRows(t *testing.T) {
 	screensTest(t)
 	for _, a := range appearances() {
 		app, store := mineApp(t)
-		store.ReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
+		store.SeedReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
 		app.Refresh()
 		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
 		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: lifeID}) })

@@ -237,16 +237,9 @@ func TestADayWithNoTimeWordsIsDueAtSixInTheEvening(t *testing.T) {
 }
 
 func TestTheStoreListsEveryDoneTaskForTheCalendar(t *testing.T) {
-	f := NewFake(fixedNow)
+	f := seededDemo(t)
 	old := fixedNow().AddDate(0, -3, 0)
-	task, _ := f.CreateTask(CreateTaskInput{Title: "ancient", Source: SourceUser})
-	if _, err := f.UpdateTask(task.ID, Patch{Status: StatusPtr(Done)}); err != nil {
-		t.Fatal(err)
-	}
-	f.mu.Lock()
-	tt, _ := f.find(task.ID)
-	tt.CompletedAt = &old
-	f.mu.Unlock()
+	task := f.SeedTask(Task{Title: "ancient", Status: Done, CreatedAt: old, UpdatedAt: old, CompletedAt: &old})
 	all, err := f.ListTasks(Filter{})
 	if err != nil {
 		t.Fatal(err)
@@ -261,7 +254,7 @@ func TestTheStoreListsEveryDoneTaskForTheCalendar(t *testing.T) {
 }
 
 func TestCreateTaskTakesADueDate(t *testing.T) {
-	f := NewFake(fixedNow)
+	f := seededDemo(t)
 	due := time.Date(2026, 10, 16, 18, 0, 0, 0, time.Local)
 	task, err := f.CreateTask(CreateTaskInput{Title: "x", Source: SourceUser, DueAt: &due})
 	if err != nil || task.DueAt == nil || !task.DueAt.Equal(due) {

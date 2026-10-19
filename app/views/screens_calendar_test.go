@@ -21,7 +21,7 @@ import (
 func calendarShowcase(t *testing.T) *App {
 	t.Helper()
 	f := data.NewEmptyFake(fixedNow)
-	proj := f.AddProject("adhd-todo", "QingYunA/adhd-todo")
+	proj := f.SeedProject("adhd-todo", "QingYunA/adhd-todo")
 	local := func(m time.Month, d, h, min int) *time.Time {
 		at := time.Date(2026, m, d, h, min, 0, 0, time.Local)
 		return &at
@@ -29,9 +29,9 @@ func calendarShowcase(t *testing.T) *App {
 	add := func(title string, src data.Source, st data.Status, agent string, edit func(*data.Task)) {
 		task := data.Task{Title: title, Source: src, Status: st, Priority: data.P2, ProjectID: &proj.ID}
 		edit(&task)
-		task = f.AddTask(task)
+		task = f.SeedTask(task)
 		if agent != "" {
-			f.AddReport(data.Report{TaskID: task.ID, Agent: agent, Summary: "Working on it", CreatedAt: fixedNow().Add(-time.Hour)})
+			f.SeedReport(data.Report{TaskID: task.ID, Agent: agent, Summary: "Working on it", CreatedAt: fixedNow().Add(-time.Hour)})
 		}
 	}
 	doneOn := func(m time.Month, d int) func(*data.Task) {

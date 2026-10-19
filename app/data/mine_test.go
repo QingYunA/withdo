@@ -1,12 +1,13 @@
 package data
 
 import (
+	"strconv"
 	"testing"
 	"time"
 )
 
 // mineInputOf is what the views hand to BuildMine, read from a fake store.
-func mineInputOf(t *testing.T, f *Fake) MineInput {
+func mineInputOf(t *testing.T, f *Real) MineInput {
 	t.Helper()
 	tasks, err := f.ListTasks(Filter{})
 	if err != nil {
@@ -31,13 +32,13 @@ func mineInputOf(t *testing.T, f *Fake) MineInput {
 }
 
 // mineOf builds the Mine screen of a fake store the way the views do.
-func mineOf(t *testing.T, f *Fake) Mine {
+func mineOf(t *testing.T, f *Real) Mine {
 	t.Helper()
 	return BuildMine(mineInputOf(t, f))
 }
 
 // firstReport is the newest report of a task from GitHub or, with github false, from an agent.
-func firstReport(f *Fake, id int, github bool) *Report {
+func firstReport(f *Real, id int, github bool) *Report {
 	d, err := f.GetTask(id)
 	if err != nil {
 		return nil
@@ -71,7 +72,7 @@ func equal(a, b []string) bool {
 }
 
 func TestBuildMineSeedMatchesTheMockup(t *testing.T) {
-	n := mineOf(t, NewFake(fixedNow))
+	n := mineOf(t, seededDemo(t))
 	wantHanded := []string{"Fix tray race on launch", "Native UI with mygo"}
 	if got := titles(n.FromAgents); !equal(got, wantHanded) {
 		t.Errorf("from agents %q, want %q (blocked, review)", got, wantHanded)
@@ -88,7 +89,7 @@ func TestBuildMineSeedMatchesTheMockup(t *testing.T) {
 }
 
 func TestBuildMineSaysWhyAndWhatTheAgentSaid(t *testing.T) {
-	n := mineOf(t, NewFake(fixedNow))
+	n := mineOf(t, seededDemo(t))
 	it := n.FromAgents[0]
 	if it.Kind != NeedBlocked || it.Words != "Needs a decision on the activation policy" {
 		t.Errorf("blocked row: kind %v, words %q", it.Kind, it.Words)
@@ -102,7 +103,7 @@ func TestBuildMineSaysWhyAndWhatTheAgentSaid(t *testing.T) {
 }
 
 func TestBuildAgentsSeedWorkingTasksWithTheirSubtasks(t *testing.T) {
-	a := buildAgentsOf(t, NewFake(fixedNow))
+	a := buildAgentsOf(t, seededDemo(t))
 	var working []string
 	for _, r := range a.Working {
 		working = append(working, r.Title)
@@ -131,13 +132,13 @@ func TestBuildAgentsSeedWorkingTasksWithTheirSubtasks(t *testing.T) {
 	}
 }
 
-func buildAgentsOf(t *testing.T, f *Fake) AgentsScreen {
+func buildAgentsOf(t *testing.T, f *Real) AgentsScreen {
 	t.Helper()
 	return BuildAgents(mineInputOf(t, f))
 }
 
 func TestSubtasksAreNeverTopLevelRows(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	parent, _ := f.CreateTask(CreateTaskInput{Title: "Parent", Source: SourceAgent, Status: Doing})
 	for _, st := range []Status{Blocked, Review, Doing, Todo, Done} {
 		f.CreateTask(CreateTaskInput{Title: "child " + string(st), ParentID: IntPtr(parent.ID), Source: SourceAgent, Status: st})
@@ -154,7 +155,7 @@ func TestSubtasksAreNeverTopLevelRows(t *testing.T) {
 }
 
 func TestACancelledSubtaskIsLeftOutOfItsParent(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	parent, _ := f.CreateTask(CreateTaskInput{Title: "Parent", Source: SourceAgent, Status: Doing})
 	f.CreateTask(CreateTaskInput{Title: "dropped", ParentID: IntPtr(parent.ID), Source: SourceAgent, Status: Cancelled})
 	f.CreateTask(CreateTaskInput{Title: "kept", ParentID: IntPtr(parent.ID), Source: SourceAgent, Status: Doing})
@@ -164,10 +165,10 @@ func TestACancelledSubtaskIsLeftOutOfItsParent(t *testing.T) {
 }
 
 func TestBuildMineEmptySectionsAndAllClear(t *testing.T) {
-	if !mineOf(t, NewEmptyFake(fixedNow)).Empty() {
+	if !mineOf(t, emptyDemo(t)).Empty() {
 		t.Error("an empty store is not All clear")
 	}
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	f.CreateTask(CreateTaskInput{Title: "Only mine"})
 	n := mineOf(t, f)
 	if len(n.FromAgents) != 0 || len(n.Today) != 0 || len(n.Later) != 1 {
@@ -177,7 +178,7 @@ func TestBuildMineEmptySectionsAndAllClear(t *testing.T) {
 
 func TestBuildMineStaleAgentWithoutReports(t *testing.T) {
 	now := fixedNow()
-	f := NewEmptyFake(func() time.Time { return now })
+	f := openDemo(t, func() time.Time { return now }, false)
 	f.CreateTask(CreateTaskInput{Title: "Quiet one", Source: SourceAgent, Status: Doing})
 	now = now.Add(80 * time.Hour)
 	n := mineOf(t, f)
@@ -190,7 +191,7 @@ func TestBuildMineStaleAgentWithoutReports(t *testing.T) {
 }
 
 func TestBuildMineReviewWithoutPRAndMyBlockedTask(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	f.CreateTask(CreateTaskInput{Title: "Reviewable", Source: SourceAgent, Status: Review})
 	f.CreateTask(CreateTaskInput{Title: "Stuck", Source: SourceUser, Status: Blocked})
 	f.CreateTask(CreateTaskInput{Title: "Waiting on someone", Source: SourceUser, Status: Review})
@@ -205,7 +206,7 @@ func TestBuildMineReviewWithoutPRAndMyBlockedTask(t *testing.T) {
 
 func TestBuildMineTodayAndLaterLimitsAndHorizon(t *testing.T) {
 	now := fixedNow()
-	f := NewEmptyFake(func() time.Time { return now })
+	f := openDemo(t, func() time.Time { return now }, false)
 	for i := 0; i < 10; i++ {
 		f.CreateTask(CreateTaskInput{Title: "Undated " + itoaT(i)})
 	}
@@ -232,7 +233,7 @@ func TestBuildMineTodayAndLaterLimitsAndHorizon(t *testing.T) {
 }
 
 func TestBuildMineMyReminderDueNowIsTodayNotFromAgents(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	task, _ := f.CreateTask(CreateTaskInput{Title: "Ping me"})
 	f.UpdateTask(task.ID, Patch{RemindAt: TimePtr(fixedNow().Add(-time.Minute))})
 	n := mineOf(t, f)
@@ -255,7 +256,7 @@ func TestNextMoment(t *testing.T) {
 func itoaT(n int) string { return string(rune('0' + n)) }
 
 func TestBuildMineDoneTodayListsWhatAnyoneFinishedSinceMidnightNewestFirst(t *testing.T) {
-	n := mineOf(t, NewFake(fixedNow)) // 2:30 PM
+	n := mineOf(t, seededDemo(t)) // 2:30 PM
 	if got := titles(n.Done); !equal(got, []string{"Port the MCP server", "Send the packaging answer"}) {
 		t.Errorf("done today %q: want what finished at 1:50 PM and 11:30 AM; yesterday's and older stay out", got)
 	}
@@ -265,7 +266,7 @@ func TestBuildMineDoneTodayListsWhatAnyoneFinishedSinceMidnightNewestFirst(t *te
 }
 
 func TestBuildMineDoneTodayNamesWhoFinishedIt(t *testing.T) {
-	n := mineOf(t, NewFake(fixedNow))
+	n := mineOf(t, seededDemo(t))
 	by := map[string]string{}
 	words := map[string]string{}
 	for _, it := range n.Done {
@@ -281,14 +282,10 @@ func TestBuildMineDoneTodayNamesWhoFinishedIt(t *testing.T) {
 
 func TestBuildMineDoneTodayStopsAtFiveAndCountsTheRest(t *testing.T) {
 	now := fixedNow()
-	f := NewEmptyFake(func() time.Time { return now })
+	f := openDemo(t, func() time.Time { return now }, false)
 	for i := 0; i < 7; i++ {
-		task, _ := f.CreateTask(CreateTaskInput{Title: "t" + itoa(i), Status: Todo})
-		f.mu.Lock()
 		at := now.Add(-time.Duration(i+1) * time.Hour)
-		tt, _ := f.find(task.ID)
-		tt.Status, tt.CompletedAt = Done, &at
-		f.mu.Unlock()
+		f.SeedTask(Task{Title: "t" + strconv.Itoa(i), Status: Done, CreatedAt: at, UpdatedAt: at, CompletedAt: &at})
 	}
 	n := mineOf(t, f)
 	if got := titles(n.Done); !equal(got, []string{"t0", "t1", "t2", "t3", "t4"}) || n.MoreDone != 2 {
@@ -301,21 +298,12 @@ func TestBuildMineDoneTodayStopsAtFiveAndCountsTheRest(t *testing.T) {
 
 func TestBuildMineDoneTodayLeavesOutCancelledAndYesterday(t *testing.T) {
 	now := fixedNow()
-	f := NewEmptyFake(func() time.Time { return now })
-	a, _ := f.CreateTask(CreateTaskInput{Title: "cancelled"})
-	b, _ := f.CreateTask(CreateTaskInput{Title: "just after midnight"})
-	c, _ := f.CreateTask(CreateTaskInput{Title: "just before midnight"})
-	f.UpdateTask(a.ID, Patch{Status: StatusPtr(Cancelled)})
-	f.UpdateTask(b.ID, Patch{Status: StatusPtr(Done)})
-	f.UpdateTask(c.ID, Patch{Status: StatusPtr(Done)})
+	f := openDemo(t, func() time.Time { return now }, false)
 	y, m, d := now.Date()
 	after, before := time.Date(y, m, d, 0, 0, 1, 0, now.Location()), time.Date(y, m, d, 0, 0, 0, 0, now.Location()).Add(-time.Second)
-	f.mu.Lock()
-	tb, _ := f.find(b.ID)
-	tb.CompletedAt = &after
-	tc, _ := f.find(c.ID)
-	tc.CompletedAt = &before
-	f.mu.Unlock()
+	f.SeedTask(Task{Title: "cancelled", Status: Cancelled})
+	f.SeedTask(Task{Title: "just after midnight", Status: Done, CompletedAt: &after})
+	f.SeedTask(Task{Title: "just before midnight", Status: Done, CompletedAt: &before})
 	if got := titles(mineOf(t, f).Done); !equal(got, []string{"just after midnight"}) {
 		t.Errorf("done today %q", got)
 	}

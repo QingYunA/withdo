@@ -18,7 +18,7 @@ import (
 func linksScreenApp(t *testing.T) (*App, *recorder) {
 	t.Helper()
 	app, store, rec := linksApp(t)
-	store.AddReport(data.Report{
+	store.SeedReport(data.Report{
 		TaskID: 2, Agent: "claude-code", Status: data.Doing, Summary: "Wrote the design notes for the board.",
 		CreatedAt: fixedNow().Add(-90 * time.Minute),
 		Links: []data.Link{
@@ -30,7 +30,7 @@ func linksScreenApp(t *testing.T) (*App, *recorder) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.AddReport(data.Report{
+	store.SeedReport(data.Report{
 		TaskID: crash.ID, Agent: "codex", Status: data.Review, Summary: "The crash report is written.",
 		CreatedAt: fixedNow().Add(-60 * time.Minute), Links: []data.Link{{URL: goneFile, Title: "Import report"}},
 	})

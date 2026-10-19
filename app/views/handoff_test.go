@@ -333,8 +333,8 @@ func TestAStillColumnsWindowAsksForNoFrames(t *testing.T) {
 
 func TestAHandOffNamesNoAgentAnywhereEvenWhenCodexReportedLast(t *testing.T) {
 	r := newHandRig(t, true)
-	r.store.ReportAs(15, "codex", "Tidying up", r.now.Add(-time.Second)) // the latest report of the project, from Codex
-	r.store.ReportAs(1, "codex", "Still at it", r.now)
+	r.store.SeedReportAs(15, "codex", "Tidying up", r.now.Add(-time.Second)) // the latest report of the project, from Codex
+	r.store.SeedReportAs(1, "codex", "Still at it", r.now)
 	r.app.Refresh()
 	r.tt.Frame()
 	r.dragOnto(t, "Write the release notes", "Port core to Go", true)

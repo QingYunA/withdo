@@ -1,15 +1,8 @@
 package data
 
-import (
-	"time"
+import "github.com/QingYunA/adhd-todo/internal/domain"
 
-	"github.com/QingYunA/adhd-todo/internal/domain"
-)
-
-var (
-	_ Summaries = (*Real)(nil)
-	_ Summaries = (*Fake)(nil)
-)
+var _ Summaries = (*Real)(nil)
 
 // GetSummary implements Summaries.
 func (r *Real) GetSummary(p Period) (*StoredSummary, error) {
@@ -42,50 +35,4 @@ func fromSummary(s domain.Summary) StoredSummary {
 		kinds[int(id)] = kind
 	}
 	return StoredSummary{Paragraph: s.Paragraph, Model: s.Model, Kinds: kinds, CreatedAt: parseTime(s.CreatedAt)}
-}
-
-// fakeSummaries is what the Fake keeps of summaries.
-type fakeSummaries map[string]StoredSummary
-
-func summaryKey(p Period) string { return p.Kind() + " " + p.FirstDate() }
-
-// GetSummary implements Summaries.
-func (f *Fake) GetSummary(p Period) (*StoredSummary, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	s, ok := f.summaries[summaryKey(p)]
-	if !ok {
-		return nil, nil
-	}
-	return &s, nil
-}
-
-// PutSummary implements Summaries.
-func (f *Fake) PutSummary(p Period, s StoredSummary) (StoredSummary, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	if f.summaries == nil {
-		f.summaries = fakeSummaries{}
-	}
-	kinds := make(map[int]string, len(s.Kinds))
-	for id, kind := range s.Kinds {
-		if domain.IsGoodKind(kind) {
-			kinds[id] = kind
-		}
-	}
-	s.Kinds, s.CreatedAt = kinds, f.Now()
-	f.summaries[summaryKey(p)] = s
-	return s, nil
-}
-
-// CompleteAt marks a task done at a moment, for demos and tests that want a day with things finished
-// at different hours.
-func (f *Fake) CompleteAt(id int, at time.Time) {
-	f.mu.Lock()
-	if t, ok := f.find(id); ok {
-		t.Status, t.CompletedAt, t.UpdatedAt = Done, &at, at
-		t.HandedTo, t.HandedAt = "", nil
-	}
-	f.mu.Unlock()
-	f.notify()
 }

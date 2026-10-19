@@ -3,24 +3,16 @@ package data
 import (
 	"testing"
 	"time"
-
-	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
-// reportOn files a report from an agent against a task, in whichever store this is.
+// reportOn files a report from an agent against a task.
 func reportOn(t *testing.T, s Store, id int, summary string) {
 	t.Helper()
-	switch s := s.(type) {
-	case *Fake:
-		s.AddReport(Report{TaskID: id, Agent: "claude-code", Status: Doing, Summary: summary, CreatedAt: s.Now()})
-	case *Real:
-		st := domain.StatusDoing
-		must[*domain.Report](t)(s.core.AddReport(bg, domain.AddReportInput{TaskID: int64(id), Agent: "claude-code", Summary: summary, Status: &st}))
-	}
+	s.(*Real).SeedReport(Report{TaskID: id, Agent: "claude-code", Status: Doing, Summary: summary})
 }
 
 func TestRestoreTaskPutsBackWhatDeleteTook(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "work"}))
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan", ProjectID: &p.ID, Priority: P1}))
 		must[Task](t)(s.UpdateTask(task.ID, Patch{Notes: StrPtr("two pages")}))
@@ -50,7 +42,7 @@ func TestRestoreTaskPutsBackWhatDeleteTook(t *testing.T) {
 }
 
 func TestRestoreTaskRefusesATaskThatIsBack(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "here"}))
 		snap := must[TaskSnapshot](t)(s.SnapshotTask(task.ID))
 		if _, err := s.RestoreTask(snap); err == nil {

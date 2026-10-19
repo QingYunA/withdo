@@ -136,7 +136,7 @@ func TestUnsortedIsOnlyThereWhileItHasRows(t *testing.T) {
 
 func TestAgentsGetOneSubRowEach(t *testing.T) {
 	app, store, _ := newTestApp(t)
-	store.ReportAs(15, "codex", "Looking at the parser", fixedNow().Add(-time.Minute))
+	store.SeedReportAs(15, "codex", "Looking at the parser", fixedNow().Add(-time.Minute))
 	app.Refresh()
 	tt, m, _ := newTesterFor(app, 1100)
 	if !tt.HasText("Claude Code") || !tt.HasText("Codex") {
@@ -168,7 +168,7 @@ func TestAgentsGetOneSubRowEach(t *testing.T) {
 
 func TestOneAgentUnderTwoSpellingsIsOneRow(t *testing.T) {
 	app, store, _ := newTestApp(t)
-	store.ReportAs(15, "Claude Code", "Writing tests", fixedNow().Add(-time.Minute))
+	store.SeedReportAs(15, "Claude Code", "Writing tests", fixedNow().Add(-time.Minute))
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	if n := countText(tt, "Claude Code"); n != 1 {

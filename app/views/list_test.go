@@ -170,7 +170,7 @@ func TestSpaceCompletesAUsersTaskInTheList(t *testing.T) {
 
 func TestDoneGroupShowsThreeAndShowAll(t *testing.T) {
 	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 12; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i), Status: data.Done, ProjectID: data.IntPtr(p.ID)})
 	}

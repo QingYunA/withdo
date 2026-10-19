@@ -34,7 +34,7 @@ func calendarApp(t *testing.T) (*App, *data.Fake) {
 	add("Dentist", data.SourceUser, data.Patch{RemindAt: oct(16, 9, 30)})
 	add("Ship notes", data.SourceUser, data.Patch{Status: data.StatusPtr(data.Done)})
 	add("Call the landlord", data.SourceUser, data.Patch{DueAt: oct(9, 18, 0)})
-	m, err := f.CreateMilestone(f.AddProject("scratch", "me/scratch").ID, "v0.3 release", oct(23, 0, 0))
+	m, err := f.CreateMilestone(f.SeedProject("scratch", "me/scratch").ID, "v0.3 release", oct(23, 0, 0))
 	if err != nil || m.ID == 0 {
 		t.Fatal(err)
 	}

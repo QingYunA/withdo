@@ -52,7 +52,7 @@ func TestEmptyLanesSayWhatTheyAreFor(t *testing.T) {
 	has(t, tt, "Nothing to review", "Nothing yet")
 	hasNot(t, tt, "Drag here to start") // Doing holds a card
 	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	p := f.SeedProject("scratch", "me/scratch")
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Waiting", ProjectID: data.IntPtr(p.ID)})
 	empty := NewApp(f, &recorder{}, testConfig())
 	empty.Now = fixedNow
@@ -87,7 +87,7 @@ func statusLaneCount(m *Main, lane data.Status) int {
 
 func TestDoneLaneShowsTheNewestFiveAndShowAll(t *testing.T) {
 	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 8; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i), Status: data.Done, ProjectID: data.IntPtr(p.ID)})
 	}
