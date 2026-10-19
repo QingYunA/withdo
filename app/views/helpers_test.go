@@ -40,6 +40,7 @@ type recorder struct {
 	saved    []savedFile // what SaveText was asked to save
 	openErr  error       // what OpenIn answers
 	denied   bool        // what NotificationsDenied answers
+	noChecks bool        // SetAutomaticUpdates(false) was called
 
 	mu     sync.Mutex
 	posted []func()
@@ -64,6 +65,9 @@ func (r *recorder) Language() string       { return r.language }
 func (r *recorder) SetLanguage(tag string) { r.language = tag }
 
 func (r *recorder) NotificationsDenied() bool { return r.denied }
+
+func (r *recorder) AutomaticUpdates() bool      { return !r.noChecks }
+func (r *recorder) SetAutomaticUpdates(on bool) { r.noChecks = !on }
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {
