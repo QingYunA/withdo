@@ -1247,8 +1247,8 @@ paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting r
 ### Recent changes
 
 What changed in your projects lately (#110), read the way a changelog reads: not a review queue.
-Reference: `docs/design/mockups/v25.html` (decided); `v24.html` (grouped by review state) was turned
-down. Reviewing, checks and who does what stay with the agents; this page only helps you understand
+Reference: `docs/design/mockups/v25.html` (decided); an earlier draft grouped by review state was
+turned down. Reviewing, checks and who does what stay with the agents; this page only helps you understand
 what was shipped and what is being worked on, and the assistant does the reading for you.
 
 **Off by default.** Settings > General gets a group **Pages** (`页面`) with one switch row, **Recent
@@ -1321,7 +1321,7 @@ repository and period); deleting it only costs the assistant's time.
 
 **Empty**: no project has anything in the period: `Nothing changed in the last 7 days` (`最近 7 天没有变
 化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`
-/ `gh auth login`) with Copy, as in v24's last panel.
+/ `gh auth login`) with Copy.
 
 **As built** (what the spec above leaves to the code; screens `recent-*.png`):
 
