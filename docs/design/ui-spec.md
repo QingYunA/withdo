@@ -365,7 +365,8 @@ takes a repository from the sheet if the user gives it one.
   `New sub-project…` (the same sheet, with this project as the parent), a
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
-  the old name back. Archive acts at once, with the project's sub-projects (the project is in Settings >
+  the old name back. Double-clicking the project's title on its page renames it the same way, in place
+  (the title becomes an input; Inbox and the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
   General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
   Archiving or deleting the project on screen goes to Mine.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
@@ -1589,7 +1590,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
-| Rename project (sidebar) | saves | puts the old name back | |
+| Rename project (sidebar, page title) | saves | puts the old name back | |
 | New project, milestone, category sheets | creates / saves | closes the sheet | |
 
 ### Notifications
