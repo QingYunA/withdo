@@ -34,7 +34,7 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 	}
 	ids := m.multi.IDs()
 	narrow := m.width < barNarrowBelow
-	ui.Row(c.Key("bulk-wrap")).Absolute().Left(0).Right(0).Bottom(barBottom).Justify(ui.Center).PassThrough().Children(func() {
+	ui.Row(c.Key("bulk-wrap")).Absolute().Left(0).Right(0).Bottom(barBottom + m.dockHeight).Justify(ui.Center).PassThrough().Children(func() {
 		bar := ui.Row(c.Key("bulk-bar")).Role(ui.RoleToolbar).FocusGroup(ui.Horizontal).Label(m.say.A11yBulkBar())
 		bar.Shrink(0).Padding(barPad, 8).Gap(2).AlignItems(ui.Center).Draw(func(p *ui.Painter, r ui.Rect) { theme.DrawPixelPanel(p, r, t) })
 		bar.Children(func() {

@@ -6,16 +6,31 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// doubleClickTitle double clicks the page title, which sits above the composer (the sidebar has
-// the same name, so Find would hit that first).
-func doubleClickTitle(t *testing.T, tt *ui.Tester) {
+// titleSpot is a point on the page title: at the left of the composer's column, on the line of
+// the List | Board switch (the sidebar has the same name, so Find would hit that first).
+func titleSpot(t *testing.T, tt *ui.Tester) (x, y float32) {
 	t.Helper()
 	c, ok := tt.Find("Add a task, or ask me anything")
 	if !ok {
 		t.Fatalf("no composer in %q", tt.Texts())
 	}
-	tt.ClickAt(c.X+10, c.Y-c.H-20)
-	tt.ClickAt(c.X+10, c.Y-c.H-20)
+	v, ok := tt.Find("List view")
+	if !ok {
+		t.Fatalf("no List | Board switch in %q", tt.Texts())
+	}
+	return c.X + 10, v.Y + v.H/2
+}
+
+func doubleClickAt(tt *ui.Tester, x, y float32) {
+	tt.ClickAt(x, y)
+	tt.ClickAt(x, y)
+}
+
+// doubleClickTitle double clicks the page title.
+func doubleClickTitle(t *testing.T, tt *ui.Tester) {
+	t.Helper()
+	x, y := titleSpot(t, tt)
+	doubleClickAt(tt, x, y)
 }
 
 func TestDoubleClickingTheProjectTitleRenamesItInPlace(t *testing.T) {
@@ -45,10 +60,12 @@ func TestEscapeKeepsTheProjectNameWhenRenamingFromTheTitle(t *testing.T) {
 }
 
 func TestDoubleClickingTheInboxTitleDoesNothing(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	tt, m, _ := projectTester(t, 1)
+	_, y := titleSpot(t, tt) // the Inbox has no switch to measure by; its title is on the same line
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	doubleClickTitle(t, tt)
+	c, _ := tt.Find("Add a task, or ask me anything")
+	doubleClickAt(tt, c.X+10, y)
 	if m.manage.rename.id != 0 {
 		t.Errorf("rename %+v", m.manage.rename)
 	}

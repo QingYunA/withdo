@@ -13,7 +13,6 @@ import (
 func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
 	m.pageHeader(c, t, m.mineTitle(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

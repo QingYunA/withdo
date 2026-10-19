@@ -73,7 +73,6 @@ func (m *Main) columnMetrics(c *ui.Context) columnMetrics {
 func (m *Main) columnsScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

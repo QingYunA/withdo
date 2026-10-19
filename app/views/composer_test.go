@@ -108,14 +108,8 @@ func TestShiftEnterBreaksTheLineAndSendsNothing(t *testing.T) {
 
 func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
-	// What sits under the composer moves with its height.
-	below := func() float32 {
-		rect, ok := r.tt.Find("From your agents")
-		if !ok {
-			t.Fatalf("no From your agents in %q", r.tt.Texts())
-		}
-		return rect.Y
-	}
+	// The composer is pinned at the bottom: its dock grows upward with the box.
+	below := func() float32 { return belowBox(t, r) }
 	rest := below()
 	r.tt.Key(ui.Cmd, ui.KeyK)
 	focused := below()
@@ -349,8 +343,8 @@ func TestTheReplyShowsUnderTheComposerThatSentItAndGoesWhenThePageDoes(t *testin
 	r.ask("remind me at 9")
 	r.answer(t)
 	has(t, r.tt, "Team meeting")
-	if !above(t, r.tt, "Add a task, or ask me anything", "Team meeting") {
-		t.Error("the line is not under the composer")
+	if !above(t, r.tt, "Team meeting", "Add a task, or ask me anything") {
+		t.Error("the line is not above the composer")
 	}
 	r.m.goTo(nav{screen: screenInbox})
 	r.tt.Frame()

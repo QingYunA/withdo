@@ -61,3 +61,21 @@ func TestATaskTheUserFiledGetsNoFilingToast(t *testing.T) {
 	r.tt.Frame()
 	hasNot(t, r.tt, "Filed under")
 }
+
+func TestTheFilingToastSitsAboveTheComposerDock(t *testing.T) {
+	r := newFiledRig(t, true)
+	r.ask("pay rent")
+	r.answer(t)
+	r.tt.Frame()
+	toast, ok := r.tt.Find("Filed under Life")
+	if !ok {
+		t.Fatalf("no toast in %q", r.tt.Texts())
+	}
+	input, ok := r.tt.Find("Ask the assistant")
+	if !ok {
+		t.Fatalf("no composer in %q", r.tt.Texts())
+	}
+	if toast.Y+toast.H > input.Y {
+		t.Errorf("toast %+v covers the composer %+v", toast, input)
+	}
+}

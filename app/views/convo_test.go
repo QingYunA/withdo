@@ -472,14 +472,18 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 	}
 }
 
-func TestTheLinePushesTheSectionsDown(t *testing.T) {
+func TestTheLineGrowsTheDockUpAndTheSectionsStay(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	before, _ := r.tt.Find("From your agents")
+	dock := belowBox(t, r)
 	r.ask("remind me")
 	r.answer(t)
 	after, _ := r.tt.Find("From your agents")
-	if after.Y <= before.Y+40 {
-		t.Errorf("From your agents moved from %v to %v; the sheet should push it down", before.Y, after.Y)
+	if after.Y != before.Y {
+		t.Errorf("From your agents moved from %v to %v; the line grows up from the composer", before.Y, after.Y)
+	}
+	if got := belowBox(t, r); got <= dock+20 {
+		t.Errorf("the dock went from %v to %v; the line should make room above the box", dock, got)
 	}
 }
 
