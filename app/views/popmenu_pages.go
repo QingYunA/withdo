@@ -204,6 +204,28 @@ func (m *Main) categoryText(c data.Category) string {
 	return categoryName(m.say, c)
 }
 
+// categoryIcon is the icon of a category: a briefcase for Work, a house for Life, and none for a
+// task nobody classified.
+func categoryIcon(c data.Category) *ui.SVG {
+	switch c {
+	case data.CategoryWork:
+		return theme.IconWork
+	case data.CategoryLife:
+		return theme.IconLife
+	}
+	return nil
+}
+
+// categoryValue draws a category's icon, when it has one, before its name.
+func categoryValue(c *ui.Context, t *theme.Tokens, cat data.Category, ink ui.Color, name string) {
+	ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(1).MinWidth(0).Children(func() {
+		if icon := categoryIcon(cat); icon != nil {
+			ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary).Shrink(0)
+		}
+		theme.Text(c, theme.Compact, ink, name).Shrink(1).MinWidth(0).Ellipsis("…")
+	})
+}
+
 // categoryStrip is Work, Life and None in a row; one click sets the category.
 func (m *Main) categoryStrip(c *ui.Context, t *theme.Tokens, task data.Task, keyboard bool) {
 	ui.Row(c.Key("pop-category")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
@@ -218,7 +240,7 @@ func (m *Main) categoryStrip(c *ui.Context, t *theme.Tokens, task data.Task, key
 					m.closeMenu()
 					_ = m.app.Update(task.ID, data.Patch{Category: data.CategoryPtr(cat)})
 				},
-				func() { theme.Text(c, theme.Compact, ink, name) })
+				func() { categoryValue(c, t, cat, ink, name) })
 		}
 	})
 }
