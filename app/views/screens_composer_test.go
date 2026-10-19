@@ -14,7 +14,7 @@ import (
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensComposer
 
 // readyApp is the seeded fake with a scripted assistant and Anthropic's Haiku connected.
-func readyApp(t *testing.T, fa *data.FakeAssistant) (*App, *data.Fake, *recorder) {
+func readyApp(t *testing.T, fa *data.FakeAssistant) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := assistApp(t, fa)
 	mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
@@ -24,7 +24,7 @@ func readyApp(t *testing.T, fa *data.FakeAssistant) (*App, *data.Fake, *recorder
 
 // fridayP1 is the reply of "fix the login redirect loop, p1, friday": a task in the project with
 // what the words made of it.
-func fridayP1(store *data.Fake, project int, title, say string) func(string) (data.Reply, error) {
+func fridayP1(store *data.Real, project int, title, say string) func(string) (data.Reply, error) {
 	return func(string) (data.Reply, error) {
 		due := fixedNow().Add(2*24*time.Hour + 3*time.Hour + 30*time.Minute) // Friday evening
 		task, err := store.CreateTask(data.CreateTaskInput{Title: title, Source: data.SourceUser,
@@ -44,7 +44,7 @@ func fridayP1(store *data.Fake, project int, title, say string) func(string) (da
 
 // remindsTomorrow is the reply of "remind me tomorrow morning": the task's reminder really moves to
 // tomorrow at 9:00, and the receipt says so.
-func remindsTomorrow(store *data.Fake, id int, say string) func(string) (data.Reply, error) {
+func remindsTomorrow(store *data.Real, id int, say string) func(string) (data.Reply, error) {
 	return func(string) (data.Reply, error) {
 		at := fixedNow().Add(18*time.Hour + 30*time.Minute)
 		task, err := store.UpdateTask(id, data.Patch{RemindAt: &at})

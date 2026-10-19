@@ -1,5 +1,6 @@
 // Package data is the UI's view of adhd-todo: the domain types, the Store the views read and
-// write through, and an in-memory fake with realistic seed data.
+// write through, and Real, its one implementation over internal/domain and SQLite. OpenDemo opens
+// it on a temporary file with realistic seed data.
 //
 // The types mirror packages/core/src/domain/types.ts. Nullable strings are empty when absent,
 // nullable times and ids are pointers, so integration with internal/domain stays mechanical.
@@ -231,7 +232,7 @@ type Reminder struct {
 	ProjectName string // empty for the inbox
 }
 
-// Store is everything the UI needs. internal/domain and internal/watch will implement it.
+// Store is everything the UI needs. Real implements it over internal/domain and internal/watch.
 type Store interface {
 	Manager
 	Images

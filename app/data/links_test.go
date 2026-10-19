@@ -3,27 +3,15 @@ package data
 import (
 	"testing"
 	"time"
-
-	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
-// The pages an agent attached to a report reach the app's Report, from the real store and the fake.
-func TestAReportCarriesItsLinksFromEitherStore(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+// The pages an agent attached to a report reach the app's Report.
+func TestAReportCarriesItsLinks(t *testing.T) {
+	withStore(t, func(t *testing.T, s Store, clock *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan", Source: SourceAgent}))
-		id := int64(task.ID)
 		want := []Link{{URL: "https://example.com/a", Title: "A"}, {URL: "file:///tmp/b.html"}}
-		switch s := s.(type) {
-		case *Fake:
-			s.AddReport(Report{TaskID: task.ID, Agent: "claude-code", Summary: "with pages", CreatedAt: s.Now(), Links: want})
-			s.AddReport(Report{TaskID: task.ID, Agent: "claude-code", Summary: "without", CreatedAt: s.Now().Add(time.Minute)})
-		case *Real:
-			must[*domain.ProgressResult](t)(s.core.ReportProgress(bg, domain.ProgressInput{
-				TaskID: &id, Agent: "claude-code", Summary: "with pages",
-				Links: []domain.ReportLink{{URL: want[0].URL, Title: "A"}, {URL: want[1].URL}},
-			}))
-			must[*domain.ProgressResult](t)(s.core.ReportProgress(bg, domain.ProgressInput{TaskID: &id, Agent: "claude-code", Summary: "without"}))
-		}
+		s.(*Real).SeedReport(Report{TaskID: task.ID, Agent: "claude-code", Summary: "with pages", CreatedAt: *clock, Links: want})
+		s.(*Real).SeedReport(Report{TaskID: task.ID, Agent: "claude-code", Summary: "without", CreatedAt: clock.Add(time.Minute)})
 		reports := must[TaskDetail](t)(s.GetTask(task.ID)).Reports // newest first
 		if len(reports) != 2 {
 			t.Fatalf("reports = %d", len(reports))

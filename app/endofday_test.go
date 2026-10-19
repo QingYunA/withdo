@@ -15,6 +15,7 @@ func TestClickingTheEndOfDayNotificationOpensSummary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = be.close() })
 	app := views.NewApp(be.store, nil, views.Config{})
 	m := views.NewMain(app)
 	s := &shell{app: app, main: m}
@@ -42,6 +43,7 @@ func TestTheShellsEndOfDayCountsFromTheStoreAndFollowsThePrefs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = be.close() })
 	app := views.NewApp(be.store, nil, views.Config{})
 	app.Prefs = be.prefs
 	s := &shell{app: app, main: views.NewMain(app)}

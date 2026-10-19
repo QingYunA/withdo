@@ -27,7 +27,7 @@ func TestMineShowsItsSectionsInOrder(t *testing.T) {
 }
 
 func TestMineEmptySectionsAreNotDrawn(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Only mine"})
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
@@ -160,7 +160,7 @@ func TestNotNowPutsAHandedOverRowAsideUntilTheAgentReportsAgain(t *testing.T) {
 		t.Error("a dismissed row is back after a restart")
 	}
 	// The agent reports again: the row comes back.
-	store.ReportAs(3, "claude-code", "Still stuck", fixedNow().Add(time.Minute))
+	store.SeedReportAs(3, "claude-code", "Still stuck", fixedNow().Add(time.Minute))
 	app.Refresh()
 	tt.Frame()
 	if !tt.HasText("Fix tray race on launch") {
@@ -367,7 +367,7 @@ func TestCmdNumbersSwitchScreens(t *testing.T) {
 }
 
 func TestMineLinksToTheInboxWhenUndatedTasksDoNotFit(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 9; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Idea " + itoa(i)})
 	}

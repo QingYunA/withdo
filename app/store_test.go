@@ -94,6 +94,7 @@ func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = fake.close() })
 	if _, ok := fake.seen.(*data.MemorySeen); !ok {
 		t.Errorf("the demo keeps seen in %T, want memory", fake.seen)
 	}
@@ -108,7 +109,7 @@ func TestTheRealBackendKeepsWhatWasSeenNextToTheDatabaseAndTheFakeInMemory(t *te
 	}
 }
 
-func TestOpenBackendFakes(t *testing.T) {
+func TestOpenBackendDemos(t *testing.T) {
 	for _, tc := range []struct {
 		fake, empty bool
 		wantTasks   bool
@@ -124,6 +125,9 @@ func TestOpenBackendFakes(t *testing.T) {
 		stop := make(chan struct{})
 		be.start(stop)
 		close(stop)
+		if err := be.close(); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -212,6 +216,7 @@ func TestDemoBackendHasAGitHubStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = be.close() })
 	if be.github == nil || be.github.Status().State != data.GitHubReady {
 		t.Errorf("github = %v", be.github)
 	}

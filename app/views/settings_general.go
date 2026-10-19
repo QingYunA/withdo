@@ -18,7 +18,7 @@ const archivedRows = 5
 // settingsURLNotifications opens the Notifications pane of System Settings.
 const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
 
-// generalPane is the language, the notifications, the pages, the archived projects, and where the data lives.
+// generalPane is the language, the notifications, the updates, the pages, the archived projects, and where the data lives.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
@@ -29,6 +29,9 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 		s.endOfDayRows(c, t)
 	})
 	group(c, t, "sound", func() { s.soundRow(c, t) })
+	if s.app.Act.CanUpdate() {
+		group(c, t, "updates", func() { s.updatesRow(c, t) })
+	}
 	groupLabel(c, t, s.say.SettingsPages())
 	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())
@@ -100,6 +103,17 @@ func (s *Settings) soundRow(c *ui.Context, t *theme.Tokens) {
 	})
 	if on != s.app.SoundEffects() {
 		s.app.SetSoundEffects(on)
+	}
+}
+
+// updatesRow is the switch for checking for updates in the background; the update plugin keeps it.
+func (s *Settings) updatesRow(c *ui.Context, t *theme.Tokens) {
+	on := s.app.Act.AutomaticUpdates()
+	settingsRow(c, t, "updates", s.say.SettingsUpdates(), s.say.SettingsUpdatesMeta(), true, func() {
+		ui.Switch(c.Key("updates-switch"), &on).Label(s.say.SettingsUpdatesSwitch())
+	})
+	if on != s.app.Act.AutomaticUpdates() {
+		s.app.Act.SetAutomaticUpdates(on)
 	}
 }
 

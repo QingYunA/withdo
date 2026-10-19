@@ -157,7 +157,7 @@ func TestAcceptWithReducedMotionFadesThenIsGoneWithNoFoldOrOpening(t *testing.T)
 }
 
 func TestTheSectionFoldsWithItsLastRowAndLeavesNoJumpAtTheEnd(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Write the notes"})
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Tidy the docs", Source: data.SourceAgent, Status: data.Review})
 	app := NewApp(f, &recorder{}, testConfig())

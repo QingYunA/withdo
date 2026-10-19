@@ -14,7 +14,7 @@ import (
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensAssist
 
 // assistApp is the seeded fake with a scripted assistant and fake model settings.
-func assistApp(t *testing.T, fa *data.FakeAssistant) (*App, *data.Fake, *recorder) {
+func assistApp(t *testing.T, fa *data.FakeAssistant) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	app.Assistant, app.Models = fa, newFakeModels(t)

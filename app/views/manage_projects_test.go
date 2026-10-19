@@ -157,8 +157,8 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 		t.Errorf("opened %v", rec.urls)
 	}
 
-	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("local-only", "")
+	f := demoStore(t, fixedNow, false)
+	p := f.SeedProject("local-only", "")
 	plain := NewApp(f, &recorder{}, testConfig())
 	plain.Now = fixedNow
 	tt2, _, _ := newTesterFor(plain, 1100)

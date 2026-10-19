@@ -60,9 +60,9 @@ func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	mustNil(t, app.Models.Save("deepseek", data.ProviderEdit{Model: "deepseek-chat", Key: "sk-ds-demo"}))
 	mustNil(t, app.Models.SetActive("deepseek"))
 	now := fixedNow()
-	store.ReportAs(1, "codex", "Added the store migration test", now.Add(-6*time.Minute))
-	store.ReportAs(1, "codex", "Read the migration", now.Add(-50*time.Minute))
-	store.ReportAs(1, "opencode", "Checked the parser", now.Add(-30*time.Hour))
+	store.SeedReportAs(1, "codex", "Added the store migration test", now.Add(-6*time.Minute))
+	store.SeedReportAs(1, "codex", "Read the migration", now.Add(-50*time.Minute))
+	store.SeedReportAs(1, "opencode", "Checked the parser", now.Add(-30*time.Hour))
 	return app
 }
 

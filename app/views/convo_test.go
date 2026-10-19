@@ -503,7 +503,7 @@ func TestTheAddedToInboxNoticeFadesAfterOneAndAHalfSeconds(t *testing.T) {
 }
 
 func TestAnswerRefreshesTheLists(t *testing.T) {
-	store := data.NewFake(fixedNow)
+	store := demoStore(t, fixedNow, true)
 	rec := &recorder{}
 	app := NewApp(store, rec, testConfig())
 	app.Now = fixedNow

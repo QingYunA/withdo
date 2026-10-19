@@ -19,7 +19,7 @@ import (
 func summaryCrowdApp(t *testing.T) *App {
 	t.Helper()
 	app := summaryShotApp(t, false)
-	store := app.Store.(*data.Fake)
+	store := app.Store.(*data.Real)
 	kinds := map[int]string{2: "gem", 20: "gear", 1: "gem", 21: "mail", 7: "mail", 8: "crate", 10: "gear", 9: "jar", 13: "book", 11: "gem", 12: "jar"}
 	for _, f := range []struct {
 		id    int
@@ -34,9 +34,9 @@ func summaryCrowdApp(t *testing.T) *App {
 		{204, "GitHub Copilot", "book", "Write the Windows setup notes", atToday(12, 40)},
 		{205, "opencode", "scroll", "Plan the sync engine rework", atToday(14, 10)},
 	} {
-		task := store.AddTask(data.Task{ID: f.id, ProjectID: data.IntPtr(1), Title: f.title, Status: data.Doing, Source: data.SourceAgent})
-		store.ReportAs(task.ID, f.by, f.title, f.at.Add(-time.Second))
-		store.CompleteAt(task.ID, f.at)
+		task := store.SeedTask(data.Task{ID: f.id, ProjectID: data.IntPtr(1), Title: f.title, Status: data.Doing, Source: data.SourceAgent})
+		store.SeedReportAs(task.ID, f.by, f.title, f.at.Add(-time.Second))
+		store.SeedCompleteAt(task.ID, f.at)
 		kinds[f.id] = f.kind
 	}
 	_, _ = store.PutSummary(data.DayPeriod(app.Now(), 0), data.StoredSummary{

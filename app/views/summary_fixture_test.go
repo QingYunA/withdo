@@ -17,17 +17,17 @@ func atToday(h, m int) time.Time {
 // summaryApp is the seeded fake with a busy day: eight tasks finished, three by me, three by Claude
 // Code (two of them with merged pull requests) and two by Codex. The assistant is ready and answers
 // with a paragraph and the kinds of the goods.
-func summaryApp(t *testing.T) (*App, *data.Fake, *recorder) {
+func summaryApp(t *testing.T) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	finish := func(id int, by string, at time.Time, said string, merged int) {
 		if by != "" {
-			store.ReportAs(id, by, said, at.Add(-time.Second))
+			store.SeedReportAs(id, by, said, at.Add(-time.Second))
 		}
 		if merged > 0 {
-			_ = store.SetPullRequest(id, data.PRMerged, data.PRChecksPassing, data.PRReviewApproved)
+			store.SeedPullRequest(id, data.PRMerged, data.PRChecksPassing, data.PRReviewApproved)
 		}
-		store.CompleteAt(id, at)
+		store.SeedCompleteAt(id, at)
 	}
 	finish(21, "", atToday(9, 40), "", 0)                                                // me: the packaging answer, from the seed
 	finish(7, "", atToday(11, 30), "", 0)                                                // me: reply to design feedback
@@ -37,7 +37,7 @@ func summaryApp(t *testing.T) (*App, *data.Fake, *recorder) {
 	finish(2, "claude-code", atToday(11, 5), "Board, lists and inspector are in", 1)     // claude, merged
 	finish(1, "claude-code", atToday(14, 0), "Core ported and the migrations pass", 0)   // claude
 	// Port the MCP server (20) was finished by the seed's merge, 40 minutes ago: its pull request merged.
-	_ = store.SetPullRequest(20, data.PRMerged, data.PRChecksPassing, data.PRReviewApproved)
+	store.SeedPullRequest(20, data.PRMerged, data.PRChecksPassing, data.PRReviewApproved)
 	app.Assistant = &data.FakeAssistant{Ready: true, SummaryScript: func(req data.SummaryRequest) (data.SummaryText, error) {
 		kinds := map[int]string{}
 		for _, task := range req.Tasks {

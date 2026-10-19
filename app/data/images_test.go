@@ -238,9 +238,8 @@ func TestWithoutADataFolderThereIsNowhereToKeepPictures(t *testing.T) {
 	}
 }
 
-func TestFakeKeepsPicturesLikeTheRealStore(t *testing.T) {
-	f := NewEmptyFake(time.Now)
-	f.SetImageDir(t.TempDir())
+func TestPicturesFollowATaskThroughDeleteAndRestore(t *testing.T) {
+	f := openImagesReal(t, time.Hour) // only the CollectImages below collects, not a sweep a slow machine lets run first
 	task, _ := f.CreateTask(CreateTaskInput{Title: "a"})
 	got, err := f.AttachImages(task.ID, []Attachment{prepared(t, "s.png", bigPNG(t)), prepared(t, "s2.png", noisePNG(t, 50, 50))})
 	if err != nil || len(got) != 2 {

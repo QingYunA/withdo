@@ -2,8 +2,8 @@ package data
 
 import "testing"
 
-func TestFakeParentDoneClosesItsSubtasks(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+func TestParentDoneClosesItsSubtasks(t *testing.T) {
+	f := emptyDemo(t)
 	parent, _ := f.CreateTask(CreateTaskInput{Title: "parent", Source: SourceAgent, Status: Doing})
 	doing, _ := f.CreateTask(CreateTaskInput{Title: "a", Source: SourceAgent, Status: Doing, ParentID: &parent.ID})
 	nested, _ := f.CreateTask(CreateTaskInput{Title: "b", Source: SourceAgent, Status: Review, ParentID: &doing.ID})
@@ -68,7 +68,7 @@ func TestRealMapsParentIDBothWays(t *testing.T) {
 		t.Error("a missing parent should be refused")
 	}
 
-	// Closing the parent through the store closes the subtask, as in the fake.
+	// Closing the parent through the store closes the subtask.
 	done := Done
 	if _, err := r.UpdateTask(parent.ID, Patch{Status: &done}); err != nil {
 		t.Fatal(err)

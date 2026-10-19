@@ -40,7 +40,7 @@ func TestTheLastRowOfAPageCanBeScrolledAboveTheBar(t *testing.T) {
 }
 
 func TestTheLastRowOfALongListScrollsAboveTheBarToo(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	for i := range 14 {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Inbox task " + itoa(i+1), Source: data.SourceUser, Status: data.Todo})
 	}

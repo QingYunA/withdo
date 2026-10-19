@@ -40,8 +40,8 @@ func TestProjectHasRepo(t *testing.T) {
 	}
 }
 
-func TestFakeCreatesAndPatchesACategory(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+func TestCreatesAndPatchesACategory(t *testing.T) {
+	f := emptyDemo(t)
 	made, err := f.CreateTask(CreateTaskInput{Title: "Pay rent", Category: lifeID})
 	if err != nil || made.CategoryID != lifeID {
 		t.Fatalf("created %+v, %v", made, err)
@@ -73,8 +73,9 @@ const workID, lifeID = 1, 2
 // project, and one nobody classified.
 func categoryTasks(t *testing.T) (MineInput, func(Task) int) {
 	t.Helper()
-	f := NewEmptyFake(fixedNow)
-	f.projects = []Project{{ID: 1, Name: "app", RepoSlug: "me/app"}, {ID: 2, Name: "Home"}}
+	f := emptyDemo(t)
+	f.SeedProject("app", "me/app")
+	f.SeedProject("Home", "")
 	f.CreateTask(CreateTaskInput{Title: "work task", Category: workID})
 	f.CreateTask(CreateTaskInput{Title: "life task", Category: lifeID})
 	f.CreateTask(CreateTaskInput{Title: "repo task", ProjectID: IntPtr(1)})
@@ -105,7 +106,7 @@ func TestBuildMineKeepsOnlyTheTasksOfASlice(t *testing.T) {
 }
 
 func TestBuildMineSliceCountsItsOwnLaterOverflow(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	for i := 0; i < MaxUndated+3; i++ {
 		f.CreateTask(CreateTaskInput{Title: "work " + itoaT(i), Category: workID})
 	}
@@ -119,7 +120,7 @@ func TestBuildMineSliceCountsItsOwnLaterOverflow(t *testing.T) {
 }
 
 func TestASubtaskFollowsItsParentIntoASlice(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	parent, _ := f.CreateTask(CreateTaskInput{Title: "Parent", Source: SourceAgent, Status: Doing, Category: workID})
 	f.CreateTask(CreateTaskInput{Title: "child", Source: SourceAgent, Status: Doing, ParentID: IntPtr(parent.ID)})
 	other, _ := f.CreateTask(CreateTaskInput{Title: "Other", Source: SourceAgent, Status: Doing, Category: lifeID})
@@ -133,7 +134,7 @@ func TestASubtaskFollowsItsParentIntoASlice(t *testing.T) {
 }
 
 func TestMineOnlyFiltersTheSections(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	f.CreateTask(CreateTaskInput{Title: "w", Category: workID, Status: Doing})
 	f.CreateTask(CreateTaskInput{Title: "l", Category: lifeID, Status: Doing})
 	f.CreateTask(CreateTaskInput{Title: "later", Category: lifeID})
@@ -149,15 +150,15 @@ func TestMineOnlyFiltersTheSections(t *testing.T) {
 }
 
 func TestAgentsScreenTalliesByAgentInScreenOrder(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
+	f := emptyDemo(t)
 	a1, _ := f.CreateTask(CreateTaskInput{Title: "a", Source: SourceAgent, Status: Doing})
 	b1, _ := f.CreateTask(CreateTaskInput{Title: "b", Source: SourceAgent, Status: Doing})
 	a2, _ := f.CreateTask(CreateTaskInput{Title: "c", Source: SourceAgent, Status: Blocked})
 	d, _ := f.CreateTask(CreateTaskInput{Title: "d", Source: SourceAgent, Status: Doing})
-	f.ReportAs(a1.ID, "claude-code", "x", fixedNow().Add(-3*time.Minute))
-	f.ReportAs(b1.ID, "Codex", "x", fixedNow().Add(-1*time.Minute))
-	f.ReportAs(a2.ID, "Claude Code", "x", fixedNow().Add(-9*time.Minute))
-	f.ReportAs(d.ID, "gemini", "x", fixedNow().Add(-20*time.Minute))
+	f.SeedReportAs(a1.ID, "claude-code", "x", fixedNow().Add(-3*time.Minute))
+	f.SeedReportAs(b1.ID, "Codex", "x", fixedNow().Add(-1*time.Minute))
+	f.SeedReportAs(a2.ID, "Claude Code", "x", fixedNow().Add(-9*time.Minute))
+	f.SeedReportAs(d.ID, "gemini", "x", fixedNow().Add(-20*time.Minute))
 	f.UpdateTask(d.ID, Patch{Status: StatusPtr(Done)})
 	in := mineInputOf(t, f)
 	tally := BuildAgents(in).Tally(func(task Task) string {

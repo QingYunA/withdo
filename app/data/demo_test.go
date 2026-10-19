@@ -1,14 +1,32 @@
 package data
 
 import (
+	"strconv"
 	"testing"
 	"time"
 )
 
 func fixedNow() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.Local) }
 
+// openDemo is OpenDemo closed with the test.
+func openDemo(t *testing.T, now func() time.Time, seeded bool) *Real {
+	t.Helper()
+	r, err := OpenDemo(now, seeded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = r.Close() })
+	return r
+}
+
+// seededDemo is a store with the seed workspace at fixedNow.
+func seededDemo(t *testing.T) *Real { t.Helper(); return openDemo(t, fixedNow, true) }
+
+// emptyDemo is a store with nothing in it, at fixedNow.
+func emptyDemo(t *testing.T) *Real { t.Helper(); return openDemo(t, fixedNow, false) }
+
 func TestOverviewGroupsActiveTasksByAttention(t *testing.T) {
-	f := NewFake(fixedNow)
+	f := seededDemo(t)
 	ov, err := f.Overview()
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +47,7 @@ func TestOverviewGroupsActiveTasksByAttention(t *testing.T) {
 }
 
 func TestUpdateTaskCompletesAndRearmsReminder(t *testing.T) {
-	f := NewFake(fixedNow)
+	f := seededDemo(t)
 	task, err := f.UpdateTask(7, Patch{Status: StatusPtr(Done)})
 	if err != nil || task.CompletedAt == nil {
 		t.Fatalf("done: %+v, %v", task, err)
@@ -43,33 +61,9 @@ func TestUpdateTaskCompletesAndRearmsReminder(t *testing.T) {
 	}
 }
 
-func TestSubscribersHearChangesAndReminders(t *testing.T) {
-	now := fixedNow()
-	f := NewFake(func() time.Time { return now })
-	changes := 0
-	cancel := f.Subscribe(func() { changes++ })
-	var got []Reminder
-	f.SubscribeReminders(func(r Reminder) { got = append(got, r) })
-
-	if _, err := f.CreateTask(CreateTaskInput{Title: "New"}); err != nil {
-		t.Fatal(err)
-	}
-	cancel()
-	f.UpdateTask(1, Patch{Notes: StrPtr("x")})
-	if changes != 1 {
-		t.Errorf("heard %d changes, want 1 (the second came after cancel)", changes)
-	}
-
-	f.CheckReminders() // task 7 came due at the seed's "now"
-	f.CheckReminders()
-	if len(got) != 1 || got[0].TaskID != 7 || got[0].ProjectName != "" {
-		t.Errorf("reminders %+v, want one for task 7", got)
-	}
-}
-
-func TestAddProjectIsEmptyAndListed(t *testing.T) {
-	f := NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+func TestSeedProjectIsEmptyAndListed(t *testing.T) {
+	f := emptyDemo(t)
+	p := f.SeedProject("scratch", "me/scratch")
 	ps, _ := f.ListProjects()
 	if len(ps) != 1 || ps[0].ID != p.ID || ps[0].Name != "scratch" {
 		t.Errorf("projects %+v", ps)
@@ -94,3 +88,5 @@ func TestDaysFromCountsCalendarDays(t *testing.T) {
 		}
 	}
 }
+
+func itoa(n int) string { return strconv.Itoa(n) }

@@ -1,34 +1,76 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"slices"
+	"time"
 
-// seed fills the fake with a small, realistic workspace that matches docs/design/mockups/now.html:
+	"github.com/QingYunA/adhd-todo/internal/domain"
+)
+
+// seed fills a demo store with a small, realistic workspace that matches docs/design/mockups/now.html:
 // three projects, a blocked agent task with a next step, a review task with a PR, a reminder that
 // just came due, two agents at work in two projects, the user's own tasks with due labels, and
-// inbox items.
-func (f *Fake) seed() {
-	now := f.Now()
+// inbox items. It is written through the domain layer, with the clock moved to when each row
+// happened; ids follow the order below, which the tests rely on.
+func (r *Real) seed(now time.Time) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("%v", p)
+		}
+	}()
 	ago := func(d time.Duration) time.Time { return now.Add(-d) }
-	in := func(d time.Duration) *time.Time { t := now.Add(d); return &t }
 	day := 24 * time.Hour
 
-	f.projects = []Project{
-		{ID: 1, Name: "adhd-todo", RepoSlug: "QingYunA/adhd-todo", RepoPath: "~/Code/adhd-todo", CreatedAt: ago(30 * day), UpdatedAt: ago(time.Hour)},
-		{ID: 2, Name: "answer-me-with-html", RepoSlug: "QingYunA/answer-me-with-html", RepoPath: "~/Code/answer-me-with-html", CreatedAt: ago(20 * day), UpdatedAt: ago(14 * time.Minute)},
-		{ID: 3, Name: "picpocket", RepoSlug: "QingYunA/picpocket", RepoPath: "~/Code/picpocket", CreatedAt: ago(90 * day), UpdatedAt: ago(5 * day)},
+	for _, p := range []struct {
+		name, slug, path string
+		created, updated time.Time
+	}{
+		{"adhd-todo", "QingYunA/adhd-todo", "~/Code/adhd-todo", ago(30 * day), ago(time.Hour)},
+		{"answer-me-with-html", "QingYunA/answer-me-with-html", "~/Code/answer-me-with-html", ago(20 * day), ago(14 * time.Minute)},
+		{"picpocket", "QingYunA/picpocket", "~/Code/picpocket", ago(90 * day), ago(5 * day)},
+	} {
+		release := r.holdClock(p.created)
+		made := r.SeedProject(p.name, p.slug)
+		release()
+		r.exec(`UPDATE projects SET repo_path = ?, updated_at = ? WHERE id = ?`, p.path, domain.FormatTime(p.updated), made.ID)
 	}
-	f.milestones = []Milestone{
-		{ID: 1, ProjectID: 1, Title: "v0.2 native", DueAt: in(14 * day), Open: true, CreatedAt: ago(10 * day)},
-		{ID: 2, ProjectID: 1, Title: "v0.1 spike", DueAt: nil, Open: false, CreatedAt: ago(28 * day)},
-	}
-	f.seedTasks(now, ago, in)
-	f.seedReports(ago)
+	r.seedMilestones(now)
+	r.seedTasks(now)
+	r.seedReports(now)
+	return nil
 }
 
-type timeAgo func(time.Duration) time.Time
-type timeIn func(time.Duration) *time.Time
+func (r *Real) seedMilestones(now time.Time) {
+	day := 24 * time.Hour
+	due := domain.FormatTime(now.Add(14 * day))
+	for _, m := range []struct {
+		title   string
+		due     *string
+		created time.Time
+		closed  bool
+	}{
+		{"v0.2 native", &due, now.Add(-10 * day), false},
+		{"v0.1 spike", nil, now.Add(-28 * day), true},
+	} {
+		release := r.holdClock(m.created)
+		made, err := r.core.CreateMilestone(r.ctx(), domain.CreateMilestoneInput{ProjectID: 1, Title: m.title, DueAt: m.due})
+		release()
+		if err != nil {
+			panic(err)
+		}
+		if m.closed {
+			closed := domain.MilestoneClosed
+			if _, err := r.core.UpdateMilestone(r.ctx(), made.ID, domain.MilestonePatch{Status: &closed}); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
 
-func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
+func (r *Real) seedTasks(now time.Time) {
+	ago := func(d time.Duration) time.Time { return now.Add(-d) }
+	in := func(d time.Duration) *time.Time { t := now.Add(d); return &t }
 	day := 24 * time.Hour
 	p1, p2, p3 := IntPtr(1), IntPtr(2), IntPtr(3)
 	m1 := IntPtr(1)
@@ -45,7 +87,7 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		t.Branch = branch
 		if pr > 0 {
 			t.PRNumber = pr
-			t.PRURL = "https://github.com/QingYunA/adhd-todo/pull/" + itoa(pr)
+			t.PRURL = fmt.Sprintf("https://github.com/QingYunA/adhd-todo/pull/%d", pr)
 		}
 		return t
 	}
@@ -74,7 +116,7 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 	t21 := done(mk(21, nil, nil, "Send the packaging answer", Done, P2, SourceUser, ago(3*time.Hour)), ago(3*time.Hour))
 	t21.CategoryID = 1
 
-	f.tasks = []Task{
+	tasks := []Task{
 		agent(mk(1, p1, m1, "Port core to Go", Doing, P1, SourceAgent, ago(2*time.Minute)), "feat/go-core", 0),
 		agent(mk(2, p1, m1, "Native UI with mygo", Review, P2, SourceAgent, ago(25*time.Minute)), "feat/native-ui", 12),
 		agent(mk(3, p1, nil, "Fix tray race on launch", Blocked, P0, SourceAgent, ago(3*day)), "fix/tray", 0),
@@ -99,12 +141,18 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 		sub(1, mk(24, p1, nil, "Watch the database for changes", Doing, P2, SourceAgent, ago(time.Minute)), time.Time{}),
 		sub(20, mk(25, p1, nil, "Cover the tools with tests", Done, P2, SourceAgent, ago(50*time.Minute)), ago(50*time.Minute)),
 	}
+	// The ids are the database's, in the order the rows are made.
+	slices.SortFunc(tasks, func(a, b Task) int { return a.ID - b.ID })
+	for _, t := range tasks {
+		r.SeedTask(t)
+	}
 }
 
-func (f *Fake) seedReports(ago timeAgo) {
+func (r *Real) seedReports(now time.Time) {
 	day := 24 * time.Hour
+	ago := func(d time.Duration) time.Time { return now.Add(-d) }
 	rep := func(task int, agent string, st Status, at time.Duration, summary, next string) Report {
-		return Report{ID: len(f.reports) + 1, TaskID: task, Agent: agent, Status: st, Summary: summary, NextStep: next, CreatedAt: ago(at)}
+		return Report{TaskID: task, Agent: agent, Status: st, Summary: summary, NextStep: next, CreatedAt: ago(at)}
 	}
 	// Where the agents work: the worktree of each task they reported from. Tasks 10 to 12 left none.
 	worktree := func(name string) string { return "/Users/demo/code/" + name }
@@ -115,16 +163,7 @@ func (f *Fake) seedReports(ago timeAgo) {
 		23: worktree("adhd-todo/.claude/worktrees/mcp-tools"), 24: worktree("adhd-todo/.claude/worktrees/watcher"),
 		25: worktree("adhd-todo/.claude/worktrees/mcp-tests"),
 	}
-	add := func(rs ...Report) {
-		for _, r := range rs {
-			r.ID = len(f.reports) + 1
-			if r.Agent != GitHubAgent {
-				r.Cwd = cwds[r.TaskID]
-			}
-			f.reports = append(f.reports, r)
-		}
-	}
-	add(
+	for _, x := range []Report{
 		rep(1, "claude-code", Doing, 2*time.Minute, "Ported the store and migrations", "Port the MCP server"),
 		rep(1, "claude-code", Doing, 41*time.Minute, "Opened the migrations against a copy of the real database", "Port the store"),
 		rep(1, "claude-code", Doing, 3*time.Hour, "Read the TypeScript domain tests and listed the cases to port", "Start with the migrations"),
@@ -143,19 +182,10 @@ func (f *Fake) seedReports(ago timeAgo) {
 		rep(23, "claude-code", Doing, 2*time.Minute, "Eight of twelve tools ported", "Port the remaining tools"),
 		rep(24, "claude-code", Doing, time.Minute, "Watching PRAGMA data_version", ""),
 		rep(25, "claude-code", Done, 50*time.Minute, "Tests added", ""),
-	)
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
+	} {
+		if x.Agent != GitHubAgent {
+			x.Cwd = cwds[x.TaskID]
+		}
+		r.SeedReport(x)
 	}
-	var b [20]byte
-	i := len(b)
-	for n > 0 {
-		i--
-		b[i] = byte('0' + n%10)
-		n /= 10
-	}
-	return string(b[i:])
 }

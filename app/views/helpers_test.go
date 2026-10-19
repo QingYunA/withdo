@@ -30,16 +30,18 @@ type savedFile struct{ name, text string }
 
 // recorder is an Actions that remembers what the views asked for.
 type recorder struct {
-	opened   []int
-	urls     []string
-	panes    []Pane      // what OpenSettings was asked to show
-	folders  []string    // what ShowInFinder was asked to reveal
-	files    []string    // what OpenFile was asked to open
-	language string      // what SetLanguage last chose
-	opens    []openCall  // what OpenIn was asked for
-	saved    []savedFile // what SaveText was asked to save
-	openErr  error       // what OpenIn answers
-	denied   bool        // what NotificationsDenied answers
+	opened    []int
+	urls      []string
+	panes     []Pane      // what OpenSettings was asked to show
+	folders   []string    // what ShowInFinder was asked to reveal
+	files     []string    // what OpenFile was asked to open
+	language  string      // what SetLanguage last chose
+	opens     []openCall  // what OpenIn was asked for
+	saved     []savedFile // what SaveText was asked to save
+	openErr   error       // what OpenIn answers
+	denied    bool        // what NotificationsDenied answers
+	noChecks  bool        // SetAutomaticUpdates(false) was called
+	noUpdates bool        // the build cannot update itself
 
 	mu     sync.Mutex
 	posted []func()
@@ -64,6 +66,10 @@ func (r *recorder) Language() string       { return r.language }
 func (r *recorder) SetLanguage(tag string) { r.language = tag }
 
 func (r *recorder) NotificationsDenied() bool { return r.denied }
+
+func (r *recorder) CanUpdate() bool             { return !r.noUpdates }
+func (r *recorder) AutomaticUpdates() bool      { return !r.noChecks }
+func (r *recorder) SetAutomaticUpdates(on bool) { r.noChecks = !on }
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {
@@ -114,10 +120,21 @@ func testConfig() Config {
 	}
 }
 
-// newTestApp is an App over the seeded fake with the fixed clock.
-func newTestApp(t *testing.T) (*App, *data.Fake, *recorder) {
+// demoStore is a data.Real on a temporary SQLite file, seeded or empty, closed with the test.
+func demoStore(t *testing.T, now func() time.Time, seeded bool) *data.Real {
 	t.Helper()
-	store := data.NewFake(fixedNow)
+	r, err := data.OpenDemo(now, seeded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = r.Close() })
+	return r
+}
+
+// newTestApp is an App over the seeded store with the fixed clock.
+func newTestApp(t *testing.T) (*App, *data.Real, *recorder) {
+	t.Helper()
+	store := demoStore(t, fixedNow, true)
 	rec := &recorder{}
 	cfg := testConfig()
 	cfg.AgentSetup = newAgentRig(t).env
@@ -131,7 +148,7 @@ func newEmptyApp(t *testing.T) (*App, *recorder) {
 	rec := &recorder{}
 	cfg := testConfig()
 	cfg.AgentSetup = newAgentRig(t).env
-	app := NewApp(data.NewEmptyFake(fixedNow), rec, cfg)
+	app := NewApp(demoStore(t, fixedNow, false), rec, cfg)
 	app.Now = fixedNow
 	return app, rec
 }
@@ -281,8 +298,8 @@ func dragTo(t *testing.T, tt *ui.Tester, text, column string) {
 // emptyProjectApp is an empty store with one project and nothing in it.
 func emptyProjectApp(t *testing.T) (*App, data.Project) {
 	t.Helper()
-	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	f := demoStore(t, fixedNow, false)
+	p := f.SeedProject("scratch", "me/scratch")
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	return app, p

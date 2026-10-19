@@ -1,7 +1,6 @@
 package data
 
 import (
-	"sort"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
@@ -23,10 +22,7 @@ type AgentSource interface {
 	AgentActivity(since time.Time) ([]AgentActivity, error)
 }
 
-var (
-	_ AgentSource = (*Real)(nil)
-	_ AgentSource = (*Fake)(nil)
-)
+var _ AgentSource = (*Real)(nil)
 
 // AgentActivity implements AgentSource.
 func (r *Real) AgentActivity(since time.Time) ([]AgentActivity, error) {
@@ -39,44 +35,4 @@ func (r *Real) AgentActivity(since time.Time) ([]AgentActivity, error) {
 		out[i] = AgentActivity{Agent: a.Agent, Last: parseTime(a.Last), Since: a.Since}
 	}
 	return out, nil
-}
-
-// AgentActivity implements AgentSource.
-func (f *Fake) AgentActivity(since time.Time) ([]AgentActivity, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	byAgent := map[string]*AgentActivity{}
-	var out []*AgentActivity
-	for _, r := range f.reports {
-		if r.Agent == GitHubAgent || r.Agent == "" {
-			continue
-		}
-		a := byAgent[r.Agent]
-		if a == nil {
-			a = &AgentActivity{Agent: r.Agent}
-			byAgent[r.Agent] = a
-			out = append(out, a)
-		}
-		if r.CreatedAt.After(a.Last) {
-			a.Last = r.CreatedAt
-		}
-		if !r.CreatedAt.Before(since) {
-			a.Since++
-		}
-	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Last.After(out[j].Last) })
-	res := make([]AgentActivity, len(out))
-	for i, a := range out {
-		res[i] = *a
-	}
-	return res, nil
-}
-
-// ReportAs files a report by an agent against a task, for demos and tests of Settings > Agents.
-func (f *Fake) ReportAs(taskID int, agent, summary string, at time.Time) {
-	f.mu.Lock()
-	f.reports = append(f.reports, Report{ID: len(f.reports) + 1, TaskID: taskID, Agent: agent, Summary: summary, CreatedAt: at})
-	f.picked(taskID)
-	f.mu.Unlock()
-	f.notify()
 }
