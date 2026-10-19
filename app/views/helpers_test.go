@@ -158,7 +158,7 @@ func shot(t *testing.T, name string, img *image.RGBA, float bool, dark bool) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	out := image.Image(img)
+	out := img
 	if float {
 		out = onBackdrop(img, dark)
 	}
@@ -167,14 +167,16 @@ func shot(t *testing.T, name string, img *image.RGBA, float bool, dark bool) {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	if err := png.Encode(f, out); err != nil {
+	// 256 colors and the best compression: a third of the bytes of the RGBA default, same look
+	enc := png.Encoder{CompressionLevel: png.BestCompression}
+	if err := enc.Encode(f, quantizeScreen(out)); err != nil {
 		t.Fatal(err)
 	}
 }
 
 // onBackdrop sets a floating surface on a soft wallpaper-like gradient with room around it, the
 // way it appears on the desktop.
-func onBackdrop(img *image.RGBA, dark bool) image.Image {
+func onBackdrop(img *image.RGBA, dark bool) *image.RGBA {
 	const pad = 96
 	b := img.Bounds()
 	w, h := b.Dx()+2*pad, b.Dy()+2*pad
