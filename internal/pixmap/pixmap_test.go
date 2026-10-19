@@ -204,3 +204,53 @@ func TestParseRows(t *testing.T) {
 		}
 	}
 }
+
+func TestGridRoundTrip(t *testing.T) {
+	b, _ := ParseHex(briefcaseHex)
+	grid := b.Grid()
+	if len(grid) != GridLen || GridLen != 144 {
+		t.Fatalf("grid is %d characters", len(grid))
+	}
+	want := strings.Join([]string{
+		"............",
+		".....##.....",
+		"....#..#....",
+		"..########..",
+		".#........#.",
+		".#........#.",
+		".#........#.",
+		".#........#.",
+		".#........#.",
+		".#........#.",
+		"..########..",
+		"............",
+	}, "")
+	if grid != want {
+		t.Fatalf("grid = %s\nwant   %s", grid, want)
+	}
+	back, err := ParseGrid(grid)
+	if err != nil || back != b {
+		t.Fatalf("ParseGrid = %v, %v", back, err)
+	}
+}
+
+func TestParseGridRefusesAnythingButDotsAndHashes(t *testing.T) {
+	ok := strings.Repeat(".", GridLen)
+	for name, s := range map[string]string{
+		"short":     ok[:143],
+		"long":      ok + ".",
+		"empty":     "",
+		"a letter":  ok[:143] + "a", // lower case letters are reserved for a palette
+		"upper":     ok[:143] + "A",
+		"a space":   ok[:143] + " ",
+		"zero":      ok[:143] + "0",
+		"multibyte": ok[:141] + "é",
+	} {
+		if _, err := ParseGrid(s); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	if _, err := ParseGrid(ok); err != nil {
+		t.Errorf("an empty grid parses (the domain refuses it): %v", err)
+	}
+}

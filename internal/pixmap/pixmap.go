@@ -15,6 +15,9 @@ const Size = 12
 // HexLen is the length of a bitmap's hex form: 12 rows of 3 digits.
 const HexLen = Size * 3
 
+// GridLen is the length of a bitmap's grid form: 12 rows of 12 characters.
+const GridLen = Size * Size
+
 // Bitmap is the grid, one entry per row, row 0 at the top. Bit 11 of a row is its leftmost pixel.
 // A Bitmap is a value: the methods that change it return a new one.
 type Bitmap [Size]uint16
@@ -59,6 +62,41 @@ func MustParseHex(s string) Bitmap {
 		panic("pixmap: " + err.Error())
 	}
 	return b
+}
+
+// Grid is the form the database keeps: the 12 rows one after the other, row 0 first, 12 characters
+// each and no separators; "#" is a lit pixel and "." a dark one.
+func (b Bitmap) Grid() string {
+	out := make([]byte, 0, GridLen)
+	for y := 0; y < Size; y++ {
+		for x := 0; x < Size; x++ {
+			if b.At(x, y) {
+				out = append(out, '#')
+			} else {
+				out = append(out, '.')
+			}
+		}
+	}
+	return string(out)
+}
+
+// ParseGrid reads what Grid wrote. Only "." and "#" are pixels; the lower case letters are kept
+// for the colors of a later palette, and anything else is refused too.
+func ParseGrid(s string) (Bitmap, error) {
+	var b Bitmap
+	if len(s) != GridLen {
+		return b, fmt.Errorf("a bitmap is %d characters of . and #", GridLen)
+	}
+	for i := 0; i < GridLen; i++ {
+		switch s[i] {
+		case '#':
+			b = b.Set(i%Size, i/Size, true)
+		case '.':
+		default:
+			return Bitmap{}, fmt.Errorf("a bitmap is %d characters of . and #", GridLen)
+		}
+	}
+	return b, nil
 }
 
 // ParseRows reads 12 strings of 12 characters, "#" for a lit pixel and "." for a dark one: the
