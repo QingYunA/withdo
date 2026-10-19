@@ -29,6 +29,8 @@ func ProviderLogo(c *ui.Context, id string, size float32, ink ui.Color) ui.Eleme
 	switch {
 	case id == "anthropic":
 		return SpriteIcon(c, spriteClaude, size)
+	case id == "deepseek":
+		return SpriteIcon(c, spriteDeepSeek, size)
 	case id == "magpie":
 		return SpriteIcon(c, magpieSprite, size)
 	case oneColorMarks[id]:
