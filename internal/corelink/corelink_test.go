@@ -26,9 +26,9 @@ func versionScript(t *testing.T, path, version string) string {
 	return script(t, path, `[ "$1" = --version ] && echo "adhd-core `+version+`" || exit 2`)
 }
 
-// bundle is the adhd-core of an app bundle under root, at version 0.5.0.
+// bundle is the executable of an app bundle under root, which is adhd-core too, at version 0.5.0.
 func bundle(t *testing.T, root string) string {
-	return versionScript(t, filepath.Join(root, "ADHD Todo.app", "Contents", "Resources", "adhd-core"), "0.5.0")
+	return versionScript(t, filepath.Join(root, "ADHD Todo.app", "Contents", "MacOS", "ADHD Todo"), "0.5.0")
 }
 
 func target(t *testing.T, link string) string {
@@ -62,6 +62,22 @@ func TestLinkIntoTheSameBundleIsLeftAlone(t *testing.T) {
 	}
 	if r, err := Ensure(link, b); err != nil || r.Action != Unchanged {
 		t.Fatalf("Ensure = %+v, %v", r, err)
+	}
+}
+
+func TestLinkToTheResourceCopyOfAnOlderAppIsRepointedToTheExecutable(t *testing.T) {
+	root := t.TempDir()
+	b := bundle(t, root)
+	link := filepath.Join(root, "adhd-core")
+	// What v0.5.0 linked: the copy in Resources, which the updated app no longer has.
+	if err := os.Symlink(filepath.Join(root, "ADHD Todo.app", "Contents", "Resources", "adhd-core"), link); err != nil {
+		t.Fatal(err)
+	}
+	if r, err := Ensure(link, b); err != nil || r.Action != Linked {
+		t.Fatalf("Ensure = %+v, %v", r, err)
+	}
+	if got := target(t, link); got != b {
+		t.Errorf("points at %s, want %s", got, b)
 	}
 }
 

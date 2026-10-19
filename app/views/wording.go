@@ -107,6 +107,10 @@ func (m *Main) receiptWords(r data.Receipt, here string) (verb, tail string) {
 	switch d.Kind {
 	case data.DetailDone:
 		return m.say.DetailDone(), ""
+	case data.DetailRemembered:
+		return m.say.ResultRemembered(), ""
+	case data.DetailForgot:
+		return m.say.ResultForgot(), ""
 	case data.DetailUpdated:
 		for _, c := range d.Changes {
 			parts = append(parts, m.changeText(c))

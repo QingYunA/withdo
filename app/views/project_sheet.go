@@ -14,6 +14,7 @@ import (
 type projectSheet struct {
 	open       bool
 	name, repo string
+	repoOpen   bool  // the repository field is unfolded; it is folded until the user asks for it
 	parent     int   // the project the new one hangs under; 0 for a top-level project
 	problem    error // what the last Create found wrong with the repository
 }
@@ -41,10 +42,14 @@ func (m *Main) newProjectSheet(c *ui.Context, t *theme.Tokens) {
 		labeled(c, t, m.say.ManageFieldName(), func() {
 			wellInput(c, t, "project-name", &s.name, m.say.ManageFieldName(), "", theme.Body, true, m.projectSheetKey)
 		})
-		labeled(c, t, m.say.ManageFieldRepo(), func() {
-			wellInput(c, t, "project-repo", &s.repo, m.say.ManageFieldRepo(), m.say.ManageRepoPlaceholder(), theme.Mono, false, m.projectSheetKey)
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, m.repoLine(), 0)
-		})
+		if s.repoOpen {
+			labeled(c, t, m.say.ManageFieldRepo(), func() {
+				wellInput(c, t, "project-repo", &s.repo, m.say.ManageFieldRepo(), m.say.ManageRepoPlaceholder(), theme.Mono, false, m.projectSheetKey)
+				theme.Paragraph(c, theme.Meta, t.TextSecondary, m.repoLine(), 0)
+			})
+		} else {
+			m.repoFold(c, t)
+		}
 		cancelled, create := sheetButtons(c, m.say.ManageCancel(), m.say.ManageCreate(), strings.TrimSpace(s.name) != "", false)
 		if cancelled {
 			s.open = false
@@ -53,6 +58,24 @@ func (m *Main) newProjectSheet(c *ui.Context, t *theme.Tokens) {
 			m.createProject()
 		}
 	})
+}
+
+// repoFold is the folded repository field: a chevron and the field's label; a click unfolds it.
+func (m *Main) repoFold(c *ui.Context, t *theme.Tokens) {
+	row := ui.Row(c.Key("project-repo-fold")).Padding(3, 4).Gap(4).Radius(7).AlignItems(ui.Center).Shrink(0).
+		Cursor(ui.CursorPointer).Label(m.say.ManageFieldRepo())
+	ink := t.TextTertiary
+	if row.Hovered() {
+		row.Background(t.BgHover)
+		ink = t.TextSecondary
+	}
+	row.Children(func() {
+		ui.Icon(c, theme.IconForward).Size(theme.IconSmall, theme.IconSmall).TextColor(ink).Shrink(0)
+		theme.Text(c, theme.Meta, ink, m.say.ManageFieldRepo())
+	})
+	if row.Clicked() {
+		m.manage.project.repoOpen = true
+	}
 }
 
 // repoLine is the line under the repository field: what is wrong with it, or what it is for.

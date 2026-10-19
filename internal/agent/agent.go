@@ -36,6 +36,8 @@ type Config struct {
 	Model     ModelFunc
 	Now       func() time.Time // time.Now in the user's zone by default
 	IdleReset time.Duration    // DefaultIdleReset when zero
+	// Memory is the user's notes, read into every turn's prompt; nil gives the assistant no memory.
+	Memory *Memory
 }
 
 // Agent is the built-in assistant. It remembers the current conversation in memory only.
@@ -175,7 +177,7 @@ func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox,
 	if err != nil {
 		return nil, nil, err
 	}
-	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects, categories: categories, images: images}
+	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects, categories: categories, images: images, memory: a.cfg.Memory}
 	if p, ok := activeProject(projects, scope.ProjectID); ok && scope.Kind == ScopeProject {
 		tb.defaultProject = &p.ID
 	}
@@ -186,7 +188,7 @@ func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox,
 	if err != nil {
 		return nil, nil, err
 	}
-	prompt := BuildPrompt(a.cfg.Now(), projects, categories, scope, focus) + imageRules(images)
+	prompt := BuildPrompt(a.cfg.Now(), projects, categories, scope, focus) + imageRules(images) + a.memoryPrompt()
 	ag, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
 		Name: "adhd-todo", Description: "Turns requests into task changes.",
 		Instruction: prompt, Model: m, MaxIterations: maxIterations,
@@ -200,6 +202,14 @@ func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox,
 		return nil, nil, fmt.Errorf("build agent: %w", err)
 	}
 	return tb, adk.NewRunner(ctx, adk.RunnerConfig{Agent: ag}), nil
+}
+
+// memoryPrompt is the rules for the memory tools and the notes, read afresh so a hand edit counts.
+func (a *Agent) memoryPrompt() string {
+	if a.cfg.Memory == nil {
+		return ""
+	}
+	return memoryRules + userNotes(a.cfg.Memory.Text())
 }
 
 // focusOf is the task of a task scope. A task that was deleted since the inspector opened is an

@@ -94,6 +94,7 @@ type Main struct {
 	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
 	convo   convo                        // the answer under the composer that sent the last request
 	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
+	filed   []data.Receipt               // tasks the assistant sorted by itself, waiting for their toast
 	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
 	queue   queued                       // what a text input's last key asked of the next frame
 
@@ -103,11 +104,12 @@ type Main struct {
 	// owned are the rows (by foldKey) of a section that folds as one this frame, which only fade.
 	owned map[string]bool
 
-	scroll    ui.ScrollState
-	inspector inspector
-	thumbs    thumbCache // the pictures of tasks, decoded once
-	viewer    viewer     // the picture viewer over the window
-	copied    time.Time
+	scroll     ui.ScrollState
+	dockHeight float32 // the composer dock's height in the last frame, which the bulk bar and the toasts ride above
+	inspector  inspector
+	thumbs     thumbCache // the pictures of tasks, decoded once
+	viewer     viewer     // the picture viewer over the window
+	copied     time.Time
 
 	// onMine tells the notifier, from its own goroutine, whether the window shows all of Mine.
 	onMine atomic.Bool
@@ -254,6 +256,7 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
+		m.pageComposer(c, t)
 		m.bulkBar(c, t)
 	})
 }

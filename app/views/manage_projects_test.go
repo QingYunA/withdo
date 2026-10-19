@@ -30,10 +30,35 @@ func TestPlusOnTheProjectsHeaderOpensTheNewProjectSheet(t *testing.T) {
 		t.Fatal("the sheet is open before the plus is clicked")
 	}
 	openNewProject(t, tt)
-	for _, want := range []string{"Name", "GitHub repository", "owner/repo", "Agent reports from this repository land in the project.", "Cancel", "Create"} {
+	for _, want := range []string{"Name", "GitHub repository", "Cancel", "Create"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+	// The repository field is folded until the user asks for it.
+	if tt.HasText("owner/repo") || tt.HasText("Agent reports from this repository land in the project.") {
+		t.Errorf("the repository field is open by default: %q", tt.Texts())
+	}
+	if err := tt.Click("GitHub repository"); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"owner/repo", "Agent reports from this repository land in the project."} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q once unfolded in %q", want, tt.Texts())
+		}
+	}
+}
+
+func TestTheRepositoryFieldIsFoldedAgainInTheNextSheet(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	tt.Frame()
+	openNewProject(t, tt)
+	_ = tt.Click("GitHub repository")
+	_ = tt.Click("Cancel")
+	m.openNewProject(0)
+	tt.Frame()
+	if tt.HasText("owner/repo") {
+		t.Errorf("the repository field stays unfolded: %q", tt.Texts())
 	}
 }
 
@@ -68,6 +93,9 @@ func TestNewProjectWithARepository(t *testing.T) {
 	tt.Frame()
 	openNewProject(t, tt)
 	tt.Type("Rocket")
+	if err := tt.Click("GitHub repository"); err != nil {
+		t.Fatal(err)
+	}
 	if err := tt.Click("owner/repo"); err != nil {
 		t.Fatal(err)
 	}
@@ -91,6 +119,7 @@ func TestNewProjectSaysWhatIsWrongWithTheRepositoryAndStaysOpen(t *testing.T) {
 	tt.Frame()
 	openNewProject(t, tt)
 	tt.Type("Rocket")
+	_ = tt.Click("GitHub repository")
 	_ = tt.Click("owner/repo")
 	tt.Type("rocket")
 	tt.Key(0, ui.KeyEnter)

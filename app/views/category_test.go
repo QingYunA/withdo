@@ -1,6 +1,7 @@
 package views
 
 import (
+	"image"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -192,6 +193,45 @@ func TestTheCategoryPageDrawsEachIconInItsColor(t *testing.T) {
 			t.Errorf("%s: no %s pixel in its icon", label, key)
 		}
 	}
+}
+
+// A category row draws its icon once: a second, one-color copy stacks the colored one under it and
+// pushes it out of the 18 pt slot.
+func TestTheCategoryPageDrawsEachIconOnce(t *testing.T) {
+	tt, _, _ := projectTester(t, 1)
+	rightClick(t, tt, "Fix tray race on launch")
+	click(t, tt, "Category")
+	r, ok := tt.Find("Set category to Life")
+	if !ok {
+		t.Fatalf("no Life row in %q", tt.Texts())
+	}
+	if h := inkHeight(tt.Image(), 1100, ui.Rect{X: r.X + 4, Y: r.Y + 1, W: 26, H: r.H - 2}); h > 18 {
+		t.Errorf("Life's icon is drawn %v pt tall, more than its 18 pt slot: drawn twice", h)
+	}
+}
+
+// inkHeight is how tall, in points, the drawing in r is: from its top to its bottom pixel that
+// differs from the pixel at r's top left corner.
+func inkHeight(img *image.RGBA, width float32, r ui.Rect) float32 {
+	scale := float32(img.Bounds().Dx()) / width
+	base := img.RGBAAt(int(r.X*scale), int(r.Y*scale))
+	top, bottom := -1, -1
+	for y := int(r.Y * scale); y < int((r.Y+r.H)*scale); y++ {
+		for x := int(r.X * scale); x < int((r.X+r.W)*scale); x++ {
+			p := img.RGBAAt(x, y)
+			if absInt(int(p.R)-int(base.R))+absInt(int(p.G)-int(base.G))+absInt(int(p.B)-int(base.B)) > 60 {
+				if top < 0 {
+					top = y
+				}
+				bottom = y
+				break
+			}
+		}
+	}
+	if top < 0 {
+		return 0
+	}
+	return float32(bottom-top+1) / scale
 }
 
 func TestTheInspectorCategoryValueHasTheIconOfItsCategory(t *testing.T) {

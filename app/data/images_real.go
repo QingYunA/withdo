@@ -1,10 +1,10 @@
 package data
 
 import (
-	"path/filepath"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/paths"
 )
 
 var _ Images = (*Real)(nil)
@@ -19,7 +19,7 @@ func imagesDir(dataFolder string) string {
 	if dataFolder == "" {
 		return ""
 	}
-	return filepath.Join(dataFolder, "images")
+	return paths.ImagesDir(dataFolder)
 }
 
 // TaskImages implements Images.

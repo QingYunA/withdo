@@ -27,8 +27,6 @@ func (m *Main) boardScreen(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c).FillWidth().Shrink(0).AlignItems(ui.Center).Children(func() {
 		ui.Column(c).Width(lay.head).Children(func() {
 			m.listHeader(c, t)
-			ui.Box(c).Height(18).Shrink(0)
-			m.pageComposer(c, t)
 		})
 	})
 	ui.Box(c).Grow(1).MinHeight(0).Children(func() {

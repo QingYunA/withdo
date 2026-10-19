@@ -30,7 +30,6 @@ func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []da
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
@@ -207,6 +206,25 @@ func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
+// listTitle is the page's title. A project's name is an input once a double click starts renaming
+// it, with the same keys as in the sidebar; Inbox stays as it is.
+func (m *Main) listTitle(c *ui.Context, t *theme.Tokens, title string) {
+	if m.nav.screen != screenProject {
+		theme.Text(c, theme.Title, t.Text, title).Shrink(0)
+		return
+	}
+	id := m.nav.projectID
+	if r := m.manage.rename; r.id == id && r.page {
+		m.renameInput(c, t, theme.Title)
+		return
+	}
+	box := ui.Box(c.Key("page-title")).Shrink(0)
+	box.Children(func() { theme.Text(c, theme.Title, t.Text, title) })
+	if box.DoubleClicked() {
+		m.startPageRename(id, title)
+	}
+}
+
 // listHeader is the project's name, or Inbox, with the milestone filter (once the project has a
 // milestone) and the List | Board switch at the right.
 func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
@@ -215,7 +233,7 @@ func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
 		p, _ := m.app.Project(m.nav.projectID)
 		title = p.Name
 	}
-	m.pageHeader(c, t, title, "", func() {
+	m.pageHeaderOf(c, t, func() { m.listTitle(c, t, title) }, "", func() {
 		m.recentLink(c, t)
 		m.milestoneMenu(c, t)
 		if m.nav.screen == screenProject {

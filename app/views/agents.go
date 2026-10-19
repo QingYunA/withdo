@@ -24,7 +24,6 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 	}
 	m.pageHeader(c, t, m.agentsTitle(), sub, nil)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

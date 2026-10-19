@@ -2,6 +2,8 @@ package views
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -68,6 +70,30 @@ func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 			}
 		})
 	}
+	s.memoryGroup(c, t)
+}
+
+// memoryGroup is the row for the file where the assistant keeps notes about the user. The file is
+// plain Markdown: Open file hands it to the editor macOS has for it, or shows the data folder when
+// the assistant has not written anything yet.
+func (s *Settings) memoryGroup(c *ui.Context, t *theme.Tokens) {
+	path := s.app.Config.AssistantMemory
+	if path == "" {
+		return
+	}
+	group(c, t, "memory", func() {
+		settingsRow(c, t, "memory", s.say.SettingsAssistantMemory(), s.say.SettingsAssistantMemoryBody(), true, func() {
+			label := s.say.SettingsOpenFile()
+			if !settingsLink(c, t, "open-memory", label, label).Clicked() {
+				return
+			}
+			if _, err := os.Stat(path); err != nil {
+				s.app.Act.ShowInFinder(filepath.Dir(path))
+				return
+			}
+			s.app.Act.OpenFile(path)
+		})
+	})
 }
 
 // inUseCard is the provider the assistant uses: its logo, name, model and how the last test went,
