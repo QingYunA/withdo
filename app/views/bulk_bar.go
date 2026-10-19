@@ -1,7 +1,6 @@
 package views
 
 import (
-	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -44,20 +43,18 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 				count = itoa(len(ids))
 			}
 			theme.Text(c, theme.MetaStrong, t.Text, count).Shrink(0).Margin(0, 6, 0, 8)
-			if m.barButton(c, t, "done", theme.IconCheck, m.say.ActionDone(), "⌘↵", false, narrow).Clicked() {
-				m.bulkSetStatus(c, ids, data.Done)
-			}
-			if move := m.barButton(c, t, "move", theme.IconMove, m.say.MenuMoveTo(), "", false, narrow); move.Clicked() {
-				m.openManyMenuAbove(move, ids, pageMove)
-			}
-			if prio := m.barButton(c, t, "priority", theme.IconFlag, m.say.PropPriority(), "", false, narrow); prio.Clicked() {
-				m.openManyMenuAbove(prio, ids, pagePriority)
-			}
-			if m.barButton(c, t, "hand", theme.IconAgent, m.say.BulkHandOff(), "⌘⇧A", false, narrow).Clicked() {
-				m.handOffMany(c, ids)
-			}
-			if m.barButton(c, t, "delete", theme.IconTrash, m.say.MenuDelete(), "⌘⌫", true, narrow).Clicked() {
-				m.askBulkDelete(ids)
+			for _, a := range actionsFor(m.tasksOf(ids)) {
+				if !a.OnBar() {
+					continue
+				}
+				btn := m.barButton(c, t, a, narrow)
+				switch {
+				case !btn.Clicked():
+				case a.Page != pageMain:
+					m.openManyMenuAbove(btn, ids, a.Page)
+				default:
+					m.runAction(c, a.Kind, ids)
+				}
 			}
 			if m.barClear(c, t).Clicked() {
 				m.multi = m.multi.with()
@@ -68,12 +65,13 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 
 // barButton is a button of the bar: an icon and, unless the bar is narrow, its word. The tooltip
 // says it with its key.
-func (m *Main) barButton(c *ui.Context, t *theme.Tokens, key string, icon *ui.SVG, label, hint string, danger, narrow bool) ui.Element {
+func (m *Main) barButton(c *ui.Context, t *theme.Tokens, a taskAction, narrow bool) ui.Element {
+	label, icon, danger := m.barLabel(a), a.Icon, a.Danger
 	tip := label
-	if hint != "" {
-		tip += "  " + hint
+	if a.Key.hint != "" {
+		tip += "  " + a.Key.hint
 	}
-	btn := ui.ButtonBase(c.Key("bulk-"+key)).Height(barButton).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).
+	btn := ui.ButtonBase(c.Key("bulk-"+a.Name)).Height(barButton).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).
 		AlignItems(ui.Center).Shrink(0).Label(label).Tooltip(tip).Cursor(ui.CursorPointer)
 	ink := t.TextSecondary
 	switch {

@@ -37,7 +37,7 @@ func (a *App) RestoreHandOff(id int, agent string, at *time.Time, source data.So
 // robot catches it, and a toast says so.
 func (m *Main) handOff(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
-	if !ok || task.Source != data.SourceUser || task.Status.Terminal() {
+	if !ok || !canHandOff(task) {
 		return
 	}
 	if _, err := m.app.HandOff(id); err != nil {
@@ -63,7 +63,7 @@ func (m *Main) undoHandOff(id int, was data.Status) func() {
 // takeBack is the drop of an agent's row on Mine: the task is the user's again, with no sprite.
 func (m *Main) takeBack(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
-	if !ok || task.Source != data.SourceAgent || task.Status.Terminal() {
+	if !ok || !canTakeBack(task) {
 		return
 	}
 	if _, err := m.app.TakeBack(id); err != nil {
