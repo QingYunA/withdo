@@ -1242,6 +1242,85 @@ turned down). The scene makes a few quiet sounds while it plays, and nothing any
 **Stored**: a `summaries` table (migration 010): period (`day`/`week`), its first date, the
 paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting replaces the row.
 
+### Recent changes
+
+What changed in your projects lately (#110), read the way a changelog reads: not a review queue.
+Reference: `docs/design/mockups/v25.html` (decided); `v24.html` (grouped by review state) was turned
+down. Reviewing, checks and who does what stay with the agents; this page only helps you understand
+what was shipped and what is being worked on, and the assistant does the reading for you.
+
+**Off by default.** Settings > General gets a group **Pages** (`页面`) with one switch row, **Recent
+changes** (`最近变化`), `meta` `See what each project merged lately, each pull request and issue in a
+sentence. Needs gh signed in.` (`按项目看最近合并的 PR 和 issue，助手用一句话说清每条做了什么。需要已登录的
+gh。`), off; kept in `prefs.json`. While it is off nothing below exists: no sidebar row, no `⌘7`, no
+entry on project pages, nothing fetched.
+
+**Where.** A sidebar row `Recent changes` (`最近变化`) under Summary, icon `git-branch`
+(pixelarticons), no count, `⌘7`. Header: the title, a repository pop-up (`All repositories` /
+`全部仓库` ▾), a `7 days | 30 days` segment (`7 天 | 30 天`), and `Updated 2 min ago` (`2 分钟前更新`)
+at the right, which refreshes on click. With the switch on, a project page's title bar has a
+`Recent changes` link that opens this page with that repository picked.
+
+**Which repositories.** Those of the projects (their `repo_slug`), archived ones left out; every pull
+request and issue in them, not only yours. The pop-up lists `All repositories`, then each repository
+with its count for the period; one with nothing in the period is dimmed but can be picked. Picking one
+shows only its section. The repository and the period are remembered. Clicking a section's project
+name picks that repository.
+
+**A section per project**, those with something in the period, the one changed last first. Its head:
+folder icon, project name (`body` 600), the full repository in `meta`, and at the right `9 merged · 2
+open · 2 issues` (`合并 9 · 在做 2 · 问题 2`). Then, in order:
+
+- **The assistant's lines**: the assistant's avatar (24 pt) and the pixel speech bubble of Summary
+  (smaller, 2 pt frame), header `These 7 days · written by the assistant` (`这 7 天 · 助手写的`) and
+  `Rewrite` (`重写`): two or three sentences on what the project gained, what was fixed and what is
+  still open. Written once per project and period, stored; a dot beside Rewrite when more was merged
+  since (as in Summary).
+- **New** (`新功能`) and **Fixed** (`修复`): the merged pull requests, newest first. Each line: the good
+  of Summary as its icon (`gem` new, `jar` fixed, 18 pt), one sentence, and under it in `meta` who did
+  it (the agent's avatar and name when a task has the PR's URL, else the GitHub author), when (`today`,
+  `2 days ago`) and `#41`.
+- **Other** (`其他`): docs, refactors, dependencies, versions, screenshots, folded as one line `3 more:
+  docs, version, screenshots` (`其他 3 项：文档、版本号、截图`); a click unfolds them, one line each.
+- **Open** (`在做`): the open pull requests, drafts too: a green pull-request icon, one sentence, who and
+  `open for 2 hours` (`开了 2 小时`). No checks, no review state.
+- **Issues** (`问题`): issues opened or closed in the period: an issue icon (a ring with a dot; green
+  open, purple closed), one sentence, `New · you · yesterday · #58` (`新问题 · 你 · 昨天 · #58`) or
+  `Solved · fixed by #41 · today · #56` (`已解决 · 由 #41 修好 · 今天 · #56`) when gh names the pull
+  request that closed it.
+
+An empty group is left out. A repository gh cannot read says so in its section in one line with a
+command to copy; the others show as usual.
+
+**One sentence per item.** The assistant reads a pull request's title and description (an issue's title
+and the first 2000 characters of its body) and writes, in the window's language, one plain sentence of
+at most 30 characters in Chinese or 12 words in English saying what it does for the user (`周报总数是两位数
+时，不再被截成省略号`, not `fix(summary): ...`), and puts it in New, Fixed or Other. Written once per
+item and kept by its URL and `updatedAt`, so it is written again only when the title or description
+changed. No model: the title without a conventional-commit prefix (`feat(scope): `), New for `feat`,
+Fixed for `fix`, Other for the rest.
+
+**Click an item** to unfold **the assistant's explanation** under it, three points: **What** (做了什么),
+**Why** (为什么), **Where** (动了哪), from the description and the names of the changed files (never the
+code), with `Read the description and the changed files` (`读了 PR 描述和改动的文件`) in `meta` above.
+Written the first time it is opened and kept. Under it `Open on GitHub` (`在 GitHub 打开`, with the
+pixel external-link icon) and, when a task has the URL, `Task #121` which opens it in the inspector.
+Issues unfold the same way (What, Why, and the pull request that fixed it when there is one).
+
+**Data**, through the `gh` the user is signed in to, per repository: `gh pr list --state merged
+--search "merged:>=<date>"`, `gh pr list --state open`, `gh issue list --state all --search
+"updated:>=<date>"` (fields: number, title, body, url, author, dates, draft, head branch, labels, and
+the changed files' names for the explanation). Fetched when the page opens and every 10 minutes while it
+is shown and the window is key; never while the switch is off.
+
+**Stored**: not in the database. The sentences, categories, the per-project lines and the explanations
+are a cache file in the data folder (`recent-changes.json`), keyed by URL and `updatedAt` (lines by
+repository and period); deleting it only costs the assistant's time.
+
+**Empty**: no project has anything in the period: `Nothing changed in the last 7 days` (`最近 7 天没有变
+化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`
+/ `gh auth login`) with Copy, as in v24's last panel.
+
 ### Calendar
 
 The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
@@ -1339,7 +1418,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
-(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary.
+(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
