@@ -204,3 +204,64 @@ sets the variable.
 9. `cmd/adhd-sync` starts with `-addr`, `-database-url`, `-tokens`; `GET /healthz` answers.
 
 `scripts/check.sh full` exits 0 with and without the Postgres variable.
+
+## S2b: the sync client
+
+`internal/syncclient`: one Go library for the desktop now and Android (gomobile) later. It talks
+to the S2a server over HTTP and to the local database only through `internal/domain` (S1's
+`Outbox`, `DeleteOutbox`, `ApplyChanges`) plus plain SQL inside `ApplyChanges`. No UI and no
+background loop (S3).
+
+State lives in `sync_state`: `device_id`, `cookie` (the last pulled version), besides S1's
+`enabled` and `applying`.
+
+### Link
+
+`Link(ctx, name)` registers the device (`POST /v1/devices`) and stores `device_id`.
+- **Seeding** (`seeding: true`): in one local transaction, set `enabled = '1'` and put one outbox
+  entry (`put`, all columns) for every existing row of the five entities, parents first (projects,
+  categories, milestones, tasks, reports). The snapshot then uploads through the ordinary push path,
+  in as many pushes as it takes; when the outbox is empty, `POST /v1/devices/seeded`.
+- **Joining** (`seeding: false`): the local database must hold no user rows (the built-in Work and
+  Life categories do not count); otherwise `ErrLocalData` and nothing changes (S3 decides how to
+  merge). Set `enabled = '1'`, then pull everything.
+- A workspace another device is seeding answers 409; `Link` returns `ErrSeeding` (try again later).
+- Then lease an id block of 1000 for each entity (`POST /v1/ids`) into `sync_id_blocks`.
+
+### Sync
+
+`Sync(ctx)` pushes, then pulls, then refills id blocks.
+- **Push**: read the outbox oldest first, at most 1000 entries a push; a `put` sends the row's
+  current values of the listed columns (all synced columns when `columns` is NULL); a `put` whose
+  row is gone sends nothing (its `delete` follows); the mutation id is the outbox `seq`. After a
+  200, `DeleteOutbox` through the last seq sent. Repeat until the outbox is empty.
+- **Pull**: from `cookie`, page until `more` is false. Each page is one `ApplyChanges` write that
+  also stores the new cookie. A change to a row that still has outbox entries is skipped (the local
+  change wins until it is pushed, then the server's merge comes back). A put upserts only the
+  columns in `data` and leaves device-local columns alone; a delete deletes the local row. Foreign
+  keys are deferred inside the write (`PRAGMA defer_foreign_keys = ON`) so a page may hold a child
+  before its parent. A 409 for the cookie resets it to 0 and pulls again.
+- **Refill**: an entity with fewer than 200 ids left leases another 1000.
+- JSON numbers are decoded with `UseNumber` and written as integers.
+
+### Tests (acceptance; need `ADHD_SYNC_TEST_DATABASE_URL`, skipped otherwise)
+
+Each test runs the S2a server in `httptest` and two or three `domain.Core`s on their own temporary
+databases (`testutil.OpenDB`). "Equal" means every synced column of every row of the five tables
+matches, compared with plain SQL.
+
+1. **Seed and join**: device A with existing data (projects with sub-projects, categories,
+   milestones, 1500 tasks with subtasks, reports) links and syncs until done; device B (empty)
+   links; both are equal, and A's `repo_path`, `cwd`, `reminded_at` are unchanged.
+2. **Convergence**: a seeded random sequence of 300 operations (create, update, complete, delete
+   and restore tasks; add reports; create, rename, archive and delete projects; create, update and
+   delete categories) spread over A, B and C, with `Sync` calls of random devices in between; after
+   two rounds of `Sync` on all three they are equal. Run five seeds; print the seed on failure.
+3. **Stable numbers**: a task made on B while it cannot reach the server gets an id from B's block
+   and shows on A under the same id after both sync.
+4. **Columns**: A changes a task's title and B its notes; after syncing both keep both. A and B
+   both change the title; both end with the one the server took last.
+5. **Deletes**: deleting a project on A removes its tasks, reports and milestones on B.
+6. **Join refused**: linking B with its own tasks to A's workspace is `ErrLocalData` and leaves B
+   unlinked and unchanged.
+7. **Seeding wait**: while A is seeding, linking B is `ErrSeeding`; after A finishes, B links.
