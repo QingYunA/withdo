@@ -231,11 +231,13 @@ func (m *Main) toolButton(c *ui.Context, t *theme.Tokens, key, label string, ico
 	return btn.Clicked()
 }
 
-// drawPalette is the pens: the category's own color first, then the twelve of the palette; the
-// picked one has a heavier border.
+// drawPalette is the pens: the category's own color first, set off by a rule since it may match a
+// palette color but follows the category, then the twelve of the palette; the picked one has a
+// heavier border.
 func (m *Main) drawPalette(c *ui.Context, t *theme.Tokens, s *categorySheet) {
-	ui.Row(c).Shrink(0).Gap(4).Children(func() {
+	ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
 		m.penSwatch(c, t, s, pixmap.Own, theme.CategoryColor(s.color), m.say.CategoryPenOwn())
+		ui.Box(c).Width(1).Height(paletteSwatch).Shrink(0).Margin(0, 4).Background(t.Border)
 		for i := 0; i < pixmap.Colors; i++ {
 			letter := pixmap.FirstColor + byte(i)
 			m.penSwatch(c, t, s, letter, theme.PaletteColor(letter), m.say.A11yCategoryPen(m.paletteName(i)))

@@ -202,7 +202,9 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | | |
+| `IconBox` | `checkbox` | `IconFlip` | `flip-horizontal-2` |
+| `IconArrowLeft` | `arrow-left` | `IconArrowDown` | `arrow-down` |
+| `IconMinus` | `minus` | | |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -1513,7 +1515,8 @@ accent-filled menu row the icon is white, like a project folder in `Move to…`.
   at its right the 24 / 18 / 12 pt preview, `Clear` and `Invert` (swaps empty and own-color cells;
   palette cells turn empty, they have no opposite), four arrows that shift the drawing one cell
   without wrapping, `Flip` (left to right). Under the grid the pens: the category color first
-  (`Category color`, `类别色`), then `a` to `l`, 22 pt squares, the picked one with a 2 pt border,
+  (`Category color`, `类别色`), set off by a 1 pt rule in `border` since it can match a palette color,
+  then `a` to `l`, 22 pt squares, the picked one with a 2 pt border,
   and the line `Click a cell to draw, drag to keep going. ⌘Z undoes.` Pressing an empty cell or one
   of another color paints it with the pen; pressing one already of the pen's color erases, and the
   drag goes on in that mode, filling the cells between samples. One stroke or button is one step of
