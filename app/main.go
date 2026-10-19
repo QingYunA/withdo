@@ -21,7 +21,7 @@ const version = "0.4.0"
 const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp"
 
 func main() {
-	fake := flag.Bool("fake", false, "use in-memory demo data instead of the database (for screenshots)")
+	fake := flag.Bool("fake", false, "use demo data in a temporary database instead of the real one (for screenshots)")
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
 
@@ -59,9 +59,7 @@ func main() {
 	stop := make(chan struct{})
 	mygo.App.OnQuit(func() {
 		close(stop)
-		if be.close != nil {
-			_ = be.close()
-		}
+		_ = be.close()
 	})
 	mygo.App.WhenReady(func() {
 		s.setMenu()
