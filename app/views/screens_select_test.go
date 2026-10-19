@@ -75,6 +75,7 @@ func TestScreensSelect(t *testing.T) {
 			r := rig()
 			r.dragOnto(t, "Write the release notes", "Port core to Go", true)
 			r.after(330 * time.Millisecond)
+			settle(r.tt) // the Select buttons fade back from the ⌘-click flash on the wall clock
 			shot(t, name("stack-over"), r.tt.Image(), false, a.dark)
 
 			r = rig()
