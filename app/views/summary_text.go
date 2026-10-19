@@ -257,8 +257,13 @@ func (m *Main) bubbleText(c *ui.Context, t *theme.Tokens, para *paragraph, now t
 // drawTail draws the stepped tail of the bubble at 3 pt a cell, 4 x 5 cells: the frame's color
 // for the edge, the bubble's for the inside.
 func drawTail(p *ui.Painter, r ui.Rect, edge, fill ui.Color) {
+	drawTailCells(p, r, edge, fill, bubbleEdge)
+}
+
+// drawTailCells is drawTail with a cell of any size: the Recent changes bubble's is 2 pt.
+func drawTailCells(p *ui.Painter, r ui.Rect, edge, fill ui.Color, size float32) {
 	cell := func(x, y, w, h float32, c ui.Color) {
-		p.Fill(ui.Rect{X: r.X + x*bubbleEdge, Y: r.Y + y*bubbleEdge, W: w * bubbleEdge, H: h * bubbleEdge}, c, 0)
+		p.Fill(ui.Rect{X: r.X + x*size, Y: r.Y + y*size, W: w * size, H: h * size}, c, 0)
 	}
 	cell(0, 2, 1, 1, edge)
 	cell(1, 1, 1, 3, edge)

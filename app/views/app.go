@@ -80,6 +80,11 @@ type App struct {
 	// whether the main window has keyboard focus, asked before each cue; nil means yes.
 	Sound                   CuePlayer
 	SystemSounds, WindowKey func() bool
+	// Recent reads the repositories of the projects for the Recent changes page, and RecentCache keeps
+	// what the assistant wrote about them (a cache in memory when nil). With no Recent the page has
+	// nothing to read.
+	Recent      data.Recent
+	RecentCache *data.RecentCache
 
 	seen            data.Seen
 	seenLoaded      bool

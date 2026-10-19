@@ -13,7 +13,7 @@ const sidebarRowPad float32 = 10
 const sidebarRowGap float32 = 10
 
 // sidebar is the source list over the window's material: Mine and Agents, Inbox, Calendar,
-// Completed and Summary, then the projects, then Settings at the bottom.
+// Completed and Summary (and Recent changes, once it is switched on), then the projects, then Settings at the bottom.
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
 	if !vibrant {
@@ -31,6 +31,9 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		m.navRow(c, t, "calendar", nav{screen: screenCalendar}, theme.IconCalendar, m.say.NavCalendar(), 0)
 		m.navRow(c, t, "completed", nav{screen: screenCompleted}, theme.IconDone, m.say.ManageNavCompleted(), 0)
 		m.navRow(c, t, "summary", nav{screen: screenSummary}, theme.IconList, m.say.NavSummary(), 0)
+		if m.app.RecentChangesOn() {
+			m.navRow(c, t, "recent", nav{screen: screenRecent}, theme.IconBranch, m.say.NavRecent(), 0)
+		}
 		m.projectsHeader(c, t)
 		for _, p := range m.app.snap.projects {
 			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })

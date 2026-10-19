@@ -23,6 +23,7 @@ var (
 	Input         = Style{Size: 17, Line: 25, Weight: 400}
 	Body          = Style{Size: 15, Line: 22, Weight: 400}
 	BodyStrong    = Style{Size: 15, Line: 22, Weight: 500}
+	BodyBold      = Style{Size: 15, Line: 22, Weight: 600} // a project's name on Recent changes
 	Compact       = Style{Size: 14, Line: 20, Weight: 400} // sidebar rows, menus, inspector values
 	CompactStrong = Style{Size: 14, Line: 20, Weight: 500}
 	Meta          = Style{Size: 13, Line: 18, Weight: 400}

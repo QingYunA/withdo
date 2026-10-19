@@ -27,6 +27,7 @@ const (
 	screenCompleted
 	screenCalendar
 	screenSummary
+	screenRecent
 )
 
 // nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
@@ -82,6 +83,7 @@ type Main struct {
 
 	cal       calendarState // the Calendar page: its month and its selected day
 	sum       summaryState  // the Summary page: its period, its scene, its paragraphs
+	recent    recentState   // the Recent changes page: what was read, and what the assistant wrote
 	manage    manageState   // the sheets, renaming, search and Completed
 	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle     // the input that renames a project in the sidebar
@@ -185,6 +187,12 @@ func (m *Main) View(c *ui.Context) {
 	if !onSummary {
 		m.leaveSummary()
 	}
+	if m.nav.screen == screenRecent && !m.app.RecentChangesOn() {
+		m.goTo(nav{}) // switched off in Settings while it was open
+	}
+	if m.nav.screen != screenRecent || m.searching() {
+		m.recent.shown = false // the page reads GitHub when it opens
+	}
 	m.dropStaleReply()
 	m.popTick()
 	m.width = m.contentWidth(c)
@@ -231,6 +239,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
 		case m.nav.screen == screenSummary:
 			m.summaryScreen(c, t)
+		case m.nav.screen == screenRecent:
+			m.recentScreen(c, t)
 		case m.boardActive():
 			m.boardScreen(c, t)
 		case m.columnsActive():

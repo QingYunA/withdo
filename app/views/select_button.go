@@ -58,7 +58,7 @@ func (m *Main) canSelect() bool {
 	if m.searching() {
 		return true
 	}
-	return m.nav.screen != screenCalendar && m.nav.screen != screenSummary
+	return m.nav.screen != screenCalendar && m.nav.screen != screenSummary && m.nav.screen != screenRecent
 }
 
 // selectControls is the Select button, or in select mode the count, Select all and Done.

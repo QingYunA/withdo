@@ -1321,6 +1321,43 @@ repository and period); deleting it only costs the assistant's time.
 化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`
 / `gh auth login`) with Copy, as in v24's last panel.
 
+**As built** (what the spec above leaves to the code; screens `recent-*.png`):
+
+- Fetching goes through `ghpoll.Runner` (the one the poller uses, `ExecRunner` in the app): per repository
+  `gh pr list --state merged`, `--state open` and `gh issue list --state all`, one after the other, 100 at
+  most each, four repositories at a time, off the UI thread (`data.GHRecent`, `data.FetchRepos`; the demo
+  and the tests use `data.FakeRecent`). The period is 7 or 30 calendar days ending today, from local
+  midnight; the search date is the UTC date of that midnight, a superset, and the exact moment cuts the
+  rest. An issue counts when it was opened or closed in the period; an open pull request counts however
+  old it is. `fixed by #N` is the first of the issue's `closedByPullRequestsReferences`. A pull request is
+  by the agent of the task whose `pr_url` is its URL, else by its author: `You` (`you` for an issue) when
+  that is the account gh is signed in to, with the robot for an app, else the login alone.
+- The page reads when it opens, on a click on `Updated …`, when the period changes, and every ten
+  minutes while it is shown and the window is key (`App.WindowKey`); the answer of an older read is
+  dropped. The repository and the period are in `prefs.json` (`recentRepo`, `recentDays`) beside the
+  switch (`recentChanges`); a remembered repository that is no project's is All repositories.
+- The assistant is asked, for the sections on screen, off the UI thread and once for each read:
+  sentences, category and topic for the items that have none kept (12 items a request, language of the
+  window), then the lines of the section, then, when an item is unfolded for the first time, its
+  explanation. A failure is not retried by itself: sentences fall back to titles until the next read, the
+  lines show `Couldn't write it. Try Rewrite.`, an explanation shows a Retry. The three are
+  `Assistant.DescribeRecent`, `WriteRecentLines` and `ExplainRecent` (`internal/agent/recent.go`).
+- `recent-changes.json` holds the sentences keyed by `<language> <url>` with the `updatedAt` they were
+  written for, the explanations in the same entry (so a changed item loses both), and the lines keyed by
+  `<language> <days> <repo>` with when they were written (a dot beside Rewrite when something merged
+  after). An item not updated for 90 days is dropped when the file is next written.
+- With no model the titles stand in (`FallbackNote`: the conventional-commit prefix off; feat New, fix
+  Fixed, the rest Other, with no topics, so the fold reads `3 more`), there are no lines, and an
+  unfolded item offers `Open on GitHub` and `Task #n` only.
+- The pop-up lists the projects by name with their count (dimmed at 0, still pickable); a project name in
+  a section picks its repository. The good beside a line is drawn at one point a cell (17 pt in the 18 pt
+  slot) to keep its pixels square; a pull request in Other has the good its title points to.
+- gh missing or signed out shows as the page's state only when every repository failed so; one that
+  failed alone says so in its section (a `gh repo view owner/name` to copy when GitHub refused it). In
+  Settings the switch's second line turns to what to run when the switch is on and gh cannot be used.
+- Not done: the typing-in of the assistant's lines (they show whole), more than the first pull request
+  that closed an issue, and a state of its own for GitHub being offline besides the section line.
+
 ### Calendar
 
 The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
