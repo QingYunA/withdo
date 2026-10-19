@@ -13,9 +13,10 @@ func (m *Main) barLabel(a taskAction) string {
 		return m.say.PropPriority()
 	case actHandOff:
 		return m.say.BulkHandOff()
-	default:
+	case actDelete:
 		return m.say.MenuDelete()
 	}
+	return "" // Cancel has no button
 }
 
 // menuLabel is the action as a line of the menu of the n selected tasks says it.
