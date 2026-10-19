@@ -3105,5 +3105,365 @@
   "handOffCopied": "Copied",
   "@handOffCopied": {
     "description": "What the Copy for the agent button of the hand-off toast reads for a moment after it was clicked."
+  },
+  "navRecent": "Recent changes",
+  "@navRecent": {
+    "description": "Sidebar item and title of the page that shows what each project merged lately."
+  },
+  "settingsPages": "Pages",
+  "@settingsPages": {
+    "description": "Header of the group in Settings > General with the switches of the pages that are off until asked for."
+  },
+  "settingsRecentChanges": "Recent changes",
+  "@settingsRecentChanges": {
+    "description": "Title of the switch row that turns the Recent changes page on."
+  },
+  "settingsRecentChangesMeta": "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in.",
+  "@settingsRecentChangesMeta": {
+    "description": "Second line of the Recent changes switch row in Settings."
+  },
+  "settingsRecentChangesSwitch": "Show the Recent changes page",
+  "@settingsRecentChangesSwitch": {
+    "description": "Accessibility label of the Recent changes switch."
+  },
+  "settingsRecentNoGH": "gh isn't installed yet: run brew install gh",
+  "@settingsRecentNoGH": {
+    "description": "Second line of the Recent changes switch row, in the warning color, when the switch is on and the GitHub CLI is missing."
+  },
+  "settingsRecentSignedOut": "gh isn't signed in yet: run gh auth login",
+  "@settingsRecentSignedOut": {
+    "description": "Second line of the Recent changes switch row, in the warning color, when the switch is on and the GitHub CLI is signed out."
+  },
+  "recentAllRepos": "All repositories",
+  "@recentAllRepos": {
+    "description": "First item of the repository pop-up on the Recent changes page: every project's repository."
+  },
+  "recentRepoPopUp": "Repository",
+  "@recentRepoPopUp": {
+    "description": "Accessibility label of the repository pop-up on the Recent changes page."
+  },
+  "recentDays7": "7 days",
+  "@recentDays7": {
+    "description": "Segment on the Recent changes page: the last seven days."
+  },
+  "recentDays30": "30 days",
+  "@recentDays30": {
+    "description": "Segment on the Recent changes page: the last thirty days."
+  },
+  "recentUpdatedNow": "Updated just now",
+  "@recentUpdatedNow": {
+    "description": "At the right of the Recent changes header: the page was read from GitHub under a minute ago. A click reads it again."
+  },
+  "recentUpdatedMinutes": "Updated {n} min ago",
+  "@recentUpdatedMinutes": {
+    "description": "At the right of the Recent changes header: how many minutes ago the page was read from GitHub.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "recentUpdatedHours": "Updated {n} h ago",
+  "@recentUpdatedHours": {
+    "description": "At the right of the Recent changes header: how many hours ago the page was read from GitHub.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "recentUpdating": "Updating…",
+  "@recentUpdating": {
+    "description": "At the right of the Recent changes header while GitHub is being read."
+  },
+  "recentLoading": "Reading GitHub…",
+  "@recentLoading": {
+    "description": "Quiet line on the Recent changes page before the first answer from GitHub."
+  },
+  "recentCountMerged": "{n} merged",
+  "@recentCountMerged": {
+    "description": "Part of the right end of a project's head on the Recent changes page: how many pull requests merged.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "9"
+      }
+    }
+  },
+  "recentCountOpen": "{n} open",
+  "@recentCountOpen": {
+    "description": "Part of the right end of a project's head on the Recent changes page: how many pull requests are open.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "recentCountIssues": "{count, plural, one {# issue} other {# issues}}",
+  "@recentCountIssues": {
+    "description": "Part of the right end of a project's head on the Recent changes page: how many issues were opened or closed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "recentWritten": "These {days} days · written by the assistant",
+  "@recentWritten": {
+    "description": "Small header of the assistant's lines at the head of a project's section on the Recent changes page.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "recentRewriteNew": "More was merged since this was written",
+  "@recentRewriteNew": {
+    "description": "Tooltip of the dot beside Rewrite on the Recent changes page."
+  },
+  "recentGroupNew": "New",
+  "@recentGroupNew": {
+    "description": "Group of the Recent changes page: merged pull requests that add something."
+  },
+  "recentGroupFixed": "Fixed",
+  "@recentGroupFixed": {
+    "description": "Group of the Recent changes page: merged pull requests that fix something."
+  },
+  "recentGroupOpen": "Open",
+  "@recentGroupOpen": {
+    "description": "Group of the Recent changes page: pull requests that are still open."
+  },
+  "recentGroupIssues": "Issues",
+  "@recentGroupIssues": {
+    "description": "Group of the Recent changes page: issues opened or closed in the period."
+  },
+  "recentMore": "{count} more: {topics}",
+  "@recentMore": {
+    "description": "Folded line of the merged pull requests that are neither new nor fixes (docs, versions, screenshots). A click unfolds them.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "topics": {
+        "type": "String",
+        "example": "docs, version, screenshots"
+      }
+    }
+  },
+  "recentMoreNoTopics": "{count} more",
+  "@recentMoreNoTopics": {
+    "description": "Folded line of the other merged pull requests when nothing says what they are.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "recentTopicSep": ", ",
+  "@recentTopicSep": {
+    "description": "Between the topics of the folded line of other pull requests."
+  },
+  "recentToday": "today",
+  "@recentToday": {
+    "description": "When something happened, in the meta line of a pull request or an issue."
+  },
+  "recentYesterday": "yesterday",
+  "@recentYesterday": {
+    "description": "When something happened, in the meta line of a pull request or an issue."
+  },
+  "recentDaysAgo": "{n} days ago",
+  "@recentDaysAgo": {
+    "description": "When something happened, in the meta line of a pull request or an issue: two to six days.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "recentOpenMinutes": "open for {n, plural, one {# minute} other {# minutes}}",
+  "@recentOpenMinutes": {
+    "description": "Meta line of an open pull request: how long it has been open.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+  "recentOpenHours": "open for {n, plural, one {# hour} other {# hours}}",
+  "@recentOpenHours": {
+    "description": "Meta line of an open pull request: how long it has been open.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "recentOpenDays": "open for {n, plural, one {# day} other {# days}}",
+  "@recentOpenDays": {
+    "description": "Meta line of an open pull request: how long it has been open.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "recentIssueNew": "New",
+  "@recentIssueNew": {
+    "description": "Start of the meta line of an issue opened in the period."
+  },
+  "recentIssueSolved": "Solved",
+  "@recentIssueSolved": {
+    "description": "Start of the meta line of an issue closed in the period."
+  },
+  "recentFixedBy": "fixed by #{number}",
+  "@recentFixedBy": {
+    "description": "Meta line of a solved issue: the pull request that closed it.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "41"
+      }
+    }
+  },
+  "recentWhoYouLower": "you",
+  "@recentWhoYouLower": {
+    "description": "Who opened an issue, in its meta line: the user."
+  },
+  "recentExplainSource": "Read the description and the changed files",
+  "@recentExplainSource": {
+    "description": "Small line above the assistant's explanation of a pull request."
+  },
+  "recentExplainSourceIssue": "Read the description",
+  "@recentExplainSourceIssue": {
+    "description": "Small line above the assistant's explanation of an issue."
+  },
+  "recentExplainReading": "Reading it…",
+  "@recentExplainReading": {
+    "description": "Quiet line under an item of the Recent changes page while the assistant writes its explanation."
+  },
+  "recentExplainFailed": "Couldn't write the explanation.",
+  "@recentExplainFailed": {
+    "description": "Quiet line under an item of the Recent changes page when the explanation failed."
+  },
+  "recentWhat": "What",
+  "@recentWhat": {
+    "description": "First point of the assistant's explanation of a pull request or an issue."
+  },
+  "recentWhy": "Why",
+  "@recentWhy": {
+    "description": "Second point of the assistant's explanation of a pull request or an issue."
+  },
+  "recentWhere": "Where",
+  "@recentWhere": {
+    "description": "Third point of the assistant's explanation of a pull request: which parts of the code it touched."
+  },
+  "recentOpenOnGitHub": "Open on GitHub",
+  "@recentOpenOnGitHub": {
+    "description": "Link under an item of the Recent changes page that opens it in the browser."
+  },
+  "recentTask": "Task #{id}",
+  "@recentTask": {
+    "description": "Link under an item of the Recent changes page that opens the task whose pull request it is.",
+    "placeholders": {
+      "id": {
+        "type": "int",
+        "example": "121"
+      }
+    }
+  },
+  "recentEmptyTitle": "Nothing changed in the last {days} days",
+  "@recentEmptyTitle": {
+    "description": "Title of the Recent changes page when nothing happened in the period.",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "recentNoReposTitle": "No project has a repository yet",
+  "@recentNoReposTitle": {
+    "description": "Title of the Recent changes page when no project has a GitHub repository."
+  },
+  "recentNoReposBody": "Give a project its GitHub repository and its changes will be listed here.",
+  "@recentNoReposBody": {
+    "description": "Body of the Recent changes page when no project has a GitHub repository."
+  },
+  "recentNoGHTitle": "Install the GitHub CLI first",
+  "@recentNoGHTitle": {
+    "description": "Title of the Recent changes page when gh is missing."
+  },
+  "recentSignedOutTitle": "Sign in to the GitHub CLI first",
+  "@recentSignedOutTitle": {
+    "description": "Title of the Recent changes page when gh is signed out."
+  },
+  "recentGHBody": "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:",
+  "@recentGHBody": {
+    "description": "Body of the Recent changes page when gh is missing or signed out; the command to run follows."
+  },
+  "recentSectionFailed": "Couldn't read this repository. Check that gh can open it:",
+  "@recentSectionFailed": {
+    "description": "One line in a project's section of the Recent changes page when GitHub refused its repository; the command to copy follows."
+  },
+  "recentSectionOffline": "Couldn't reach GitHub. It will try again.",
+  "@recentSectionOffline": {
+    "description": "One line in a project's section of the Recent changes page when GitHub could not be reached."
+  },
+  "recentSectionError": "GitHub answered with an error: {text}",
+  "@recentSectionError": {
+    "description": "One line in a project's section of the Recent changes page when gh failed in a way that is none of the others.",
+    "placeholders": {
+      "text": {
+        "type": "String",
+        "example": "rate limit"
+      }
+    }
+  },
+  "recentRefresh": "Update now",
+  "@recentRefresh": {
+    "description": "Accessibility label and tooltip of the Updated … text of the Recent changes page, which reads GitHub again when clicked."
+  },
+  "recentPickRepo": "Show only {repo}",
+  "@recentPickRepo": {
+    "description": "Accessibility label and tooltip of the project name in a section of the Recent changes page: it picks that repository.",
+    "placeholders": {
+      "repo": {
+        "type": "String",
+        "example": "QingYunA/adhd-todo"
+      }
+    }
+  },
+  "recentToggleItem": "Show what it does: {title}",
+  "@recentToggleItem": {
+    "description": "Accessibility label of an item of the Recent changes page that unfolds the explanation.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Counts fit"
+      }
+    }
+  },
+  "recentFoldOther": "Show the other changes",
+  "@recentFoldOther": {
+    "description": "Accessibility label of the folded line of other pull requests."
+  },
+  "recentLink": "Recent changes",
+  "@recentLink": {
+    "description": "Link in the title bar of a project page that opens the Recent changes page on that project's repository."
+  },
+  "recentLinkTip": "See what changed lately in this repository",
+  "@recentLinkTip": {
+    "description": "Tooltip of the Recent changes link on a project page."
   }
 }

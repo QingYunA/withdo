@@ -1,0 +1,98 @@
+[
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "## Summary\n\n```diff\n ledgerCount\n-  count box width = 8*digits + 4      # 48 in bold title weight does not fit: drawn as \"…\"\n+  count box width = ledgerCountWidth(final) = 10*digits + 2\n```\n\nOne digit keeps its width (12 pt), so no screen changes; two or more digits get room.\n\n## Evidence\n\n- **Befor",
+  "createdAt": "2026-10-19T02:57:46Z",
+  "files": [
+   {
+    "path": "app/views/summary_ledger.go",
+    "additions": 5,
+    "deletions": 1,
+    "changeType": "MODIFIED"
+   },
+   {
+    "path": "app/views/summary_ledger_width_test.go",
+    "additions": 20,
+    "deletions": 0,
+    "changeType": "ADDED"
+   }
+  ],
+  "headRefName": "claude/ledger-count-width",
+  "isDraft": false,
+  "labels": [],
+  "mergedAt": "2026-10-19T03:04:29Z",
+  "number": 41,
+  "title": "fix(summary): give a two-digit ledger count room, so 48 is not cut to an ellipsis",
+  "updatedAt": "2026-10-19T03:04:29Z",
+  "url": "https://github.com/QingYunA/adhd-todo/pull/41"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "## Summary\n\n`TestTheModelListIsFetchedForTheStoredKeyAndOffersWhatTheProviderListed` failed once on CI ([run](https://github.com/QingYunA/adhd-todo/actions/runs/39145673360)) with `asked [], want one request with the stored key`.\n\nCause: clicking **Change** calls `fetchModels` for the provider in us",
+  "createdAt": "2026-10-19T01:48:45Z",
+  "files": [
+   {
+    "path": "app/views/settings_assistant_test.go",
+    "additions": 12,
+    "deletions": 4,
+    "changeType": "MODIFIED"
+   }
+  ],
+  "headRefName": "claude/frosty-pascal-a9266f",
+  "isDraft": false,
+  "labels": [],
+  "mergedAt": "2026-10-19T02:01:42Z",
+  "number": 36,
+  "title": "test(settings): fix the flaky model list test",
+  "updatedAt": "2026-10-19T02:01:42Z",
+  "url": "https://github.com/QingYunA/adhd-todo/pull/36"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "## Summary\n\nThe Summary day scene gets four more figures, room for six people, and a ground dressed with Kenney Tiny Town tiles (v22, v23 mixed; spec: `ui-spec.md` › Summary).\n\n```diff\n DayPlan\n-  actorSlots [4]{26, 66, 198, 160}\n+  slotsFor(n): n ≤ 4 → {26, 66, 198, 160}; else {24, 52, 216, 188, 80",
+  "createdAt": "2026-10-18T16:35:08Z",
+  "files": [
+   {
+    "path": "app/theme/scene.go",
+    "additions": 25,
+    "deletions": 11,
+    "changeType": "MODIFIED"
+   },
+   {
+    "path": "app/theme/scene_day.go",
+    "additions": 24,
+    "deletions": 9,
+    "changeType": "MODIFIED"
+   },
+   {
+    "path": "app/theme/scene_files.go",
+    "additions": 8,
+    "deletions": 4,
+    "changeType": "MODIFIED"
+   }
+  ],
+  "headRefName": "claude/scene-actors-impl",
+  "isDraft": false,
+  "labels": [],
+  "mergedAt": "2026-10-19T01:40:26Z",
+  "number": 35,
+  "title": "feat(summary): figures for Gemini, Cursor, Copilot and OpenCode; six in the scene; Kenney ground",
+  "updatedAt": "2026-10-19T01:40:27Z",
+  "url": "https://github.com/QingYunA/adhd-todo/pull/35"
+ }
+]

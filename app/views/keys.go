@@ -21,6 +21,8 @@ func (m *Main) rowIDs() []int {
 		return nil // the arrows walk the days, not rows
 	case m.nav.screen == screenSummary:
 		return nil // the ledger opens with the mouse
+	case m.nav.screen == screenRecent:
+		return nil // so does Recent changes
 	case m.boardActive():
 		var ids []int
 		for _, col := range m.boardColumns() {
@@ -60,7 +62,7 @@ func (m *Main) textUndoFree(c *ui.Context) bool {
 	return !m.typing(c) || empty(surfacePage) || empty(surfaceInspector)
 }
 
-// keys handles the keyboard for one frame: Cmd+K, and Cmd+1 to Cmd+6 for the sidebar's rows, anywhere; and, unless a text
+// keys handles the keyboard for one frame: Cmd+K, and Cmd+1 to Cmd+7 for the sidebar's rows, anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
 	if m.sheetOpen() {
@@ -84,6 +86,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.goTo(nav{screen: screenCompleted})
 	case c.Shortcut(ui.Cmd, ui.Key6):
 		m.goTo(nav{screen: screenSummary})
+	case c.Shortcut(ui.Cmd, ui.Key7) && m.app.RecentChangesOn():
+		m.goTo(nav{screen: screenRecent})
 	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd, ui.KeyEnter):
 		m.bulkSetStatus(c, m.selectedRows(), data.Done)
 	case m.barShown() && !m.typing(c) && c.Shortcut(ui.Cmd|ui.Shift, ui.KeyA):
