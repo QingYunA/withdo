@@ -89,19 +89,28 @@ func prepareImage(name string, raw []byte) (Attachment, error) {
 
 // ReadImageFile reads a picture from disk and prepares it.
 func ReadImageFile(path string) (Attachment, error) {
-	f, err := os.Open(path)
+	raw, err := readSource(path)
 	if err != nil {
 		return Attachment{}, err
+	}
+	return PrepareImage(filepath.Base(path), raw)
+}
+
+// readSource reads a file of at most maxSourceSize bytes.
+func readSource(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
 	}
 	defer f.Close()
 	raw, err := io.ReadAll(io.LimitReader(f, maxSourceSize+1))
 	if err != nil {
-		return Attachment{}, err
+		return nil, err
 	}
 	if len(raw) > maxSourceSize {
-		return Attachment{}, ErrPictureSize
+		return nil, ErrPictureSize
 	}
-	return PrepareImage(filepath.Base(path), raw)
+	return raw, nil
 }
 
 // Stored is the picture as a task keeps it: the original when the attachment has one, else the
