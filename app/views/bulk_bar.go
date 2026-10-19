@@ -32,7 +32,7 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 	if !m.barUp() {
 		return
 	}
-	ids := m.selectedRows()
+	ids := m.multi.IDs()
 	narrow := m.width < barNarrowBelow
 	ui.Row(c.Key("bulk-wrap")).Absolute().Left(0).Right(0).Bottom(barBottom).Justify(ui.Center).PassThrough().Children(func() {
 		bar := ui.Row(c.Key("bulk-bar")).Role(ui.RoleToolbar).FocusGroup(ui.Horizontal).Label(m.say.A11yBulkBar())
@@ -57,7 +57,7 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 				}
 			}
 			if m.barClear(c, t).Clicked() {
-				m.multi = m.multi.with()
+				m.multi.Deselect()
 			}
 		})
 	})
@@ -113,7 +113,7 @@ func (m *Main) barClear(c *ui.Context, t *theme.Tokens) ui.Element {
 // barUp says whether the bar is drawn: it is wanted, the page can select, and there is something
 // selected on it.
 func (m *Main) barUp() bool {
-	return m.barShown() && m.canSelect() && len(m.selectedRows()) > 0
+	return m.multi.Bar() && m.canSelect() && len(m.multi.IDs()) > 0
 }
 
 // barInset is the room the bar takes at the bottom of the page while it is up: its height and its

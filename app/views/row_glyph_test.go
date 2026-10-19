@@ -100,7 +100,7 @@ func TestTheHoverGlyphStaysWhileTheRowCompletes(t *testing.T) {
 
 func TestSelectModeShowsNoHoverGlyph(t *testing.T) {
 	tt, m, _ := projectTester(t, 1)
-	m.multi.mode = true
+	m.multi.EnterMode()
 	tt.Frame()
 	hover(t, tt, "Write the release notes")
 	hasNot(t, tt, "Mark done: Write the release notes")

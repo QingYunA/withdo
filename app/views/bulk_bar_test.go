@@ -58,8 +58,8 @@ func TestTheBarsDoneButtonFinishesTheSelection(t *testing.T) {
 			done++
 		}
 	}
-	if done != 2 || m.multi.active() {
-		t.Errorf("%d of 2 done, selecting %v: the bar's Done finishes them and the page stops selecting", done, m.multi.active())
+	if done != 2 || m.multi.Active() {
+		t.Errorf("%d of 2 done, selecting %v: the bar's Done finishes them and the page stops selecting", done, m.multi.Active())
 	}
 }
 

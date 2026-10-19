@@ -41,7 +41,7 @@ func TestCmdReturnMarksTheSelectionDoneAsOneChangeWithOneUndo(t *testing.T) {
 	if !tt.HasText("Marked 2 tasks done") {
 		t.Errorf("no toast in %q", tt.Texts())
 	}
-	if m.multi.active() {
+	if m.multi.Active() {
 		t.Error("the page is still selecting after the action")
 	}
 	tt.Key(ui.Cmd, ui.KeyZ)

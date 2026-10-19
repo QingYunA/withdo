@@ -1031,7 +1031,7 @@ search results. Calendar and Summary do not select.
 
 Decisions made while building it (2026-10-18; screens `select-*`):
 
-- **One selection per page**, in `Main.multi`: cleared when the page changes or the search starts or
+- **One selection per page**, in `Main.multi` (`app/selection`, a pure module with its own tests): cleared when the page changes or the search starts or
   ends, and held to the rows the page draws. While it is empty the keyboard row is the only selected
   row, as before; a plain click or a plain arrow leaves it empty. A `⌘`-click with nothing ticked
   counts the keyboard row as the first one. `Esc` clears the selection, and leaves select mode,
@@ -1056,6 +1056,9 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   row can only paint over its own background, so it paints all its cards), 3 pt lower each.
   Handing several tasks stamps the first of them the newest, so `Waiting for an agent` reads in the
   order the rows were in.
+  One rule for every drag, `Selection.Stack`: the selected rows in page order that the target takes, or
+  only the dragged row when it is not selected or fewer than two are taken. The tray takes the user's
+  unfinished rows; a board lane takes every selected card.
 - **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
   two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
 

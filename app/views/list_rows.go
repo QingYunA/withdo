@@ -171,7 +171,7 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 		row := m.rowShell(c, t, task.ID, plainRow, ph)
 		stack := []int{task.ID}
 		if !fromAgents {
-			stack = m.stackOf(task)
+			stack = m.trayStack(task)
 		}
 		row.Drag(dragRow{id: task.ID, fromAgents: fromAgents, n: len(stack), stack: stackKey(stack)})
 		dragging = row.Dragging()

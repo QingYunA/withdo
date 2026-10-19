@@ -66,17 +66,17 @@ func (m *Main) selectControls(c *ui.Context, t *theme.Tokens) {
 	if !m.canSelect() {
 		return
 	}
-	if !m.multi.mode {
+	if !m.multi.Mode() {
 		m.selectButton(c, t)
 		return
 	}
 	ui.Row(c.Key("select-bar")).Shrink(0).Gap(14).AlignItems(ui.Center).Margin(0, 8, 0, 0).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, m.say.SelectCount(m.multi.count())).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.SelectCount(m.multi.Count())).Shrink(0)
 		if link(c, t, m.say.SelectAll()).Clicked() {
-			m.selectAll()
+			m.multi.All()
 		}
 		if actionButtonKeyed(c, t, "select-done", m.say.ActionDone(), m.say.ActionDone()).Clicked() {
-			m.clearMulti()
+			m.multi.Clear()
 		}
 	})
 }
@@ -100,13 +100,13 @@ func (m *Main) selectButton(c *ui.Context, t *theme.Tokens) {
 		theme.Text(c, theme.Meta, ink, m.say.SelectButton())
 	})
 	if btn.Clicked() {
-		m.multi.mode = true
+		m.multi.EnterMode()
 	}
 }
 
 // checkbox is the pixel checkbox of select mode: empty, or ticked in the accent color.
 func (m *Main) checkbox(c *ui.Context, t *theme.Tokens, id int, size float32) ui.Element {
-	if m.multi.has(id) {
+	if m.multi.Has(id) {
 		return ui.Icon(c.Key("check"), theme.IconDone).Size(size, size).TextColor(t.Accent).Shrink(0)
 	}
 	return ui.Icon(c.Key("check"), theme.IconBox).Size(size, size).TextColor(t.TextTertiary).Shrink(0)
@@ -115,7 +115,7 @@ func (m *Main) checkbox(c *ui.Context, t *theme.Tokens, id int, size float32) ui
 // lead is the picture at the start of a row: the author's avatar, or in select mode the checkbox in
 // its place and of its size.
 func (m *Main) lead(c *ui.Context, t *theme.Tokens, key string, id int, who theme.Who, size float32) ui.Element {
-	if m.multi.mode {
+	if m.multi.Mode() {
 		return m.checkbox(c, t, id, size)
 	}
 	return theme.AvatarIcon(c.Key(key), who, size)
@@ -125,7 +125,7 @@ func (m *Main) lead(c *ui.Context, t *theme.Tokens, key string, id int, who them
 // holds the checkbox, 4 pt wider than the room, so the title keeps its place.
 func (m *Main) indentSlot(c *ui.Context, t *theme.Tokens, id int) {
 	room := listIndent - rowGap
-	if !m.multi.mode {
+	if !m.multi.Mode() {
 		ui.Box(c.Key("indent")).Width(room).Shrink(0)
 		return
 	}
