@@ -331,6 +331,18 @@ subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or 
 Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
 Right-click: see **Categories (M9)**.
 
+**Folding.** The sub-rows of `Mine` and of `Agents` are folded by default, so many agents and
+categories do not crowd the sidebar. Each of the two parents has a disclosure chevron at its right end
+(after the count or badge): a 12 pt pixel chevron (`theme.IconForward` folded, `theme.IconChevron`
+unfolded, the icons of the Recent changes fold) in `text.tertiary`, `text.secondary` and a `bg.hover`
+square on hover, with the tooltip and a11y label `Expand Mine` / `Collapse Agents`. Clicking the
+chevron only folds or unfolds; clicking anywhere else on the row still opens the page and leaves the
+fold as it was. This is how Finder, Mail and Linear fold a sidebar section (a chevron on the parent
+row, the row itself navigates); we keep it at the right so the icons and labels of all rows stay in one
+column. The choice is kept per section in the prefs file (`mineOpen`, `agentsOpen`), so it survives a
+restart. While the open page is a sub-row of a folded section (`Work`, `Claude Code`),
+that one row stays drawn so the highlight never vanishes; the rest fold away.
+
 **Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
 before M9 only `work` and `life`, migration 007).
 The category it counts under is its own, else Work when its project is a repository, else none
@@ -1478,6 +1490,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 `Esc` and the Cancel button close them; the primary button is the accent one.
 
 - **New project**: title `New project`; field `Name` (focused); field `GitHub repository` (optional,
+  folded by default into a `GitHub repository` row with a chevron, under the name; a click unfolds it, and each new sheet starts folded again;
   mono, placeholder `owner/repo`) with the line `Agent reports from this repository land in the
   project.` Create is off until the name has text. A pasted GitHub address is read as `owner/repo`.
   Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like

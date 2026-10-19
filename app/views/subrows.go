@@ -113,25 +113,34 @@ func categoryTitle(say locales.Messages, c data.Category) string {
 
 // mineSubRows are the rows under Mine: every category by position, empty ones too, then Unsorted
 // while it has rows (or is the open page, so its highlight does not vanish under the pointer).
+// Folded, only the open page's row stays.
 func (m *Main) mineSubRows(c *ui.Context, t *theme.Tokens) {
+	open := m.app.MineOpen()
 	for _, cat := range m.app.snap.categories {
+		if !open && m.nav != (nav{screen: screenMine, cat: cat.ID}) {
+			continue
+		}
 		m.subRow(c, t, "cat-"+itoa(cat.ID), nav{screen: screenMine, cat: cat.ID}, categoryTitle(m.say, cat), m.slices.byCat[cat.ID].Count(),
 			func() { categoryGlyph(c, cat, theme.AvatarSmall) }, func(mn *ui.Menu) { m.categoryMenu(c, mn, cat) })
 	}
 	to := nav{screen: screenMine, cat: catUnsorted}
-	if !m.slices.unsorted.Empty() || m.nav == to {
+	if (open && !m.slices.unsorted.Empty()) || m.nav == to {
 		m.subRow(c, t, "mine-unsorted", to, m.say.CategoryUnsorted(), m.slices.unsorted.Count(), nil, m.mineMenu)
 	}
 }
 
 // agentSubRows are the rows under Agents: one per agent that has a task at work or finished one
-// today, in the order of the Agents screen.
+// today, in the order of the Agents screen. Folded, only the open page's row stays.
 func (m *Main) agentSubRows(c *ui.Context, t *theme.Tokens) {
 	rows, open := m.agentRows, m.nav.sub
 	if m.nav.screen == screenAgents && open != "" && !hasAgentRow(rows, open) {
 		rows = append(append([]data.AgentTally(nil), rows...), data.AgentTally{Name: open})
 	}
+	unfolded := m.app.AgentsOpen()
 	for _, r := range rows {
+		if !unfolded && !(m.nav.screen == screenAgents && open == r.Name) {
+			continue
+		}
 		who := theme.AgentAvatar(strings.ToLower(r.Name))
 		m.subRow(c, t, "agent:"+r.Name, nav{screen: screenAgents, sub: r.Name}, r.Name, r.Working, func() {
 			theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarSmall)

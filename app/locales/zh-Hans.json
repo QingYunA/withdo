@@ -390,6 +390,8 @@
   "propParent": "父任务",
   "inspectorSubtasks": "子任务",
   "a11yMineUnseen": "{count} 项 Agent 新交过来的",
+  "navSectionExpand": "展开{name}",
+  "navSectionCollapse": "折叠{name}",
   "composerPlaceholderAgents": "问问 Agent 们在做什么",
   "agentsEmpty": "没有 Agent 在做事",
   "agentsEmptyBody": "Agent 汇报进度后，会出现在这里。",
