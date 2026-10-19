@@ -15,7 +15,9 @@ type Deleted struct {
 }
 
 // DeleteProject removes a project with its reports, tasks and milestones, in that order and in one
-// transaction: when any step fails nothing is removed. The schema has no ON DELETE CASCADE.
+// transaction: when any step fails nothing is removed. The schema has no ON DELETE CASCADE; the one
+// foreign key that acts is projects.parent_id, which leaves a sub-project standing as a top-level
+// project, as deleting a task's parent does for a subtask.
 func (c *Core) DeleteProject(ctx context.Context, id int64) (Deleted, error) {
 	var out Deleted
 	err := c.write(ctx, func(q store.Querier) error {

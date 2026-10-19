@@ -104,6 +104,8 @@ type Project struct {
 	CreatedAt  string  `json:"created_at"`
 	UpdatedAt  string  `json:"updated_at"`
 	ArchivedAt *string `json:"archived_at"`
+	// ParentID is the project this one hangs under as a sub-project; nil for a top-level project.
+	ParentID *int64 `json:"parent_id"`
 }
 
 // Milestone is a dated goal inside a project.

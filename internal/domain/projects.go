@@ -12,13 +12,13 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
 
-const projectCols = "id, name, repo_slug, repo_path, created_at, updated_at, archived_at"
+const projectCols = "id, name, repo_slug, repo_path, created_at, updated_at, archived_at, parent_id"
 
 var slugPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 
 func scanProject(s scanner) (Project, error) {
 	var p Project
-	err := s.Scan(&p.ID, &p.Name, &p.RepoSlug, &p.RepoPath, &p.CreatedAt, &p.UpdatedAt, &p.ArchivedAt)
+	err := s.Scan(&p.ID, &p.Name, &p.RepoSlug, &p.RepoPath, &p.CreatedAt, &p.UpdatedAt, &p.ArchivedAt, &p.ParentID)
 	return p, err
 }
 
@@ -99,10 +99,10 @@ func (c *Core) statusCounts(ctx context.Context) (map[int64]map[Status]int, erro
 	return out, rows.Err()
 }
 
-func insertProject(ctx context.Context, q store.Querier, ts, name string, slug, repoPath *string) (*Project, error) {
+func insertProject(ctx context.Context, q store.Querier, ts, name string, slug, repoPath *string, parentID *int64) (*Project, error) {
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO projects (name, repo_slug, repo_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-		name, slug, repoPath, ts, ts)
+		"INSERT INTO projects (name, repo_slug, repo_path, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+		name, slug, repoPath, parentID, ts, ts)
 	if err != nil {
 		return nil, fmt.Errorf("insert project: %w", err)
 	}
@@ -180,7 +180,7 @@ func (c *Core) findOrCreateByGit(ctx context.Context, q store.Querier, info *git
 		if info.RepoSlug != "" {
 			slug = &info.RepoSlug
 		}
-		return insertProject(ctx, q, c.stamp(), info.RepoName, slug, &info.RepoRoot)
+		return insertProject(ctx, q, c.stamp(), info.RepoName, slug, &info.RepoRoot, nil)
 	}
 	if existing.RepoPath != nil && *existing.RepoPath == info.RepoRoot {
 		return existing, nil
@@ -239,7 +239,7 @@ func (c *Core) findOrCreateBySlug(ctx context.Context, slug string) (*Project, e
 			return e
 		}
 		name := slug[strings.Index(slug, "/")+1:]
-		project, e = insertProject(ctx, q, c.stamp(), name, &slug, nil)
+		project, e = insertProject(ctx, q, c.stamp(), name, &slug, nil, nil)
 		return e
 	})
 	if err != nil {
