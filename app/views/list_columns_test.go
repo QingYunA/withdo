@@ -66,7 +66,7 @@ func TestEachColumnHasItsOwnDoneAndBacklog(t *testing.T) {
 }
 
 func TestTheAgentsDoneGroupShowsThreeAndShowAll(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 5; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Agent made " + itoa(i), Status: data.Done, Source: data.SourceAgent, ProjectID: data.IntPtr(p.ID)})
@@ -115,7 +115,7 @@ func TestAWaitingTaskHasItsOwnGroupFirstAndLeavesTodo(t *testing.T) {
 
 func TestAnEmptyColumnKeepsItsHeaderAndOneQuietLine(t *testing.T) {
 	// Only an agent's task: Mine is empty.
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("scratch", "me/scratch")
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Agent only", Source: data.SourceAgent, Status: data.Doing, ProjectID: data.IntPtr(p.ID)})
 	app := NewApp(f, &recorder{}, testConfig())
@@ -127,7 +127,7 @@ func TestAnEmptyColumnKeepsItsHeaderAndOneQuietLine(t *testing.T) {
 	hasNot(t, tt, "No agent has reported in this project yet", "Install MCP →")
 
 	// Only a task of mine: Agents is empty, with the link to install the MCP.
-	g := data.NewEmptyFake(fixedNow)
+	g := demoStore(t, fixedNow, false)
 	q := g.SeedProject("local", "me/local")
 	_, _ = g.CreateTask(data.CreateTaskInput{Title: "Mine only", ProjectID: data.IntPtr(q.ID)})
 	app2 := NewApp(g, &recorder{}, testConfig())

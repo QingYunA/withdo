@@ -20,7 +20,7 @@ import (
 // calendarShowcase is a store with a month of tasks written by me and by agents.
 func calendarShowcase(t *testing.T) *App {
 	t.Helper()
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	proj := f.SeedProject("adhd-todo", "QingYunA/adhd-todo")
 	local := func(m time.Month, d, h, min int) *time.Time {
 		at := time.Date(2026, m, d, h, min, 0, 0, time.Local)

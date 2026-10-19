@@ -32,7 +32,7 @@ func agentsRig(t *testing.T) *settingsRig {
 func emptyMacRig(t *testing.T) *settingsRig {
 	t.Helper()
 	r := newSettingsRig(t)
-	r.app.Store = data.NewEmptyFake(fixedNow)
+	r.app.Store = demoStore(t, fixedNow, false)
 	r.app.Refresh()
 	r.pane(t, "Agents")
 	return r
@@ -123,7 +123,7 @@ func TestBothSectionsFitTheWindowBeforeItScrolls(t *testing.T) {
 
 func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 	r := agentsRig(t)
-	store := r.app.Store.(*data.Fake)
+	store := r.app.Store.(*data.Real)
 	store.SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
 	store.SeedReportAs(1, "codex", "two", fixedNow().Add(-50*time.Minute))
 	r.app.Refresh()
@@ -146,7 +146,7 @@ func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 
 func TestAnAgentThatReportedHasItsMCPInstalledEvenIfItsConfigIsElsewhere(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).SeedReportAs(1, "cursor-vscode", "one", fixedNow().Add(-30*time.Hour))
+	r.app.Store.(*data.Real).SeedReportAs(1, "cursor-vscode", "one", fixedNow().Add(-30*time.Hour))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "No reports today")
@@ -157,7 +157,7 @@ func TestAnAgentThatReportedHasItsMCPInstalledEvenIfItsConfigIsElsewhere(t *test
 
 func TestAgentsPaneCountsOneReportInTheSingular(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).SeedReportAs(1, "cursor-agent", "one", fixedNow().Add(-time.Minute))
+	r.app.Store.(*data.Real).SeedReportAs(1, "cursor-agent", "one", fixedNow().Add(-time.Minute))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Cursor", "1 report today")
@@ -167,7 +167,7 @@ func TestAgentsPaneCountsOneReportInTheSingular(t *testing.T) {
 // config folder: its MCP is installed somewhere.
 func TestAnAgentThatOnlyReportedStaysOnThisMac(t *testing.T) {
 	r := agentsRig(t)
-	r.app.Store.(*data.Fake).SeedReportAs(1, "amp", "one", fixedNow().Add(-time.Hour))
+	r.app.Store.(*data.Real).SeedReportAs(1, "amp", "one", fixedNow().Add(-time.Hour))
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "Amp", "MCP installed")
@@ -321,7 +321,7 @@ func TestADeepSeekPatchThatCannotBeAppendedOffersTheSnippet(t *testing.T) {
 func TestInstallMCPWritesAMCPJSONForKiroAndCline(t *testing.T) {
 	for _, id := range []string{"Kiro", "Cline"} {
 		r := newSettingsRig(t)
-		r.app.Store = data.NewEmptyFake(fixedNow)
+		r.app.Store = demoStore(t, fixedNow, false)
 		r.app.Refresh()
 		r.mac.write(".kiro/settings/mcp.json", "{}")
 		r.mac.write("Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", "{}")
@@ -368,7 +368,7 @@ func TestGetItOpensTheAgentsSite(t *testing.T) {
 func TestAgentsPaneWithoutAnEnvFindsNothingAndDoesNotPanic(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.Config.AgentSetup = nil })
 	r.s.app.Config.AgentSetup = nil
-	r.app.Store = data.NewEmptyFake(fixedNow)
+	r.app.Store = demoStore(t, fixedNow, false)
 	r.app.Refresh()
 	r.pane(t, "Agents")
 	has(t, r.tt, "No agent found on this Mac yet", "See how to connect", "Claude Code", "Get it")
@@ -380,7 +380,7 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	inChinese(r.tt)
 	r.mac.has("gemini")
 	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{}}}`)
-	r.app.Store.(*data.Fake).SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
+	r.app.Store.(*data.Real).SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()

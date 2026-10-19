@@ -27,7 +27,7 @@ func TestMineShowsItsSectionsInOrder(t *testing.T) {
 }
 
 func TestMineEmptySectionsAreNotDrawn(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Only mine"})
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
@@ -367,7 +367,7 @@ func TestCmdNumbersSwitchScreens(t *testing.T) {
 }
 
 func TestMineLinksToTheInboxWhenUndatedTasksDoNotFit(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 9; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Idea " + itoa(i)})
 	}

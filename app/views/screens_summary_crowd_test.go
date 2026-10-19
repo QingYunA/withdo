@@ -19,7 +19,7 @@ import (
 func summaryCrowdApp(t *testing.T) *App {
 	t.Helper()
 	app := summaryShotApp(t, false)
-	store := app.Store.(*data.Fake)
+	store := app.Store.(*data.Real)
 	kinds := map[int]string{2: "gem", 20: "gear", 1: "gem", 21: "mail", 7: "mail", 8: "crate", 10: "gear", 9: "jar", 13: "book", 11: "gem", 12: "jar"}
 	for _, f := range []struct {
 		id    int

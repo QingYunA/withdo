@@ -72,7 +72,7 @@ func TestTheOpenWithChoiceIsKeptBetweenRuns(t *testing.T) {
 		t.Fatalf("default %q, want the agent's app", got)
 	}
 	app.SetOpenWith(OpenEditor)
-	again := NewApp(data.NewFake(fixedNow), &recorder{}, testConfig())
+	again := NewApp(demoStore(t, fixedNow, true), &recorder{}, testConfig())
 	again.Prefs = prefs
 	if got := again.OpenWith(); got != OpenEditor {
 		t.Errorf("after a restart %q, want editor", got)

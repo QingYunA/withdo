@@ -20,7 +20,7 @@ const (
 
 // crowdedApp has five items on Wed Oct 21, more than a cell lists, and a window tall enough that the
 // cell says "2 more".
-func crowdedApp(t *testing.T) (*App, *data.Fake, *ui.Tester, *Main) {
+func crowdedApp(t *testing.T) (*App, *data.Real, *ui.Tester, *Main) {
 	t.Helper()
 	app, f := calendarApp(t)
 	for _, title := range []string{"One", "Two", "Three", "Four", crowdedTitle} {

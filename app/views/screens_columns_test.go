@@ -34,7 +34,7 @@ func columnsShot(t *testing.T, name string, zh bool, app *App, dark bool, size [
 }
 
 // handedApp is the seeded workspace after the user handed "Write the release notes" to Claude Code.
-func handedApp(t *testing.T) (*App, *data.Fake) {
+func handedApp(t *testing.T) (*App, *data.Real) {
 	t.Helper()
 	app, store, _ := newTestApp(t)
 	if _, err := store.HandOff(5); err != nil {
@@ -47,7 +47,7 @@ func handedApp(t *testing.T) (*App, *data.Fake) {
 // onlyMineApp is a project in which no agent has reported, with a few tasks of the user's.
 func onlyMineApp(t *testing.T) (*App, data.Project) {
 	t.Helper()
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("answer-me-with-html", "me/answer-me-with-html")
 	for i, task := range []struct {
 		title  string

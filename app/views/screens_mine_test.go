@@ -15,9 +15,9 @@ import (
 
 // mineApp is the seeded workspace with one more subtask handed back to its parent (the seed has
 // subtasks that are done and doing only), so every status pill is on screen.
-func mineApp(t *testing.T) (*App, *data.Fake) {
+func mineApp(t *testing.T) (*App, *data.Real) {
 	t.Helper()
-	store := data.NewFake(fixedNow)
+	store := demoStore(t, fixedNow, true)
 	app := NewApp(store, &recorder{}, testConfig())
 	app.Now = fixedNow
 	sub, err := store.CreateTask(data.CreateTaskInput{

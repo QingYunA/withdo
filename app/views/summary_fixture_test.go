@@ -17,7 +17,7 @@ func atToday(h, m int) time.Time {
 // summaryApp is the seeded fake with a busy day: eight tasks finished, three by me, three by Claude
 // Code (two of them with merged pull requests) and two by Codex. The assistant is ready and answers
 // with a paragraph and the kinds of the goods.
-func summaryApp(t *testing.T) (*App, *data.Fake, *recorder) {
+func summaryApp(t *testing.T) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	finish := func(id int, by string, at time.Time, said string, merged int) {

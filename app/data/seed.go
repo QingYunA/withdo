@@ -144,9 +144,7 @@ func (r *Real) seedTasks(now time.Time) {
 	// The ids are the database's, in the order the rows are made.
 	slices.SortFunc(tasks, func(a, b Task) int { return a.ID - b.ID })
 	for _, t := range tasks {
-		if got := r.SeedTask(t); got.ID != t.ID {
-			panic(fmt.Sprintf("seed task %q got id %d, want %d", t.Title, got.ID, t.ID))
-		}
+		r.SeedTask(t)
 	}
 }
 

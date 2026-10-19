@@ -9,7 +9,7 @@ import (
 
 // prApp is the seeded workspace with three tasks whose pull requests need attention: one closed
 // without merging (task 101), one failing its checks (102) and one with changes requested (103).
-func prApp(t *testing.T) (*App, *data.Fake, *recorder) {
+func prApp(t *testing.T) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	add := func(id int, title, branch string, number int, state data.PRState, checks data.PRChecks, review data.PRReview, ago time.Duration, summary string) {

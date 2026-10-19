@@ -52,7 +52,6 @@ func sheetFile(t *testing.T, name string, ground, accent color.NRGBA, lines []in
 func imagesApp(t *testing.T, zh bool) (*App, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
-	store.SetImageDir(t.TempDir())
 	names := map[bool][]string{
 		false: {"rent-notice.png", "weekend-list.png", "whiteboard.png", "design-feedback.png", "dentist.png", "invoice.png"},
 		true:  {"房租通知.png", "周末清单.png", "白板.png", "设计反馈.png", "牙医.png", "发票.png"},

@@ -80,7 +80,8 @@ func (r *Real) SeedProject(name, slug string) Project {
 }
 
 // SeedTask adds a task as given, a shape CreateTask does not make (a pull request, an age). Zero
-// CreatedAt and UpdatedAt mean now; ID is ignored.
+// CreatedAt and UpdatedAt mean now; a non-zero ID renames the new row, so give it one the
+// database has not reached.
 func (r *Real) SeedTask(t Task) Task {
 	defer r.holdClock(t.CreatedAt)()
 	in := domain.CreateTaskInput{
@@ -101,8 +102,13 @@ func (r *Real) SeedTask(t Task) Task {
 	if err != nil {
 		panic(err)
 	}
-	r.stampTask(int(made.ID), t.UpdatedAt, t.CompletedAt)
-	return r.mustTask(int(made.ID))
+	id := int(made.ID)
+	if t.ID != 0 && t.ID != id {
+		r.exec(`UPDATE tasks SET id = ? WHERE id = ?`, t.ID, id)
+		id = t.ID
+	}
+	r.stampTask(id, t.UpdatedAt, t.CompletedAt)
+	return r.mustTask(id)
 }
 
 // SeedReport files a report as given; a zero CreatedAt means now.

@@ -22,7 +22,7 @@ const (
 
 // linksApp is the seeded fake where the review task 2 ("Native UI with mygo", a pull request) has a
 // newer report with pages attached, and the file the import report names is gone.
-func linksApp(t *testing.T) (*App, *data.Fake, *recorder) {
+func linksApp(t *testing.T) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	app.Config.Home = pageHome

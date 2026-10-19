@@ -15,7 +15,7 @@ type hopRig struct {
 	tt    *ui.Tester
 	m     *Main
 	app   *App
-	store *data.Fake
+	store *data.Real
 	seen  *data.MemorySeen
 	now   time.Time
 }
@@ -23,7 +23,7 @@ type hopRig struct {
 func newHopRig(t *testing.T, reduceMotion bool) *hopRig {
 	t.Helper()
 	r := &hopRig{now: fixedNow(), seen: &data.MemorySeen{}}
-	r.store = data.NewFake(func() time.Time { return r.now })
+	r.store = demoStore(t, func() time.Time { return r.now }, true)
 	r.app = NewApp(r.store, &recorder{}, testConfig())
 	r.app.Now = func() time.Time { return r.now }
 	r.app.Seen = r.seen

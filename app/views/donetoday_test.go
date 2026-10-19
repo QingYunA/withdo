@@ -29,7 +29,7 @@ func TestMineShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
 }
 
 func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 7; i++ {
 		task, _ := f.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i)})
 		_, _ = f.UpdateTask(task.ID, data.Patch{Status: data.StatusPtr(data.Done)})

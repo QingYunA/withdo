@@ -15,14 +15,14 @@ type handRig struct {
 	tt     *ui.Tester
 	m      *Main
 	app    *App
-	store  *data.Fake
+	store  *data.Real
 	now    time.Time
 }
 
 func newHandRig(t *testing.T, reduceMotion bool) *handRig {
 	t.Helper()
 	r := &handRig{now: fixedNow(), reduce: reduceMotion}
-	r.store = data.NewFake(func() time.Time { return r.now })
+	r.store = demoStore(t, func() time.Time { return r.now }, true)
 	r.app = NewApp(r.store, &recorder{}, testConfig())
 	r.app.Now = func() time.Time { return r.now }
 	r.m = NewMain(r.app)
