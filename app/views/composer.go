@@ -75,19 +75,13 @@ func (m *Main) placeOf(s surface) data.Place {
 	return data.Place{Kind: data.PlaceNow, Category: m.pageCategory()}
 }
 
-// pageCategory is the id of the category of the Work or Life page of Mine, which new tasks typed
+// pageCategory is the id of the category of the page of Mine that is open, which new tasks typed
 // there get; 0 on every other page, Unsorted included.
 func (m *Main) pageCategory() int {
-	if m.nav.screen != screenMine {
+	if m.nav.screen != screenMine || m.nav.cat == catUnsorted {
 		return 0
 	}
-	switch m.nav.sub {
-	case subWork:
-		return m.app.builtinID(data.BuiltinWork)
-	case subLife:
-		return m.app.builtinID(data.BuiltinLife)
-	}
-	return 0
+	return m.nav.cat
 }
 
 // focusPageComposer takes Cmd+K: it puts the cursor in the composer of the page, or goes to Now

@@ -109,7 +109,7 @@ func (m *Main) categoryRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 		if btn.Clicked() {
 			m.openMenuBelow(btn, task.ID, pageCategory)
 		}
-		btn.Children(func() { categoryValue(c, t, m.categoryIcon(task.CategoryID), color, label) })
+		btn.Children(func() { m.categoryValue(c, task.CategoryID, color) })
 	})
 }
 

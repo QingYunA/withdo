@@ -25,7 +25,7 @@ const (
 	pageRemind
 	pageCalendar // Custom… of the reminders
 	pageOpenIn   // where to open an agent's work
-	pageCategory // work, life or none
+	pageCategory // a category, or none
 )
 
 const (
@@ -66,14 +66,12 @@ func (m *Main) openMenu(id int, page menuPage, x, y float32, back bool) {
 	m.pop = popMenu{open: true, task: id, page: page, back: back, x: x, y: y, hl: -1, frame: m.pop.frame, at: m.pop.frame}
 	m.sel = id
 	switch task, _ := m.app.Task(id); page {
-	case pageMove:
+	case pageMove, pageCategory:
 		m.pop.hl = 0
 	case pageStatus: // the arrows start from the current choice
 		m.pop.hl = slices.Index(data.Statuses, task.Status)
 	case pagePriority:
 		m.pop.hl = slices.Index(data.Priorities, task.Priority)
-	case pageCategory:
-		m.pop.hl = slices.Index(m.categoryChoices(), task.CategoryID)
 	}
 }
 
@@ -127,16 +125,25 @@ func (m *Main) taskMenuView(c *ui.Context, t *theme.Tokens) {
 }
 
 // menuTop is where the menu hangs. The pages that do not change their height let the panel flip
-// above the point when there is no room below. The Move to page shrinks as the filter narrows it,
-// so it would flip back and forth while typing; it is placed once, by the room its whole list
-// needs: below the point, else above it, else as low as the window allows.
+// above the point when there is no room below. The Move to and Category pages shrink as the filter
+// narrows them, so they would flip back and forth while typing; they are placed once, by the room
+// their whole list needs: below the point, else above it, else as low as the window allows.
 func (m *Main) menuTop(c *ui.Context) float32 {
 	pm := &m.pop
-	if pm.page != pageMove {
+	var rows int
+	switch pm.page {
+	case pageMove:
+		rows = len(m.app.snap.projects) + 1
+	case pageCategory:
+		rows = len(m.app.snap.categories) + 1
+	default:
 		return pm.y
 	}
 	_, window := c.Size()
-	full := moveFullHeight(len(m.app.snap.projects) + 1)
+	full := moveFullHeight(rows)
+	if pm.page == pageCategory {
+		full += menuRuleH + popRowH // the hairline and New category…
+	}
 	switch {
 	case pm.y+full+popEdge <= window:
 		return pm.y
@@ -160,8 +167,7 @@ func (m *Main) pageBody(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 		m.priorityStrip(c, t, task, true)
 	case pageCategory:
-		m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.CategoryID))
-		m.categoryStrip(c, t, task, true)
+		m.categoryPage(c, t, task)
 	case pageMove:
 		m.movePage(c, t, task)
 	case pageRemind:

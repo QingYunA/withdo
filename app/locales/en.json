@@ -3105,5 +3105,183 @@
   "handOffCopied": "Copied",
   "@handOffCopied": {
     "description": "What the Copy for the agent button of the hand-off toast reads for a moment after it was clicked."
+  },
+  "menuFindCategory": "Find a category",
+  "@menuFindCategory": {
+    "description": "Placeholder of the filter field on the Category page of the task menu."
+  },
+  "menuNoCategoryMatch": "No category matches",
+  "@menuNoCategoryMatch": {
+    "description": "Shown on the Category page of the task menu when the filter matches no category."
+  },
+  "categoryNew": "New category…",
+  "@categoryNew": {
+    "description": "Item of the context menu of Mine and of its categories in the sidebar, and last choice of the Category page of the task menu: opens the New category sheet."
+  },
+  "categoryEdit": "Edit category…",
+  "@categoryEdit": {
+    "description": "Item of the context menu of a category in the sidebar: opens the Edit category sheet."
+  },
+  "categoryMoveUp": "Move up",
+  "@categoryMoveUp": {
+    "description": "Item of the context menu of a category in the sidebar: puts it one place higher in the list under Mine."
+  },
+  "categoryMoveDown": "Move down",
+  "@categoryMoveDown": {
+    "description": "Item of the context menu of a category in the sidebar: puts it one place lower in the list under Mine."
+  },
+  "categoryDelete": "Delete category",
+  "@categoryDelete": {
+    "description": "Item of the context menu of a category the user made: deletes it at once, its tasks become unsorted, and an Undo toast follows."
+  },
+  "categorySheetNew": "New category",
+  "@categorySheetNew": {
+    "description": "Title of the sheet that makes a category."
+  },
+  "categorySheetEdit": "Edit category",
+  "@categorySheetEdit": {
+    "description": "Title of the sheet that changes a category's name, icon and color."
+  },
+  "categoryFieldIcon": "Icon",
+  "@categoryFieldIcon": {
+    "description": "Label of the line of the category sheet that previews the icon at three sizes."
+  },
+  "categoryFieldColor": "Color",
+  "@categoryFieldColor": {
+    "description": "Label of the row of color swatches in the category sheet."
+  },
+  "categorySearchIcons": "Search icons",
+  "@categorySearchIcons": {
+    "description": "Placeholder and accessibility label of the field of the category sheet that searches the icon library by name."
+  },
+  "categoryNoIconMatch": "No icon matches",
+  "@categoryNoIconMatch": {
+    "description": "Shown in the icon area of the category sheet when the search finds no icon."
+  },
+  "categoryBuiltinKeepsName": "Work and Life keep their names.",
+  "@categoryBuiltinKeepsName": {
+    "description": "Line under the read-only name of the built-in categories in the Edit category sheet."
+  },
+  "categoryErrLong": "A name can have at most {count} characters.",
+  "@categoryErrLong": {
+    "description": "Under the name field of the category sheet when the name is too long.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "32"
+      }
+    }
+  },
+  "categoryErrTaken": "A category with that name already exists.",
+  "@categoryErrTaken": {
+    "description": "Under the name field of the category sheet when another category has the name, whatever the case."
+  },
+  "categoryErrTooMany": "There can be at most {count} categories. Delete one first.",
+  "@categoryErrTooMany": {
+    "description": "Under the name field of the category sheet when the list is full.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "24"
+      }
+    }
+  },
+  "categoryDeleted": "Deleted “{name}” · {count, plural, one {# task} other {# tasks}} unsorted",
+  "@categoryDeleted": {
+    "description": "Toast after a category was deleted; its Undo puts the category back. count is how many tasks became unsorted, at least 1.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      },
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "categoryDeletedEmpty": "Deleted “{name}”",
+  "@categoryDeletedEmpty": {
+    "description": "Toast after a category with no tasks was deleted; its Undo puts it back.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      }
+    }
+  },
+  "a11yCategoryColor": "Color: {name}",
+  "@a11yCategoryColor": {
+    "description": "Accessibility label of a color swatch of the category sheet.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Orange"
+      }
+    }
+  },
+  "categoryColorIndigo": "Indigo",
+  "@categoryColorIndigo": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorYellow": "Yellow",
+  "@categoryColorYellow": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorGreen": "Green",
+  "@categoryColorGreen": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorRed": "Red",
+  "@categoryColorRed": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorBlue": "Blue",
+  "@categoryColorBlue": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorPink": "Pink",
+  "@categoryColorPink": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorTeal": "Teal",
+  "@categoryColorTeal": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryColorOrange": "Orange",
+  "@categoryColorOrange": {
+    "description": "Name of a category color, for the swatch's accessibility label."
+  },
+  "categoryGroupWork": "Work",
+  "@categoryGroupWork": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupStudy": "Study",
+  "@categoryGroupStudy": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupHealth": "Health",
+  "@categoryGroupHealth": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupMoney": "Money",
+  "@categoryGroupMoney": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupHome": "Home",
+  "@categoryGroupHome": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupHobby": "Hobby",
+  "@categoryGroupHobby": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupTravel": "Travel",
+  "@categoryGroupTravel": {
+    "description": "Heading of a group of icons in the category sheet."
+  },
+  "categoryGroupPeople": "People",
+  "@categoryGroupPeople": {
+    "description": "Heading of a group of icons in the category sheet."
   }
 }

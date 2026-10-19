@@ -37,6 +37,14 @@ const (
 	MaxCategoryName = domain.MaxCategoryName
 )
 
+// CategoryColors are the keys of the eight colors a category can have, in the order of the app's
+// project colors.
+var CategoryColors = domain.CategoryColors
+
+// DefaultCategoryColor is the key of the color a category gets when it is not given one: the one
+// its name hashes to.
+func DefaultCategoryColor(name string) string { return domain.DefaultCategoryColor(name) }
+
 // CategoryOf is the id of the category a task counts under: its own when it has one, else workID
 // (the built-in Work) when its project has a repository (hasRepo says), else 0. An explicit
 // category always wins.

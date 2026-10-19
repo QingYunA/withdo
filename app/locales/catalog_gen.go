@@ -7533,3 +7533,535 @@ func HandOffCopied() string { return In(i18n.Locale()).HandOffCopied() }
 func (msgs Messages) HandOffCopied() string {
 	return Catalog.Format(msgs.locale, "handOffCopied", nil)
 }
+
+// MenuFindCategory says "Find a category"
+// in the language the app shows.
+//
+// Placeholder of the filter field on the Category page of the task menu.
+func MenuFindCategory() string { return In(i18n.Locale()).MenuFindCategory() }
+
+// MenuFindCategory says "Find a category"
+// in the language of msgs.
+//
+// Placeholder of the filter field on the Category page of the task menu.
+func (msgs Messages) MenuFindCategory() string {
+	return Catalog.Format(msgs.locale, "menuFindCategory", nil)
+}
+
+// MenuNoCategoryMatch says "No category matches"
+// in the language the app shows.
+//
+// Shown on the Category page of the task menu when the filter matches no
+// category.
+func MenuNoCategoryMatch() string { return In(i18n.Locale()).MenuNoCategoryMatch() }
+
+// MenuNoCategoryMatch says "No category matches"
+// in the language of msgs.
+//
+// Shown on the Category page of the task menu when the filter matches no
+// category.
+func (msgs Messages) MenuNoCategoryMatch() string {
+	return Catalog.Format(msgs.locale, "menuNoCategoryMatch", nil)
+}
+
+// CategoryNew says "New category…"
+// in the language the app shows.
+//
+// Item of the context menu of Mine and of its categories in the sidebar,
+// and last choice of the Category page of the task menu: opens the New
+// category sheet.
+func CategoryNew() string { return In(i18n.Locale()).CategoryNew() }
+
+// CategoryNew says "New category…"
+// in the language of msgs.
+//
+// Item of the context menu of Mine and of its categories in the sidebar,
+// and last choice of the Category page of the task menu: opens the New
+// category sheet.
+func (msgs Messages) CategoryNew() string {
+	return Catalog.Format(msgs.locale, "categoryNew", nil)
+}
+
+// CategoryEdit says "Edit category…"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: opens the Edit
+// category sheet.
+func CategoryEdit() string { return In(i18n.Locale()).CategoryEdit() }
+
+// CategoryEdit says "Edit category…"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: opens the Edit
+// category sheet.
+func (msgs Messages) CategoryEdit() string {
+	return Catalog.Format(msgs.locale, "categoryEdit", nil)
+}
+
+// CategoryMoveUp says "Move up"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// higher in the list under Mine.
+func CategoryMoveUp() string { return In(i18n.Locale()).CategoryMoveUp() }
+
+// CategoryMoveUp says "Move up"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// higher in the list under Mine.
+func (msgs Messages) CategoryMoveUp() string {
+	return Catalog.Format(msgs.locale, "categoryMoveUp", nil)
+}
+
+// CategoryMoveDown says "Move down"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// lower in the list under Mine.
+func CategoryMoveDown() string { return In(i18n.Locale()).CategoryMoveDown() }
+
+// CategoryMoveDown says "Move down"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// lower in the list under Mine.
+func (msgs Messages) CategoryMoveDown() string {
+	return Catalog.Format(msgs.locale, "categoryMoveDown", nil)
+}
+
+// CategoryDelete says "Delete category"
+// in the language the app shows.
+//
+// Item of the context menu of a category the user made: deletes it at once,
+// its tasks become unsorted, and an Undo toast follows.
+func CategoryDelete() string { return In(i18n.Locale()).CategoryDelete() }
+
+// CategoryDelete says "Delete category"
+// in the language of msgs.
+//
+// Item of the context menu of a category the user made: deletes it at once,
+// its tasks become unsorted, and an Undo toast follows.
+func (msgs Messages) CategoryDelete() string {
+	return Catalog.Format(msgs.locale, "categoryDelete", nil)
+}
+
+// CategorySheetNew says "New category"
+// in the language the app shows.
+//
+// Title of the sheet that makes a category.
+func CategorySheetNew() string { return In(i18n.Locale()).CategorySheetNew() }
+
+// CategorySheetNew says "New category"
+// in the language of msgs.
+//
+// Title of the sheet that makes a category.
+func (msgs Messages) CategorySheetNew() string {
+	return Catalog.Format(msgs.locale, "categorySheetNew", nil)
+}
+
+// CategorySheetEdit says "Edit category"
+// in the language the app shows.
+//
+// Title of the sheet that changes a category's name, icon and color.
+func CategorySheetEdit() string { return In(i18n.Locale()).CategorySheetEdit() }
+
+// CategorySheetEdit says "Edit category"
+// in the language of msgs.
+//
+// Title of the sheet that changes a category's name, icon and color.
+func (msgs Messages) CategorySheetEdit() string {
+	return Catalog.Format(msgs.locale, "categorySheetEdit", nil)
+}
+
+// CategoryFieldIcon says "Icon"
+// in the language the app shows.
+//
+// Label of the line of the category sheet that previews the icon at three
+// sizes.
+func CategoryFieldIcon() string { return In(i18n.Locale()).CategoryFieldIcon() }
+
+// CategoryFieldIcon says "Icon"
+// in the language of msgs.
+//
+// Label of the line of the category sheet that previews the icon at three
+// sizes.
+func (msgs Messages) CategoryFieldIcon() string {
+	return Catalog.Format(msgs.locale, "categoryFieldIcon", nil)
+}
+
+// CategoryFieldColor says "Color"
+// in the language the app shows.
+//
+// Label of the row of color swatches in the category sheet.
+func CategoryFieldColor() string { return In(i18n.Locale()).CategoryFieldColor() }
+
+// CategoryFieldColor says "Color"
+// in the language of msgs.
+//
+// Label of the row of color swatches in the category sheet.
+func (msgs Messages) CategoryFieldColor() string {
+	return Catalog.Format(msgs.locale, "categoryFieldColor", nil)
+}
+
+// CategorySearchIcons says "Search icons"
+// in the language the app shows.
+//
+// Placeholder and accessibility label of the field of the category sheet
+// that searches the icon library by name.
+func CategorySearchIcons() string { return In(i18n.Locale()).CategorySearchIcons() }
+
+// CategorySearchIcons says "Search icons"
+// in the language of msgs.
+//
+// Placeholder and accessibility label of the field of the category sheet
+// that searches the icon library by name.
+func (msgs Messages) CategorySearchIcons() string {
+	return Catalog.Format(msgs.locale, "categorySearchIcons", nil)
+}
+
+// CategoryNoIconMatch says "No icon matches"
+// in the language the app shows.
+//
+// Shown in the icon area of the category sheet when the search finds no
+// icon.
+func CategoryNoIconMatch() string { return In(i18n.Locale()).CategoryNoIconMatch() }
+
+// CategoryNoIconMatch says "No icon matches"
+// in the language of msgs.
+//
+// Shown in the icon area of the category sheet when the search finds no
+// icon.
+func (msgs Messages) CategoryNoIconMatch() string {
+	return Catalog.Format(msgs.locale, "categoryNoIconMatch", nil)
+}
+
+// CategoryBuiltinKeepsName says "Work and Life keep their names."
+// in the language the app shows.
+//
+// Line under the read-only name of the built-in categories in the Edit
+// category sheet.
+func CategoryBuiltinKeepsName() string { return In(i18n.Locale()).CategoryBuiltinKeepsName() }
+
+// CategoryBuiltinKeepsName says "Work and Life keep their names."
+// in the language of msgs.
+//
+// Line under the read-only name of the built-in categories in the Edit
+// category sheet.
+func (msgs Messages) CategoryBuiltinKeepsName() string {
+	return Catalog.Format(msgs.locale, "categoryBuiltinKeepsName", nil)
+}
+
+// CategoryErrLong says "A name can have at most {count} characters."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when the name is too long.
+func CategoryErrLong(count int) string { return In(i18n.Locale()).CategoryErrLong(count) }
+
+// CategoryErrLong says "A name can have at most {count} characters."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when the name is too long.
+func (msgs Messages) CategoryErrLong(count int) string {
+	return Catalog.Format(msgs.locale, "categoryErrLong", map[string]any{"count": count})
+}
+
+// CategoryErrTaken says "A category with that name already exists."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when another category has the
+// name, whatever the case.
+func CategoryErrTaken() string { return In(i18n.Locale()).CategoryErrTaken() }
+
+// CategoryErrTaken says "A category with that name already exists."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when another category has the
+// name, whatever the case.
+func (msgs Messages) CategoryErrTaken() string {
+	return Catalog.Format(msgs.locale, "categoryErrTaken", nil)
+}
+
+// CategoryErrTooMany says "There can be at most {count} categories. Delete one first."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when the list is full.
+func CategoryErrTooMany(count int) string { return In(i18n.Locale()).CategoryErrTooMany(count) }
+
+// CategoryErrTooMany says "There can be at most {count} categories. Delete one first."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when the list is full.
+func (msgs Messages) CategoryErrTooMany(count int) string {
+	return Catalog.Format(msgs.locale, "categoryErrTooMany", map[string]any{"count": count})
+}
+
+// CategoryDeleted says "Deleted “{name}” · {count, plural, one {# task} other {# tasks}} unsorted"
+// in the language the app shows.
+//
+// Toast after a category was deleted; its Undo puts the category back.
+// count is how many tasks became unsorted, at least 1.
+func CategoryDeleted(name string, count int) string {
+	return In(i18n.Locale()).CategoryDeleted(name, count)
+}
+
+// CategoryDeleted says "Deleted “{name}” · {count, plural, one {# task} other {# tasks}} unsorted"
+// in the language of msgs.
+//
+// Toast after a category was deleted; its Undo puts the category back.
+// count is how many tasks became unsorted, at least 1.
+func (msgs Messages) CategoryDeleted(name string, count int) string {
+	return Catalog.Format(msgs.locale, "categoryDeleted", map[string]any{"name": name, "count": count})
+}
+
+// CategoryDeletedEmpty says "Deleted “{name}”"
+// in the language the app shows.
+//
+// Toast after a category with no tasks was deleted; its Undo puts it back.
+func CategoryDeletedEmpty(name string) string { return In(i18n.Locale()).CategoryDeletedEmpty(name) }
+
+// CategoryDeletedEmpty says "Deleted “{name}”"
+// in the language of msgs.
+//
+// Toast after a category with no tasks was deleted; its Undo puts it back.
+func (msgs Messages) CategoryDeletedEmpty(name string) string {
+	return Catalog.Format(msgs.locale, "categoryDeletedEmpty", map[string]any{"name": name})
+}
+
+// A11yCategoryColor says "Color: {name}"
+// in the language the app shows.
+//
+// Accessibility label of a color swatch of the category sheet.
+func A11yCategoryColor(name string) string { return In(i18n.Locale()).A11yCategoryColor(name) }
+
+// A11yCategoryColor says "Color: {name}"
+// in the language of msgs.
+//
+// Accessibility label of a color swatch of the category sheet.
+func (msgs Messages) A11yCategoryColor(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryColor", map[string]any{"name": name})
+}
+
+// CategoryColorIndigo says "Indigo"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorIndigo() string { return In(i18n.Locale()).CategoryColorIndigo() }
+
+// CategoryColorIndigo says "Indigo"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorIndigo() string {
+	return Catalog.Format(msgs.locale, "categoryColorIndigo", nil)
+}
+
+// CategoryColorYellow says "Yellow"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorYellow() string { return In(i18n.Locale()).CategoryColorYellow() }
+
+// CategoryColorYellow says "Yellow"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorYellow() string {
+	return Catalog.Format(msgs.locale, "categoryColorYellow", nil)
+}
+
+// CategoryColorGreen says "Green"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorGreen() string { return In(i18n.Locale()).CategoryColorGreen() }
+
+// CategoryColorGreen says "Green"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorGreen() string {
+	return Catalog.Format(msgs.locale, "categoryColorGreen", nil)
+}
+
+// CategoryColorRed says "Red"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorRed() string { return In(i18n.Locale()).CategoryColorRed() }
+
+// CategoryColorRed says "Red"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorRed() string {
+	return Catalog.Format(msgs.locale, "categoryColorRed", nil)
+}
+
+// CategoryColorBlue says "Blue"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorBlue() string { return In(i18n.Locale()).CategoryColorBlue() }
+
+// CategoryColorBlue says "Blue"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorBlue() string {
+	return Catalog.Format(msgs.locale, "categoryColorBlue", nil)
+}
+
+// CategoryColorPink says "Pink"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorPink() string { return In(i18n.Locale()).CategoryColorPink() }
+
+// CategoryColorPink says "Pink"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorPink() string {
+	return Catalog.Format(msgs.locale, "categoryColorPink", nil)
+}
+
+// CategoryColorTeal says "Teal"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorTeal() string { return In(i18n.Locale()).CategoryColorTeal() }
+
+// CategoryColorTeal says "Teal"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorTeal() string {
+	return Catalog.Format(msgs.locale, "categoryColorTeal", nil)
+}
+
+// CategoryColorOrange says "Orange"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorOrange() string { return In(i18n.Locale()).CategoryColorOrange() }
+
+// CategoryColorOrange says "Orange"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorOrange() string {
+	return Catalog.Format(msgs.locale, "categoryColorOrange", nil)
+}
+
+// CategoryGroupWork says "Work"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupWork() string { return In(i18n.Locale()).CategoryGroupWork() }
+
+// CategoryGroupWork says "Work"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupWork() string {
+	return Catalog.Format(msgs.locale, "categoryGroupWork", nil)
+}
+
+// CategoryGroupStudy says "Study"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupStudy() string { return In(i18n.Locale()).CategoryGroupStudy() }
+
+// CategoryGroupStudy says "Study"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupStudy() string {
+	return Catalog.Format(msgs.locale, "categoryGroupStudy", nil)
+}
+
+// CategoryGroupHealth says "Health"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHealth() string { return In(i18n.Locale()).CategoryGroupHealth() }
+
+// CategoryGroupHealth says "Health"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHealth() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHealth", nil)
+}
+
+// CategoryGroupMoney says "Money"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupMoney() string { return In(i18n.Locale()).CategoryGroupMoney() }
+
+// CategoryGroupMoney says "Money"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupMoney() string {
+	return Catalog.Format(msgs.locale, "categoryGroupMoney", nil)
+}
+
+// CategoryGroupHome says "Home"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHome() string { return In(i18n.Locale()).CategoryGroupHome() }
+
+// CategoryGroupHome says "Home"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHome() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHome", nil)
+}
+
+// CategoryGroupHobby says "Hobby"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHobby() string { return In(i18n.Locale()).CategoryGroupHobby() }
+
+// CategoryGroupHobby says "Hobby"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHobby() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHobby", nil)
+}
+
+// CategoryGroupTravel says "Travel"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupTravel() string { return In(i18n.Locale()).CategoryGroupTravel() }
+
+// CategoryGroupTravel says "Travel"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupTravel() string {
+	return Catalog.Format(msgs.locale, "categoryGroupTravel", nil)
+}
+
+// CategoryGroupPeople says "People"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupPeople() string { return In(i18n.Locale()).CategoryGroupPeople() }
+
+// CategoryGroupPeople says "People"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupPeople() string {
+	return Catalog.Format(msgs.locale, "categoryGroupPeople", nil)
+}
