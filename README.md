@@ -18,11 +18,11 @@ More in [`docs/design/screens/`](docs/design/screens/); the design is specified 
 
 Install the app once from the DMG of the [latest release](https://github.com/QingYunA/adhd-todo/releases/latest)
 (drag it to Applications; the app is not notarized, so open it the first time with right-click >
-Open). Later versions arrive through **ADHD Todo > Check for Updates…**, and the app checks once a day
-(Settings > General > Software updates).
+Open). Install a later version the same way. Automatic updates are built in but off for now
+(`docs/plans/m10-auto-update.md`).
 
 `adhd-core` comes inside the app: on launch the app links `~/.local/bin/adhd-core`, where the MCP
-registration below points, to its own copy, so an update brings both. It leaves a build of your own
+registration below points, to its own copy, so installing the app brings both. It leaves a build of your own
 (one that is as new as the app's) alone. Coding agents keep running the old `adhd-core` until you
 restart them. Without the app, `adhd-core-<version>-macos-universal.tar.gz` on the release is the
 binary by itself.
@@ -39,9 +39,9 @@ cd app && go tool mygo build
 go build -o ~/.local/bin/adhd-core ./cmd/adhd-core
 ```
 
-`scripts/build-mac.sh` makes the release files (the universal app with `adhd-core` inside, the signed
-update archive, the DMG and the standalone `adhd-core` tarball) in `app/build/darwin-universal/`; it
-needs the update key, see `docs/plans/m10-auto-update.md`.
+`scripts/build-mac.sh` makes the release files (the universal app with `adhd-core` inside, the DMG
+and the standalone `adhd-core` tarball, plus the signed update archive when updates are on) in
+`app/build/darwin-universal/`; see `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 

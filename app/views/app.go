@@ -39,6 +39,9 @@ type Actions interface {
 	// NotificationsDenied says macOS refused the last system notification, so the switch in
 	// Settings does nothing until it is allowed in System Settings.
 	NotificationsDenied() bool
+	// CanUpdate says this build updates itself: it was built with updates in mygo.json. Without, it
+	// offers no updates at all.
+	CanUpdate() bool
 	// AutomaticUpdates says the app checks for updates in the background; SetAutomaticUpdates turns
 	// that on or off. The update plugin keeps the choice, not the app's prefs.
 	AutomaticUpdates() bool

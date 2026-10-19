@@ -29,7 +29,9 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 		s.endOfDayRows(c, t)
 	})
 	group(c, t, "sound", func() { s.soundRow(c, t) })
-	group(c, t, "updates", func() { s.updatesRow(c, t) })
+	if s.app.Act.CanUpdate() {
+		group(c, t, "updates", func() { s.updatesRow(c, t) })
+	}
 	groupLabel(c, t, s.say.SettingsPages())
 	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())

@@ -48,8 +48,11 @@ func main() {
 	s.notifier = s.newNotifier()
 
 	// The update window is native UI like the app's own; its choices live in the plugin's updater.json.
-	mygo.Use(native.Plugin)
-	updater.OnChange(s.invalidateSettings)
+	// A build without updates in mygo.json (or a dev build) cannot update, so it offers nothing.
+	if mygo.Updater.Enabled() {
+		mygo.Use(native.Plugin)
+		updater.OnChange(s.invalidateSettings)
+	}
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
 	// Hiding the main window must not end the app.
 	mygo.App.OnWindowAllClosed(func() {})

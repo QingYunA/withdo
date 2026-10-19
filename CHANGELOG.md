@@ -1,23 +1,18 @@
 # Changelog
 
-`mygo build` reads the release notes of an update from the section of its version (`## 0.5.0`), and
-fails when the file has no such section. The release PR bumps the version and finishes the section.
+Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
+reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
 ## 0.5.0
-
-The last version to install by hand: from here on the app updates itself.
 
 Upgrading from 0.4.0: quit your coding agents first and back up `~/Library/Application Support/adhd-todo/`.
 The database moves from schema 11 to 13, which 0.4.0's adhd-core cannot read; on its first launch
 the app points `~/.local/bin/adhd-core` at its own copy (the old file is kept as `adhd-core.old`).
 
-- **Automatic updates.** "Check for Updates…" in the app menu, and a daily background check with the
-  usual window: release notes, Install Update, Remind Me Later, Skip This Version. Turn the
-  background checks off in Settings > General > Software updates.
 - **adhd-core comes with the app.** The app links `~/.local/bin/adhd-core`, the path your coding
-  agents run, to the copy inside it, so an update brings both. A coding agent keeps running the old
-  adhd-core until it is restarted; restart it after an update. `adhd-core --version` prints the
-  version.
+  agents run, to the copy inside it, so installing the app brings both. A coding agent keeps running
+  the old adhd-core until it is restarted; restart it after installing. `adhd-core --version` prints
+  the version.
 - **Your own categories**, with 12 x 12 pixel icons in color, an icon editor, and import from a
   picture or SVG. Work and Life stay as the built-in two.
 - **Sub-projects**: a project can hang under another in the sidebar (right-click > New sub-project).

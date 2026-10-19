@@ -382,6 +382,9 @@ func (s *shell) windowKey() bool {
 // NotificationsDenied implements views.Actions.
 func (s *shell) NotificationsDenied() bool { return s.notifier.Denied() }
 
+// CanUpdate implements views.Actions.
+func (s *shell) CanUpdate() bool { return mygo.Updater.Enabled() }
+
 // AutomaticUpdates implements views.Actions.
 func (s *shell) AutomaticUpdates() bool { return updater.AutomaticChecks() }
 
