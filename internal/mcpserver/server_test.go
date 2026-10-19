@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/mcpserver"
+	"github.com/QingYunA/adhd-todo/internal/paths"
 	"github.com/QingYunA/adhd-todo/internal/pixmap"
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
@@ -29,6 +31,7 @@ type rig struct {
 	t       *testing.T
 	session *mcp.ClientSession
 	core    *domain.Core
+	images  string // the folder of the pictures
 	dir     string // a GitHub-backed repo on branch feat/login, the server's default cwd
 }
 
@@ -41,10 +44,11 @@ type result struct {
 func newRig(t *testing.T) *rig {
 	t.Helper()
 	testutil.IsolateGit(t)
-	db, _ := testutil.OpenDB(t)
+	db, dbPath := testutil.OpenDB(t)
+	images := paths.ImagesDir(filepath.Dir(dbPath))
 	core := domain.New(db, domain.Options{})
 	dir := testutil.NewRepo(t, t.TempDir(), "widgets", testutil.RepoOptions{Remote: "git@github.com:acme/widgets.git", Branch: "feat/login"})
-	server := mcpserver.New(core, mcpserver.Options{DefaultCwd: dir, Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
+	server := mcpserver.New(core, mcpserver.Options{DefaultCwd: dir, ImagesDir: images, Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
 	serverT, clientT := mcp.NewInMemoryTransports()
 	serverSession, err := server.Connect(ctx, serverT, nil)
 	if err != nil {
@@ -56,7 +60,7 @@ func newRig(t *testing.T) *rig {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = session.Close(); _ = serverSession.Close() })
-	return &rig{t: t, session: session, core: core, dir: dir}
+	return &rig{t: t, session: session, core: core, images: images, dir: dir}
 }
 
 func (r *rig) call(name string, args map[string]any) result {
@@ -99,7 +103,7 @@ func (res result) list(key string) []any {
 	return l
 }
 
-func TestListsTheNineTools(t *testing.T) {
+func TestListsTheTenTools(t *testing.T) {
 	r := newRig(t)
 	list, err := r.session.ListTools(ctx, nil)
 	if err != nil {
@@ -117,7 +121,7 @@ func TestListsTheNineTools(t *testing.T) {
 		}
 	}
 	sort.Strings(names)
-	want := []string{"create_milestone", "create_task", "get_overview", "get_task", "list_categories", "list_tasks", "report_progress", "update_task", "upsert_project"}
+	want := []string{"create_milestone", "create_task", "get_overview", "get_task", "get_task_image", "list_categories", "list_tasks", "report_progress", "update_task", "upsert_project"}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Errorf("tools = %v, want %v", names, want)
 	}

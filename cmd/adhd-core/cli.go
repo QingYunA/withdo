@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -94,7 +95,8 @@ func wantsHelp(args []string) bool {
 }
 
 func execute(ctx context.Context, command string, d deps) error {
-	db, err := store.Open(ctx, paths.DBPath(d.getenv, runtime.GOOS, d.home))
+	dbPath := paths.DBPath(d.getenv, runtime.GOOS, d.home)
+	db, err := store.Open(ctx, dbPath)
 	if err != nil {
 		return err
 	}
@@ -102,7 +104,7 @@ func execute(ctx context.Context, command string, d deps) error {
 	core := domain.New(db, domain.Options{})
 	if command == "mcp" {
 		_, _ = io.WriteString(d.stderr, "[adhd-todo] MCP server ready on stdio\n")
-		return d.serve(ctx, mcpserver.New(core, mcpserver.Options{}))
+		return d.serve(ctx, mcpserver.New(core, mcpserver.Options{ImagesDir: paths.ImagesDir(filepath.Dir(dbPath))}))
 	}
 	overview, err := core.GetOverview(ctx, domain.OverviewOptions{})
 	if err != nil {

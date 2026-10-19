@@ -248,7 +248,7 @@ func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 		t.Fatalf("connect: %v\n%s", err, stderr.String())
 	}
 	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 9 {
+	if err != nil || len(tools.Tools) != 10 {
 		t.Fatalf("tools = %v, err = %v", tools, err)
 	}
 	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "report_progress",

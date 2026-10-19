@@ -184,7 +184,7 @@ func (t *tools) registerGetTask(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "get_task",
 		Title:       "Get task",
-		Description: "Get a task together with its progress report timeline (oldest first) and its subtasks.",
+		Description: "Get a task together with its progress report timeline (oldest first), its subtasks and the pictures attached to it (listed with file paths; see one with get_task_image).",
 		InputSchema: object(map[string]*jsonschema.Schema{
 			"task_id": id("Task id, as returned by report_progress or create_task"),
 		}, "task_id"),
@@ -207,6 +207,10 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 	if err != nil {
 		return t.fail(err)
 	}
+	images, err := t.core.ListTaskImages(ctx, a.TaskID)
+	if err != nil {
+		return t.fail(err)
+	}
 	lines := []string{domain.FormatTaskLine(*task)}
 	for _, r := range reports {
 		lines = append(lines, fmt.Sprintf("- %s %s: %s", r.CreatedAt, r.Agent, r.Summary))
@@ -220,6 +224,11 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 		lines = append(lines, fmt.Sprintf("- #%d [%s] %s", s.ID, s.Status, s.Title))
 	}
 	data := map[string]any{"task": task, "reports": reports, "subtasks": brief}
+	if len(images) > 0 {
+		pics := t.imageBriefs(images)
+		lines = append(lines, imageLines(task.ID, pics)...)
+		data["images"] = pics
+	}
 	if task.HandedTo != nil && !task.Status.Terminal() {
 		lines = append(lines, waitingNote)
 		data["note"] = waitingNote
