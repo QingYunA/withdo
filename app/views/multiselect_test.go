@@ -10,7 +10,7 @@ import (
 // pickedTitles are the titles of the rows selected together, in page order.
 func pickedTitles(m *Main) []string {
 	var out []string
-	for _, id := range m.selectedRows() {
+	for _, id := range m.multi.IDs() {
 		if task, ok := m.app.Task(id); ok {
 			out = append(out, task.Title)
 		}
@@ -64,7 +64,7 @@ func TestShiftArrowsExtendFromTheKeyboardRow(t *testing.T) {
 	tt.Key(ui.Shift, ui.KeyUp)
 	wantPicked(t, m, "Reply to design feedback", "Decide on the activation policy")
 	tt.Key(0, ui.KeyDown)
-	if n := m.multi.count(); n != 0 {
+	if n := m.multi.Count(); n != 0 {
 		t.Errorf("a plain arrow left %d rows selected", n)
 	}
 }
@@ -72,19 +72,19 @@ func TestShiftArrowsExtendFromTheKeyboardRow(t *testing.T) {
 func TestCmdASelectsEveryRowAndEscClearsThemFirst(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyA)
-	if got, want := m.multi.count(), len(m.rowIDs()); got != want || got < 8 {
+	if got, want := m.multi.Count(), len(m.rowIDs()); got != want || got < 8 {
 		t.Fatalf("⌘A selected %d of %d rows", got, want)
 	}
 	if err := tt.Click("Book dentist"); err != nil { // a plain click opens it
 		t.Fatal(err)
 	}
-	if m.openID == 0 || m.multi.count() != 0 {
-		t.Errorf("a plain click left openID %d and %d selected", m.openID, m.multi.count())
+	if m.openID == 0 || m.multi.Count() != 0 {
+		t.Errorf("a plain click left openID %d and %d selected", m.openID, m.multi.Count())
 	}
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyEscape)
-	if m.multi.count() != 0 || m.openID == 0 {
-		t.Errorf("Esc: %d selected, openID %d: it clears the selection first and leaves the inspector", m.multi.count(), m.openID)
+	if m.multi.Count() != 0 || m.openID == 0 {
+		t.Errorf("Esc: %d selected, openID %d: it clears the selection first and leaves the inspector", m.multi.Count(), m.openID)
 	}
 	tt.Key(0, ui.KeyEscape)
 	if m.openID != 0 {
@@ -96,7 +96,7 @@ func TestTheSelectionIsClearedWhenThePageChanges(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(ui.Cmd, ui.Key3)
-	if m.multi.count() != 0 {
+	if m.multi.Count() != 0 {
 		t.Error("the selection followed the user to the Inbox")
 	}
 }

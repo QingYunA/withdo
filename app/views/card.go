@@ -27,10 +27,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		} else {
 			card.Padding(12).Gap(4)
 		}
-		stack := []int{task.ID}
-		if m.multi.has(task.ID) && m.multi.count() >= 2 {
-			stack = m.selectedRows()
-		}
+		stack := m.multi.Stack(task.ID, nil) // a lane takes every selected card
 		card.Drag(dragCard{id: task.ID, stack: stackKey(stack)})
 		dragging = card.Dragging()
 		if dragging {
@@ -84,7 +81,7 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	switch {
 	case dragging:
 		border = t.TextTertiary
-	case m.multi.has(task.ID):
+	case m.multi.Has(task.ID):
 		bg, border = t.Bg.Mix(t.Accent, 0.12), t.Accent.Alpha(0.6)
 		if m.sel == task.ID { // the keyboard card has the ring
 			border = t.Accent.Alpha(0.9)

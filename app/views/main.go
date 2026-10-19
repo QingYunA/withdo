@@ -6,6 +6,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/locales"
+	"github.com/QingYunA/adhd-todo/app/selection"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/words"
 	"github.com/egoist/mygo/ui"
@@ -59,17 +60,17 @@ type Main struct {
 	minePage   data.Mine
 	agentsPage data.AgentsScreen
 	slices     mineSlices
-	agentRows  []data.AgentTally // the agents the sidebar lists under Agents
-	hop        hopper            // the hop to the Mine row, and the badge there
-	cols       columnsState      // a project's two columns, and where they were drawn
-	ho         handOffState      // handing a task to an agent, and its motion
-	openID     int               // task open in the inspector, 0 for none
-	sel        int               // task the keyboard highlights, 0 for none
-	multi      multiSel          // the rows selected together on this page
-	hint       selectHint        // where the Select button has flashed
-	order      []int             // the rows of the page in the order they are drawn, as View found them
-	rects      map[int]ui.Rect   // where the rows were drawn this frame, and prevRects the frame before:
-	prevRects  map[int]ui.Rect   // neighbouring selected rows join into one block by them
+	agentRows  []data.AgentTally   // the agents the sidebar lists under Agents
+	hop        hopper              // the hop to the Mine row, and the badge there
+	cols       columnsState        // a project's two columns, and where they were drawn
+	ho         handOffState        // handing a task to an agent, and its motion
+	openID     int                 // task open in the inspector, 0 for none
+	sel        int                 // task the keyboard highlights, 0 for none
+	multi      selection.Selection // the rows selected together on this page
+	hint       selectHint          // where the Select button has flashed
+	order      []int               // the rows of the page in the order they are drawn, as View found them
+	rects      map[int]ui.Rect     // where the rows were drawn this frame, and prevRects the frame before:
+	prevRects  map[int]ui.Rect     // neighbouring selected rows join into one block by them
 	moved      bool
 	width      float32 // the room the screen has this frame
 	// focusComposer is set by Cmd+K: the page's composer takes the focus once it is drawn.
@@ -157,7 +158,7 @@ func (m *Main) goTo(n nav) {
 	if m.nav != n {
 		m.cmp[surfacePage].keepDraft(m.nav, n)
 		m.nav, m.openID, m.sel = n, 0, 0
-		m.clearMulti()
+		m.multi.Clear()
 		m.scroll = ui.ScrollState{}
 	}
 }
@@ -183,7 +184,7 @@ func (m *Main) View(c *ui.Context) {
 	}
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
-		m.clearMulti()
+		m.multi.Clear()
 	}
 	m.onMine.Store(m.nav == nav{} && !m.searching())
 	onSummary := m.nav.screen == screenSummary && !m.searching()
@@ -205,7 +206,7 @@ func (m *Main) View(c *ui.Context) {
 	m.handOffTick(c)
 	ids := m.rowIDs()
 	m.order = ids
-	m.pruneMulti(ids)
+	m.multi.Sync(ids)
 	m.prevRects, m.rects = m.rects, m.prevRects
 	clear(m.rects)
 	m.keys(c, ids)

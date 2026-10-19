@@ -33,7 +33,7 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, ph 
 func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
 	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(rowGap).
 		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
-	picked := m.multi.has(id)
+	picked := m.multi.Has(id)
 	switch {
 	case picked || m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):
 		row.Background(t.BgSelected)
@@ -85,7 +85,7 @@ func (m *Main) pickedRow(t *theme.Tokens, row ui.Element, id int) {
 // the rows were drawn the frame before.
 func (m *Main) joinedNeighbours(id int, r ui.Rect) (above, below bool) {
 	for other, o := range m.prevRects {
-		if other == id || !m.multi.has(other) || o.X+o.W <= r.X || o.X >= r.X+r.W {
+		if other == id || !m.multi.Has(other) || o.X+o.W <= r.X || o.X >= r.X+r.W {
 			continue
 		}
 		if gap := r.Y - (o.Y + o.H); gap > -1.5 && gap < 1.5 {
@@ -101,7 +101,7 @@ func (m *Main) joinedNeighbours(id int, r ui.Rect) (above, below bool) {
 // openRow opens a row's task in the inspector and highlights it.
 func (m *Main) openRow(id int) {
 	m.openID, m.sel = id, id
-	m.multi = multiSel{anchor: id}
+	m.multi.Open(id)
 	m.openFail = openFailure{}
 	m.inspector.reset()
 }
@@ -152,7 +152,7 @@ func right(c *ui.Context, fn func()) {
 // target reaches past the 18 pt glyph, so it takes negative margins.
 func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
-	if m.multi.mode {
+	if m.multi.Mode() {
 		m.checkSlot(c, t, task.ID).Margin(-pad)
 		return
 	}
@@ -163,7 +163,7 @@ func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill fl
 // it): the glyph sits 2 pt lower, level with the middle of the first line.
 func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
-	if m.multi.mode {
+	if m.multi.Mode() {
 		m.checkSlot(c, t, task.ID).Margin(2-pad, -pad, -pad-2, -pad)
 		return
 	}
@@ -183,7 +183,7 @@ func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill
 // press on the button ends the hover of the row (the pointer is not over the row) but not the fact
 // that the pointer is in the zone.
 func (m *Main) groupGlyph(c *ui.Context, t *theme.Tokens, row ui.Element, task data.Task, ph phase, top bool) {
-	if m.multi.mode || row.Dragging() {
+	if m.multi.Mode() || row.Dragging() {
 		return
 	}
 	pad := (theme.HitTarget - theme.GlyphSize) / 2

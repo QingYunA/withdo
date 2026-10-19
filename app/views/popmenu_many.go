@@ -33,8 +33,8 @@ func (m *Main) openManyMenuAbove(el ui.Element, ids []int, page menuPage) {
 // rowMenu is the right-click on a row: on one of the rows selected together the menu is for all of
 // them; on any other row it is for that row alone, and the selection stays as it is.
 func (m *Main) rowMenu(row ui.Element, id int) {
-	if m.multi.has(id) && m.multi.count() >= 2 {
-		m.openManyMenuAtPointer(row, m.selectedRows())
+	if m.multi.Has(id) && m.multi.Count() >= 2 {
+		m.openManyMenuAtPointer(row, m.multi.IDs())
 		return
 	}
 	m.openMenuAtPointer(row, id)
@@ -116,7 +116,7 @@ func (m *Main) manyLetters(c *ui.Context, panel ui.Element) {
 // manyTaskKeys are the keys of the rows selected together, in place of a single row's: P and M open
 // the menu on that piece, under the keyboard row, and ⌘⌫ asks before deleting them all.
 func (m *Main) manyTaskKeys(c *ui.Context) {
-	ids := m.selectedRows()
+	ids := m.multi.IDs()
 	r := m.selRect
 	a, ok := pressedAction(actionsFor(m.tasksOf(ids)), func(b binding) bool { return b.down(c) }, actMove, actPriority, actDelete)
 	switch {

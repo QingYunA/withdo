@@ -29,7 +29,7 @@ func TestDraggingOneOfTheSelectedRowsHandsOverAllOfThemAtOnce(t *testing.T) {
 	if got := r.m.ho.landed.ids; !slices.Equal(got, []int{6, 5}) && !slices.Equal(got, []int{5, 6}) {
 		t.Errorf("landed %v, want both rows", got)
 	}
-	if m := r.m.multi; m.active() {
+	if m := r.m.multi; m.Active() {
 		t.Error("the selection outlived the hand-off")
 	}
 }
@@ -59,7 +59,7 @@ func TestDraggingARowThatIsNotSelectedTakesOnlyThatRowAndClearsTheSelection(t *t
 	if task, _ := r.app.Task(6); task.HandedTo != "" {
 		t.Error("a selected row that was not dragged went along")
 	}
-	if r.m.multi.active() {
+	if r.m.multi.Active() {
 		t.Error("the selection was kept")
 	}
 	has(t, r.tt, "Handed to an agent")

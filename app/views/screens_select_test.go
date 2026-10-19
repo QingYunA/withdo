@@ -37,7 +37,7 @@ func TestScreensSelect(t *testing.T) {
 			// Select mode on Mine: the checkboxes, the count, Select all and Done, and the bar.
 			app, _, _ := newTestApp(t)
 			selectShot(t, name("mode"), zh, app, a.dark, full, func(tt *ui.Tester, m *Main) {
-				m.multi.mode = true
+				m.multi.EnterMode()
 				tt.Frame()
 				tick(tt, "Reply to design feedback", "Decide on the activation policy")
 			})

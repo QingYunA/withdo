@@ -24,7 +24,7 @@ func (m *Main) tasksOf(ids []int) []data.Task {
 
 // finishBulk is what follows every bulk action: no rows are selected and select mode is over.
 func (m *Main) finishBulk() {
-	m.clearMulti()
+	m.multi.Clear()
 	m.sel = 0
 }
 

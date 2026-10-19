@@ -32,13 +32,13 @@ func TestSelectButtonTurnsOnSelectModeWhereAClickTicksARow(t *testing.T) {
 	if err := tt.Click("Select all"); err != nil {
 		t.Fatal(err)
 	}
-	if m.multi.count() != len(m.rowIDs()) {
-		t.Errorf("Select all ticked %d of %d rows", m.multi.count(), len(m.rowIDs()))
+	if m.multi.Count() != len(m.rowIDs()) {
+		t.Errorf("Select all ticked %d of %d rows", m.multi.Count(), len(m.rowIDs()))
 	}
 	if err := tt.Click("Done"); err != nil {
 		t.Fatal(err)
 	}
-	if m.multi.mode || m.multi.count() != 0 {
+	if m.multi.Mode() || m.multi.Count() != 0 {
 		t.Error("Done did not leave select mode and clear the selection")
 	}
 }
@@ -49,7 +49,7 @@ func TestEscLeavesSelectMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Key(0, ui.KeyEscape)
-	if m.multi.mode {
+	if m.multi.Mode() {
 		t.Error("Esc left the page in select mode")
 	}
 }
@@ -62,13 +62,13 @@ func TestSpaceTicksTheKeyboardRowInSelectMode(t *testing.T) {
 	tt.Key(0, ui.KeyDown)
 	tt.Key(0, ui.KeyDown)
 	tt.Key(0, ui.KeySpace)
-	if m.multi.count() != 1 {
-		t.Errorf("Space ticked %d rows", m.multi.count())
+	if m.multi.Count() != 1 {
+		t.Errorf("Space ticked %d rows", m.multi.Count())
 	}
 	tt.Key(0, ui.KeyDown)
 	tt.Key(0, ui.KeySpace)
-	if m.multi.count() != 2 {
-		t.Errorf("the first tick was lost moving on: %d ticked", m.multi.count())
+	if m.multi.Count() != 2 {
+		t.Errorf("the first tick was lost moving on: %d ticked", m.multi.Count())
 	}
 }
 
