@@ -17,11 +17,11 @@ func int64s(ids []int) []int64 {
 }
 
 // UpdateTasks implements Bulk.
-func (r *Real) UpdateTasks(ids []int, p Patch) ([]Task, error) {
+func (r *Real) UpdateTasks(ids []int, p BulkPatch) ([]Task, error) {
 	if len(ids) == 0 {
 		return nil, errNoTasks
 	}
-	before, err := r.core.UpdateTasks(r.ctx(), int64s(ids), toPatch(p))
+	before, err := r.core.UpdateTasks(r.ctx(), int64s(ids), toPatch(p.patch()))
 	if err != nil {
 		return nil, err
 	}

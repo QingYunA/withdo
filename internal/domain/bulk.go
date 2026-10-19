@@ -37,7 +37,8 @@ func StateOf(t Task) TaskState {
 // UpdateTasks applies one patch to every task in ids, in one transaction. It returns the tasks as
 // they were before, and with them the open subtasks that closed along with a task that became
 // done or cancelled, in the order they were changed. A missing task, or a patch one of them
-// refuses, changes nothing.
+// refuses, changes nothing. Only the fields of TaskState come back with RestoreStates; the app
+// narrows its patch to those (data.BulkPatch), so a caller that passes more loses that part of its Undo.
 func (c *Core) UpdateTasks(ctx context.Context, ids []int64, patch TaskPatch) ([]Task, error) {
 	var before []Task
 	err := c.write(ctx, func(q store.Querier) error {

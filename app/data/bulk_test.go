@@ -1,6 +1,7 @@
 package data
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
@@ -12,7 +13,7 @@ func TestUpdateTasksChangesAllAndRestoreStatesPutsThemBack(t *testing.T) {
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b", Status: Doing, ProjectID: &p.ID}))
 		kid := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "kid", Status: Doing, ProjectID: &p.ID, ParentID: &b.ID}))
 
-		before := must[[]Task](t)(s.UpdateTasks([]int{a.ID, b.ID}, Patch{Status: StatusPtr(Done)}))
+		before := must[[]Task](t)(s.UpdateTasks([]int{a.ID, b.ID}, BulkPatch{Status: StatusPtr(Done)}))
 		if len(before) != 3 || before[0].ID != a.ID || before[1].ID != b.ID || before[2].ID != kid.ID {
 			t.Fatalf("before = %+v, want a, b and b's open subtask", before)
 		}
@@ -30,7 +31,7 @@ func TestUpdateTasksChangesAllAndRestoreStatesPutsThemBack(t *testing.T) {
 			}
 		}
 
-		moved := must[[]Task](t)(s.UpdateTasks([]int{a.ID, b.ID}, Patch{ProjectID: IntPtr(0), Priority: PriorityPtr(P0)}))
+		moved := must[[]Task](t)(s.UpdateTasks([]int{a.ID, b.ID}, BulkPatch{ProjectID: IntPtr(0), Priority: PriorityPtr(P0)}))
 		if got := must[TaskDetail](t)(s.GetTask(b.ID)); got.Task.ProjectID != nil || got.Task.Priority != P0 {
 			t.Errorf("moved task = %+v, want the Inbox and P0", got.Task)
 		}
@@ -46,13 +47,13 @@ func TestUpdateTasksChangesAllAndRestoreStatesPutsThemBack(t *testing.T) {
 func TestUpdateTasksChangesNothingWhenOneIsMissing(t *testing.T) {
 	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a"}))
-		if _, err := s.UpdateTasks([]int{a.ID, 9999}, Patch{Status: StatusPtr(Done)}); err == nil {
+		if _, err := s.UpdateTasks([]int{a.ID, 9999}, BulkPatch{Status: StatusPtr(Done)}); err == nil {
 			t.Fatal("updated a task that does not exist")
 		}
 		if got := must[TaskDetail](t)(s.GetTask(a.ID)); got.Task.Status != Todo {
 			t.Errorf("a = %+v, want it untouched", got.Task)
 		}
-		if _, err := s.UpdateTasks(nil, Patch{Status: StatusPtr(Done)}); err == nil {
+		if _, err := s.UpdateTasks(nil, BulkPatch{Status: StatusPtr(Done)}); err == nil {
 			t.Error("updated no tasks without a word")
 		}
 	})
@@ -120,4 +121,45 @@ func TestDeleteTasksAndRestoreTasks(t *testing.T) {
 			t.Error("a failed delete still removed the first task")
 		}
 	})
+}
+
+// Every field a BulkPatch can carry has to come back with RestoreStates, whole: the task after the
+// Undo is the task before, whatever the change touched. A new field in BulkPatch fails here until
+// the case is added.
+func TestEveryBulkPatchFieldIsFullyUndone(t *testing.T) {
+	zero := 0
+	cases := map[string]BulkPatch{
+		"Status":    {Status: StatusPtr(Done)},
+		"Priority":  {Priority: PriorityPtr(P0)},
+		"ProjectID": {ProjectID: &zero},
+	}
+	if n := reflect.TypeOf(BulkPatch{}).NumField(); n != len(cases) {
+		t.Fatalf("BulkPatch has %d fields and the test %d cases", n, len(cases))
+	}
+	for field, patch := range cases {
+		t.Run(field, func(t *testing.T) {
+			withStore(t, func(t *testing.T, s *Real, now *time.Time) {
+				p := must[Project](t)(s.CreateProject(NewProject{Name: "scratch"}))
+				ms := must[Milestone](t)(s.CreateMilestone(p.ID, "v1", nil))
+				a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", Status: Doing, Priority: P2, ProjectID: &p.ID}))
+				must[Task](t)(s.UpdateTask(a.ID, Patch{MilestoneID: IntPtr(ms.ID)}))
+				before := must[TaskDetail](t)(s.GetTask(a.ID)).Task
+
+				*now = now.Add(time.Hour)
+				undo := must[[]Task](t)(s.UpdateTasks([]int{a.ID}, patch))
+				if changed := must[TaskDetail](t)(s.GetTask(a.ID)).Task; reflect.DeepEqual(changed, before) {
+					t.Fatalf("%s: the patch changed nothing", field)
+				}
+				*now = now.Add(time.Hour)
+				if err := s.RestoreStates(undo); err != nil {
+					t.Fatal(err)
+				}
+				after := must[TaskDetail](t)(s.GetTask(a.ID)).Task
+				after.UpdatedAt, before.UpdatedAt = time.Time{}, time.Time{}
+				if !reflect.DeepEqual(after, before) {
+					t.Errorf("%s: after the undo\n%+v\nwant\n%+v", field, after, before)
+				}
+			})
+		})
+	}
 }
