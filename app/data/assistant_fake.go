@@ -19,6 +19,14 @@ type FakeAssistant struct {
 	SummaryScript func(SummaryRequest) (SummaryText, error)
 	// SummaryBlock, when non-nil, holds every Summarize until it is closed or the request is cancelled.
 	SummaryBlock chan struct{}
+	// RecentScript answers a request for the sentences of a repository's items; nil answers with the
+	// titles (FallbackNote). RecentLinesScript and RecentExplainScript answer the other two; nil
+	// answers with a fixed text. RecentBlock, when non-nil, holds all three until it is closed or the
+	// request is cancelled.
+	RecentScript        func(RecentDescribeRequest) (map[int]RecentNote, error)
+	RecentLinesScript   func(RecentLinesRequest) (string, error)
+	RecentExplainScript func(RecentExplainRequest) (RecentExplanation, error)
+	RecentBlock         chan struct{}
 
 	mu        sync.Mutex
 	asked     []string
@@ -27,6 +35,9 @@ type FakeAssistant struct {
 	undone    []int
 	resets    int
 	summaries []SummaryRequest
+	described []RecentDescribeRequest
+	lined     []RecentLinesRequest
+	explained []RecentExplainRequest
 }
 
 var _ Assistant = (*FakeAssistant)(nil)
