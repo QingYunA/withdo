@@ -265,3 +265,40 @@ matches, compared with plain SQL.
 6. **Join refused**: linking B with its own tasks to A's workspace is `ErrLocalData` and leaves B
    unlinked and unchanged.
 7. **Seeding wait**: while A is seeding, linking B is `ErrSeeding`; after A finishes, B links.
+
+### Review fixes (S2a/S2b, 2026-10-20)
+
+1. **Seeding is taken over only on purpose.** `POST /v1/devices {name, resume_seeding}`: while
+   another device seeds, a registration without `resume_seeding: true` is 409 `workspace is
+   seeding`; with it, it takes the seeding over. The client sends `resume_seeding: true` only when
+   its local database has user rows (it would seed); an empty joining device gets `ErrSeeding`.
+2. **The server keeps references whole**, as the local foreign keys and `internal/domain` do.
+   `internal/syncproto` lists every reference and what a delete of its target does:
+
+   | Column | Target | On delete of the target |
+   |---|---|---|
+   | `milestones.project_id` | projects | delete the row |
+   | `tasks.project_id` | projects | delete the row |
+   | `reports.task_id` | tasks | delete the row |
+   | `tasks.milestone_id` | milestones | set NULL |
+   | `tasks.parent_id` | tasks | set NULL |
+   | `tasks.category_id` | categories | set NULL |
+   | `projects.parent_id` | projects | set NULL |
+
+   In the push transaction: a delete also deletes or nulls every live row that references the
+   deleted one (recursively, each change taking a version); a put whose reference points at a
+   deleted row nulls it, or becomes a delete for a "delete the row" reference. Clients then never
+   receive an orphan, and the client's `repairReferences` goes.
+3. **A re-insert revives a deleted row.** A mutation carries `full: true` when its outbox entry
+   has `columns` NULL (an insert: every column). A full put on a tombstone brings the row back with
+   exactly that data; a partial put on a tombstone is still ignored (delete wins over an edit). So
+   Undo of a delete (`RestoreTask` re-inserts with the old id) survives a sync.
+4. **One pull, one write.** All pages of one `Sync` pull are applied in a single `ApplyChanges`
+   write with deferred foreign keys, so a child whose parent comes on a later page is fine.
+
+New tests: an empty device linking while another seeds is `ErrSeeding` and does not take over;
+a device with data and `resume_seeding` takes over; deleting a project on A while B adds a task to
+it converges with the task gone everywhere (server and both devices); deleting a task and
+restoring it (Undo) before and after a sync ends with the task on every device; deleting a category
+on A while B files a task under it ends with `category_id` NULL everywhere; the convergence test
+also compares each device with the server's rows.
