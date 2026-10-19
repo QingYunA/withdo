@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -312,7 +313,8 @@ func TestInstallCreatesAMissingFileEachAgentsWay(t *testing.T) {
 		if err := json.Unmarshal([]byte(r.read(a.Files[0])), &got); err != nil {
 			t.Fatalf("%s wrote invalid JSON: %v", id, err)
 		}
-		if err := json.Unmarshal([]byte("{"+strings.ReplaceAll(w, "CORE", r.core())+"}"), &exp); err != nil {
+		coreJSON := strings.Trim(mustMarshal(t, r.core()), `"`)
+		if err := json.Unmarshal([]byte("{"+strings.ReplaceAll(w, "CORE", coreJSON)+"}"), &exp); err != nil {
 			t.Fatal(err)
 		}
 		if gj, _ := json.Marshal(got); string(gj) != mustMarshal(t, exp) {
@@ -345,7 +347,7 @@ func TestInstallLeavesAFileWithCommentsAloneAndOffersTheSnippet(t *testing.T) {
 	if r.read(".config/zed/settings.json") != orig {
 		t.Error("the file was rewritten")
 	}
-	for _, want := range []string{`"context_servers": {`, `"adhd-todo": {`, `"command": "` + r.core() + `"`, `"args": [`, `"env": {}`} {
+	for _, want := range []string{`"context_servers": {`, `"adhd-todo": {`, `"command": ` + mustMarshal(t, r.core()), `"args": [`, `"env": {}`} {
 		if !strings.Contains(me.Snippet, want) {
 			t.Errorf("snippet lacks %q:\n%s", want, me.Snippet)
 		}
@@ -384,7 +386,7 @@ func TestInstallKeepsTheModeOfTheFileAndItsTwoSpaceIndent(t *testing.T) {
 	if err := r.env.Install(context.Background(), r.agent("windsurf")); err != nil {
 		t.Fatal(err)
 	}
-	if fi, _ := os.Stat(p); fi.Mode().Perm() != 0o600 {
+	if fi, _ := os.Stat(p); runtime.GOOS != "windows" && fi.Mode().Perm() != 0o600 {
 		t.Errorf("mode %v", fi.Mode().Perm())
 	}
 	if got := r.read(".codeium/windsurf/mcp_config.json"); !strings.HasPrefix(got, "{\n  \"a\": 1,\n  \"mcpServers\": {\n    \"adhd-todo\"") {

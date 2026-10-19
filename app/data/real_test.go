@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sync/atomic"
 	"testing"
@@ -149,10 +150,12 @@ func TestRealMilestonesAndGetTask(t *testing.T) {
 	if err != nil || len(d.Reports) != 2 || d.Reports[0].Summary != "second" || d.Reports[0].Status != Doing || d.Reports[0].NextStep != "go on" {
 		t.Fatalf("detail = %+v, %v", d, err)
 	}
-	if _, err := core.AddReport(bg, domain.AddReportInput{TaskID: int64(task.ID), Agent: "claude", Summary: "third", Cwd: "/work/tree"}); err != nil {
+	// filepath.Clean keeps a native path stable; /work/tree is how it looks on Unix.
+	cwd := filepath.FromSlash("/work/tree")
+	if _, err := core.AddReport(bg, domain.AddReportInput{TaskID: int64(task.ID), Agent: "claude", Summary: "third", Cwd: cwd}); err != nil {
 		t.Fatal(err)
 	}
-	if d, err := r.GetTask(task.ID); err != nil || len(d.Reports) != 3 || d.Reports[0].Cwd != "/work/tree" || d.Reports[1].Cwd != "" {
+	if d, err := r.GetTask(task.ID); err != nil || len(d.Reports) != 3 || d.Reports[0].Cwd != cwd || d.Reports[1].Cwd != "" {
 		t.Fatalf("cwd of the reports = %+v, %v", d, err)
 	}
 	if _, err := r.GetTask(4242); err == nil {
@@ -291,7 +294,12 @@ func TestRealCloseStopsTheWatcher(t *testing.T) {
 }
 
 func TestOpenRealReportsBadPath(t *testing.T) {
-	if _, err := OpenReal(bg, "/dev/null/nope/x.db", RealOptions{}); err == nil {
+	// A path whose parent is a file cannot become a directory on any OS.
+	blocker := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(blocker, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OpenReal(bg, filepath.Join(blocker, "x.db"), RealOptions{}); err == nil {
 		t.Error("expected an error")
 	}
 }
