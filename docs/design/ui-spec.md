@@ -35,6 +35,12 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
 6. **Fast is a feature.** The composer is one keystroke away (⌘K). No spinner for local data.
 7. **Pictures are pixels; text and layout are native.** See **Pixel language**.
+8. **Few entries, few steps.** Each action has one place to start it; a new button must replace
+   one or earn its place against the question above. Rarely used parts start folded.
+9. **Hand it to an agent.** What an agent can do for me (filing, splitting, dating, organizing)
+   is offered through the assistant or a hand-off, not as another form or setting.
+10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
+    reason the existing ones cannot carry.
 
 ## Tokens
 
