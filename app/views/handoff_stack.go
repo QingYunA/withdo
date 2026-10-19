@@ -48,7 +48,7 @@ func (m *Main) stackOf(task data.Task) []int {
 	}
 	var ids []int
 	for _, id := range m.selectedRows() {
-		if t, ok := m.app.Task(id); ok && t.Source == data.SourceUser && !t.Status.Terminal() {
+		if t, ok := m.app.Task(id); ok && canHandOff(t) {
 			ids = append(ids, id)
 		}
 	}

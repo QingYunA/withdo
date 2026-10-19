@@ -41,7 +41,7 @@ func link(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 // under it, so agent work is never completed by accident and a finished task can be reopened.
 // fill, when above 0, plays the completion animation.
 func (m *Main) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) ui.Element {
-	own := task.Source == data.SourceUser && !task.Status.Terminal()
+	own := ownOpen(task)
 	name := statusLabel(m.say, task.Status)
 	label, tip := m.say.A11yStatus(name), name
 	if own {

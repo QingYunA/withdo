@@ -95,10 +95,9 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.priorityStrip(c, t, task, false)
 	menuRule(c, t)
 	m.popRow(c, t, m.categoryPopRow(task))
-	m.popRow(c, t, popSpec{key: "move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
-		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
-	}})
-	m.popRow(c, t, popSpec{key: "remind", icon: theme.IconClock, label: m.say.MenuRemindMe(), hint: "R", run: func() {
+	one := []data.Task{task}
+	m.popRow(c, t, actionSpec(actionOf(one, actMove), "", m.say.MenuMoveTo(), func() { pm.openPage(pageMove) }))
+	m.popRow(c, t, popSpec{key: "remind", icon: theme.IconClock, label: m.say.MenuRemindMe(), hint: keyRemind.hint, run: func() {
 		pm.page, pm.back, pm.hl = pageRemind, true, -1
 	}})
 	if task.PRURL != "" {
@@ -112,15 +111,15 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 			pm.page, pm.back, pm.hl = pageOpenIn, true, 0
 		}})
 	}
-	m.popRow(c, t, popSpec{key: "ask", icon: theme.IconSparkle, label: m.say.MenuAsk(), hint: "⌘J", run: func() {
+	m.popRow(c, t, popSpec{key: "ask", icon: theme.IconSparkle, label: m.say.MenuAsk(), hint: keyAsk.hint, run: func() {
 		m.closeMenu()
 		m.askAboutTask(task.ID)
 	}})
 	menuRule(c, t)
-	m.popRow(c, t, popSpec{key: "delete", icon: theme.IconTrash, label: m.say.MenuDelete(), hint: "⌘⌫", danger: true, run: func() {
+	m.popRow(c, t, actionSpec(actionOf(one, actDelete), "", m.say.MenuDelete(), func() {
 		m.closeMenu()
 		m.deleteTask(c, task.ID)
-	}})
+	}))
 }
 
 // openInPage lists where the agent's work can be opened: its app, a terminal, an editor, Finder.

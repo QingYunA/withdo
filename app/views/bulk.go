@@ -22,26 +22,6 @@ func (m *Main) tasksOf(ids []int) []data.Task {
 	return out
 }
 
-// idsOf are the ids of tasks, in order.
-func idsOf(tasks []data.Task) []int {
-	out := make([]int, len(tasks))
-	for i, t := range tasks {
-		out[i] = t.ID
-	}
-	return out
-}
-
-// only keeps the tasks keep accepts.
-func only(tasks []data.Task, keep func(data.Task) bool) []data.Task {
-	var out []data.Task
-	for _, t := range tasks {
-		if keep(t) {
-			out = append(out, t)
-		}
-	}
-	return out
-}
-
 // finishBulk is what follows every bulk action: no rows are selected and select mode is over.
 func (m *Main) finishBulk() {
 	m.clearMulti()
@@ -66,23 +46,25 @@ func (m *Main) bulkUpdate(c *ui.Context, tasks []data.Task, p data.Patch, title 
 	m.offerUndo(c, title, func() { _ = m.app.RestoreStates(before) })
 }
 
-// bulkSetStatus is Done and Cancel: every selected task that is not in that status yet.
-func (m *Main) bulkSetStatus(c *ui.Context, ids []int, s data.Status) {
-	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return t.Status != s })
-	title := m.say.BulkDoneToast(len(tasks))
-	if s == data.Cancelled {
-		title = m.say.BulkCancelToast(len(tasks))
+// runAction does an action of the selection ids that runs at once: Done, Cancel, Hand to an agent
+// or Delete. Move and Priority open a page of the menu, which the caller does.
+func (m *Main) runAction(c *ui.Context, kind actionKind, ids []int) {
+	a := actionOf(m.tasksOf(ids), kind)
+	switch kind {
+	case actDone:
+		m.bulkUpdate(c, m.tasksOf(a.Ids), data.Patch{Status: data.StatusPtr(data.Done)}, m.say.BulkDoneToast(len(a.Ids)))
+	case actCancel:
+		m.bulkUpdate(c, m.tasksOf(a.Ids), data.Patch{Status: data.StatusPtr(data.Cancelled)}, m.say.BulkCancelToast(len(a.Ids)))
+	case actHandOff:
+		m.handOffMany(c, ids)
+	case actDelete:
+		m.askBulkDelete(ids)
 	}
-	m.bulkUpdate(c, tasks, data.Patch{Status: data.StatusPtr(s)}, title)
 }
 
-// bulkMove moves the selected tasks to a project, or to the Inbox for project 0. A subtask stays
-// with its parent, and a task that is there already is left alone.
+// bulkMove moves the selected tasks to a project, or to the Inbox for project 0.
 func (m *Main) bulkMove(c *ui.Context, ids []int, project int) {
-	tasks := only(m.tasksOf(ids), func(t data.Task) bool {
-		there := (t.ProjectID == nil && project == 0) || (t.ProjectID != nil && *t.ProjectID == project)
-		return !t.IsSubtask() && !there
-	})
+	tasks := movable(m.tasksOf(ids), project)
 	where := m.say.NavInbox()
 	if p, ok := m.app.Project(project); ok {
 		where = p.Name
@@ -92,19 +74,14 @@ func (m *Main) bulkMove(c *ui.Context, ids []int, project int) {
 
 // bulkPriority gives the selected tasks a priority.
 func (m *Main) bulkPriority(c *ui.Context, ids []int, p data.Priority) {
-	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return t.Priority != p })
+	tasks := repriced(m.tasksOf(ids), p)
 	m.bulkUpdate(c, tasks, data.Patch{Priority: data.PriorityPtr(p)}, m.say.BulkPriorityToast(len(tasks), string(p)))
 }
 
 // handOffMany hands tasks to an agent as one change, whatever of them is the user's own and unfinished. Each waits in its own project's Waiting for an
 // agent, the Inbox's in the Inbox. The toast offers Copy for the agent and Undo.
 func (m *Main) handOffMany(c *ui.Context, ids []int) {
-	var own []data.Task
-	for _, id := range ids {
-		if t, ok := m.app.Task(id); ok && t.Source == data.SourceUser && !t.Status.Terminal() {
-			own = append(own, t)
-		}
-	}
+	own := only(m.tasksOf(ids), canHandOff)
 	skipped := len(ids) - len(own)
 	if len(own) == 0 {
 		m.finishBulk()

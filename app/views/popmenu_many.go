@@ -54,19 +54,14 @@ func (m *Main) manyPage(c *ui.Context, t *theme.Tokens) {
 	switch pm.page {
 	case pagePriority:
 		m.stripLabel(c, t, "priority", m.say.PropPriority(), m.say.MenuManyHeader(len(ids)))
-		same := func(p data.Priority) bool {
-			return len(tasks) > 0 && len(only(tasks, func(k data.Task) bool { return k.Priority != p })) == 0
-		}
-		m.priorityStripOf(c, t, same, true, func(p data.Priority) {
+		m.priorityStripOf(c, t, func(p data.Priority) bool { return allPriority(tasks, p) }, true, func(p data.Priority) {
 			m.closeMenu()
 			m.bulkPriority(c, ids, p)
 		})
 	case pageMove:
 		m.movePageOf(c, t, finder{placeholder: m.say.MenuFindProject(), noMatch: m.say.MenuNoProjectMatch()}, func() []popSpec {
 			return m.projectChoices(
-				func(project int) bool {
-					return len(tasks) > 0 && len(only(tasks, func(k data.Task) bool { return !inProject(k, project) })) == 0
-				},
+				func(project int) bool { return allIn(tasks, project) },
 				func(project int) {
 					m.closeMenu()
 					m.bulkMove(c, ids, project)
@@ -77,59 +72,44 @@ func (m *Main) manyPage(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// inProject says whether the task is in the project, or in the Inbox for project 0.
-func inProject(t data.Task, project int) bool {
-	return (t.ProjectID == nil && project == 0) || (t.ProjectID != nil && *t.ProjectID == project)
+// openPage opens a piece of the selection's whole menu: Move to starts on its first choice, the
+// strips on none.
+func (pm *popMenu) openPage(page menuPage) {
+	pm.page, pm.back, pm.filter, pm.hl = page, true, "", -1
+	if page == pageMove {
+		pm.hl = 0
+	}
 }
 
-// manyMainPage is the whole menu of the selection.
+// manyMainPage is the whole menu of the selection: the actions in their groups.
 func (m *Main) manyMainPage(c *ui.Context, t *theme.Tokens, ids []int) {
-	pm := &m.pop
 	theme.Text(c, theme.Meta, t.TextTertiary, m.say.MenuManyHeader(len(ids))).Padding(6, 8, 4)
-	m.popRow(c, t, popSpec{key: "many-done", icon: theme.IconCheck, label: m.say.BulkMarkDone(), hint: "⌘↵", run: func() {
-		m.closeMenu()
-		m.bulkSetStatus(c, ids, data.Done)
-	}})
-	m.popRow(c, t, popSpec{key: "many-cancel", icon: theme.IconClose, label: m.say.BulkCancel(), run: func() {
-		m.closeMenu()
-		m.bulkSetStatus(c, ids, data.Cancelled)
-	}})
-	menuRule(c, t)
-	m.popRow(c, t, popSpec{key: "many-move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
-		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
-	}})
-	m.popRow(c, t, popSpec{key: "many-priority", icon: theme.IconFlag, label: m.say.PropPriority(), hint: "P", run: func() {
-		pm.page, pm.back, pm.hl = pagePriority, true, -1
-	}})
-	m.popRow(c, t, popSpec{key: "many-hand", icon: theme.IconAgent, label: m.say.BulkHandOff(), hint: "⌘⇧A", run: func() {
-		m.closeMenu()
-		m.handOffMany(c, ids)
-	}})
-	menuRule(c, t)
-	m.popRow(c, t, popSpec{key: "many-delete", icon: theme.IconTrash, label: m.say.BulkDeleteMenu(len(ids)), hint: "⌘⌫", danger: true, run: func() {
-		m.closeMenu()
-		m.askBulkDelete(ids)
-	}})
+	group := 0
+	for _, a := range actionsFor(m.tasksOf(ids)) {
+		if a.Group != group {
+			menuRule(c, t)
+			group = a.Group
+		}
+		m.popRow(c, t, actionSpec(a, "many-", m.menuLabel(a, len(ids)), func() { m.chooseAction(c, a, ids) }))
+	}
+}
+
+// chooseAction is an action chosen in the selection's menu, by its line or its key: a piece of the
+// menu opens, or the action is done and the menu closes.
+func (m *Main) chooseAction(c *ui.Context, a taskAction, ids []int) {
+	if a.Page != pageMain {
+		m.pop.openPage(a.Page)
+		return
+	}
+	m.closeMenu()
+	m.runAction(c, a.Kind, ids)
 }
 
 // manyLetters are the keys of the selection's whole menu.
 func (m *Main) manyLetters(c *ui.Context, panel ui.Element) {
-	pm := &m.pop
-	ids := pm.many
-	switch {
-	case panel.OverlayShortcut(0, ui.KeyP):
-		pm.page, pm.back, pm.hl = pagePriority, true, -1
-	case panel.OverlayShortcut(0, ui.KeyM):
-		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
-	case panel.OverlayShortcut(ui.Cmd, ui.KeyEnter):
-		m.closeMenu()
-		m.bulkSetStatus(c, ids, data.Done)
-	case panel.OverlayShortcut(ui.Cmd|ui.Shift, ui.KeyA):
-		m.closeMenu()
-		m.handOffMany(c, ids)
-	case panel.OverlayShortcut(ui.Cmd, ui.KeyBackspace):
-		m.closeMenu()
-		m.askBulkDelete(ids)
+	acts := actionsFor(m.tasksOf(m.pop.many))
+	if a, ok := pressedAction(acts, func(b binding) bool { return b.inMenu(panel) }); ok {
+		m.chooseAction(c, a, m.pop.many)
 	}
 }
 
@@ -138,12 +118,12 @@ func (m *Main) manyLetters(c *ui.Context, panel ui.Element) {
 func (m *Main) manyTaskKeys(c *ui.Context) {
 	ids := m.selectedRows()
 	r := m.selRect
+	a, ok := pressedAction(actionsFor(m.tasksOf(ids)), func(b binding) bool { return b.down(c) }, actMove, actPriority, actDelete)
 	switch {
-	case c.Shortcut(0, ui.KeyP):
-		m.openManyMenu(ids, pagePriority, r.X+24, r.Y+r.H, false)
-	case c.Shortcut(0, ui.KeyM):
-		m.openManyMenu(ids, pageMove, r.X+24, r.Y+r.H, false)
-	case c.Shortcut(ui.Cmd, ui.KeyBackspace):
-		m.askBulkDelete(ids)
+	case !ok:
+	case a.Page != pageMain:
+		m.openManyMenu(ids, a.Page, r.X+24, r.Y+r.H, false)
+	default:
+		m.runAction(c, a.Kind, ids)
 	}
 }

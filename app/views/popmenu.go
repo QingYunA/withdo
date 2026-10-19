@@ -224,18 +224,18 @@ func (m *Main) menuKeys(c *ui.Context, panel ui.Element) {
 func (m *Main) menuLetters(c *ui.Context, panel ui.Element) {
 	pm := &m.pop
 	switch {
-	case panel.OverlayShortcut(0, ui.KeyS):
+	case keyStatus.inMenu(panel):
 		pm.page, pm.back, pm.hl = pageStatus, true, -1
-	case panel.OverlayShortcut(0, ui.KeyP):
+	case keyPriority.inMenu(panel):
 		pm.page, pm.back, pm.hl = pagePriority, true, -1
-	case panel.OverlayShortcut(0, ui.KeyM):
+	case keyMove.inMenu(panel):
 		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
-	case panel.OverlayShortcut(0, ui.KeyR):
+	case keyRemind.inMenu(panel):
 		pm.page, pm.back, pm.hl = pageRemind, true, -1
-	case panel.OverlayShortcut(ui.Cmd, ui.KeyJ):
+	case keyAsk.inMenu(panel):
 		m.askAboutTask(pm.task)
 		m.closeMenu()
-	case panel.OverlayShortcut(ui.Cmd, ui.KeyBackspace):
+	case keyDelete.inMenu(panel):
 		m.deleteTask(c, pm.task)
 		m.closeMenu()
 	}
