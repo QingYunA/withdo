@@ -41,6 +41,7 @@ func (m *Main) myRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 				m.carrier(c, m.ho.walk(c, row, m.app.Now()))
 				m.stackBadge(c, t)
 			}
+			m.groupGlyph(c, t, row, task, ph, false)
 			m.indentSlot(c, t, task.ID)
 			body(c, func() { m.titleLine(c, t, task, "", false) })
 			right(c, func() { m.listRight(c, t, task, ot) })
@@ -60,6 +61,7 @@ func (m *Main) agentRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ot := m.app.overviewTask(task)
 	m.draggableRow(c, t, task, true, ph, func(row ui.Element, _ bool) {
 		row.AlignItems(ui.Start).Children(func() {
+			m.groupGlyph(c, t, row, task, ph, true)
 			m.agentAvatar(c, t, task.ID, m.app.taskWho(task))
 			body(c, func() {
 				m.agentTitle(c, t, task, func() { m.agentRight(c, t, row, task, ot, ph) })

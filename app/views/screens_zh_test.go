@@ -42,6 +42,11 @@ func TestScreensChineseSeed(t *testing.T) {
 		app, _, _ := newTestApp(t)
 		zhShot(t, "mine-zh-"+a.suffix+".png", app, a.dark, nil)
 		zhShot(t, "project-list-zh-"+a.suffix+".png", app, a.dark, toProject(1))
+		zhShot(t, "project-list-row-hover-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+			toProject(1)(tt, m)
+			tt.Frame()
+			hover(t, tt, "Write the release notes")
+		})
 		zhShot(t, "project-board-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			toProject(1)(tt, m)
 			m.board[1] = true

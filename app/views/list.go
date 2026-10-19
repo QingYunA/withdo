@@ -200,6 +200,7 @@ func (m *Main) listRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	ot := m.app.overviewTask(task)
 	row := m.rowShell(c, t, task.ID, plainRow, ph).AlignItems(ui.Center)
 	row.Children(func() {
+		m.groupGlyph(c, t, row, task, ph, false)
 		m.authorSlot(c, t, task) // under the group's name
 		body(c, func() {
 			m.titleLine(c, t, task, "", false)

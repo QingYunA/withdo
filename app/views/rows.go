@@ -170,6 +170,36 @@ func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill
 	m.glyphButton(c, t, task, fill).Margin(2-pad, -pad, -pad-2, -pad)
 }
 
+// groupGlyph is the status glyph button of a row in a status group. The group says the status, so
+// at rest the row has none; while the pointer is over the row, its task menu is open or its
+// completion plays, the button shows under the header's glyph, left of the row's avatar, so a task
+// can be completed from the list. It takes no room (its margins cancel its width and the row's gap),
+// so the avatar and the title stay where they are. top is for a row whose lines start at its top.
+//
+// The button lies partly left of the row. A press on it ends the row's hover (the pointer is not over
+// the row), so glyphHot keeps the button drawn while the pointer is on it.
+func (m *Main) groupGlyph(c *ui.Context, t *theme.Tokens, row ui.Element, task data.Task, ph phase, top bool) {
+	menu := m.pop.open && m.pop.task == task.ID
+	if m.multi.mode || row.Dragging() || !(row.Hovered() || ph.moving || menu || m.glyphHot == task.ID) {
+		return
+	}
+	pad := (theme.HitTarget - theme.GlyphSize) / 2
+	left := -(listIndent + pad) // the button is centered under the header's glyph
+	right := -(theme.HitTarget + rowGap) - left
+	btn := m.glyphButton(c, t, task, ph.fill)
+	if top {
+		btn.Margin(2-pad, right, -pad-2, left)
+	} else {
+		btn.Margin(-pad, right, -pad, left)
+	}
+	switch {
+	case btn.Hovered() || btn.Pressed():
+		m.glyphHot = task.ID
+	case m.glyphHot == task.ID:
+		m.glyphHot = 0
+	}
+}
+
 // ageLabel is how long ago, in the stale color when the agent went quiet.
 func (m *Main) ageLabel(c *ui.Context, t *theme.Tokens, it data.Item) {
 	color := t.TextTertiary
