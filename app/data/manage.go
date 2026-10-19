@@ -9,11 +9,14 @@ import (
 // MCP server, and what it cannot, done from the window.
 type Manager interface {
 	// CreateProject adds a project. A repository is optional; a GitHub address pasted in its place
-	// is read as owner/repo. Failures are ErrNameEmpty, ErrRepoInvalid and *RepoTakenError.
+	// is read as owner/repo, and ParentID makes the project a sub-project. Failures are ErrNameEmpty,
+	// ErrRepoInvalid and *RepoTakenError; a parent that is gone or archived is any other error, for
+	// the banner.
 	CreateProject(NewProject) (Project, error)
 	RenameProject(id int, name string) (Project, error)
-	// ArchiveProject hides a project and its tasks; RestoreProject brings them back. A report from
-	// an agent in the project's repository restores it too.
+	// ArchiveProject hides a project, its tasks and its sub-projects; RestoreProject brings back the
+	// project and the sub-projects archived with it. A report from an agent in the project's
+	// repository restores it too.
 	ArchiveProject(id int) error
 	RestoreProject(id int) error
 	ListArchivedProjects() ([]Project, error)

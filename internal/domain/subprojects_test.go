@@ -2,6 +2,7 @@ package domain_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 )
@@ -86,7 +87,7 @@ func TestArchivingAProjectTakesItsSubprojects(t *testing.T) {
 	}
 }
 
-func TestRestoringASubprojectBringsTheProjectItHangsUnder(t *testing.T) {
+func TestRestoringAProjectBringsBackTheSubprojectsArchivedWithIt(t *testing.T) {
 	c, _ := newCore(t)
 	root := must[*domain.Project](t)(c.CreateProject(ctx, domain.CreateProjectInput{Name: "adhd-todo"}))
 	app := subproject(t, c, "App", root)
@@ -94,10 +95,43 @@ func TestRestoringASubprojectBringsTheProjectItHangsUnder(t *testing.T) {
 	must[*domain.Project](t)(c.ArchiveProject(ctx, root.ID))
 
 	must[*domain.Project](t)(c.RestoreProject(ctx, app.ID))
+	for _, p := range []*domain.Project{app, ui} {
+		if got := must[*domain.Project](t)(c.GetProject(ctx, p.ID)); got.ArchivedAt != nil {
+			t.Errorf("%q did not come back with the project it was archived with", p.Name)
+		}
+	}
+	if got := must[*domain.Project](t)(c.GetProject(ctx, root.ID)); got.ArchivedAt == nil {
+		t.Error("restoring a sub-project restored the project above it")
+	}
+
+	must[*domain.Project](t)(c.RestoreProject(ctx, root.ID))
 	for _, p := range []*domain.Project{root, app, ui} {
 		if got := must[*domain.Project](t)(c.GetProject(ctx, p.ID)); got.ArchivedAt != nil {
-			t.Errorf("%q is not visible: a restored sub-project needs its parent and its own sub-projects", p.Name)
+			t.Errorf("%q did not come back with the project above it", p.Name)
 		}
+	}
+}
+
+func TestRestoringAProjectLeavesWhatWasArchivedEarlierAlone(t *testing.T) {
+	c, clk := newCore(t)
+	root := must[*domain.Project](t)(c.CreateProject(ctx, domain.CreateProjectInput{Name: "adhd-todo"}))
+	app := subproject(t, c, "App", root)
+	ui := subproject(t, c, "UI", app)
+
+	clk.advance(time.Millisecond)
+	must[*domain.Project](t)(c.ArchiveProject(ctx, ui.ID)) // its own action, its own time
+	clk.advance(time.Millisecond)
+	must[*domain.Project](t)(c.ArchiveProject(ctx, app.ID)) // takes app and its already archived UI
+
+	must[*domain.Project](t)(c.RestoreProject(ctx, app.ID))
+	if got := must[*domain.Project](t)(c.GetProject(ctx, app.ID)); got.ArchivedAt != nil {
+		t.Error("the project was not restored")
+	}
+	if got := must[*domain.Project](t)(c.GetProject(ctx, ui.ID)); got.ArchivedAt == nil {
+		t.Error("a sub-project archived earlier came back with a later archive action")
+	}
+	if got := must[*domain.Project](t)(c.GetProject(ctx, root.ID)); got.ArchivedAt != nil {
+		t.Error("restoring a sub-project reached the project above it")
 	}
 }
 

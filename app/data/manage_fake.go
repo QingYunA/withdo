@@ -102,26 +102,6 @@ func (f *Fake) subtree(id int) []*Project {
 	return out
 }
 
-// ancestors returns the projects above id, outermost first, as pointers into f.projects.
-func (f *Fake) ancestors(id int) []*Project {
-	var out []*Project
-	seen := map[int]bool{id: true}
-	for cur := id; ; {
-		p, ok := f.project(cur)
-		if !ok || p.ParentID == nil || seen[*p.ParentID] {
-			break
-		}
-		seen[*p.ParentID] = true
-		parent, ok := f.project(*p.ParentID)
-		if !ok {
-			break
-		}
-		out = append([]*Project{parent}, out...)
-		cur = parent.ID
-	}
-	return out
-}
-
 func (f *Fake) ArchiveProject(id int) error {
 	f.mu.Lock()
 	p, ok := f.project(id)
@@ -152,15 +132,18 @@ func (f *Fake) RestoreProject(id int) error {
 		f.mu.Unlock()
 		return fmt.Errorf("project %d not found", id)
 	}
-	tree := f.subtree(id)
-	if p.ArchivedAt != nil {
-		now := f.Now()
-		for _, q := range append(f.ancestors(id), tree...) {
-			if q.ArchivedAt != nil {
-				q.ArchivedAt = nil
-			}
-			q.UpdatedAt = now
+	if p.ArchivedAt == nil {
+		f.mu.Unlock()
+		return nil
+	}
+	// The branch archived with this project shares its archive time; what was archived earlier stays.
+	at, now := *p.ArchivedAt, f.Now()
+	for _, q := range f.subtree(id) {
+		if q.ArchivedAt == nil || !q.ArchivedAt.Equal(at) {
+			continue
 		}
+		q.ArchivedAt = nil
+		q.UpdatedAt = now
 	}
 	f.mu.Unlock()
 	f.notify()

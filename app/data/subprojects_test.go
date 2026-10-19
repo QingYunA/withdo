@@ -6,7 +6,7 @@ import (
 )
 
 func TestSubprojects(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	eachStore(t, func(t *testing.T, s Store, clock *time.Time) {
 		root := must[Project](t)(s.CreateProject(NewProject{Name: "adhd-todo"}))
 		app := must[Project](t)(s.CreateProject(NewProject{Name: "App", ParentID: IntPtr(root.ID)}))
 		ui := must[Project](t)(s.CreateProject(NewProject{Name: "UI", ParentID: IntPtr(app.ID)}))
@@ -36,13 +36,53 @@ func TestSubprojects(t *testing.T) {
 		if arch := must[[]Project](t)(s.ListArchivedProjects()); len(arch) != 3 {
 			t.Errorf("archived = %+v", arch)
 		}
+		if _, err := s.CreateProject(NewProject{Name: "Late", ParentID: IntPtr(root.ID)}); err == nil {
+			t.Error("a project under an archived parent was made")
+		}
 
-		// Bringing a sub-project back brings the project it hangs under, and its own.
+		// Restoring a sub-project brings back what was archived with it, not the project above.
 		if err := s.RestoreProject(app.ID); err != nil {
 			t.Fatal(err)
 		}
+		if ps := must[[]Project](t)(s.ListProjects()); len(ps) != 2 {
+			t.Fatalf("restored = %+v", ps)
+		}
+		for _, p := range must[[]Project](t)(s.ListProjects()) {
+			if p.ID == root.ID {
+				t.Error("restoring a sub-project restored the project above it")
+			}
+		}
+		if err := s.RestoreProject(root.ID); err != nil {
+			t.Fatal(err)
+		}
 		if ps := must[[]Project](t)(s.ListProjects()); len(ps) != 3 {
-			t.Errorf("restored = %+v", ps)
+			t.Errorf("restoring the project above = %+v", ps)
+		}
+
+		// A sub-project archived earlier stays archived when a later action archives and restores
+		// the branch it hangs in.
+		*clock = clock.Add(time.Millisecond)
+		if err := s.ArchiveProject(ui.ID); err != nil {
+			t.Fatal(err)
+		}
+		*clock = clock.Add(time.Millisecond)
+		if err := s.ArchiveProject(root.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.RestoreProject(root.ID); err != nil {
+			t.Fatal(err)
+		}
+		archivedUI := false
+		for _, p := range must[[]Project](t)(s.ListArchivedProjects()) {
+			if p.ID == ui.ID {
+				archivedUI = true
+			}
+		}
+		if !archivedUI {
+			t.Error("a sub-project archived earlier came back with a later archive action")
+		}
+		if err := s.RestoreProject(ui.ID); err != nil {
+			t.Fatal(err)
 		}
 
 		// Deleting a parent leaves the sub-project standing as a top-level project.

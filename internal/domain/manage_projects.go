@@ -91,7 +91,8 @@ func (c *Core) RenameProject(ctx context.Context, id int64, name string) (*Proje
 }
 
 // archiveTree archives a project and, with it, every project under it: a sub-project whose parent is
-// hidden would have nowhere to show. Archiving twice keeps the first time of each project.
+// hidden would have nowhere to show. Archiving twice keeps the first time of each project, so a
+// branch archived later keeps the earlier archive time of what it already held.
 const archiveTree = `WITH RECURSIVE sub(id) AS (
 	SELECT id FROM projects WHERE id = ?1
 	UNION
@@ -100,7 +101,7 @@ const archiveTree = `WITH RECURSIVE sub(id) AS (
 UPDATE projects SET archived_at = COALESCE(archived_at, ?2), updated_at = ?2
 WHERE id IN (SELECT id FROM sub)`
 
-// ArchiveProject hides a project and its tasks from the lists, with its sub-projects.
+// ArchiveProject hides a project, its tasks and its sub-projects from the lists.
 func (c *Core) ArchiveProject(ctx context.Context, id int64) (*Project, error) {
 	return c.editProject(ctx, id, "archive", func(q store.Querier, p *Project) error {
 		if p.ArchivedAt != nil {
@@ -112,35 +113,32 @@ func (c *Core) ArchiveProject(ctx context.Context, id int64) (*Project, error) {
 	})
 }
 
-// restoreTree brings back a project with its sub-projects and the projects it hangs under: a
-// sub-project that is shown needs its parent shown too, so the sidebar can nest it.
-const restoreTree = `WITH RECURSIVE
-up(id, parent_id) AS (
-	SELECT id, parent_id FROM projects WHERE id = ?1
+// restoreTree brings back a project and the sub-projects archived with it: one archive action stamps
+// the whole branch with one time, so a sub-project archived earlier (a different time) stays
+// archived. It leaves the project above alone; a sub-project whose parent is still hidden reads as a
+// top-level project in the sidebar, and comes back under its parent when that one is restored.
+const restoreTree = `WITH RECURSIVE sub(id, archived_at) AS (
+	SELECT id, archived_at FROM projects WHERE id = ?1
 	UNION
-	SELECT p.id, p.parent_id FROM projects p JOIN up ON p.id = up.parent_id
-),
-sub(id) AS (
-	SELECT id FROM projects WHERE id = ?1
-	UNION
-	SELECT p.id FROM projects p JOIN sub ON p.parent_id = sub.id
+	SELECT p.id, p.archived_at FROM projects p JOIN sub ON p.parent_id = sub.id
 )
 UPDATE projects SET archived_at = NULL, updated_at = ?2
-WHERE archived_at IS NOT NULL AND id IN (SELECT id FROM up UNION SELECT id FROM sub)`
+WHERE archived_at = ?3 AND id IN (SELECT id FROM sub)`
 
-// RestoreProject brings an archived project back. A project that is not archived is left as it is.
+// RestoreProject brings an archived project back, with the sub-projects archived with it. A project
+// that is not archived is left as it is.
 func (c *Core) RestoreProject(ctx context.Context, id int64) (*Project, error) {
 	return c.editProject(ctx, id, "restore", func(q store.Querier, p *Project) error {
 		return c.unarchive(ctx, q, p)
 	})
 }
 
-// unarchive brings p back when it is archived, with the projects above and below it.
+// unarchive brings p back when it is archived, with the sub-projects of the same archive action.
 func (c *Core) unarchive(ctx context.Context, q store.Querier, p *Project) error {
 	if p.ArchivedAt == nil {
 		return nil
 	}
-	_, err := q.ExecContext(ctx, restoreTree, p.ID, c.stamp())
+	_, err := q.ExecContext(ctx, restoreTree, p.ID, c.stamp(), *p.ArchivedAt)
 	return err
 }
 
