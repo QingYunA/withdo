@@ -68,10 +68,19 @@ func OpenDemo(now func() time.Time, seeded bool) (*Real, error) {
 }
 
 // The Seed methods write fixtures through the domain layer, for the demo and for tests. They hold
-// the clock at the moment a row should carry and panic on a bad fixture.
+// the clock at the moment a row should carry and panic on a bad fixture, or on a store that
+// OpenDemo did not open: they never write to the user's data.
+
+// mustBeDemo panics unless OpenDemo opened r.
+func (r *Real) mustBeDemo() {
+	if r.demo == nil {
+		panic("data: Seed is for a store OpenDemo opened")
+	}
+}
 
 // SeedProject adds a project with no tasks; slug may be empty for one without a repository.
 func (r *Real) SeedProject(name, slug string) Project {
+	r.mustBeDemo()
 	p, err := r.core.CreateProject(r.ctx(), domain.CreateProjectInput{Name: name, RepoSlug: slug})
 	if err != nil {
 		panic(err)
@@ -83,6 +92,7 @@ func (r *Real) SeedProject(name, slug string) Project {
 // CreatedAt and UpdatedAt mean now; a non-zero ID renames the new row, so give it one the
 // database has not reached.
 func (r *Real) SeedTask(t Task) Task {
+	r.mustBeDemo()
 	defer r.holdClock(t.CreatedAt)()
 	in := domain.CreateTaskInput{
 		Title: t.Title, Source: domain.Source(t.Source), ProjectID: int64Ptr(t.ProjectID), MilestoneID: int64Ptr(t.MilestoneID),
@@ -113,6 +123,7 @@ func (r *Real) SeedTask(t Task) Task {
 
 // SeedReport files a report as given; a zero CreatedAt means now.
 func (r *Real) SeedReport(rep Report) {
+	r.mustBeDemo()
 	in := domain.AddReportInput{TaskID: int64(rep.TaskID), Agent: rep.Agent, Summary: rep.Summary, Cwd: rep.Cwd}
 	if rep.Status != "" {
 		st := domain.Status(rep.Status)
@@ -140,6 +151,7 @@ func (r *Real) SeedReportAs(taskID int, agent, summary string, at time.Time) {
 // SeedPullRequest sets what the poller would have found about a task's pull request. The poller
 // never writes it for a finished task or one without the link, so this goes to the row directly.
 func (r *Real) SeedPullRequest(id int, state PRState, checks PRChecks, review PRReview) {
+	r.mustBeDemo()
 	r.exec(`UPDATE tasks SET pr_state = NULLIF(?, ''), pr_checks = NULLIF(?, ''), pr_review = NULLIF(?, ''),
 		pr_checked_at = ?, pr_closed_seen_at = NULL WHERE id = ?`,
 		string(state), string(checks), string(review), domain.FormatTime(r.opts.Now()), id)
@@ -148,6 +160,7 @@ func (r *Real) SeedPullRequest(id int, state PRState, checks PRChecks, review PR
 // SeedCompleteAt marks a task done at a moment, for tests that want a day with things finished at
 // different hours.
 func (r *Real) SeedCompleteAt(id int, at time.Time) {
+	r.mustBeDemo()
 	done := domain.StatusDone
 	release := r.holdClock(at)
 	_, err := r.core.UpdateTask(r.ctx(), int64(id), domain.TaskPatch{Status: &done})
@@ -158,12 +171,7 @@ func (r *Real) SeedCompleteAt(id int, at time.Time) {
 	r.stampTask(id, at, &at)
 }
 
-func (r *Real) holdClock(t time.Time) func() {
-	if r.demo == nil {
-		return func() {}
-	}
-	return r.demo.hold(t)
-}
+func (r *Real) holdClock(t time.Time) func() { return r.demo.hold(t) }
 
 // stampTask sets updated_at and completed_at, which the domain layer stamps with the clock; a zero
 // updated, or a nil completed on a task that is open, leaves them.
