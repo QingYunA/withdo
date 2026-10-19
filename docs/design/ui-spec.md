@@ -306,7 +306,7 @@ with their number instead, `status.blocked` with white `badge` text) and `Agents
 tasks at work, never their subtasks), each with sub-rows (below), `Inbox` (count), `Calendar`, `Completed` (no count: it
 only grows) and `Summary` (no count), `⌘1` to `⌘6` in that order, then `Projects` (sentence
 case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
-**on one line, ellipsized** (`answer-me-with-ht…`); a 6 pt red dot at the right when
+**on one line, ellipsized** (`answer-me-with-ht…`), its sub-projects under it (see **Sub-projects**); a 6 pt red dot at the right when
 it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
 task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
 (the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
@@ -335,15 +335,30 @@ The category it counts under is its own, else Work when its project is a reposit
 writes from the words and leaves it out when unsure or when the task goes into a repository's project.
 A task typed in the composer of a category's page gets that category, with or without a model.
 
+**Sub-projects.** A project can hang under another one (`projects.parent_id`, migration 013), as deep
+as the user likes. Its row is indented 28 pt per step, so a sub-project's folder sits where its
+parent's label is, and the projects under a parent follow it in name order; the row still shows the
+project's own active tasks, never those of its sub-projects. A sub-project is made with `New
+sub-project…` in its parent's menu (below): the **New project** sheet opens titled `New sub-project`,
+with `Under adhd-todo` under the title, and the project it makes hangs under that one and opens.
+Archiving a project archives its sub-projects with it, so no row is left under a project that is not
+shown. Restoring it brings back the project and the sub-projects archived by that same action; what
+was archived earlier stays archived, and the project above is left as it is. A sub-project whose
+parent is still archived reads as a top-level project, and comes back under its parent when that one
+is restored. Deleting a project leaves its sub-projects standing as top-level projects, as deleting a
+task leaves its subtasks. A sub-project is made by hand only: it is a project like any other, so it
+takes a repository from the sheet if the user gives it one.
+
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
 - **Right-click a project**: `Open QingYunA/adhd-todo on GitHub` (only with a repository: it opens
-  github.com in the browser), `New milestone…` (the project's only way to its first milestone), a
+  github.com in the browser), `New milestone…` (the project's only way to its first milestone),
+  `New sub-project…` (the same sheet, with this project as the parent), a
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
-  the old name back. Archive acts at once (the project is in Settings > General > Archived projects,
-  one click from coming back); Delete… asks first (**Delete confirmation**). Archiving or deleting the
-  project on screen goes to Mine.
+  the old name back. Archive acts at once, with the project's sub-projects (the project is in Settings >
+  General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
+  Archiving or deleting the project on screen goes to Mine.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Mine (home)
@@ -1457,7 +1472,9 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
   project.` Create is off until the name has text. A pasted GitHub address is read as `owner/repo`.
   Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like
   QingYunA/adhd-todo.` and `“adhd-todo” already uses this repository.` Enter in either field creates;
-  the new project opens.
+  the new project opens. Opened from `New sub-project…` in a project's menu, the title is `New
+  sub-project`, a line under it reads `Under adhd-todo`, and the project it makes is that project's
+  sub-project; there is no other difference and no extra field.
 - **Category sheet**: `New category` / `Edit category` (400 pt); see **Categories (M9)**.
 - **Milestone sheet**: `New milestone` (Title, Due date optional), `Rename milestone` (Title) and
   `Due date` (a calendar and a Clear link). Done is the primary button; Enter saves.

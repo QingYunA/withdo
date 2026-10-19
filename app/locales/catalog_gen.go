@@ -2288,6 +2288,38 @@ func (msgs Messages) ManageNewProjectTip() string {
 	return Catalog.Format(msgs.locale, "manageNewProjectTip", nil)
 }
 
+// ManageNewSubproject says "New sub-project…"
+// in the language the app shows.
+//
+// Item of a project context menu in the sidebar: opens the new project
+// sheet with that project as the parent.
+func ManageNewSubproject() string { return In(i18n.Locale()).ManageNewSubproject() }
+
+// ManageNewSubproject says "New sub-project…"
+// in the language of msgs.
+//
+// Item of a project context menu in the sidebar: opens the new project
+// sheet with that project as the parent.
+func (msgs Messages) ManageNewSubproject() string {
+	return Catalog.Format(msgs.locale, "manageNewSubproject", nil)
+}
+
+// ManageNewSubprojectTitle says "New sub-project"
+// in the language the app shows.
+//
+// Title of the new project sheet when a project's menu opened it, so the
+// project it makes hangs under that one.
+func ManageNewSubprojectTitle() string { return In(i18n.Locale()).ManageNewSubprojectTitle() }
+
+// ManageNewSubprojectTitle says "New sub-project"
+// in the language of msgs.
+//
+// Title of the new project sheet when a project's menu opened it, so the
+// project it makes hangs under that one.
+func (msgs Messages) ManageNewSubprojectTitle() string {
+	return Catalog.Format(msgs.locale, "manageNewSubprojectTitle", nil)
+}
+
 // ManagePropProject says "Project"
 // in the language the app shows.
 //
@@ -2524,6 +2556,24 @@ func ManageSearchNoneBody() string { return In(i18n.Locale()).ManageSearchNoneBo
 // looks.
 func (msgs Messages) ManageSearchNoneBody() string {
 	return Catalog.Format(msgs.locale, "manageSearchNoneBody", nil)
+}
+
+// ManageSubprojectUnder says "Under {project}"
+// in the language the app shows.
+//
+// Line under the title of the new sub-project sheet: the project the new
+// one will hang under.
+func ManageSubprojectUnder(project string) string {
+	return In(i18n.Locale()).ManageSubprojectUnder(project)
+}
+
+// ManageSubprojectUnder says "Under {project}"
+// in the language of msgs.
+//
+// Line under the title of the new sub-project sheet: the project the new
+// one will hang under.
+func (msgs Messages) ManageSubprojectUnder(project string) string {
+	return Catalog.Format(msgs.locale, "manageSubprojectUnder", map[string]any{"project": project})
 }
 
 // MilestoneAll says "All milestones"

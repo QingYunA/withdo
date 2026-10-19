@@ -9,15 +9,18 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// projectSheet is the New project sheet: a name and an optional GitHub repository.
+// projectSheet is the New project sheet: a name and an optional GitHub repository, under an optional
+// parent project (which is how a sub-project is made, from the parent's menu).
 type projectSheet struct {
 	open       bool
 	name, repo string
+	parent     int   // the project the new one hangs under; 0 for a top-level project
 	problem    error // what the last Create found wrong with the repository
 }
 
-func (m *Main) openNewProject() {
-	m.manage.project = projectSheet{open: true}
+// openNewProject opens the sheet; parent 0 makes a top-level project.
+func (m *Main) openNewProject(parent int) {
+	m.manage.project = projectSheet{open: true, parent: parent}
 }
 
 // newProjectSheet draws the sheet while it is open.
@@ -27,7 +30,14 @@ func (m *Main) newProjectSheet(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	sheet(c, t, &s.open, func() {
-		theme.Text(c, theme.Title, t.Text, m.say.ManageNewProjectTip())
+		title := m.say.ManageNewProjectTip()
+		if s.parent != 0 {
+			title = m.say.ManageNewSubprojectTitle()
+		}
+		theme.Text(c, theme.Title, t.Text, title)
+		if parent, ok := m.app.Project(s.parent); ok {
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, m.say.ManageSubprojectUnder(parent.Name), 0)
+		}
 		labeled(c, t, m.say.ManageFieldName(), func() {
 			wellInput(c, t, "project-name", &s.name, m.say.ManageFieldName(), "", theme.Body, true, m.projectSheetKey)
 		})
@@ -73,7 +83,12 @@ func (m *Main) createProject() {
 	if strings.TrimSpace(s.name) == "" {
 		return
 	}
-	p, err := m.app.CreateProject(data.NewProject{Name: s.name, RepoSlug: s.repo})
+	var parent *int
+	if s.parent != 0 {
+		id := s.parent
+		parent = &id
+	}
+	p, err := m.app.CreateProject(data.NewProject{Name: s.name, RepoSlug: s.repo, ParentID: parent})
 	var taken *data.RepoTakenError
 	switch {
 	case errors.Is(err, data.ErrRepoInvalid), errors.As(err, &taken):

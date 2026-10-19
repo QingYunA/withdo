@@ -140,7 +140,7 @@ func TestProjectContextMenu(t *testing.T) {
 	if err := tt.RightClick("picpocket"); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub", "New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub", "New milestone…", "New sub-project…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu %q, want %q", got, want)
 	}
 }
@@ -164,7 +164,7 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 	tt2, _, _ := newTesterFor(plain, 1100)
 	tt2.Frame()
 	_ = tt2.RightClick(p.Name)
-	if got, want := tt2.Menu(), []string{"New milestone…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	if got, want := tt2.Menu(), []string{"New milestone…", "New sub-project…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu without a repository %q, want %q", got, want)
 	}
 }

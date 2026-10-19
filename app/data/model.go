@@ -62,6 +62,8 @@ type Project struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	ArchivedAt *time.Time
+	// ParentID is the project this one hangs under as a sub-project; nil for a top-level project.
+	ParentID *int
 }
 
 // HasRepo reports whether the project is a repository: its tasks count as work.
