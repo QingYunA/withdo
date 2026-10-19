@@ -27,7 +27,7 @@ updates with it. v0.5.0 is meant to be the last manual install.
   (`internal/corelink`) the app makes that path a symlink to its bundled copy when the path is
   - missing (its folder is made),
   - already a symlink into some `*.app` (an older install, or one that moved or was deleted), or
-  - a regular file whose `--version` is below the bundled one, or has none (v0.4.0 and older).
+  - a regular file whose `--version` is below the bundled one, or has none (v0.4.0 and older); it is kept as `adhd-core.old` next to the link.
 
   Anything else is left alone: a symlink elsewhere, a regular file as new as the bundled one (a
   developer's own build), a directory. The swap is a symlink renamed over the path, so the path is

@@ -31,6 +31,6 @@ cp app/resources/darwin/adhd-core "$work/tar/adhd-core"
 tar -czf "$out/adhd-core-$version-macos-universal.tar.gz" -C "$work/tar" adhd-core
 
 # The DMG under the name the release gives it (GitHub turns the spaces of the built name into dots).
-cp "$out/ADHD Todo $version.dmg" "$out/ADHD-Todo-$version-macos-universal.dmg"
+mv "$out/ADHD Todo $version.dmg" "$out/ADHD-Todo-$version-macos-universal.dmg"
 (cd "$out" && shasum -a 256 "ADHD-Todo-$version-macos-universal.dmg" "adhd-core-$version-macos-universal.tar.gz" > SHA256SUMS.txt)
 echo "built $version into $out"

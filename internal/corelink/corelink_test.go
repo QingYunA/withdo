@@ -113,6 +113,10 @@ func TestRegularFileOlderThanTheBundledOneIsReplaced(t *testing.T) {
 			if got := target(t, link); got != b {
 				t.Errorf("points at %s, want %s", got, b)
 			}
+			// The file it replaced is kept next to it, in case it was someone's own build.
+			if kept, err := os.ReadFile(link + ".old"); err != nil || string(kept) != "#!/bin/sh\n"+body+"\n" {
+				t.Errorf("the replaced file is not kept as %s.old: %q, %v", link, kept, err)
+			}
 		})
 	}
 }

@@ -33,7 +33,8 @@ type Result struct {
 const versionTimeout = 5 * time.Second
 
 // Ensure makes link a symlink to bundled when link is missing, is a symlink into some .app bundle
-// (an older install of the app, maybe gone), or is a regular file older than bundled. Anything else
+// (an older install of the app, maybe gone), or is a regular file older than bundled, which is
+// kept as link.old. Anything else
 // (a symlink elsewhere, a file as new as bundled, a directory) is a developer's own and stays.
 func Ensure(link, bundled string) (Result, error) {
 	bundledVersion, err := versionOf(bundled)
@@ -71,7 +72,10 @@ func fromSymlink(link, bundled string) (Result, error) {
 func fromFile(link, bundled, bundledVersion string) (Result, error) {
 	have, err := versionOf(link)
 	if err != nil || older(have, bundledVersion) {
-		return replace(link, bundled, "version "+quote(have)+" is below "+bundledVersion)
+		if err := keepOld(link); err != nil {
+			return Result{}, err
+		}
+		return replace(link, bundled, "version "+quote(have)+" is below "+bundledVersion+"; the file is kept as "+link+".old")
 	}
 	return Result{Kept, "version " + have + " is not below " + bundledVersion}, nil
 }
@@ -81,6 +85,16 @@ func quote(v string) string {
 		return "unknown"
 	}
 	return v
+}
+
+// keepOld keeps the file at link as link.old before it is replaced, in case it was someone's own
+// build: a hard link, so link itself stays in place until replace renames over it.
+func keepOld(link string) error {
+	old := link + ".old"
+	if err := os.Remove(old); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return os.Link(link, old)
 }
 
 // replace points link at bundled: a new symlink renamed over link, so link is never missing.
