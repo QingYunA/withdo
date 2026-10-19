@@ -75,6 +75,15 @@ func (c *Core) SyncHasLocalData(ctx context.Context) (bool, error) {
 	return n > 0, nil
 }
 
+// SyncPending counts the local changes still waiting to upload.
+func (c *Core) SyncPending(ctx context.Context) (int, error) {
+	var n int
+	if err := c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM sync_outbox").Scan(&n); err != nil {
+		return 0, fmt.Errorf("count outbox: %w", err)
+	}
+	return n, nil
+}
+
 // SyncIDsLeft reports how many ids of entity the local blocks still hand out.
 func (c *Core) SyncIDsLeft(ctx context.Context, entity string) (int64, error) {
 	var n int64

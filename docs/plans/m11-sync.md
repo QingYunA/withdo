@@ -340,6 +340,9 @@ When `sync.json` exists and the database is linked (`sync_state.device_id`), `da
 - Errors are one line on stderr with a non-zero exit: `ErrLocalData` explains that this Mac
   already has tasks and the account too, and that merging comes with the Settings page.
 
+As built: the app nudges only when the outbox has entries. A pull writes the database too, so
+nudging on every change made the runner trigger itself about once a second.
+
 ### Tests
 
 1. Runner, with a fake clock and a fake server: nudges within the debounce make one sync; a nudge

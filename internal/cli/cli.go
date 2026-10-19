@@ -29,6 +29,7 @@ const usage = `Usage: adhd-core <command>
 Commands:
   mcp        Run the MCP server on stdio
   overview   Print active tasks per project, with stale flags
+  sync       Link this Mac to a sync server, show its status, or sync once
   guide      Print a setup guide to paste to any coding agent, so it adds this MCP server itself
   version    Print the version (also --version)
 `
@@ -41,7 +42,7 @@ const (
 )
 
 // commands are the first arguments adhd-core answers to; the app uses them to tell a command line from a launch.
-var commands = []string{"mcp", "overview", "guide", "version", "--version", "help", "--help", "-h"}
+var commands = []string{"mcp", "overview", "sync", "guide", "version", "--version", "help", "--help", "-h"}
 
 // IsCommand reports whether arg is one of adhd-core's own commands or flags.
 func IsCommand(arg string) bool { return slices.Contains(commands, arg) }
@@ -96,6 +97,12 @@ func run(ctx context.Context, args []string, d deps) int {
 			return exitError
 		}
 		return exitOK
+	case "sync":
+		if err := runSync(ctx, args[1:], d); err != nil {
+			_, _ = fmt.Fprintf(d.stderr, "adhd-core: %v\n", err)
+			return exitError
+		}
+		return exitOK
 	default:
 		_, _ = fmt.Fprintf(d.stderr, "Unknown command: %s\n%s", args[0], usage)
 		return exitUsage
@@ -108,7 +115,7 @@ func wantsHelp(args []string) bool {
 	switch args[0] {
 	case "help", "--help", "-h":
 		return true
-	case "mcp", "overview", "guide":
+	case "mcp", "overview", "sync", "guide":
 		return len(args) > 1 && (args[1] == "--help" || args[1] == "-h")
 	}
 	return false

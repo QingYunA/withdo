@@ -276,7 +276,7 @@ func TestDefaultDepsUseTheProcessEnvironment(t *testing.T) {
 }
 
 func TestIsCommandKnowsEveryCommandRunAnswersTo(t *testing.T) {
-	for _, arg := range []string{"mcp", "overview", "guide", "version", "--version", "help", "-h", "--help"} {
+	for _, arg := range []string{"mcp", "overview", "sync", "guide", "version", "--version", "help", "-h", "--help"} {
 		if !IsCommand(arg) {
 			t.Errorf("IsCommand(%q) = false", arg)
 		}
