@@ -1831,9 +1831,9 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   Code); any other name gets a robot colored by the name. These are the avatars of the rest of the
   app: the rows of Settings > Agents draw the harnesses' official marks instead, at 24 and 18 pt
   (see **Pixel language**). The agents added in v14 (DeepSeek Harness, Amp, Kiro) have no 12 x 12
-  avatar yet; when it is drawn it is a file `app/theme/sprites/avatars/<name>.png` (see **Sprites
-  are files**), and until then elsewhere they get the robot colored by the name; `agentName` maps a
-  report to their catalog name so it still lands in the right Settings row.
+  drawing: their avatar is their 18 x 18 harness mark (`theme.harnessSprite`, light and dark), the
+  whale, Amp's red mark and Kiro's purple ghost, matched by the same names as `agentName`
+  (`deepseek*`, `dsh`, `dsh-*`; `amp`, `amp-*`, `amp *`; `*kiro*`).
 - **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads

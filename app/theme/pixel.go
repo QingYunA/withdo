@@ -67,6 +67,8 @@ const (
 	AvatarZed
 	AvatarCline
 	AvatarDeepSeek
+	AvatarAmp
+	AvatarKiro
 	AvatarOther
 )
 
@@ -89,6 +91,9 @@ var (
 	spriteCline    = tintedBot(brandTints[AvatarCline])
 	// DeepSeek Harness is its official whale, the same drawing as its mark in Settings.
 	spriteDeepSeek = harnessSprite("deepseek")
+	// Amp and Kiro, too, are their official marks: no 12 x 12 drawing of them survives the grid.
+	spriteAmp  = harnessSprite("amp")
+	spriteKiro = harnessSprite("kiro")
 	// botTints color the robot of an agent the app does not know, by its name, so two unknown
 	// agents still look different. The first is the gray of an agent with no name, which is the
 	// color the robot's file is drawn in.
@@ -123,6 +128,8 @@ func AgentAvatar(name string) Who {
 		return Who{Kind: AvatarClaude, sprite: spriteClaude}
 	case strings.Contains(n, "codex"):
 		return Who{Kind: AvatarCodex, sprite: spriteCodex}
+	case strings.Contains(n, "deepseek") || n == "dsh" || strings.HasPrefix(n, "dsh-") || strings.HasPrefix(n, "dsh "):
+		return Who{Kind: AvatarDeepSeek, sprite: spriteDeepSeek}
 	case strings.Contains(n, "cursor"):
 		return Who{Kind: AvatarCursor, sprite: spriteCursor}
 	case strings.Contains(n, "gemini"):
@@ -139,8 +146,10 @@ func AgentAvatar(name string) Who {
 		return Who{Kind: AvatarWindsurf, sprite: spriteWindsurf}
 	case n == "zed" || strings.HasPrefix(n, "zed ") || strings.HasPrefix(n, "zed-"):
 		return Who{Kind: AvatarZed, sprite: spriteZed}
-	case strings.Contains(n, "deepseek") || n == "dsh" || strings.HasPrefix(n, "dsh-") || strings.HasPrefix(n, "dsh "):
-		return Who{Kind: AvatarDeepSeek, sprite: spriteDeepSeek}
+	case n == "amp" || strings.HasPrefix(n, "amp ") || strings.HasPrefix(n, "amp-"):
+		return Who{Kind: AvatarAmp, sprite: spriteAmp}
+	case strings.Contains(n, "kiro"):
+		return Who{Kind: AvatarKiro, sprite: spriteKiro}
 	case strings.Contains(n, "cline"):
 		return Who{Kind: AvatarCline, sprite: spriteCline}
 	}

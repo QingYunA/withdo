@@ -177,3 +177,19 @@ func TestDeepSeekIsTheWhaleEverywhere(t *testing.T) {
 		}
 	}
 }
+
+// TestAmpAndKiroAreTheirMarks: an agent that reports as Amp or Kiro is drawn as its harness mark
+// at 18, in both appearances, as DeepSeek Harness is the whale.
+func TestAmpAndKiroAreTheirMarks(t *testing.T) {
+	for id, names := range map[string][]string{"amp": {"amp", "Amp", "amp-cli"}, "kiro": {"kiro", "Kiro IDE"}} {
+		for _, dark := range []bool{false, true} {
+			want := harnessMark(t, id, 18, dark)
+			for _, name := range names {
+				got := render(t, dark, func(c *ui.Context, tk *Tokens) { AvatarIcon(c, AgentAvatar(name), 18) })
+				if string(got.Image().Pix) != string(want.Image().Pix) {
+					t.Errorf("agent %q (dark %v) is not the %s mark", name, dark, id)
+				}
+			}
+		}
+	}
+}

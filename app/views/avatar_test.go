@@ -87,6 +87,22 @@ func TestAgentNamesAreTheProductsNames(t *testing.T) {
 	}
 }
 
+// TestEveryNamedAgentHasItsOwnAvatar: a name agentName knows is never drawn as the robot of an
+// unknown agent, so a name and its avatar agree.
+func TestEveryNamedAgentHasItsOwnAvatar(t *testing.T) {
+	for _, in := range []string{
+		"claude-code", "codex", "deepseek-harness", "dsh", "dsh-desktop", "cursor-vscode", "gemini-cli", "opencode-cli",
+		"Visual Studio Code", "qwen-code-mcp-client", "kimi-cli", "windsurf", "zed", "amp", "amp-cli", "kiro", "cline",
+	} {
+		if agentName(in) == in {
+			t.Fatalf("%q is not a name agentName knows", in)
+		}
+		if kind := theme.AgentAvatar(in).Kind; kind == theme.AvatarOther {
+			t.Errorf("%q (%s) is drawn as an unknown agent's robot", in, agentName(in))
+		}
+	}
+}
+
 func TestAgentRowsStartWithTheirAvatarAndMineHaveNone(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 1})
