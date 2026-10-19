@@ -32,7 +32,9 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 		Notes: a.Notes, Priority: domain.Priority(a.Priority),
 	}
 	in.CategoryID = tb.defaultCategory
-	if a.Category != "" {
+	// A task in a project counts as Work, so a category the model chose itself is not attached.
+	chosen := a.Category != "" && !a.CategoryNamed && in.ProjectID != nil
+	if a.Category != "" && !chosen {
 		id, err := tb.core.ResolveCategory(ctx, a.Category)
 		if err != nil {
 			return fail(ctx, err)
@@ -53,7 +55,7 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	tb.keep(t.ID, a.Images)
 	tb.addReceipt(Receipt{
 		TaskID: t.ID, Title: t.Title, Status: string(t.Status), Bell: t.RemindAt != nil,
-		Detail: tb.createDetail(*t, a.Category != "" && !a.CategoryNamed),
+		Detail: tb.createDetail(*t, a.Category != "" && !a.CategoryNamed && !chosen),
 	}, undoCreate(tb.core, t.ID))
 	v := tb.view(*t)
 	return reply{OK: true, Task: &v}, nil
