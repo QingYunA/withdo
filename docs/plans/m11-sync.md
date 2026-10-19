@@ -302,3 +302,52 @@ it converges with the task gone everywhere (server and both devices); deleting a
 restoring it (Undo) before and after a sync ends with the task on every device; deleting a category
 on A while B files a task under it ends with `category_id` NULL everywhere; the convergence test
 also compares each device with the server's rows.
+
+## S3-core: syncing in the background
+
+The desktop keeps itself in sync without any UI. The Settings page, signing in and the choice
+when both sides have data come in S3-UI, after the user approves its mockup.
+
+### Runner (`internal/syncclient`)
+
+`Runner` keeps one device in sync: `Start(ctx)`, `Nudge()`, `Status()`, `Close()`.
+- **Triggers**: `Nudge()` (a local change; the app calls it from `internal/watch`'s `OnChange`,
+  so the MCP server's writes count too) syncs after a 1 s debounce; a `poke` on `/v1/events`
+  (one SSE connection, reconnected with backoff) syncs at once; a 5 min timer syncs anyway.
+- **One at a time**: a trigger during a sync runs one more sync after it, never two at once.
+- **Backoff**: a failed sync waits 2 s, doubling to 5 min, then tries again; a success resets it.
+  401 stops the runner with status `signed out` until it is started again.
+- **Status**: `{State: idle | syncing | offline | error | seeding | signed out, LastSynced,
+  LastError, Pending}` (`Pending` = outbox entries), and an `OnStatus` callback when it changes.
+- A clock and the HTTP client are injectable, so tests run without sleeping.
+
+### Config and the token (interim until S4's OIDC)
+
+`sync.json` next to the database (mode 0600): `{server, token}`. Only the CLI writes it in S3.
+S4 replaces the token with OIDC and keeps it in the keychain; the file then holds only `server`.
+
+### App wiring (`app/`)
+
+When `sync.json` exists and the database is linked (`sync_state.device_id`), `data.Real` starts a
+`Runner` after `internal/watch` and nudges it on every change; `Close` stops it. No UI change.
+
+### CLI (`adhd-core sync …`, next to `mcp` and `overview`)
+
+- `sync link --server URL --token-file FILE --name NAME`: writes `sync.json`, links (seeding or
+  joining), syncs until the outbox is empty; prints what it did.
+- `sync status`: device id, workspace, cookie, pending outbox entries, id blocks left, last error.
+- `sync now`: one `Sync`, prints the counts pushed and pulled.
+- Errors are one line on stderr with a non-zero exit: `ErrLocalData` explains that this Mac
+  already has tasks and the account too, and that merging comes with the Settings page.
+
+### Tests
+
+1. Runner, with a fake clock and a fake server: nudges within the debounce make one sync; a nudge
+   during a sync makes exactly one more; backoff doubles to 5 min and resets; 401 ends in
+   `signed out`; a poke syncs at once; status changes reach `OnStatus`.
+2. End to end with Postgres: two Cores with Runners against the S2 server; a task made on A shows
+   on B through the SSE poke, without B's timer (the test waits on B's status, never sleeps blind).
+3. The app starts and stops the Runner with the database when `sync.json` is there, and not
+   otherwise (`app/data` with a test server).
+4. CLI: `sync link` on an empty database joins, on a database with data seeds; `status` and `now`
+   print the documented fields; a missing token file is a one-line error.
