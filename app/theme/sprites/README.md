@@ -23,7 +23,7 @@ so a picture changes by replacing its file.
 | `avatars/assistant.png` | 12 x 12 | the assistant (a ghost with a crown): the composer, its answers, empty states |
 | `avatars/claude.png` | 12 x 12 | the Claude Code avatar |
 | `avatars/codex.png` | 12 x 12 | the Codex avatar |
-| `avatars/cursor.png` | 12 x 12 | the Cursor avatar |
+| `avatars/cursor.png`, `avatars/cursor.dark.png` | 12 x 12 | the Cursor avatar (its cube); the dark file in dark mode |
 | `avatars/gemini.png` | 12 x 12 | the Gemini CLI avatar |
 | `avatars/opencode.png`, `avatars/opencode.dark.png` | 12 x 12 | the opencode avatar; the dark file in dark mode |
 | `avatars/copilot.png`, `avatars/copilot.dark.png` | 12 x 12 | the Copilot (VS Code) avatar; the dark file in dark mode |
@@ -47,13 +47,13 @@ PNGs.
 
 | File | Size | Drawn |
 |---|---|---|
-| `actors/<who>/<pose>.png` | 24 x 24 | the people of the scene. `who` is `you`, `claude`, `codex` or `bot`; poses are `idle`, `lift`, `throw` and `hop`, and `idle2`, which an actor swaps with `idle` while it sways (Claude's claws, Codex's blink). A folder with no file for a pose draws its `idle`. The drop shadow is cut at the file's edge. |
+| `actors/<who>/<pose>.png` | 24 x 24 | the people of the scene. `who` is `you`, `claude`, `codex`, `gemini`, `cursor`, `copilot`, `opencode` or `bot` (an agent's name picks its folder the way it picks its avatar); poses are `idle`, `lift`, `throw` and `hop`, and `idle2`, which an actor swaps with `idle` while it sways (Claude's claws, Codex's blink). `you` and `bot` have no `idle2`. The four newest figures are drawn by `docs/design/tools/actors-v22.py`. A folder with no file for a pose draws its `idle`. The drop shadow is cut at the file's edge. |
 | `actors/bot/*.png` | 24 x 24 | the robot of every agent without a folder of its own. It is a template in the gray of `avatars/bot.png`, tinted the same way (see below). |
 | `goods/<kind>.png` | 17 x 17 | a finished task: `gem` (a feature), `jar` (a bug fix), `gear` (a refactor or migration), `book` (docs or design), `flask` (tests), `mail` (a reply), `coin` (money or a bill), `scroll` (a plan or research), `crate` (anything else). 16 x 16 cells and the shadow cell; the shadow is not drawn while a good is in the air. |
 | `props/star.png` | 7 x 7 | the gold star of a good whose pull request merged |
 | `props/bin.png` | 41 x 17 | the shipping bin (40 x 16 and the shadow cell) |
 | `props/lid-open.png`, `props/lid-half.png`, `props/lid-shut.png` | 41 x 7, 41 x 4, 43 x 4 | the lid of the bin: the dark inside seen from behind, the lid half open, the lid shut |
-| `scenes/day.png`, `scenes/dusk.png`, `scenes/night.png` | 264 x 80 | the backdrop: sky, hills, grass, path, fence and lamp. A wider column repeats the first and last column outward; a narrower one crops both sides equally. |
+| `scenes/day.png`, `scenes/dusk.png`, `scenes/night.png` | 264 x 80 | the backdrop: sky, hills, grass, path, fence and lamp. The ground of `day` and `dusk` is dressed with tiles of Kenney's Tiny Town (CC0; the tiles and its License.txt are in `third_party/kenney-tiny-town/`), put together by `docs/design/tools/scenes-v23.py`. A wider column repeats the first and last column outward; a narrower one crops both sides equally. |
 
 Not files: gold dust, fireflies, the `+1` digits, the dip of the bin and every motion; they are
 effects, not characters or objects.

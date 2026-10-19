@@ -36,10 +36,14 @@ func GoodKinds() []string { return append([]string(nil), goodKinds...) }
 // actorPoses are the poses each actor folder has a file for. A pose a folder does not have is its
 // idle one; idle2 is the pose it alternates with while it sways.
 var actorPoses = map[string][]string{
-	"you":    {"idle", "lift", "throw", "hop"},
-	"claude": {"idle", "idle2", "lift", "throw", "hop"},
-	"codex":  {"idle", "idle2", "lift", "throw", "hop"},
-	"bot":    {"idle", "lift", "throw", "hop"},
+	"you":      {"idle", "lift", "throw", "hop"},
+	"claude":   {"idle", "idle2", "lift", "throw", "hop"},
+	"codex":    {"idle", "idle2", "lift", "throw", "hop"},
+	"gemini":   {"idle", "idle2", "lift", "throw", "hop"},
+	"cursor":   {"idle", "idle2", "lift", "throw", "hop"},
+	"copilot":  {"idle", "idle2", "lift", "throw", "hop"},
+	"opencode": {"idle", "idle2", "lift", "throw", "hop"},
+	"bot":      {"idle", "lift", "throw", "hop"},
 }
 
 // ActorBot is the folder of the robot every agent without a folder of its own is drawn with. It is

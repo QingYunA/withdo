@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v23 草稿 — 场景换成 Kenney Tiny Town 的对比</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 8px 4px; display: flex; gap: 12px; align-items: center; }
+  h1 button { font: 500 12px/20px -apple-system; border: 0; border-radius: 6px; padding: 2px 10px; background: rgba(0,0,0,.07); color: inherit; cursor: pointer; }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 40px 0 6px 4px; }
+  .lead { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1100px; margin: 0 4px 18px; }
+  .scene { position: relative; width: 1056px; height: 320px; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.15); cursor: pointer; }
+  canvas.px { image-rendering: pixelated; display: block; }
+  .names { position: relative; width: 1056px; height: 22px; font-size: 12px; color: #6e6e73; }
+  .names span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+  .sheet { display: grid; grid-template-columns: 140px repeat(5, 112px); gap: 6px 10px; align-items: center; margin: 8px 4px; }
+  .sheet .h { font-size: 12px; color: #6e6e73; text-align: center; }
+  .sheet .who { font-weight: 600; font-size: 14px; }
+  .sheet .who small { display: block; font-weight: 400; color: #6e6e73; font-size: 12px; line-height: 16px; }
+  .sheet canvas { width: 104px; height: 104px; background: #6f6790; border-radius: 6px; }
+  .sheet .new canvas { background: #5f5880; outline: 2px solid #5b5bd6; outline-offset: -2px; }
+  table { border-collapse: collapse; margin: 8px 4px; font-size: 13px; line-height: 20px; }
+  th, td { text-align: left; padding: 6px 16px 6px 0; border-bottom: 1px solid rgba(0,0,0,.08); vertical-align: top; }
+  th { color: #6e6e73; font-weight: 600; }
+  code { font: 12px/18px ui-monospace, Menlo; background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 4px; }
+  .caption { font: 600 14px/20px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 10px 4px; }
+</style>
+</head>
+<body>
+<h1>v23 · 场景：现在 vs Kenney Tiny Town<button id="replay">重播（带 A 木盒音效）</button><button id="mute">静音重播</button></h1>
+<p class="lead">同一段动画放在两个场景里，同时播放。上面是现在自己画的场景；下面把草地、小路、栅栏、树和蘑菇换成 Kenney Tiny Town（CC0）的图块，天空、山、路灯和出货箱保持不变（这几样图库里没有合适的）。Kenney 的图块是白天的颜色，这里按我们黄昏草地的颜色整体压暗了一档（RGB 乘 0.7）；做进 app 时日、黄昏、夜三种天空各要一套。点任一场景重播。</p>
+<div class="caption">A · 现在（自己画）</div>
+<div class="scene" id="sceneA"><canvas class="px" id="cvA" width="264" height="80" style="width:1056px;height:320px"></canvas></div>
+<div class="names" id="names"></div>
+<div class="caption" style="margin-top:28px">B · 草地、小路、栅栏、树换成 Kenney Tiny Town</div>
+<div class="scene" id="sceneB"><canvas class="px" id="cvB" width="264" height="80" style="width:1056px;height:320px"></canvas></div>
+<div class="names" id="namesB"></div>
+<h2>差别</h2>
+<table>
+  <tr><th></th><th>A 现在</th><th>B Kenney Tiny Town</th></tr>
+  <tr><td>草地</td><td>平涂加零星草叶</td><td>带小花和草丛的图块</td></tr>
+  <tr><td>小路</td><td>细碎的点</td><td>上沿有一圈草边，土块更大</td></tr>
+  <tr><td>栅栏</td><td>长木栏，6 根桩</td><td>Kenney 栅栏，深紫褐描边，粗一些</td></tr>
+  <tr><td>点缀</td><td>没有</td><td>左边两棵树，右边一丛蘑菇（都不站在角色后面）</td></tr>
+  <tr><td>描边色</td><td>按元素变色</td><td>统一深紫褐 <code>#3f2631</code>（压暗后更深）</td></tr>
+  <tr><td>授权</td><td>自有</td><td>CC0，带上 License.txt 放进 <code>third_party/</code></td></tr>
+</table>
+<script>
+const SP = '../../../app/theme/sprites/';
+const img = {};
+const load = (k, path) => new Promise((ok) => { const i = new Image(); i.onload = () => { img[k] = i; ok(); }; i.onerror = () => ok(); i.src = SP + path; });
+
+const SCENE_W = 264, FEET = 71, TOP = FEET - 22, BINX = 112, RIM = FEET - 16, GOOD = 16;
+const POSES = ['idle', 'idle2', 'lift', 'throw', 'hop'];
+const CAST = [
+  { f: 'you', name: '你' }, { f: 'claude', name: 'Claude Code' }, { f: 'codex', name: 'Codex' },
+  { f: 'gemini', name: 'Gemini' }, { f: 'cursor', name: 'Cursor' }, { f: 'copilot', name: 'Copilot' }, { f: 'opencode', name: 'OpenCode（画外）' },
+];
+const SLOTS6 = [24, 52, 216, 188, 80, 160];
+const NOFLIP = { codex: 1, cursor: 1, opencode: 1, gemini: 1 };
+const HANDS = { codex: [2, 15], you: [20, 4], gemini: [12, 2], cursor: [12, -2], copilot: [12, 2], opencode: [12, 2] };
+const HEAP = [[115, 49], [133, 49], [124, 44], [116, 39], [132, 39], [124, 34], [124, 29]];
+// who finished what, in order; s = its PR merged
+const THROWS = [
+  [1, 'gem', 1], [0, 'coin'], [2, 'jar', 1], [3, 'book'], [4, 'gear', 1], [1, 'flask'], [5, 'mail'], [6, 'scroll'],
+  [0, 'mail'], [3, 'gem', 1], [2, 'gear'], [4, 'jar'], [1, 'gem', 1], [0, 'crate'], [2, 'book'], [1, 'gear'],
+];
+const X = CAST.map((a, i) => i < 6 ? SLOTS6[i] : SCENE_W + 8);
+const FLIP = CAST.map((a, i) => X[i] > BINX && !NOFLIP[a.f]);
+const n = THROWS.length, GAP = Math.max(120, Math.min(480, Math.floor(5760 / n)));
+const plan = THROWS.map(([a, k, s], i) => {
+  let [hx, hy] = HANDS[CAST[a].f] || [12, 2], x0 = X[a];
+  if (a >= 6) hx = 0; else if (FLIP[a]) hx = 23 - hx;
+  const slot = HEAP[Math.min(i, 6)], to = [slot[0] + 8, slot[1] + 8], from = [x0 + hx, TOP + hy];
+  const dx = Math.abs(to[0] - from[0]), T = 700 + i * GAP, D = Math.round(560 + dx * 2.2);
+  return { a, k, s, T, D, land: T + D, from, to, arc: 16 + dx / 5, dir: to[0] < from[0] ? -1 : 1, heap: i < 7 ? i : -1 };
+});
+const LAST = Math.max(...plan.map((p) => p.land)), JUMP = LAST + 350, END = JUMP + 900;
+const pos = (p, t) => { const u = Math.min(Math.max((t - p.T) / p.D, 0), 1); return [p.from[0] + (p.to[0] - p.from[0]) * u, p.from[1] + (p.to[1] - p.from[1]) * u - p.arc * 4 * u * (1 - u)]; };
+const r = Math.round;
+
+function poseAt(i, t) {
+  for (const [n, p] of plan.entries()) if (p.a === i) { if (t >= p.T - 260 && t < p.T) return ['lift', n]; if (t >= p.T && t < p.T + 180) return ['throw', n]; }
+  const at = t - JUMP - i * 90; if (at >= 0 && at < 420) return ['hop'];
+  if (t > JUMP + 600 && Math.floor((t + i * 170) / 450) % 2 && img[CAST[i].f + '/idle2']) return ['idle2'];
+  return ['idle'];
+}
+const hop = (i, t) => { const u = (t - JUMP - i * 90) / 420; return u > 0 && u < 1 ? -r(40 * u * (1 - u)) : 0; };
+const bob = (i, t) => t > JUMP + 600 && Math.floor((t + i * 170) / 450) % 2 ? 1 : 0;
+
+function drawImg(g, k, x, y, flip) {
+  const i = img[k]; if (!i) return;
+  if (!flip) { g.drawImage(i, x, y); return; }
+  g.save(); g.translate(x + i.width, y); g.scale(-1, 1); g.drawImage(i, 0, 0); g.restore();
+}
+function drawGood(g, k, x, y, turns) { // the 16 x 16 body, turned a quarter at a time, no shadow cell
+  const i = img['goods/' + k]; if (!i) return;
+  g.save(); g.translate(x + 8, y + 8); g.rotate(turns * Math.PI / 2); g.drawImage(i, 0, 0, 16, 16, -8, -8, 16, 16); g.restore();
+}
+const DIG = { '+': ['...', '.#.', '###', '.#.', '...'], '1': ['.#.', '##.', '.#.', '.#.', '###'] };
+function digits(g, s, x, y, c) { g.fillStyle = c; [...s].forEach((ch, k) => DIG[ch].forEach((row, yy) => [...row].forEach((v, xx) => v === '#' && g.fillRect(x + k * 4 + xx, y + yy, 1, 1)))); }
+
+function draw(g, t, bg = 'scenes/dusk') {
+  g.imageSmoothingEnabled = false;
+  g.clearRect(0, 0, 264, 80);
+  drawImg(g, bg, 0, 0);
+  g.fillStyle = 'rgba(30,20,40,.22)';
+  CAST.forEach((a, i) => { if (i < 6) g.fillRect(X[i] + 5, FEET + 1, 15, 2); });
+  g.fillRect(BINX - 1, FEET + 1, 42, 2);
+  const sink = plan.some((p) => t >= p.land && t < p.land + 110) ? 1 : 0;
+  const lid = t < 250 ? 'shut' : t < 350 ? 'half' : 'open';
+  if (lid === 'open') drawImg(g, 'props/lid-open', BINX, RIM - 6 + sink);
+  plan.forEach((p) => { if (p.heap >= 0 && t >= p.land) drawImg(g, 'goods/' + p.k, HEAP[p.heap][0], HEAP[p.heap][1] + sink); });
+  plan.forEach((p) => {
+    if (t < p.T || t >= p.land) return;
+    const [x, y] = pos(p, t);
+    if (p.s) for (let k = 1; k <= 6; k++) { const at = t - k * 45; if (at < p.T) break; const [dx, dy] = pos(p, at); g.fillStyle = k >= 5 ? '#e8a03a' : k >= 3 ? '#fee761' : '#fff6c0'; g.fillRect(r(dx) + (k * 7) % 5 - 2, r(dy) + (k * 3) % 5 - 2, 1, 1); }
+    drawGood(g, p.k, r(x) - 8, r(y) - 8, (((Math.floor((t - p.T) / 100) * p.dir) % 4) + 4) % 4);
+  });
+  drawImg(g, 'props/bin', BINX, RIM + sink);
+  if (lid === 'half') drawImg(g, 'props/lid-half', BINX, RIM - 4);
+  if (lid === 'shut') drawImg(g, 'props/lid-shut', BINX - 1, RIM - 3);
+  CAST.forEach((a, i) => {
+    if (i >= 6) return;
+    const [pose, n] = poseAt(i, t), y = TOP + hop(i, t) + bob(i, t);
+    const key = img[a.f + '/' + pose] ? a.f + '/' + pose : a.f + '/idle';
+    drawImg(g, key, X[i], y, FLIP[i]);
+    if (pose === 'lift' && a.f !== 'codex') { const p = plan[n]; drawImg(g, 'goods/' + p.k, r(p.from[0]) - 8, r(p.from[1]) - 8 + (y - TOP)); }
+  });
+  plan.forEach((p) => {
+    const age = t - p.land; if (age < 0 || age > 700) return;
+    const rise = Math.floor(Math.min(age / 600, 1) * 10);
+    digits(g, '+1', BINX + 15, RIM - 14 - rise, age < 450 ? '#ffffff' : '#c8c4e8');
+    if (p.s) drawImg(g, 'props/star', BINX + 26, RIM - 16 - rise);
+  });
+  if (t > JUMP) for (let i = 0; i < 7; i++) {
+    if ((Math.floor(t / 300) + i) % 3 === 0) continue;
+    const fx = r(196 + 26 * Math.sin(t / 1100 + i * 1.7) + i * 6), fy = r(30 + 12 * Math.sin(t / 800 + i * 2.3));
+    g.fillStyle = 'rgba(254,231,97,.45)'; g.fillRect(fx - 1, fy, 1, 1); g.fillRect(fx + 1, fy, 1, 1);
+    g.fillStyle = '#fff6b0'; g.fillRect(fx, fy, 1, 1);
+  }
+}
+
+/* ---------- sound: set A of v21 ---------- */
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19], hz = (s) => 523.25 * Math.pow(2, s / 12);
+let AC = null, BUS = null, noiseBuf = null;
+function tone(type, f, at, dur, peak, o = {}) {
+  const osc = AC.createOscillator(), g = AC.createGain(); osc.type = type;
+  osc.frequency.setValueAtTime(f, at); if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, at + (o.glide || dur));
+  g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(peak, at + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.connect(g); g.connect(BUS); osc.start(at); osc.stop(at + dur + 0.03);
+}
+function noise(at, dur, peak, freq, q = 1) {
+  if (!noiseBuf) { noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  g.gain.setValueAtTime(peak, at); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  s.connect(f); f.connect(g); g.connect(BUS); s.start(at); s.stop(at + dur + 0.02);
+}
+const A = {
+  lid: (at) => { tone('triangle', 180, at, 0.09, 0.30, { to: 120 }); noise(at, 0.03, 0.10, 900); },
+  land: (at, i) => { const f = hz(PENTA[i] - 12); tone('sine', f, at, 0.12, 0.36, { to: f * 0.72, glide: 0.05 }); tone('triangle', f * 2, at, 0.05, 0.10); noise(at, 0.02, 0.10, 2400, 2); },
+  star: (at) => tone('sine', 2093, at + 0.04, 0.28, 0.07),
+  done: (at) => [0, 4, 7].forEach((s, k) => { tone('sine', hz(s), at + k * 0.10, 0.55, 0.26); tone('sine', hz(s) * 4, at + k * 0.10, 0.12, 0.03); }),
+};
+function sound() {
+  if (!AC) AC = new AudioContext(); if (AC.state === 'suspended') AC.resume();
+  if (BUS) BUS.disconnect();
+  BUS = AC.createGain(); BUS.gain.value = 0.3; BUS.connect(AC.destination);
+  const t0 = AC.currentTime + 0.03; let last = -1e9, lands = 0;
+  A.lid(t0 + 0.25);
+  plan.forEach((p) => { if (p.land - last < 150 || lands >= 8) return; last = p.land; A.land(t0 + p.land / 1000, lands++); if (p.s) A.star(t0 + p.land / 1000); });
+  A.done(t0 + JUMP / 1000);
+}
+
+/* ---------- page ---------- */
+let t0 = performance.now();
+const gA = document.getElementById('cvA').getContext('2d'), gB = document.getElementById('cvB').getContext('2d');
+const still = location.hash === '#still', freeze = +((/^#t=(\d+)/.exec(location.hash) || [])[1] || NaN);
+function frame(now) { const t = still ? END + 2000 : !isNaN(freeze) ? freeze : now - t0; draw(gA, t); draw(gB, t, 'kenney'); requestAnimationFrame(frame); }
+function replay(withSound) { t0 = performance.now(); if (withSound) sound(); else if (BUS) BUS.disconnect(), BUS = null; }
+document.getElementById('sceneA').onclick = () => replay(true);
+document.getElementById('sceneB').onclick = () => replay(true);
+document.getElementById('replay').onclick = () => replay(true);
+document.getElementById('mute').onclick = () => replay(false);
+
+const keys = [['scenes/dusk', 'scenes/dusk.png'], ['props/bin', 'props/bin.png'], ['props/lid-open', 'props/lid-open.png'], ['props/lid-half', 'props/lid-half.png'], ['props/lid-shut', 'props/lid-shut.png'], ['props/star', 'props/star.png'],
+  ...['gem', 'jar', 'gear', 'book', 'flask', 'mail', 'coin', 'scroll', 'crate'].map((k) => ['goods/' + k, `goods/${k}.png`]),
+  ...CAST.flatMap((a) => POSES.map((p) => [`${a.f}/${p}`, `actors/${a.f}/${p}.png`]))];
+const kenney = new Promise((ok) => { const i = new Image(); i.onload = () => { img.kenney = i; ok(); }; i.src = 'v23-kenney-dusk.png'; });
+Promise.all([kenney, ...keys.map(([k, p]) => load(k, p))]).then(() => {
+  t0 = performance.now(); requestAnimationFrame(frame);
+  document.getElementById('namesB').innerHTML = document.getElementById('names').innerHTML = CAST.slice(0, 6).map((a, i) => `<span style="left:${(X[i] + 12) * 4}px">${a.name}</span>`).join('') + `<span style="left:1010px">${CAST[6].name} →</span>`;
+  const NEW = { gemini: 1, cursor: 1, copilot: 1, opencode: 1 }, LBL = { idle: '站着', idle2: '摆动', lift: '举起', throw: '扔出', hop: '跳' };
+  const sh = document.getElementById('sheet');
+  if (sh) sh.innerHTML = '<div></div>' + POSES.map((p) => `<div class="h">${LBL[p]} · ${p}</div>`).join('') +
+    CAST.map((a) => `<div class="who">${a.name.replace('（画外）', '')}<small>actors/${a.f}/</small></div>` + POSES.map((p) => `<div class="${NEW[a.f] ? 'new' : ''}"><canvas class="px" width="26" height="26" data-k="${a.f}/${p}"></canvas></div>`).join('')).join('');
+  if (sh) sh.querySelectorAll('canvas').forEach((c) => { const x = c.getContext('2d'); x.imageSmoothingEnabled = false; if (img[c.dataset.k]) x.drawImage(img[c.dataset.k], 1, 1); else c.style.opacity = 0.15; });
+});
+</script>
+</body>
+</html>

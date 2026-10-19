@@ -1,7 +1,6 @@
 package theme
 
 import (
-	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -67,21 +66,36 @@ type Actor struct {
 // YouActor is the user.
 var YouActor = Actor{Folder: "you"}
 
-// ActorOf is how an agent is drawn, by the name it reported under: Claude Code and Codex have their
-// own, any other agent is the robot, tinted by its avatar's color so the two always agree.
+// actorFolders are the agents that have a figure of their own, by the avatar the name matches (so an
+// agent's avatar and its actor always agree), and the folder of each under sprites/actors/.
+var actorFolders = map[AvatarKind]string{
+	AvatarClaude:   "claude",
+	AvatarCodex:    "codex",
+	AvatarGemini:   "gemini",
+	AvatarCursor:   "cursor",
+	AvatarCopilot:  "copilot",
+	AvatarOpencode: "opencode",
+}
+
+// ActorOf is how an agent is drawn, by the name it reported under: Claude Code, Codex, Gemini CLI,
+// Cursor, Copilot and opencode have their own, any other agent is the robot, tinted by its avatar's
+// color so the two always agree.
 func ActorOf(agent string) Actor {
-	switch n := strings.ToLower(agent); {
-	case strings.Contains(n, "claude"):
-		return Actor{Folder: "claude"}
-	case strings.Contains(n, "codex"):
-		return Actor{Folder: "codex"}
+	if folder, ok := actorFolders[AgentAvatar(agent).Kind]; ok {
+		return Actor{Folder: folder}
 	}
 	return Actor{Folder: ActorBot, Tint: botTint(agent)}
 }
 
-// facesLeft reports whether an actor's picture looks to the left, so it is not turned round when it
-// stands on the left of the bin (turning Codex round would turn its `>_` into `<_`).
-func (a Actor) facesLeft() bool { return a.Folder == "codex" }
+// neverTurned reports whether an actor's picture is a mark with a set direction, so it is not turned
+// round when it stands right of the bin (turning Codex round would turn its `>_` into `<_`).
+func (a Actor) neverTurned() bool {
+	switch a.Folder {
+	case "codex", "cursor", "gemini", "opencode":
+		return true
+	}
+	return false
+}
 
 // OpKind says what a SceneOp draws.
 type OpKind int

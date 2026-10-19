@@ -17,7 +17,7 @@ func at(msec int) time.Duration { return time.Duration(msec) * time.Millisecond 
 func day(people int, throws ...int) *DayPlan {
 	s := DayScene{Sky: SkyDusk}
 	for i := 0; i < people; i++ {
-		s.Actors = append(s.Actors, []Actor{YouActor, ActorOf("claude-code"), ActorOf("codex"), ActorOf("kimi-cli"), ActorOf("zed"), ActorOf("mystery")}[i])
+		s.Actors = append(s.Actors, []Actor{YouActor, ActorOf("claude-code"), ActorOf("codex"), ActorOf("kimi-cli"), ActorOf("zed"), ActorOf("mystery"), ActorOf("gemini-cli"), ActorOf("Cursor")}[i])
 	}
 	for _, a := range throws {
 		s.Throws = append(s.Throws, DayThrow{Actor: a, Kind: "gem"})
@@ -96,14 +96,37 @@ func TestPeopleStandTwoLeftOfTheBinAndTwoRight(t *testing.T) {
 	}
 }
 
-func TestAFifthPersonThrowsFromOffTheRightEdgeAndIsNotDrawn(t *testing.T) {
-	p := day(6, 4, 5)
-	if p.ActorX(4) < SceneW || p.ActorX(5) < SceneW {
-		t.Errorf("fifth and sixth stand at %d and %d", p.ActorX(4), p.ActorX(5))
+func TestFiveAndSixPeopleStandThreeEachSideOfTheBin(t *testing.T) {
+	want := []int{24, 52, 216, 188, 80, 160}
+	for _, n := range []int{5, 6} {
+		p := day(n, 0)
+		for i := 0; i < n; i++ {
+			if p.ActorX(i) != want[i] {
+				t.Errorf("%d people: person %d at %d, want %d", n, i, p.ActorX(i), want[i])
+			}
+			if x, left := p.ActorX(i), i < 2 || i == 4; left && x+ActorGrid > binX || !left && x < binX+binW {
+				t.Errorf("%d people: person %d at %d is on the wrong side of the bin", n, i, x)
+			}
+		}
+		if got := len(ops(p.Frame(p.Calm(), false), OpActor)); got != n {
+			t.Errorf("%d people: %d drawn", n, got)
+		}
+	}
+}
+
+func TestAnySeventhPersonThrowsFromOffTheRightEdgeAndIsNotDrawn(t *testing.T) {
+	p := day(8, 6, 7)
+	for i := 0; i < 6; i++ {
+		if p.ActorX(i) != actorSlots6[i] {
+			t.Errorf("person %d at %d, want %d", i, p.ActorX(i), actorSlots6[i])
+		}
+	}
+	if p.ActorX(6) < SceneW || p.ActorX(7) < SceneW {
+		t.Errorf("seventh and eighth stand at %d and %d", p.ActorX(6), p.ActorX(7))
 	}
 	f := p.Frame(p.Calm(), false)
-	if got := len(ops(f, OpActor)); got != 4 {
-		t.Errorf("%d actors drawn, want the first four", got)
+	if got := len(ops(f, OpActor)); got != 6 {
+		t.Errorf("%d actors drawn, want the first six", got)
 	}
 	if fl := p.flights[0]; fl.fromX < SceneW {
 		t.Errorf("a goods comes from x=%v, inside the scene", fl.fromX)
@@ -288,7 +311,7 @@ func TestCodexShootsItsGoodWithoutHoldingItUp(t *testing.T) {
 	}
 }
 
-func TestActorsRightOfTheBinFaceItExceptCodex(t *testing.T) {
+func TestActorsRightOfTheBinFaceIt(t *testing.T) {
 	p := day(3, 0)
 	f := p.Frame(p.Calm(), false)
 	flip := map[string]bool{}
@@ -298,14 +321,73 @@ func TestActorsRightOfTheBinFaceItExceptCodex(t *testing.T) {
 	if flip["you"] || flip["claude"] || flip["codex"] {
 		t.Errorf("%v: you and claude stand left, and codex is never turned round", flip)
 	}
-	robot := day(3, 0)
-	robot.flip[2] = true
-	if !robot.flip[2] {
-		t.Fatal("setup")
-	}
 	right := NewDayPlan(DayScene{Actors: []Actor{YouActor, YouActor, YouActor}})
 	if !right.flip[2] || right.flip[0] {
 		t.Errorf("flips %v: the third person stands right of the bin and faces left", right.flip)
+	}
+}
+
+func TestMarksWithASetDirectionAreNeverTurnedRound(t *testing.T) {
+	// Seven people: you, then six agents; six stand, the 3rd, 4th and 6th right of the bin.
+	s := DayScene{Actors: []Actor{YouActor}}
+	for _, name := range []string{"claude", "codex", "gemini", "cursor", "copilot", "opencode"} {
+		s.Actors = append(s.Actors, ActorOf(name))
+	}
+	p := NewDayPlan(s)
+	for i, a := range s.Actors[:maxActors] {
+		right := p.ActorX(i) > binX
+		never := slices.Contains([]string{"codex", "gemini", "cursor", "opencode"}, a.Folder)
+		if p.flip[i] != (right && !never) {
+			t.Errorf("%s at %d: turned %v", a.Folder, p.ActorX(i), p.flip[i])
+		}
+	}
+	for _, name := range []string{"gemini", "cursor", "opencode", "codex"} {
+		if !ActorOf(name).neverTurned() {
+			t.Errorf("%s is turned round", name)
+		}
+	}
+	for _, name := range []string{"claude", "copilot", "qwen"} {
+		if ActorOf(name).neverTurned() {
+			t.Errorf("%s is never turned round", name)
+		}
+	}
+}
+
+func TestEveryAgentWithAFigureGetsItsFolderAndTheRestTheRobot(t *testing.T) {
+	for agent, want := range map[string]string{
+		"claude-code": "claude", "Codex CLI": "codex",
+		"Gemini": "gemini", "Gemini CLI": "gemini",
+		"Cursor": "cursor", "cursor-vscode": "cursor",
+		"GitHub Copilot": "copilot", "Copilot": "copilot", "Visual Studio Code": "copilot",
+		"OpenCode": "opencode", "opencode": "opencode",
+		"Qwen Code": ActorBot, "mystery": ActorBot, "": ActorBot,
+	} {
+		a := ActorOf(agent)
+		if a.Folder != want {
+			t.Errorf("%q is drawn as %q, want %q", agent, a.Folder, want)
+		}
+		if (a.Folder == ActorBot) != (a.Tint != ui.Color{}) {
+			t.Errorf("%q: tint %v for folder %q", agent, a.Tint, a.Folder)
+		}
+		for _, pose := range []string{"idle", "idle2", "lift", "throw", "hop"} {
+			if a.Folder != ActorBot && !hasPose(a.Folder, pose) {
+				t.Errorf("%q: folder %q has no %s", agent, a.Folder, pose)
+			}
+		}
+	}
+}
+
+func TestGoodsLeaveTheHandsOfEachFigure(t *testing.T) {
+	for who, want := range map[string][2]int{
+		"gemini": {12, 2}, "cursor": {12, -2}, "copilot": {12, 2}, "opencode": {12, 2},
+		"codex": {2, 15}, "claude": {12, 2}, "mystery": {12, -4},
+	} {
+		if x, y := handsOf(ActorOf(who)); x != want[0] || y != want[1] {
+			t.Errorf("%s: hands at %d,%d, want %v", who, x, y, want)
+		}
+	}
+	if x, y := handsOf(YouActor); x != 20 || y != 4 {
+		t.Errorf("you: hands at %d,%d", x, y)
 	}
 }
 
