@@ -110,10 +110,7 @@ func (m *Main) detachImage(c *ui.Context, task data.Task, im data.TaskImage) {
 	if m.app.DetachImage(task.ID, im.Hash) != nil {
 		return
 	}
-	c.AddToast(ui.Toast{
-		ID: "image-detached", Title: m.say.ImageDetached(im.Name), Action: m.say.MenuUndo(), Timeout: undoWithin,
-		OnAction: func() { _ = m.app.RestoreImage(im) },
-	})
+	m.offerUndo(c, undoEntry{title: m.say.ImageDetached(im.Name), undo: func() { _ = m.app.RestoreImage(im) }})
 }
 
 // chooseTaskPictures opens the file panel for the + tile and the quiet line.

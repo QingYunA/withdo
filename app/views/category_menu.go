@@ -50,5 +50,5 @@ func (m *Main) deleteCategory(c *ui.Context, cat data.Category) {
 	if d.Tasks > 0 {
 		title = m.say.CategoryDeleted(cat.Name, d.Tasks)
 	}
-	m.offerUndo(c, title, func() { _ = m.app.RestoreCategory(d) })
+	m.offerUndo(c, undoEntry{title: title, undo: func() { _ = m.app.RestoreCategory(d) }})
 }

@@ -500,3 +500,24 @@ func TestTheReceiptsInChineseSaySoToo(t *testing.T) {
 	a.answer(t)
 	has(t, a.tt, "图片也挂上了")
 }
+
+func TestCmdZAfterDetachingAPictureBringsItBack(t *testing.T) {
+	r := newPicRig(t)
+	r.give(t, 5, "bill.png", red)
+	r.openAside(t, 5)
+	tile, _ := r.tt.Find("Open bill.png")
+	r.tt.Move(tile.X+10, tile.Y+10)
+	r.tt.Frame()
+	if err := r.tt.Click("Remove bill.png from this task"); err != nil {
+		t.Fatal(err)
+	}
+	r.tt.Frame()
+	if n := len(r.app.Images(5)); n != 0 {
+		t.Fatalf("%d pictures after the x, want 0", n)
+	}
+	r.tt.Key(ui.Cmd, ui.KeyZ)
+	r.settle(t)
+	if got := r.app.Images(5); len(got) != 1 || got[0].Name != "bill.png" {
+		t.Errorf("after ⌘Z: %+v", got)
+	}
+}

@@ -119,27 +119,20 @@ func (m *Main) laneEmpty(s data.Status) string {
 	return m.say.BoardEmptyNone()
 }
 
-// dropCards is the drop of cards on a lane: one card takes the lane's status; several selected ones
-// all do, as one change with one Undo.
+// dropCards is the drop of cards on a lane: the dragged card takes the lane's status, and so do all
+// of the selected ones when it is a stack, as one change with one Undo. A blocked card dropped on
+// Doing stays blocked.
 func (m *Main) dropCards(c *ui.Context, ids []int, to data.Status) {
-	if len(ids) == 1 {
-		m.dropCard(ids[0], to)
-		return
-	}
 	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return page.LaneOf(t.Status) != to })
 	title := m.say.BulkMoveToast(len(tasks), statusLabel(m.say, to))
 	if to == data.Done {
 		title = m.say.BulkDoneToast(len(tasks))
 	}
-	m.bulkUpdate(c, tasks, data.Patch{Status: data.StatusPtr(to)}, title)
-}
-
-func (m *Main) dropCard(id int, to data.Status) {
-	task, ok := m.app.Task(id)
-	if !ok || page.LaneOf(task.Status) == to { // a blocked card dropped on Doing stays blocked
+	if len(ids) == 1 { // a lone card is no selection to leave
+		m.patchTasks(c, tasks, data.BulkPatch{Status: data.StatusPtr(to)}, title)
 		return
 	}
-	m.app.SetStatus(task, to)
+	m.bulkUpdate(c, tasks, data.BulkPatch{Status: data.StatusPtr(to)}, title)
 }
 
 func doneAt(t data.Task) time.Time { return page.DoneAt(t) }

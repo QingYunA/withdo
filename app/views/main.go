@@ -65,6 +65,7 @@ type Main struct {
 	hop        hopper              // the hop to the Mine row, and the badge there
 	cols       columnsState        // a project's two columns, and where they were drawn
 	ho         handOffState        // handing a task to an agent, and its motion
+	undos      undoSlot            // the change the Undo toast and ⌘Z take back
 	openID     int                 // task open in the inspector, 0 for none
 	sel        int                 // task the keyboard highlights, 0 for none
 	multi      selection.Selection // the rows selected together on this page

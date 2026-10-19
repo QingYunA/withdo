@@ -2,13 +2,26 @@ package data
 
 import "errors"
 
+// BulkPatch is what a bulk change may touch: only the fields RestoreStates puts back, so an Undo
+// can never lose part of a change. A field the Undo cannot restore has no place here.
+type BulkPatch struct {
+	Status    *Status
+	Priority  *Priority
+	ProjectID *int // 0 moves the tasks to the Inbox; the milestone stays behind, as with Patch
+}
+
+// patch is p as the single-task Patch the store applies.
+func (p BulkPatch) patch() Patch {
+	return Patch{Status: p.Status, Priority: p.Priority, ProjectID: p.ProjectID}
+}
+
 // Bulk is changing several tasks as one: each call is one change that either applies to every task
 // or to none, and hands back what one Undo needs.
 type Bulk interface {
 	// UpdateTasks applies one patch to every task in ids. It returns the tasks as they were before,
 	// and with them the open subtasks that closed along with a task that became done or
 	// cancelled; RestoreStates puts them back.
-	UpdateTasks(ids []int, p Patch) (before []Task, err error)
+	UpdateTasks(ids []int, p BulkPatch) (before []Task, err error)
 	// HandOffTasks hands every task in ids to any agent, as HandOff does for one, and returns the
 	// tasks as they were before. The caller leaves out what cannot be handed over.
 	HandOffTasks(ids []int) (before []Task, err error)

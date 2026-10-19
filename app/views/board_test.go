@@ -275,3 +275,26 @@ func TestMilestoneFilterIsHiddenUntilTheProjectHasAMilestone(t *testing.T) {
 	}
 	has(t, tt, "v0.2 native")
 }
+
+func TestDroppingOneCardOffersUndoAndCmdZ(t *testing.T) {
+	for _, how := range []string{"toast button", "Cmd+Z"} {
+		app, _, _ := newTestApp(t)
+		tt, _ := boardTester(t, app, 1, 1840)
+		dragTo(t, tt, "Write the release notes", "Doing")
+		tt.Frame()
+		if task, _ := app.Task(5); task.Status != data.Doing {
+			t.Fatalf("status %v after the drop, want doing", task.Status)
+		}
+		if !tt.HasText("Undo") {
+			t.Fatalf("no Undo toast: %q", tt.Texts())
+		}
+		if how == "Cmd+Z" {
+			tt.Key(ui.Cmd, ui.KeyZ)
+		} else {
+			click(t, tt, "Undo")
+		}
+		if task, _ := app.Task(5); task.Status != data.Todo {
+			t.Errorf("%s: status %v after Undo, want todo", how, task.Status)
+		}
+	}
+}

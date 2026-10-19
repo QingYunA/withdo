@@ -1,16 +1,9 @@
 package views
 
-import (
-	"time"
-
-	"github.com/egoist/mygo/ui"
-)
-
-// undoWithin is how long the toast of a deleted task offers Undo.
-const undoWithin = 6 * time.Second
+import "github.com/egoist/mygo/ui"
 
 // deleteTask deletes a task at once, without asking, and offers Undo for six seconds: the toast's
-// button restores it with its id, fields and reports.
+// button and ⌘Z restore it with its id, fields and reports.
 func (m *Main) deleteTask(c *ui.Context, id int) {
 	task, ok := m.app.Task(id)
 	if !ok {
@@ -26,10 +19,7 @@ func (m *Main) deleteTask(c *ui.Context, id int) {
 	if m.sel == id {
 		m.sel = 0
 	}
-	c.AddToast(ui.Toast{
-		ID: "task-deleted", Title: m.say.MenuDeleted(task.Title), Action: m.say.MenuUndo(), Timeout: undoWithin,
-		OnAction: func() { _ = m.app.RestoreTask(snap) },
-	})
+	m.offerUndo(c, undoEntry{title: m.say.MenuDeleted(task.Title), undo: func() { _ = m.app.RestoreTask(snap) }})
 }
 
 // askAboutTask opens the task in the inspector and asks for the keyboard to go to the inspector's

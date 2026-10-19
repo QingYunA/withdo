@@ -27,15 +27,13 @@ const carrierSize = theme.HopSize
 const carrierTuck float32 = 3
 
 // handOffState is the hand-off's memory: the pointer of the row being carried, whether the row is
-// over the tray, the row that just landed, and the Undo that ⌘Z does.
+// over the tray, and the row that just landed.
 type handOffState struct {
-	carry   carry
-	over    bool      // a row of Mine is over the Agents tray
-	overAt  time.Time // since when
-	landed  landing
-	undo    func()
-	undoSeq int
-	asked   int // frames asked for, which the tests look at
+	carry  carry
+	over   bool      // a row of Mine is over the Agents tray
+	overAt time.Time // since when
+	landed landing
+	asked  int // frames asked for, which the tests look at
 	// stack is the rows in the air while a stack is dragged, and stackSeen that one of them was
 	// built as the dragged row this frame, which is how the others know to fade.
 	stack     []int
