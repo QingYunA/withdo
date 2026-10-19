@@ -113,8 +113,8 @@ func categoryName(say locales.Messages, c data.Category) string {
 // mineSubRows are the rows under Mine: Work and Life always, Unsorted while it has rows (or is the
 // open page, so its highlight does not vanish under the pointer).
 func (m *Main) mineSubRows(c *ui.Context, t *theme.Tokens) {
-	m.subRow(c, t, "mine-work", nav{screen: screenMine, sub: subWork}, m.say.CategoryWork(), m.slices.work.Count(), nil)
-	m.subRow(c, t, "mine-life", nav{screen: screenMine, sub: subLife}, m.say.CategoryLife(), m.slices.life.Count(), nil)
+	m.subRow(c, t, "mine-work", nav{screen: screenMine, sub: subWork}, m.say.CategoryWork(), m.slices.work.Count(), categoryLead(c, t, data.CategoryWork))
+	m.subRow(c, t, "mine-life", nav{screen: screenMine, sub: subLife}, m.say.CategoryLife(), m.slices.life.Count(), categoryLead(c, t, data.CategoryLife))
 	to := nav{screen: screenMine, sub: subUnsorted}
 	if !m.slices.unsorted.Empty() || m.nav == to {
 		m.subRow(c, t, "mine-unsorted", to, m.say.CategoryUnsorted(), m.slices.unsorted.Count(), nil)
@@ -130,7 +130,9 @@ func (m *Main) agentSubRows(c *ui.Context, t *theme.Tokens) {
 	}
 	for _, r := range rows {
 		who := theme.AgentAvatar(strings.ToLower(r.Name))
-		m.subRow(c, t, "agent:"+r.Name, nav{screen: screenAgents, sub: r.Name}, r.Name, r.Working, &who)
+		m.subRow(c, t, "agent:"+r.Name, nav{screen: screenAgents, sub: r.Name}, r.Name, r.Working, func() {
+			theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarSmall)
+		})
 	}
 }
 
@@ -143,19 +145,27 @@ func hasAgentRow(rows []data.AgentTally, name string) bool {
 	return false
 }
 
+// categoryLead draws a category's icon in a sub-row's slot.
+func categoryLead(c *ui.Context, t *theme.Tokens, cat data.Category) func() {
+	return func() {
+		ui.Icon(c, categoryIcon(cat)).Size(theme.AvatarSmall, theme.AvatarSmall).TextColor(t.TextSecondary)
+	}
+}
+
 // subRowIndent is how far a sub-row's content sits in from its parent's: one 18 pt icon and the row's
 // gap, so its slot starts where the parent's label does.
 const subRowIndent = theme.IconRow + sidebarRowGap
 
 // subRow is a sidebar row under Mine or Agents, one step in from its parent. Its 12 pt slot, flush
-// with the parent's label, is empty or holds the agent's avatar, so the sub-rows' labels line up.
-func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, avatar *theme.Who) {
+// with the parent's label, holds what lead draws (the category's icon, the agent's avatar) or stays
+// empty when lead is nil, so the sub-rows' labels line up.
+func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, lead func()) {
 	selected := m.nav == to && !m.searching()
 	row := sidebarRow(c, t, key, selected).Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent)
 	row.Children(func() {
 		ui.Row(c.Key("lead")).Width(theme.AvatarSmall).Height(theme.AvatarSmall).Shrink(0).Children(func() {
-			if avatar != nil {
-				theme.AvatarIcon(c.Key("avatar"), *avatar, theme.AvatarSmall)
+			if lead != nil {
+				lead()
 			}
 		})
 		sidebarLabel(c, t, label, selected)
