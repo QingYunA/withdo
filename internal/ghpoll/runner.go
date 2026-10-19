@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -38,8 +39,32 @@ func (e *ExitError) Error() string {
 // Output is everything gh printed, for matching against its messages.
 func (e *ExitError) Output() string { return string(e.Stdout) + string(e.Stderr) }
 
-// usualFolders are where gh lives when the app is started from Finder with its short PATH.
-var usualFolders = []string{"/opt/homebrew/bin", "/usr/local/bin"}
+// usualFolders are where gh lives when the app is started with a short PATH
+// (Finder on macOS, Explorer on Windows).
+var usualFolders = func() []string {
+	if runtime.GOOS == "windows" {
+		return []string{`C:\Program Files\GitHub CLI`}
+	}
+	return []string{"/opt/homebrew/bin", "/usr/local/bin"}
+}()
+
+// ghNames are the file names gh can have on this platform. Windows has no
+// execute bit; the extension decides, so gh installs as gh.exe.
+var ghNames = func() []string {
+	if runtime.GOOS == "windows" {
+		return []string{"gh.exe", "gh.cmd", "gh.bat"}
+	}
+	return []string{"gh"}
+}()
+
+// executable reports whether info can be run. Windows files carry no
+// permission bits, so any present file counts there.
+func executable(info os.FileInfo) bool {
+	if runtime.GOOS == "windows" {
+		return true
+	}
+	return info.Mode()&0o111 != 0
+}
 
 // FindGH looks for an executable named gh in each folder of pathEnv (a PATH), then in extra.
 func FindGH(pathEnv string, extra []string) (string, error) {
@@ -48,9 +73,11 @@ func FindGH(pathEnv string, extra []string) (string, error) {
 		if dir == "" {
 			continue
 		}
-		candidate := filepath.Join(dir, "gh")
-		if info, err := os.Stat(candidate); err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
-			return candidate, nil
+		for _, name := range ghNames {
+			candidate := filepath.Join(dir, name)
+			if info, err := os.Stat(candidate); err == nil && !info.IsDir() && executable(info) {
+				return candidate, nil
+			}
 		}
 	}
 	return "", ErrNotInstalled

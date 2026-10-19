@@ -1,6 +1,7 @@
 package views
 
 import (
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,8 +31,12 @@ func withTilde(path, home string) string {
 	if home == "" || home == "/" {
 		return path
 	}
-	if rest, ok := strings.CutPrefix(path, home+"/"); ok {
-		return "~/" + rest
+	// Paths come from filepath.Join on the host OS, but config values may keep
+	// Unix slashes wherever the app runs: accept either separator.
+	for _, sep := range []string{"/", "\\"} {
+		if rest, ok := strings.CutPrefix(path, home+sep); ok {
+			return "~/" + filepath.ToSlash(rest)
+		}
 	}
 	return path
 }

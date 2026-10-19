@@ -2,6 +2,7 @@ package agentsetup
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -34,8 +35,9 @@ func TestGuideNamesTheServerAndFillsInTheCorePath(t *testing.T) {
 }
 
 func TestGuideDefaultsToTheCoreTheKnownAgentsGet(t *testing.T) {
-	env := New("/Users/me")
-	if g := env.Guide(); !strings.Contains(g, env.CorePath()) || !strings.Contains(g, "/Users/me/.local/bin/adhd-core") {
+	env := New(filepath.FromSlash("/Users/me"))
+	want := filepath.Join(env.Home, ".local", "bin", "adhd-core")
+	if g := env.Guide(); !strings.Contains(g, env.CorePath()) || !strings.Contains(g, want) {
 		t.Errorf("the guide does not use %s:\n%s", env.CorePath(), g)
 	}
 }
