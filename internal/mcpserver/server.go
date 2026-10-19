@@ -1,4 +1,4 @@
-// Package mcpserver exposes adhd-todo's core as an MCP server with nine tools.
+// Package mcpserver exposes adhd-todo's core as an MCP server with ten tools.
 package mcpserver
 
 import (
@@ -28,6 +28,7 @@ var Instructions = strings.Join([]string{
 	"Always pass cwd: your current working directory. The server process may run in a different directory, and in a git worktree cwd decides the branch.",
 	"Calls from the same repo and branch update one task, so keep each report to one or two short sentences. Pass task_id if you have it.",
 	"When the user asks you to do an adhd-todo task by its number (\"do #44\"), read it with get_task and report on it with that task_id.",
+	"get_task lists the pictures attached to a task with their file paths; get_task_image shows one by its number.",
 	"When one piece of work covers several adhd-todo tasks (\"do #69 and #70\"), report on each of them with its own task_id, at least when you start and when you finish.",
 	"Please pass title on your first report: a short name for the task. Without it the title is the first sentence of the summary.",
 	"Reports match a task by repo and branch; with no branch (outside git, or a detached HEAD) each report without task_id creates a new task, so pass the task_id of your first report on the rest.",
@@ -48,6 +49,8 @@ type Options struct {
 	// DefaultCwd is used by tools called without cwd; the process's working
 	// directory when empty.
 	DefaultCwd string
+	// ImagesDir is the folder holding the pictures of tasks (paths.ImagesDir).
+	ImagesDir string
 	// Logger receives diagnostics. It must not write to stdout, which belongs
 	// to the stdio transport. Defaults to a text logger on stderr.
 	Logger *slog.Logger
@@ -57,12 +60,13 @@ type Options struct {
 type tools struct {
 	core       *domain.Core
 	defaultCwd string
+	imagesDir  string
 	log        *slog.Logger
 }
 
 // New builds the MCP server over core.
 func New(core *domain.Core, opts Options) *mcp.Server {
-	t := &tools{core: core, defaultCwd: opts.DefaultCwd, log: opts.Logger}
+	t := &tools{core: core, defaultCwd: opts.DefaultCwd, imagesDir: opts.ImagesDir, log: opts.Logger}
 	if t.log == nil {
 		t.log = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
 	}
@@ -78,6 +82,7 @@ func New(core *domain.Core, opts Options) *mcp.Server {
 	t.registerCreateTask(server)
 	t.registerUpdateTask(server)
 	t.registerGetTask(server)
+	t.registerGetTaskImage(server)
 	t.registerListTasks(server)
 	t.registerListCategories(server)
 	t.registerGetOverview(server)

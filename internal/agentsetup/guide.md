@@ -42,7 +42,7 @@ Call `report_progress`:
 - when you open a PR (pr_url, status "review"),
 - when you finish (status "done").
 
-Always pass `cwd`: your current working directory. Pass `task_id` when the user names an adhd-todo task ("do #44"); read it with `get_task` first. When one piece of work covers several tasks, report on each with its own `task_id`. Write summaries in the user's language. Keep each report to one or two short sentences. Do not report trivial questions or read-only exploration.
+Always pass `cwd`: your current working directory. Pass `task_id` when the user names an adhd-todo task ("do #44"); read it with `get_task` first (it lists attached pictures; `get_task_image` shows one). When one piece of work covers several tasks, report on each with its own `task_id`. Write summaries in the user's language. Keep each report to one or two short sentences. Do not report trivial questions or read-only exploration.
 
 ## 6. Optional: a standing rule
 
