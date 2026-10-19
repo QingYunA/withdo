@@ -14,6 +14,19 @@ and the data is one local SQLite file.
 More in [`docs/design/screens/`](docs/design/screens/); the design is specified in
 [`docs/design/ui-spec.md`](docs/design/ui-spec.md).
 
+## Install and update
+
+Install the app once from the DMG of the [latest release](https://github.com/QingYunA/adhd-todo/releases/latest)
+(drag it to Applications; the app is not notarized, so open it the first time with right-click >
+Open). Later versions arrive through **ADHD Todo > Check for Updates…**, and the app checks once a day
+(Settings > General > Software updates).
+
+`adhd-core` comes inside the app: on launch the app links `~/.local/bin/adhd-core`, where the MCP
+registration below points, to its own copy, so an update brings both. It leaves a build of your own
+(one that is as new as the app's) alone. Coding agents keep running the old `adhd-core` until you
+restart them. Without the app, `adhd-core-<version>-macos-universal.tar.gz` on the release is the
+binary by itself.
+
 ## Build
 
 Requires Go 1.27.1 or newer (macOS for the app).
@@ -25,6 +38,10 @@ cd app && go tool mygo build
 # the CLI and MCP server
 go build -o ~/.local/bin/adhd-core ./cmd/adhd-core
 ```
+
+`scripts/build-mac.sh` makes the release files (the universal app with `adhd-core` inside, the signed
+update archive, the DMG and the standalone `adhd-core` tarball) in `app/build/darwin-universal/`; it
+needs the update key, see `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 

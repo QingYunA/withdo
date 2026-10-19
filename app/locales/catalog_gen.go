@@ -7092,6 +7092,48 @@ func (msgs Messages) SettingsSoundEffectsSwitch() string {
 	return Catalog.Format(msgs.locale, "settingsSoundEffectsSwitch", nil)
 }
 
+// SettingsUpdates says "Software updates"
+// in the language the app shows.
+//
+// Label of the updates switch in Settings > General.
+func SettingsUpdates() string { return In(i18n.Locale()).SettingsUpdates() }
+
+// SettingsUpdates says "Software updates"
+// in the language of msgs.
+//
+// Label of the updates switch in Settings > General.
+func (msgs Messages) SettingsUpdates() string {
+	return Catalog.Format(msgs.locale, "settingsUpdates", nil)
+}
+
+// SettingsUpdatesMeta says "Checked once a day; you choose when to install"
+// in the language the app shows.
+//
+// Quiet line under the updates switch.
+func SettingsUpdatesMeta() string { return In(i18n.Locale()).SettingsUpdatesMeta() }
+
+// SettingsUpdatesMeta says "Checked once a day; you choose when to install"
+// in the language of msgs.
+//
+// Quiet line under the updates switch.
+func (msgs Messages) SettingsUpdatesMeta() string {
+	return Catalog.Format(msgs.locale, "settingsUpdatesMeta", nil)
+}
+
+// SettingsUpdatesSwitch says "Automatically check for updates"
+// in the language the app shows.
+//
+// Accessibility label of the updates switch.
+func SettingsUpdatesSwitch() string { return In(i18n.Locale()).SettingsUpdatesSwitch() }
+
+// SettingsUpdatesSwitch says "Automatically check for updates"
+// in the language of msgs.
+//
+// Accessibility label of the updates switch.
+func (msgs Messages) SettingsUpdatesSwitch() string {
+	return Catalog.Format(msgs.locale, "settingsUpdatesSwitch", nil)
+}
+
 // NotifyDayDoneTitle says "Day's done"
 // in the language the app shows.
 //

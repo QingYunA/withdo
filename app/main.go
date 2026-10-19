@@ -13,6 +13,8 @@ import (
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
+	"github.com/egoist/mygo/plugins/updater/native"
 )
 
 const version = "0.4.0"
@@ -45,6 +47,9 @@ func main() {
 	app.Sound, app.SystemSounds, app.WindowKey = theme.LoadVoices(), uiSoundsOn, s.windowKey
 	s.notifier = s.newNotifier()
 
+	// The update window is native UI like the app's own; its choices live in the plugin's updater.json.
+	mygo.Use(native.Plugin)
+	updater.OnChange(s.invalidateSettings)
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })
 	// Hiding the main window must not end the app.
 	mygo.App.OnWindowAllClosed(func() {})
@@ -65,6 +70,9 @@ func main() {
 	})
 	mygo.App.WhenReady(func() {
 		s.setMenu()
+		if dir, err := mygo.App.Path(mygo.PathResources); err == nil {
+			go linkBundledCore(dir, app.Config.AgentSetup.CorePath())
+		}
 		s.createMain()
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go s.notifier.Reminder(r) })

@@ -4,6 +4,7 @@ import (
 	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
 )
 
 // setMenu installs the menu bar: mygo's standard one, with Settings… (⌘,) in the app menu, where
@@ -13,9 +14,11 @@ func (s *shell) setMenu() {
 		ID: "settings", Label: locales.MenuSettings(), Accelerator: "CmdOrCtrl+,",
 		Click: func(*mygo.MenuItem, *mygo.Window) { s.OpenSettings(views.PaneGeneral) },
 	}
+	check := updater.MenuItem()
 	menu := mygo.NewMenu([]*mygo.MenuItem{
 		{Role: mygo.RoleAppMenu, Submenu: []*mygo.MenuItem{
 			{Role: mygo.RoleAbout},
+			check,
 			mygo.Separator(),
 			settings,
 			mygo.Separator(),
@@ -33,5 +36,8 @@ func (s *shell) setMenu() {
 		{Role: mygo.RoleWindowMenu},
 	})
 	mygo.App.SetMenu(menu)
-	mygo.App.OnLocaleChanged(func(string) { settings.SetLabel(locales.MenuSettings()) })
+	mygo.App.OnLocaleChanged(func(string) {
+		settings.SetLabel(locales.MenuSettings())
+		check.SetLabel(updater.MenuItem().Label)
+	})
 }

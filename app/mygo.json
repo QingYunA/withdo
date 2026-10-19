@@ -3,6 +3,10 @@
   "identifier": "dev.adhdtodo.desktop",
   "version": "0.4.0",
   "out": "build",
+  "updates": {
+    "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
+    "github": "QingYunA/adhd-todo"
+  },
   "i18n": {
     "dir": "locales",
     "source": "en"
