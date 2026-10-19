@@ -41,10 +41,16 @@ func (m *Memory) Path() string { return m.path }
 
 // MemoryEdit is one change to the file, with what is needed to take it back.
 type MemoryEdit struct {
-	Text    string // the file after the change
-	Changed int    // notes added (0 or 1) or removed
-	prev    string
-	existed bool
+	Text    string   // the file after the change
+	Changed int      // notes added (0 or 1) or removed
+	added   placed   // the note a remember wrote
+	removed []placed // the notes a forget took out
+	created bool     // the remember made the file
+}
+
+// placed is a note with the heading of the section it is in.
+type placed struct {
+	heading, bullet string
 }
 
 // Text is the whole file; empty when there is none.
@@ -91,17 +97,55 @@ func (m *Memory) write(text string) error {
 	return werr
 }
 
-// Restore puts the file back as it was before e: its text, or no file when there was none.
+// Restore takes back e alone: the note a remember added goes, the notes a forget removed come back
+// to their sections. Later notes and hand edits stay. A file the remember made is removed when that
+// note was all it held.
 func (m *Memory) Restore(e MemoryEdit) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if !e.existed {
-		if err := os.Remove(m.path); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
+	text, _ := m.read()
+	lines := splitLines(text)
+	if e.added.bullet != "" {
+		for i, l := range lines {
+			if strings.TrimSpace(l) == e.added.bullet {
+				lines = append(lines[:i:i], lines[i+1:]...)
+				break
+			}
 		}
-		return nil
+		if e.created && onlyHeadings(lines) {
+			if err := os.Remove(m.path); err != nil && !errors.Is(err, os.ErrNotExist) {
+				return err
+			}
+			return nil
+		}
 	}
-	return m.write(e.prev)
+	for _, p := range e.removed {
+		if !hasNote(lines, p.bullet) {
+			lines = splitLines(insertNote(lines, p.heading, p.bullet))
+		}
+	}
+	return m.write(strings.Join(lines, "\n") + "\n")
+}
+
+// onlyHeadings tells that lines hold nothing but headings and blank lines.
+func onlyHeadings(lines []string) bool {
+	for _, l := range lines {
+		if t := strings.TrimSpace(l); t != "" && !strings.HasPrefix(t, "#") {
+			return false
+		}
+	}
+	return true
+}
+
+// hasNote tells that a bullet saying the same as bullet is in lines.
+func hasNote(lines []string, bullet string) bool {
+	want, _ := bulletOf(bullet)
+	for _, l := range lines {
+		if b, ok := bulletOf(l); ok && normal(b) == normal(want) {
+			return true
+		}
+	}
+	return false
 }
 
 // cleanNote is a note as it is stored: one line, trimmed, without a bullet of its own.
@@ -165,17 +209,16 @@ func (m *Memory) Add(section, note string) (MemoryEdit, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	prev, existed := m.read()
-	edit := MemoryEdit{Text: prev, prev: prev, existed: existed}
+	edit := MemoryEdit{Text: prev}
 	lines := splitLines(prev)
-	for _, l := range lines {
-		if b, ok := bulletOf(l); ok && normal(b) == normal(note) {
-			return edit, nil
-		}
+	if hasNote(lines, "- "+note) {
+		return edit, nil
 	}
 	if countNotes(lines) >= maxNotes {
 		return edit, fmt.Errorf("memory is full (%d notes): merge notes with forget and remember first", maxNotes)
 	}
-	text := insertNote(lines, heading, "- "+note)
+	edit.added, edit.created = placed{heading, "- " + note}, !existed
+	text := insertNote(lines, heading, edit.added.bullet)
 	if len(text) > maxMemoryText {
 		return edit, fmt.Errorf("memory is over %d characters: merge or forget notes first", maxMemoryText)
 	}
@@ -194,12 +237,17 @@ func (m *Memory) Forget(match string) (MemoryEdit, error) {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	prev, existed := m.read()
-	edit := MemoryEdit{Text: prev, prev: prev, existed: existed}
+	prev, _ := m.read()
+	edit := MemoryEdit{Text: prev}
 	var kept []string
+	heading := headingPrefs // a note above every heading goes back under the preferences
 	for _, l := range splitLines(prev) {
+		if t := strings.TrimSpace(l); strings.HasPrefix(t, "#") {
+			heading = t
+		}
 		if b, ok := bulletOf(l); ok && strings.Contains(strings.ToLower(b), match) {
 			edit.Changed++
+			edit.removed = append(edit.removed, placed{heading, "- " + b})
 			continue
 		}
 		kept = append(kept, l)

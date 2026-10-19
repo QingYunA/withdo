@@ -683,7 +683,8 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   corrections and stated preferences are saved with `remember`, removed with `forget`, at most 40
   notes / 4000 characters, 200 per note. A write needs no confirmation: its receipt is a line like
   any other, `✓ Remembered Fitness is Life, not Work   Undo` (`✓ Forgot …`), with no task to open;
-  Undo restores the file as it was. Settings > Assistant ends with an **Assistant memory** row and
+  Undo takes back that edit alone: a remembered note goes, forgotten notes come back; later notes
+  and hand edits stay. Settings > Assistant ends with an **Assistant memory** row and
   an `Open file` link (the data folder when nothing is written yet).
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,

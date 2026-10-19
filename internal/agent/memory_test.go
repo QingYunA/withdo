@@ -136,3 +136,72 @@ func TestMemoryKeepsHandEditsAndRestores(t *testing.T) {
 		t.Errorf("file left behind: %v", err)
 	}
 }
+
+// TestUndoingAForgetKeepsALaterNote: undoing only the forget of "forget, then remember" brings the
+// old note back and keeps the new one, instead of rolling the file back past the remember.
+func TestUndoingAForgetKeepsALaterNote(t *testing.T) {
+	m := newMem(t)
+	mustAdd(t, m, "about", "叫我 Cyan")
+	mustAdd(t, m, "prefs", "健身归「工作」类")
+	forgot, err := m.Forget("健身")
+	if err != nil || forgot.Changed != 1 {
+		t.Fatalf("forget: %+v %v", forgot, err)
+	}
+	mustAdd(t, m, "prefs", "健身归「生活」类")
+	if err := m.Restore(forgot); err != nil {
+		t.Fatal(err)
+	}
+	contains(t, "file", m.Text(), "## 纠正与偏好\n- 健身归「生活」类\n- 健身归「工作」类")
+	contains(t, "file", m.Text(), "## 关于我\n- 叫我 Cyan")
+}
+
+// TestUndoingARememberKeepsLaterHandEdits: undoing a remember takes out that note only.
+func TestUndoingARememberKeepsLaterHandEdits(t *testing.T) {
+	m := newMem(t)
+	e := mustAdd(t, m, "prefs", "新的")
+	if err := os.WriteFile(m.Path(), []byte(m.Text()+"- 后来手写的\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Restore(e); err != nil {
+		t.Fatal(err)
+	}
+	if text := m.Text(); strings.Contains(text, "新的") || !strings.Contains(text, "- 后来手写的") {
+		t.Errorf("file:\n%s", text)
+	}
+}
+
+// TestUndoingARememberKeepsAFileWithHandWrittenText: the file the remember made stays once the
+// user has written in it.
+func TestUndoingARememberKeepsAFileWithHandWrittenText(t *testing.T) {
+	m := newMem(t)
+	e := mustAdd(t, m, "about", "x")
+	if err := os.WriteFile(m.Path(), []byte(m.Text()+"\n随手写的一段\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Restore(e); err != nil {
+		t.Fatal(err)
+	}
+	if text := m.Text(); strings.Contains(text, "- x") || !strings.Contains(text, "随手写的一段") {
+		t.Errorf("file:\n%s", text)
+	}
+}
+
+// TestUndoingAForgetOfANoteAboveTheHeadingsFilesItUnderPreferences: a note the user wrote above
+// every heading comes back in the preferences section.
+func TestUndoingAForgetOfANoteAboveTheHeadingsFilesItUnderPreferences(t *testing.T) {
+	m := newMem(t)
+	if err := os.MkdirAll(filepath.Dir(m.Path()), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(m.Path(), []byte("- 顶上的\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	e, err := m.Forget("顶上")
+	if err != nil || e.Changed != 1 {
+		t.Fatalf("forget: %+v %v", e, err)
+	}
+	if err := m.Restore(e); err != nil {
+		t.Fatal(err)
+	}
+	contains(t, "file", m.Text(), "## 纠正与偏好\n- 顶上的")
+}
