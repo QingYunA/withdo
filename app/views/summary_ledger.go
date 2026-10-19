@@ -145,10 +145,14 @@ func (m *Main) shippedLabel(p data.Period) string {
 func (m *Main) ledgerCount(c *ui.Context, t *theme.Tokens, shown, final int, total bool) {
 	ink := t.Text
 	ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, ledgerCountStyle, ink, itoa(shown)).Width(float32(8*len(itoa(final)) + 4)).TextAlign(ui.End)
+		theme.Text(c, ledgerCountStyle, ink, itoa(shown)).Width(ledgerCountWidth(final)).TextAlign(ui.End)
 		theme.Text(c, theme.Meta, t.TextTertiary, m.say.SummaryUnit(final)).Shrink(0)
 	})
 }
+
+// ledgerCountWidth is the width of the box a count of n is drawn in: room for the widest bold digits
+// of the number, so the count does not shift as it runs up and is never cut to an ellipsis.
+func ledgerCountWidth(n int) float32 { return float32(10*len(itoa(n)) + 2) }
 
 // leader is the dotted line between a name and its count: 2 pt dots, 4 pt apart.
 func leader(c *ui.Context, t *theme.Tokens) {
