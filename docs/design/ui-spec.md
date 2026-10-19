@@ -1017,12 +1017,18 @@ v20 (`docs/design/mockups/v20.html`, #75). Every task list can hold several task
 them together: Mine, a project (list, two columns, board cards), the Inbox, Agents, Completed and
 search results. Calendar and Summary do not select.
 
-- **Select button.** At the right of the page title, `Select` / `选择` (the pixel checkbox icon,
+- **Select button.** At the right of the page title, `Select` / `多选` (the pixel checkbox icon,
   quiet like the title row's other buttons) enters select mode: each row's status glyph becomes a
   pixel checkbox, a click ticks or unticks the row instead of opening the inspector, and the title
   row reads `2 selected` / `已选 2 件` · `Select all` / `全选` · `Done` / `完成`. `Done`, `Esc`, or
   finishing a bulk action leaves select mode. The first time the user ⌘-clicks in a list, the
   Select button flashes once (two 100 ms frames), so the button is found.
+  A project drawn as two columns has no button in its title row: each column head (Mine, Agents) has
+  its own `Select` / `多选` at its right end. It enters select mode for that column's rows only (a
+  click on the other column's rows still opens them, `Select all` and `⌘A` take the column's rows),
+  and the other column's button is hidden meanwhile; the count, `Select all` and `Done` appear in the
+  head of the column that is in select mode. Pages with no column heads (Mine, Inbox, a board,
+  Agents, Completed, search) keep the button in the title row.
 - **Without the mode**: `⌘`-click adds or removes a row, `⇧`-click selects from the last clicked row
   to this one, `⇧↑ ⇧↓` extend from the keyboard row, `⌘A` selects every row of the page. A plain
   click opens the inspector and makes that row the only one selected, as before. `Esc` clears the
@@ -1063,7 +1069,7 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   row, as before; a plain click or a plain arrow leaves it empty. A `⌘`-click with nothing ticked
   counts the keyboard row as the first one. `Esc` clears the selection, and leaves select mode,
   before it does anything else.
-- **Select button** is the first of the title row's controls, before the milestone menu and the
+- **Select button** (a page without column heads) is the first of the title row's controls, before the milestone menu and the
   List | Board switch; not drawn on an empty page. The flash is remembered per page for the run of
   the app, and skipped with Reduce Motion. In select mode a row without a status glyph (a list, the
   columns, Agents, a board card) shows the checkbox where its author's avatar was (12 pt on a card);
