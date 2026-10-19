@@ -1650,7 +1650,7 @@ update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off
 - **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
   checks run once a day, the first 10 s after launch when one is due, and never in a development build.
 - **The switch**: Settings > General > Software updates (below).
-- `adhd-core` is inside the app and updates with it; see `docs/plans/m10-auto-update.md`.
+- `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
 
 ### Settings
 

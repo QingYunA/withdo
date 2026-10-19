@@ -1,5 +1,5 @@
 // Package corelink keeps the stable adhd-core path the coding agents run ($HOME/.local/bin/adhd-core)
-// pointing at the adhd-core inside the app bundle, so that it updates with the app.
+// pointing at the app's executable, which is adhd-core too, so that it updates with the app.
 package corelink
 
 import (

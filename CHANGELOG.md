@@ -3,6 +3,11 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.5.1
+
+- **A smaller download.** adhd-core is now the app's own program instead of a second copy inside it,
+  so the DMG is about 8 MB smaller. `~/.local/bin/adhd-core` is repointed on the next launch.
+
 ## 0.5.0
 
 Upgrading from 0.4.0: quit your coding agents first and back up `~/Library/Application Support/adhd-todo/`.
@@ -21,7 +26,7 @@ the app points `~/.local/bin/adhd-core` at its own copy (the old file is kept as
 - **Summary**: quiet sound effects while the day is shipped (Settings > General can mute them), and
   six people in the scene, with figures of their own for Gemini, Cursor, Copilot and OpenCode.
 - Fixes: completing a task from a grouped list by its hover glyph, the Summary ledger's two-digit
-  counts, and the test suite and SQLite on Windows.
+  counts, undoing a delete keeps subtasks under their parent, and the test suite and SQLite on Windows.
 
 ## 0.4.0
 

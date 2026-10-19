@@ -1,11 +1,17 @@
-package main
+// Package cli is adhd-core, the command line: an MCP server for coding agents (mcp) and a plain-text
+// report of what they are doing (overview). The standalone cmd/adhd-core and the app, which is
+// adhd-core too when run under that name or with one of its commands, both call Main.
+package cli
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"runtime"
+	"slices"
+	"syscall"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -32,6 +38,20 @@ const (
 	exitError = 1
 	exitUsage = 2
 )
+
+// commands are the first arguments adhd-core answers to; the app uses them to tell a command line from a launch.
+var commands = []string{"mcp", "overview", "guide", "version", "--version", "help", "--help", "-h"}
+
+// IsCommand reports whether arg is one of adhd-core's own commands or flags.
+func IsCommand(arg string) bool { return slices.Contains(commands, arg) }
+
+// Main runs adhd-core on the process's environment until it ends or is interrupted, and returns
+// the exit code.
+func Main(args []string) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return run(ctx, args, defaultDeps())
+}
 
 // deps is everything run needs from the outside world, so tests can fake it.
 type deps struct {
