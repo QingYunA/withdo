@@ -61,6 +61,9 @@ func undoCreate(core *domain.Core, id int64) func(context.Context) error {
 func undoPatch(core *domain.Core, before domain.Task, applied domain.TaskPatch) func(context.Context) error {
 	revert := revertPatch(before, applied)
 	return func(ctx context.Context) error {
+		if err := dropGoneCategory(ctx, core, &revert); err != nil {
+			return err
+		}
 		if _, err := core.UpdateTask(ctx, before.ID, revert); err != nil {
 			if domain.IsNotFound(err) {
 				return fmt.Errorf("the task no longer exists")
@@ -69,6 +72,25 @@ func undoPatch(core *domain.Core, before domain.Task, applied domain.TaskPatch) 
 		}
 		return nil
 	}
+}
+
+// dropGoneCategory turns a revert to a category that was deleted meanwhile into leaving the task
+// unsorted, which is where the deletion left every other task of it.
+func dropGoneCategory(ctx context.Context, core *domain.Core, revert *domain.TaskPatch) error {
+	if !revert.CategoryID.Present || revert.CategoryID.Value == nil {
+		return nil
+	}
+	cats, err := core.ListCategories(ctx)
+	if err != nil {
+		return err
+	}
+	for _, c := range cats {
+		if c.ID == *revert.CategoryID.Value {
+			return nil
+		}
+	}
+	revert.CategoryID = domain.Clear[int64]()
+	return nil
 }
 
 // revertPatch is the patch that undoes applied on a task that looked like before.
@@ -83,7 +105,7 @@ func revertPatch(before domain.Task, applied domain.TaskPatch) domain.TaskPatch 
 	if applied.Priority != nil {
 		r.Priority = &before.Priority
 	}
-	r.Category = restore(applied.Category, before.Category)
+	r.CategoryID = restore(applied.CategoryID, before.CategoryID)
 	r.Notes = restore(applied.Notes, before.Notes)
 	r.ProjectID = restore(applied.ProjectID, before.ProjectID)
 	r.MilestoneID = restore(applied.MilestoneID, before.MilestoneID)

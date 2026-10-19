@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -166,22 +167,26 @@ func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox,
 	if err != nil {
 		return nil, nil, fmt.Errorf("list projects: %w", err)
 	}
+	categories, err := a.cfg.Core.ListCategories(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("list categories: %w", err)
+	}
 	focus, err := a.focusOf(ctx, scope)
 	if err != nil {
 		return nil, nil, err
 	}
-	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects, images: images}
+	tb := &toolbox{core: a.cfg.Core, now: a.cfg.Now, journal: a.journal, projects: projects, categories: categories, images: images}
 	if p, ok := activeProject(projects, scope.ProjectID); ok && scope.Kind == ScopeProject {
 		tb.defaultProject = &p.ID
 	}
-	if scope.Kind == ScopeNow && scope.Category.Valid() {
-		tb.defaultCategory = &scope.Category
+	if scope.Kind == ScopeNow && slices.ContainsFunc(categories, func(c domain.Category) bool { return c.ID == scope.CategoryID }) {
+		tb.defaultCategory = &scope.CategoryID
 	}
 	tools, direct, err := tb.tools()
 	if err != nil {
 		return nil, nil, err
 	}
-	prompt := BuildPrompt(a.cfg.Now(), projects, scope, focus) + imageRules(images)
+	prompt := BuildPrompt(a.cfg.Now(), projects, categories, scope, focus) + imageRules(images)
 	ag, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
 		Name: "adhd-todo", Description: "Turns requests into task changes.",
 		Instruction: prompt, Model: m, MaxIterations: maxIterations,

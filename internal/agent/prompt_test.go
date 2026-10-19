@@ -11,7 +11,7 @@ import (
 func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
 	loc := loadZone(t, "Asia/Shanghai")
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, loc)
-	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}, {ID: 4, Name: "picpocket"}}, Scope{}, nil)
+	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}, {ID: 4, Name: "picpocket"}}, nil, Scope{}, nil)
 	for _, want := range []string{
 		"Wednesday, 2026-10-14 14:30",
 		"Asia/Shanghai",
@@ -34,29 +34,40 @@ func TestPromptHasClockZoneProjectsAndLanguageRule(t *testing.T) {
 // The user writes Chinese as often as English, so the inference rules carry the Chinese words too,
 // and one message may hold several tasks or report one done.
 func TestPromptInfersFromChineseAndSplitsLists(t *testing.T) {
-	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, nil, Scope{}, nil)
 	for _, want := range []string{"紧急", "不急", "线上挂了", "明早", "下班前", "周末", "separate tasks", "complete_task", "Titles are short"} {
 		contains(t, "prompt", p, want)
 	}
 }
 
-// A new task is classified as work or life from its words; the rule says when to leave it out.
-func TestPromptClassifiesTasksAsWorkOrLife(t *testing.T) {
-	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
-	for _, want := range []string{"category", "work or life", "交房租", "写周报", "repository"} {
+// A new task is sorted into one of the user's categories from its words; the rule says when to
+// leave it out, and the prompt lists the categories so the model never invents one.
+func TestPromptClassifiesTasksIntoTheUsersCategories(t *testing.T) {
+	cats := []domain.Category{
+		{ID: 1, Builtin: domain.BuiltinWork, Name: "Work"}, {ID: 2, Builtin: domain.BuiltinLife, Name: "Life"},
+		{ID: 3, Name: "Reading"},
+	}
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, cats, Scope{}, nil)
+	for _, want := range []string{
+		"Categories (use these names, never invent one): Work (工作), Life (生活), Reading.",
+		"category", "one of the categories above", "交房租", "写周报", "repository",
+	} {
 		contains(t, "prompt", p, want)
+	}
+	if strings.Contains(p, "work or life") {
+		t.Errorf("the rule still says work or life:\n%s", p)
 	}
 }
 
 func TestPromptWithoutProjects(t *testing.T) {
-	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, nil, Scope{}, nil)
 	contains(t, "prompt", p, "none yet")
 	contains(t, "prompt", p, "UTC+00:00")
 }
 
 func TestPromptSkipsArchivedProjects(t *testing.T) {
 	arch := "2026-01-01T00:00:00.000Z"
-	p := BuildPrompt(time.Now(), []domain.Project{{ID: 1, Name: "live"}, {ID: 2, Name: "gone", ArchivedAt: &arch}}, Scope{}, nil)
+	p := BuildPrompt(time.Now(), []domain.Project{{ID: 1, Name: "live"}, {ID: 2, Name: "gone", ArchivedAt: &arch}}, nil, Scope{}, nil)
 	contains(t, "prompt", p, "live")
 	if strings.Contains(p, "gone") {
 		t.Error("archived project listed")
@@ -66,7 +77,7 @@ func TestPromptSkipsArchivedProjects(t *testing.T) {
 func TestPromptSpellsOutDaylightSavingChange(t *testing.T) {
 	loc := loadZone(t, "America/New_York")
 	now := time.Date(2026, 3, 7, 20, 0, 0, 0, loc) // the evening before the clocks go forward
-	p := BuildPrompt(now, nil, Scope{}, nil)
+	p := BuildPrompt(now, nil, nil, Scope{}, nil)
 	contains(t, "prompt", p, "-05:00 today and changes")
 	contains(t, "prompt", p, "-04:00 from 2026-03-08")
 	contains(t, "prompt", p, "Sun 2026-03-08")
