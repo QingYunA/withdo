@@ -7,6 +7,10 @@ fails when the file has no such section. The release PR bumps the version and fi
 
 The last version to install by hand: from here on the app updates itself.
 
+Upgrading from 0.4.0: quit your coding agents first and back up `~/Library/Application Support/adhd-todo/`.
+The database moves from schema 11 to 13, which 0.4.0's adhd-core cannot read; on its first launch
+the app points `~/.local/bin/adhd-core` at its own copy (the old file is kept as `adhd-core.old`).
+
 - **Automatic updates.** "Check for Updates…" in the app menu, and a daily background check with the
   usual window: release notes, Install Update, Remind Me Later, Skip This Version. Turn the
   background checks off in Settings > General > Software updates.
@@ -19,12 +23,14 @@ The last version to install by hand: from here on the app updates itself.
 - **Sub-projects**: a project can hang under another in the sidebar (right-click > New sub-project).
 - **Recent changes**, a page off by default (Settings > General > Pages) that reads your projects'
   repositories with `gh` and has the assistant explain what merged.
+- **Summary**: quiet sound effects while the day is shipped (Settings > General can mute them), and
+  six people in the scene, with figures of their own for Gemini, Cursor, Copilot and OpenCode.
 - Fixes: completing a task from a grouped list by its hover glyph, the Summary ledger's two-digit
   counts, and the test suite and SQLite on Windows.
 
 ## 0.4.0
 
-- **Summary page**: the day's and the week's shipping, an end-of-day reminder, quiet sound effects.
+- **Summary page**: the day's and the week's shipping, and an end-of-day reminder.
 - **Pictures on tasks**, and **selecting several tasks** to act on them together, each with undo.
 - **Pages from agents**: an agent can attach an HTML report or a design draft to its report.
 - **System notifications** when an agent finishes or gets stuck, or a pull request fails or merges.
