@@ -51,6 +51,7 @@ func fromProject(p domain.Project) Project {
 	return Project{
 		ID: int(p.ID), Name: p.Name, RepoSlug: str(p.RepoSlug), RepoPath: str(p.RepoPath),
 		CreatedAt: parseTime(p.CreatedAt), UpdatedAt: parseTime(p.UpdatedAt), ArchivedAt: parseTimePtr(p.ArchivedAt),
+		ParentID: intPtr(p.ParentID),
 	}
 }
 

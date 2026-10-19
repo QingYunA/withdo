@@ -11,7 +11,9 @@ import (
 var _ Manager = (*Real)(nil)
 
 func (r *Real) CreateProject(in NewProject) (Project, error) {
-	p, err := r.core.CreateProject(r.ctx(), domain.CreateProjectInput{Name: in.Name, RepoSlug: in.RepoSlug})
+	p, err := r.core.CreateProject(r.ctx(), domain.CreateProjectInput{
+		Name: in.Name, RepoSlug: in.RepoSlug, ParentID: int64Ptr(in.ParentID),
+	})
 	if err != nil {
 		return Project{}, r.projectProblem(err, in)
 	}

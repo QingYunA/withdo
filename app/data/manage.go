@@ -45,10 +45,11 @@ type TaskSnapshot struct {
 	raw     any      // the store's own form
 }
 
-// NewProject is what the New project sheet sends.
+// NewProject is what the New project sheet sends. ParentID makes it a sub-project of that project.
 type NewProject struct {
 	Name     string
 	RepoSlug string // owner/repo, or empty
+	ParentID *int
 }
 
 // Removed counts what DeleteProject took with the project.
