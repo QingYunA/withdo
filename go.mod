@@ -8,6 +8,7 @@ require (
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.13
 	github.com/egoist/mygo v0.5.1
 	github.com/google/jsonschema-go v0.4.3
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	golang.org/x/image v0.46.0
 	modernc.org/sqlite v1.60.1
@@ -29,6 +30,9 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/goph/emperror v0.17.2 // indirect
 	github.com/invopop/jsonschema v0.14.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -42,6 +46,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

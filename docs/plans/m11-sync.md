@@ -163,8 +163,16 @@ Push rules (Replicache's, adapted):
   is deleted is ignored (delete wins). A put of a new row needs `row_id` below the workspace's
   `id_counters.next` for that entity, or the workspace empty-snapshot rule below; else 409.
 - `delete` marks the row deleted (`data` NULL), keeps it as a tombstone, sets `version`.
-- **Snapshot**: while a workspace has no rows, the first device may push puts with any ids; after
-  that push, `id_counters.next` for each entity is raised above the largest id seen.
+- **Seeding** (the first device's snapshot, which spans many pushes): `POST /v1/devices` on a
+  workspace with no rows and no seeding device registers the device with `devices.seeding = true`
+  and answers `seeding: true`. A seeding device's puts of new rows may use any ids; every push
+  raises `id_counters.next` above the largest id it wrote. While a workspace has a seeding device,
+  every other device's push, pull and `POST /v1/ids` is 409 `workspace is seeding` (they retry).
+  `POST /v1/devices/seeded {device_id}` (only the seeding device) ends it. A new registration by the
+  same user while a device is seeding takes the seeding over (the old device stops seeding), so a
+  client that crashed before it kept its device id can start again.
+- JSON numbers are decoded with `UseNumber` everywhere the server merges or forwards `data`, so ids
+  above 2^53 survive.
 - Request bodies are limited (8 MiB); a push is at most 1000 mutations.
 
 Pull rules: changes with `version > cookie` in version order, at most `limit` (default 500, max

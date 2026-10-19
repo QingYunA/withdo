@@ -10,6 +10,21 @@ jobs:
     # Linux, not macOS: the repo is private and Linux minutes cost the least. mygo is pure Go and
     # its tester renders headless, so the app tests run here too.
     runs-on: ubuntu-latest
+    services:
+      # The sync server's Postgres tests create a schema per test; without this service they skip.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: adhd_sync_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -19,3 +34,5 @@ jobs:
       # The Chinese tests measure Han glyphs, so they need a CJK font like the Mac's PingFang.
       - run: sudo apt-get update && sudo apt-get install -y libpangocairo-1.0-0 fonts-noto-cjk
       - run: scripts/check.sh full
+        env:
+          ADHD_SYNC_TEST_DATABASE_URL: postgres://postgres:dev@127.0.0.1:5432/adhd_sync_test?sslmode=disable
