@@ -18,8 +18,7 @@ import (
 // hundred inputs; the result is one mono 48 kHz 16-bit WAV that render.sh encodes.
 
 const (
-	promoRate     = 48000
-	promoDuration = 28.0 // seconds of the video
+	promoRate = 48000
 	// promoGainDB lifts the scene's quiet sounds (peaks about -18 dBFS in the app) so that they are
 	// heard on a video: still well under full scale.
 	promoGainDB = 9.0
@@ -50,7 +49,7 @@ func readWAV(path string) ([]float64, error) {
 // promoMix is the WAV of the whole video's sound.
 func promoMix(t *testing.T, track promoTrack) []byte {
 	t.Helper()
-	mix := make([]float64, int(promoDuration*promoRate))
+	mix := make([]float64, int(track.Total*promoRate))
 	files := map[string][]float64{}
 	for _, cue := range track.Cues {
 		src, ok := files[cue.Sound]

@@ -28,9 +28,9 @@ import (
 const (
 	promoW, promoH = 3840, 2160
 	promoSceneCell = 27 // px of one cell of the scene
-	// The window sits centred on the backdrop, at 1:1 (2200 x 1440).
-	promoWinX, promoWinY = (promoW - 2200) / 2, (promoH - 1440) / 2
-	promoDim             = 0.42 // what is left of the backdrop's light behind the window
+	promoScale     = 2  // the cards are drawn at 1920 x 1080 points, 2x
+	// The window sits centred on the backdrop (promoWinX, promoWinY in promo_frames_test.go).
+	promoDim = 0.42 // what is left of the backdrop's light behind the window
 
 	titleLen = 2.6 // seconds of title frames: the cut into the window crossfades from 2.4 s
 )
@@ -68,7 +68,7 @@ func promoBackdrop(t *testing.T, dim float64, shadowed bool) *image.RGBA {
 	}
 	if shadowed {
 		// The shadow of helpers_test, wider and lower: a window floating well above the desktop.
-		shadow(out, image.Rect(promoWinX, promoWinY+50, promoWinX+2200, promoWinY+1440+50), 200, true)
+		shadow(out, image.Rect(promoWinX, promoWinY+50, promoWinX+promoWinPxW, promoWinY+promoWinPxH+50), 200, true)
 	}
 	return out
 }
