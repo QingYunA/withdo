@@ -111,3 +111,88 @@ All existing tests keep passing; `scripts/check.sh full` exits 0.
 ### Out of scope for S1
 
 Networking, linking a device, the server, images and summaries, Settings UI, Android.
+
+## S2a: the sync server
+
+A Go HTTP service, `cmd/adhd-sync`, with its logic in `internal/syncserver` and the wire types in
+`internal/syncproto` (shared with the S2b client). Postgres through `github.com/jackc/pgx/v5`
+(`pgxpool`). No client, no UI, no OIDC yet.
+
+### Data (Postgres, migrations embedded and applied at start, like `internal/store`)
+
+- `users(id BIGSERIAL PK, subject TEXT UNIQUE NOT NULL, created_at)`: `subject` is the OIDC `sub`.
+- `workspaces(id BIGSERIAL PK, owner_id → users, created_at)`: one per user for now, made on the
+  user's first request.
+- `devices(id TEXT PK, workspace_id, user_id, name, last_mutation_id BIGINT NOT NULL DEFAULT 0,
+  created_at)`: `id` is a random UUID the server makes.
+- `rows(workspace_id, entity TEXT, row_id BIGINT, data JSONB, deleted BOOL NOT NULL DEFAULT false,
+  version BIGINT NOT NULL, PK (workspace_id, entity, row_id))`, index `(workspace_id, version)`.
+- `workspace_versions(workspace_id PK, version BIGINT NOT NULL)`: the workspace's clock; each push
+  transaction takes the next value for every row it changes.
+- `id_counters(workspace_id, entity, next BIGINT NOT NULL, PK (workspace_id, entity))`.
+
+### Entities and columns
+
+The server knows the five S1 entities and, for each, its synced columns (the S1 trigger lists;
+put them once in `internal/syncproto`, with a test that compares them with the triggers of
+migration 014 so the two cannot drift). Anything else is rejected with 400.
+
+### Auth
+
+`Authenticator` interface: request → user subject, or 401. S2a ships `StaticTokens` (a map of bearer
+token → subject, from a file named by a flag) for development and tests; S4 adds OIDC. Every
+query is scoped to the caller's workspace; a device id that belongs to another user is 403.
+
+### Endpoints (JSON; all need a bearer token)
+
+| Method and path | Request | Response |
+|---|---|---|
+| `POST /v1/devices` | `{name}` | `{device_id, workspace_id, empty}` — `empty` is true when the workspace has no rows yet |
+| `POST /v1/ids` | `{device_id, entity, count}` (1–10000) | `{start, end}` — a fresh half-open block from `id_counters` |
+| `POST /v1/push` | `{device_id, mutations: [{id, entity, row_id, op, data}]}` | `{last_mutation_id}` |
+| `GET /v1/pull?device_id=&cookie=&limit=` | | `{cookie, last_mutation_id, changes: [{entity, row_id, deleted, data, version}], more}` |
+| `GET /v1/events?device_id=` | | SSE: an event `poke` when the workspace's version rises |
+| `GET /healthz` | | `ok`, no auth |
+
+Push rules (Replicache's, adapted):
+- Mutations are applied in order in **one transaction**, with the device's `last_mutation_id`
+  updated in the same transaction. A mutation whose `id` is not above `last_mutation_id` is skipped
+  (already applied); ids must rise within a request, else 400 and nothing is applied.
+- `put` merges `data` (column → value, only synced columns of the entity, else 400) into the row's
+  `data`, column by column (last write wins in server order), and sets `version`. A put on a row that
+  is deleted is ignored (delete wins). A put of a new row needs `row_id` below the workspace's
+  `id_counters.next` for that entity, or the workspace empty-snapshot rule below; else 409.
+- `delete` marks the row deleted (`data` NULL), keeps it as a tombstone, sets `version`.
+- **Snapshot**: while a workspace has no rows, the first device may push puts with any ids; after
+  that push, `id_counters.next` for each entity is raised above the largest id seen.
+- Request bodies are limited (8 MiB); a push is at most 1000 mutations.
+
+Pull rules: changes with `version > cookie` in version order, at most `limit` (default 500, max
+1000); `cookie` in the response is the last change's version (or the current version when there are
+none), `more` says whether more remain. `last_mutation_id` is the calling device's, read in the same
+transaction as the changes. A cookie above the workspace's version is 409 (the client resets).
+
+### Tests (acceptance)
+
+Postgres tests run when `ADHD_SYNC_TEST_DATABASE_URL` is set and are skipped otherwise; each test
+uses its own schema or database so they can run in parallel. CI gets a `postgres:17` service and
+sets the variable.
+
+1. **Isolation**: two users' devices never see or change each other's rows; another user's device
+   id is 403; a missing or unknown token is 401.
+2. **Push idempotency**: the same push sent twice applies once; a lower or equal mutation id is
+   skipped; falling ids in one request are 400 and change nothing.
+3. **Column merge**: two devices put different columns of one row; both survive. Two devices put the
+   same column; the later push wins.
+4. **Delete wins**: a put after a delete leaves the row deleted.
+5. **Ids**: blocks from `POST /v1/ids` never overlap, across devices and concurrent requests; a put
+   of a new row outside any leased range is 409; the snapshot push raises the counters.
+6. **Pull**: paging with `limit` returns every change once, in version order, with a correct `more`;
+   a cookie from the future is 409; `last_mutation_id` matches the push.
+7. **Columns**: an unknown entity or column is 400; the column lists match the triggers of
+   migration 014.
+8. **Events**: a push to the workspace wakes an open `/v1/events` stream of another device of it,
+   and not one of another workspace.
+9. `cmd/adhd-sync` starts with `-addr`, `-database-url`, `-tokens`; `GET /healthz` answers.
+
+`scripts/check.sh full` exits 0 with and without the Postgres variable.
