@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(13),
+		"PRAGMA user_version": int64(14),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 13 {
-		t.Errorf("SchemaVersion = %d, want 13", store.SchemaVersion())
+	if store.SchemaVersion() != 14 {
+		t.Errorf("SchemaVersion = %d, want 14", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 14 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 14 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -276,7 +276,7 @@ func TestVersionEightDatabaseGainsProjectParent(t *testing.T) {
 
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 14"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 15"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -378,8 +378,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
-		t.Fatalf("user_version = %d, want 13 (migrations 005 to 013 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 14 {
+		t.Fatalf("user_version = %d, want 14 (migrations 005 to 014 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -491,7 +491,7 @@ func TestMigration012MovesTaskCategoriesToTheCategoriesTable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 14 {
 		t.Fatalf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM pragma_table_info('tasks') WHERE name = 'category'"); n != 0 {

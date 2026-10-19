@@ -98,6 +98,16 @@ Synced tables in S1: `projects`, `milestones`, `tasks`, `reports`, `categories`.
 
 All existing tests keep passing; `scripts/check.sh full` exits 0.
 
+### As built (S1)
+
+- Five INSERT sites take block ids (`insertTask`, milestones, user categories, `insertProject`, reports);
+  `restore.go` keeps the original ids.
+- `findOrCreateByGit` no longer touches `projects.updated_at` when only `repo_path` changes, so a
+  device-local change records nothing. Nothing sorts projects by `updated_at`.
+- There is no exported project reparent; `CreateProject` with a parent covers `parent_id`.
+- `Outbox(upTo)` / `DeleteOutbox(upTo)` read and acknowledge through a seq; `ApplyChanges` runs a
+  write with `applying` set and clears it in the same transaction.
+
 ### Out of scope for S1
 
 Networking, linking a device, the server, images and summaries, Settings UI, Android.

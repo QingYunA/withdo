@@ -144,15 +144,19 @@ func (c *Core) insertTask(ctx context.Context, q store.Querier, in CreateTaskInp
 	if err := checkCategoryRef(ctx, q, in.CategoryID); err != nil {
 		return nil, err
 	}
+	newID, err := c.syncID(ctx, q, "tasks")
+	if err != nil {
+		return nil, err
+	}
 	ts := c.stamp()
 	var completed *string
 	if in.Status.Terminal() {
 		completed = &ts
 	}
-	res, err := q.ExecContext(ctx, `INSERT INTO tasks (project_id, milestone_id, title, notes, status, priority,
+	res, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status, priority,
 		due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at, parent_id, category_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		projectID, in.MilestoneID, in.Title, in.Notes, in.Status, in.Priority,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		newID, projectID, in.MilestoneID, in.Title, in.Notes, in.Status, in.Priority,
 		in.DueAt, in.RemindAt, in.Branch, in.PRURL, prNumber(in.PRURL), in.Source, ts, ts, completed, in.ParentID, in.CategoryID)
 	if err != nil {
 		return nil, fmt.Errorf("insert task: %w", err)

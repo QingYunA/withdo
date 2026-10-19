@@ -43,8 +43,12 @@ func (c *Core) CreateMilestone(ctx context.Context, in CreateMilestoneInput) (*M
 		if p == nil {
 			return notFound("project_id", "project", in.ProjectID)
 		}
-		res, err := q.ExecContext(ctx, "INSERT INTO milestones (project_id, title, due_at, created_at) VALUES (?, ?, ?, ?)",
-			in.ProjectID, in.Title, in.DueAt, c.stamp())
+		newID, err := c.syncID(ctx, q, "milestones")
+		if err != nil {
+			return err
+		}
+		res, err := q.ExecContext(ctx, "INSERT INTO milestones (id, project_id, title, due_at, created_at) VALUES (?, ?, ?, ?, ?)",
+			newID, in.ProjectID, in.Title, in.DueAt, c.stamp())
 		if err != nil {
 			return fmt.Errorf("insert milestone: %w", err)
 		}
