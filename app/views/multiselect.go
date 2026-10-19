@@ -23,7 +23,7 @@ func (m *Main) rowClicked(row ui.Element, id int) bool {
 		m.sel = m.multi.Toggle(id, m.sel)
 	case mods&ui.Shift != 0:
 		m.sel = m.multi.Reach(id, m.sel)
-	case m.multi.Mode():
+	case m.multi.Picks(id):
 		m.sel = m.multi.Toggle(id, m.sel)
 	default:
 		return true

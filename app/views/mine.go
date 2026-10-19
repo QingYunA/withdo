@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -44,7 +45,9 @@ func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, con
 			theme.Text(c, theme.Body, t.TextTertiary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
 		ui.Spacer(c)
-		m.selectControls(c, t)
+		if m.pg.Kind != page.KindColumns { // there each column's head has it
+			m.selectControls(c, t)
+		}
 		if controls != nil {
 			controls()
 		}

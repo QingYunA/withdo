@@ -2948,7 +2948,7 @@
   },
   "selectButton": "Select",
   "@selectButton": {
-    "description": "Button at the right of a page title that turns on select mode, where a click ticks a row instead of opening it."
+    "description": "Button at the right of a page title, or of a column's header on a project page, that turns on select mode, where a click ticks a row instead of opening it."
   },
   "a11ySelectButton": "Select tasks",
   "@a11ySelectButton": {
