@@ -459,3 +459,22 @@ func TestMoveToStaysInTheWindowAndDoesNotJumpWhileFiltering(t *testing.T) {
 		t.Errorf("the filter moved from %.0f to %.0f while typing", before.Y, after.Y)
 	}
 }
+
+func TestCmdZRestoresATaskDeletedOnItsOwn(t *testing.T) {
+	tt, m, app := projectTester(t, 1)
+	m.sel = 5
+	tt.Frame()
+	tt.Key(ui.Cmd, ui.KeyBackspace)
+	tt.Frame()
+	if _, ok := app.Task(5); ok {
+		t.Fatal("Cmd+Backspace left the task")
+	}
+	tt.Key(ui.Cmd, ui.KeyZ)
+	tt.Frame()
+	if _, ok := app.Task(5); !ok {
+		t.Error("Cmd+Z did not bring the task back")
+	}
+	if tt.HasText("Undo") {
+		t.Error("the Undo toast stays after Cmd+Z")
+	}
+}

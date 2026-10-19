@@ -651,7 +651,7 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
 - **⌘Z** undoes the assistant's last change that is not undone, newest first, while its line is shown
   or the conversation is live (until the second `Esc`, or the assistant idling out); with the line
   gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
-  field's own. (The task menu's Delete keeps its own Undo toast.)
+  field's own. (See **Undo**.)
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`) when there is one to say.
@@ -805,8 +805,8 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
   In a lane narrower than 200 pt two buttons do not fit beside the meta line: they take a line of
   their own under it.
 - **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
-  status as before (a blocked card dropped on Doing stays blocked); there are no drop targets for
-  hidden statuses.
+  status (a blocked card dropped on Doing stays blocked) and shows the Undo toast, as dragging several
+  does; there are no drop targets for hidden statuses.
 - **Edges.** The header, the composer and the four lanes share their left and right edges: one
   centered block as wide as the window allows less the page's side padding (48 pt), but no wider than
   980 pt. When even 176 pt lanes do not fit (the inspector open on a small window), the block fills
@@ -1563,9 +1563,29 @@ accent-filled menu row the icon is white, like a project folder in `Move to…`.
 - **Chinese** (frame 8): `新建类别…`, `编辑类别…`, `上移`, `下移`, `删除类别`, `名称`, `图标`, `颜色`,
   `搜索图标`, `没有匹配的图标`, `查找类别`, `工作和生活不能改名。`.
 
+### Undo
+
+**One rule: every change that shows an Undo toast also answers `⌘Z`.** The window keeps one change on
+offer, the newest, in one toast (`Undo` at the right, six seconds, a newer change replaces it); the
+toast's button and `⌘Z` take back the same thing. The changes that offer it:
+
+- Delete of one task (the task menu, `⌘⌫`, the inspector's `Delete task…`) and of several; a deleted
+  category.
+- Every bulk action (Done, Cancel, Move to…, Priority, Hand to an agent, Take back), and dragging
+  cards to another lane, one card or several.
+- Handing one task to an agent, and taking one back.
+- Taking an image off a task (the tile's `x`).
+
+The strips of the task menu that change one task's status or priority do **not** offer Undo: they are
+one tap to change back. The assistant's receipts have their own Undo on their line (see **Assistant**).
+
+`⌘Z` takes the assistant's last change that is not undone first, else the toast's change. In a text
+field with its own undo history (text typed, or any other input) `⌘Z` is the field's; an empty
+composer has none, so there `⌘Z` goes on to the assistant and the toast.
+
 ### Keyboard
 
-`⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌘K` the page's composer · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
 (see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).

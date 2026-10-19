@@ -7,7 +7,7 @@ import "github.com/QingYunA/adhd-todo/app/data"
 
 // UpdateTasks applies one patch to every task in ids and returns the tasks as they were, which
 // RestoreStates puts back.
-func (a *App) UpdateTasks(ids []int, p data.Patch) ([]data.Task, error) {
+func (a *App) UpdateTasks(ids []int, p data.BulkPatch) ([]data.Task, error) {
 	var before []data.Task
 	err := a.do(func() (err error) { before, err = a.Store.UpdateTasks(ids, p); return })
 	return before, a.fail(err)
