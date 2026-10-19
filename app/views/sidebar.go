@@ -32,10 +32,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		m.navRow(c, t, "completed", nav{screen: screenCompleted}, theme.IconDone, m.say.ManageNavCompleted(), 0)
 		m.navRow(c, t, "summary", nav{screen: screenSummary}, theme.IconList, m.say.NavSummary(), 0)
 		m.projectsHeader(c, t)
-		for _, p := range m.app.snap.projects {
-			n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool { return task.ProjectID != nil && *task.ProjectID == p.ID })
-			m.projectRow(c, t, p, n, blocked)
-		}
+		m.projectRows(c, t)
 		if len(m.app.snap.projects) == 0 {
 			theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.NavNoProjects(), 0).Padding(0, 18)
 		}
@@ -122,11 +119,55 @@ func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *
 	}
 }
 
-func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool) {
+// projectRows lists the projects: the top-level ones in name order, each with its sub-projects
+// nested under it, one indent step in. The snapshot is one flat, name-ordered list.
+func (m *Main) projectRows(c *ui.Context, t *theme.Tokens) {
+	projects := m.app.snap.projects
+	known := make(map[int]bool, len(projects))
+	for _, p := range projects {
+		known[p.ID] = true
+	}
+	children := make(map[int][]data.Project, len(projects))
+	var top []data.Project
+	for _, p := range projects {
+		// A sub-project whose parent is not on screen (not expected: archiving takes the whole
+		// branch) reads as a top-level project rather than vanishing.
+		if p.ParentID != nil && known[*p.ParentID] {
+			children[*p.ParentID] = append(children[*p.ParentID], p)
+			continue
+		}
+		top = append(top, p)
+	}
+	seen := make(map[int]bool, len(projects))
+	var draw func(p data.Project, depth int)
+	draw = func(p data.Project, depth int) {
+		if seen[p.ID] { // a parent cycle is not expected; never draw forever
+			return
+		}
+		seen[p.ID] = true
+		n, blocked := openCount(m.app.snap.tasks, func(task data.Task) bool {
+			return task.ProjectID != nil && *task.ProjectID == p.ID
+		})
+		m.projectRow(c, t, p, n, blocked, depth)
+		for _, child := range children[p.ID] {
+			draw(child, depth+1)
+		}
+	}
+	for _, p := range top {
+		draw(p, 0)
+	}
+}
+
+// projectRow is one project in the sidebar; a sub-project sits depth steps in, its folder where its
+// parent's label is.
+func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool, depth int) {
 	to := nav{screen: screenProject, projectID: p.ID}
 	selected := m.nav == to && !m.searching()
 	renaming := m.manage.rename.id == p.ID
 	row := sidebarRow(c, t, p.ID, selected)
+	if depth > 0 {
+		row.Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent*float32(depth))
+	}
 	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
 		ui.Icon(c, theme.IconFolder).Size(theme.IconRow, theme.IconRow).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
@@ -156,6 +197,9 @@ func (m *Main) projectMenu(mn *ui.Menu, p data.Project) {
 	if mn.Item(m.say.ManageMilestoneNew()).Chosen() {
 		m.newMilestone(p.ID)
 	}
+	if mn.Item(m.say.ManageNewSubproject()).Chosen() {
+		m.openNewProject(p.ID)
+	}
 	mn.Separator()
 	if mn.Item(m.say.ManageRename()).Chosen() {
 		m.startRename(p.ID, p.Name)
@@ -184,7 +228,7 @@ func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
 		}
 		btn.Children(func() { ui.Icon(c, theme.IconPlus).Size(theme.IconSmall, theme.IconSmall) })
 		if btn.Clicked() {
-			m.openNewProject()
+			m.openNewProject(0)
 		}
 	})
 }
