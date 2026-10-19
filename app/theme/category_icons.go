@@ -2,6 +2,7 @@ package theme
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 	"sync"
 
@@ -89,6 +90,14 @@ var PaletteColors = [pixmap.Colors]ui.Color{
 	ProjectColors[0], ProjectColors[1], ProjectColors[2], ProjectColors[3],
 	ProjectColors[4], ProjectColors[5], ProjectColors[6], ProjectColors[7],
 	ui.Hex("#FFFFFF"), ui.Hex("#8E8E93"), ui.Hex("#1C1C1E"), ui.Hex("#8A5A3B"),
+}
+
+// PaletteRGBA is PaletteColors for the image package, to match the colors of a picture to the palette.
+func PaletteRGBA() (out [pixmap.Colors]color.RGBA) {
+	for i, c := range PaletteColors {
+		out[i] = color.RGBA{R: c.R, G: c.G, B: c.B, A: 255}
+	}
+	return out
 }
 
 // PaletteColor is the color of a palette letter.

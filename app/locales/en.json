@@ -3252,6 +3252,112 @@
   "@categoryColorOrange": {
     "description": "Name of a category color, for the swatch's accessibility label."
   },
+  "categoryDraw": "Draw",
+  "@categoryDraw": {
+    "description": "Button of the category sheet that opens the 12 x 12 icon editor."
+  },
+  "categoryImport": "Import image…",
+  "@categoryImport": {
+    "description": "Button of the category sheet that picks an image file to turn into the icon."
+  },
+  "categoryImportTitle": "Choose an image for the icon",
+  "@categoryImportTitle": {
+    "description": "Title of the file panel opened by Import image."
+  },
+  "categoryLibrary": "Library",
+  "@categoryLibrary": {
+    "description": "Button of the category sheet that goes back from the editor or an import to the icon library."
+  },
+  "categoryClear": "Clear",
+  "@categoryClear": {
+    "description": "Button of the icon editor that empties the drawing."
+  },
+  "categoryInvert": "Invert",
+  "@categoryInvert": {
+    "description": "Button of the icon editor that swaps the empty cells and the cells in the category's color."
+  },
+  "categoryFlip": "Flip",
+  "@categoryFlip": {
+    "description": "Button of the icon editor that mirrors the drawing left to right."
+  },
+  "categoryShiftLeft": "Move the drawing left",
+  "@categoryShiftLeft": {
+    "description": "Accessibility label of an arrow button of the icon editor."
+  },
+  "categoryShiftRight": "Move the drawing right",
+  "@categoryShiftRight": {
+    "description": "Accessibility label of an arrow button of the icon editor."
+  },
+  "categoryShiftUp": "Move the drawing up",
+  "@categoryShiftUp": {
+    "description": "Accessibility label of an arrow button of the icon editor."
+  },
+  "categoryShiftDown": "Move the drawing down",
+  "@categoryShiftDown": {
+    "description": "Accessibility label of an arrow button of the icon editor."
+  },
+  "categoryDrawing": "Icon drawing",
+  "@categoryDrawing": {
+    "description": "Accessibility label of the 12 x 12 grid of the icon editor."
+  },
+  "categoryPenOwn": "Category color",
+  "@categoryPenOwn": {
+    "description": "Accessibility label of the first swatch of the icon editor's palette: pixels drawn with it follow the category's color."
+  },
+  "categoryDrawHelp": "Click a cell to draw, drag to keep going. ⌘Z undoes.",
+  "@categoryDrawHelp": {
+    "description": "Help line under the icon editor's palette."
+  },
+  "categoryThreshold": "Threshold",
+  "@categoryThreshold": {
+    "description": "Label of the stepper that sets how much of an imported image becomes pixels."
+  },
+  "categoryThresholdLess": "Lower the threshold",
+  "@categoryThresholdLess": {
+    "description": "Accessibility label of the minus button of the threshold stepper."
+  },
+  "categoryThresholdMore": "Raise the threshold",
+  "@categoryThresholdMore": {
+    "description": "Accessibility label of the plus button of the threshold stepper."
+  },
+  "categoryOutline": "Outline only",
+  "@categoryOutline": {
+    "description": "Switch of the import: keep only the pixels at the edge of the shape."
+  },
+  "categoryImportErrRead": "Couldn't read this image.",
+  "@categoryImportErrRead": {
+    "description": "Under the icon of the category sheet when the chosen file is not a picture that can be read."
+  },
+  "categoryImportErrCurves": "This SVG has curves; export it as PNG first.",
+  "@categoryImportErrCurves": {
+    "description": "Under the icon of the category sheet when the chosen SVG is not made of right angles."
+  },
+  "categoryColorWhite": "White",
+  "@categoryColorWhite": {
+    "description": "Name of a palette color of the icon editor, for the swatch's accessibility label."
+  },
+  "categoryColorGray": "Gray",
+  "@categoryColorGray": {
+    "description": "Name of a palette color of the icon editor, for the swatch's accessibility label."
+  },
+  "categoryColorBlack": "Black",
+  "@categoryColorBlack": {
+    "description": "Name of a palette color of the icon editor, for the swatch's accessibility label."
+  },
+  "categoryColorBrown": "Brown",
+  "@categoryColorBrown": {
+    "description": "Name of a palette color of the icon editor, for the swatch's accessibility label."
+  },
+  "a11yCategoryPen": "Draw with {name}",
+  "@a11yCategoryPen": {
+    "description": "Accessibility label of a color of the icon editor's palette.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Red"
+      }
+    }
+  },
   "categoryGroupWork": "Work",
   "@categoryGroupWork": {
     "description": "Heading of a group of icons in the category sheet."

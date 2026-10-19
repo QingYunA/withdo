@@ -24,8 +24,8 @@ those two plus multi-color icons.
   (unique); the built-ins are stored as Work and Life and the app localizes them by `builtin`. Names are
   unique case-insensitively (`COLLATE NOCASE` index as a backstop to the domain check).
 - `icon` is 144 characters, the 12 rows one after the other (row 0 on top, 12 characters each, no
-  separators): `.` is empty and `#` a pixel in the category's color. Lower case letters are reserved for
-  the colors of a palette (PR2) and refused for now.
+  separators): `.` is empty and `#` a pixel in the category's color. Lower case letters `a` to `l` are the
+  colors of a palette (PR2).
 - `color` is one of eight keys, `indigo yellow green red blue pink teal orange`, in the order of
   `theme.ProjectColors` (`domain.CategoryColors` holds the list, `theme.CategoryColor` the colors).
   Work is blue, Life green; a new category defaults to the color its name hashes to, with the same FNV-1a
@@ -68,12 +68,22 @@ those two plus multi-color icons.
 - Icon picker: curated groups (Work, Study, Health, Money, Home, Hobby, Travel, People) before anything is
   typed, a flat grid of matches (English names, curated Chinese keywords) after.
 
-## PR2
+## PR2 (done in branch claude/category-editor)
 
-- Multi-color icons: a fixed palette whose lower case letters fill the reserved grid characters, with an
-  "outline only" toggle that drops the palette back to the category's color.
-- A 12 x 12 drawing editor in the sheet and image import reduced to 12 x 12 (area average, Otsu
-  threshold with a stepper; SVG only when it is right-angle paths).
+- `pixmap.Picture [12][12]byte` (0 empty, `#`, `a` to `l`) with Set, Invert (empty and own color swap,
+  palette pixels turn empty), Shift, FlipH, Line (Bresenham), Outline, Grid/ParseGrid; `Bitmap` stays for the
+  library. Domain and store accept `a` to `l`; `data.Category.Icon` is a Picture.
+- `theme.PaletteColors` (a to h are `ProjectColors`); `theme.CategoryIcon(Picture)` is one SVG with a path per
+  color. mygo's `ui.Icon` tints every shape, so category icons are drawn with `ui.Image`, which keeps the
+  explicit fills and tints only `currentColor` (pixel test in `category_icons_test.go`).
+- The sheet has three modes (library, draw, import). The editor is one `Draw`-painted element with a pointer
+  stroke state, a stack of pictures for `⌘Z`, and keyboard arrows and Space. Import: `pixmap.Reduce` (ink, crop,
+  10 x 10 averages), `Reduced.Otsu` and `Reduced.Picture` (threshold, nearest palette color, 80 % rule), then
+  `Picture.Outline`; `data.ReadIconFile` decodes, or rasters an SVG of right angles.
+- Deviations: Otsu is not applied when the classes differ by less than 20 % ink (a drawing that fills its
+  square would be split by noise); the file panel for the import is `pickIconFiles` (the composer's `pickFiles`
+  has no SVG); four pixelarticons (`arrow-left`, `arrow-down`, `minus`, `flip-horizontal-2`) are vendored for
+  the editor.
 
 ## Risks
 

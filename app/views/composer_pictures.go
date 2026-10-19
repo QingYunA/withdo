@@ -44,9 +44,13 @@ func attachments(ps []picture) []data.Attachment {
 // pickFiles opens the file panel for images and returns what was chosen, nil when it was
 // cancelled. It blocks until the panel closes, so it runs off the UI thread. Tests replace it.
 var pickFiles = func(title string) []string {
+	return openFiles(title, true, "png", "jpg", "jpeg", "gif", "webp")
+}
+
+// openFiles is the file panel with a filter on the extensions.
+func openFiles(title string, multiple bool, exts ...string) []string {
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Title: title, Multiple: true,
-		Filters: []mygo.FileFilter{{Name: title, Extensions: []string{"png", "jpg", "jpeg", "gif", "webp"}}},
+		Title: title, Multiple: multiple, Filters: []mygo.FileFilter{{Name: title, Extensions: exts}},
 	})
 	if err != nil {
 		return nil
