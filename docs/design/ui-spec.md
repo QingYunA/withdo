@@ -652,6 +652,14 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   or the conversation is live (until the second `Esc`, or the assistant idling out); with the line
   gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
   field's own. (The task menu's Delete keeps its own Undo toast.)
+- **Memory.** The assistant keeps short notes about the user in one Markdown file, `assistant-memory.md`
+  in the data folder (`## 关于我` and `## 纠正与偏好`, one `- ` bullet per note; the user may edit it by
+  hand, and a missing file is no memory). Every turn reads the file afresh and puts it in the prompt;
+  corrections and stated preferences are saved with `remember`, removed with `forget`, at most 40
+  notes / 4000 characters, 200 per note. A write needs no confirmation: its receipt is a line like
+  any other, `✓ Remembered Fitness is Life, not Work   Undo` (`✓ Forgot …`), with no task to open;
+  Undo restores the file as it was. Settings > Assistant ends with an **Assistant memory** row and
+  an `Open file` link (the data folder when nothing is written yet).
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`) when there is one to say.

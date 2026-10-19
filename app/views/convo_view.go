@@ -157,7 +157,7 @@ func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTit
 			m.undo(r)
 		}
 	})
-	if row.Clicked() && !undone {
+	if row.Clicked() && !undone && r.TaskID != 0 { // a memory note has no task to open
 		m.openRow(r.TaskID)
 	}
 }

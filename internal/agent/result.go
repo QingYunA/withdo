@@ -17,11 +17,13 @@ type Receipt struct {
 type DetailKind int
 
 const (
-	DetailAdded    DetailKind = iota // a task without a date was added, to Project
-	DetailReminder                   // a task was added with a reminder at At
-	DetailDue                        // a task was added with a due time At
-	DetailUpdated                    // a task was edited; Changes says how
-	DetailDone                       // a task was marked done
+	DetailAdded      DetailKind = iota // a task without a date was added, to Project
+	DetailReminder                     // a task was added with a reminder at At
+	DetailDue                          // a task was added with a due time At
+	DetailUpdated                      // a task was edited; Changes says how
+	DetailDone                         // a task was marked done
+	DetailRemembered                   // a note was added to the assistant's memory; Title is the note
+	DetailForgot                       // notes were removed from it; Title is the text they matched
 )
 
 // ChangeKind says which field of a task an update changed.
