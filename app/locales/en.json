@@ -2366,6 +2366,26 @@
       }
     }
   },
+  "navSectionExpand": "Expand {name}",
+  "@navSectionExpand": {
+    "description": "Tooltip and accessibility label of the chevron on a sidebar row (Mine, Agents) that shows its sub-rows.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Mine"
+      }
+    }
+  },
+  "navSectionCollapse": "Collapse {name}",
+  "@navSectionCollapse": {
+    "description": "Tooltip and accessibility label of the chevron on a sidebar row (Mine, Agents) that hides its sub-rows.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Mine"
+      }
+    }
+  },
   "composerPlaceholderAgents": "Ask what your agents are doing",
   "@composerPlaceholderAgents": {
     "description": "Placeholder of the composer on Agents."

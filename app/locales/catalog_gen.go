@@ -5888,6 +5888,38 @@ func (msgs Messages) A11yMineUnseen(count int) string {
 	return Catalog.Format(msgs.locale, "a11yMineUnseen", map[string]any{"count": count})
 }
 
+// NavSectionExpand says "Expand {name}"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that shows its sub-rows.
+func NavSectionExpand(name string) string { return In(i18n.Locale()).NavSectionExpand(name) }
+
+// NavSectionExpand says "Expand {name}"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that shows its sub-rows.
+func (msgs Messages) NavSectionExpand(name string) string {
+	return Catalog.Format(msgs.locale, "navSectionExpand", map[string]any{"name": name})
+}
+
+// NavSectionCollapse says "Collapse {name}"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that hides its sub-rows.
+func NavSectionCollapse(name string) string { return In(i18n.Locale()).NavSectionCollapse(name) }
+
+// NavSectionCollapse says "Collapse {name}"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that hides its sub-rows.
+func (msgs Messages) NavSectionCollapse(name string) string {
+	return Catalog.Format(msgs.locale, "navSectionCollapse", map[string]any{"name": name})
+}
+
 // ComposerPlaceholderAgents says "Ask what your agents are doing"
 // in the language the app shows.
 //
