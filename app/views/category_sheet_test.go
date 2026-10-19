@@ -71,7 +71,7 @@ func TestNewCategoryFromTheSidebarSearchPickAndCreate(t *testing.T) {
 	click(t, tt, "coffee") // the cell's name
 	click(t, tt, "Create")
 	cat := categoryNamed(t, app, "Coffee")
-	if want, _ := theme.CategoryIconNamed("coffee"); cat.Icon != want.Bitmap {
+	if want, _ := theme.CategoryIconNamed("coffee"); cat.Icon != want.Bitmap.Picture() {
 		t.Errorf("icon %v, want the coffee cup", cat.Icon)
 	}
 	if want := data.DefaultCategoryColor("Coffee"); cat.Color != want {
@@ -212,7 +212,7 @@ func TestEditingWorkShowsItsNameReadOnlyAndSavesTheIcon(t *testing.T) {
 	click(t, tt, "Color: Red")
 	click(t, tt, "Save")
 	work := categoryNamed(t, app, "Work")
-	if work.Icon != laptop.Bitmap || work.Color != "red" {
+	if work.Icon != laptop.Bitmap.Picture() || work.Color != "red" {
 		t.Errorf("Work after Save: icon %v color %q", work.Icon, work.Color)
 	}
 	if tt.HasText("Edit category") {

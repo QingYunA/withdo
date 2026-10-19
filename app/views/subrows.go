@@ -150,7 +150,7 @@ func hasAgentRow(rows []data.AgentTally, name string) bool {
 
 // categoryGlyph draws a category's icon, size pt square, in its color.
 func categoryGlyph(c *ui.Context, cat data.Category, size float32) ui.Element {
-	return ui.Icon(c, theme.CategoryIcon(cat.Icon)).Size(size, size).TextColor(theme.CategoryColor(cat.Color)).Shrink(0)
+	return ui.Image(c, theme.CategoryIcon(cat.Icon)).Size(size, size).TextColor(theme.CategoryColor(cat.Color)).Shrink(0)
 }
 
 // subRowIndent is how far a sub-row's content sits in from its parent's: one 18 pt icon and the row's

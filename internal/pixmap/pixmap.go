@@ -1,6 +1,8 @@
-// Package pixmap is the 12 x 12 one-bit bitmap behind a category's icon: the same grid as the
-// interface icons and the avatars, stored in the database as 36 hex digits and drawn in the text
-// color. It imports nothing from the app, so the store, the domain and the generator share it.
+// Package pixmap is the 12 x 12 picture behind a category's icon: the same grid as the interface
+// icons and the avatars. The library's icons are one-bit Bitmaps (36 hex digits in the generated
+// table); what a category keeps is a Picture, 144 characters in the database, whose pixels are in
+// the category's color or in one of a palette's. It imports nothing from the app, so the store, the
+// domain and the generator share it.
 package pixmap
 
 import (
@@ -21,8 +23,6 @@ const GridLen = Size * Size
 // Bitmap is the grid, one entry per row, row 0 at the top. Bit 11 of a row is its leftmost pixel.
 // A Bitmap is a value: the methods that change it return a new one.
 type Bitmap [Size]uint16
-
-const rowMask = 1<<Size - 1
 
 // Hex returns the 36 lowercase hex digits the database keeps, 3 a row.
 func (b Bitmap) Hex() string {
@@ -64,8 +64,8 @@ func MustParseHex(s string) Bitmap {
 	return b
 }
 
-// Grid is the form the database keeps: the 12 rows one after the other, row 0 first, 12 characters
-// each and no separators; "#" is a lit pixel and "." a dark one.
+// Grid is the 12 rows one after the other, row 0 first, 12 characters each and no separators; "#" is
+// a lit pixel and "." a dark one. A Picture keeps the same form.
 func (b Bitmap) Grid() string {
 	out := make([]byte, 0, GridLen)
 	for y := 0; y < Size; y++ {
@@ -78,25 +78,6 @@ func (b Bitmap) Grid() string {
 		}
 	}
 	return string(out)
-}
-
-// ParseGrid reads what Grid wrote. Only "." and "#" are pixels; the lower case letters are kept
-// for the colors of a later palette, and anything else is refused too.
-func ParseGrid(s string) (Bitmap, error) {
-	var b Bitmap
-	if len(s) != GridLen {
-		return b, fmt.Errorf("a bitmap is %d characters of . and #", GridLen)
-	}
-	for i := 0; i < GridLen; i++ {
-		switch s[i] {
-		case '#':
-			b = b.Set(i%Size, i/Size, true)
-		case '.':
-		default:
-			return Bitmap{}, fmt.Errorf("a bitmap is %d characters of . and #", GridLen)
-		}
-	}
-	return b, nil
 }
 
 // ParseRows reads 12 strings of 12 characters, "#" for a lit pixel and "." for a dark one: the
@@ -155,31 +136,4 @@ func (b Bitmap) Count() int {
 		n += bits.OnesCount16(r)
 	}
 	return n
-}
-
-// Invert swaps lit and dark.
-func (b Bitmap) Invert() Bitmap {
-	for i := range b {
-		b[i] = ^b[i] & rowMask
-	}
-	return b
-}
-
-// Shift moves the picture by (dx, dy) pixels; what leaves the grid is dropped.
-func (b Bitmap) Shift(dx, dy int) Bitmap {
-	var out Bitmap
-	for y := range b {
-		ny := y + dy
-		if ny < 0 || ny >= Size {
-			continue
-		}
-		row := uint32(b[y])
-		if dx >= 0 {
-			row >>= uint(dx)
-		} else {
-			row <<= uint(-dx)
-		}
-		out[ny] = uint16(row & rowMask)
-	}
-	return out
 }

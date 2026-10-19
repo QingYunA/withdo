@@ -57,6 +57,14 @@ var (
 	IconForward   = pixelIcon("chevron-right")
 )
 
+// The category icon editor's tools; its up and right arrows are IconSend and IconMove.
+var (
+	IconArrowLeft = pixelIcon("arrow-left")
+	IconArrowDown = pixelIcon("arrow-down")
+	IconMinus     = pixelIcon("minus")
+	IconFlip      = pixelIcon("flip-horizontal-2")
+)
+
 // The sidebar, the inspector's properties and the Settings toolbar.
 var (
 	IconDone     = pixelIcon("checkbox-on")

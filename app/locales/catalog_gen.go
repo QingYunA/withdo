@@ -8004,6 +8004,378 @@ func (msgs Messages) CategoryColorOrange() string {
 	return Catalog.Format(msgs.locale, "categoryColorOrange", nil)
 }
 
+// CategoryDraw says "Draw"
+// in the language the app shows.
+//
+// Button of the category sheet that opens the 12 x 12 icon editor.
+func CategoryDraw() string { return In(i18n.Locale()).CategoryDraw() }
+
+// CategoryDraw says "Draw"
+// in the language of msgs.
+//
+// Button of the category sheet that opens the 12 x 12 icon editor.
+func (msgs Messages) CategoryDraw() string {
+	return Catalog.Format(msgs.locale, "categoryDraw", nil)
+}
+
+// CategoryImport says "Import image…"
+// in the language the app shows.
+//
+// Button of the category sheet that picks an image file to turn into the
+// icon.
+func CategoryImport() string { return In(i18n.Locale()).CategoryImport() }
+
+// CategoryImport says "Import image…"
+// in the language of msgs.
+//
+// Button of the category sheet that picks an image file to turn into the
+// icon.
+func (msgs Messages) CategoryImport() string {
+	return Catalog.Format(msgs.locale, "categoryImport", nil)
+}
+
+// CategoryImportTitle says "Choose an image for the icon"
+// in the language the app shows.
+//
+// Title of the file panel opened by Import image.
+func CategoryImportTitle() string { return In(i18n.Locale()).CategoryImportTitle() }
+
+// CategoryImportTitle says "Choose an image for the icon"
+// in the language of msgs.
+//
+// Title of the file panel opened by Import image.
+func (msgs Messages) CategoryImportTitle() string {
+	return Catalog.Format(msgs.locale, "categoryImportTitle", nil)
+}
+
+// CategoryLibrary says "Library"
+// in the language the app shows.
+//
+// Button of the category sheet that goes back from the editor or an import
+// to the icon library.
+func CategoryLibrary() string { return In(i18n.Locale()).CategoryLibrary() }
+
+// CategoryLibrary says "Library"
+// in the language of msgs.
+//
+// Button of the category sheet that goes back from the editor or an import
+// to the icon library.
+func (msgs Messages) CategoryLibrary() string {
+	return Catalog.Format(msgs.locale, "categoryLibrary", nil)
+}
+
+// CategoryClear says "Clear"
+// in the language the app shows.
+//
+// Button of the icon editor that empties the drawing.
+func CategoryClear() string { return In(i18n.Locale()).CategoryClear() }
+
+// CategoryClear says "Clear"
+// in the language of msgs.
+//
+// Button of the icon editor that empties the drawing.
+func (msgs Messages) CategoryClear() string {
+	return Catalog.Format(msgs.locale, "categoryClear", nil)
+}
+
+// CategoryInvert says "Invert"
+// in the language the app shows.
+//
+// Button of the icon editor that swaps the empty cells and the cells in the
+// category's color.
+func CategoryInvert() string { return In(i18n.Locale()).CategoryInvert() }
+
+// CategoryInvert says "Invert"
+// in the language of msgs.
+//
+// Button of the icon editor that swaps the empty cells and the cells in the
+// category's color.
+func (msgs Messages) CategoryInvert() string {
+	return Catalog.Format(msgs.locale, "categoryInvert", nil)
+}
+
+// CategoryFlip says "Flip"
+// in the language the app shows.
+//
+// Button of the icon editor that mirrors the drawing left to right.
+func CategoryFlip() string { return In(i18n.Locale()).CategoryFlip() }
+
+// CategoryFlip says "Flip"
+// in the language of msgs.
+//
+// Button of the icon editor that mirrors the drawing left to right.
+func (msgs Messages) CategoryFlip() string {
+	return Catalog.Format(msgs.locale, "categoryFlip", nil)
+}
+
+// CategoryShiftLeft says "Move the drawing left"
+// in the language the app shows.
+//
+// Accessibility label of an arrow button of the icon editor.
+func CategoryShiftLeft() string { return In(i18n.Locale()).CategoryShiftLeft() }
+
+// CategoryShiftLeft says "Move the drawing left"
+// in the language of msgs.
+//
+// Accessibility label of an arrow button of the icon editor.
+func (msgs Messages) CategoryShiftLeft() string {
+	return Catalog.Format(msgs.locale, "categoryShiftLeft", nil)
+}
+
+// CategoryShiftRight says "Move the drawing right"
+// in the language the app shows.
+//
+// Accessibility label of an arrow button of the icon editor.
+func CategoryShiftRight() string { return In(i18n.Locale()).CategoryShiftRight() }
+
+// CategoryShiftRight says "Move the drawing right"
+// in the language of msgs.
+//
+// Accessibility label of an arrow button of the icon editor.
+func (msgs Messages) CategoryShiftRight() string {
+	return Catalog.Format(msgs.locale, "categoryShiftRight", nil)
+}
+
+// CategoryShiftUp says "Move the drawing up"
+// in the language the app shows.
+//
+// Accessibility label of an arrow button of the icon editor.
+func CategoryShiftUp() string { return In(i18n.Locale()).CategoryShiftUp() }
+
+// CategoryShiftUp says "Move the drawing up"
+// in the language of msgs.
+//
+// Accessibility label of an arrow button of the icon editor.
+func (msgs Messages) CategoryShiftUp() string {
+	return Catalog.Format(msgs.locale, "categoryShiftUp", nil)
+}
+
+// CategoryShiftDown says "Move the drawing down"
+// in the language the app shows.
+//
+// Accessibility label of an arrow button of the icon editor.
+func CategoryShiftDown() string { return In(i18n.Locale()).CategoryShiftDown() }
+
+// CategoryShiftDown says "Move the drawing down"
+// in the language of msgs.
+//
+// Accessibility label of an arrow button of the icon editor.
+func (msgs Messages) CategoryShiftDown() string {
+	return Catalog.Format(msgs.locale, "categoryShiftDown", nil)
+}
+
+// CategoryDrawing says "Icon drawing"
+// in the language the app shows.
+//
+// Accessibility label of the 12 x 12 grid of the icon editor.
+func CategoryDrawing() string { return In(i18n.Locale()).CategoryDrawing() }
+
+// CategoryDrawing says "Icon drawing"
+// in the language of msgs.
+//
+// Accessibility label of the 12 x 12 grid of the icon editor.
+func (msgs Messages) CategoryDrawing() string {
+	return Catalog.Format(msgs.locale, "categoryDrawing", nil)
+}
+
+// CategoryPenOwn says "Category color"
+// in the language the app shows.
+//
+// Accessibility label of the first swatch of the icon editor's palette:
+// pixels drawn with it follow the category's color.
+func CategoryPenOwn() string { return In(i18n.Locale()).CategoryPenOwn() }
+
+// CategoryPenOwn says "Category color"
+// in the language of msgs.
+//
+// Accessibility label of the first swatch of the icon editor's palette:
+// pixels drawn with it follow the category's color.
+func (msgs Messages) CategoryPenOwn() string {
+	return Catalog.Format(msgs.locale, "categoryPenOwn", nil)
+}
+
+// CategoryDrawHelp says "Click a cell to draw, drag to keep going. ⌘Z undoes."
+// in the language the app shows.
+//
+// Help line under the icon editor's palette.
+func CategoryDrawHelp() string { return In(i18n.Locale()).CategoryDrawHelp() }
+
+// CategoryDrawHelp says "Click a cell to draw, drag to keep going. ⌘Z undoes."
+// in the language of msgs.
+//
+// Help line under the icon editor's palette.
+func (msgs Messages) CategoryDrawHelp() string {
+	return Catalog.Format(msgs.locale, "categoryDrawHelp", nil)
+}
+
+// CategoryThreshold says "Threshold"
+// in the language the app shows.
+//
+// Label of the stepper that sets how much of an imported image becomes
+// pixels.
+func CategoryThreshold() string { return In(i18n.Locale()).CategoryThreshold() }
+
+// CategoryThreshold says "Threshold"
+// in the language of msgs.
+//
+// Label of the stepper that sets how much of an imported image becomes
+// pixels.
+func (msgs Messages) CategoryThreshold() string {
+	return Catalog.Format(msgs.locale, "categoryThreshold", nil)
+}
+
+// CategoryThresholdLess says "Lower the threshold"
+// in the language the app shows.
+//
+// Accessibility label of the minus button of the threshold stepper.
+func CategoryThresholdLess() string { return In(i18n.Locale()).CategoryThresholdLess() }
+
+// CategoryThresholdLess says "Lower the threshold"
+// in the language of msgs.
+//
+// Accessibility label of the minus button of the threshold stepper.
+func (msgs Messages) CategoryThresholdLess() string {
+	return Catalog.Format(msgs.locale, "categoryThresholdLess", nil)
+}
+
+// CategoryThresholdMore says "Raise the threshold"
+// in the language the app shows.
+//
+// Accessibility label of the plus button of the threshold stepper.
+func CategoryThresholdMore() string { return In(i18n.Locale()).CategoryThresholdMore() }
+
+// CategoryThresholdMore says "Raise the threshold"
+// in the language of msgs.
+//
+// Accessibility label of the plus button of the threshold stepper.
+func (msgs Messages) CategoryThresholdMore() string {
+	return Catalog.Format(msgs.locale, "categoryThresholdMore", nil)
+}
+
+// CategoryOutline says "Outline only"
+// in the language the app shows.
+//
+// Switch of the import: keep only the pixels at the edge of the shape.
+func CategoryOutline() string { return In(i18n.Locale()).CategoryOutline() }
+
+// CategoryOutline says "Outline only"
+// in the language of msgs.
+//
+// Switch of the import: keep only the pixels at the edge of the shape.
+func (msgs Messages) CategoryOutline() string {
+	return Catalog.Format(msgs.locale, "categoryOutline", nil)
+}
+
+// CategoryImportErrRead says "Couldn't read this image."
+// in the language the app shows.
+//
+// Under the icon of the category sheet when the chosen file is not a
+// picture that can be read.
+func CategoryImportErrRead() string { return In(i18n.Locale()).CategoryImportErrRead() }
+
+// CategoryImportErrRead says "Couldn't read this image."
+// in the language of msgs.
+//
+// Under the icon of the category sheet when the chosen file is not a
+// picture that can be read.
+func (msgs Messages) CategoryImportErrRead() string {
+	return Catalog.Format(msgs.locale, "categoryImportErrRead", nil)
+}
+
+// CategoryImportErrCurves says "This SVG has curves; export it as PNG first."
+// in the language the app shows.
+//
+// Under the icon of the category sheet when the chosen SVG is not made of
+// right angles.
+func CategoryImportErrCurves() string { return In(i18n.Locale()).CategoryImportErrCurves() }
+
+// CategoryImportErrCurves says "This SVG has curves; export it as PNG first."
+// in the language of msgs.
+//
+// Under the icon of the category sheet when the chosen SVG is not made of
+// right angles.
+func (msgs Messages) CategoryImportErrCurves() string {
+	return Catalog.Format(msgs.locale, "categoryImportErrCurves", nil)
+}
+
+// CategoryColorWhite says "White"
+// in the language the app shows.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func CategoryColorWhite() string { return In(i18n.Locale()).CategoryColorWhite() }
+
+// CategoryColorWhite says "White"
+// in the language of msgs.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func (msgs Messages) CategoryColorWhite() string {
+	return Catalog.Format(msgs.locale, "categoryColorWhite", nil)
+}
+
+// CategoryColorGray says "Gray"
+// in the language the app shows.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func CategoryColorGray() string { return In(i18n.Locale()).CategoryColorGray() }
+
+// CategoryColorGray says "Gray"
+// in the language of msgs.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func (msgs Messages) CategoryColorGray() string {
+	return Catalog.Format(msgs.locale, "categoryColorGray", nil)
+}
+
+// CategoryColorBlack says "Black"
+// in the language the app shows.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func CategoryColorBlack() string { return In(i18n.Locale()).CategoryColorBlack() }
+
+// CategoryColorBlack says "Black"
+// in the language of msgs.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func (msgs Messages) CategoryColorBlack() string {
+	return Catalog.Format(msgs.locale, "categoryColorBlack", nil)
+}
+
+// CategoryColorBrown says "Brown"
+// in the language the app shows.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func CategoryColorBrown() string { return In(i18n.Locale()).CategoryColorBrown() }
+
+// CategoryColorBrown says "Brown"
+// in the language of msgs.
+//
+// Name of a palette color of the icon editor, for the swatch's
+// accessibility label.
+func (msgs Messages) CategoryColorBrown() string {
+	return Catalog.Format(msgs.locale, "categoryColorBrown", nil)
+}
+
+// A11yCategoryPen says "Draw with {name}"
+// in the language the app shows.
+//
+// Accessibility label of a color of the icon editor's palette.
+func A11yCategoryPen(name string) string { return In(i18n.Locale()).A11yCategoryPen(name) }
+
+// A11yCategoryPen says "Draw with {name}"
+// in the language of msgs.
+//
+// Accessibility label of a color of the icon editor's palette.
+func (msgs Messages) A11yCategoryPen(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryPen", map[string]any{"name": name})
+}
+
 // CategoryGroupWork says "Work"
 // in the language the app shows.
 //

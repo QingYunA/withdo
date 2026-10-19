@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	dot       = pixmap.Bitmap{}.Set(5, 5, true)
+	dot       = pixmap.Bitmap{}.Set(5, 5, true).Picture()
 	dotGrid   = dot.Grid()
-	briefcase = pixmap.MustParseHex("0000600903fc4024024024024024023fc000")
-	house     = pixmap.MustParseHex("0000600901082044024624924924923fc000")
+	briefcase = pixmap.MustParseHex("0000600903fc4024024024024024023fc000").Picture()
+	house     = pixmap.MustParseHex("0000600901082044024624924924923fc000").Picture()
 )
 
 func categoryNames(t *testing.T, s Store) []string {
@@ -66,7 +66,7 @@ func TestCreateUpdateAndMoveCategories(t *testing.T) {
 		}
 		wantCategories(t, s, "Work", "Life", "Reading", "Garden")
 
-		other := dot.Set(0, 0, true)
+		other := dot.Set(0, 0, 'd') // a palette pixel survives the store
 		got := must[Category](t)(s.UpdateCategory(reading.ID, CategoryPatch{Name: StrPtr("Books"), Icon: &other, Color: StrPtr("pink")}))
 		if got.Name != "Books" || got.Icon != other || got.Color != "pink" {
 			t.Errorf("updated %+v", got)

@@ -18,8 +18,8 @@ const (
 // builtinCategories are Work (1, blue) and Life (2, green) as a new database has them.
 func builtinCategories() []Category {
 	return []Category{
-		{ID: 1, Builtin: BuiltinWork, Name: "Work", Icon: pixmap.MustParseHex(workIconHex), Color: "blue", Position: 1},
-		{ID: 2, Builtin: BuiltinLife, Name: "Life", Icon: pixmap.MustParseHex(lifeIconHex), Color: "green", Position: 2},
+		{ID: 1, Builtin: BuiltinWork, Name: "Work", Icon: pixmap.MustParseHex(workIconHex).Picture(), Color: "blue", Position: 1},
+		{ID: 2, Builtin: BuiltinLife, Name: "Life", Icon: pixmap.MustParseHex(lifeIconHex).Picture(), Color: "green", Position: 2},
 	}
 }
 

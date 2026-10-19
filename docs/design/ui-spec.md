@@ -116,9 +116,10 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
 - **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
   opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
   the layout are not.
-- **Category icons are 12 x 12 one-bit bitmaps** (M9, v24): kept in the database as 144 characters
-  (`.` and `#`), drawn as one path of 2-unit squares in the category's color (`theme.CategoryIcon`),
-  only at 12, 18 and 36 pt. The library icons of the picker are pixelarticons reduced to that grid
+- **Category icons are 12 x 12 pictures** (M9, v24): kept in the database as 144 characters (`.`
+  empty, `#` the category's own color, `a` to `l` the 12 palette colors), drawn as one path of 2-unit
+  squares per color (`theme.CategoryIcon`, with `ui.Image`, which keeps the palette fills), only at
+  12, 18, 24 (editor previews), 36 and 144 (the import's result) pt. The library icons of the picker are pixelarticons reduced to that grid
   (`scripts/category-icons.sh`); an icon that does not reduce cleanly carries a hand-drawn grid.
   The color swatches are 12 x 12 pixel circles drawn at 18 pt. See **Categories (M9)**.
 - **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
@@ -201,7 +202,9 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | | |
+| `IconBox` | `checkbox` | `IconFlip` | `flip-horizontal-2` |
+| `IconArrowLeft` | `arrow-left` | `IconArrowDown` | `arrow-down` |
+| `IconMinus` | `minus` | | |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -1486,8 +1489,8 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 
 ### Categories (M9)
 
-References: `docs/design/mockups/v24.html` (frames 1 to 6 and 8 are built; frame 7, the 12 x 12
-editor and image import, is PR2). Plan: `docs/plans/m9-custom-categories.md`.
+References: `docs/design/mockups/v24.html` (all frames are built: 7a to 7d are the 12 x 12 editor
+and the image import). Plan: `docs/plans/m9-custom-categories.md`.
 
 The user makes categories; Work and Life are built in, always there, movable and re-iconable but
 neither renamed (their names follow the language) nor deleted. A category has a name (unique in any
@@ -1515,6 +1518,38 @@ accent-filled menu row the icon is white, like a project folder in `Move to…`.
   name is blank; Enter in `Name` creates or saves. Problems read under the field in `text.secondary`,
   never red. After Create the category's page opens, unless the sheet came from the task menu, which
   gives the category to the task instead.
+- **Palette.** An icon's pixels are empty, the category's own color (`#`, follows the category) or
+  one of 12 fixed colors, the same in light and dark: `a` indigo `#5B5BD6`, `b` yellow `#E0A800`,
+  `c` green `#30A46C`, `d` red `#E5484D`, `e` blue `#3B82F6`, `f` pink `#D9488B`, `g` teal `#0EA5A4`,
+  `h` orange `#E08A1E` (the project colors, `theme.ProjectColors`), `i` white `#FFFFFF`, `j` gray
+  `#8E8E93`, `k` black `#1C1C1E`, `l` brown `#8A5A3B` (`theme.PaletteColors`).
+- **Icon modes** (frames 7a to 7d). Under `Icon`, the preview and two buttons, `Draw` and
+  `Import image…` (`画`, `导入图片…`). In the editor and the import the buttons sit at the right of
+  the `Icon` label and name the other ways: `Library` (`图标库`, back to the search and the grid; the
+  picked library icon replaces the drawing), `Draw`, `Import image…`. Create stays off while the icon
+  is empty.
+- **Editor** (7b). A 12 x 12 grid of 18 pt cells with 1 pt lines in `border`, empty cells in `bg`;
+  at its right the 24 / 18 / 12 pt preview, `Clear` and `Invert` (swaps empty and own-color cells;
+  palette cells turn empty, they have no opposite), four arrows that shift the drawing one cell
+  without wrapping, `Flip` (left to right). Under the grid the pens: the category color first
+  (`Category color`, `类别色`), set off by a 1 pt rule in `border` since it can match a palette color,
+  then `a` to `l`, 22 pt squares, the picked one with a 2 pt border,
+  and the line `Click a cell to draw, drag to keep going. ⌘Z undoes.` Pressing an empty cell or one
+  of another color paints it with the pen; pressing one already of the pen's color erases, and the
+  drag goes on in that mode, filling the cells between samples. One stroke or button is one step of
+  `⌘Z` (while the focus is inside the editor). With the grid focused the arrows move a cell and
+  `Space` toggles it.
+- **Import** (7c, 7d). A file panel (PNG, JPEG, GIF, WebP, SVG) or one file dropped on the sheet.
+  The picture (144 pt, file name under it) → the 12 x 12 result on `bg.subtle` (144 pt), a
+  `Threshold` stepper (percent, steps of 4, starts at Otsu's), the 24 / 18 / 12 pt previews and the
+  `Outline only` switch. The picture is scaled to 256 px; its ink is the alpha when its edge is
+  transparent, else its distance from the median edge color; it is cropped to the ink, padded to a
+  square and averaged into 10 x 10 cells in the middle of the 12 x 12 grid; cells with ink at or above
+  the threshold are set, each in the nearest palette color (OKLab), and a color covering 80 % of the
+  cells becomes `#`. Outline only keeps the cells that touch an empty cell, all as `#`. An SVG must
+  be right-angle paths (24-unit view box); it is the icon as it is (no threshold). Errors, under the
+  icon: `Couldn't read this image.` (`读不了这张图片。`), `This SVG has curves; export it as PNG
+  first.` (`这个 SVG 有曲线，请先导出成 PNG。`).
 - **Delete** is immediate (the list is the user's own); a toast `Deleted “Reading” · 5 tasks
   unsorted` (no count when 0) with **Undo** for six seconds, which puts the category back with its
   icon, color, place and tasks (only the ones still unsorted).

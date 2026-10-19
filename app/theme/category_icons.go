@@ -1,6 +1,8 @@
 package theme
 
 import (
+	"fmt"
+	"image/color"
 	"strings"
 	"sync"
 
@@ -8,7 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// A category's icon is a 12 x 12 one-bit bitmap kept in the database. The picker offers the
+// A category's icon is a 12 x 12 picture kept in the database. The picker offers the
 // pixelarticons that reduce to that grid with little loss (category_icons_gen.go, written by
 // scripts/category-icons.sh) and, first, a curated list in groups (docs/design/category-icons.txt).
 
@@ -82,20 +84,45 @@ func SearchCategoryIcons(q string) []CategoryIconEntry {
 	return out
 }
 
+// PaletteColors are the colors of the letters a to l in a category's icon: the project colors (a to
+// h) and white, gray, black and brown. They are the same in light and dark mode.
+var PaletteColors = [pixmap.Colors]ui.Color{
+	ProjectColors[0], ProjectColors[1], ProjectColors[2], ProjectColors[3],
+	ProjectColors[4], ProjectColors[5], ProjectColors[6], ProjectColors[7],
+	ui.Hex("#FFFFFF"), ui.Hex("#8E8E93"), ui.Hex("#1C1C1E"), ui.Hex("#8A5A3B"),
+}
+
+// PaletteRGBA is PaletteColors for the image package, to match the colors of a picture to the palette.
+func PaletteRGBA() (out [pixmap.Colors]color.RGBA) {
+	for i, c := range PaletteColors {
+		out[i] = color.RGBA{R: c.R, G: c.G, B: c.B, A: 255}
+	}
+	return out
+}
+
+// PaletteColor is the color of a palette letter.
+func PaletteColor(letter byte) ui.Color { return PaletteColors[letter-pixmap.FirstColor] }
+
 var (
 	categorySVGMu sync.Mutex
-	categorySVGs  = map[pixmap.Bitmap]*ui.SVG{}
+	categorySVGs  = map[pixmap.Picture]*ui.SVG{}
 )
 
-// CategoryIcon is the bitmap as an SVG in the color of the surrounding text, parsed once per
-// bitmap. Draw it at the same whole multiples of 12 pt as the interface icons.
-func CategoryIcon(b pixmap.Bitmap) *ui.SVG {
+// CategoryIcon is the picture as an SVG: its Own pixels in the color of the surrounding text
+// (tint it with TextColor), its palette pixels in their own colors. Draw it with ui.Image, which
+// keeps the SVG's own colors; ui.Icon would flatten it to one. Parsed once per picture. Draw it at
+// the same whole multiples of 12 pt as the interface icons.
+func CategoryIcon(p pixmap.Picture) *ui.SVG {
 	categorySVGMu.Lock()
 	defer categorySVGMu.Unlock()
-	if s, ok := categorySVGs[b]; ok {
+	if s, ok := categorySVGs[p]; ok {
 		return s
 	}
-	s := ui.MustParseSVG(b.SVG())
-	categorySVGs[b] = s
+	var fills [pixmap.Colors]string
+	for i, c := range PaletteColors {
+		fills[i] = fmt.Sprintf("#%02X%02X%02X", c.R, c.G, c.B)
+	}
+	s := ui.MustParseSVG(p.SVG(fills))
+	categorySVGs[p] = s
 	return s
 }

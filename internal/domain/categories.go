@@ -51,7 +51,8 @@ type Category struct {
 	// whoever shows them.
 	Name string `json:"name"`
 	// Icon is the 12 x 12 picture drawn beside the name: 144 characters, 12 rows of 12 with row 0
-	// first, "." for an empty pixel and "#" for one in the category's color. See pixmap.ParseGrid.
+	// first, "." for an empty pixel, "#" for one in the category's color and a letter a to l for one in
+	// a fixed palette color. See pixmap.ParseGrid.
 	Icon string `json:"icon"`
 	// Color is one of CategoryColors.
 	Color string `json:"color"`
@@ -91,7 +92,7 @@ func (c *Core) ListCategories(ctx context.Context) ([]Category, error) {
 
 // CreateCategoryInput describes a new category. Name is trimmed, at most MaxCategoryName characters
 // and not taken by another category in any case, nor by an alias of Work or Life (work, life, 工作,
-// 生活). Icon is a grid of 144 characters with at least one pixel lit. An empty Color takes
+// 生活). Icon is a grid of 144 characters with at least one pixel set. An empty Color takes
 // DefaultCategoryColor(Name).
 type CreateCategoryInput struct {
 	Name  string
@@ -389,13 +390,13 @@ func cleanCategoryName(name string) (string, error) {
 	return name, nil
 }
 
-// checkCategoryIcon wants the grid of pixmap.Grid with at least one pixel lit.
+// checkCategoryIcon wants the grid of pixmap.Grid with at least one pixel set.
 func checkCategoryIcon(icon string) error {
-	b, err := pixmap.ParseGrid(icon)
+	p, err := pixmap.ParseGrid(icon)
 	if err != nil {
-		return invalid("icon", "must be %d characters of . and #", pixmap.GridLen)
+		return invalid("icon", "must be %d characters of ., # and the palette letters a to l", pixmap.GridLen)
 	}
-	if b.Empty() {
+	if p.Empty() {
 		return invalid("icon", "must have at least one pixel")
 	}
 	return nil

@@ -16,18 +16,32 @@ type categorySheet struct {
 	id      int // the category being edited, 0 for a new one
 	task    int // the task a new category is given to, 0 for none
 	name    string
-	icon    pixmap.Bitmap
+	icon    pixmap.Picture
 	color   string // the key of one of data.CategoryColors
 	picked  bool   // the color was chosen, so it no longer follows the name
 	query   string // what is typed in Search icons
 	problem error  // what the last Create or Save found wrong with the name
+	mode    iconMode
+	draw    drawing
+	imp     importing
+	iconErr error // what the last import found wrong with the file
 }
+
+// iconMode is what the sheet offers for the icon: the library to pick from, the editor, or the
+// result of an import. Whichever it is, icon is the picture the sheet will store.
+type iconMode int
+
+const (
+	modeLibrary iconMode = iota
+	modeDraw
+	modeImport
+)
 
 // openNewCategory opens the sheet for a new category, on the first curated icon and the color its
 // name hashes to. A category made from the task menu is given to task; from the sidebar (task 0)
 // its page opens.
 func (m *Main) openNewCategory(task int) {
-	m.manage.category = categorySheet{open: true, task: task, icon: theme.CategoryIconGroups[0].Icons[0].Bitmap}
+	m.manage.category = categorySheet{open: true, task: task, icon: theme.CategoryIconGroups[0].Icons[0].Bitmap.Picture()}
 }
 
 // openEditCategory opens the sheet on a category as it is.
@@ -55,18 +69,30 @@ func (m *Main) categorySheet(c *ui.Context, t *theme.Tokens) {
 		title, primary = m.say.CategorySheetEdit(), m.say.ManageSave()
 	}
 	sheet(c, t, &s.open, func() {
-		theme.Text(c, theme.Title, t.Text, title)
-		labeled(c, t, m.say.ManageFieldName(), func() { m.categoryNameField(c, t, s) })
-		labeled(c, t, m.say.CategoryFieldIcon(), func() { m.categoryPreview(c, t, s) })
-		labeled(c, t, m.say.CategoryFieldColor(), func() { m.categorySwatches(c, t, s) })
-		m.categoryPicker(c, t, s)
-		cancelled, chosen := sheetButtons(c, m.say.ManageCancel(), primary, m.editsBuiltin() || strings.TrimSpace(s.name) != "", false)
-		if cancelled {
-			s.open = false
+		drop := ui.Column(c.Key("category-drop")).Gap(16)
+		if files := drop.DroppedFiles(); len(files) > 0 {
+			go m.readIcon(files[0]) // an image file dropped on the sheet is imported, as Import image… does
 		}
-		if chosen {
-			m.saveCategory()
-		}
+		drop.Children(func() {
+			if drop.FileDragOver() {
+				dropOverlay(c, t)
+			}
+			theme.Text(c, theme.Title, t.Text, title)
+			labeled(c, t, m.say.ManageFieldName(), func() { m.categoryNameField(c, t, s) })
+			m.categoryIcon(c, t, s)
+			labeled(c, t, m.say.CategoryFieldColor(), func() { m.categorySwatches(c, t, s) })
+			if s.mode == modeLibrary {
+				m.categoryPicker(c, t, s)
+			}
+			named := m.editsBuiltin() || strings.TrimSpace(s.name) != ""
+			cancelled, chosen := sheetButtons(c, m.say.ManageCancel(), primary, named && !s.icon.Empty(), false)
+			if cancelled {
+				s.open = false
+			}
+			if chosen {
+				m.saveCategory()
+			}
+		})
 	})
 }
 
@@ -110,12 +136,54 @@ func (m *Main) categorySheetKey(k ui.TextKey) bool {
 	return true
 }
 
-// categoryPreview is the icon in the chosen color at 36, 18 and 12 pt: the sizes of the pages, the
-// rows and the sidebar.
-func (m *Main) categoryPreview(c *ui.Context, t *theme.Tokens, s *categorySheet) {
+// categoryIcon is the Icon field: the picture's preview with the buttons that choose how to make it,
+// and under them what the mode shows (the picker follows the Color field, so it is not here).
+func (m *Main) categoryIcon(c *ui.Context, t *theme.Tokens, s *categorySheet) {
+	ui.Column(c).Gap(6).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.Meta, t.TextSecondary, m.say.CategoryFieldIcon())
+			ui.Box(c).Grow(1)
+			if s.mode != modeLibrary {
+				m.iconModeButtons(c, s)
+			}
+		})
+		switch s.mode {
+		case modeLibrary:
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				m.categoryPreview(c, t, s, theme.IconLarge, theme.IconRow, theme.IconSmall)
+				m.iconModeButtons(c, s)
+			})
+		case modeDraw:
+			m.categoryDraw(c, t, s)
+		case modeImport:
+			m.categoryImport(c, t, s)
+		}
+		if line := m.iconProblemLine(); line != "" {
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 0)
+		}
+	})
+}
+
+// iconModeButtons are the ways to a different icon that the mode is not already showing: Library
+// (the picker), Draw (the editor, on the icon as it is) and Import image….
+func (m *Main) iconModeButtons(c *ui.Context, s *categorySheet) {
+	if s.mode != modeLibrary && ui.Button(c.Key("icon-library"), m.say.CategoryLibrary()).Clicked() {
+		s.mode, s.iconErr = modeLibrary, nil
+	}
+	if s.mode != modeDraw && ui.Button(c.Key("icon-draw"), m.say.CategoryDraw()).Clicked() {
+		s.startDraw()
+	}
+	if ui.Button(c.Key("icon-import"), m.say.CategoryImport()).Clicked() {
+		m.chooseIcon()
+	}
+}
+
+// categoryPreview is the icon in the chosen color at the given sizes: the pages', the rows' and the
+// sidebar's.
+func (m *Main) categoryPreview(c *ui.Context, t *theme.Tokens, s *categorySheet, sizes ...float32) {
 	shown := data.Category{Icon: s.icon, Color: s.color}
 	ui.Row(c).Shrink(0).AlignSelf(ui.Start).Padding(10, 16).Gap(14).Radius(theme.RadiusPanel).Background(t.BgSubtle).AlignItems(ui.Center).Children(func() {
-		for _, size := range []float32{theme.IconLarge, theme.IconRow, theme.IconSmall} {
+		for _, size := range sizes {
 			categoryGlyph(c, shown, size)
 		}
 	})
@@ -126,7 +194,7 @@ func (m *Main) categoryPreview(c *ui.Context, t *theme.Tokens, s *categorySheet)
 func (m *Main) saveCategory() {
 	s := &m.manage.category
 	name := strings.TrimSpace(s.name)
-	if name == "" && !m.editsBuiltin() {
+	if name == "" && !m.editsBuiltin() || s.icon.Empty() {
 		return
 	}
 	var made data.Category

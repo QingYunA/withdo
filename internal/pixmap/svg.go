@@ -28,14 +28,33 @@ func (b Bitmap) Path() string {
 	return sb.String()
 }
 
-// SVG is the icon as a standalone SVG that fills with currentColor, like the files in pixel-icons.
-// An empty bitmap yields an SVG that draws nothing.
-func (b Bitmap) SVG() []byte {
-	d := b.Path()
-	if d == "" {
-		d = "M0 0z"
+// SVG draws the picture as a standalone SVG with one path per color. The Own pixels are filled
+// with currentColor, like the files in pixel-icons, so the surrounding text color tints them; the
+// pixels of palette letter FirstColor+i are filled with fills[i], a "#RRGGBB" string. A picture
+// with no pixel yields an SVG that draws nothing.
+func (p Picture) SVG(fills [Colors]string) []byte {
+	var sb strings.Builder
+	sb.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">`)
+	path := func(c byte, fill string) {
+		var b Bitmap
+		for y, row := range p {
+			for x, v := range row {
+				b = b.Set(x, y, v == c)
+			}
+		}
+		if d := b.Path(); d != "" {
+			fmt.Fprintf(&sb, `<path%s d="%s"/>`, fill, d)
+		}
 	}
-	return []byte(`<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="` + d + `"/></svg>`)
+	path(Own, "")
+	for i, hex := range fills {
+		path(FirstColor+byte(i), ` fill="`+hex+`"`)
+	}
+	if p.Empty() {
+		sb.WriteString(`<path d="M0 0z"/>`)
+	}
+	sb.WriteString(`</svg>`)
+	return []byte(sb.String())
 }
 
 const gridUnits = 2 * Size // the 24-unit view box
