@@ -353,14 +353,23 @@ func completedAt(cur Task, status Status, ts string) *string {
 	}
 }
 
+// notUserPrivateSQL is the SQL form of !Task.UserPrivate.
+const notUserPrivateSQL = "(project_id IS NOT NULL OR source <> 'user')"
+
+// UserPrivate reports whether the task is the user's own: no project and source user. Agents (MCP)
+// must not see such a task until the user hands it to them, which makes its source agent.
+func (t Task) UserPrivate() bool { return t.ProjectID == nil && t.Source == SourceUser }
+
 // TaskFilter narrows ListTasks. Zero values mean "no filter".
 type TaskFilter struct {
-	ProjectID   *int64
-	Inbox       bool // only tasks without a project
-	Statuses    []Status
-	MilestoneID *int64
-	ParentID    *int64 // only the subtasks of this task
-	Limit       int    // DefaultTaskLimit when 0
+	ProjectID *int64
+	Inbox     bool // only tasks without a project
+	// HideUserInbox leaves out the user's own tasks (see Task.UserPrivate). The MCP surface sets it.
+	HideUserInbox bool
+	Statuses      []Status
+	MilestoneID   *int64
+	ParentID      *int64 // only the subtasks of this task
+	Limit         int    // DefaultTaskLimit when 0
 }
 
 // ListTasks returns matching tasks, newest first.
@@ -372,6 +381,9 @@ func (c *Core) ListTasks(ctx context.Context, f TaskFilter) ([]Task, error) {
 	}
 	if f.Inbox {
 		where = append(where, "project_id IS NULL")
+	}
+	if f.HideUserInbox {
+		where = append(where, notUserPrivateSQL)
 	}
 	if f.MilestoneID != nil {
 		where, args = append(where, "milestone_id = ?"), append(args, *f.MilestoneID)

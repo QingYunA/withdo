@@ -39,8 +39,13 @@ func (m *Main) belowComposer(c *ui.Context, body func()) {
 
 // pageHeader is the title with a quiet companion, and whatever controls sit at the right.
 func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, controls func()) {
+	m.pageHeaderOf(c, t, func() { theme.Text(c, theme.Title, t.Text, title).Shrink(0) }, sub, controls)
+}
+
+// pageHeaderOf is pageHeader with a title that draws itself.
+func (m *Main) pageHeaderOf(c *ui.Context, t *theme.Tokens, title func(), sub string, controls func()) {
 	ui.Row(c).Height(36).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Title, t.Text, title).Shrink(0)
+		title()
 		if sub != "" {
 			theme.Text(c, theme.Body, t.TextTertiary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
 		}

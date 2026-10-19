@@ -142,6 +142,41 @@ func TestCreateTaskTakesAUserCategoryByName(t *testing.T) {
 	contains(t, "system prompt", r.system(), "Work (工作), Life (生活), Reading.")
 }
 
+// A category the model picked on its own is flagged so the UI can say so; one the user's words
+// named, or none at all, is not.
+func TestCreateTaskFlagsACategoryTheModelChoseItself(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		args m
+		want bool
+	}{
+		{"chosen", m{"title": "pay rent", "category": "life"}, true},
+		{"named by the user", m{"title": "pay rent", "category": "life", "category_named": true}, false},
+		{"none", m{"title": "pay rent"}, false},
+	} {
+		r := newRig(t, "Asia/Shanghai", oct14, call("create_task", c.args), say("ok"))
+		res := r.ask("pay rent")
+		if got := res.Receipts[0].Detail.AutoFiled; got != c.want {
+			t.Errorf("%s: AutoFiled = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// A task in a project counts as Work: a category the model chose is not attached and not flagged.
+func TestCreateTaskInAProjectIgnoresAModelChosenCategory(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "pay rent", "category": "life", "project_id": 1}), say("ok"))
+	if _, err := r.core.CreateProject(context.Background(), domain.CreateProjectInput{Name: "p"}); err != nil {
+		t.Fatal(err)
+	}
+	res := r.ask("pay rent")
+	if res.Receipts[0].Detail.AutoFiled {
+		t.Error("AutoFiled for a project task")
+	}
+	if got := r.task(res.Receipts[0].TaskID); got.CategoryID != nil {
+		t.Errorf("category = %v, want none", *got.CategoryID)
+	}
+}
+
 func TestCreateTaskWithoutACategoryLeavesItOut(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "x"}), say("ok"))
 	res := r.ask("x")

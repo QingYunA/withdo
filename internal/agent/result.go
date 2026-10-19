@@ -17,11 +17,13 @@ type Receipt struct {
 type DetailKind int
 
 const (
-	DetailAdded    DetailKind = iota // a task without a date was added, to Project
-	DetailReminder                   // a task was added with a reminder at At
-	DetailDue                        // a task was added with a due time At
-	DetailUpdated                    // a task was edited; Changes says how
-	DetailDone                       // a task was marked done
+	DetailAdded      DetailKind = iota // a task without a date was added, to Project
+	DetailReminder                     // a task was added with a reminder at At
+	DetailDue                          // a task was added with a due time At
+	DetailUpdated                      // a task was edited; Changes says how
+	DetailDone                         // a task was marked done
+	DetailRemembered                   // a note was added to the assistant's memory; Title is the note
+	DetailForgot                       // notes were removed from it; Title is the text they matched
 )
 
 // ChangeKind says which field of a task an update changed.
@@ -58,7 +60,10 @@ type Detail struct {
 	// Category is set on a new task the assistant sorted: the key "work" or "life" for a built-in
 	// category, which the UI words in its language, else the name of the user's category.
 	Category string
-	Changes  []Change // DetailUpdated
+	// AutoFiled is set on a new task whose Category the assistant chose itself, without the user
+	// naming one; the UI says so in a quiet toast that offers to clear it.
+	AutoFiled bool
+	Changes   []Change // DetailUpdated
 }
 
 // Question is what ask_user asked: a short question and 2 to 4 answers to pick from.

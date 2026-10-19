@@ -53,6 +53,13 @@ func (t *tools) reportProgress(ctx context.Context, req *mcp.CallToolRequest, a 
 	if err := urlArg("pr_url", a.PRURL); err != nil {
 		return t.fail(err)
 	}
+	for field, id := range map[string]*int64{"task_id": a.TaskID, "parent_task_id": a.ParentTaskID} {
+		if id != nil {
+			if _, err := t.agentTask(ctx, field, *id); err != nil {
+				return t.fail(err)
+			}
+		}
+	}
 	fallback := ""
 	if a.TaskID == nil && a.Cwd == "" {
 		fallback = t.defaultCwd

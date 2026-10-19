@@ -35,6 +35,12 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
 6. **Fast is a feature.** The composer is one keystroke away (⌘K). No spinner for local data.
 7. **Pictures are pixels; text and layout are native.** See **Pixel language**.
+8. **Few entries, few steps.** Each action has one place to start it; a new button must replace
+   one or earn its place against the question above. Rarely used parts start folded.
+9. **Hand it to an agent.** What an agent can do for me (filing, splitting, dating, organizing)
+   is offered through the assistant or a hand-off, not as another form or setting.
+10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
+    reason the existing ones cannot carry.
 
 ## Tokens
 
@@ -331,6 +337,18 @@ subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or 
 Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
 Right-click: see **Categories (M9)**.
 
+**Folding.** The sub-rows of `Mine` and of `Agents` are folded by default, so many agents and
+categories do not crowd the sidebar. Each of the two parents has a disclosure chevron at its right end
+(after the count or badge): a 12 pt pixel chevron (`theme.IconForward` folded, `theme.IconChevron`
+unfolded, the icons of the Recent changes fold) in `text.tertiary`, `text.secondary` and a `bg.hover`
+square on hover, with the tooltip and a11y label `Expand Mine` / `Collapse Agents`. Clicking the
+chevron only folds or unfolds; clicking anywhere else on the row still opens the page and leaves the
+fold as it was. This is how Finder, Mail and Linear fold a sidebar section (a chevron on the parent
+row, the row itself navigates); we keep it at the right so the icons and labels of all rows stay in one
+column. The choice is kept per section in the prefs file (`mineOpen`, `agentsOpen`), so it survives a
+restart. While the open page is a sub-row of a folded section (`Work`, `Claude Code`),
+that one row stays drawn so the highlight never vanishes; the rest fold away.
+
 **Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
 before M9 only `work` and `life`, migration 007).
 The category it counts under is its own, else Work when its project is a repository, else none
@@ -359,7 +377,8 @@ takes a repository from the sheet if the user gives it one.
   `New sub-project…` (the same sheet, with this project as the parent), a
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
-  the old name back. Archive acts at once, with the project's sub-projects (the project is in Settings >
+  the old name back. Double-clicking the project's title on its page renames it the same way, in place
+  (the title becomes an input; Inbox and the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
   General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
   Archiving or deleting the project on screen goes to Mine.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
@@ -652,6 +671,14 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   or the conversation is live (until the second `Esc`, or the assistant idling out); with the line
   gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
   field's own. (The task menu's Delete keeps its own Undo toast.)
+- **Memory.** The assistant keeps short notes about the user in one Markdown file, `assistant-memory.md`
+  in the data folder (`## 关于我` and `## 纠正与偏好`, one `- ` bullet per note; the user may edit it by
+  hand, and a missing file is no memory). Every turn reads the file afresh and puts it in the prompt;
+  corrections and stated preferences are saved with `remember`, removed with `forget`, at most 40
+  notes / 4000 characters, 200 per note. A write needs no confirmation: its receipt is a line like
+  any other, `✓ Remembered Fitness is Life, not Work   Undo` (`✓ Forgot …`), with no task to open;
+  Undo restores the file as it was. Settings > Assistant ends with an **Assistant memory** row and
+  an `Open file` link (the data folder when nothing is written yet).
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`) when there is one to say.
@@ -1067,6 +1094,11 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   unfinished rows; a board lane takes every selected card.
 - **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
   two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
+- **The filing toast.** When the built-in assistant creates a task and picks its category itself
+  (the user named none, the task is not in a repository's project), a quiet toast says
+  `Filed under Life` / `已归到 生活` with **Undo**, and goes by itself after 4 s. Undo clears the
+  category (the task is Unsorted). Nothing shows when the user named the category or none fit;
+  tasks typed by hand or made over MCP never get it. Screen: `mine-filed-toast-*.png`.
 
 ### Search
 
@@ -1484,6 +1516,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 `Esc` and the Cancel button close them; the primary button is the accent one.
 
 - **New project**: title `New project`; field `Name` (focused); field `GitHub repository` (optional,
+  folded by default into a `GitHub repository` row with a chevron, under the name; a click unfolds it, and each new sheet starts folded again;
   mono, placeholder `owner/repo`) with the line `Agent reports from this repository land in the
   project.` Create is off until the name has text. A pasted GitHub address is read as `owner/repo`.
   Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like
@@ -1589,7 +1622,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
-| Rename project (sidebar) | saves | puts the old name back | |
+| Rename project (sidebar, page title) | saves | puts the old name back | |
 | New project, milestone, category sheets | creates / saves | closes the sheet | |
 
 ### Notifications
@@ -1636,7 +1669,7 @@ update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off
 - **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
   checks run once a day, the first 10 s after launch when one is due, and never in a development build.
 - **The switch**: Settings > General > Software updates (below).
-- `adhd-core` is inside the app and updates with it; see `docs/plans/m10-auto-update.md`.
+- `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
 
 ### Settings
 

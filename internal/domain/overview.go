@@ -44,6 +44,8 @@ type Overview struct {
 type OverviewOptions struct {
 	// StaleHours: hours without a report before a task is stale (DefaultStaleHours when 0).
 	StaleHours float64
+	// HideUserInbox leaves out the user's own tasks (Task.UserPrivate).
+	HideUserInbox bool
 }
 
 // attentionRank orders what needs the user first: blocked, review, doing.
@@ -58,7 +60,7 @@ func (c *Core) GetOverview(ctx context.Context, opts OverviewOptions) (*Overview
 		staleHours = DefaultStaleHours
 	}
 	now := c.now()
-	tasks, err := c.activeTasks(ctx)
+	tasks, err := c.activeTasks(ctx, opts.HideUserInbox)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +106,13 @@ func (c *Core) GetOverview(ctx context.Context, opts OverviewOptions) (*Overview
 }
 
 // activeTasks returns doing/blocked/review tasks outside archived projects.
-func (c *Core) activeTasks(ctx context.Context) ([]Task, error) {
-	rows, err := c.db.QueryContext(ctx, "SELECT "+prefixCols(taskCols)+` FROM tasks t LEFT JOIN projects p ON p.id = t.project_id
-		WHERE t.status IN ('doing','blocked','review') AND (t.project_id IS NULL OR p.archived_at IS NULL)`)
+func (c *Core) activeTasks(ctx context.Context, hideUserInbox bool) ([]Task, error) {
+	query := "SELECT " + prefixCols(taskCols) + ` FROM tasks t LEFT JOIN projects p ON p.id = t.project_id
+		WHERE t.status IN ('doing','blocked','review') AND (t.project_id IS NULL OR p.archived_at IS NULL)`
+	if hideUserInbox {
+		query += " AND (t.project_id IS NOT NULL OR t.source <> 'user')"
+	}
+	rows, err := c.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("list active tasks: %w", err)
 	}

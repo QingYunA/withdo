@@ -170,6 +170,8 @@ func TestEachKindOfReceiptReadsAsOneLine(t *testing.T) {
 		{"moved", data.Receipt{ID: 4, TaskID: 5, Title: "D", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}}}, "", "· Moved to adhd-todo"},
 		{"reminder cleared", data.Receipt{ID: 5, TaskID: 5, Title: "E", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeReminder}}}}, "", "· Reminder cleared"},
 		{"rescheduled", data.Receipt{ID: 6, TaskID: 5, Title: "F", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeDue, At: now.Add(26 * time.Hour)}}}}, "", "· Tomorrow 4:30 PM · due"},
+		{"remembered", data.Receipt{ID: 7, Title: "Fitness is Life", Detail: data.Detail{Kind: data.DetailRemembered}}, "Remembered", ""},
+		{"forgot", data.Receipt{ID: 8, Title: "Fitness", Detail: data.Detail{Kind: data.DetailForgot}}, "Forgot", ""},
 	}
 	for _, tc := range tests {
 		r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Receipts: []data.Receipt{tc.r}}, nil)})

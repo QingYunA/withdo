@@ -63,6 +63,7 @@ func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
 	to := nav{}
 	selected := m.shows(to)
 	row := sidebarRow(c, t, "mine", selected)
+	folded := false // the chevron took the click: it is not the row's
 	row.ContextMenu(m.mineMenu)
 	m.hop.mine = row.Bounds()
 	row.Children(func() {
@@ -73,8 +74,12 @@ func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
 		} else {
 			sidebarCount(c, t, m.mine.Count())
 		}
+		if m.sectionToggle(c, t, "mine-fold", m.say.NavMine(), m.app.MineOpen()) {
+			m.app.SetMineOpen(!m.app.MineOpen())
+			folded = true
+		}
 	})
-	if row.Clicked() {
+	if row.Clicked() && !folded {
 		m.goTo(to)
 	}
 }
@@ -84,15 +89,38 @@ func (m *Main) agentsRow(c *ui.Context, t *theme.Tokens) {
 	to := nav{screen: screenAgents}
 	selected := m.shows(to)
 	row := sidebarRow(c, t, "agents", selected)
+	folded := false
 	m.hop.agents = row.Bounds()
 	row.Children(func() {
 		avatarSlot(c, theme.AccentBot(t.Accent))
 		sidebarLabel(c, t, m.say.NavAgents(), selected)
 		sidebarCount(c, t, m.agents.Count())
+		if m.sectionToggle(c, t, "agents-fold", m.say.NavAgents(), m.app.AgentsOpen()) {
+			m.app.SetAgentsOpen(!m.app.AgentsOpen())
+			folded = true
+		}
 	})
-	if row.Clicked() {
+	if row.Clicked() && !folded {
 		m.goTo(to)
 	}
+}
+
+// sectionToggle is the chevron at the right end of Mine and Agents: down while their sub-rows show,
+// right while they are folded. It reports a click, which folds or unfolds them and does not open the page.
+func (m *Main) sectionToggle(c *ui.Context, t *theme.Tokens, key, name string, open bool) bool {
+	icon, label := theme.IconForward, m.say.NavSectionExpand(name)
+	if open {
+		icon, label = theme.IconChevron, m.say.NavSectionCollapse(name)
+	}
+	btn := ui.ButtonBase(c.Key(key)).Size(theme.IconRow, theme.IconRow).Shrink(0).Radius(5).Center().Label(label).Tooltip(label).
+		Cursor(ui.CursorPointer)
+	ink := t.TextTertiary
+	if btn.Hovered() {
+		btn.Background(t.BgHover)
+		ink = t.TextSecondary
+	}
+	btn.Children(func() { ui.Icon(c, icon).Size(theme.IconSmall, theme.IconSmall).TextColor(ink) })
+	return btn.Clicked()
 }
 
 // avatarSlot is an avatar in the place of a row's 18 pt icon, so the labels stay in line.
@@ -167,7 +195,7 @@ func (m *Main) projectRows(c *ui.Context, t *theme.Tokens) {
 func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool, depth int) {
 	to := nav{screen: screenProject, projectID: p.ID}
 	selected := m.shows(to)
-	renaming := m.manage.rename.id == p.ID
+	renaming := m.manage.rename.id == p.ID && !m.manage.rename.page
 	row := sidebarRow(c, t, p.ID, selected)
 	if depth > 0 {
 		row.Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent*float32(depth))
@@ -176,7 +204,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row.Children(func() {
 		ui.Icon(c, theme.IconFolder).Size(theme.IconRow, theme.IconRow).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
 		if renaming {
-			m.renameInput(c, t)
+			m.renameInput(c, t, theme.Body)
 		} else {
 			sidebarLabel(c, t, p.Name, selected)
 		}
