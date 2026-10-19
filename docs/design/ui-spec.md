@@ -1619,7 +1619,9 @@ The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the i
 ### Updates (M10)
 
 The app updates itself from GitHub releases with mygo's native updater plugin (`native.Plugin`); the
-window is the plugin's own, so the app draws nothing of it.
+window is the plugin's own, so the app draws nothing of it. All of it shows only in a build that can
+update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off for now, see
+`docs/plans/m10-auto-update.md`.
 
 - **The menu item**: `Check for Updates…` (`检查更新…`) in the app menu right after About. It opens the
   plugin's window at once: release notes of the new version, **Install Update**, **Remind Me Later**,
@@ -1661,7 +1663,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
-  link). **Software updates** (M10): a group of one row between Sound effects and Pages, `Software
+  link). **Software updates** (M10; only in a build that can update): a group of one row between Sound effects and Pages, `Software
   updates` (`软件更新`), `meta` `Checked once a day; you choose when to install` (`每天检查一次，装不装由你决定`),
   and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
   plugin keeps it in its own `updater.json`, not in the prefs, and the row reads it back whenever the

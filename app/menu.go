@@ -1,6 +1,8 @@
 package main
 
 import (
+	"slices"
+
 	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/egoist/mygo"
@@ -14,22 +16,27 @@ func (s *shell) setMenu() {
 		ID: "settings", Label: locales.MenuSettings(), Accelerator: "CmdOrCtrl+,",
 		Click: func(*mygo.MenuItem, *mygo.Window) { s.OpenSettings(views.PaneGeneral) },
 	}
-	check := updater.MenuItem()
+	appMenu := []*mygo.MenuItem{
+		{Role: mygo.RoleAbout},
+		mygo.Separator(),
+		settings,
+		mygo.Separator(),
+		{Role: mygo.RoleServices},
+		mygo.Separator(),
+		{Role: mygo.RoleHide},
+		{Role: mygo.RoleHideOthers},
+		{Role: mygo.RoleUnhide},
+		mygo.Separator(),
+		{Role: mygo.RoleQuit},
+	}
+	// Check for Updates… follows About, in a build that can update itself.
+	var check *mygo.MenuItem
+	if mygo.Updater.Enabled() {
+		check = updater.MenuItem()
+		appMenu = slices.Insert(appMenu, 1, check)
+	}
 	menu := mygo.NewMenu([]*mygo.MenuItem{
-		{Role: mygo.RoleAppMenu, Submenu: []*mygo.MenuItem{
-			{Role: mygo.RoleAbout},
-			check,
-			mygo.Separator(),
-			settings,
-			mygo.Separator(),
-			{Role: mygo.RoleServices},
-			mygo.Separator(),
-			{Role: mygo.RoleHide},
-			{Role: mygo.RoleHideOthers},
-			{Role: mygo.RoleUnhide},
-			mygo.Separator(),
-			{Role: mygo.RoleQuit},
-		}},
+		{Role: mygo.RoleAppMenu, Submenu: appMenu},
 		{Role: mygo.RoleFileMenu},
 		{Role: mygo.RoleEditMenu},
 		{Role: mygo.RoleViewMenu},
@@ -38,6 +45,8 @@ func (s *shell) setMenu() {
 	mygo.App.SetMenu(menu)
 	mygo.App.OnLocaleChanged(func(string) {
 		settings.SetLabel(locales.MenuSettings())
-		check.SetLabel(updater.MenuItem().Label)
+		if check != nil {
+			check.SetLabel(updater.MenuItem().Label)
+		}
 	})
 }

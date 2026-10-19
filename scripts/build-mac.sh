@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the macOS release files into app/build: the universal app with adhd-core inside it, the
-# signed update archive and manifest, the DMG, and the standalone adhd-core tarball with its
+# signed update archive and manifest when updates are on, the DMG, and the standalone adhd-core tarball with its
 # SHA256SUMS.txt. It uploads nothing.
 #   scripts/build-mac.sh
 # The update key is the secret half of mygo's key pair (mygo keygen). It stays out of the repository;
@@ -8,8 +8,13 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+# Updates are off while the repository is private (docs/plans/m10-auto-update.md): with no "updates"
+# in mygo.json the app is built without them, and no key is needed.
 KEY="${MYGO_UPDATE_KEY:-$HOME/Library/Application Support/mygo/update-keys/mygo-update.key}"
-[ -r "$KEY" ] || { echo "no update key at $KEY (set MYGO_UPDATE_KEY, or run: cd app && go tool mygo keygen)" >&2; exit 1; }
+if grep -q '"updates"' app/mygo.json; then
+  [ -r "$KEY" ] || { echo "no update key at $KEY (set MYGO_UPDATE_KEY, or run: cd app && go tool mygo keygen)" >&2; exit 1; }
+  export MYGO_UPDATER_PRIVATE_KEY="$(cat "$KEY")"
+fi
 
 version="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' app/mygo.json)"
 out="$PWD/app/build/darwin-universal"
@@ -23,7 +28,7 @@ done
 mkdir -p app/resources/darwin
 lipo -create -output app/resources/darwin/adhd-core "$work/adhd-core-arm64" "$work/adhd-core-amd64"
 
-(cd app && MYGO_UPDATER_PRIVATE_KEY="$(cat "$KEY")" go tool mygo build -platform darwin/universal)
+(cd app && go tool mygo build -platform darwin/universal)
 
 # The standalone adhd-core, for machines without the app: the same binary, unsigned, as a bare file.
 mkdir -p "$work/tar"

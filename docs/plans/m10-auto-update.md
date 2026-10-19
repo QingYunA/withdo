@@ -1,7 +1,27 @@
 # M10: automatic updates
 
 User request: the app updates itself from GitHub releases, and the `adhd-core` CLI / MCP binary
-updates with it. v0.5.0 is meant to be the last manual install.
+updates with it.
+
+**Status: updates are off.** `QingYunA/adhd-todo` is private, so its release files answer 404 to an
+app that is not signed in to GitHub, and mygo's updater needs them public. v0.5.0 was published with
+updates on, found unable to update, withdrawn, and re-released without them: `app/mygo.json` has no
+`updates`, so `mygo.Updater.Enabled()` is false and the app loads no update plugin, shows no `Check
+for Updates…` and no Settings switch. `adhd-core` still ships inside the app and is linked on launch.
+
+To turn updates on, once the release files are public (this repository made public, or a public
+repository holding only the releases, named in `github`): put back in `app/mygo.json`
+
+```json
+"updates": {
+  "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
+  "github": "QingYunA/adhd-todo",
+  "changelog": "../CHANGELOG.md"
+}
+```
+
+and build with `scripts/build-mac.sh`, which then asks for the private key (see below). The first
+version built so is the last one to install by hand.
 
 ## Decisions
 

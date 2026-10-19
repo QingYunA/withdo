@@ -27,3 +27,10 @@ func TestTheAutomaticUpdatesSwitchGoesToTheUpdater(t *testing.T) {
 		t.Error("the switch does not turn the checks on again")
 	}
 }
+
+func TestABuildWithoutUpdatesHasNoUpdatesRow(t *testing.T) {
+	r := newSettingsRig(t, func(a *App) { a.Act.(*recorder).noUpdates = true })
+	if r.tt.HasText("Software updates") || r.tt.HasText("Automatically check for updates") {
+		t.Errorf("a build that cannot update offers to: %q", r.tt.Texts())
+	}
+}
