@@ -1,4 +1,4 @@
-// Package mcpserver exposes adhd-todo's core as an MCP server with eight tools.
+// Package mcpserver exposes adhd-todo's core as an MCP server with nine tools.
 package mcpserver
 
 import (
@@ -79,6 +79,7 @@ func New(core *domain.Core, opts Options) *mcp.Server {
 	t.registerUpdateTask(server)
 	t.registerGetTask(server)
 	t.registerListTasks(server)
+	t.registerListCategories(server)
 	t.registerGetOverview(server)
 	t.registerUpsertProject(server)
 	t.registerCreateMilestone(server)

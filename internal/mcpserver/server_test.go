@@ -15,10 +15,14 @@ import (
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/mcpserver"
+	"github.com/QingYunA/adhd-todo/internal/pixmap"
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
 
 var ctx = context.Background()
+
+// dot is the smallest icon a category may have.
+var dot = pixmap.Bitmap{}.Set(5, 5, true).Grid()
 
 // rig is a connected client/server pair over an in-memory transport.
 type rig struct {
@@ -95,7 +99,7 @@ func (res result) list(key string) []any {
 	return l
 }
 
-func TestListsTheEightTools(t *testing.T) {
+func TestListsTheNineTools(t *testing.T) {
 	r := newRig(t)
 	list, err := r.session.ListTools(ctx, nil)
 	if err != nil {
@@ -113,7 +117,7 @@ func TestListsTheEightTools(t *testing.T) {
 		}
 	}
 	sort.Strings(names)
-	want := []string{"create_milestone", "create_task", "get_overview", "get_task", "list_tasks", "report_progress", "update_task", "upsert_project"}
+	want := []string{"create_milestone", "create_task", "get_overview", "get_task", "list_categories", "list_tasks", "report_progress", "update_task", "upsert_project"}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Errorf("tools = %v, want %v", names, want)
 	}
@@ -326,7 +330,7 @@ func TestSchemaErrorsReadLikeDomainErrors(t *testing.T) {
 		{"empty string", "report_progress", map[string]any{"summary": ""}, "summary: must not be empty"},
 		{"unknown enum", "report_progress", map[string]any{"summary": "s", "status": "weird"},
 			"status: must be one of backlog, todo, doing, blocked, review, done, cancelled"},
-		{"unknown nullable enum", "update_task", map[string]any{"task_id": 1, "category": "play"}, "category: must be one of work, life"},
+		{"unknown category", "update_task", map[string]any{"task_id": 1, "category": "play"}, `category: no category named "play"; the categories are Work, Life`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -426,24 +430,83 @@ func TestTaskLifecycle(t *testing.T) {
 
 func TestTaskCategoryIsSetAndCleared(t *testing.T) {
 	r := newRig(t)
-	if c := r.ok("create_task", map[string]any{"title": "plain"}).obj("task")["category"]; c != nil {
-		t.Errorf("category without one given = %v, want null", c)
+	plain := r.ok("create_task", map[string]any{"title": "plain"}).obj("task")
+	if plain["category"] != nil || plain["category_id"] != nil {
+		t.Errorf("category without one given = %v %v, want null", plain["category"], plain["category_id"])
 	}
 	task := r.ok("create_task", map[string]any{"title": "Pay rent", "category": "life"}).obj("task")
-	if task["category"] != "life" {
+	if task["category"] != "Life" || task["category_id"] != float64(2) {
 		t.Fatalf("created = %+v", task)
 	}
 	same := r.ok("update_task", map[string]any{"task_id": task["id"], "title": "Pay the rent"}).obj("task")
-	if same["category"] != "life" {
+	if same["category"] != "Life" {
 		t.Errorf("an omitted category changed: %+v", same)
 	}
 	moved := r.ok("update_task", map[string]any{"task_id": task["id"], "category": "work"}).obj("task")
-	if moved["category"] != "work" {
+	if moved["category"] != "Work" {
 		t.Errorf("set = %+v", moved)
 	}
 	cleared := r.ok("update_task", map[string]any{"task_id": task["id"], "category": nil}).obj("task")
-	if cleared["category"] != nil {
+	if cleared["category"] != nil || cleared["category_id"] != nil {
 		t.Errorf("cleared = %+v", cleared)
+	}
+}
+
+// The categories are the user's own: an agent names one in any case, and Work and Life also answer
+// to their Chinese names.
+func TestTaskCategoryResolvesByName(t *testing.T) {
+	r := newRig(t)
+	reading, err := r.core.CreateCategory(ctx, domain.CreateCategoryInput{Name: "Reading", Icon: dot})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, want := range map[string]string{"WORK": "Work", "工作": "Work", "生活": "Life", "reading": "Reading", " Reading ": "Reading"} {
+		task := r.ok("create_task", map[string]any{"title": "x", "category": name}).obj("task")
+		if task["category"] != want {
+			t.Errorf("category %q gave %v, want %s", name, task["category"], want)
+		}
+	}
+	task := r.ok("create_task", map[string]any{"title": "x", "category": "reading"}).obj("task")
+	if task["category_id"] != float64(reading.ID) {
+		t.Errorf("category_id = %v, want %d", task["category_id"], reading.ID)
+	}
+	res := r.call("create_task", map[string]any{"title": "x", "category": "play"})
+	if !res.IsError || !strings.Contains(res.Text, `no category named "play"; the categories are Work, Life, Reading`) {
+		t.Errorf("unknown category: %v %q", res.IsError, res.Text)
+	}
+	if res := r.call("create_task", map[string]any{"title": "x", "category": ""}); !res.IsError {
+		t.Errorf("an empty category was accepted")
+	}
+	res = r.call("update_task", map[string]any{"task_id": task["id"], "category": "play"})
+	if !res.IsError || !strings.HasPrefix(res.Text, "category: no category named") {
+		t.Errorf("update with an unknown category: %v %q", res.IsError, res.Text)
+	}
+}
+
+func TestListCategoriesTool(t *testing.T) {
+	r := newRig(t)
+	if _, err := r.core.CreateCategory(ctx, domain.CreateCategoryInput{Name: "Reading", Icon: dot}); err != nil {
+		t.Fatal(err)
+	}
+	res := r.ok("list_categories", map[string]any{})
+	cats := res.list("categories")
+	if len(cats) != 3 {
+		t.Fatalf("categories = %v", cats)
+	}
+	first, third := cats[0].(map[string]any), cats[2].(map[string]any)
+	if first["name"] != "Work" || first["builtin"] != "work" || first["id"] != float64(1) {
+		t.Errorf("first = %v", first)
+	}
+	if first["color"] != "blue" || third["color"] != domain.DefaultCategoryColor("Reading") {
+		t.Errorf("colors = %v %v", first["color"], third["color"])
+	}
+	if third["name"] != "Reading" || third["builtin"] != nil {
+		t.Errorf("third = %v", third)
+	}
+	for _, want := range []string{"Work", "Life", "Reading"} {
+		if !strings.Contains(res.Text, want) {
+			t.Errorf("text %q lacks %s", res.Text, want)
+		}
 	}
 }
 
