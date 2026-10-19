@@ -13,3 +13,4 @@ coverage/
 !internal/store/testdata/*.db
 
 .DS_Store
+out/
