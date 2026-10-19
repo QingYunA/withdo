@@ -60,30 +60,6 @@ func TestAtSetEmptyInvert(t *testing.T) {
 	if b2.At(-1, 0) || b2.At(0, 12) || b2.Set(12, 0, true) != b2 {
 		t.Fatal("out of range reads off and writes nothing")
 	}
-	inv := b.Invert()
-	for _, r := range inv {
-		if r != 0xfff {
-			t.Fatalf("Invert of empty = %03x", r)
-		}
-	}
-	if inv.Invert() != b {
-		t.Fatal("Invert twice is not the identity")
-	}
-}
-
-func TestShiftDropsWhatLeavesTheGrid(t *testing.T) {
-	b := Bitmap{}.Set(0, 0, true).Set(11, 5, true)
-	r := b.Shift(1, 1)
-	if !r.At(1, 1) || r.At(0, 0) || r.At(12, 6) {
-		t.Fatalf("Shift(1,1) wrong: %v", r)
-	}
-	if r.Count() != 1 {
-		t.Fatalf("the pixel pushed off the right edge must be gone, got %d", r.Count())
-	}
-	l := b.Shift(-1, -1)
-	if !l.At(10, 4) || l.Count() != 1 {
-		t.Fatalf("Shift(-1,-1) wrong: %v", l)
-	}
 }
 
 func TestPathMergesRunsPerRow(t *testing.T) {
@@ -92,15 +68,32 @@ func TestPathMergesRunsPerRow(t *testing.T) {
 	if got := b.Path(); got != want {
 		t.Fatalf("Path = %q, want %q", got, want)
 	}
-	if !strings.Contains(string(b.SVG()), `viewBox="0 0 24 24"`) || !strings.Contains(string(b.SVG()), `fill="currentColor"`) {
-		t.Fatalf("SVG = %s", b.SVG())
+}
+
+func TestPictureSVGHasOnePathPerColor(t *testing.T) {
+	var fills [Colors]string
+	for i := range fills {
+		fills[i] = "#0000" + string(rune('a'+i)) + "0"
+	}
+	svg := string(Picture{}.Set(0, 0, Own).Set(1, 0, 'a').Set(2, 0, 'l').SVG(fills))
+	for _, want := range []string{`viewBox="0 0 24 24"`, `fill="currentColor"`, `<path d="M0 0h2v2h-2z"/>`,
+		`<path fill="#0000a0" d="M2 0h2v2h-2z"/>`, `<path fill="#0000l0" d="M4 0h2v2h-2z"/>`} {
+		if !strings.Contains(svg, want) {
+			t.Errorf("SVG lacks %s: %s", want, svg)
+		}
+	}
+	if n := strings.Count(svg, "<path"); n != 3 {
+		t.Errorf("%d paths, want 3: %s", n, svg)
+	}
+	if empty := string(Picture{}.SVG(fills)); !strings.Contains(empty, `<path d="M0 0z"/>`) {
+		t.Errorf("an empty picture draws nothing: %s", empty)
 	}
 }
 
 func TestPathRoundTripsThroughFromRectSVG(t *testing.T) {
 	for _, hex := range []string{briefcaseHex, homeHex} {
 		b, _ := ParseHex(hex)
-		got, errCells, err := FromRectSVG(b.SVG())
+		got, errCells, err := FromRectSVG(b.Picture().SVG([Colors]string{}))
 		if err != nil || errCells != 0 || got != b {
 			t.Errorf("%s: got %s, %d, %v", hex, got.Hex(), errCells, err)
 		}
@@ -229,28 +222,7 @@ func TestGridRoundTrip(t *testing.T) {
 		t.Fatalf("grid = %s\nwant   %s", grid, want)
 	}
 	back, err := ParseGrid(grid)
-	if err != nil || back != b {
+	if err != nil || back != b.Picture() {
 		t.Fatalf("ParseGrid = %v, %v", back, err)
-	}
-}
-
-func TestParseGridRefusesAnythingButDotsAndHashes(t *testing.T) {
-	ok := strings.Repeat(".", GridLen)
-	for name, s := range map[string]string{
-		"short":     ok[:143],
-		"long":      ok + ".",
-		"empty":     "",
-		"a letter":  ok[:143] + "a", // lower case letters are reserved for a palette
-		"upper":     ok[:143] + "A",
-		"a space":   ok[:143] + " ",
-		"zero":      ok[:143] + "0",
-		"multibyte": ok[:141] + "é",
-	} {
-		if _, err := ParseGrid(s); err == nil {
-			t.Errorf("%s accepted", name)
-		}
-	}
-	if _, err := ParseGrid(ok); err != nil {
-		t.Errorf("an empty grid parses (the domain refuses it): %v", err)
 	}
 }

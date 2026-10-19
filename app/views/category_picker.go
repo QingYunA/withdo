@@ -14,18 +14,17 @@ import (
 
 const (
 	swatchCell   float32 = 24 // a swatch's hit area; its ring is drawn at this size
-	swatchDisc   float32 = 18
+	swatchSize   float32 = 18
 	pickerHeight float32 = 240
 	iconCell     float32 = 36
 	iconsPerRow          = 9
 )
 
-// swatchDiscBitmap and swatchRingBitmap are a color's 12 x 12 pixel circle and the ring around the
-// current one.
-var swatchDiscBitmap, swatchRingBitmap = swatchBitmaps()
+// swatchDisc and swatchRing are a color's 12 x 12 pixel circle and the ring around the current one.
+var swatchDisc, swatchRing = swatchPictures()
 
-func swatchBitmaps() (disc, ring pixmap.Bitmap) {
-	disc, err := pixmap.ParseRows([]string{
+func swatchPictures() (disc, ring pixmap.Picture) {
+	circle, err := pixmap.ParseRows([]string{
 		"....####....",
 		"..########..",
 		".##########.",
@@ -42,13 +41,8 @@ func swatchBitmaps() (disc, ring pixmap.Bitmap) {
 	if err != nil {
 		panic(err)
 	}
-	for y := 0; y < pixmap.Size; y++ {
-		for x := 0; x < pixmap.Size; x++ {
-			inner := disc.At(x, y) && disc.At(x-1, y) && disc.At(x+1, y) && disc.At(x, y-1) && disc.At(x, y+1)
-			ring = ring.Set(x, y, disc.At(x, y) && !inner)
-		}
-	}
-	return disc, ring
+	disc = circle.Picture()
+	return disc, disc.Outline()
 }
 
 // categorySwatches is the eight colors a category can have, in the order of the project colors; the
@@ -61,9 +55,9 @@ func (m *Main) categorySwatches(c *ui.Context, t *theme.Tokens, s *categorySheet
 				Label(m.say.A11yCategoryColor(m.categoryColorName(key))).Cursor(ui.CursorPointer)
 			btn.Children(func() {
 				if on {
-					ui.Icon(c, theme.CategoryIcon(swatchRingBitmap)).Size(swatchCell, swatchCell).TextColor(t.Text).Absolute().Left(0).Top(0)
+					ui.Icon(c, theme.CategoryIcon(swatchRing)).Size(swatchCell, swatchCell).TextColor(t.Text).Absolute().Left(0).Top(0)
 				}
-				ui.Icon(c, theme.CategoryIcon(swatchDiscBitmap)).Size(swatchDisc, swatchDisc).TextColor(theme.CategoryColor(key))
+				ui.Icon(c, theme.CategoryIcon(swatchDisc)).Size(swatchSize, swatchSize).TextColor(theme.CategoryColor(key))
 			})
 			if btn.Clicked() {
 				s.color, s.picked = key, true
@@ -126,15 +120,17 @@ func (m *Main) iconCell(c *ui.Context, t *theme.Tokens, s *categorySheet, e them
 	cell := ui.ButtonBase(c.Key("icon-"+e.Name)).Size(iconCell, iconCell).Shrink(0).Center().Radius(7).Label(e.Name).Cursor(ui.CursorPointer)
 	ink := t.Text
 	switch {
-	case e.Bitmap == s.icon:
+	case e.Bitmap.Picture() == s.icon:
 		cell.Background(t.Accent.Alpha(0.12)).Border(2, t.Accent)
 		ink = theme.CategoryColor(s.color)
 	case cell.Hovered():
 		cell.Background(t.BgHover)
 	}
-	cell.Children(func() { ui.Icon(c, theme.CategoryIcon(e.Bitmap)).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
+	cell.Children(func() {
+		ui.Icon(c, theme.CategoryIcon(e.Bitmap.Picture())).Size(theme.IconRow, theme.IconRow).TextColor(ink)
+	})
 	if cell.Clicked() {
-		s.icon = e.Bitmap
+		s.icon = e.Bitmap.Picture()
 	}
 }
 

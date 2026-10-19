@@ -1,9 +1,12 @@
 package theme
 
 import (
+	"image/color"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/pixmap"
+	"github.com/egoist/mygo/ui"
 )
 
 func TestEveryCuratedIconExistsAndDraws(t *testing.T) {
@@ -79,16 +82,63 @@ func TestSearchReadsEnglishNamesAndChineseKeywords(t *testing.T) {
 	}
 }
 
-func TestCategoryIconIsCachedByBitmap(t *testing.T) {
+func TestCategoryIconIsCachedByPicture(t *testing.T) {
 	ic, _ := CategoryIconNamed("heart")
-	if CategoryIcon(ic.Bitmap) == nil || CategoryIcon(ic.Bitmap) != CategoryIcon(ic.Bitmap) {
-		t.Error("the same bitmap must give the same *ui.SVG")
+	p := ic.Bitmap.Picture()
+	if CategoryIcon(p) == nil || CategoryIcon(p) != CategoryIcon(p) {
+		t.Error("the same picture must give the same *ui.SVG")
 	}
-	if CategoryIcon(ic.Bitmap.Invert()) == CategoryIcon(ic.Bitmap) {
-		t.Error("different bitmaps shared an SVG")
+	if CategoryIcon(p.Invert()) == CategoryIcon(p) {
+		t.Error("different pictures shared an SVG")
 	}
-	if CategoryIcon(ic.Bitmap.Invert().Invert()) != CategoryIcon(ic.Bitmap) {
-		t.Error("equal bitmaps built apart gave different SVGs")
+	if CategoryIcon(p.Invert().Invert()) != CategoryIcon(p) {
+		t.Error("equal pictures built apart gave different SVGs")
+	}
+}
+
+func TestThePaletteIsTheProjectColorsThenWhiteGrayBlackBrown(t *testing.T) {
+	for i, c := range ProjectColors {
+		if PaletteColors[i] != c {
+			t.Errorf("letter %c is not project color %d", 'a'+i, i)
+		}
+	}
+	for i, hex := range []string{"#FFFFFF", "#8E8E93", "#1C1C1E", "#8A5A3B"} {
+		if got := PaletteColors[len(ProjectColors)+i]; got != ui.Hex(hex) {
+			t.Errorf("letter %c = %v, want %s", 'i'+i, got, hex)
+		}
+	}
+	if len(PaletteColors) != pixmap.Colors || PaletteColor('d') != ProjectColors[3] || PaletteColor('l') != PaletteColors[11] {
+		t.Error("PaletteColor does not read the letters")
+	}
+}
+
+// ui.Image keeps a palette pixel's own color while the TextColor tints the Own pixels: that is how
+// the sidebar draws every category icon.
+func TestAPicturesPalettePixelsSurviveTheTintOfTheOwnOnes(t *testing.T) {
+	pic := pixmap.Picture{}
+	for y := 0; y < 12; y++ {
+		for x := 0; x < 12; x++ {
+			c := pixmap.Own
+			if x >= 6 {
+				c = 'd' // red
+			}
+			pic = pic.Set(x, y, c)
+		}
+	}
+	tint := ui.Hex("#3B82F6")
+	tt := ui.NewTester(func(c *ui.Context) {
+		ui.Box(c).Padding(10).Children(func() { ui.Image(c, CategoryIcon(pic)).Size(48, 48).TextColor(tint) })
+	}, 70, 70)
+	tt.Frame()
+	img := tt.Image()
+	scale := img.Bounds().Dx() / 70
+	left, right := img.RGBAAt(20*scale, 34*scale), img.RGBAAt(48*scale, 34*scale)
+	near := func(p color.RGBA, want ui.Color) bool {
+		d := func(a, b uint8) int { return max(int(a)-int(b), int(b)-int(a)) }
+		return d(p.R, want.R)+d(p.G, want.G)+d(p.B, want.B) < 24
+	}
+	if !near(left, tint) || !near(right, PaletteColor('d')) {
+		t.Errorf("own pixel %v (want the tint), palette pixel %v (want red)", left, right)
 	}
 }
 

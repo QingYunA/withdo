@@ -18,7 +18,7 @@ type Category struct {
 	// Name is what the user called it; a built-in category is stored as Work or Life.
 	Name string
 	// Icon is the 12 x 12 picture drawn beside the name, in the category's color.
-	Icon pixmap.Bitmap
+	Icon pixmap.Picture
 	// Color is one of domain.CategoryColors, which theme.CategoryColor turns into a color.
 	Color string
 	// Position is the place in the list, 1-based and contiguous.
@@ -61,14 +61,14 @@ func CategoryOf(t Task, hasRepo func(*int) bool, workID int) int {
 // NewCategory is what the category sheet sends. An empty Color takes the one the name hashes to.
 type NewCategory struct {
 	Name  string
-	Icon  pixmap.Bitmap
+	Icon  pixmap.Picture
 	Color string
 }
 
 // CategoryPatch changes a category; a nil field is left alone. A built-in category keeps its name.
 type CategoryPatch struct {
 	Name  *string
-	Icon  *pixmap.Bitmap
+	Icon  *pixmap.Picture
 	Color *string
 }
 

@@ -23,7 +23,7 @@ func categoriesApp(t *testing.T) *App {
 		if !ok {
 			t.Fatalf("no icon %q", c.icon)
 		}
-		cat, err := app.CreateCategory(data.NewCategory{Name: c.name, Icon: icon.Bitmap, Color: c.color})
+		cat, err := app.CreateCategory(data.NewCategory{Name: c.name, Icon: icon.Bitmap.Picture(), Color: c.color})
 		if err != nil {
 			t.Fatal(err)
 		}

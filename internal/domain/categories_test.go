@@ -98,10 +98,10 @@ func TestCreateCategoryChecksItsInput(t *testing.T) {
 		"built-in key":     {domain.CreateCategoryInput{Name: "work", Icon: dot}, "name", "already exists"},
 		"built-in Chinese": {domain.CreateCategoryInput{Name: "工作", Icon: dot}, "name", "already exists"},
 		"life Chinese":     {domain.CreateCategoryInput{Name: "生活", Icon: dot}, "name", "already exists"},
-		"no icon":          {domain.CreateCategoryInput{Name: "Blank"}, "icon", "must be 144 characters of . and #"},
+		"no icon":          {domain.CreateCategoryInput{Name: "Blank"}, "icon", "must be 144 characters of ., # and the palette letters a to l"},
 		"no pixel":         {domain.CreateCategoryInput{Name: "Blank", Icon: strings.Repeat(".", 144)}, "icon", "must have at least one pixel"},
-		"short icon":       {domain.CreateCategoryInput{Name: "Blank", Icon: dot[:100]}, "icon", "must be 144 characters of . and #"},
-		"palette letter":   {domain.CreateCategoryInput{Name: "Blank", Icon: dot[:5] + "a" + dot[6:]}, "icon", "must be 144 characters of . and #"},
+		"short icon":       {domain.CreateCategoryInput{Name: "Blank", Icon: dot[:100]}, "icon", "must be 144 characters of ., # and the palette letters a to l"},
+		"past the palette": {domain.CreateCategoryInput{Name: "Blank", Icon: dot[:5] + "m" + dot[6:]}, "icon", "must be 144 characters of ., # and the palette letters a to l"},
 		"bad color":        {domain.CreateCategoryInput{Name: "Blank", Icon: dot, Color: "mauve"}, "color", "must be one of indigo, yellow, green, red, blue, pink, teal, orange"},
 	}
 	for name, tc := range cases {
@@ -116,6 +116,16 @@ func TestCreateCategoryChecksItsInput(t *testing.T) {
 	if _, err := c.CreateCategory(ctx, domain.CreateCategoryInput{Name: strings.Repeat("a", 32), Icon: dot}); err != nil {
 		t.Errorf("32 characters is allowed: %v", err)
 	}
+}
+
+func TestAnIconMayUseTheLettersOfThePalette(t *testing.T) {
+	c, _ := newCore(t)
+	icon := dot[:5] + "a" + dot[6:60] + "l" + dot[61:]
+	got := must[*domain.Category](t)(c.CreateCategory(ctx, domain.CreateCategoryInput{Name: "Paint", Icon: icon}))
+	eq(t, "icon", got.Icon, icon)
+	repainted := strings.Repeat(".", 143) + "k"
+	got = must[*domain.Category](t)(c.UpdateCategory(ctx, got.ID, domain.CategoryPatch{Icon: &repainted}))
+	eq(t, "icon after update", got.Icon, repainted)
 }
 
 func TestAtMostTwentyFourCategories(t *testing.T) {

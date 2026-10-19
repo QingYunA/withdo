@@ -219,7 +219,7 @@ func TestTheComposerOfASlicePutsNewTasksThere(t *testing.T) {
 // addCategory makes a category of the user's own with one lit pixel and refreshes the app.
 func addCategory(t *testing.T, app *App, name, color string) data.Category {
 	t.Helper()
-	c, err := app.CreateCategory(data.NewCategory{Name: name, Icon: pixmap.Bitmap{}.Set(3, 3, true), Color: color})
+	c, err := app.CreateCategory(data.NewCategory{Name: name, Icon: pixmap.Bitmap{}.Set(3, 3, true).Picture(), Color: color})
 	if err != nil {
 		t.Fatal(err)
 	}

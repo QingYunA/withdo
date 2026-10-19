@@ -16,6 +16,7 @@ type popSpec struct {
 	icon             *ui.SVG  // in the 18 pt slot at the left, drawn 15 pt
 	tint             ui.Color // the icon's color at rest, when it is not the text's (a project's folder)
 	mark             string   // text in that slot instead of an icon
+	colored          bool     // the icon is a category's: its palette pixels keep their colors at rest
 	checked, danger  bool
 	more             bool // a chevron after the hint: the choice opens a page
 	disabled         bool // drawn quiet; the pointer and the arrow keys pass over it
@@ -51,7 +52,11 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 					if s.tint != (ui.Color{}) && ink == t.Text {
 						color = s.tint
 					}
-					ui.Icon(c, s.icon).Size(theme.IconMenu, theme.IconMenu).TextColor(color)
+					glyph := ui.Icon(c, s.icon) // one color
+					if s.colored && ink == t.Text {
+						glyph = ui.Image(c, s.icon) // a category's palette pixels keep their colors
+					}
+					glyph.Size(theme.IconMenu, theme.IconMenu).TextColor(color)
 				} else {
 					theme.Text(c, theme.Compact, quiet, s.mark)
 				}
@@ -227,7 +232,7 @@ func (m *Main) categoryPopRow(task data.Task) popSpec {
 		m.pop.page, m.pop.back, m.pop.hl, m.pop.filter = pageCategory, true, 0, ""
 	}}
 	if cat, ok := m.app.Category(task.CategoryID); ok {
-		spec.icon, spec.tint = theme.CategoryIcon(cat.Icon), theme.CategoryColor(cat.Color)
+		spec.icon, spec.tint, spec.colored = theme.CategoryIcon(cat.Icon), theme.CategoryColor(cat.Color), true
 	}
 	return spec
 }
@@ -256,7 +261,7 @@ func (m *Main) categoryChoices(task data.Task) []popSpec {
 	var out []popSpec
 	for _, cat := range m.app.snap.categories {
 		if name := categoryTitle(m.say, cat); hit(name) {
-			out = append(out, popSpec{key: "cat-" + itoa(cat.ID), icon: theme.CategoryIcon(cat.Icon), tint: theme.CategoryColor(cat.Color), label: name,
+			out = append(out, popSpec{key: "cat-" + itoa(cat.ID), icon: theme.CategoryIcon(cat.Icon), tint: theme.CategoryColor(cat.Color), colored: true, label: name,
 				a11y: m.say.A11yMenuCategory(name), checked: task.CategoryID == cat.ID, run: set(cat.ID)})
 		}
 	}

@@ -211,7 +211,7 @@ func TestTheInspectorCategoryValueHasTheIconOfItsCategory(t *testing.T) {
 // its own name and bitmap in the inspector; it is not on the strip, which stays Work, Life and None.
 func TestTheInspectorShowsATaskInAUserCategoryByName(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
-	reading, err := app.Store.CreateCategory(data.NewCategory{Name: "Reading", Icon: pixmap.Bitmap{}.Set(5, 5, true)})
+	reading, err := app.Store.CreateCategory(data.NewCategory{Name: "Reading", Icon: pixmap.Bitmap{}.Set(5, 5, true).Picture()})
 	if err != nil {
 		t.Fatal(err)
 	}

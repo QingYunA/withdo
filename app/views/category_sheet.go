@@ -16,7 +16,7 @@ type categorySheet struct {
 	id      int // the category being edited, 0 for a new one
 	task    int // the task a new category is given to, 0 for none
 	name    string
-	icon    pixmap.Bitmap
+	icon    pixmap.Picture
 	color   string // the key of one of data.CategoryColors
 	picked  bool   // the color was chosen, so it no longer follows the name
 	query   string // what is typed in Search icons
@@ -27,7 +27,7 @@ type categorySheet struct {
 // name hashes to. A category made from the task menu is given to task; from the sidebar (task 0)
 // its page opens.
 func (m *Main) openNewCategory(task int) {
-	m.manage.category = categorySheet{open: true, task: task, icon: theme.CategoryIconGroups[0].Icons[0].Bitmap}
+	m.manage.category = categorySheet{open: true, task: task, icon: theme.CategoryIconGroups[0].Icons[0].Bitmap.Picture()}
 }
 
 // openEditCategory opens the sheet on a category as it is.
