@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the macOS release files into app/build: the universal app with adhd-core inside it, the
+# Builds the macOS release files into app/build: the universal app (which is adhd-core too), the
 # signed update archive and manifest when updates are on, the DMG, and the standalone adhd-core tarball with its
 # SHA256SUMS.txt. It uploads nothing.
 #   scripts/build-mac.sh
@@ -21,18 +21,16 @@ out="$PWD/app/build/darwin-universal"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# One adhd-core for both architectures. It is a resource of the app, which mygo build signs with it.
+# The app is adhd-core too (app/cli.go), so the bundle carries one program.
+(cd app && go tool mygo build -platform darwin/universal)
+
+# The standalone adhd-core, for machines without the app: built on its own for both architectures,
+# unsigned, as a bare file.
 for arch in arm64 amd64; do
   GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$work/adhd-core-$arch" ./cmd/adhd-core
 done
-mkdir -p app/resources/darwin
-lipo -create -output app/resources/darwin/adhd-core "$work/adhd-core-arm64" "$work/adhd-core-amd64"
-
-(cd app && go tool mygo build -platform darwin/universal)
-
-# The standalone adhd-core, for machines without the app: the same binary, unsigned, as a bare file.
 mkdir -p "$work/tar"
-cp app/resources/darwin/adhd-core "$work/tar/adhd-core"
+lipo -create -output "$work/tar/adhd-core" "$work/adhd-core-arm64" "$work/adhd-core-amd64"
 tar -czf "$out/adhd-core-$version-macos-universal.tar.gz" -C "$work/tar" adhd-core
 
 # The DMG under the name the release gives it (GitHub turns the spaces of the built name into dots).
