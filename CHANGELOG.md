@@ -5,6 +5,22 @@ reads the update window's notes from the section of the version (`## 0.5.0`) and
 
 ## 0.5.1
 
+No database change: upgrading from 0.5.0 is installing the app. Restart your coding agents afterwards
+to get the new MCP tool.
+
+- **Agents see a task's pictures.** `get_task` lists them with their files, and the new
+  `get_task_image` shows one, scaled down when it is large.
+- **Your own tasks stay yours.** Tasks you wrote that are in no project are no longer visible to
+  coding agents over MCP; hand one to an agent and it can see it.
+- **The assistant remembers.** Corrections and preferences you give it are kept in
+  `assistant-memory.md` in the data folder (Settings > Assistant opens it), each with Undo.
+- **The assistant files its tasks.** When you name no category it picks one and says so in a toast,
+  with Undo.
+- The assistant's box sits at the bottom of the page, like a chat.
+- Rename a project by double-clicking its title. The sub-rows of Mine and Agents fold, and a new
+  project's repository field is folded until you need it.
+- In a project shown as two columns, each column has its own Select.
+- DeepSeek Harness is the whale everywhere.
 - **A smaller download.** adhd-core is now the app's own program instead of a second copy inside it,
   so the DMG is about 8 MB smaller. `~/.local/bin/adhd-core` is repointed on the next launch.
 
