@@ -908,6 +908,16 @@
   "@menuDelete": {
     "description": "Item of the task menu that deletes the task at once; an Undo toast follows."
   },
+  "taskFiled": "Filed under {category}",
+  "@taskFiled": {
+    "description": "Quiet toast after the assistant sorted a new task into a category on its own; its Undo button clears the category.",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "Life"
+      }
+    }
+  },
   "menuDeleted": "Deleted “{title}”",
   "@menuDeleted": {
     "description": "Toast after a task was deleted; its Undo button puts the task back.",
@@ -1806,6 +1816,18 @@
   "@settingsAssistantNone": {
     "description": "Line of Settings > Assistant when the app has no assistant."
   },
+  "settingsAssistantMemory": "Assistant memory",
+  "@settingsAssistantMemory": {
+    "description": "Title of the row in Settings > Assistant about the file where the assistant keeps notes about the user."
+  },
+  "settingsAssistantMemoryBody": "What the assistant remembers about you. It is a plain text file you can edit.",
+  "@settingsAssistantMemoryBody": {
+    "description": "Second line of the assistant memory row in Settings > Assistant."
+  },
+  "settingsOpenFile": "Open file",
+  "@settingsOpenFile": {
+    "description": "Link that opens a file in the app macOS has for it."
+  },
   "composerChipSetUp": "Set up the assistant",
   "@composerChipSetUp": {
     "description": "Quiet link under the composer while it is focused and no model is connected. It opens Settings > Assistant."
@@ -1887,6 +1909,14 @@
   "resultAdded": "Added",
   "@resultAdded": {
     "description": "First word of the one-line answer after the assistant added a task: \"✓ Added Fix the login loop · Fri · P1\"."
+  },
+  "resultRemembered": "Remembered",
+  "@resultRemembered": {
+    "description": "First word of the one-line answer after the assistant saved a note to its memory: \"✓ Remembered Fitness is Life, not Work\"."
+  },
+  "resultForgot": "Forgot",
+  "@resultForgot": {
+    "description": "First word of the one-line answer after the assistant deleted notes from its memory; the title is the text the notes matched."
   },
   "resultMore": "and {n} more",
   "@resultMore": {

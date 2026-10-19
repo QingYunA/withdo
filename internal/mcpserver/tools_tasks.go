@@ -154,6 +154,9 @@ func (t *tools) updateTask(ctx context.Context, _ *mcp.CallToolRequest, a update
 	if err != nil {
 		return t.fail(err)
 	}
+	if _, err := t.agentTask(ctx, "task_id", a.TaskID); err != nil {
+		return t.fail(err)
+	}
 	task, err := t.core.UpdateTask(ctx, a.TaskID, domain.TaskPatch{
 		Title: a.Title, Status: a.Status, Priority: a.Priority, CategoryID: category, Notes: a.Notes,
 		ProjectID: a.ProjectID, MilestoneID: a.MilestoneID, DueAt: due, RemindAt: remind,
@@ -192,12 +195,9 @@ func (t *tools) registerGetTask(s *mcp.Server) {
 }
 
 func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskArgs) (*mcp.CallToolResult, any, error) {
-	task, err := t.core.GetTask(ctx, a.TaskID)
+	task, err := t.agentTask(ctx, "task_id", a.TaskID)
 	if err != nil {
 		return t.fail(err)
-	}
-	if task == nil {
-		return t.fail(&domain.FieldError{Field: "task_id", Msg: fmt.Sprintf("task %d not found", a.TaskID), NotFound: true})
 	}
 	reports, err := t.core.ListReports(ctx, a.TaskID)
 	if err != nil {
@@ -207,6 +207,7 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 	if err != nil {
 		return t.fail(err)
 	}
+	subtasks = visibleTasks(subtasks)
 	images, err := t.core.ListTaskImages(ctx, a.TaskID)
 	if err != nil {
 		return t.fail(err)
@@ -215,10 +216,10 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 	for _, r := range reports {
 		lines = append(lines, fmt.Sprintf("- %s %s: %s", r.CreatedAt, r.Agent, r.Summary))
 	}
-	brief := make([]subtaskBrief, len(subtasks))
 	if len(subtasks) > 0 {
 		lines = append(lines, "Subtasks:")
 	}
+	brief := make([]subtaskBrief, len(subtasks))
 	for i, s := range subtasks {
 		brief[i] = subtaskBrief{ID: s.ID, Title: s.Title, Status: s.Status}
 		lines = append(lines, fmt.Sprintf("- #%d [%s] %s", s.ID, s.Status, s.Title))
@@ -234,6 +235,30 @@ func (t *tools) getTask(ctx context.Context, _ *mcp.CallToolRequest, a getTaskAr
 		data["note"] = waitingNote
 	}
 	return ok(strings.Join(lines, "\n"), data)
+}
+
+// agentTask loads a task for an agent. A missing task and one of the user's own (domain.Task.UserPrivate)
+// give the same not-found error, so an agent cannot tell they exist.
+func (t *tools) agentTask(ctx context.Context, field string, id int64) (*domain.Task, error) {
+	task, err := t.core.GetTask(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if task == nil || task.UserPrivate() {
+		return nil, &domain.FieldError{Field: field, Msg: fmt.Sprintf("task %d not found", id), NotFound: true}
+	}
+	return task, nil
+}
+
+// visibleTasks drops the user's own tasks (domain.Task.UserPrivate).
+func visibleTasks(tasks []domain.Task) []domain.Task {
+	out := make([]domain.Task, 0, len(tasks))
+	for _, k := range tasks {
+		if !k.UserPrivate() {
+			out = append(out, k)
+		}
+	}
+	return out
 }
 
 func firstNonEmpty(vals ...string) string {

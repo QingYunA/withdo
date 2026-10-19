@@ -7,7 +7,7 @@ updates with it.
 app that is not signed in to GitHub, and mygo's updater needs them public. v0.5.0 was published with
 updates on, found unable to update, withdrawn, and re-released without them: `app/mygo.json` has no
 `updates`, so `mygo.Updater.Enabled()` is false and the app loads no update plugin, shows no `Check
-for Updates…` and no Settings switch. `adhd-core` still ships inside the app and is linked on launch.
+for Updates…` and no Settings switch. `adhd-core` is still the app's own program and is linked on launch.
 
 To turn updates on, once the release files are public (this repository made public, or a public
 repository holding only the releases, named in `github`): put back in `app/mygo.json`
@@ -37,16 +37,18 @@ version built so is the last one to install by hand.
   the file exists without the section of the version being built.
 - **Settings > General > Software updates** is the plugin's `SetAutomaticChecks`. The plugin persists
   it (`updater.json` in the data folder), so the app's prefs do not.
-- **`adhd-core` rides inside the app.** `scripts/build-mac.sh` builds it for arm64 and amd64
-  (`CGO_ENABLED=0`, `-trimpath -ldflags "-s -w"`), `lipo`s them into `app/resources/darwin/adhd-core`
-  (gitignored), and mygo copies it to `Contents/Resources/adhd-core` and signs it with the app. The
-  same binary is also published alone as `adhd-core-<version>-macos-universal.tar.gz`, for machines
-  without the app. `adhd-core --version` prints `adhd-core <version>`.
+- **The app is `adhd-core`.** `app/main.go` hands over to `internal/cli` before anything of mygo
+  starts when it is run under the name `adhd-core`, or with one of the command line's own commands
+  or flags (`app/cli.go`); anything else opens the window. The bundle carries that one program (about
+  8 MB of DMG less than with a second copy). `cmd/adhd-core` builds the same command line alone:
+  `scripts/build-mac.sh` builds it for arm64 and amd64 (`CGO_ENABLED=0`, `-trimpath -ldflags "-s -w"`)
+  and publishes it as `adhd-core-<version>-macos-universal.tar.gz`, for machines without the app.
+  `adhd-core --version` prints `adhd-core <version>`.
 - **A stable path for the agents.** Agents' MCP configs name `~/.local/bin/adhd-core`
   (`agentsetup.Env.CorePath`), so on launch of a build that runs from an app bundle
-  (`internal/corelink`) the app makes that path a symlink to its bundled copy when the path is
+  (`internal/corelink`) the app makes that path a symlink to its own executable (`Contents/MacOS/ADHD Todo`) when the path is
   - missing (its folder is made),
-  - already a symlink into some `*.app` (an older install, or one that moved or was deleted), or
+  - already a symlink into some `*.app` (an older install, or one that moved or was deleted; v0.5.0 linked `Contents/Resources/adhd-core`, which the app no longer has), or
   - a regular file whose `--version` is below the bundled one, or has none (v0.4.0 and older); it is kept as `adhd-core.old` next to the link.
 
   Anything else is left alone: a symlink elsewhere, a regular file as new as the bundled one (a
