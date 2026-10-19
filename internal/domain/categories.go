@@ -128,8 +128,12 @@ func (c *Core) CreateCategory(ctx context.Context, in CreateCategoryInput) (*Cat
 		if err := checkCategoryName(all, 0, name); err != nil {
 			return err
 		}
-		res, err := q.ExecContext(ctx, "INSERT INTO categories (name, icon, color, position, created_at) VALUES (?, ?, ?, ?, ?)",
-			name, in.Icon, color, len(all)+1, c.stamp())
+		newID, err := c.syncID(ctx, q, "categories")
+		if err != nil {
+			return err
+		}
+		res, err := q.ExecContext(ctx, "INSERT INTO categories (id, name, icon, color, position, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+			newID, name, in.Icon, color, len(all)+1, c.stamp())
 		if err != nil {
 			return fmt.Errorf("insert category: %w", err)
 		}

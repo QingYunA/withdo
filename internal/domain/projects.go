@@ -99,10 +99,14 @@ func (c *Core) statusCounts(ctx context.Context) (map[int64]map[Status]int, erro
 	return out, rows.Err()
 }
 
-func insertProject(ctx context.Context, q store.Querier, ts, name string, slug, repoPath *string, parentID *int64) (*Project, error) {
+func (c *Core) insertProject(ctx context.Context, q store.Querier, ts, name string, slug, repoPath *string, parentID *int64) (*Project, error) {
+	newID, err := c.syncID(ctx, q, "projects")
+	if err != nil {
+		return nil, err
+	}
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO projects (name, repo_slug, repo_path, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-		name, slug, repoPath, parentID, ts, ts)
+		"INSERT INTO projects (id, name, repo_slug, repo_path, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		newID, name, slug, repoPath, parentID, ts, ts)
 	if err != nil {
 		return nil, fmt.Errorf("insert project: %w", err)
 	}
@@ -180,13 +184,15 @@ func (c *Core) findOrCreateByGit(ctx context.Context, q store.Querier, info *git
 		if info.RepoSlug != "" {
 			slug = &info.RepoSlug
 		}
-		return insertProject(ctx, q, c.stamp(), info.RepoName, slug, &info.RepoRoot, nil)
+		return c.insertProject(ctx, q, c.stamp(), info.RepoName, slug, &info.RepoRoot, nil)
 	}
 	if existing.RepoPath != nil && *existing.RepoPath == info.RepoRoot {
 		return existing, nil
 	}
-	if _, err := q.ExecContext(ctx, "UPDATE projects SET repo_path = ?, updated_at = ? WHERE id = ?",
-		info.RepoRoot, c.stamp(), existing.ID); err != nil {
+	// repo_path is device-local and does not sync, so this update leaves updated_at alone: a linked
+	// database would otherwise record a change with no synced column in it.
+	if _, err := q.ExecContext(ctx, "UPDATE projects SET repo_path = ? WHERE id = ?",
+		info.RepoRoot, existing.ID); err != nil {
 		return nil, fmt.Errorf("update project path: %w", err)
 	}
 	return getProject(ctx, q, existing.ID)
@@ -239,7 +245,7 @@ func (c *Core) findOrCreateBySlug(ctx context.Context, slug string) (*Project, e
 			return e
 		}
 		name := slug[strings.Index(slug, "/")+1:]
-		project, e = insertProject(ctx, q, c.stamp(), name, &slug, nil, nil)
+		project, e = c.insertProject(ctx, q, c.stamp(), name, &slug, nil, nil)
 		return e
 	})
 	if err != nil {

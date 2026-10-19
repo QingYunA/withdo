@@ -10,7 +10,8 @@ cd "$(git rev-parse --show-toplevel)"
 mode="${1:-fast}"
 case "$mode" in static | fast | full) ;; *) echo "usage: $0 [static|fast|full]" >&2; exit 2 ;; esac
 
-unformatted="$(gofmt -l app internal cmd)"
+# The toolchain's own gofmt, as in CI: an older gofmt on PATH formats some code differently.
+unformatted="$("$(go env GOROOT)/bin/gofmt" -l app internal cmd)"
 if [ -n "$unformatted" ]; then
   echo "gofmt needed (run gofmt -w):" >&2
   echo "$unformatted" >&2

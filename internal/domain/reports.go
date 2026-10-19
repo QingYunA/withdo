@@ -135,9 +135,13 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 	if err != nil {
 		return nil, err
 	}
+	newID, err := c.syncID(ctx, q, "reports")
+	if err != nil {
+		return nil, err
+	}
 	res, err := q.ExecContext(ctx,
-		"INSERT INTO reports (task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd), in.Kind, links)
+		"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		newID, in.TaskID, in.Agent, in.Status, in.Summary, in.NextStep, in.CreatedAt, cleanCwd(in.Cwd), in.Kind, links)
 	if err != nil {
 		return nil, fmt.Errorf("insert report: %w", err)
 	}

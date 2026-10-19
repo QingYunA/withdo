@@ -69,7 +69,7 @@ func (c *Core) CreateProject(ctx context.Context, in CreateProjectInput) (*Proje
 			}
 		}
 		var err error
-		out, err = insertProject(ctx, q, c.stamp(), name, slug, nil, in.ParentID)
+		out, err = c.insertProject(ctx, q, c.stamp(), name, slug, nil, in.ParentID)
 		return err
 	})
 	if err != nil {
