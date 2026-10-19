@@ -1,0 +1,36 @@
+appId: dev.adhdtodo.mobile
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: task-add
+    timeout: 30000
+- tapOn:
+    id: task-add
+- tapOn:
+    id: task-title-input
+- inputText: Android offline task
+- tapOn:
+    id: task-notes-input
+- inputText: Saved without a computer or network
+- hideKeyboard
+- tapOn:
+    id: task-save
+- assertVisible: Android offline task
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: Android offline task
+    timeout: 15000
+- tapOn: Android offline task
+- assertVisible: Saved without a computer or network
+- tapOn:
+    id: back-button
+- tapOn:
+    id: calendar-tab
+- assertVisible:
+    id: calendar-tab
+- tapOn:
+    id: mine-tab
+- assertVisible: Android offline task

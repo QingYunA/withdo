@@ -1,0 +1,36 @@
+allowBuilds:
+  unrs-resolver: true
+  esbuild: true
+# SDK 58 bundles Worklets 0.13; this core patch still declares the older peer range.
+peerDependencyRules:
+  allowedVersions:
+    'expo-modules-core@58.0.19>react-native-worklets': '0.13.0'
+minimumReleaseAgeExclude:
+  - '@expo/cli@58.1.9'
+  - '@expo/metro-config@58.0.14'
+  - '@expo/package-manager@1.14.2'
+  - '@expo/prebuild-config@58.0.14'
+  - '@expo/router-server@58.0.14'
+  - '@react-native/asset-utils@0.88.0'
+  - '@react-native/babel-plugin-codegen@0.88.0'
+  - '@react-native/codegen@0.88.0'
+  - '@react-native/community-cli-plugin@0.88.0'
+  - '@react-native/debugger-frontend@0.88.0'
+  - '@react-native/debugger-shell@0.88.0'
+  - '@react-native/dev-middleware@0.88.0'
+  - '@react-native/gradle-plugin@0.88.0'
+  - '@react-native/js-polyfills@0.88.0'
+  - '@react-native/normalize-colors@0.88.0'
+  - '@react-native/virtualized-lists@0.88.0'
+  - babel-preset-expo@58.0.15
+  - expo-asset@58.0.16
+  - expo-modules-core@58.0.19
+  - expo-modules-jsi@58.0.14
+  - expo@58.0.11
+  - react-native@0.88.0
+  - expo-router@58.0.20
+  - react-native-svg@15.16.0
+  - '@react-native/babel-preset@0.88.0'
+  - '@react-native/metro-babel-transformer@0.88.0'
+  - '@react-native/metro-config@0.88.0'
+  - expo-system-ui@58.0.6

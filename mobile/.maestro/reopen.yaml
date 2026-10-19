@@ -1,0 +1,13 @@
+appId: dev.adhdtodo.mobile
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: Android offline task
+    timeout: 15000
+- tapOn:
+    id: settings-tab
+- assertVisible: Settings
+- tapOn:
+    id: mine-tab
+- assertVisible: Android offline task
