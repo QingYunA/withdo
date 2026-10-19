@@ -27,6 +27,20 @@ type Manager interface {
 	SnapshotTask(id int) (TaskSnapshot, error)
 	RestoreTask(TaskSnapshot) (Task, error)
 
+	// CreateCategory adds a category at the end of the list. Failures are ErrNameEmpty,
+	// ErrCategoryNameLong, ErrCategoryNameTaken, ErrTooManyCategories, ErrIconEmpty and ErrCategoryColor.
+	CreateCategory(NewCategory) (Category, error)
+	// UpdateCategory renames, redraws or recolors a category; Work and Life answer
+	// ErrCategoryBuiltinName to a new name.
+	UpdateCategory(id int, p CategoryPatch) (Category, error)
+	// MoveCategory puts a category at index (0-based) in the list, the built-in two included.
+	MoveCategory(id, index int) error
+	// DeleteCategory removes a category of the user's; its tasks become unsorted. Work and Life
+	// answer ErrCategoryBuiltin. RestoreCategory is its Undo: the category comes back with its id at
+	// its old place, and takes back the tasks that are still unsorted.
+	DeleteCategory(id int) (DeletedCategory, error)
+	RestoreCategory(DeletedCategory) (Category, error)
+
 	CreateMilestone(projectID int, title string, dueAt *time.Time) (Milestone, error)
 	UpdateMilestone(id int, p MilestonePatch) (Milestone, error)
 

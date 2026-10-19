@@ -367,6 +367,17 @@ func resolveCategory(all []Category, name string) (int64, error) {
 	return 0, invalid("category", "no category named %q; the categories are %s", name, strings.Join(names, ", "))
 }
 
+// CheckCategoryName trims a category name and checks it against the categories there are: self is
+// the one being renamed, 0 for a new category. It is what CreateCategory and UpdateCategory ask, for
+// a store that keeps its categories elsewhere.
+func CheckCategoryName(all []Category, self int64, name string) (string, error) {
+	name, err := cleanCategoryName(name)
+	if err != nil {
+		return "", err
+	}
+	return name, checkCategoryName(all, self, name)
+}
+
 func cleanCategoryName(name string) (string, error) {
 	name = strings.TrimSpace(name)
 	switch {

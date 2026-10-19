@@ -42,12 +42,14 @@ func (a *App) projectHasRepo(id *int) bool {
 	return ok && p.HasRepo()
 }
 
-// categoryOf is the category a task counts under: its own, else work in a repository's project.
-func (a *App) categoryOf(t data.Task) data.Category { return data.CategoryOf(t, a.projectHasRepo) }
+// categoryOf is the id of the category a task counts under: its own, else Work in a repository's
+// project, else 0 (Unsorted).
+func (a *App) categoryOf(t data.Task) int { return data.CategoryOf(t, a.projectHasRepo, a.workID()) }
 
-// inMineSlice accepts the tasks that belong to a slice of Mine.
+// inMineSlice accepts the tasks that belong to a slice of Mine: the slice names a built-in category,
+// or none for Unsorted.
 func (a *App) inMineSlice(sub string) func(data.Task) bool {
-	want := map[string]data.Category{subWork: data.CategoryWork, subLife: data.CategoryLife}[sub]
+	want := map[string]int{subWork: a.builtinID(data.BuiltinWork), subLife: a.builtinID(data.BuiltinLife)}[sub]
 	return func(t data.Task) bool { return a.categoryOf(t) == want }
 }
 
@@ -99,22 +101,32 @@ func (m *Main) agentsTitle() string {
 	return m.say.NavAgents()
 }
 
-// categoryName is a category as people read it; "" is Unsorted.
-func categoryName(say locales.Messages, c data.Category) string {
-	switch c {
-	case data.CategoryWork:
+// categoryLabel is a category as people read it, from the label a receipt carries: the key of a
+// built-in category (work, life) in the user's language, the name of any other as it is.
+func categoryLabel(say locales.Messages, label string) string {
+	switch label {
+	case data.BuiltinWork:
 		return say.CategoryWork()
-	case data.CategoryLife:
+	case data.BuiltinLife:
 		return say.CategoryLife()
 	}
-	return say.CategoryUnsorted()
+	return label
+}
+
+// categoryTitle is a category as people read it: Work and Life in the user's language, the rest by
+// name.
+func categoryTitle(say locales.Messages, c data.Category) string {
+	if c.Builtin != "" {
+		return categoryLabel(say, c.Builtin)
+	}
+	return c.Name
 }
 
 // mineSubRows are the rows under Mine: Work and Life always, Unsorted while it has rows (or is the
 // open page, so its highlight does not vanish under the pointer).
 func (m *Main) mineSubRows(c *ui.Context, t *theme.Tokens) {
-	m.subRow(c, t, "mine-work", nav{screen: screenMine, sub: subWork}, m.say.CategoryWork(), m.slices.work.Count(), categoryLead(c, t, data.CategoryWork))
-	m.subRow(c, t, "mine-life", nav{screen: screenMine, sub: subLife}, m.say.CategoryLife(), m.slices.life.Count(), categoryLead(c, t, data.CategoryLife))
+	m.subRow(c, t, "mine-work", nav{screen: screenMine, sub: subWork}, m.say.CategoryWork(), m.slices.work.Count(), categoryLead(c, t, theme.IconWork))
+	m.subRow(c, t, "mine-life", nav{screen: screenMine, sub: subLife}, m.say.CategoryLife(), m.slices.life.Count(), categoryLead(c, t, theme.IconLife))
 	to := nav{screen: screenMine, sub: subUnsorted}
 	if !m.slices.unsorted.Empty() || m.nav == to {
 		m.subRow(c, t, "mine-unsorted", to, m.say.CategoryUnsorted(), m.slices.unsorted.Count(), nil)
@@ -146,9 +158,9 @@ func hasAgentRow(rows []data.AgentTally, name string) bool {
 }
 
 // categoryLead draws a category's icon in a sub-row's slot.
-func categoryLead(c *ui.Context, t *theme.Tokens, cat data.Category) func() {
+func categoryLead(c *ui.Context, t *theme.Tokens, icon *ui.SVG) func() {
 	return func() {
-		ui.Icon(c, categoryIcon(cat)).Size(theme.AvatarSmall, theme.AvatarSmall).TextColor(t.TextSecondary)
+		ui.Icon(c, icon).Size(theme.AvatarSmall, theme.AvatarSmall).TextColor(t.TextSecondary)
 	}
 }
 

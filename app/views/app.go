@@ -99,6 +99,7 @@ type snapshot struct {
 	loaded     bool
 	err        error
 	projects   []data.Project
+	categories []data.Category
 	archived   []data.Project
 	tasks      []data.Task
 	overview   data.Overview
@@ -126,6 +127,9 @@ func (a *App) Refresh() {
 	}
 	if err == nil {
 		s.archived, err = a.Store.ListArchivedProjects()
+	}
+	if err == nil {
+		s.categories, err = a.Store.ListCategories()
 	}
 	for _, p := range s.projects {
 		if ms, merr := a.Store.ListMilestones(p.ID); merr == nil {
@@ -230,6 +234,30 @@ func (a *App) Project(id int) (data.Project, bool) {
 	}
 	return data.Project{}, false
 }
+
+// Category finds a category in the snapshot.
+func (a *App) Category(id int) (data.Category, bool) {
+	for _, c := range a.snap.categories {
+		if c.ID == id {
+			return c, true
+		}
+	}
+	return data.Category{}, false
+}
+
+// builtinID is the id of the built-in category data.BuiltinWork or data.BuiltinLife, 0 when the
+// snapshot has none (the store is unreachable).
+func (a *App) builtinID(key string) int {
+	for _, c := range a.snap.categories {
+		if c.Builtin == key {
+			return c.ID
+		}
+	}
+	return 0
+}
+
+// workID is the id of the built-in Work, which a task in a repository's project counts under.
+func (a *App) workID() int { return a.builtinID(data.BuiltinWork) }
 
 func (a *App) projectName(id *int) string {
 	if id == nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
+	"github.com/QingYunA/adhd-todo/internal/pixmap"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -27,16 +28,16 @@ func TestInspectorCategoryRowSitsUnderPriorityAndSetsTheCategory(t *testing.T) {
 		t.Error("the Category value opened more than its own piece")
 	}
 	click(t, tt, "Set category to Life")
-	if got, _ := app.Task(18); got.Category != data.CategoryLife {
-		t.Errorf("category %q", got.Category)
+	if got, _ := app.Task(18); got.CategoryID != lifeID {
+		t.Errorf("category %d", got.CategoryID)
 	}
 	if !tt.HasText("Category: Life") {
 		t.Errorf("the row does not show the new value: %q", tt.Texts())
 	}
 	click(t, tt, "Category: Life")
 	click(t, tt, "Set category to None")
-	if got, _ := app.Task(18); got.Category != "" {
-		t.Errorf("category %q after None", got.Category)
+	if got, _ := app.Task(18); got.CategoryID != 0 {
+		t.Errorf("category %d after None", got.CategoryID)
 	}
 }
 
@@ -52,8 +53,8 @@ func TestTaskMenuMainPageHasACategoryStrip(t *testing.T) {
 		t.Errorf("the strip sits under the priority strip, above Move to: %q", tt.Texts())
 	}
 	click(t, tt, "Set category to Life")
-	if got, _ := app.Task(3); got.Category != data.CategoryLife {
-		t.Errorf("category %q", got.Category)
+	if got, _ := app.Task(3); got.CategoryID != lifeID {
+		t.Errorf("category %d", got.CategoryID)
 	}
 }
 
@@ -124,11 +125,33 @@ func TestTheInspectorCategoryValueHasTheIconOfItsCategory(t *testing.T) {
 	m.OpenTask(18) // Look into Liquid Glass: nobody classified it
 	tt.Frame()
 	none := inkWidth(t, tt, "Category: None")
-	_ = app.Update(18, data.Patch{Category: data.CategoryPtr(data.CategoryLife)})
+	_ = app.Update(18, data.Patch{Category: data.IntPtr(lifeID)})
 	tt.Frame()
 	// Life is a shorter word than None; with the house before it, it draws wider.
 	if life := inkWidth(t, tt, "Category: Life"); life < none+12 {
 		t.Errorf("Life draws %v pt against None's %v pt: no icon before it", life, none)
+	}
+}
+
+// A category the user made, which a task can be sorted into by an agent or by the window, reads by
+// its own name and bitmap in the inspector; it is not on the strip, which stays Work, Life and None.
+func TestTheInspectorShowsATaskInAUserCategoryByName(t *testing.T) {
+	tt, m, app := newMainTester(t, 1100)
+	reading, err := app.Store.CreateCategory(data.NewCategory{Name: "Reading", Icon: pixmap.Bitmap{}.Set(5, 5, true)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = app.Update(18, data.Patch{Category: data.IntPtr(reading.ID)})
+	m.OpenTask(18)
+	tt.Frame()
+	if !tt.HasText("Category: Reading") {
+		t.Fatalf("the inspector does not name the category: %q", tt.Texts())
+	}
+	if id := app.categoryOf(data.Task{CategoryID: reading.ID}); id != reading.ID {
+		t.Errorf("categoryOf = %d, want the task's own", id)
+	}
+	if w := app.workID(); w != workID {
+		t.Errorf("workID = %d, want %d", w, workID)
 	}
 }
 
@@ -160,3 +183,6 @@ func inkWidth(t *testing.T, tt *ui.Tester, label string) float32 {
 	}
 	return float32(right-left+1) / scale
 }
+
+// The seeded stores put Work and Life at ids 1 and 2, as a new database does.
+const workID, lifeID = 1, 2

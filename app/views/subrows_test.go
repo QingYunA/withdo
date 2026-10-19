@@ -115,7 +115,7 @@ func TestASliceTitlesItsPageAndCommandOneGoesToTheWholeOfMine(t *testing.T) {
 
 func TestUnsortedIsOnlyThereWhileItHasRows(t *testing.T) {
 	app, store, _ := newTestApp(t)
-	if _, err := store.UpdateTask(18, data.Patch{Category: data.CategoryPtr(data.CategoryWork)}); err != nil {
+	if _, err := store.UpdateTask(18, data.Patch{Category: data.IntPtr(workID)}); err != nil {
 		t.Fatal(err)
 	}
 	app.Refresh()
@@ -193,11 +193,11 @@ func TestTheComposerOfASlicePutsNewTasksThere(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenMine, sub: subLife})
 	tt.Frame()
-	if place := m.placeOf(surfacePage); place.Kind != data.PlaceNow || place.Category != data.CategoryLife {
+	if place := m.placeOf(surfacePage); place.Kind != data.PlaceNow || place.Category != lifeID {
 		t.Fatalf("place %+v", place)
 	}
 	m.goTo(nav{screen: screenMine, sub: subUnsorted})
-	if place := m.placeOf(surfacePage); place.Category != "" {
+	if place := m.placeOf(surfacePage); place.Category != 0 {
 		t.Errorf("Unsorted page place %+v", place)
 	}
 	m.goTo(nav{screen: screenMine, sub: subWork})
@@ -210,7 +210,7 @@ func TestTheComposerOfASlicePutsNewTasksThere(t *testing.T) {
 			made = task
 		}
 	}
-	if made.Category != data.CategoryWork {
+	if made.CategoryID != workID {
 		t.Errorf("a task typed on the Work page: %+v", made)
 	}
 }

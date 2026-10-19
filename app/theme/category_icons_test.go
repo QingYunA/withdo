@@ -3,6 +3,7 @@ package theme
 import (
 	"testing"
 
+	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -113,5 +114,25 @@ func TestBitmapWorkAndLifeIconsPaintLikeTheVendoredSVGs(t *testing.T) {
 				t.Errorf("%s at %v pt paints differently from the vendored SVG", name, size)
 			}
 		}
+	}
+}
+
+func TestCategoryColorsAreTheProjectColorsInOrder(t *testing.T) {
+	if len(domain.CategoryColors) != len(ProjectColors) {
+		t.Fatalf("%d keys for %d colors", len(domain.CategoryColors), len(ProjectColors))
+	}
+	for i, key := range domain.CategoryColors {
+		if CategoryColor(key) != ProjectColors[i] {
+			t.Errorf("%s is not project color %d", key, i)
+		}
+	}
+	// A new category gets the color its name hashes to, which is the one a project of that name has.
+	for _, name := range []string{"Reading", "Garden", "adhd-todo", "读书", "Work"} {
+		if got, want := CategoryColor(domain.DefaultCategoryColor(name)), ProjectColor(name); got != want {
+			t.Errorf("%s: category color %v, project color %v", name, got, want)
+		}
+	}
+	if CategoryColor("mauve") != ProjectColors[0] {
+		t.Error("a key from a newer build falls back to the first color")
 	}
 }

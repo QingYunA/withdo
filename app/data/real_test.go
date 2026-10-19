@@ -366,32 +366,53 @@ func TestRealCreatesATaskWithADueDate(t *testing.T) {
 
 func TestRealReadsAndWritesACategory(t *testing.T) {
 	r, core := realPair(t, nil)
-	made, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Pay rent", Category: ptrTo(domain.CategoryLife)})
+	made, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Pay rent", CategoryID: ptrTo(int64(lifeID))})
 	if err != nil {
 		t.Fatal(err)
 	}
 	tasks, _ := r.ListTasks(Filter{})
-	if len(tasks) != 1 || tasks[0].Category != CategoryLife {
+	if len(tasks) != 1 || tasks[0].CategoryID != lifeID {
 		t.Fatalf("read %+v, want life", tasks)
 	}
-	created, err := r.CreateTask(CreateTaskInput{Title: "Ship it", Category: CategoryWork})
-	if err != nil || created.Category != CategoryWork {
+	created, err := r.CreateTask(CreateTaskInput{Title: "Ship it", Category: workID})
+	if err != nil || created.CategoryID != workID {
 		t.Fatalf("created %+v, %v", created, err)
 	}
-	moved, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr(CategoryWork)})
-	if err != nil || moved.Category != CategoryWork {
+	moved, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(workID)})
+	if err != nil || moved.CategoryID != workID {
 		t.Fatalf("moved %+v, %v", moved, err)
 	}
 	kept, _ := r.UpdateTask(int(made.ID), Patch{Title: StrPtr("Pay the rent")})
-	if kept.Category != CategoryWork {
-		t.Errorf("a patch without a category changed it to %q", kept.Category)
+	if kept.CategoryID != workID {
+		t.Errorf("a patch without a category changed it to %d", kept.CategoryID)
 	}
-	cleared, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("")})
-	if err != nil || cleared.Category != "" {
+	cleared, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(0)})
+	if err != nil || cleared.CategoryID != 0 {
 		t.Errorf("cleared %+v, %v", cleared, err)
 	}
-	if _, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("play")}); err == nil {
-		t.Error("an unknown category was accepted")
+	if _, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(99)}); err == nil {
+		t.Error("a category that does not exist was accepted")
+	}
+}
+
+// A category the MCP side cannot make but the window can: it shows up for the app after the watcher
+// sees the change, with the name the task read through the domain layer.
+func TestRealReadsACategoryAnotherProcessSortedATaskInto(t *testing.T) {
+	r, core := realPair(t, nil)
+	cat, err := core.CreateCategory(bg, domain.CreateCategoryInput{Name: "Reading", Icon: dotGrid})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Finish the novel", CategoryID: &cat.ID}); err != nil {
+		t.Fatal(err)
+	}
+	cats, err := r.ListCategories()
+	if err != nil || len(cats) != 3 || cats[2].Name != "Reading" || int64(cats[2].ID) != cat.ID {
+		t.Fatalf("categories %+v, %v", cats, err)
+	}
+	tasks, _ := r.ListTasks(Filter{})
+	if len(tasks) != 1 || int64(tasks[0].CategoryID) != cat.ID {
+		t.Errorf("tasks %+v", tasks)
 	}
 }
 

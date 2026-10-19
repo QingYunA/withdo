@@ -80,7 +80,7 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.statusStrip(c, t, task, false)
 	m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 	m.priorityStrip(c, t, task, false)
-	m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.Category))
+	m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.CategoryID))
 	m.categoryStrip(c, t, task, false)
 	menuRule(c, t)
 	m.popRow(c, t, popSpec{key: "move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
@@ -193,33 +193,39 @@ func (m *Main) priorityStripOf(c *ui.Context, t *theme.Tokens, current func(data
 	})
 }
 
-// categoryChoices are the choices of the category strip: work, life, and none, which unclassifies.
-var categoryChoices = []data.Category{data.CategoryWork, data.CategoryLife, ""}
-
-// categoryText is a task's own category as the row and the strip read it: Work, Life or None.
-func (m *Main) categoryText(c data.Category) string {
-	if c == "" {
-		return m.say.ValueNone()
-	}
-	return categoryName(m.say, c)
+// categoryChoices are the choices of the category strip: Work, Life, and none (0), which unsorts.
+func (m *Main) categoryChoices() []int {
+	return []int{m.app.builtinID(data.BuiltinWork), m.app.builtinID(data.BuiltinLife), 0}
 }
 
-// categoryIcon is the icon of a category: a briefcase for Work, a house for Life, and none for a
-// task nobody classified.
-func categoryIcon(c data.Category) *ui.SVG {
-	switch c {
-	case data.CategoryWork:
+// categoryText is a task's own category as the row and the strip read it: Work, Life, its name or
+// None.
+func (m *Main) categoryText(id int) string {
+	if c, ok := m.app.Category(id); ok {
+		return categoryTitle(m.say, c)
+	}
+	return m.say.ValueNone()
+}
+
+// categoryIcon is the icon of a category: a briefcase for Work, a house for Life, the bitmap of the
+// user's own, and none for a task nobody sorted.
+func (m *Main) categoryIcon(id int) *ui.SVG {
+	c, ok := m.app.Category(id)
+	switch {
+	case !ok:
+		return nil
+	case c.Builtin == data.BuiltinWork:
 		return theme.IconWork
-	case data.CategoryLife:
+	case c.Builtin == data.BuiltinLife:
 		return theme.IconLife
 	}
-	return nil
+	return theme.CategoryIcon(c.Icon)
 }
 
 // categoryValue draws a category's icon, when it has one, before its name.
-func categoryValue(c *ui.Context, t *theme.Tokens, cat data.Category, ink ui.Color, name string) {
+func categoryValue(c *ui.Context, t *theme.Tokens, icon *ui.SVG, ink ui.Color, name string) {
 	ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(1).MinWidth(0).Children(func() {
-		if icon := categoryIcon(cat); icon != nil {
+		if icon != nil {
 			ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary).Shrink(0)
 		}
 		theme.Text(c, theme.Compact, ink, name).Shrink(1).MinWidth(0).Ellipsis("…")
@@ -229,18 +235,19 @@ func categoryValue(c *ui.Context, t *theme.Tokens, cat data.Category, ink ui.Col
 // categoryStrip is Work, Life and None in a row; one click sets the category.
 func (m *Main) categoryStrip(c *ui.Context, t *theme.Tokens, task data.Task, keyboard bool) {
 	ui.Row(c.Key("pop-category")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
-		for _, cat := range categoryChoices {
-			name := m.categoryText(cat)
+		for _, id := range m.categoryChoices() {
+			name := m.categoryText(id)
 			ink := t.Text
-			if cat == "" {
+			if id == 0 {
 				ink = t.TextTertiary
 			}
-			m.stripButton(c, t, "category", "pop-category-"+string(cat), m.say.A11yMenuCategory(name), name, task.Category == cat, keyboard,
+			cat, _ := m.app.Category(id)
+			m.stripButton(c, t, "category", "pop-category-"+cat.Builtin, m.say.A11yMenuCategory(name), name, task.CategoryID == id, keyboard,
 				func() {
 					m.closeMenu()
-					_ = m.app.Update(task.ID, data.Patch{Category: data.CategoryPtr(cat)})
+					_ = m.app.Update(task.ID, data.Patch{Category: data.IntPtr(id)})
 				},
-				func() { categoryValue(c, t, cat, ink, name) })
+				func() { categoryValue(c, t, m.categoryIcon(id), ink, name) })
 		}
 	})
 }

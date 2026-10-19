@@ -64,15 +64,15 @@ func (f *Fake) seedTasks(now time.Time, ago timeAgo, in timeIn) {
 	t6 := mk(6, p1, nil, "Decide on the activation policy", Doing, P1, SourceUser, ago(3*time.Hour))
 	t6.DueAt = in(5 * time.Hour)
 	t7 := mk(7, nil, nil, "Reply to design feedback", Todo, P2, SourceUser, ago(6*time.Hour))
-	t7.Category = CategoryWork
+	t7.CategoryID = 1
 	t7.RemindAt = in(0) // came due just now
 	t8 := mk(8, nil, nil, "Book dentist", Todo, P2, SourceUser, ago(2*day))
 	t8.DueAt = daysAhead(1, 9)
-	t8.Category = CategoryLife
+	t8.CategoryID = 2
 	t19 := mk(19, nil, nil, "Renew passport", Backlog, P2, SourceUser, ago(12*day))
-	t19.Category = CategoryLife
+	t19.CategoryID = 2
 	t21 := done(mk(21, nil, nil, "Send the packaging answer", Done, P2, SourceUser, ago(3*time.Hour)), ago(3*time.Hour))
-	t21.Category = CategoryWork
+	t21.CategoryID = 1
 
 	f.tasks = []Task{
 		agent(mk(1, p1, m1, "Port core to Go", Doing, P1, SourceAgent, ago(2*time.Minute)), "feat/go-core", 0),

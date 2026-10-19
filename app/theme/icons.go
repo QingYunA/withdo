@@ -3,6 +3,7 @@ package theme
 import (
 	"embed"
 
+	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -79,6 +80,17 @@ var (
 var ProjectColors = []ui.Color{
 	ui.Hex("#5B5BD6"), ui.Hex("#E0A800"), ui.Hex("#30A46C"), ui.Hex("#E5484D"),
 	ui.Hex("#3B82F6"), ui.Hex("#D9488B"), ui.Hex("#0EA5A4"), ui.Hex("#E08A1E"),
+}
+
+// CategoryColor is the color a category's key stands for: domain.CategoryColors are the project
+// colors by another name, in the same order. A key this build does not know gets the first color.
+func CategoryColor(key string) ui.Color {
+	for i, k := range domain.CategoryColors {
+		if k == key {
+			return ProjectColors[i]
+		}
+	}
+	return ProjectColors[0]
 }
 
 // ProjectColor is the color of a project's folder in the sidebar.
