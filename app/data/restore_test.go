@@ -6,13 +6,13 @@ import (
 )
 
 // reportOn files a report from an agent against a task.
-func reportOn(t *testing.T, s Store, id int, summary string) {
+func reportOn(t *testing.T, s *Real, id int, summary string) {
 	t.Helper()
-	s.(*Real).SeedReport(Report{TaskID: id, Agent: "claude-code", Status: Doing, Summary: summary})
+	s.SeedReport(Report{TaskID: id, Agent: "claude-code", Status: Doing, Summary: summary})
 }
 
 func TestRestoreTaskPutsBackWhatDeleteTook(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "work"}))
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan", ProjectID: &p.ID, Priority: P1}))
 		must[Task](t)(s.UpdateTask(task.ID, Patch{Notes: StrPtr("two pages")}))
@@ -42,7 +42,7 @@ func TestRestoreTaskPutsBackWhatDeleteTook(t *testing.T) {
 }
 
 func TestRestoreTaskRefusesATaskThatIsBack(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "here"}))
 		snap := must[TaskSnapshot](t)(s.SnapshotTask(task.ID))
 		if _, err := s.RestoreTask(snap); err == nil {

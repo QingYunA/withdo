@@ -6,7 +6,7 @@ import (
 )
 
 func TestUpdateTasksChangesAllAndRestoreStatesPutsThemBack(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "scratch"}))
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", Priority: P2}))
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b", Status: Doing, ProjectID: &p.ID}))
@@ -44,7 +44,7 @@ func TestUpdateTasksChangesAllAndRestoreStatesPutsThemBack(t *testing.T) {
 }
 
 func TestUpdateTasksChangesNothingWhenOneIsMissing(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a"}))
 		if _, err := s.UpdateTasks([]int{a.ID, 9999}, Patch{Status: StatusPtr(Done)}); err == nil {
 			t.Fatal("updated a task that does not exist")
@@ -59,7 +59,7 @@ func TestUpdateTasksChangesNothingWhenOneIsMissing(t *testing.T) {
 }
 
 func TestHandOffTasksAndRestoreStates(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", Status: Doing}))
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b"}))
 		before := must[[]Task](t)(s.HandOffTasks([]int{a.ID, b.ID}))
@@ -90,7 +90,7 @@ func TestHandOffTasksAndRestoreStates(t *testing.T) {
 }
 
 func TestDeleteTasksAndRestoreTasks(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a"}))
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b"}))
 		snaps := must[[]TaskSnapshot](t)(s.DeleteTasks([]int{a.ID, b.ID}))

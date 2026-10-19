@@ -190,7 +190,8 @@ func TestTaskMenuOpensThePullRequestAndAsksAboutTheTask(t *testing.T) {
 
 func TestTaskMenuDeleteHasNoQuestionAndUndoRestoresTheTask(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
-	before, _ := app.Store.GetTask(3)
+	reportsOf3 := func() int { snap, _ := app.Store.Snapshot(); return len(snap.Reports[3]) }
+	before := reportsOf3()
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Delete")
 	if _, ok := app.Task(3); ok {
@@ -210,8 +211,8 @@ func TestTaskMenuDeleteHasNoQuestionAndUndoRestoresTheTask(t *testing.T) {
 	if !ok || got.Title != "Fix tray race on launch" || got.Status != data.Blocked || got.Priority != data.P0 {
 		t.Fatalf("restored %+v (%v)", got, ok)
 	}
-	if d, _ := app.Store.GetTask(3); len(d.Reports) != len(before.Reports) || len(d.Reports) == 0 {
-		t.Errorf("reports %d, want %d", len(d.Reports), len(before.Reports))
+	if n := reportsOf3(); n != before || n == 0 {
+		t.Errorf("reports %d, want %d", n, before)
 	}
 	if !tt.HasText("Fix tray race on launch") {
 		t.Error("the task is not listed again")

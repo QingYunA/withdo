@@ -118,7 +118,8 @@ func TestOpenBackendDemos(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		ts, _ := be.store.ListTasks(data.Filter{})
+		snap, _ := be.store.Snapshot()
+		ts := snap.Tasks
 		if (len(ts) > 0) != tc.wantTasks {
 			t.Errorf("fake=%v empty=%v: %d tasks", tc.fake, tc.empty, len(ts))
 		}
@@ -181,10 +182,11 @@ func TestRealBackendPollsPullRequestsFromLaunch(t *testing.T) {
 	be.start(nil)
 	deadline := time.Now().Add(5 * time.Second)
 	for {
-		d, err := be.store.GetTask(int(made.ID))
+		snap, err := be.store.Snapshot()
 		if err != nil {
 			t.Fatal(err)
 		}
+		d := snap.Details()[int(made.ID)]
 		if d.Task.Status == data.Done && be.github.Status().State == data.GitHubReady {
 			if st := be.github.Status(); st.Account != "QingYunA" || st.CheckedAt.IsZero() {
 				t.Errorf("status = %+v", st)

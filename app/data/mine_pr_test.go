@@ -13,14 +13,29 @@ func prTask(id int, title string, st Status, pr Task) Task {
 	return pr
 }
 
+// snapshotWith is a snapshot of tasks whose newest agent report is latest(id) and whose newest GitHub
+// report is event(id); either may be nil.
+func snapshotWith(tasks []Task, latest, event func(int) *Report) Snapshot {
+	s := Snapshot{Tasks: tasks, Reports: map[int][]Report{}}
+	for _, t := range tasks {
+		if event != nil {
+			if r := event(t.ID); r != nil {
+				gh := *r
+				gh.Agent = GitHubAgent
+				s.Reports[t.ID] = append(s.Reports[t.ID], gh)
+			}
+		}
+		if latest != nil {
+			if r := latest(t.ID); r != nil {
+				s.Reports[t.ID] = append(s.Reports[t.ID], *r)
+			}
+		}
+	}
+	return s
+}
+
 func mineInputOfTasks(tasks []Task, latest, event func(int) *Report) MineInput {
-	if latest == nil {
-		latest = func(int) *Report { return nil }
-	}
-	return MineInput{
-		Now: fixedNow(), Tasks: tasks, Latest: latest, Event: event,
-		ProjectName: func(*int) string { return "" },
-	}
+	return MineInput{Now: fixedNow(), Snapshot: snapshotWith(tasks, latest, event)}
 }
 
 func mineOfTasks(tasks []Task, latest, event func(int) *Report) Mine {

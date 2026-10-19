@@ -189,15 +189,6 @@ type Overview struct {
 // DefaultStaleHours is how long an active task may stay silent before it counts as stale.
 const DefaultStaleHours = 48
 
-// Filter selects tasks. A zero Filter selects everything.
-type Filter struct {
-	ProjectID   *int
-	Inbox       bool // only tasks without a project
-	Status      []Status
-	MilestoneID *int
-	Source      Source
-}
-
 // CreateTaskInput is what the UI sends to create a task.
 type CreateTaskInput struct {
 	ParentID  *int
@@ -239,15 +230,11 @@ type Store interface {
 	Summaries
 	Bulk
 
-	ListProjects() ([]Project, error)
-	// ListCategories lists the categories in the user's order: Work and Life, and the user's own.
-	ListCategories() ([]Category, error)
-	Overview() (Overview, error)
-	ListTasks(Filter) ([]Task, error)
-	GetTask(id int) (TaskDetail, error)
+	// Snapshot reads what the windows show in one go: the projects, the categories, the tasks with
+	// their reports, the milestones and the overview, in a fixed number of queries.
+	Snapshot() (Snapshot, error)
 	CreateTask(CreateTaskInput) (Task, error)
 	UpdateTask(id int, p Patch) (Task, error)
-	ListMilestones(projectID int) ([]Milestone, error)
 
 	// Subscribe calls fn, on an arbitrary goroutine, after every change to the data, including
 	// changes made by other processes such as the MCP server. The returned func cancels it.

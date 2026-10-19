@@ -16,7 +16,7 @@ var (
 	house     = pixmap.MustParseHex("0000600901082044024624924924923fc000").Picture()
 )
 
-func categoryNames(t *testing.T, s Store) []string {
+func categoryNames(t *testing.T, s *Real) []string {
 	t.Helper()
 	var out []string
 	for i, c := range must[[]Category](t)(s.ListCategories()) {
@@ -28,7 +28,7 @@ func categoryNames(t *testing.T, s Store) []string {
 	return out
 }
 
-func wantCategories(t *testing.T, s Store, want ...string) {
+func wantCategories(t *testing.T, s *Real, want ...string) {
 	t.Helper()
 	if got := strings.Join(categoryNames(t, s), ","); got != strings.Join(want, ",") {
 		t.Errorf("categories = %s, want %s", got, strings.Join(want, ","))
@@ -36,7 +36,7 @@ func wantCategories(t *testing.T, s Store, want ...string) {
 }
 
 func TestEveryStoreStartsWithWorkAndLife(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		cats := must[[]Category](t)(s.ListCategories())
 		if len(cats) != 2 {
 			t.Fatalf("categories %+v", cats)
@@ -52,7 +52,7 @@ func TestEveryStoreStartsWithWorkAndLife(t *testing.T) {
 }
 
 func TestCreateUpdateAndMoveCategories(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		reading := must[Category](t)(s.CreateCategory(NewCategory{Name: "  Reading ", Icon: dot}))
 		if reading.Name != "Reading" || reading.Icon != dot || reading.Builtin != "" || reading.Position != 3 {
 			t.Errorf("created %+v", reading)
@@ -96,7 +96,7 @@ func TestCreateUpdateAndMoveCategories(t *testing.T) {
 }
 
 func TestCategoryProblemsAreTheStoresOwnErrors(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		must[Category](t)(s.CreateCategory(NewCategory{Name: "Reading", Icon: dot}))
 		for name, tc := range map[string]struct {
 			in   NewCategory
@@ -133,7 +133,7 @@ func TestCategoryProblemsAreTheStoresOwnErrors(t *testing.T) {
 }
 
 func TestDeletingACategoryUnsortsItsTasksAndUndoSortsThemBack(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		reading := must[Category](t)(s.CreateCategory(NewCategory{Name: "Reading", Icon: dot}))
 		garden := must[Category](t)(s.CreateCategory(NewCategory{Name: "Garden", Icon: dot}))
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", Category: reading.ID}))
@@ -178,7 +178,7 @@ func TestDeletingACategoryUnsortsItsTasksAndUndoSortsThemBack(t *testing.T) {
 
 // A deleted task comes back unsorted when its category went meanwhile, like its project.
 func TestRestoringATaskWhoseCategoryIsGoneLeavesItUnsorted(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		reading := must[Category](t)(s.CreateCategory(NewCategory{Name: "Reading", Icon: dot}))
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", Category: reading.ID}))
 		snap := must[TaskSnapshot](t)(s.SnapshotTask(task.ID))

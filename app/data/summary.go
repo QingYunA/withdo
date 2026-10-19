@@ -146,13 +146,10 @@ func finishedBefore(a, b SummaryTask) bool {
 
 // SummaryInput is what a summary is built from.
 type SummaryInput struct {
+	// Snapshot has the tasks, their reports and the project names.
+	Snapshot
 	Now    time.Time
 	Period Period
-	Tasks  []Task
-	// Latest is the newest report an agent filed against a task, Event the newest GitHub filed;
-	// either may be nil or return nil.
-	Latest, Event func(id int) *Report
-	ProjectName   func(*int) string
 	// Kinds are the goods the assistant picked, by task id.
 	Kinds map[int]string
 	// Agent says which agent a name it reported under is, so that "claude-code" and "Claude Code" are
@@ -220,21 +217,12 @@ func finishTime(t Task) time.Time {
 }
 
 func summaryTask(t Task, at time.Time, in SummaryInput, canon func(string) string) SummaryTask {
-	var agent, github *Report
-	if in.Latest != nil {
-		agent = in.Latest(t.ID)
-	}
-	if in.Event != nil {
-		github = in.Event(t.ID)
-	}
-	by, _ := CompletedBy(t, agent, github)
+	agent := in.LatestReport(t.ID)
+	by, _ := CompletedBy(t, agent, in.GitHubReport(t.ID))
 	if by == GitHubAgent {
 		by = "" // a merge nobody reported on: the user's own pull request
 	}
-	task := SummaryTask{Task: t, By: canon(by), At: at, Merged: t.PRState == PRMerged}
-	if in.ProjectName != nil {
-		task.Project = in.ProjectName(t.ProjectID)
-	}
+	task := SummaryTask{Task: t, By: canon(by), At: at, Merged: t.PRState == PRMerged, Project: in.ProjectName(t.ProjectID)}
 	if by != "" && agent != nil {
 		task.Said = agent.Summary
 	}

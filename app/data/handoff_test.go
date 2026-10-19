@@ -9,7 +9,7 @@ import (
 )
 
 func TestHandOffGivesTheTaskToTheAgentAndTakeBackReturnsIt(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan", Status: Doing}))
 		got := must[Task](t)(s.HandOff(task.ID))
 		if got.Source != SourceAgent || got.Status != Todo || got.HandedTo != AnyAgent ||
@@ -30,7 +30,7 @@ func TestHandOffGivesTheTaskToTheAgentAndTakeBackReturnsIt(t *testing.T) {
 }
 
 func TestRestoreHandOffUndoesATakeBack(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
 		handed := must[Task](t)(s.HandOff(task.ID))
 		must[Task](t)(s.TakeBack(task.ID))
@@ -51,7 +51,7 @@ func TestRestoreHandOffUndoesATakeBack(t *testing.T) {
 }
 
 func TestAReportOnAWaitingTaskEndsTheWaiting(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, now *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, now *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
 		must[Task](t)(s.HandOff(task.ID))
 		reportOn(t, s, task.ID, "on it")
@@ -63,7 +63,7 @@ func TestAReportOnAWaitingTaskEndsTheWaiting(t *testing.T) {
 }
 
 func TestRestoreTaskKeepsAWaitingTaskWaiting(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
 		handed := must[Task](t)(s.HandOff(task.ID))
 		snap := must[TaskSnapshot](t)(s.SnapshotTask(task.ID))

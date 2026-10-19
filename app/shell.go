@@ -392,12 +392,13 @@ func (s *shell) newEndOfDay() *notify.EndOfDay {
 		SetLast: s.app.SetEndOfDayLast,
 		Viewing: s.watchingSummary,
 		Count: func(now time.Time) (day, week data.SummaryCounts, err error) {
-			day, err = data.CountSummary(s.app.Store, data.DayPeriod(now, 0), nil)
+			snap, err := s.app.Store.Snapshot()
 			if err != nil {
-				return
+				return day, week, err
 			}
-			week, err = data.CountSummary(s.app.Store, data.WeekPeriod(now, 0, s.app.WeekStart()), nil)
-			return
+			day = data.CountSummary(snap, data.DayPeriod(now, 0), nil)
+			week = data.CountSummary(snap, data.WeekPeriod(now, 0, s.app.WeekStart()), nil)
+			return day, week, nil
 		},
 		Say:  func() locales.Messages { return locales.In(i18n.Locale()) },
 		Show: s.notifier.Announce,

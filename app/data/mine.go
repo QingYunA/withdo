@@ -161,16 +161,11 @@ func (a AgentsScreen) IDs() []int {
 	return ids
 }
 
-// MineInput is what BuildMine and BuildAgents read. Latest returns a task's newest report, or nil.
+// MineInput is what BuildMine and BuildAgents read: the snapshot, whose Tasks are the ones to sort
+// (the views add the ones that are just done), with its reports and project names.
 type MineInput struct {
-	Now    time.Time
-	Tasks  []Task
-	Latest func(taskID int) *Report
-	// Event returns the newest report GitHub filed against a task, or nil; it dates the pull
-	// request rows. Latest should leave GitHub's reports out: they are not the agent speaking.
-	Event       func(taskID int) *Report
-	StaleHours  int // DefaultStaleHours when 0
-	ProjectName func(*int) string
+	Snapshot
+	Now time.Time
 	// Keep, when set, limits the screen to the top-level tasks it accepts; their subtasks go where
 	// they go. The screen is built from those tasks alone, so its counts and overflow are its own.
 	Keep func(Task) bool
@@ -221,12 +216,6 @@ type nowBuilder struct{ MineInput }
 func newBuilder(in MineInput) nowBuilder {
 	in.Tasks = keepSlice(in.Tasks, in.Keep)
 	b := nowBuilder{MineInput: in}
-	if b.StaleHours == 0 {
-		b.StaleHours = DefaultStaleHours
-	}
-	if b.ProjectName == nil {
-		b.ProjectName = func(*int) string { return "" }
-	}
 	return b
 }
 
@@ -254,11 +243,11 @@ func keepSlice(tasks []Task, keep func(Task) bool) []Task {
 // item fills what every row has: the project, and when the task last showed a sign of life.
 func (b nowBuilder) item(t Task) Item {
 	it := Item{Task: t, Project: b.ProjectName(t.ProjectID), Since: t.UpdatedAt}
-	if r := b.Latest(t.ID); r != nil {
+	if r := b.LatestReport(t.ID); r != nil {
 		it.Since = r.CreatedAt
 	}
 	it.Hours = int(b.Now.Sub(it.Since) / time.Hour)
-	it.Stale = t.Source == SourceAgent && t.Status.Active() && it.Hours >= b.StaleHours
+	it.Stale = t.Source == SourceAgent && t.Status.Active() && it.Hours >= b.StaleHours()
 	return it
 }
 
@@ -313,7 +302,7 @@ func (b nowBuilder) handed(t Task, out *Mine) bool {
 		b.dateByEvent(&it)
 	}
 	if kind == NeedBlocked {
-		it.Words = blockedWords(b.Latest(t.ID))
+		it.Words = blockedWords(b.LatestReport(t.ID))
 	}
 	out.FromAgents = append(out.FromAgents, it)
 	return true
@@ -323,10 +312,7 @@ func (b nowBuilder) handed(t Task, out *Mine) bool {
 // last word: what it waits on is the pull request.
 func (b nowBuilder) dateByEvent(it *Item) {
 	it.Stale = false
-	if b.Event == nil {
-		return
-	}
-	if r := b.Event(it.ID); r != nil {
+	if r := b.GitHubReport(it.ID); r != nil {
 		it.Since = r.CreatedAt
 		it.Hours = int(b.Now.Sub(it.Since) / time.Hour)
 	}
@@ -356,7 +342,7 @@ func sortHanded(ns []Item) {
 func (b nowBuilder) agent(t Task) Item {
 	it := b.item(t)
 	it.Live = b.Now.Sub(it.Since) < LiveWithin
-	if r := b.Latest(t.ID); r != nil {
+	if r := b.LatestReport(t.ID); r != nil {
 		it.Summary, it.NextStep = r.Summary, r.NextStep
 	}
 	return it
@@ -450,11 +436,7 @@ func (b nowBuilder) doneToday(want func(Task) bool) (rows []Item, more int) {
 }
 
 func (b nowBuilder) completedBy(t Task) (by, summary string) {
-	var event *Report
-	if b.Event != nil {
-		event = b.Event(t.ID)
-	}
-	return CompletedBy(t, b.Latest(t.ID), event)
+	return CompletedBy(t, b.LatestReport(t.ID), b.GitHubReport(t.ID))
 }
 
 // CompletedBy says who finished a done task and what was said when it was. agent is the newest

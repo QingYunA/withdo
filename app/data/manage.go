@@ -19,7 +19,6 @@ type Manager interface {
 	// repository restores it too.
 	ArchiveProject(id int) error
 	RestoreProject(id int) error
-	ListArchivedProjects() ([]Project, error)
 	// DeleteProject removes the project with its tasks, their reports and its milestones, or nothing.
 	DeleteProject(id int) (Removed, error)
 	// DeleteTask removes a task and its reports.
