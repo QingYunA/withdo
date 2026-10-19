@@ -4,6 +4,7 @@ package paths
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -52,6 +53,12 @@ func DefaultDBPath() (string, error) {
 		return "", err
 	}
 	return DBPath(os.Getenv, runtime.GOOS, home), nil
+}
+
+// ImagesDir is the folder of the pictures kept for tasks, inside the data folder (the directory
+// of the database).
+func ImagesDir(dataFolder string) string {
+	return filepath.Join(dataFolder, "images")
 }
 
 func winJoin(parts ...string) string {

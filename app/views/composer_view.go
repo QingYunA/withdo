@@ -6,22 +6,49 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
-// pageComposer is the composer at the top of Now, a project or the Inbox, with the "Added to …"
-// confirmation under it and the answer to the request it sent.
+// dockPad is the room around the composer's dock: above it, and under it at the window's edge.
+const (
+	dockTop    float32 = 8
+	dockBottom float32 = 18
+)
+
+// pageComposer is the composer, pinned at the bottom of Now, a project, the Inbox, the Calendar or
+// Agents, in the column of the page above it. The "Added to …" confirmation and the answer to the
+// request it sent sit directly above the box and push the page up as they appear. The page scrolls
+// above the dock, so its last row is never behind the box.
 func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 	if !m.pg.Composer {
+		m.dockHeight = 0
 		return
 	}
-	m.composerBox(c, t, surfacePage, theme.Input)
-	m.pictureNotice(c, t, surfacePage)
-	m.notice(c, t)
-	if m.replyIn(surfacePage, 0) {
-		m.answerView(c, t, false)
+	pad := m.sidePad(c)
+	maxWidth := theme.ContentMax
+	switch m.pg.Kind {
+	case page.KindCalendar:
+		maxWidth = theme.CalendarMax
+	case page.KindColumns:
+		maxWidth = theme.BoardMax + 2*pad
+	case page.KindBoard:
+		maxWidth = m.boardLayout(c).head + 2*pad
 	}
+	dock := ui.Column(c.Key("composer-dock")).FillWidth().Shrink(0).AlignItems(ui.Center)
+	dock.Children(func() {
+		ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(dockTop, pad, dockBottom).Children(func() {
+			if m.replyIn(surfacePage, 0) {
+				m.answerView(c, t, false)
+			}
+			m.notice(c, t)
+			m.pictureNotice(c, t, surfacePage)
+			ui.Box(c).Height(8).Shrink(0)
+			m.composerBox(c, t, surfacePage, theme.Input)
+		})
+	})
+	m.dockHeight = dock.Bounds().H
 }
 
 // composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with the

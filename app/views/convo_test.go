@@ -170,6 +170,8 @@ func TestEachKindOfReceiptReadsAsOneLine(t *testing.T) {
 		{"moved", data.Receipt{ID: 4, TaskID: 5, Title: "D", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}}}, "", "· Moved to adhd-todo"},
 		{"reminder cleared", data.Receipt{ID: 5, TaskID: 5, Title: "E", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeReminder}}}}, "", "· Reminder cleared"},
 		{"rescheduled", data.Receipt{ID: 6, TaskID: 5, Title: "F", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeDue, At: now.Add(26 * time.Hour)}}}}, "", "· Tomorrow 4:30 PM · due"},
+		{"remembered", data.Receipt{ID: 7, Title: "Fitness is Life", Detail: data.Detail{Kind: data.DetailRemembered}}, "Remembered", ""},
+		{"forgot", data.Receipt{ID: 8, Title: "Fitness", Detail: data.Detail{Kind: data.DetailForgot}}, "Forgot", ""},
 	}
 	for _, tc := range tests {
 		r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Receipts: []data.Receipt{tc.r}}, nil)})
@@ -470,14 +472,18 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 	}
 }
 
-func TestTheLinePushesTheSectionsDown(t *testing.T) {
+func TestTheLineGrowsTheDockUpAndTheSectionsStay(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
 	before, _ := r.tt.Find("From your agents")
+	dock := belowBox(t, r)
 	r.ask("remind me")
 	r.answer(t)
 	after, _ := r.tt.Find("From your agents")
-	if after.Y <= before.Y+40 {
-		t.Errorf("From your agents moved from %v to %v; the sheet should push it down", before.Y, after.Y)
+	if after.Y != before.Y {
+		t.Errorf("From your agents moved from %v to %v; the line grows up from the composer", before.Y, after.Y)
+	}
+	if got := belowBox(t, r); got <= dock+20 {
+		t.Errorf("the dock went from %v to %v; the line should make room above the box", dock, got)
 	}
 }
 

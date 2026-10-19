@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -12,7 +13,6 @@ import (
 func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
 	m.pageHeader(c, t, m.mineTitle(), m.clock.Heading(m.app.Now()), nil)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
@@ -38,13 +38,20 @@ func (m *Main) belowComposer(c *ui.Context, body func()) {
 
 // pageHeader is the title with a quiet companion, and whatever controls sit at the right.
 func (m *Main) pageHeader(c *ui.Context, t *theme.Tokens, title, sub string, controls func()) {
+	m.pageHeaderOf(c, t, func() { theme.Text(c, theme.Title, t.Text, title).Shrink(0) }, sub, controls)
+}
+
+// pageHeaderOf is pageHeader with a title that draws itself.
+func (m *Main) pageHeaderOf(c *ui.Context, t *theme.Tokens, title func(), sub string, controls func()) {
 	ui.Row(c).Height(36).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Title, t.Text, title).Shrink(0)
+		title()
 		if sub != "" {
 			theme.Text(c, theme.Body, t.TextTertiary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
 		ui.Spacer(c)
-		m.selectControls(c, t)
+		if m.pg.Kind != page.KindColumns { // there each column's head has it
+			m.selectControls(c, t)
+		}
 		if controls != nil {
 			controls()
 		}

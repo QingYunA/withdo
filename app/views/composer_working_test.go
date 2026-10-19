@@ -13,15 +13,14 @@ import (
 
 const deepseekChip = "DeepSeek · deepseek-chat"
 
-// belowBox is the top of what sits under the composer: it moves with the height of the box and of
-// the line under it.
+// belowBox is the height of the composer's dock at the bottom of the page: it moves with the height
+// of the box and of the line above it.
 func belowBox(t *testing.T, r *assistRig) float32 {
 	t.Helper()
-	rect, ok := r.tt.Find("From your agents")
-	if !ok {
-		t.Fatalf("no From your agents in %q", r.tt.Texts())
+	if r.m.dockHeight == 0 {
+		t.Fatal("the page has no composer dock")
 	}
-	return rect.Y
+	return r.m.dockHeight
 }
 
 func TestTheModelChipSitsInTheOneLineBoxAtRestAndFocusedAndTheBoxDoesNotGrow(t *testing.T) {

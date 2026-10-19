@@ -15,13 +15,18 @@ import "slices"
 type Selection struct {
 	order  []int // the rows the page draws, as of the last Sync
 	ids    map[int]bool
-	anchor int  // the row that was last clicked: ⇧-click and ⇧↑ ⇧↓ reach from it
-	mode   bool // select mode (the Select button): a click ticks a row instead of opening it
+	anchor int          // the row that was last clicked: ⇧-click and ⇧↑ ⇧↓ reach from it
+	mode   bool         // select mode (the Select button): a click ticks a row instead of opening it
+	scope  int          // which part of the page select mode is on: 0 the whole page, else a key EnterModeIn was given
+	only   map[int]bool // with a scope, the rows select mode reaches
 }
 
 // Sync tells the selection which rows the page draws now, in order, and drops the selected rows that
 // are no longer among them (a task that went away, or folded out of sight), and the anchor.
 func (s *Selection) Sync(order []int) {
+	if s.only != nil {
+		order = slices.DeleteFunc(slices.Clone(order), func(id int) bool { return !s.only[id] })
+	}
 	s.order = order
 	if len(s.ids) == 0 {
 		return
@@ -69,6 +74,22 @@ func (s Selection) Bar() bool { return len(s.ids) >= 2 || (s.mode && len(s.ids) 
 
 // EnterMode turns select mode on.
 func (s *Selection) EnterMode() { s.mode = true }
+
+// EnterModeIn turns select mode on for some of the page's rows only (a column), named by scope, a
+// non-zero key. Other rows are not ticked by a click, by ⌘A or by a range.
+func (s *Selection) EnterModeIn(scope int, ids []int) {
+	s.mode, s.scope, s.only = true, scope, make(map[int]bool, len(ids))
+	for _, id := range ids {
+		s.only[id] = true
+	}
+	s.order = slices.DeleteFunc(slices.Clone(s.order), func(id int) bool { return !s.only[id] })
+}
+
+// Scope is the key select mode was entered with: 0 for the whole page.
+func (s Selection) Scope() int { return s.scope }
+
+// Picks reports whether select mode reaches the row: it is on, and the row is in its scope.
+func (s Selection) Picks(id int) bool { return s.mode && (s.only == nil || s.only[id]) }
 
 // Clear drops the selection and leaves select mode.
 func (s *Selection) Clear() { *s = Selection{order: s.order} }

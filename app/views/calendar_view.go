@@ -15,8 +15,6 @@ func (m *Main) calendarScreen(c *ui.Context, t *theme.Tokens) {
 	days := m.calendarDays()
 	m.pageHeader(c, t, m.clock.MonthTitle(m.cal.month), "", func() { m.calendarNav(c, t) })
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
-	ui.Box(c).Height(16).Shrink(0)
 	m.monthGrid(c, t, days)
 }
 

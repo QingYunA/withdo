@@ -2,6 +2,8 @@ package views
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -441,4 +443,34 @@ func TestInChineseTheAssistantPaneSaysItInChinese(t *testing.T) {
 	hasFold(t, r.tt, "当前在用")
 	mustNil(t, r.tt.Click("更换"))
 	has(t, r.tt, "选一个厂商", "完成", "智谱 GLM", "通义千问", "硅基流动", "自定义", "保存并测试")
+}
+
+func TestAssistantMemoryRowOpensTheFileOrTheFolder(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "assistant-memory.md")
+	r := newSettingsRig(t, func(a *App) { a.Config.AssistantMemory = file })
+	r.setUp(t, "anthropic")
+	r.assistant(t)
+	has(t, r.tt, "Assistant memory", "Open file")
+	if err := r.tt.Click("Open file"); err != nil {
+		t.Fatal(err)
+	}
+	if len(r.rec.files) != 0 || !slices.Equal(r.rec.folders, []string{dir}) { // nothing written yet: the folder shows
+		t.Errorf("files %v, folders %v", r.rec.files, r.rec.folders)
+	}
+	mustNil(t, os.WriteFile(file, []byte("# 助手记忆\n"), 0o644))
+	r.tt.Frame()
+	if err := r.tt.Click("Open file"); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(r.rec.files, []string{file}) {
+		t.Errorf("files %v", r.rec.files)
+	}
+}
+
+func TestAssistantMemoryRowIsHiddenWithoutAFile(t *testing.T) {
+	r := newSettingsRig(t)
+	r.setUp(t, "anthropic")
+	r.assistant(t)
+	hasNot(t, r.tt, "Assistant memory")
 }

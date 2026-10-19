@@ -152,7 +152,7 @@ func right(c *ui.Context, fn func()) {
 // target reaches past the 18 pt glyph, so it takes negative margins.
 func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
-	if m.multi.Mode() {
+	if m.multi.Picks(task.ID) {
 		m.checkSlot(c, t, task.ID).Margin(-pad)
 		return
 	}
@@ -163,7 +163,7 @@ func (m *Main) glyphSlot(c *ui.Context, t *theme.Tokens, task data.Task, fill fl
 // it): the glyph sits 2 pt lower, level with the middle of the first line.
 func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill float32) {
 	pad := (theme.HitTarget - theme.GlyphSize) / 2
-	if m.multi.Mode() {
+	if m.multi.Picks(task.ID) {
 		m.checkSlot(c, t, task.ID).Margin(2-pad, -pad, -pad-2, -pad)
 		return
 	}
@@ -183,7 +183,7 @@ func (m *Main) glyphSlotTop(c *ui.Context, t *theme.Tokens, task data.Task, fill
 // press on the button ends the hover of the row (the pointer is not over the row) but not the fact
 // that the pointer is in the zone.
 func (m *Main) groupGlyph(c *ui.Context, t *theme.Tokens, row ui.Element, task data.Task, ph phase, top bool) {
-	if m.multi.Mode() || row.Dragging() {
+	if m.multi.Picks(task.ID) || row.Dragging() {
 		return
 	}
 	pad := (theme.HitTarget - theme.GlyphSize) / 2

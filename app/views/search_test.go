@@ -184,7 +184,9 @@ func TestSearchRowsOpenTheInspectorAndHaveTheTaskMenu(t *testing.T) {
 	if !m.pop.open || m.pop.task != 8 || !tt.HasText("Move to…") {
 		t.Errorf("menu open %v for %d", m.pop.open, m.pop.task)
 	}
-	tt.Key(0, ui.KeyEscape)
+	tt.Key(0, ui.KeyEscape) // the search field takes the first Esc
+	tt.Frame()
+	m.closeMenu() // the menu hangs where the row was, and the row is under it now
 	tt.Frame()
 	if err := tt.Click("Book dentist"); err != nil {
 		t.Fatal(err)

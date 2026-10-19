@@ -73,7 +73,6 @@ func (m *Main) columnMetrics(c *ui.Context) columnMetrics {
 func (m *Main) columnsScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}
@@ -170,9 +169,24 @@ func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui
 			if n > 0 {
 				theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
 			}
+			ui.Spacer(c)
+			m.selectControlsIn(c, t, int(s)+1, m.columnIDs(s))
 		})
 		ui.Box(c).FillWidth().Height(1).Background(line)
 	})
+}
+
+// columnIDs are the tasks the column draws, in order: what its Select button reaches.
+func (m *Main) columnIDs(s side) []int {
+	var ids []int
+	for _, sec := range m.pg.Sections {
+		if sec.Col == int(s) {
+			for _, t := range sec.Tasks {
+				ids = append(ids, t.ID)
+			}
+		}
+	}
+	return ids
 }
 
 // agentAvatar20 is the robot of the Agents header. It hops while a row of Mine is over the tray and

@@ -101,11 +101,13 @@ type (
 )
 
 const (
-	DetailAdded    = agent.DetailAdded
-	DetailReminder = agent.DetailReminder
-	DetailDue      = agent.DetailDue
-	DetailUpdated  = agent.DetailUpdated
-	DetailDone     = agent.DetailDone
+	DetailAdded      = agent.DetailAdded
+	DetailReminder   = agent.DetailReminder
+	DetailDue        = agent.DetailDue
+	DetailUpdated    = agent.DetailUpdated
+	DetailDone       = agent.DetailDone
+	DetailRemembered = agent.DetailRemembered
+	DetailForgot     = agent.DetailForgot
 
 	ChangeReminder = agent.ChangeReminder
 	ChangeDue      = agent.ChangeDue

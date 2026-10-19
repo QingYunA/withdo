@@ -170,7 +170,7 @@ func (m *Main) openSelected() {
 
 // toggleSelected marks one of my own tasks done, or reopens it. An agent's task is left alone.
 func (m *Main) toggleSelected() {
-	if m.multi.Mode() { // there a row is ticked, not finished
+	if m.multi.Picks(m.sel) { // there a row is ticked, not finished
 		if m.sel != 0 {
 			m.sel = m.multi.Toggle(m.sel, m.sel)
 		}

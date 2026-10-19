@@ -1,6 +1,6 @@
 // Command adhd-todo is the desktop app: one window with the Mine and Agents screens and a list per project,
 // drawn with mygo native UI. It reads and writes the same SQLite database as the adhd-core MCP
-// server, so what agents report shows up live.
+// server, so what agents report shows up live. The same executable is adhd-core too (cli.go).
 package main
 
 import (
@@ -12,17 +12,21 @@ import (
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
+	"github.com/QingYunA/adhd-todo/internal/cli"
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/plugins/updater/native"
 )
 
-const version = "0.5.0"
+const version = "0.5.1"
 
 // connectCommand registers the MCP server with Claude Code.
 const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp"
 
 func main() {
+	if args, ok := cliArgs(os.Args); ok {
+		os.Exit(cli.Main(args))
+	}
 	fake := flag.Bool("fake", false, "use demo data in a temporary database instead of the real one (for screenshots)")
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
@@ -33,11 +37,12 @@ func main() {
 	}
 	home, _ := os.UserHomeDir()
 	app := views.NewApp(be.store, nil, views.Config{
-		ConnectCommand: connectCommand,
-		DataFolder:     be.dataFolder,
-		Home:           home,
-		Version:        version,
-		AgentSetup:     agentsetup.New(home),
+		ConnectCommand:  connectCommand,
+		DataFolder:      be.dataFolder,
+		AssistantMemory: be.memoryFile,
+		Home:            home,
+		Version:         version,
+		AgentSetup:      agentsetup.New(home),
 	})
 	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed
 	app.Prefs = be.prefs
@@ -71,9 +76,7 @@ func main() {
 	})
 	mygo.App.WhenReady(func() {
 		s.setMenu()
-		if dir, err := mygo.App.Path(mygo.PathResources); err == nil {
-			go linkBundledCore(dir, app.Config.AgentSetup.CorePath())
-		}
+		go linkOwnExecutable(app.Config.AgentSetup.CorePath())
 		s.createMain()
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go s.notifier.Reminder(r) })

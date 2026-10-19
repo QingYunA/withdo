@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"bytes"
@@ -229,7 +229,7 @@ func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		bin += ".exe" // Windows LookPath requires the extension
 	}
-	if out, err := exec.Command("go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
+	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/adhd-core").CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, out)
 	}
 	dbPath := filepath.Join(t.TempDir(), "stdio.db")
@@ -248,7 +248,7 @@ func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 		t.Fatalf("connect: %v\n%s", err, stderr.String())
 	}
 	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 9 {
+	if err != nil || len(tools.Tools) != 10 {
 		t.Fatalf("tools = %v, err = %v", tools, err)
 	}
 	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "report_progress",
@@ -272,5 +272,18 @@ func TestDefaultDepsUseTheProcessEnvironment(t *testing.T) {
 	d := defaultDeps()
 	if d.getenv("ADHD_TODO_DB") != "/tmp/from-env.db" || d.stdout != os.Stdout || d.stderr != os.Stderr || d.serve == nil {
 		t.Errorf("defaultDeps = %+v", d)
+	}
+}
+
+func TestIsCommandKnowsEveryCommandRunAnswersTo(t *testing.T) {
+	for _, arg := range []string{"mcp", "overview", "guide", "version", "--version", "help", "-h", "--help"} {
+		if !IsCommand(arg) {
+			t.Errorf("IsCommand(%q) = false", arg)
+		}
+	}
+	for _, arg := range []string{"", "-fake", "-psn_0_12345", "-NSDocumentRevisionsDebugMode", "bogus"} {
+		if IsCommand(arg) {
+			t.Errorf("IsCommand(%q) = true", arg)
+		}
 	}
 }

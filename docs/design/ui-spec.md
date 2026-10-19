@@ -35,6 +35,12 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 5. **Never a dead end.** Every empty state says what will appear there and how to make it appear.
 6. **Fast is a feature.** The composer is one keystroke away (⌘K). No spinner for local data.
 7. **Pictures are pixels; text and layout are native.** See **Pixel language**.
+8. **Few entries, few steps.** Each action has one place to start it; a new button must replace
+   one or earn its place against the question above. Rarely used parts start folded.
+9. **Hand it to an agent.** What an agent can do for me (filing, splitting, dating, organizing)
+   is offered through the assistant or a hand-off, not as another form or setting.
+10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
+    reason the existing ones cannot carry.
 
 ## Tokens
 
@@ -331,6 +337,18 @@ subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or 
 Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
 Right-click: see **Categories (M9)**.
 
+**Folding.** The sub-rows of `Mine` and of `Agents` are folded by default, so many agents and
+categories do not crowd the sidebar. Each of the two parents has a disclosure chevron at its right end
+(after the count or badge): a 12 pt pixel chevron (`theme.IconForward` folded, `theme.IconChevron`
+unfolded, the icons of the Recent changes fold) in `text.tertiary`, `text.secondary` and a `bg.hover`
+square on hover, with the tooltip and a11y label `Expand Mine` / `Collapse Agents`. Clicking the
+chevron only folds or unfolds; clicking anywhere else on the row still opens the page and leaves the
+fold as it was. This is how Finder, Mail and Linear fold a sidebar section (a chevron on the parent
+row, the row itself navigates); we keep it at the right so the icons and labels of all rows stay in one
+column. The choice is kept per section in the prefs file (`mineOpen`, `agentsOpen`), so it survives a
+restart. While the open page is a sub-row of a folded section (`Work`, `Claude Code`),
+that one row stays drawn so the highlight never vanishes; the rest fold away.
+
 **Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
 before M9 only `work` and `life`, migration 007).
 The category it counts under is its own, else Work when its project is a repository, else none
@@ -359,7 +377,8 @@ takes a repository from the sheet if the user gives it one.
   `New sub-project…` (the same sheet, with this project as the parent), a
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
-  the old name back. Archive acts at once, with the project's sub-projects (the project is in Settings >
+  the old name back. Double-clicking the project's title on its page renames it the same way, in place
+  (the title becomes an input; Inbox and the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
   General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
   Archiving or deleting the project on screen goes to Mine.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
@@ -370,10 +389,10 @@ Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else
 `docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
 new item: the hop (below) is the signal.
 
-**Composer.** The one input is the **Composer** (see **Composer** below), the first thing on the page.
+**Composer.** The one input is the **Composer** (see **Composer** below), pinned at the bottom of the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
 assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Mine) and
-shows a quiet "Added to Inbox" line under the box for 1.5 s.
+shows a quiet "Added to Inbox" line above the box for 1.5 s.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
 a row anywhere (see **Subtasks**).
@@ -442,7 +461,7 @@ active list (the status glyph, `Space`, the task menu) folds the row the same wa
 fill, instead of vanishing at the end of the fade.
 
 The sidebar count is the rows of From your agents plus Today. **Nothing needs you.** When those
-three sections are empty (Done today may still show): the empty state under the composer,
+three sections are empty (Done today may still show): the empty state under the header,
 `Nothing needs you right now` and in secondary `Your agents are at work. Whatever happens shows up
 here.` (zh `现在没有要你处理的事` / `Agent 们在干活，有动静会出现在这里`), with a "How to connect" link.
 
@@ -529,8 +548,14 @@ rows recorded as seen does not hop for them.
 
 ### Composer
 
-One component, five places: the top of **Mine**, of **Agents**, the top of **every project** (under the header, above
-the list or the board), the top of the **Inbox**, and the bottom of the **inspector**. It replaces the
+One component, six places: **Mine**, **Agents**, **every project**, the **Inbox**, the **Calendar**, and the
+**inspector**. On the pages it is **pinned at the bottom edge of the content column** (the way ChatGPT, Claude
+and the Codex chat pane do it), not under the header: the page scrolls above it, and the column keeps the
+page's width (820 pt, the board's 980 pt, the Calendar's width), centered, with 8 pt above the box and 18 pt
+under it. The **answer line**, the "Added to …" line and an image notice sit **directly above the box** and
+grow the dock upward; the page does not move, it is only shorter by the dock's height (the page's bottom
+padding still applies, and the dock is a sibling under the scroller, not an overlay, so the last row is never behind the box). The bulk bar rides
+above the dock. `⌘K` focuses it wherever it is. It replaces the
 old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
 none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
 page's title already says where a task goes, so the input has no label, no chip and no hint text.
@@ -644,14 +669,23 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
     running?") with **Retry** as a link. No red. It stays.
 - **It goes by itself.** The line of a turn that asked and failed nothing shows **6 s**, the last 400 ms
   a fade (opacity only, so Reduce Motion changes nothing), by the app clock; Undo restarts the 6 s.
-  It goes at once when the user types in the composer it came from. What is under it slides up
-  rather than jumping (not with Reduce Motion). `Esc` closes it at once; a further `Esc` with
+  It goes at once when the user types in the composer it came from. The dock shrinks back and the
+  page grows with it. `Esc` closes it at once; a further `Esc` with
   nothing else to close makes the assistant forget the conversation (it forgets after 10 minutes
   idle as well).
 - **⌘Z** undoes the assistant's last change that is not undone, newest first, while its line is shown
   or the conversation is live (until the second `Esc`, or the assistant idling out); with the line
   gone it comes back for a moment saying `Undone`. In a composer with text typed, `⌘Z` is the
   field's own. (See **Undo**.)
+- **Memory.** The assistant keeps short notes about the user in one Markdown file, `assistant-memory.md`
+  in the data folder (`## 关于我` and `## 纠正与偏好`, one `- ` bullet per note; the user may edit it by
+  hand, and a missing file is no memory). Every turn reads the file afresh and puts it in the prompt;
+  corrections and stated preferences are saved with `remember`, removed with `forget`, at most 40
+  notes / 4000 characters, 200 per note. A write needs no confirmation: its receipt is a line like
+  any other, `✓ Remembered Fitness is Life, not Work   Undo` (`✓ Forgot …`), with no task to open;
+  Undo takes back that edit alone: a remembered note goes, forgotten notes come back; later notes
+  and hand edits stay. Settings > Assistant ends with an **Assistant memory** row and
+  an `Open file` link (the data folder when nothing is written yet).
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
   followed by the clock (`9:00 AM`) when there is one to say.
@@ -680,11 +714,11 @@ at once. A project with no milestone has no filter: `New milestone…` is in its
 
 **List view: two columns** (the Inbox keeps the single list, **Inbox list view** below; the board is unchanged). A project
 with at least one task is drawn as **Mine** on the left (tasks with `Source user`) and **Agents** on the
-right (`Source agent`) under the header and the composer, as in `docs/design/mockups/v7.html` and
+right (`Source agent`) under the header, with the composer pinned at the bottom, as in `docs/design/mockups/v7.html` and
 `v7b.html` (screens `project-two-columns-*`, `project-list-*`). With no task at all the project keeps the
 centred empty state.
 
-- **Block.** Header, composer and columns share one block as wide as the content allows less the page's
+- **Block.** Header, columns and the composer's dock share one block as wide as the content allows less the page's
   side padding, up to `theme.BoardMax` (980 pt), centered. Two equal columns 28 pt apart
   (`theme.ColumnsGap`). Below **640 pt of content** (the inspector open on a small window) they stack:
   Mine first, the Agents tray under it, 14 pt apart.
@@ -774,7 +808,7 @@ agent's name, the branch, the pull request, then the report; for a blocked task 
 a report that only repeats the title, as on a task made by its first report, is left out);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
 or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
-The composer sits above the groups (see **Composer**): it is how a task is added here.
+The composer is pinned under the groups (see **Composer**): it is how a task is added here.
 After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
 its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
 Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in `accent` that expands
@@ -807,7 +841,7 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
 - **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
   status (a blocked card dropped on Doing stays blocked) and shows the Undo toast, as dragging several
   does; there are no drop targets for hidden statuses.
-- **Edges.** The header, the composer and the four lanes share their left and right edges: one
+- **Edges.** The header, the lanes and the composer's dock share their left and right edges: one
   centered block as wide as the window allows less the page's side padding (48 pt), but no wider than
   980 pt. When even 176 pt lanes do not fit (the inspector open on a small window), the block fills
   the room and the lanes scroll sideways.
@@ -990,12 +1024,18 @@ v20 (`docs/design/mockups/v20.html`, #75). Every task list can hold several task
 them together: Mine, a project (list, two columns, board cards), the Inbox, Agents, Completed and
 search results. Calendar and Summary do not select.
 
-- **Select button.** At the right of the page title, `Select` / `选择` (the pixel checkbox icon,
+- **Select button.** At the right of the page title, `Select` / `多选` (the pixel checkbox icon,
   quiet like the title row's other buttons) enters select mode: each row's status glyph becomes a
   pixel checkbox, a click ticks or unticks the row instead of opening the inspector, and the title
   row reads `2 selected` / `已选 2 件` · `Select all` / `全选` · `Done` / `完成`. `Done`, `Esc`, or
   finishing a bulk action leaves select mode. The first time the user ⌘-clicks in a list, the
   Select button flashes once (two 100 ms frames), so the button is found.
+  A project drawn as two columns has no button in its title row: each column head (Mine, Agents) has
+  its own `Select` / `多选` at its right end. It enters select mode for that column's rows only (a
+  click on the other column's rows still opens them, `Select all` and `⌘A` take the column's rows),
+  and the other column's button is hidden meanwhile; the count, `Select all` and `Done` appear in the
+  head of the column that is in select mode. Pages with no column heads (Mine, Inbox, a board,
+  Agents, Completed, search) keep the button in the title row.
 - **Without the mode**: `⌘`-click adds or removes a row, `⇧`-click selects from the last clicked row
   to this one, `⇧↑ ⇧↓` extend from the keyboard row, `⌘A` selects every row of the page. A plain
   click opens the inspector and makes that row the only one selected, as before. `Esc` clears the
@@ -1036,7 +1076,7 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   row, as before; a plain click or a plain arrow leaves it empty. A `⌘`-click with nothing ticked
   counts the keyboard row as the first one. `Esc` clears the selection, and leaves select mode,
   before it does anything else.
-- **Select button** is the first of the title row's controls, before the milestone menu and the
+- **Select button** (a page without column heads) is the first of the title row's controls, before the milestone menu and the
   List | Board switch; not drawn on an empty page. The flash is remembered per page for the run of
   the app, and skipped with Reduce Motion. In select mode a row without a status glyph (a list, the
   columns, Agents, a board card) shows the checkbox where its author's avatar was (12 pt on a card);
@@ -1061,6 +1101,11 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   unfinished rows; a board lane takes every selected card.
 - **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
   two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
+- **The filing toast.** When the built-in assistant creates a task and picks its category itself
+  (the user named none, the task is not in a repository's project), a quiet toast says
+  `Filed under Life` / `已归到 生活` with **Undo**, and goes by itself after 4 s. Undo clears the
+  category (the task is Unsorted). Nothing shows when the user named the category or none fit;
+  tasks typed by hand or made over MCP never get it. Screen: `mine-filed-toast-*.png`.
 
 ### Search
 
@@ -1478,6 +1523,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
 `Esc` and the Cancel button close them; the primary button is the accent one.
 
 - **New project**: title `New project`; field `Name` (focused); field `GitHub repository` (optional,
+  folded by default into a `GitHub repository` row with a chevron, under the name; a click unfolds it, and each new sheet starts folded again;
   mono, placeholder `owner/repo`) with the line `Agent reports from this repository land in the
   project.` Create is off until the name has text. A pasted GitHub address is read as `owner/repo`.
   Problems read under the field in `text.secondary`, never red: `Use the form owner/repo, like
@@ -1578,6 +1624,8 @@ toast's button and `⌘Z` take back the same thing. The changes that offer it:
 
 The strips of the task menu that change one task's status or priority do **not** offer Undo: they are
 one tap to change back. The assistant's receipts have their own Undo on their line (see **Assistant**).
+The quiet `Filed under Life` toast of a task the assistant filed is not this toast either: its Undo
+only clears the category, while `⌘Z` there takes back the assistant's whole change, the new task.
 
 `⌘Z` takes the assistant's last change that is not undone first, else the toast's change. In a text
 field with its own undo history (text typed, or any other input) `⌘Z` is the field's; an empty
@@ -1603,7 +1651,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
-| Rename project (sidebar) | saves | puts the old name back | |
+| Rename project (sidebar, page title) | saves | puts the old name back | |
 | New project, milestone, category sheets | creates / saves | closes the sheet | |
 
 ### Notifications
@@ -1650,7 +1698,7 @@ update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off
 - **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
   checks run once a day, the first 10 s after launch when one is due, and never in a development build.
 - **The switch**: Settings > General > Software updates (below).
-- `adhd-core` is inside the app and updates with it; see `docs/plans/m10-auto-update.md`.
+- `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
 
 ### Settings
 

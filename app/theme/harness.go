@@ -32,3 +32,11 @@ func HarnessMark(c *ui.Context, id string, size float32) ui.Element {
 	}
 	return SpriteIcon(c, s, size)
 }
+
+// harnessSprite is the 18 x 18 mark of a harness as a sprite that knows its dark variant, for
+// the places that draw a harness as an avatar (the robots' row) instead of in Settings.
+func harnessSprite(id string) *Sprite {
+	s := *harnessMarks18[id]
+	s.dark = harnessMarks18Dark[id]
+	return &s
+}
