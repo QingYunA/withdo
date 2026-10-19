@@ -332,35 +332,48 @@ func TestDeleteTask(t *testing.T) {
 	}
 }
 
-func TestCategoryValid(t *testing.T) {
-	for c, want := range map[domain.Category]bool{domain.CategoryWork: true, domain.CategoryLife: true, "": false, "play": false} {
-		eq(t, "Valid("+string(c)+")", c.Valid(), want)
-	}
-}
-
 func TestCreateTaskCategory(t *testing.T) {
 	c, _ := newCore(t)
-	eq(t, "unclassified by default", mustTask(t, c, domain.CreateTaskInput{Title: "x"}).Category == nil, true)
-	work := mustTask(t, c, domain.CreateTaskInput{Title: "x", Category: ptr(domain.CategoryWork)})
-	eqPtr(t, "work", work.Category, ptr(domain.CategoryWork))
-	life := mustTask(t, c, domain.CreateTaskInput{Title: "x", Category: ptr(domain.CategoryLife)})
-	got := must[*domain.Task](t)(c.GetTask(ctx, life.ID))
-	eqPtr(t, "life read back", got.Category, ptr(domain.CategoryLife))
-	_, err := c.CreateTask(ctx, domain.CreateTaskInput{Title: "x", Category: ptr(domain.Category("play"))})
-	wantFieldError(t, err, "category")
+	reading := newCategory(t, c, "Reading")
+	eq(t, "unclassified by default", mustTask(t, c, domain.CreateTaskInput{Title: "x"}).CategoryID == nil, true)
+	work := mustTask(t, c, domain.CreateTaskInput{Title: "x", CategoryID: ptr(int64(1))})
+	eqPtr(t, "work", work.CategoryID, ptr(int64(1)))
+	eqPtr(t, "work's name", work.Category, ptr("Work"))
+	book := mustTask(t, c, domain.CreateTaskInput{Title: "x", CategoryID: &reading.ID})
+	got := must[*domain.Task](t)(c.GetTask(ctx, book.ID))
+	eqPtr(t, "user category read back", got.CategoryID, &reading.ID)
+	eqPtr(t, "its name", got.Category, ptr("Reading"))
+	_, err := c.CreateTask(ctx, domain.CreateTaskInput{Title: "x", CategoryID: ptr(int64(99))})
+	wantFieldError(t, err, "category_id")
+	if !domain.IsNotFound(err) {
+		t.Errorf("a category that does not exist is not found, got %v", err)
+	}
 }
 
 func TestUpdateTaskCategory(t *testing.T) {
 	c, _ := newCore(t)
+	reading := newCategory(t, c, "Reading")
 	task := mustTask(t, c, domain.CreateTaskInput{Title: "x"})
-	set := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Set(domain.CategoryLife)}))
-	eqPtr(t, "set", set.Category, ptr(domain.CategoryLife))
+	set := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{CategoryID: domain.Set(reading.ID)}))
+	eqPtr(t, "set", set.CategoryID, &reading.ID)
+	eqPtr(t, "set name", set.Category, ptr("Reading"))
 	kept := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Title: ptr("y")}))
-	eqPtr(t, "an omitted category stays", kept.Category, ptr(domain.CategoryLife))
-	cleared := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Clear[domain.Category]()}))
-	if cleared.Category != nil {
-		t.Errorf("category = %v, want cleared", *cleared.Category)
+	eqPtr(t, "an omitted category stays", kept.CategoryID, &reading.ID)
+	cleared := must[*domain.Task](t)(c.UpdateTask(ctx, task.ID, domain.TaskPatch{CategoryID: domain.Clear[int64]()}))
+	if cleared.CategoryID != nil || cleared.Category != nil {
+		t.Errorf("category = %v %v, want cleared", cleared.CategoryID, cleared.Category)
 	}
-	_, err := c.UpdateTask(ctx, task.ID, domain.TaskPatch{Category: domain.Set(domain.Category("play"))})
-	wantFieldError(t, err, "category")
+	_, err := c.UpdateTask(ctx, task.ID, domain.TaskPatch{CategoryID: domain.Set(int64(99))})
+	wantFieldError(t, err, "category_id")
+}
+
+// An active task carries its category's name through the overview's joined query as well.
+func TestOverviewTasksCarryTheirCategoryName(t *testing.T) {
+	c, _ := newCore(t)
+	reading := newCategory(t, c, "Reading")
+	mustTask(t, c, domain.CreateTaskInput{Title: "x", Status: domain.StatusDoing, CategoryID: &reading.ID})
+	o := must[*domain.Overview](t)(c.GetOverview(ctx, domain.OverviewOptions{}))
+	got := o.Projects[0].Tasks[0]
+	eqPtr(t, "category id", got.CategoryID, &reading.ID)
+	eqPtr(t, "category name", got.Category, ptr("Reading"))
 }

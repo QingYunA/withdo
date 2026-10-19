@@ -66,6 +66,7 @@ func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
 	to := nav{}
 	selected := m.nav == to && !m.searching()
 	row := sidebarRow(c, t, "mine", selected)
+	row.ContextMenu(m.mineMenu)
 	m.hop.mine = row.Bounds()
 	row.Children(func() {
 		avatarSlot(c, theme.You)

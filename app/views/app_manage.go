@@ -34,6 +34,39 @@ func (a *App) CreateProject(in data.NewProject) (data.Project, error) {
 	return p, err
 }
 
+// CreateCategory adds a category and returns it. The sheet words the store's problems with a name or
+// the list (ErrNameEmpty, ErrCategoryNameLong, ErrCategoryNameTaken, ErrCategoryBuiltinName,
+// ErrTooManyCategories); any other failure goes to the banner.
+func (a *App) CreateCategory(in data.NewCategory) (data.Category, error) {
+	var c data.Category
+	err := a.do(func() (err error) { c, err = a.Store.CreateCategory(in); return })
+	return c, err
+}
+
+// UpdateCategory changes a category; the sheet words its problems like CreateCategory's.
+func (a *App) UpdateCategory(id int, p data.CategoryPatch) error {
+	return a.do(func() error { _, err := a.Store.UpdateCategory(id, p); return err })
+}
+
+// MoveCategory puts a category at a place of the list, 0 being the first.
+func (a *App) MoveCategory(id, index int) error {
+	return a.fail(a.do(func() error { return a.Store.MoveCategory(id, index) }))
+}
+
+// DeleteCategory removes a category; its tasks become unsorted. The result is what RestoreCategory
+// needs to put it back.
+func (a *App) DeleteCategory(id int) (data.DeletedCategory, error) {
+	var d data.DeletedCategory
+	err := a.fail(a.do(func() (err error) { d, err = a.Store.DeleteCategory(id); return }))
+	return d, err
+}
+
+// RestoreCategory is the Undo of DeleteCategory: the category comes back where it was, and so do
+// the tasks it held that are still unsorted.
+func (a *App) RestoreCategory(d data.DeletedCategory) error {
+	return a.fail(a.do(func() error { _, err := a.Store.RestoreCategory(d); return err }))
+}
+
 func (a *App) RenameProject(id int, name string) error {
 	return a.fail(a.do(func() error { _, err := a.Store.RenameProject(id, name); return err }))
 }

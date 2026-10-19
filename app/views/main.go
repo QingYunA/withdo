@@ -35,8 +35,9 @@ const (
 type nav struct {
 	screen    screen
 	projectID int
-	// sub narrows Mine or Agents to one slice: a category (subWork, subLife, subUnsorted) or an
-	// agent's name; "" is the whole screen.
+	// cat narrows Mine to one category's page: its id, or catUnsorted; 0 is the whole of Mine.
+	cat int
+	// sub narrows Agents to one agent's page, by the agent's name; "" is the whole screen.
 	sub string
 }
 
@@ -54,7 +55,7 @@ type Main struct {
 	mine   data.Mine         // all of Mine this frame: the sidebar's count and the hop read it
 	agents data.AgentsScreen // all of Agents this frame
 	// minePage and agentsPage are what the open Mine or Agents page lists: the same as mine and
-	// agents, or one slice of them when nav.sub names one. slices holds the parts of Mine.
+	// agents, or one slice of them when nav.cat or nav.sub names one. slices holds the parts of Mine.
 	minePage   data.Mine
 	agentsPage data.AgentsScreen
 	slices     mineSlices
@@ -177,6 +178,9 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Project(m.nav.projectID); m.nav.screen == screenProject && !ok {
 		m.goTo(nav{}) // archived or deleted, here or by another process
 	}
+	if _, ok := m.app.Category(m.nav.cat); m.nav.cat > 0 && !ok {
+		m.goTo(nav{}) // deleted, here or by another process
+	}
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 		m.clearMulti()
@@ -212,6 +216,7 @@ func (m *Main) View(c *ui.Context) {
 		m.inspectorPane(c, t)
 	})
 	m.newProjectSheet(c, t)
+	m.categorySheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
 	m.dayCardView(c, t)

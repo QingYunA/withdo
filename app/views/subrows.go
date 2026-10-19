@@ -9,28 +9,22 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The slices of Mine, named in nav.sub. An agent's slice of Agents is named by the agent's name.
-const (
-	subWork     = "work"
-	subLife     = "life"
-	subUnsorted = "unsorted"
-)
+// catUnsorted is the nav.cat of the Unsorted page of Mine: the tasks with no category.
+const catUnsorted = -1
 
 // mineSlices are the parts of Mine the sidebar lists, each built from its own tasks so its counts
-// and its "Show all" link are right.
-type mineSlices struct{ work, life, unsorted data.Mine }
+// and its "Show all" link are right: one per category, by id, and the unsorted ones.
+type mineSlices struct {
+	byCat    map[int]data.Mine
+	unsorted data.Mine
+}
 
-// of is the slice a nav.sub names; a sub that is none of them gives the zero Mine.
-func (s mineSlices) of(sub string) data.Mine {
-	switch sub {
-	case subWork:
-		return s.work
-	case subLife:
-		return s.life
-	case subUnsorted:
+// of is the slice a nav.cat names; a category that is not there gives the zero Mine.
+func (s mineSlices) of(cat int) data.Mine {
+	if cat == catUnsorted {
 		return s.unsorted
 	}
-	return data.Mine{}
+	return s.byCat[cat]
 }
 
 // projectHasRepo reports whether a task's project is a repository, which makes its tasks work.
@@ -42,12 +36,13 @@ func (a *App) projectHasRepo(id *int) bool {
 	return ok && p.HasRepo()
 }
 
-// categoryOf is the category a task counts under: its own, else work in a repository's project.
-func (a *App) categoryOf(t data.Task) data.Category { return data.CategoryOf(t, a.projectHasRepo) }
+// categoryOf is the id of the category a task counts under: its own, else Work in a repository's
+// project, else 0 (Unsorted).
+func (a *App) categoryOf(t data.Task) int { return data.CategoryOf(t, a.projectHasRepo, a.workID()) }
 
-// inMineSlice accepts the tasks that belong to a slice of Mine.
-func (a *App) inMineSlice(sub string) func(data.Task) bool {
-	want := map[string]data.Category{subWork: data.CategoryWork, subLife: data.CategoryLife}[sub]
+// inMineSlice accepts the tasks that count under the category cat, or under none for catUnsorted.
+func (a *App) inMineSlice(cat int) func(data.Task) bool {
+	want := max(cat, 0)
 	return func(t data.Task) bool { return a.categoryOf(t) == want }
 }
 
@@ -62,31 +57,27 @@ func (a *App) inAgentSlice(name string) func(data.Task) bool {
 func (m *Main) buildPages() {
 	a := m.app
 	m.mine, m.agents = a.buildMine(), a.buildAgents()
-	m.slices = mineSlices{
-		work:     a.buildMineOf(a.inMineSlice(subWork)),
-		life:     a.buildMineOf(a.inMineSlice(subLife)),
-		unsorted: a.buildMineOf(a.inMineSlice(subUnsorted)),
+	m.slices = mineSlices{byCat: make(map[int]data.Mine, len(a.snap.categories)), unsorted: a.buildMineOf(a.inMineSlice(catUnsorted))}
+	for _, c := range a.snap.categories {
+		m.slices.byCat[c.ID] = a.buildMineOf(a.inMineSlice(c.ID))
 	}
 	m.agentRows = m.agents.Tally(func(t data.Task) string { return agentName(a.taskAgent(t)) })
 	m.minePage, m.agentsPage = m.mine, m.agents
 	switch {
-	case m.nav.sub == "":
-	case m.nav.screen == screenMine:
-		m.minePage = m.slices.of(m.nav.sub)
-	case m.nav.screen == screenAgents:
+	case m.nav.screen == screenMine && m.nav.cat != 0:
+		m.minePage = m.slices.of(m.nav.cat)
+	case m.nav.screen == screenAgents && m.nav.sub != "":
 		m.agentsPage = a.buildAgentsOf(a.inAgentSlice(m.nav.sub))
 	}
 }
 
-// mineTitle is the title of the Mine page: Mine, or the name of its slice.
+// mineTitle is the title of the Mine page: Mine, or the name of its category.
 func (m *Main) mineTitle() string {
-	switch m.nav.sub {
-	case subWork:
-		return m.say.CategoryWork()
-	case subLife:
-		return m.say.CategoryLife()
-	case subUnsorted:
+	if m.nav.cat == catUnsorted {
 		return m.say.CategoryUnsorted()
+	}
+	if c, ok := m.app.Category(m.nav.cat); ok {
+		return categoryTitle(m.say, c)
 	}
 	return m.say.NavMine()
 }
@@ -99,25 +90,37 @@ func (m *Main) agentsTitle() string {
 	return m.say.NavAgents()
 }
 
-// categoryName is a category as people read it; "" is Unsorted.
-func categoryName(say locales.Messages, c data.Category) string {
-	switch c {
-	case data.CategoryWork:
+// categoryLabel is a category as people read it, from the label a receipt carries: the key of a
+// built-in category (work, life) in the user's language, the name of any other as it is.
+func categoryLabel(say locales.Messages, label string) string {
+	switch label {
+	case data.BuiltinWork:
 		return say.CategoryWork()
-	case data.CategoryLife:
+	case data.BuiltinLife:
 		return say.CategoryLife()
 	}
-	return say.CategoryUnsorted()
+	return label
 }
 
-// mineSubRows are the rows under Mine: Work and Life always, Unsorted while it has rows (or is the
-// open page, so its highlight does not vanish under the pointer).
+// categoryTitle is a category as people read it: Work and Life in the user's language, the rest by
+// name.
+func categoryTitle(say locales.Messages, c data.Category) string {
+	if c.Builtin != "" {
+		return categoryLabel(say, c.Builtin)
+	}
+	return c.Name
+}
+
+// mineSubRows are the rows under Mine: every category by position, empty ones too, then Unsorted
+// while it has rows (or is the open page, so its highlight does not vanish under the pointer).
 func (m *Main) mineSubRows(c *ui.Context, t *theme.Tokens) {
-	m.subRow(c, t, "mine-work", nav{screen: screenMine, sub: subWork}, m.say.CategoryWork(), m.slices.work.Count(), categoryLead(c, t, data.CategoryWork))
-	m.subRow(c, t, "mine-life", nav{screen: screenMine, sub: subLife}, m.say.CategoryLife(), m.slices.life.Count(), categoryLead(c, t, data.CategoryLife))
-	to := nav{screen: screenMine, sub: subUnsorted}
+	for _, cat := range m.app.snap.categories {
+		m.subRow(c, t, "cat-"+itoa(cat.ID), nav{screen: screenMine, cat: cat.ID}, categoryTitle(m.say, cat), m.slices.byCat[cat.ID].Count(),
+			func() { categoryGlyph(c, cat, theme.AvatarSmall) }, func(mn *ui.Menu) { m.categoryMenu(c, mn, cat) })
+	}
+	to := nav{screen: screenMine, cat: catUnsorted}
 	if !m.slices.unsorted.Empty() || m.nav == to {
-		m.subRow(c, t, "mine-unsorted", to, m.say.CategoryUnsorted(), m.slices.unsorted.Count(), nil)
+		m.subRow(c, t, "mine-unsorted", to, m.say.CategoryUnsorted(), m.slices.unsorted.Count(), nil, m.mineMenu)
 	}
 }
 
@@ -132,7 +135,7 @@ func (m *Main) agentSubRows(c *ui.Context, t *theme.Tokens) {
 		who := theme.AgentAvatar(strings.ToLower(r.Name))
 		m.subRow(c, t, "agent:"+r.Name, nav{screen: screenAgents, sub: r.Name}, r.Name, r.Working, func() {
 			theme.AvatarIcon(c.Key("avatar"), who, theme.AvatarSmall)
-		})
+		}, nil)
 	}
 }
 
@@ -145,11 +148,9 @@ func hasAgentRow(rows []data.AgentTally, name string) bool {
 	return false
 }
 
-// categoryLead draws a category's icon in a sub-row's slot.
-func categoryLead(c *ui.Context, t *theme.Tokens, cat data.Category) func() {
-	return func() {
-		ui.Icon(c, categoryIcon(cat)).Size(theme.AvatarSmall, theme.AvatarSmall).TextColor(t.TextSecondary)
-	}
+// categoryGlyph draws a category's icon, size pt square, in its color.
+func categoryGlyph(c *ui.Context, cat data.Category, size float32) ui.Element {
+	return ui.Icon(c, theme.CategoryIcon(cat.Icon)).Size(size, size).TextColor(theme.CategoryColor(cat.Color)).Shrink(0)
 }
 
 // subRowIndent is how far a sub-row's content sits in from its parent's: one 18 pt icon and the row's
@@ -158,10 +159,13 @@ const subRowIndent = theme.IconRow + sidebarRowGap
 
 // subRow is a sidebar row under Mine or Agents, one step in from its parent. Its 12 pt slot, flush
 // with the parent's label, holds what lead draws (the category's icon, the agent's avatar) or stays
-// empty when lead is nil, so the sub-rows' labels line up.
-func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, lead func()) {
+// empty when lead is nil, so the sub-rows' labels line up. menu is the row's context menu, if it has one.
+func (m *Main) subRow(c *ui.Context, t *theme.Tokens, key any, to nav, label string, count int, lead func(), menu func(*ui.Menu)) {
 	selected := m.nav == to && !m.searching()
 	row := sidebarRow(c, t, key, selected).Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent)
+	if menu != nil {
+		row.ContextMenu(menu)
+	}
 	row.Children(func() {
 		ui.Row(c.Key("lead")).Width(theme.AvatarSmall).Height(theme.AvatarSmall).Shrink(0).Children(func() {
 			if lead != nil {

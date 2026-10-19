@@ -62,7 +62,7 @@ func (m *Main) manyPage(c *ui.Context, t *theme.Tokens) {
 			m.bulkPriority(c, ids, p)
 		})
 	case pageMove:
-		m.movePageOf(c, t, func() []popSpec {
+		m.movePageOf(c, t, finder{placeholder: m.say.MenuFindProject(), noMatch: m.say.MenuNoProjectMatch()}, func() []popSpec {
 			return m.projectChoices(
 				func(project int) bool {
 					return len(tasks) > 0 && len(only(tasks, func(k data.Task) bool { return !inProject(k, project) })) == 0

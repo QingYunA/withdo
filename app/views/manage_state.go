@@ -9,6 +9,7 @@ import (
 // over the window, the project being renamed in the sidebar, the search and Completed.
 type manageState struct {
 	project   projectSheet
+	category  categorySheet
 	milestone milestoneSheet
 	confirm   confirmation
 	rename    renaming

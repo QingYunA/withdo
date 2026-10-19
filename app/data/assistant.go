@@ -27,8 +27,9 @@ type Place struct {
 	TaskID    int // PlaceTask
 	// Day is the selected day of the Calendar page as "2006-01-02" (PlaceCalendar).
 	Day string
-	// Category is the Work or Life page of Mine (PlaceNow): a new task is in that category.
-	Category Category
+	// Category is the id of the category page of Mine (PlaceNow), 0 for Mine as a whole: a new
+	// task is in that category.
+	Category int
 }
 
 // Assistant is the built-in agent behind the composer, as the UI sees it.

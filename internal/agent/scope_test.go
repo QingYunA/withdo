@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/pixmap"
 )
 
 // system is the system prompt of the first call the model was sent.
@@ -30,6 +31,18 @@ func (r *rig) project(name string) *domain.Project {
 	}
 	return p
 }
+
+func (r *rig) category(name string) *domain.Category {
+	r.t.Helper()
+	c, err := r.core.CreateCategory(context.Background(), domain.CreateCategoryInput{Name: name, Icon: dotIcon})
+	if err != nil {
+		r.t.Fatal(err)
+	}
+	return c
+}
+
+// dotIcon is the smallest icon a category may have.
+var dotIcon = pixmap.Bitmap{}.Set(5, 5, true).Grid()
 
 func TestPromptTellsTheModelWhereTheRequestComesFrom(t *testing.T) {
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC)
@@ -56,7 +69,7 @@ func TestPromptTellsTheModelWhereTheRequestComesFrom(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			p := BuildPrompt(now, projects, tc.scope, tc.focus)
+			p := BuildPrompt(now, projects, nil, tc.scope, tc.focus)
 			for _, w := range tc.want {
 				if !strings.Contains(p, w) {
 					t.Errorf("prompt lacks %q:\n%s", w, p)
@@ -72,7 +85,7 @@ func TestPromptTellsTheModelWhereTheRequestComesFrom(t *testing.T) {
 }
 
 func TestPromptHasTheInferenceRules(t *testing.T) {
-	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, Scope{}, nil)
+	p := BuildPrompt(time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC), nil, nil, Scope{}, nil)
 	for _, want := range []string{
 		`"urgent", "asap", "blocker"`, "P1",
 		`"someday"`, "P3",
@@ -128,23 +141,31 @@ func TestProjectScopeLetsTheWordsNameAnotherProjectOrTheInbox(t *testing.T) {
 	}
 }
 
-func TestWorkAndLifePagesOfMineClassifyNewTasks(t *testing.T) {
-	for _, c := range []domain.Category{domain.CategoryWork, domain.CategoryLife} {
+func TestCategoryPagesOfMineClassifyNewTasks(t *testing.T) {
+	for _, page := range []struct {
+		id    int64 // a built-in, or the first category the test makes
+		label string
+		page  string
+	}{{1, "work", "Work"}, {2, "life", "Life"}, {0, "Reading", "Reading"}} {
 		r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "a thing"}), say("ok"))
-		rc := r.askIn(Scope{Kind: ScopeNow, Category: c}, "a thing").Receipts[0]
-		if got := r.task(rc.TaskID).Category; got == nil || *got != c {
-			t.Errorf("%s page: category %v", c, got)
+		if page.id == 0 {
+			page.id = r.category("Reading").ID
 		}
-		eq(t, "receipt category", rc.Detail.Category, string(c))
-		contains(t, "system prompt", r.system(), "the "+string(c)+" page of Mine")
+		rc := r.askIn(Scope{Kind: ScopeNow, CategoryID: page.id}, "a thing").Receipts[0]
+		if got := r.task(rc.TaskID).CategoryID; got == nil || *got != page.id {
+			t.Errorf("%s page: category %v", page.page, got)
+		}
+		eq(t, "receipt category", rc.Detail.Category, page.label)
+		contains(t, "system prompt", r.system(), "the "+page.page+" page of Mine")
 		contains(t, "system prompt", r.system(), "Inbox unless the words name a project")
+		contains(t, "system prompt", r.system(), "its category is "+page.page+" unless the words name another")
 	}
 }
 
 func TestTheWordsCanNameAnotherCategoryThanThePage(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "pay rent", "category": "life"}), say("ok"))
-	rc := r.askIn(Scope{Kind: ScopeNow, Category: domain.CategoryWork}, "pay rent").Receipts[0]
-	if got := r.task(rc.TaskID).Category; got == nil || *got != domain.CategoryLife {
+	rc := r.askIn(Scope{Kind: ScopeNow, CategoryID: 1}, "pay rent").Receipts[0]
+	if got := r.task(rc.TaskID).CategoryID; got == nil || *got != 2 {
 		t.Errorf("category %v, want the one the model named", got)
 	}
 }
@@ -152,10 +173,19 @@ func TestTheWordsCanNameAnotherCategoryThanThePage(t *testing.T) {
 func TestACategoryOnAnotherPageIsIgnored(t *testing.T) {
 	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "loose"}), say("ok"))
 	p := r.project("a-project")
-	rc := r.askIn(Scope{Kind: ScopeProject, ProjectID: p.ID, Category: domain.CategoryLife}, "loose").Receipts[0]
-	if got := r.task(rc.TaskID).Category; got != nil {
+	rc := r.askIn(Scope{Kind: ScopeProject, ProjectID: p.ID, CategoryID: 2}, "loose").Receipts[0]
+	if got := r.task(rc.TaskID).CategoryID; got != nil {
 		t.Errorf("category %v on a project page", *got)
 	}
+}
+
+func TestADeletedCategoryPageReadsAsTheNowPage(t *testing.T) {
+	r := newRig(t, "Asia/Shanghai", oct14, call("create_task", m{"title": "x"}), say("ok"))
+	rc := r.askIn(Scope{Kind: ScopeNow, CategoryID: 99}, "x").Receipts[0]
+	if got := r.task(rc.TaskID).CategoryID; got != nil {
+		t.Errorf("category %v for a page that is gone", *got)
+	}
+	contains(t, "prompt", r.system(), "the Now page")
 }
 
 func TestInboxAndNowScopesCreateInTheInbox(t *testing.T) {
@@ -230,7 +260,7 @@ func TestReceiptsShowWhatWasInferred(t *testing.T) {
 func TestCalendarScopeNamesTheSelectedDay(t *testing.T) {
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.FixedZone("CST", 8*3600))
 	sc := Scope{Kind: ScopeCalendar, Day: "2026-10-16"}
-	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}}, sc, nil)
+	p := BuildPrompt(now, []domain.Project{{ID: 3, Name: "adhd-todo"}}, nil, sc, nil)
 	for _, want := range []string{
 		"the Calendar page", "Friday, 2026-10-16", "no time words", "18:00",
 		"2026-10-16T18:00:00+08:00", "Inbox unless",
@@ -248,7 +278,7 @@ func TestCalendarScopeNamesTheSelectedDay(t *testing.T) {
 func TestCalendarScopeWithoutAUsableDayReadsAsTheNowPage(t *testing.T) {
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC)
 	for _, day := range []string{"", "tomorrow", "2026-13-40"} {
-		p := BuildPrompt(now, nil, Scope{Kind: ScopeCalendar, Day: day}, nil)
+		p := BuildPrompt(now, nil, nil, Scope{Kind: ScopeCalendar, Day: day}, nil)
 		if !strings.Contains(p, "the Now page") || strings.Contains(p, "Calendar page") {
 			t.Errorf("day %q:\n%s", day, p)
 		}

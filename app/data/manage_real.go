@@ -121,6 +121,51 @@ func (r *Real) RestoreTask(s TaskSnapshot) (Task, error) {
 	return fromTask(*t), nil
 }
 
+func (r *Real) CreateCategory(in NewCategory) (Category, error) {
+	c, err := r.core.CreateCategory(r.ctx(), domain.CreateCategoryInput{Name: in.Name, Icon: in.Icon.Grid(), Color: in.Color})
+	if err != nil {
+		return Category{}, categoryProblem(err)
+	}
+	return fromCategory(*c), nil
+}
+
+func (r *Real) UpdateCategory(id int, p CategoryPatch) (Category, error) {
+	patch := domain.CategoryPatch{Name: p.Name, Color: p.Color}
+	if p.Icon != nil {
+		grid := p.Icon.Grid()
+		patch.Icon = &grid
+	}
+	c, err := r.core.UpdateCategory(r.ctx(), int64(id), patch)
+	if err != nil {
+		return Category{}, categoryProblem(err)
+	}
+	return fromCategory(*c), nil
+}
+
+func (r *Real) MoveCategory(id, index int) error {
+	return r.core.MoveCategory(r.ctx(), int64(id), index)
+}
+
+func (r *Real) DeleteCategory(id int) (DeletedCategory, error) {
+	d, err := r.core.DeleteCategory(r.ctx(), int64(id))
+	if err != nil {
+		return DeletedCategory{}, categoryProblem(err)
+	}
+	return DeletedCategory{Category: fromCategory(d.Category), Tasks: len(d.TaskIDs), raw: d}, nil
+}
+
+func (r *Real) RestoreCategory(d DeletedCategory) (Category, error) {
+	raw, ok := d.raw.(domain.DeletedCategory)
+	if !ok {
+		return Category{}, errors.New("deleted category was not made by this store")
+	}
+	c, err := r.core.RestoreCategory(r.ctx(), raw)
+	if err != nil {
+		return Category{}, categoryProblem(err)
+	}
+	return fromCategory(*c), nil
+}
+
 func (r *Real) CreateMilestone(projectID int, title string, dueAt *time.Time) (Milestone, error) {
 	var due *string
 	if dueAt != nil && !dueAt.IsZero() {

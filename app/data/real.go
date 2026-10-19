@@ -149,6 +149,18 @@ func (r *Real) ListProjects() ([]Project, error) {
 	return out, nil
 }
 
+func (r *Real) ListCategories() ([]Category, error) {
+	cs, err := r.core.ListCategories(r.ctx())
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Category, len(cs))
+	for i, c := range cs {
+		out[i] = fromCategory(c)
+	}
+	return out, nil
+}
+
 func (r *Real) ListMilestones(projectID int) ([]Milestone, error) {
 	ms, err := r.core.ListMilestones(r.ctx(), int64(projectID))
 	if err != nil {
@@ -206,7 +218,7 @@ func (r *Real) CreateTask(in CreateTaskInput) (Task, error) {
 	t, err := r.core.CreateTask(r.ctx(), domain.CreateTaskInput{
 		Title: in.Title, Source: domain.Source(in.Source), ProjectID: int64Ptr(in.ProjectID),
 		Status: domain.Status(in.Status), Priority: domain.Priority(in.Priority), DueAt: formatTimePtr(in.DueAt),
-		ParentID: int64Ptr(in.ParentID), Category: toCategory(in.Category),
+		ParentID: int64Ptr(in.ParentID), CategoryID: nonZero(in.Category),
 	})
 	if err != nil {
 		return Task{}, err

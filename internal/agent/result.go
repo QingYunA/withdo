@@ -35,7 +35,7 @@ const (
 	ChangeProject                    // Value is the project's name, empty for the Inbox
 	ChangeRenamed
 	ChangeNotes
-	ChangeCategory // Value is the new category, work or life; empty when it was cleared
+	ChangeCategory // Value is the new category (see Detail.Category); empty when it was cleared
 )
 
 // Change is one field an update changed.
@@ -55,7 +55,8 @@ type Detail struct {
 	// Priority is set on a new task when it is not the default P2, so the receipt shows what the
 	// words made of it.
 	Priority string
-	// Category is set on a new task the assistant classified, work or life.
+	// Category is set on a new task the assistant sorted: the key "work" or "life" for a built-in
+	// category, which the UI words in its language, else the name of the user's category.
 	Category string
 	Changes  []Change // DetailUpdated
 }

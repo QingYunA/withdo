@@ -45,26 +45,6 @@ const (
 // Priorities lists every priority from most to least urgent.
 var Priorities = []Priority{P0, P1, P2, P3}
 
-// Category says what a task is for me: work or life. "" means nobody classified it.
-type Category string
-
-const (
-	CategoryWork Category = "work"
-	CategoryLife Category = "life"
-)
-
-// CategoryOf is the category a task counts under: its own when it has one, else work when its
-// project has a repository (hasRepo says), else "". An explicit category always wins.
-func CategoryOf(t Task, hasRepo func(*int) bool) Category {
-	switch {
-	case t.Category != "":
-		return t.Category
-	case hasRepo != nil && t.ProjectID != nil && hasRepo(t.ProjectID):
-		return CategoryWork
-	}
-	return ""
-}
-
 // Source says who created a task.
 type Source string
 
@@ -107,7 +87,7 @@ type Task struct {
 	Notes       string
 	Status      Status
 	Priority    Priority
-	Category    Category // "" until someone classifies the task; see CategoryOf
+	CategoryID  int // the category the user sorted the task under, 0 for none; see CategoryOf
 	DueAt       *time.Time
 	RemindAt    *time.Time
 	RemindedAt  *time.Time
@@ -223,18 +203,18 @@ type CreateTaskInput struct {
 	ProjectID *int
 	Status    Status
 	Priority  Priority
-	Category  Category // "" leaves the task unclassified
+	Category  int // a category id; 0 leaves the task unsorted
 	DueAt     *time.Time
 }
 
 // Patch changes a task. A nil field is left alone. To clear a nullable field set the zero value:
-// "" for text and Category, 0 for MilestoneID, the zero time for DueAt and RemindAt.
+// "" for text, 0 for Category and MilestoneID, the zero time for DueAt and RemindAt.
 type Patch struct {
 	Title       *string
 	Notes       *string
 	Status      *Status
 	Priority    *Priority
-	Category    *Category
+	Category    *int // a category id; 0 unsorts the task
 	ProjectID   *int // 0 moves the task to the Inbox; a move without MilestoneID drops the milestone
 	MilestoneID *int
 	DueAt       *time.Time
@@ -257,6 +237,8 @@ type Store interface {
 	Bulk
 
 	ListProjects() ([]Project, error)
+	// ListCategories lists the categories in the user's order: Work and Life, and the user's own.
+	ListCategories() ([]Category, error)
 	Overview() (Overview, error)
 	ListTasks(Filter) ([]Task, error)
 	GetTask(id int) (TaskDetail, error)
@@ -301,9 +283,6 @@ func StatusPtr(v Status) *Status { return &v }
 
 // PriorityPtr returns a pointer to v.
 func PriorityPtr(v Priority) *Priority { return &v }
-
-// CategoryPtr returns a pointer to v.
-func CategoryPtr(v Category) *Category { return &v }
 
 // TimePtr returns a pointer to v.
 func TimePtr(v time.Time) *time.Time { return &v }

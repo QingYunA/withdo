@@ -14,7 +14,7 @@ type createArgs struct {
 	ProjectID *int64  `json:"project_id,omitempty" jsonschema:"description=Project id from list_projects. Omit for the place the request came from (see the prompt); 0 means the Inbox."`
 	Notes     *string `json:"notes,omitempty"`
 	Priority  string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3,description=P0 is urgent and P2 the default."`
-	Category  string  `json:"category,omitempty" jsonschema:"enum=work,enum=life,description=What the task is for the user. Leave out when unsure or when the task goes into a repository's project (that counts as work)."`
+	Category  string  `json:"category,omitempty" jsonschema:"description=Name of one of the categories listed in the prompt. Leave out when unsure or when the task goes into a repository's project (that counts as Work)."`
 	DueAt     string  `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
 	RemindAt  string  `json:"remind_at,omitempty" jsonschema:"description=When to remind the user as RFC 3339 with a UTC offset."`
 	Images    []int   `json:"images,omitempty" jsonschema:"description=Numbers of the request's pictures that belong to this task. Omit for all of them; an empty list for none."`
@@ -29,10 +29,13 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 		Title: strings.TrimSpace(a.Title), Source: domain.SourceUser, ProjectID: tb.projectFor(a.ProjectID),
 		Notes: a.Notes, Priority: domain.Priority(a.Priority),
 	}
-	in.Category = tb.defaultCategory
+	in.CategoryID = tb.defaultCategory
 	if a.Category != "" {
-		c := domain.Category(a.Category)
-		in.Category = &c
+		id, err := tb.core.ResolveCategory(ctx, a.Category)
+		if err != nil {
+			return fail(ctx, err)
+		}
+		in.CategoryID = &id
 	}
 	var err error
 	if in.DueAt, err = optWhen("due_at", a.DueAt, now, false); err != nil {
@@ -94,7 +97,7 @@ func (tb *toolbox) createDetail(t domain.Task) Detail {
 	if t.Priority != domain.P2 {
 		d.Priority = string(t.Priority)
 	}
-	d.Category = categoryName(t.Category)
+	d.Category = tb.categoryLabel(t)
 	return d
 }
 
@@ -103,7 +106,7 @@ type updateArgs struct {
 	Title     *string  `json:"title,omitempty"`
 	Status    *string  `json:"status,omitempty" jsonschema:"enum=backlog,enum=todo,enum=doing,enum=blocked,enum=review,enum=done,enum=cancelled"`
 	Priority  *string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3"`
-	Category  *string  `json:"category,omitempty" jsonschema:"enum=work,enum=life"`
+	Category  *string  `json:"category,omitempty" jsonschema:"description=Name of one of the categories listed in the prompt."`
 	Notes     *string  `json:"notes,omitempty"`
 	ProjectID *int64   `json:"project_id,omitempty" jsonschema:"description=Move the task to this project."`
 	DueAt     *string  `json:"due_at,omitempty" jsonschema:"description=RFC 3339 with a UTC offset."`
@@ -123,7 +126,7 @@ func (tb *toolbox) update(ctx context.Context, a updateArgs) (reply, error) {
 		}
 		return fail(ctx, err)
 	}
-	patch, err := tb.patchFrom(a, *before)
+	patch, err := tb.patchFrom(ctx, a, *before)
 	if err != nil {
 		return fail(ctx, err)
 	}
@@ -141,7 +144,7 @@ func (tb *toolbox) update(ctx context.Context, a updateArgs) (reply, error) {
 }
 
 // patchFrom turns the model's arguments into a domain patch, validating times and enums.
-func (tb *toolbox) patchFrom(a updateArgs, before domain.Task) (domain.TaskPatch, error) {
+func (tb *toolbox) patchFrom(ctx context.Context, a updateArgs, before domain.Task) (domain.TaskPatch, error) {
 	now := tb.now()
 	p := domain.TaskPatch{Title: a.Title}
 	if a.Status != nil {
@@ -153,7 +156,11 @@ func (tb *toolbox) patchFrom(a updateArgs, before domain.Task) (domain.TaskPatch
 		p.Priority = &pr
 	}
 	if a.Category != nil {
-		p.Category = domain.Set(domain.Category(*a.Category))
+		id, err := tb.core.ResolveCategory(ctx, *a.Category)
+		if err != nil {
+			return p, err
+		}
+		p.CategoryID = domain.Set(id)
 	}
 	if a.Notes != nil {
 		p.Notes = domain.Set(*a.Notes)
@@ -178,7 +185,7 @@ func (tb *toolbox) patchFrom(a updateArgs, before domain.Task) (domain.TaskPatch
 		case "project":
 			p.ProjectID, p.MilestoneID = domain.Clear[int64](), domain.Clear[int64]()
 		case "category":
-			p.Category = domain.Clear[domain.Category]()
+			p.CategoryID = domain.Clear[int64]()
 		case "due_at":
 			p.DueAt = domain.Clear[string]()
 		case "remind_at":
@@ -205,7 +212,7 @@ func nullableWhen(field string, s *string, now time.Time, future bool) (domain.N
 }
 
 func isEmptyPatch(p domain.TaskPatch) bool {
-	return p.Title == nil && p.Status == nil && p.Priority == nil && !p.Category.Present && !p.Notes.Present && !p.ProjectID.Present &&
+	return p.Title == nil && p.Status == nil && p.Priority == nil && !p.CategoryID.Present && !p.Notes.Present && !p.ProjectID.Present &&
 		!p.DueAt.Present && !p.RemindAt.Present
 }
 
@@ -225,8 +232,8 @@ func (tb *toolbox) changeDetail(p domain.TaskPatch, after domain.Task) Detail {
 	if p.Priority != nil {
 		changes = append(changes, Change{Kind: ChangePriority, Value: string(after.Priority)})
 	}
-	if p.Category.Present {
-		changes = append(changes, Change{Kind: ChangeCategory, Value: categoryName(after.Category)})
+	if p.CategoryID.Present {
+		changes = append(changes, Change{Kind: ChangeCategory, Value: tb.categoryLabel(after)})
 	}
 	if p.ProjectID.Present {
 		changes = append(changes, Change{Kind: ChangeProject, Value: tb.projectLabel(after.ProjectID)})

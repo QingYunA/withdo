@@ -12,8 +12,8 @@ import (
 )
 
 // categoryDesc tells an agent when to fill category in.
-const categoryDesc = "What the task is for the user: work or life. Leave it out for a task in a " +
-	"repository's project, which counts as work"
+const categoryDesc = "Name of one of the user's categories, in any case (list_categories); Work and Life always exist. " +
+	"Leave it out for a task in a repository's project, which counts as Work"
 
 type createTaskArgs struct {
 	Title       string           `json:"title"`
@@ -21,7 +21,7 @@ type createTaskArgs struct {
 	ProjectID   *int64           `json:"project_id"`
 	Notes       *string          `json:"notes"`
 	Priority    *domain.Priority `json:"priority"`
-	Category    *domain.Category `json:"category"`
+	Category    *string          `json:"category"`
 	MilestoneID *int64           `json:"milestone_id"`
 	DueAt       string           `json:"due_at"`
 	RemindAt    string           `json:"remind_at"`
@@ -40,7 +40,7 @@ func (t *tools) registerCreateTask(s *mcp.Server) {
 			"project_id":   id("Project to file the task under (instead of cwd)"),
 			"notes":        anyText(""),
 			"priority":     priorityEnum("P0 (urgent) to P3 (low); default P2"),
-			"category":     categoryEnum(categoryDesc),
+			"category":     text(categoryDesc),
 			"milestone_id": id(""),
 			"due_at":       timestamp(timestampDesc),
 			"remind_at":    timestamp(timestampDesc),
@@ -65,7 +65,7 @@ func (t *tools) createTask(ctx context.Context, _ *mcp.CallToolRequest, a create
 func (t *tools) createTaskInput(ctx context.Context, a createTaskArgs) (domain.CreateTaskInput, error) {
 	in := domain.CreateTaskInput{
 		Title: a.Title, Source: domain.SourceAgent, MilestoneID: a.MilestoneID, Notes: a.Notes,
-		Branch: strPtr(a.Branch), PRURL: strPtr(a.PRURL), Category: a.Category,
+		Branch: strPtr(a.Branch), PRURL: strPtr(a.PRURL),
 	}
 	if a.Priority != nil {
 		in.Priority = *a.Priority
@@ -77,6 +77,13 @@ func (t *tools) createTaskInput(ctx context.Context, a createTaskArgs) (domain.C
 		return in, err
 	}
 	var err error
+	if a.Category != nil {
+		id, err := t.core.ResolveCategory(ctx, *a.Category)
+		if err != nil {
+			return in, err
+		}
+		in.CategoryID = &id
+	}
 	if in.DueAt, err = timestampArg("due_at", a.DueAt); err != nil {
 		return in, err
 	}
@@ -95,18 +102,18 @@ func (t *tools) createTaskInput(ctx context.Context, a createTaskArgs) (domain.C
 }
 
 type updateTaskArgs struct {
-	TaskID      int64                            `json:"task_id"`
-	Title       *string                          `json:"title"`
-	Notes       domain.Nullable[string]          `json:"notes"`
-	Status      *domain.Status                   `json:"status"`
-	Priority    *domain.Priority                 `json:"priority"`
-	Category    domain.Nullable[domain.Category] `json:"category"`
-	ProjectID   domain.Nullable[int64]           `json:"project_id"`
-	MilestoneID domain.Nullable[int64]           `json:"milestone_id"`
-	DueAt       domain.Nullable[string]          `json:"due_at"`
-	RemindAt    domain.Nullable[string]          `json:"remind_at"`
-	Branch      domain.Nullable[string]          `json:"branch"`
-	PRURL       domain.Nullable[string]          `json:"pr_url"`
+	TaskID      int64                   `json:"task_id"`
+	Title       *string                 `json:"title"`
+	Notes       domain.Nullable[string] `json:"notes"`
+	Status      *domain.Status          `json:"status"`
+	Priority    *domain.Priority        `json:"priority"`
+	Category    domain.Nullable[string] `json:"category"`
+	ProjectID   domain.Nullable[int64]  `json:"project_id"`
+	MilestoneID domain.Nullable[int64]  `json:"milestone_id"`
+	DueAt       domain.Nullable[string] `json:"due_at"`
+	RemindAt    domain.Nullable[string] `json:"remind_at"`
+	Branch      domain.Nullable[string] `json:"branch"`
+	PRURL       domain.Nullable[string] `json:"pr_url"`
 }
 
 func (t *tools) registerUpdateTask(s *mcp.Server) {
@@ -120,7 +127,7 @@ func (t *tools) registerUpdateTask(s *mcp.Server) {
 			"notes":        nullable(anyText(""), "null clears the notes"),
 			"status":       statusEnum(""),
 			"priority":     priorityEnum(""),
-			"category":     nullable(categoryEnum(""), categoryDesc+"; null clears it"),
+			"category":     nullable(text(""), categoryDesc+"; null clears it"),
 			"project_id":   nullable(id(""), "null moves the task to the inbox"),
 			"milestone_id": nullable(id(""), "null detaches the milestone"),
 			"due_at":       nullable(timestamp(""), "null clears the due date"),
@@ -143,8 +150,12 @@ func (t *tools) updateTask(ctx context.Context, _ *mcp.CallToolRequest, a update
 	if err := nullableURLArg("pr_url", a.PRURL); err != nil {
 		return t.fail(err)
 	}
+	category, err := t.categoryPatch(ctx, a.Category)
+	if err != nil {
+		return t.fail(err)
+	}
 	task, err := t.core.UpdateTask(ctx, a.TaskID, domain.TaskPatch{
-		Title: a.Title, Status: a.Status, Priority: a.Priority, Category: a.Category, Notes: a.Notes,
+		Title: a.Title, Status: a.Status, Priority: a.Priority, CategoryID: category, Notes: a.Notes,
 		ProjectID: a.ProjectID, MilestoneID: a.MilestoneID, DueAt: due, RemindAt: remind,
 		Branch: a.Branch, PRURL: a.PRURL,
 	})

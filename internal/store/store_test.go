@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(11),
+		"PRAGMA user_version": int64(12),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 11 {
-		t.Errorf("SchemaVersion = %d, want 11", store.SchemaVersion())
+	if store.SchemaVersion() != 12 {
+		t.Errorf("SchemaVersion = %d, want 12", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 11 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 11 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -221,7 +221,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 12"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 13"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -323,8 +323,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 11 {
-		t.Fatalf("user_version = %d, want 11 (migrations 005 to 011 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
+		t.Fatalf("user_version = %d, want 12 (migrations 005 to 012 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -396,9 +396,9 @@ func TestMigration006AddsHandOffColumnsToExistingRows(t *testing.T) {
 }
 
 // Migration 007 adds tasks.category: a task that predates it is not classified, and only work or
-// life can be written.
+// life can be written. Migration 012 replaces it, so this stops at version 11.
 func TestMigration007AddsCategoryToExistingRows(t *testing.T) {
-	db := openCopyOf(t, "testdata/ts-v2.db")
+	db := openCopyOfAt(t, "testdata/ts-v2.db", 11)
 	var category sql.NullString
 	if err := db.QueryRowContext(ctx, "SELECT category FROM tasks").Scan(&category); err != nil {
 		t.Fatal(err)
@@ -416,8 +416,114 @@ func TestMigration007AddsCategoryToExistingRows(t *testing.T) {
 	}
 }
 
+// Migration 012 turns the work/life enum into the categories table: a task keeps its category as
+// an id, Work and Life become the two built-in rows, and nothing else in the task's family is lost.
+func TestMigration012MovesTaskCategoriesToTheCategoriesTable(t *testing.T) {
+	db := openCopyOfAt(t, "testdata/ts-v2.db", 11)
+	for _, q := range []string{
+		`INSERT INTO tasks (id, title, source, category, created_at, updated_at) VALUES (11, 'ship', 'user', 'work', 't', 't')`,
+		`INSERT INTO tasks (id, title, source, category, created_at, updated_at) VALUES (12, 'rent', 'user', 'life', 't', 't')`,
+		`INSERT INTO tasks (id, title, source, created_at, updated_at) VALUES (13, 'loose', 'user', 't', 't')`,
+		`INSERT INTO reports (task_id, agent, summary, created_at) VALUES (11, 'go', 'kept', 't')`,
+		`INSERT INTO images (hash, ext, mime, bytes, created_at) VALUES ('ab', 'png', 'image/png', 3, 'x')`,
+		`INSERT INTO task_images (task_id, image_hash, name, width, height, added_at) VALUES (11, 'ab', 'a.png', 4, 3, 'x')`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := store.Migrate(ctx, db); err != nil {
+		t.Fatal(err)
+	}
+
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
+		t.Fatalf("user_version = %d", v)
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM pragma_table_info('tasks') WHERE name = 'category'"); n != 0 {
+		t.Error("tasks.category is still there")
+	}
+	for title, want := range map[string]string{"ship": "work", "rent": "life"} {
+		q := fmt.Sprintf("SELECT c.builtin FROM tasks t JOIN categories c ON c.id = t.category_id WHERE t.title = '%s'", title)
+		if got := scalar[string](t, db, q); got != want {
+			t.Errorf("%s has category %q, want %q", title, got, want)
+		}
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM tasks WHERE category_id IS NULL"); n != 2 { // 'loose' and the TypeScript core's task
+		t.Errorf("%d tasks without a category, want 2", n)
+	}
+	if scalar[int](t, db, "SELECT COUNT(*) FROM reports WHERE summary = 'kept'") != 1 || scalar[int](t, db, "SELECT COUNT(*) FROM task_images") != 1 {
+		t.Error("the migration lost a report or a picture link")
+	}
+
+	rows := map[int64][5]string{}
+	cr, err := db.QueryContext(ctx, "SELECT id, builtin, name, icon, color, position FROM categories")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = cr.Close() }()
+	for cr.Next() {
+		var id, pos int64
+		var builtin, name, icon, color string
+		if err := cr.Scan(&id, &builtin, &name, &icon, &color, &pos); err != nil {
+			t.Fatal(err)
+		}
+		rows[id] = [5]string{builtin, name, icon, color, fmt.Sprint(pos)}
+	}
+	// The briefcase and the house, 12 rows of 12 characters each.
+	want := map[int64][5]string{
+		1: {"work", "Work", "............" + ".....##....." + "....#..#...." + "..########.." + strings.Repeat(".#........#.", 6) + "..########.." + "............", "blue", "1"},
+		2: {"life", "Life", "............" + ".....##....." + "....#..#...." + "...#....#..." + "..#......#.." + ".#........#." + ".#...##...#." + strings.Repeat(".#..#..#..#.", 3) + "..########.." + "............", "green", "2"},
+	}
+	if len(rows) != 2 || rows[1] != want[1] || rows[2] != want[2] {
+		t.Errorf("categories = %v, want %v", rows, want)
+	}
+}
+
+func TestCategoriesTableConstraints(t *testing.T) {
+	db, _ := open(t)
+	icon := strings.Repeat(".", 144)
+	bad := map[string]string{
+		"duplicate built-in":    `INSERT INTO categories (builtin, name, icon, color, position, created_at) VALUES ('work', 'Job', '` + icon + `', 'red', 3, 't')`,
+		"unknown built-in":      `INSERT INTO categories (builtin, name, icon, color, position, created_at) VALUES ('play', 'Play', '` + icon + `', 'red', 3, 't')`,
+		"same name, other case": `INSERT INTO categories (name, icon, color, position, created_at) VALUES ('WORK', '` + icon + `', 'red', 3, 't')`,
+		"short icon":            `INSERT INTO categories (name, icon, color, position, created_at) VALUES ('Reading', '..', 'red', 3, 't')`,
+		"no name":               `INSERT INTO categories (icon, color, position, created_at) VALUES ('` + icon + `', 'red', 3, 't')`,
+		"no color":              `INSERT INTO categories (name, icon, position, created_at) VALUES ('Reading', '` + icon + `', 3, 't')`,
+		"unknown color":         `INSERT INTO categories (name, icon, color, position, created_at) VALUES ('Reading', '` + icon + `', 'mauve', 3, 't')`,
+	}
+	for name, q := range bad {
+		if _, err := db.ExecContext(ctx, q); err == nil {
+			t.Errorf("%s should be rejected", name)
+		}
+	}
+	for _, q := range []string{
+		`INSERT INTO categories (id, name, icon, color, position, created_at) VALUES (3, 'Reading', '` + icon + `', 'red', 3, 't')`,
+		`INSERT INTO tasks (id, title, source, category_id, created_at, updated_at) VALUES (1, 'book', 'user', 3, 't', 't')`,
+	} {
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := db.ExecContext(ctx, `INSERT INTO tasks (title, source, category_id, created_at, updated_at) VALUES ('x', 'user', 99, 't', 't')`); err == nil {
+		t.Error("a task cannot point at a category that does not exist")
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM categories WHERE id = 3`); err != nil {
+		t.Fatal(err)
+	}
+	var cat sql.NullInt64
+	if err := db.QueryRowContext(ctx, "SELECT category_id FROM tasks WHERE id = 1").Scan(&cat); err != nil || cat.Valid {
+		t.Errorf("category_id = %v, %v; deleting a category leaves its tasks unsorted", cat, err)
+	}
+}
+
 // openCopyOf opens a copy of a database file from testdata, so the original stays at its version.
 func openCopyOf(t *testing.T, file string) *sql.DB {
+	t.Helper()
+	return openCopyOfAt(t, file, store.SchemaVersion())
+}
+
+// openCopyOfAt is openCopyOf migrated only up to version, to test what a migration carries over.
+func openCopyOfAt(t *testing.T, file string, version int) *sql.DB {
 	t.Helper()
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -427,11 +533,14 @@ func openCopyOf(t *testing.T, file string) *sql.DB {
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	db, err := store.Open(ctx, path)
+	db, err := sql.Open("sqlite", store.DSN(path))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = db.Close() })
+	if err := store.MigrateTo(ctx, db, version); err != nil {
+		t.Fatal(err)
+	}
 	return db
 }
 
