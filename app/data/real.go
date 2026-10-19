@@ -29,6 +29,8 @@ type RealOptions struct {
 	// SyncConfigPath is the sync.json to read; empty means next to the database in OpenReal and
 	// no sync in NewReal.
 	SyncConfigPath string
+	// Secrets is where an OIDC sync keeps its refresh token; nil means the app has no keychain.
+	Secrets syncclient.Secrets
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and
@@ -139,7 +141,19 @@ func (r *Real) startSync(ctx context.Context) {
 	if err != nil || !linked || device == "" {
 		return
 	}
-	client, err := syncclient.New(r.core, syncclient.Options{BaseURL: cfg.Server, Token: cfg.Token})
+	var tokens syncclient.TokenSource
+	switch {
+	case cfg.Issuer != "":
+		if r.opts.Secrets == nil {
+			return
+		}
+		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, nil, r.opts.Secrets)
+	case cfg.Token != "":
+		tokens = syncclient.StaticToken(cfg.Token)
+	default:
+		return
+	}
+	client, err := syncclient.New(r.core, syncclient.Options{BaseURL: cfg.Server, TokenSource: tokens})
 	if err != nil {
 		return
 	}

@@ -153,6 +153,49 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 		}
 	})
 
+	t.Run("sync.json with an issuer starts an OIDC runner when secrets are injected", func(t *testing.T) {
+		server := newAppSyncServer(t)
+		path := linkedAppDB(t, server, true, false)
+		if err := syncclient.SaveConfig(path, syncclient.Config{
+			Server: server.URL, Issuer: "https://issuer.example", ClientID: "client",
+		}); err != nil {
+			t.Fatal(err)
+		}
+		real, err := OpenReal(ctx, path, RealOptions{
+			DataFolder: filepath.Dir(path), Interval: time.Hour, Secrets: appSecrets{},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		real.Start()
+		if real.syncRunner() == nil {
+			_ = real.Close()
+			t.Fatal("the app did not start an OIDC sync runner")
+		}
+		if err := real.Close(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("sync.json with an issuer and no secrets means no runner", func(t *testing.T) {
+		server := newAppSyncServer(t)
+		path := linkedAppDB(t, server, true, false)
+		if err := syncclient.SaveConfig(path, syncclient.Config{
+			Server: server.URL, Issuer: "https://issuer.example", ClientID: "client",
+		}); err != nil {
+			t.Fatal(err)
+		}
+		real, err := OpenReal(ctx, path, RealOptions{DataFolder: filepath.Dir(path), Interval: time.Hour})
+		if err != nil {
+			t.Fatal(err)
+		}
+		real.Start()
+		defer func() { _ = real.Close() }()
+		if real.syncRunner() != nil {
+			t.Fatal("the app started an OIDC runner without secrets")
+		}
+	})
+
 	t.Run("sync.json without a linked database means no runner", func(t *testing.T) {
 		server := newAppSyncServer(t)
 		path := linkedAppDB(t, server, false, true)
@@ -167,3 +210,10 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 		}
 	})
 }
+
+// appSecrets is a syncclient.Secrets with no token, for the OIDC wiring test.
+type appSecrets struct{}
+
+func (appSecrets) Get(string) (string, error) { return "", syncclient.ErrSecretNotFound }
+func (appSecrets) Set(string, string) error   { return nil }
+func (appSecrets) Delete(string) error        { return nil }

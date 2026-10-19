@@ -34,8 +34,11 @@ var (
 type Options struct {
 	// BaseURL is the sync server's root, e.g. https://sync.example.com.
 	BaseURL string
-	// Token is the bearer token the S2a server's authenticator knows.
+	// Token is a fixed bearer token, the development setup written by S3. It is ignored when
+	// TokenSource is set.
 	Token string
+	// TokenSource supplies the bearer token of each request; nil uses Token.
+	TokenSource TokenSource
 	// HTTP is the transport; nil uses a client with a 30 second timeout.
 	HTTP *http.Client
 }
@@ -43,10 +46,10 @@ type Options struct {
 // Client is one linked local database talking to one sync server. It is safe for concurrent use
 // only as far as domain.Core is; callers serialize Sync and Link.
 type Client struct {
-	core  *domain.Core
-	base  string
-	token string
-	http  *http.Client
+	core   *domain.Core
+	base   string
+	tokens TokenSource
+	http   *http.Client
 }
 
 // New returns a client for core. It does not touch the network.
@@ -65,7 +68,19 @@ func New(core *domain.Core, opts Options) (*Client, error) {
 	if client == nil {
 		client = &http.Client{Timeout: 30 * time.Second}
 	}
-	return &Client{core: core, base: base, token: opts.Token, http: client}, nil
+	tokens := opts.TokenSource
+	if tokens == nil && opts.Token != "" {
+		tokens = StaticToken(opts.Token)
+	}
+	return &Client{core: core, base: base, tokens: tokens, http: client}, nil
+}
+
+// token asks the source for this request's bearer token.
+func (c *Client) token(ctx context.Context) (string, error) {
+	if c.tokens == nil {
+		return "", nil
+	}
+	return c.tokens.Token(ctx)
 }
 
 // statusError is a non-2xx answer from the server.
@@ -102,8 +117,12 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+	token, err := c.token(ctx)
+	if err != nil {
+		return err
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {

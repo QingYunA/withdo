@@ -41,6 +41,12 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessWithAuth(t, testTokens)
+}
+
+// newHarnessWithAuth is newHarness with the authenticator the test needs, such as OIDC.
+func newHarnessWithAuth(t *testing.T, auth syncserver.Authenticator) *harness {
+	t.Helper()
 	databaseURL := os.Getenv("ADHD_SYNC_TEST_DATABASE_URL")
 	if databaseURL == "" {
 		t.Skip("ADHD_SYNC_TEST_DATABASE_URL is not set")
@@ -64,7 +70,7 @@ func newHarness(t *testing.T) *harness {
 	q := u.Query()
 	q.Set("search_path", schema)
 	u.RawQuery = q.Encode()
-	server, err := syncserver.Open(ctx, u.String(), testTokens)
+	server, err := syncserver.Open(ctx, u.String(), auth)
 	if err != nil {
 		_, _ = admin.Exec(ctx, "DROP SCHEMA "+pgx.Identifier{schema}.Sanitize()+" CASCADE")
 		_ = admin.Close(ctx)

@@ -301,7 +301,7 @@ func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
 		next.State = StateIdle
 		next.LastSynced = r.clock.Now()
 		r.client.RecordResult(ctx, nil)
-	case IsUnauthorized(err):
+	case IsUnauthorized(err) || IsSignedOut(err):
 		next.State = StateSignedOut
 		next.LastError = err.Error()
 		r.client.RecordResult(ctx, err)
@@ -395,7 +395,7 @@ func (r *Runner) watchEvents(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		if IsUnauthorized(err) {
+		if IsUnauthorized(err) || IsSignedOut(err) {
 			current := r.Status()
 			r.setStatus(Status{
 				State: StateSignedOut, LastSynced: current.LastSynced,

@@ -25,7 +25,7 @@ const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/ad
 
 func main() {
 	if args, ok := cliArgs(os.Args); ok {
-		os.Exit(cli.Main(args))
+		os.Exit(cli.Main(args, cli.Options{Secrets: newSyncSecrets()}))
 	}
 	fake := flag.Bool("fake", false, "use demo data in a temporary database instead of the real one (for screenshots)")
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")

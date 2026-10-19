@@ -23,8 +23,12 @@ func (c *Client) events(ctx context.Context, deviceID string, onPoke func()) err
 		return err
 	}
 	req.Header.Set("Accept", "text/event-stream")
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
+	token, err := c.token(ctx)
+	if err != nil {
+		return err
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	// The stream outlives any JSON request, so it must not inherit a client timeout.
 	httpClient := c.http

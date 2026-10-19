@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -28,7 +29,10 @@ const syncUsage = `Usage: adhd-core sync <command>
 
 Commands:
   link --server URL --token-file FILE --name NAME
-             Link this Mac to a sync server
+             Link this Mac to a sync server with a static token (development)
+  login --server URL --issuer URL --client-id ID --name NAME
+             Sign in to an OIDC account and link this Mac
+  logout     Forget the OIDC sign-in on this Mac
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
 `
@@ -48,6 +52,10 @@ func runSync(ctx context.Context, args []string, d deps) error {
 	switch args[0] {
 	case "link":
 		return syncLink(ctx, args[1:], dbPath, core, d)
+	case "login":
+		return syncLogin(ctx, args[1:], dbPath, core, d)
+	case "logout":
+		return syncLogout(args[1:], d)
 	case "status":
 		return syncStatus(ctx, core, d)
 	case "now":
@@ -84,7 +92,7 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 	if token == "" {
 		return errors.New("sync link: the token file is empty")
 	}
-	client, err := syncclient.New(core, syncclient.Options{BaseURL: *server, Token: token})
+	client, err := syncclient.New(core, syncclient.Options{BaseURL: *server, TokenSource: syncclient.StaticToken(token)})
 	if err != nil {
 		return err
 	}
@@ -92,11 +100,84 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 	if err != nil {
 		return err
 	}
-	if err := client.Link(ctx, strings.TrimSpace(*name)); err != nil {
+	return linkAndSave(ctx, client, dbPath, syncclient.Config{Server: *server, Token: token}, *name, hasData, d)
+}
+
+// syncLogin signs in through the system browser, writes sync.json without a token and links this
+// Mac like sync link does. The refresh token goes to the keychain, never to the file.
+func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.Core, d deps) error {
+	fs := flag.NewFlagSet("sync login", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	server := fs.String("server", "", "sync server URL")
+	issuer := fs.String("issuer", "", "OIDC issuer URL")
+	clientID := fs.String("client-id", "", "OIDC client id")
+	name := fs.String("name", "", "device name")
+	if err := fs.Parse(args); err != nil {
+		return fmt.Errorf("sync login: %w", err)
+	}
+	if strings.TrimSpace(*server) == "" {
+		return errors.New("sync login: --server is required")
+	}
+	if strings.TrimSpace(*issuer) == "" {
+		return errors.New("sync login: --issuer is required")
+	}
+	if strings.TrimSpace(*clientID) == "" {
+		return errors.New("sync login: --client-id is required")
+	}
+	if strings.TrimSpace(*name) == "" {
+		return errors.New("sync login: --name is required")
+	}
+	if d.secrets == nil {
+		return errors.New("sync login: no keychain available; use the desktop app")
+	}
+	source := syncclient.NewOIDCSource(*issuer, *clientID, nil, d.secrets)
+	open := d.openBrowser
+	if open == nil {
+		open = openBrowser
+	}
+	if err := source.Login(ctx, func(url string) error {
+		_, _ = fmt.Fprintf(d.stdout, "open this URL to sign in:\n%s\n", url)
+		return open(url)
+	}); err != nil {
 		return syncFriendlyError(err)
 	}
-	if err := syncclient.SaveConfigAt(syncclient.ConfigPath(dbPath),
-		syncclient.Config{Server: *server, Token: token}); err != nil {
+	client, err := syncclient.New(core, syncclient.Options{BaseURL: *server, TokenSource: source})
+	if err != nil {
+		return err
+	}
+	hasData, err := core.SyncHasLocalData(ctx)
+	if err != nil {
+		return err
+	}
+	_, _ = io.WriteString(d.stdout, "signed in\n")
+	return linkAndSave(ctx, client, dbPath,
+		syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID}, *name, hasData, d)
+}
+
+// syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
+func syncLogout(args []string, d deps) error {
+	if len(args) > 0 {
+		return errors.New("usage: adhd-core sync logout")
+	}
+	if d.secrets == nil {
+		return errors.New("sync logout: no keychain available; use the desktop app")
+	}
+	if err := syncclient.DeleteRefreshToken(d.secrets); err != nil {
+		return err
+	}
+	_, _ = io.WriteString(d.stdout, "signed out\n")
+	return nil
+}
+
+// linkAndSave links the database, writes sync.json and prints what happened. The config is written
+// only after the server accepted the link, so a failed link leaves the Mac unconfigured.
+func linkAndSave(ctx context.Context, client *syncclient.Client, dbPath string, cfg syncclient.Config,
+	name string, hasData bool, d deps) error {
+	name = strings.TrimSpace(name)
+	if err := client.Link(ctx, name); err != nil {
+		return syncFriendlyError(err)
+	}
+	if err := syncclient.SaveConfigAt(syncclient.ConfigPath(dbPath), cfg); err != nil {
 		return err
 	}
 	// A write made by another process during the link is still in the outbox.
@@ -178,7 +259,19 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 	if !found {
 		return fmt.Errorf("sync now: %s is missing", syncclient.ConfigPath(dbPath))
 	}
-	client, err := syncclient.New(core, syncclient.Options{BaseURL: cfg.Server, Token: cfg.Token})
+	var tokens syncclient.TokenSource
+	switch {
+	case cfg.Issuer != "":
+		if d.secrets == nil {
+			return errors.New("sync now: OIDC sign-in needs the desktop app's keychain")
+		}
+		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, nil, d.secrets)
+	case cfg.Token != "":
+		tokens = syncclient.StaticToken(cfg.Token)
+	default:
+		return errors.New("sync now: sync.json has no token or OIDC issuer")
+	}
+	client, err := syncclient.New(core, syncclient.Options{BaseURL: cfg.Server, TokenSource: tokens})
 	if err != nil {
 		return err
 	}
@@ -201,9 +294,31 @@ func syncFriendlyError(err error) error {
 		return errors.New("the workspace is still uploading its first snapshot; try again later")
 	case errors.Is(err, syncclient.ErrNotLinked):
 		return errors.New("this database is not linked; run adhd-core sync link first")
+	case syncclient.IsSignedOut(err):
+		return errors.New("not signed in; run adhd-core sync login")
 	case syncclient.IsUnauthorized(err):
-		return errors.New("the sync server refused the token; run adhd-core sync link again")
+		return errors.New("the sync server refused the token; run adhd-core sync login again")
 	default:
 		return err
 	}
+}
+
+// openBrowser opens url in the platform's browser. Tests and the app replace it.
+func openBrowser(url string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	default:
+		cmd = exec.Command("xdg-open", url)
+	}
+	if out, err := cmd.CombinedOutput(); err != nil {
+		if msg := strings.TrimSpace(string(out)); msg != "" {
+			return errors.New(msg)
+		}
+		return err
+	}
+	return nil
 }
