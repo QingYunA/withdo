@@ -46,4 +46,4 @@ work, and a task nobody classified is Unsorted (no keyword guessing).
 
 ## Not in M8
 
-- User-defined categories, nested levels, categories for agents' own tasks on the Agents screen.
+- User-defined categories (that is M9, `m9-custom-categories.md`), nested levels, categories for agents' own tasks on the Agents screen.
