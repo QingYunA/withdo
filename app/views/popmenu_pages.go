@@ -52,9 +52,11 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 					if s.tint != (ui.Color{}) && ink == t.Text {
 						color = s.tint
 					}
-					glyph := ui.Icon(c, s.icon) // one color
+					var glyph ui.Element
 					if s.colored && ink == t.Text {
 						glyph = ui.Image(c, s.icon) // a category's palette pixels keep their colors
+					} else {
+						glyph = ui.Icon(c, s.icon) // one color
 					}
 					glyph.Size(theme.IconMenu, theme.IconMenu).TextColor(color)
 				} else {
