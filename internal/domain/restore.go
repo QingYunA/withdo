@@ -3,15 +3,17 @@ package domain
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 )
 
 // TaskSnapshot is a task with its reports, taken before it is deleted so it can be put back.
 type TaskSnapshot struct {
-	Task    Task
-	Reports []Report // oldest first
-	Images  []TaskImage
+	Task     Task
+	Reports  []Report // oldest first
+	Images   []TaskImage
+	Subtasks []int64 // the ids of its subtasks, which the delete leaves top-level
 }
 
 // SnapshotTask reads a task and its reports as they are now; a missing task is a not-found error.
@@ -31,13 +33,22 @@ func (c *Core) SnapshotTask(ctx context.Context, id int64) (*TaskSnapshot, error
 	if err != nil {
 		return nil, err
 	}
-	return &TaskSnapshot{Task: *t, Reports: rs, Images: imgs}, nil
+	subs, err := c.ListTasks(ctx, TaskFilter{ParentID: &id, Limit: math.MaxInt32})
+	if err != nil {
+		return nil, err
+	}
+	snap := &TaskSnapshot{Task: *t, Reports: rs, Images: imgs}
+	for _, sub := range subs {
+		snap.Subtasks = append(snap.Subtasks, sub.ID)
+	}
+	return snap, nil
 }
 
 // RestoreTask puts a snapshotted task back with its id, every field and its reports, in one
 // transaction. It is the Undo of DeleteTask. A task that is already there (its id was taken
 // meanwhile) is a conflict. A project or milestone that is gone since leaves the task in the Inbox
-// with no milestone.
+// with no milestone; a parent that is gone, or is in another project now, leaves it top-level. Its
+// subtasks that are still top-level in its project go back under it.
 func (c *Core) RestoreTask(ctx context.Context, s TaskSnapshot) (*Task, error) {
 	var out *Task
 	err := c.write(ctx, func(q store.Querier) error {
@@ -64,12 +75,18 @@ func restoreTask(ctx context.Context, q store.Querier, s TaskSnapshot) (*Task, e
 	}
 	if _, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status,
 		priority, due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at,
-		reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at, category_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, parent_id, handed_to, handed_at, category_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		t.ID, t.ProjectID, t.MilestoneID, t.Title, t.Notes, t.Status, t.Priority, t.DueAt, t.RemindAt,
 		t.Branch, t.PRURL, t.PRNumber, t.Source, t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RemindedAt,
-		t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt, t.CategoryID); err != nil {
+		t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.ParentID, t.HandedTo, t.HandedAt, t.CategoryID); err != nil {
 		return nil, fmt.Errorf("insert task: %w", err)
+	}
+	for _, sub := range s.Subtasks {
+		if _, err := q.ExecContext(ctx, "UPDATE tasks SET parent_id = ? WHERE id = ? AND parent_id IS NULL AND project_id IS ?",
+			t.ID, sub, t.ProjectID); err != nil {
+			return nil, fmt.Errorf("relink subtask %d: %w", sub, err)
+		}
 	}
 	for _, r := range s.Reports {
 		links, err := encodeLinks(r.Links)
@@ -104,7 +121,8 @@ func relinkImage(ctx context.Context, q store.Querier, taskID int64, im TaskImag
 	return nil
 }
 
-// dropGoneRefs clears the project, milestone and category of t that no longer exist.
+// dropGoneRefs clears the project, milestone, category and parent of t that no longer exist, and a
+// parent that is in another project than t now.
 func dropGoneRefs(ctx context.Context, q store.Querier, t *Task) error {
 	if t.MilestoneID != nil {
 		m, err := getMilestone(ctx, q, *t.MilestoneID)
@@ -131,6 +149,15 @@ func dropGoneRefs(ctx context.Context, q store.Querier, t *Task) error {
 		}
 		if p == nil {
 			t.ProjectID, t.MilestoneID = nil, nil
+		}
+	}
+	if t.ParentID != nil {
+		parent, err := getTask(ctx, q, *t.ParentID)
+		if err != nil {
+			return err
+		}
+		if parent == nil || !sameInt(parent.ProjectID, t.ProjectID) {
+			t.ParentID = nil
 		}
 	}
 	return nil
