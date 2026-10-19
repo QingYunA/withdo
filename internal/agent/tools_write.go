@@ -14,10 +14,12 @@ type createArgs struct {
 	ProjectID *int64  `json:"project_id,omitempty" jsonschema:"description=Project id from list_projects. Omit for the place the request came from (see the prompt); 0 means the Inbox."`
 	Notes     *string `json:"notes,omitempty"`
 	Priority  string  `json:"priority,omitempty" jsonschema:"enum=P0,enum=P1,enum=P2,enum=P3,description=P0 is urgent and P2 the default."`
-	Category  string  `json:"category,omitempty" jsonschema:"description=Name of one of the categories listed in the prompt. Leave out when unsure or when the task goes into a repository's project (that counts as Work)."`
-	DueAt     string  `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
-	RemindAt  string  `json:"remind_at,omitempty" jsonschema:"description=When to remind the user as RFC 3339 with a UTC offset."`
-	Images    []int   `json:"images,omitempty" jsonschema:"description=Numbers of the request's pictures that belong to this task. Omit for all of them; an empty list for none."`
+	Category  string  `json:"category,omitempty" jsonschema:"description=Name of one of the categories listed in the prompt. When the user did not name one choose the best-fitting category yourself. Leave out when none fits or when the task goes into a repository's project (that counts as Work)."`
+	// CategoryNamed is true when the user's own words named the category.
+	CategoryNamed bool   `json:"category_named,omitempty" jsonschema:"description=True only when the user's words named the category themselves. Leave out when you chose it."`
+	DueAt         string `json:"due_at,omitempty" jsonschema:"description=Deadline as RFC 3339 with a UTC offset."`
+	RemindAt      string `json:"remind_at,omitempty" jsonschema:"description=When to remind the user as RFC 3339 with a UTC offset."`
+	Images        []int  `json:"images,omitempty" jsonschema:"description=Numbers of the request's pictures that belong to this task. Omit for all of them; an empty list for none."`
 }
 
 func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
@@ -51,7 +53,7 @@ func (tb *toolbox) create(ctx context.Context, a createArgs) (reply, error) {
 	tb.keep(t.ID, a.Images)
 	tb.addReceipt(Receipt{
 		TaskID: t.ID, Title: t.Title, Status: string(t.Status), Bell: t.RemindAt != nil,
-		Detail: tb.createDetail(*t),
+		Detail: tb.createDetail(*t, a.Category != "" && !a.CategoryNamed),
 	}, undoCreate(tb.core, t.ID))
 	v := tb.view(*t)
 	return reply{OK: true, Task: &v}, nil
@@ -82,7 +84,7 @@ func optWhen(field, s string, now time.Time, future bool) (*string, error) {
 
 // createDetail is what a receipt says about a new task: its date, the priority and the category when
 // the words set them, so what was inferred shows.
-func (tb *toolbox) createDetail(t domain.Task) Detail {
+func (tb *toolbox) createDetail(t domain.Task, autoFiled bool) Detail {
 	now := tb.now()
 	d := Detail{Kind: DetailAdded, Project: tb.projectLabel(t.ProjectID)}
 	switch {
@@ -98,6 +100,7 @@ func (tb *toolbox) createDetail(t domain.Task) Detail {
 		d.Priority = string(t.Priority)
 	}
 	d.Category = tb.categoryLabel(t)
+	d.AutoFiled = autoFiled && d.Category != ""
 	return d
 }
 

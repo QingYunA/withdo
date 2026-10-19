@@ -157,6 +157,7 @@
   "menuBack": "返回",
   "menuCustom": "自定义…",
   "menuDelete": "删除",
+  "taskFiled": "已归到 {category}",
   "menuDeleted": "已删除“{title}”",
   "menuFindProject": "查找项目",
   "menuLaterToday": "今天晚些时候",

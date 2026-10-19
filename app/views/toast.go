@@ -41,6 +41,7 @@ func copyForAgent(ids []int) string {
 
 // toastsView builds the toasts of the window.
 func (m *Main) toastsView(c *ui.Context, t *theme.Tokens) {
+	m.offerFiled(c)
 	ui.ToastViewportBase(c, func(viewport ui.Element, toasts []ui.Toast) {
 		viewport.Bottom(24).AlignItems(ui.Center).Gap(8)
 		for _, ts := range toasts {

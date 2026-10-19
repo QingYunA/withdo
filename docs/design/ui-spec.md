@@ -1061,6 +1061,11 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   unfinished rows; a board lane takes every selected card.
 - **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
   two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
+- **The filing toast.** When the built-in assistant creates a task and picks its category itself
+  (the user named none, the task is not in a repository's project), a quiet toast says
+  `Filed under Life` / `已归到 生活` with **Undo**, and goes by itself after 4 s. Undo clears the
+  category (the task is Unsorted). Nothing shows when the user named the category or none fit;
+  tasks typed by hand or made over MCP never get it. Screen: `mine-filed-toast-*.png`.
 
 ### Search
 

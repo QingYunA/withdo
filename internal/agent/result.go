@@ -58,7 +58,10 @@ type Detail struct {
 	// Category is set on a new task the assistant sorted: the key "work" or "life" for a built-in
 	// category, which the UI words in its language, else the name of the user's category.
 	Category string
-	Changes  []Change // DetailUpdated
+	// AutoFiled is set on a new task whose Category the assistant chose itself, without the user
+	// naming one; the UI says so in a quiet toast that offers to clear it.
+	AutoFiled bool
+	Changes   []Change // DetailUpdated
 }
 
 // Question is what ask_user asked: a short question and 2 to 4 answers to pick from.
