@@ -24,9 +24,10 @@ type listTasksArgs struct {
 
 func (t *tools) registerListTasks(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{
-		Name:        "list_tasks",
-		Title:       "List tasks",
-		Description: "List tasks, newest first, optionally filtered by project, status, milestone or parent task.",
+		Name:  "list_tasks",
+		Title: "List tasks",
+		Description: "List tasks, newest first, optionally filtered by project, status, milestone or parent task. " +
+			"The user's own tasks (\"My tasks\", no project) are not listed until the user hands one to an agent.",
 		InputSchema: object(map[string]*jsonschema.Schema{
 			"project_id": id("Project id"),
 			"cwd":        withDesc(cwdProp, "List tasks of the project that owns this directory"),
@@ -58,7 +59,13 @@ func (t *tools) listTasks(ctx context.Context, _ *mcp.CallToolRequest, a listTas
 		}
 		scope = &resolved.Project.ID
 	}
-	filter := domain.TaskFilter{ProjectID: scope, Statuses: a.Status, MilestoneID: a.MilestoneID, ParentID: a.ParentID}
+	if a.ParentID != nil {
+		if _, err := t.agentTask(ctx, "parent_task_id", *a.ParentID); err != nil {
+			return t.fail(err)
+		}
+	}
+	filter := domain.TaskFilter{ProjectID: scope, Statuses: a.Status, MilestoneID: a.MilestoneID, ParentID: a.ParentID,
+		HideUserInbox: true}
 	if a.Limit != nil {
 		filter.Limit = *a.Limit
 	}
@@ -95,7 +102,7 @@ func (t *tools) registerGetOverview(s *mcp.Server) {
 }
 
 func (t *tools) getOverview(ctx context.Context, _ *mcp.CallToolRequest, a getOverviewArgs) (*mcp.CallToolResult, any, error) {
-	opts := domain.OverviewOptions{}
+	opts := domain.OverviewOptions{HideUserInbox: true}
 	if a.StaleHours != nil {
 		if *a.StaleHours <= 0 {
 			return t.fail(fieldErr("stale_hours", "must be greater than 0"))
