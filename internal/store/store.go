@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "modernc.org/sqlite" // pure Go SQLite driver, registered as "sqlite"
 )
@@ -52,7 +53,14 @@ func dsn(path string) string {
 	if err != nil {
 		abs = path
 	}
-	u := url.URL{Scheme: "file", Path: filepath.ToSlash(abs)}
+	// A file URI must have an empty authority: Windows paths like C:\... need a
+	// leading slash (file:///C:/...) or SQLite parses the drive letter as the
+	// URI authority and fails with "invalid uri authority".
+	slashed := filepath.ToSlash(abs)
+	if !strings.HasPrefix(slashed, "/") {
+		slashed = "/" + slashed
+	}
+	u := url.URL{Scheme: "file", Path: slashed}
 	q := url.Values{}
 	q.Add("_pragma", "journal_mode(WAL)")
 	q.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", BusyTimeoutMillis))
