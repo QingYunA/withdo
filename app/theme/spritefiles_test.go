@@ -15,6 +15,9 @@ import (
 
 func TestEveryAvatarKindHasAFileOfTwelveSquare(t *testing.T) {
 	for kind := AvatarYou; kind <= AvatarOther; kind++ {
+		if kind == AvatarDeepSeek {
+			continue // drawn from the harness registry (harness_marks.go), not from a file
+		}
 		name, ok := avatarFiles[kind]
 		if !ok {
 			t.Errorf("avatar kind %d names no file", kind)

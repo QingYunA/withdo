@@ -159,3 +159,21 @@ func TestAColouredHarnessMarkKeepsItsBrandColours(t *testing.T) {
 		t.Error("Gemini lost its gradient")
 	}
 }
+
+// TestDeepSeekIsTheWhaleEverywhere: the harness mark, the avatar of an agent under any of its
+// names and the provider's logo are one drawing, the whale, at 18 in both appearances.
+func TestDeepSeekIsTheWhaleEverywhere(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		want := harnessMark(t, "deepseek", 18, dark)
+		for _, name := range []string{"deepseek", "DeepSeek Harness", "dsh", "dsh-mcp-client"} {
+			got := render(t, dark, func(c *ui.Context, tk *Tokens) { AvatarIcon(c, AgentAvatar(name), 18) })
+			if string(got.Image().Pix) != string(want.Image().Pix) {
+				t.Errorf("agent %q (dark %v) is not the whale", name, dark)
+			}
+		}
+		got := render(t, dark, func(c *ui.Context, tk *Tokens) { ProviderLogo(c, "deepseek", 18, tk.Text) })
+		if string(got.Image().Pix) != string(want.Image().Pix) {
+			t.Errorf("the provider logo (dark %v) is not the whale", dark)
+		}
+	}
+}
