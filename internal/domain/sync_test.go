@@ -183,11 +183,11 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				a := mustTask(t, c, domain.CreateTaskInput{Title: "a"})
 				b := mustTask(t, c, domain.CreateTaskInput{Title: "b"})
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[[]domain.Task](t)(c.UpdateTasks(ctx, []int64{a.ID, b.ID}, domain.TaskPatch{Title: ptr("x")}))
-					}, []wantChange{
-						{"tasks", a.ID, "put", []string{"title", "updated_at"}},
-						{"tasks", b.ID, "put", []string{"title", "updated_at"}},
-					}
+					must[[]domain.Task](t)(c.UpdateTasks(ctx, []int64{a.ID, b.ID}, domain.TaskPatch{Title: ptr("x")}))
+				}, []wantChange{
+					{"tasks", a.ID, "put", []string{"title", "updated_at"}},
+					{"tasks", b.ID, "put", []string{"title", "updated_at"}},
+				}
 			},
 		},
 		{
@@ -198,11 +198,11 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				ra := must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: a.ID, Agent: "x", Summary: "a"}))
 				rb := must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: b.ID, Agent: "x", Summary: "b"}))
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[[]domain.TaskSnapshot](t)(c.DeleteTasks(ctx, []int64{a.ID, b.ID}))
-					}, []wantChange{
-						{"reports", ra.ID, "delete", nil}, {"tasks", a.ID, "delete", nil},
-						{"reports", rb.ID, "delete", nil}, {"tasks", b.ID, "delete", nil},
-					}
+					must[[]domain.TaskSnapshot](t)(c.DeleteTasks(ctx, []int64{a.ID, b.ID}))
+				}, []wantChange{
+					{"reports", ra.ID, "delete", nil}, {"tasks", a.ID, "delete", nil},
+					{"reports", rb.ID, "delete", nil}, {"tasks", b.ID, "delete", nil},
+				}
 			},
 		},
 		{
@@ -219,11 +219,11 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 			prepare: func(t *testing.T, c *domain.Core, db *sql.DB) (syncStep, []wantChange) {
 				task := handedTask(t, c)
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "x", Summary: "on it"}))
-					}, []wantChange{
-						{"reports", 5000, "put", nil},
-						{"tasks", task.ID, "put", []string{"handed_to", "handed_at"}},
-					}
+					must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "x", Summary: "on it"}))
+				}, []wantChange{
+					{"reports", 5000, "put", nil},
+					{"tasks", task.ID, "put", []string{"handed_to", "handed_at"}},
+				}
 			},
 		},
 		{
@@ -271,14 +271,14 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				ra := must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: a.ID, Agent: "x", Summary: "a"}))
 				rb := must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: b.ID, Agent: "x", Summary: "b"}))
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						if _, err := c.DeleteProject(ctx, p.ID); err != nil {
-							t.Fatal(err)
-						}
-					}, []wantChange{
-						{"reports", ra.ID, "delete", nil}, {"reports", rb.ID, "delete", nil},
-						{"tasks", a.ID, "delete", nil}, {"tasks", b.ID, "delete", nil},
-						{"milestones", m.ID, "delete", nil}, {"projects", p.ID, "delete", nil},
+					if _, err := c.DeleteProject(ctx, p.ID); err != nil {
+						t.Fatal(err)
 					}
+				}, []wantChange{
+					{"reports", ra.ID, "delete", nil}, {"reports", rb.ID, "delete", nil},
+					{"tasks", a.ID, "delete", nil}, {"tasks", b.ID, "delete", nil},
+					{"milestones", m.ID, "delete", nil}, {"projects", p.ID, "delete", nil},
+				}
 			},
 		},
 		{
@@ -323,15 +323,15 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				newCategory(t, c, "Reading")
 				garden := newCategory(t, c, "Garden")
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						if err := c.MoveCategory(ctx, garden.ID, 0); err != nil {
-							t.Fatal(err)
-						}
-					}, []wantChange{
-						{"categories", 1, "put", []string{"position"}},
-						{"categories", 2, "put", []string{"position"}},
-						{"categories", 3, "put", []string{"position"}},
-						{"categories", 4, "put", []string{"position"}},
+					if err := c.MoveCategory(ctx, garden.ID, 0); err != nil {
+						t.Fatal(err)
 					}
+				}, []wantChange{
+					{"categories", 1, "put", []string{"position"}},
+					{"categories", 2, "put", []string{"position"}},
+					{"categories", 3, "put", []string{"position"}},
+					{"categories", 4, "put", []string{"position"}},
+				}
 			},
 		},
 		{
@@ -341,12 +341,12 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				garden := newCategory(t, c, "Garden")
 				task := mustTask(t, c, domain.CreateTaskInput{Title: "one", CategoryID: &reading.ID})
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[domain.DeletedCategory](t)(c.DeleteCategory(ctx, reading.ID))
-					}, []wantChange{
-						{"categories", reading.ID, "delete", nil},
-						{"tasks", task.ID, "put", []string{"category_id"}},
-						{"categories", garden.ID, "put", []string{"position"}},
-					}
+					must[domain.DeletedCategory](t)(c.DeleteCategory(ctx, reading.ID))
+				}, []wantChange{
+					{"categories", reading.ID, "delete", nil},
+					{"tasks", task.ID, "put", []string{"category_id"}},
+					{"categories", garden.ID, "put", []string{"position"}},
+				}
 			},
 		},
 		{
@@ -355,12 +355,12 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent"})
 				sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[*domain.Task](t)(c.UpdateTask(ctx, parent.ID, domain.TaskPatch{Status: ptr(domain.StatusDone)}))
-					}, []wantChange{
-						{"tasks", parent.ID, "put", []string{"status", "updated_at", "completed_at"}},
-						{"tasks", sub.ID, "put", []string{"status", "updated_at", "completed_at"}},
-						{"reports", 5000, "put", nil},
-					}
+					must[*domain.Task](t)(c.UpdateTask(ctx, parent.ID, domain.TaskPatch{Status: ptr(domain.StatusDone)}))
+				}, []wantChange{
+					{"tasks", parent.ID, "put", []string{"status", "updated_at", "completed_at"}},
+					{"tasks", sub.ID, "put", []string{"status", "updated_at", "completed_at"}},
+					{"reports", 5000, "put", nil},
+				}
 			},
 		},
 		{
@@ -369,15 +369,15 @@ func TestEveryWritePathIsCaptured(t *testing.T) {
 				url := "https://github.com/acme/widgets/pull/7"
 				task := mustTask(t, c, domain.CreateTaskInput{Title: "one", PRURL: &url})
 				return func(t *testing.T, c *domain.Core, db *sql.DB) {
-						must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{
-							URL:      url,
-							Snapshot: domain.PRSnapshot{State: domain.PROpen, Checks: domain.PRChecksPassing, Review: domain.PRReviewNone},
-							Reports:  []domain.PRReport{{Kind: domain.KindChecksFailing, Summary: "checks failed"}},
-						}))
-					}, []wantChange{
-						{"tasks", task.ID, "put", []string{"pr_state", "pr_checks", "pr_review", "pr_checked_at"}},
-						{"reports", 5000, "put", nil},
-					}
+					must[bool](t)(c.RecordPR(ctx, task.ID, domain.PRUpdate{
+						URL:      url,
+						Snapshot: domain.PRSnapshot{State: domain.PROpen, Checks: domain.PRChecksPassing, Review: domain.PRReviewNone},
+						Reports:  []domain.PRReport{{Kind: domain.KindChecksFailing, Summary: "checks failed"}},
+					}))
+				}, []wantChange{
+					{"tasks", task.ID, "put", []string{"pr_state", "pr_checks", "pr_review", "pr_checked_at"}},
+					{"reports", 5000, "put", nil},
+				}
 			},
 		},
 		{
