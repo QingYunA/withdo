@@ -537,6 +537,15 @@ func TestOutboxAckDeletesThroughSeq(t *testing.T) {
 		t.Fatal(err)
 	}
 	eq(t, "changes left after the last ack", len(readOutbox(t, c)), 0)
+
+	// The seq is the mutation id the server deduplicates on, so it keeps rising after the outbox
+	// empties instead of starting again at 1.
+	mustTask(t, c, domain.CreateTaskInput{Title: "three"})
+	next := readOutbox(t, c)
+	eq(t, "changes after the empty outbox", len(next), 1)
+	if next[0].Seq <= changes[1].Seq {
+		t.Errorf("seq %d after an empty outbox, want above %d", next[0].Seq, changes[1].Seq)
+	}
 }
 
 // TestIdBlocksHandOutIdsAndFailWhenEmpty is acceptance criterion 4.

@@ -12,9 +12,10 @@ CREATE TABLE sync_state (
 );
 
 -- One local change waiting for upload. columns is a JSON array naming the synced columns an update
--- changed; it is NULL for an insert (every column) and a delete. seq is the cursor the uploader acks.
+-- changed; it is NULL for an insert (every column) and a delete. seq is the cursor the uploader acks;
+-- AUTOINCREMENT keeps it rising after the outbox empties, so it can serve as the mutation id.
 CREATE TABLE sync_outbox (
-  seq        INTEGER PRIMARY KEY,
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
   entity     TEXT NOT NULL,
   row_id     INTEGER NOT NULL,
   op         TEXT NOT NULL CHECK (op IN ('put','delete')),
