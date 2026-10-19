@@ -97,7 +97,6 @@ type Main struct {
 	pop      popMenu     // the task menu
 	openFail openFailure // the last failure to open an agent's work, drawn under its row
 	selRect  ui.Rect     // where the selected row or card is, for the menu the S, P, M and R keys open
-	glyphHot int         // the task whose hover glyph the pointer is on, which lies outside its row (groupGlyph)
 	// owned are the rows (by foldKey) of a section that folds as one this frame, which only fade.
 	owned map[string]bool
 

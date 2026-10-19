@@ -16,7 +16,6 @@ func TestAGroupedRowHasNoGlyphAtRestAndMarksMyTaskDoneWhenHovered(t *testing.T) 
 	hasNot(t, tt, "Mark done: Write the release notes")
 	hover(t, tt, "Write the release notes")
 	has(t, tt, "Mark done: Write the release notes")
-	hover(t, tt, "Mark done: Write the release notes") // the pointer goes on to the glyph, which lies left of the row
 	if err := tt.Click("Mark done: Write the release notes"); err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +30,6 @@ func TestAGroupedRowHasNoGlyphAtRestAndMarksMyTaskDoneWhenHovered(t *testing.T) 
 func TestTheHoverGlyphGoesWhenThePointerLeavesTheRow(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
 	hover(t, tt, "Write the release notes")
-	hover(t, tt, "Mark done: Write the release notes")
 	has(t, tt, "Mark done: Write the release notes")
 	tt.Move(2, 700)
 	tt.Frame()
@@ -45,7 +43,6 @@ func TestTheInboxListMarksMyTaskDoneFromTheHoverGlyphToo(t *testing.T) {
 	tt.Frame()
 	hasNot(t, tt, "Mark done: Look into Liquid Glass for the sidebar")
 	hover(t, tt, "Look into Liquid Glass for the sidebar")
-	hover(t, tt, "Mark done: Look into Liquid Glass for the sidebar")
 	if err := tt.Click("Mark done: Look into Liquid Glass for the sidebar"); err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +55,6 @@ func TestTheHoverGlyphOfAnAgentsTaskOpensTheMenuInsteadOfCompleting(t *testing.T
 	tt, m, app := projectTester(t, 1)
 	hasNot(t, tt, "Status: To do")
 	hover(t, tt, "Port the reminder watcher")
-	hover(t, tt, "Status: To do")
 	if err := tt.Click("Status: To do"); err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +92,6 @@ func TestTheHoverGlyphStaysWhileTheRowCompletes(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	moving(tt)
 	hover(t, tt, "Write the release notes")
-	hover(t, tt, "Mark done: Write the release notes")
 	click(t, tt, "Mark done: Write the release notes")
 	tt.Move(2, 700)
 	at(tt, app, ms(100))
@@ -118,4 +113,41 @@ func rectOf(t *testing.T, tt *ui.Tester, text string) ui.Rect {
 		t.Fatalf("no %q in %q", text, tt.Texts())
 	}
 	return r
+}
+
+// gutter moves the pointer into the glyph column beside the row of title: under the header's glyph,
+// left of the row, level with its title.
+func gutter(t *testing.T, tt *ui.Tester, title string) {
+	t.Helper()
+	r := rectOf(t, tt, title)
+	tt.Move(r.X-2*listIndent+theme.GlyphSize/2, r.Y+r.H/2)
+	tt.Frame()
+	tt.Frame()
+}
+
+func TestAPointerInTheGlyphColumnBesideARowShowsItsGlyphAndCompletesIt(t *testing.T) {
+	tt, m, app := projectTester(t, 1)
+	gutter(t, tt, "Write the release notes")
+	has(t, tt, "Mark done: Write the release notes")
+	if err := tt.Click("Mark done: Write the release notes"); err != nil {
+		t.Fatal(err)
+	}
+	if got := taskTitled(t, app, "Write the release notes").Status; got != data.Done {
+		t.Fatalf("status %v, want done", got)
+	}
+	if m.openID != 0 {
+		t.Error("the click opened the inspector")
+	}
+}
+
+func TestAPointerInTheGlyphColumnShowsTheGlyphOfThatRowAlone(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	m.goTo(nav{screen: screenInbox})
+	tt.Frame()
+	gutter(t, tt, "Book dentist")
+	has(t, tt, "Mark done: Book dentist")
+	hasNot(t, tt, "Mark done: Reply to design feedback", "Mark done: Look into Liquid Glass for the sidebar")
+	gutter(t, tt, "Reply to design feedback")
+	has(t, tt, "Mark done: Reply to design feedback")
+	hasNot(t, tt, "Mark done: Book dentist")
 }
