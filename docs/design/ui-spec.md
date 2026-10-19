@@ -370,10 +370,10 @@ Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else
 `docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
 new item: the hop (below) is the signal.
 
-**Composer.** The one input is the **Composer** (see **Composer** below), the first thing on the page.
+**Composer.** The one input is the **Composer** (see **Composer** below), pinned at the bottom of the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
 assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Mine) and
-shows a quiet "Added to Inbox" line under the box for 1.5 s.
+shows a quiet "Added to Inbox" line above the box for 1.5 s.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
 a row anywhere (see **Subtasks**).
@@ -442,7 +442,7 @@ active list (the status glyph, `Space`, the task menu) folds the row the same wa
 fill, instead of vanishing at the end of the fade.
 
 The sidebar count is the rows of From your agents plus Today. **Nothing needs you.** When those
-three sections are empty (Done today may still show): the empty state under the composer,
+three sections are empty (Done today may still show): the empty state under the header,
 `Nothing needs you right now` and in secondary `Your agents are at work. Whatever happens shows up
 here.` (zh `现在没有要你处理的事` / `Agent 们在干活，有动静会出现在这里`), with a "How to connect" link.
 
@@ -529,8 +529,14 @@ rows recorded as seen does not hop for them.
 
 ### Composer
 
-One component, five places: the top of **Mine**, of **Agents**, the top of **every project** (under the header, above
-the list or the board), the top of the **Inbox**, and the bottom of the **inspector**. It replaces the
+One component, six places: **Mine**, **Agents**, **every project**, the **Inbox**, the **Calendar**, and the
+**inspector**. On the pages it is **pinned at the bottom edge of the content column** (the way ChatGPT, Claude
+and the Codex chat pane do it), not under the header: the page scrolls above it, and the column keeps the
+page's width (820 pt, the board's 980 pt, the Calendar's width), centered, with 8 pt above the box and 18 pt
+under it. The **answer line**, the "Added to …" line and an image notice sit **directly above the box** and
+grow the dock upward; the page does not move, it is only shorter by the dock's height (the page's bottom
+padding still applies, and the dock is a sibling under the scroller, not an overlay, so the last row is never behind the box). The bulk bar rides
+above the dock. `⌘K` focuses it wherever it is. It replaces the
 old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
 none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
 page's title already says where a task goes, so the input has no label, no chip and no hint text.
@@ -644,8 +650,8 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
     running?") with **Retry** as a link. No red. It stays.
 - **It goes by itself.** The line of a turn that asked and failed nothing shows **6 s**, the last 400 ms
   a fade (opacity only, so Reduce Motion changes nothing), by the app clock; Undo restarts the 6 s.
-  It goes at once when the user types in the composer it came from. What is under it slides up
-  rather than jumping (not with Reduce Motion). `Esc` closes it at once; a further `Esc` with
+  It goes at once when the user types in the composer it came from. The dock shrinks back and the
+  page grows with it. `Esc` closes it at once; a further `Esc` with
   nothing else to close makes the assistant forget the conversation (it forgets after 10 minutes
   idle as well).
 - **⌘Z** undoes the assistant's last change that is not undone, newest first, while its line is shown
@@ -680,11 +686,11 @@ at once. A project with no milestone has no filter: `New milestone…` is in its
 
 **List view: two columns** (the Inbox keeps the single list, **Inbox list view** below; the board is unchanged). A project
 with at least one task is drawn as **Mine** on the left (tasks with `Source user`) and **Agents** on the
-right (`Source agent`) under the header and the composer, as in `docs/design/mockups/v7.html` and
+right (`Source agent`) under the header, with the composer pinned at the bottom, as in `docs/design/mockups/v7.html` and
 `v7b.html` (screens `project-two-columns-*`, `project-list-*`). With no task at all the project keeps the
 centred empty state.
 
-- **Block.** Header, composer and columns share one block as wide as the content allows less the page's
+- **Block.** Header, columns and the composer's dock share one block as wide as the content allows less the page's
   side padding, up to `theme.BoardMax` (980 pt), centered. Two equal columns 28 pt apart
   (`theme.ColumnsGap`). Below **640 pt of content** (the inspector open on a small window) they stack:
   Mine first, the Agents tray under it, 14 pt apart.
@@ -774,7 +780,7 @@ agent's name, the branch, the pull request, then the report; for a blocked task 
 a report that only repeats the title, as on a task made by its first report, is left out);
 at the right a `P0` or `P1` badge when it has one (see **Glyphs**), then the due label, or the age,
 or the stale label. There is no branch pill beside the title any more. **Empty groups are not drawn.**
-The composer sits above the groups (see **Composer**): it is how a task is added here.
+The composer is pinned under the groups (see **Composer**): it is how a task is added here.
 After To do comes **Done**, a group like the others and **expanded**: glyph + `Done` + count,
 its rows newest first in `text.secondary`, with who finished them and the day at the right (`Claude
 Code  Yesterday`, `You  Oct 12`), three rows and then a `Show all 4 →` link in `accent` that expands
@@ -807,7 +813,7 @@ all 12` in `accent`, which opens the lane in place. Screens `project-board-*`.
 - **No `+` in a lane header**: the input above adds tasks. Dragging a card to another lane changes its
   status as before (a blocked card dropped on Doing stays blocked); there are no drop targets for
   hidden statuses.
-- **Edges.** The header, the composer and the four lanes share their left and right edges: one
+- **Edges.** The header, the lanes and the composer's dock share their left and right edges: one
   centered block as wide as the window allows less the page's side padding (48 pt), but no wider than
   980 pt. When even 176 pt lanes do not fit (the inspector open on a small window), the block fills
   the room and the lanes scroll sideways.

@@ -30,7 +30,6 @@ func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []da
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
 	ui.Box(c).Height(18).Shrink(0)
-	m.pageComposer(c, t)
 	if !m.app.snap.loaded {
 		return
 	}

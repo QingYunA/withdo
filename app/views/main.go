@@ -103,11 +103,12 @@ type Main struct {
 	// owned are the rows (by foldKey) of a section that folds as one this frame, which only fade.
 	owned map[string]bool
 
-	scroll    ui.ScrollState
-	inspector inspector
-	thumbs    thumbCache // the pictures of tasks, decoded once
-	viewer    viewer     // the picture viewer over the window
-	copied    time.Time
+	scroll     ui.ScrollState
+	dockHeight float32 // the composer dock's height in the last frame, which the bulk bar rides above
+	inspector  inspector
+	thumbs     thumbCache // the pictures of tasks, decoded once
+	viewer     viewer     // the picture viewer over the window
+	copied     time.Time
 
 	// onMine tells the notifier, from its own goroutine, whether the window shows all of Mine.
 	onMine atomic.Bool
@@ -254,6 +255,7 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 		default:
 			m.page(c, t, func() { m.listScreen(c, t) })
 		}
+		m.pageComposer(c, t)
 		m.bulkBar(c, t)
 	})
 }
