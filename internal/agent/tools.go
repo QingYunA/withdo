@@ -43,6 +43,8 @@ type toolbox struct {
 	defaultCategory *int64
 	// images is how many pictures the request carries; the tools take their indexes.
 	images int
+	// memory is the assistant's notes about the user; nil has no remember and forget tools.
+	memory *Memory
 
 	mu       sync.Mutex
 	receipts []Receipt
@@ -107,6 +109,10 @@ func (tb *toolbox) tools() ([]tool.BaseTool, map[string]bool, error) {
 	build(utils.InferTool(toolComplete, "Mark one task done by id.", tb.complete))
 	build(utils.InferTool(toolProjects, "List the projects with their ids.", tb.listProjects))
 	build(utils.InferTool(toolAsk, "Ask the user a short question when you cannot act without the answer. Offer 2 to 4 options. This ends your turn.", tb.ask))
+	if tb.memory != nil {
+		build(utils.InferTool(toolRemember, "Save one short note about the user to your memory, which you see in every conversation.", tb.remember))
+		build(utils.InferTool(toolForget, "Delete every memory note that contains the given text. Returns the notes that are left.", tb.forget))
+	}
 	if firstErr != nil {
 		return nil, nil, fmt.Errorf("build tools: %w", firstErr)
 	}
@@ -167,6 +173,8 @@ type reply struct {
 	Task     *taskView     `json:"task,omitempty"`
 	Tasks    []taskView    `json:"tasks,omitempty"`
 	Projects []projectView `json:"projects,omitempty"`
+	// Memory is the assistant's notes after remember or forget.
+	Memory string `json:"memory,omitempty"`
 }
 
 type projectView struct {
