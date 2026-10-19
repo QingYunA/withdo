@@ -17,6 +17,7 @@ import (
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/i18n"
+	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -380,6 +381,15 @@ func (s *shell) windowKey() bool {
 
 // NotificationsDenied implements views.Actions.
 func (s *shell) NotificationsDenied() bool { return s.notifier.Denied() }
+
+// CanUpdate implements views.Actions.
+func (s *shell) CanUpdate() bool { return mygo.Updater.Enabled() }
+
+// AutomaticUpdates implements views.Actions.
+func (s *shell) AutomaticUpdates() bool { return updater.AutomaticChecks() }
+
+// SetAutomaticUpdates implements views.Actions.
+func (s *shell) SetAutomaticUpdates(on bool) { updater.SetAutomaticChecks(on) }
 
 // newEndOfDay is the end-of-day reminder: it asks the app's choices, counts from the store, and shows
 // through the notifier, so that macOS refusing it is noticed like any other.

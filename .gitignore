@@ -2,6 +2,8 @@
 app/build/
 app/.mygo/
 dist/
+app/resources/darwin/adhd-core
+mygo-update.key
 coverage/
 *.out
 *.test

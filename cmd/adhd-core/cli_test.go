@@ -15,6 +15,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/mcpserver"
 	"github.com/QingYunA/adhd-todo/internal/store"
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
@@ -40,6 +41,18 @@ func newHarness(t *testing.T, dbPath string) *harness {
 		serve:  func(context.Context, *mcp.Server) error { return nil },
 	}
 	return h
+}
+
+func TestVersionPrintsTheServersVersion(t *testing.T) {
+	for _, arg := range []string{"--version", "version"} {
+		h := newHarness(t, "")
+		if code := run(context.Background(), []string{arg}, h.d); code != 0 {
+			t.Fatalf("%s: exit %d, stderr %q", arg, code, h.err.String())
+		}
+		if want := "adhd-core " + mcpserver.Version + "\n"; h.out.String() != want {
+			t.Errorf("%s printed %q, want %q", arg, h.out.String(), want)
+		}
+	}
 }
 
 func TestUsageAndHelp(t *testing.T) {

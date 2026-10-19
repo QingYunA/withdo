@@ -47,7 +47,7 @@ func (m *Main) askAboutTask(id int) {
 // row, and Cmd+J and Cmd+Backspace ask about the task and delete it. ⌘J works while typing
 // elsewhere; the plain letters do not.
 func (m *Main) taskKeys(c *ui.Context, typing bool) {
-	if m.multi.count() >= 2 && !typing {
+	if m.multi.Count() >= 2 && !typing {
 		m.manyTaskKeys(c)
 		return
 	}
@@ -58,21 +58,21 @@ func (m *Main) taskKeys(c *ui.Context, typing bool) {
 	if _, ok := m.app.Task(id); !ok {
 		return
 	}
-	if c.Shortcut(ui.Cmd, ui.KeyJ) {
+	if keyAsk.down(c) {
 		m.askAboutTask(id)
 		return
 	}
 	if typing {
 		return
 	}
-	pages := map[ui.Key]menuPage{ui.KeyS: pageStatus, ui.KeyP: pagePriority, ui.KeyM: pageMove, ui.KeyR: pageRemind}
+	pages := map[binding]menuPage{keyStatus: pageStatus, keyPriority: pagePriority, keyMove: pageMove, keyRemind: pageRemind}
 	for key, page := range pages {
-		if c.Shortcut(0, key) {
+		if key.down(c) {
 			m.openMenuForSelection(id, page)
 			return
 		}
 	}
-	if c.Shortcut(ui.Cmd, ui.KeyBackspace) {
+	if keyDelete.down(c) {
 		m.deleteTask(c, id)
 	}
 }

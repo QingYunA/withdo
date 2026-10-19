@@ -23,6 +23,7 @@ Commands:
   mcp        Run the MCP server on stdio
   overview   Print active tasks per project, with stale flags
   guide      Print a setup guide to paste to any coding agent, so it adds this MCP server itself
+  version    Print the version (also --version)
 `
 
 // Exit codes.
@@ -62,6 +63,9 @@ func run(ctx context.Context, args []string, d deps) int {
 		return exitOK
 	}
 	switch args[0] {
+	case "version", "--version":
+		_, _ = fmt.Fprintf(d.stdout, "adhd-core %s\n", mcpserver.Version)
+		return exitOK
 	case "guide":
 		_, _ = io.WriteString(d.stdout, agentsetup.New(d.home).Guide())
 		return exitOK

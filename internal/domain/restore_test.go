@@ -119,3 +119,81 @@ func TestRestoreLeavesTheTaskUnsortedWhenItsCategoryIsGone(t *testing.T) {
 		t.Errorf("category = %v %v, want none", got.CategoryID, got.Category)
 	}
 }
+
+func TestRestoreKeepsASubtaskUnderItsParent(t *testing.T) {
+	c, _ := newCore(t)
+	parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent"})
+	sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
+	snap := must[*domain.TaskSnapshot](t)(c.SnapshotTask(ctx, sub.ID))
+	noErr(t, c.DeleteTask(ctx, sub.ID))
+
+	got := must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
+	if got.ParentID == nil || *got.ParentID != parent.ID {
+		t.Errorf("parent %v, want %d", got.ParentID, parent.ID)
+	}
+}
+
+func TestRestoreMakesASubtaskTopLevelWhenItsParentIsGone(t *testing.T) {
+	c, _ := newCore(t)
+	parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent"})
+	sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
+	snap := must[*domain.TaskSnapshot](t)(c.SnapshotTask(ctx, sub.ID))
+	noErr(t, c.DeleteTask(ctx, sub.ID))
+	noErr(t, c.DeleteTask(ctx, parent.ID))
+
+	got := must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
+	if got.ParentID != nil {
+		t.Errorf("parent %d, want none", *got.ParentID)
+	}
+}
+
+func TestRestoreMakesASubtaskTopLevelWhenItsParentMovedToAnotherProject(t *testing.T) {
+	c, _ := newCore(t)
+	p := mustProject(t, c, "acme/widgets")
+	q := mustProject(t, c, "acme/gadgets")
+	parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent", ProjectID: &p.ID})
+	sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
+	snap := must[*domain.TaskSnapshot](t)(c.SnapshotTask(ctx, sub.ID))
+	noErr(t, c.DeleteTask(ctx, sub.ID))
+	must[*domain.Task](t)(c.UpdateTask(ctx, parent.ID, domain.TaskPatch{ProjectID: domain.Set(q.ID)}))
+
+	got := must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
+	if got.ParentID != nil {
+		t.Errorf("parent %d, want none: a subtask is in its parent's project", *got.ParentID)
+	}
+}
+
+func TestRestoringAParentTakesBackItsSubtasks(t *testing.T) {
+	c, _ := newCore(t)
+	parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent"})
+	sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
+	snap := must[*domain.TaskSnapshot](t)(c.SnapshotTask(ctx, parent.ID))
+	noErr(t, c.DeleteTask(ctx, parent.ID))
+
+	must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
+	got := must[*domain.Task](t)(c.GetTask(ctx, sub.ID))
+	if got.ParentID == nil || *got.ParentID != parent.ID {
+		t.Errorf("subtask's parent %v, want %d", got.ParentID, parent.ID)
+	}
+}
+
+func TestRestoreTasksKeepsParentAndSubtaskTogetherInEitherOrder(t *testing.T) {
+	for _, order := range []string{"parent first", "subtask first"} {
+		t.Run(order, func(t *testing.T) {
+			c, _ := newCore(t)
+			parent := mustTask(t, c, domain.CreateTaskInput{Title: "parent"})
+			sub := mustTask(t, c, domain.CreateTaskInput{Title: "sub", ParentID: &parent.ID})
+			ids := []int64{parent.ID, sub.ID}
+			if order == "subtask first" {
+				ids = []int64{sub.ID, parent.ID}
+			}
+			snaps := must[[]domain.TaskSnapshot](t)(c.DeleteTasks(ctx, ids))
+
+			noErr(t, c.RestoreTasks(ctx, snaps))
+			got := must[*domain.Task](t)(c.GetTask(ctx, sub.ID))
+			if got.ParentID == nil || *got.ParentID != parent.ID {
+				t.Errorf("subtask's parent %v, want %d", got.ParentID, parent.ID)
+			}
+		})
+	}
+}

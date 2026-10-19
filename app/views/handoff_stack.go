@@ -40,31 +40,21 @@ func stackIDs(key string) []int {
 	return ids
 }
 
-// stackOf is the rows a drag of this task takes to the tray: when it is one of several selected, the
-// user's unfinished ones among them, in page order; else only itself.
-func (m *Main) stackOf(task data.Task) []int {
-	if !m.multi.has(task.ID) || m.multi.count() < 2 {
-		return []int{task.ID}
-	}
-	var ids []int
-	for _, id := range m.selectedRows() {
-		if t, ok := m.app.Task(id); ok && t.Source == data.SourceUser && !t.Status.Terminal() {
-			ids = append(ids, id)
-		}
-	}
-	if len(ids) < 2 || !slices.Contains(ids, task.ID) {
-		return []int{task.ID}
-	}
-	return ids
+// trayStack is the rows a drag of this task takes to the tray: when it is one of several selected,
+// the user's unfinished ones among them, in page order; else only itself. A board lane takes every
+// selected card instead (card.go); both are m.multi.Stack, told what the target accepts.
+func (m *Main) trayStack(task data.Task) []int {
+	return m.multi.Stack(task.ID, func(id int) bool {
+		t, ok := m.app.Task(id)
+		return ok && canHandOff(t)
+	})
 }
 
 // startedDrag is called by the row that is being dragged: it says which rows are in the air, and
 // drops the selection when the row dragged was not in it.
 func (m *Main) startedDrag(id int, stack []int) {
 	m.ho.stack, m.ho.stackSeen = stack, true
-	if !m.multi.has(id) && m.multi.count() > 0 {
-		m.clearMulti()
-	}
+	m.multi.Dragged(id)
 }
 
 // fadesInStack says whether the row is one of a stack in the air that is not the one in the hand.

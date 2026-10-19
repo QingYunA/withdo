@@ -1031,7 +1031,7 @@ search results. Calendar and Summary do not select.
 
 Decisions made while building it (2026-10-18; screens `select-*`):
 
-- **One selection per page**, in `Main.multi`: cleared when the page changes or the search starts or
+- **One selection per page**, in `Main.multi` (`app/selection`, a pure module with its own tests): cleared when the page changes or the search starts or
   ends, and held to the rows the page draws. While it is empty the keyboard row is the only selected
   row, as before; a plain click or a plain arrow leaves it empty. A `⌘`-click with nothing ticked
   counts the keyboard row as the first one. `Esc` clears the selection, and leaves select mode,
@@ -1056,6 +1056,9 @@ Decisions made while building it (2026-10-18; screens `select-*`):
   row can only paint over its own background, so it paints all its cards), 3 pt lower each.
   Handing several tasks stamps the first of them the newest, so `Waiting for an agent` reads in the
   order the rows were in.
+  One rule for every drag, `Selection.Stack`: the selected rows in page order that the target takes, or
+  only the dragged row when it is not selected or fewer than two are taken. The tray takes the user's
+  unfinished rows; a board lane takes every selected card.
 - **Toasts** are built by the views (`toast.go`) in mygo's own look, so a hand-off toast can have
   two buttons; they fade out but no longer fade in. Copy puts the numbers in ascending order.
 
@@ -1613,6 +1616,22 @@ The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the i
   Mine. Further events in the burst update the summary (same notification ID) until 10 s pass with none.
 - **The switch.** Settings > General > Notifications (below). Off, nothing notifies, reminders included.
 
+### Updates (M10)
+
+The app updates itself from GitHub releases with mygo's native updater plugin (`native.Plugin`); the
+window is the plugin's own, so the app draws nothing of it. All of it shows only in a build that can
+update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off for now, see
+`docs/plans/m10-auto-update.md`.
+
+- **The menu item**: `Check for Updates…` (`检查更新…`) in the app menu right after About. It opens the
+  plugin's window at once: release notes of the new version, **Install Update**, **Remind Me Later**,
+  **Skip This Version**, a progress bar while it downloads, then a relaunch. When there is none, the
+  window says the app is up to date; a failed check says why. The label follows the app's language.
+- **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
+  checks run once a day, the first 10 s after launch when one is due, and never in a development build.
+- **The switch**: Settings > General > Software updates (below).
+- `adhd-core` is inside the app and updates with it; see `docs/plans/m10-auto-update.md`.
+
 ### Settings
 
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
@@ -1644,7 +1663,11 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
-  link).
+  link). **Software updates** (M10; only in a build that can update): a group of one row between Sound effects and Pages, `Software
+  updates` (`软件更新`), `meta` `Checked once a day; you choose when to install` (`每天检查一次，装不装由你决定`),
+  and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
+  plugin keeps it in its own `updater.json`, not in the prefs, and the row reads it back whenever the
+  plugin reports a change (a check, an answer in the update window).
 - **Assistant**, at rest (M5): the label **In use** and one card (a group): the provider's **logo**
   (38 pt, `theme.ProviderLogo`, see **Provider logos** below), its
   name (`body` 500), then `model · ● Connected · 312 ms` in `meta` (the model in `text.secondary`, the

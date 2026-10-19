@@ -1774,7 +1774,7 @@
     "placeholders": {
       "version": {
         "type": "String",
-        "example": "0.4.0"
+        "example": "0.5.0"
       }
     }
   },
@@ -2887,6 +2887,18 @@
   "settingsSoundEffectsSwitch": "Play sound effects",
   "@settingsSoundEffectsSwitch": {
     "description": "Accessibility label of the sound effects switch."
+  },
+  "settingsUpdates": "Software updates",
+  "@settingsUpdates": {
+    "description": "Label of the updates switch in Settings > General."
+  },
+  "settingsUpdatesMeta": "Checked once a day; you choose when to install",
+  "@settingsUpdatesMeta": {
+    "description": "Quiet line under the updates switch."
+  },
+  "settingsUpdatesSwitch": "Automatically check for updates",
+  "@settingsUpdatesSwitch": {
+    "description": "Accessibility label of the updates switch."
   },
   "notifyDayDoneTitle": "Day's done",
   "@notifyDayDoneTitle": {

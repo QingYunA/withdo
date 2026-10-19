@@ -30,16 +30,18 @@ type savedFile struct{ name, text string }
 
 // recorder is an Actions that remembers what the views asked for.
 type recorder struct {
-	opened   []int
-	urls     []string
-	panes    []Pane      // what OpenSettings was asked to show
-	folders  []string    // what ShowInFinder was asked to reveal
-	files    []string    // what OpenFile was asked to open
-	language string      // what SetLanguage last chose
-	opens    []openCall  // what OpenIn was asked for
-	saved    []savedFile // what SaveText was asked to save
-	openErr  error       // what OpenIn answers
-	denied   bool        // what NotificationsDenied answers
+	opened    []int
+	urls      []string
+	panes     []Pane      // what OpenSettings was asked to show
+	folders   []string    // what ShowInFinder was asked to reveal
+	files     []string    // what OpenFile was asked to open
+	language  string      // what SetLanguage last chose
+	opens     []openCall  // what OpenIn was asked for
+	saved     []savedFile // what SaveText was asked to save
+	openErr   error       // what OpenIn answers
+	denied    bool        // what NotificationsDenied answers
+	noChecks  bool        // SetAutomaticUpdates(false) was called
+	noUpdates bool        // the build cannot update itself
 
 	mu     sync.Mutex
 	posted []func()
@@ -64,6 +66,10 @@ func (r *recorder) Language() string       { return r.language }
 func (r *recorder) SetLanguage(tag string) { r.language = tag }
 
 func (r *recorder) NotificationsDenied() bool { return r.denied }
+
+func (r *recorder) CanUpdate() bool             { return !r.noUpdates }
+func (r *recorder) AutomaticUpdates() bool      { return !r.noChecks }
+func (r *recorder) SetAutomaticUpdates(on bool) { r.noChecks = !on }
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {
