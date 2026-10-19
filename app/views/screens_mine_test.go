@@ -15,9 +15,9 @@ import (
 
 // mineApp is the seeded workspace with one more subtask handed back to its parent (the seed has
 // subtasks that are done and doing only), so every status pill is on screen.
-func mineApp(t *testing.T) (*App, *data.Fake) {
+func mineApp(t *testing.T) (*App, *data.Real) {
 	t.Helper()
-	store := data.NewFake(fixedNow)
+	store := demoStore(t, fixedNow, true)
 	app := NewApp(store, &recorder{}, testConfig())
 	app.Now = fixedNow
 	sub, err := store.CreateTask(data.CreateTaskInput{
@@ -27,7 +27,7 @@ func mineApp(t *testing.T) (*App, *data.Fake) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.ReportAs(sub.ID, "claude-code", "Handed back for review", fixedNow().Add(-time.Minute))
+	store.SeedReportAs(sub.ID, "claude-code", "Handed back for review", fixedNow().Add(-time.Minute))
 	app.Refresh()
 	return app, store
 }
@@ -92,7 +92,7 @@ func TestScreensSubRows(t *testing.T) {
 	screensTest(t)
 	for _, a := range appearances() {
 		app, store := mineApp(t)
-		store.ReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
+		store.SeedReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
 		app.Refresh()
 		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
 		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: lifeID}) })

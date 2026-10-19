@@ -372,8 +372,7 @@ func TestADotBesideRewriteSaysMoreWasFinishedSinceWhileThePeriodIsNotOver(t *tes
 	}
 	// The paragraph is dated by the store's clock: a task finished after it says so.
 	later := app.Now().Add(time.Hour)
-	store.Now = func() time.Time { return later }
-	store.CompleteAt(9, later.Add(time.Minute))
+	store.SeedCompleteAt(9, later.Add(time.Minute))
 	app.Refresh()
 	v = m.summaryFor(later.Add(2 * time.Minute))
 	if !m.newSince(v, para, later.Add(2*time.Minute)) {

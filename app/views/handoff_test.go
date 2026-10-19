@@ -15,14 +15,14 @@ type handRig struct {
 	tt     *ui.Tester
 	m      *Main
 	app    *App
-	store  *data.Fake
+	store  *data.Real
 	now    time.Time
 }
 
 func newHandRig(t *testing.T, reduceMotion bool) *handRig {
 	t.Helper()
 	r := &handRig{now: fixedNow(), reduce: reduceMotion}
-	r.store = data.NewFake(func() time.Time { return r.now })
+	r.store = demoStore(t, func() time.Time { return r.now }, true)
 	r.app = NewApp(r.store, &recorder{}, testConfig())
 	r.app.Now = func() time.Time { return r.now }
 	r.m = NewMain(r.app)
@@ -333,8 +333,8 @@ func TestAStillColumnsWindowAsksForNoFrames(t *testing.T) {
 
 func TestAHandOffNamesNoAgentAnywhereEvenWhenCodexReportedLast(t *testing.T) {
 	r := newHandRig(t, true)
-	r.store.ReportAs(15, "codex", "Tidying up", r.now.Add(-time.Second)) // the latest report of the project, from Codex
-	r.store.ReportAs(1, "codex", "Still at it", r.now)
+	r.store.SeedReportAs(15, "codex", "Tidying up", r.now.Add(-time.Second)) // the latest report of the project, from Codex
+	r.store.SeedReportAs(1, "codex", "Still at it", r.now)
 	r.app.Refresh()
 	r.tt.Frame()
 	r.dragOnto(t, "Write the release notes", "Port core to Go", true)

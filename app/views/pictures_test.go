@@ -19,7 +19,7 @@ type picRig struct {
 	tt    *ui.Tester
 	m     *Main
 	app   *App
-	store *data.Fake
+	store *data.Real
 	rec   *recorder
 }
 
@@ -31,7 +31,6 @@ var (
 func newPicRig(t *testing.T) *picRig {
 	t.Helper()
 	app, store, rec := newTestApp(t)
-	store.SetImageDir(t.TempDir())
 	tt, m, _ := newTesterFor(app, 1100)
 	return &picRig{tt: tt, m: m, app: app, store: store, rec: rec}
 }

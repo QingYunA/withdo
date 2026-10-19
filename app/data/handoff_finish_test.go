@@ -10,7 +10,7 @@ import (
 func TestFinishingAWaitingTaskEndsTheWaiting(t *testing.T) {
 	for _, status := range []Status{Done, Cancelled} {
 		t.Run(string(status), func(t *testing.T) {
-			eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+			withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 				task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "Write the plan"}))
 				must[Task](t)(s.HandOff(task.ID))
 

@@ -137,7 +137,7 @@ func TestCompletedKeyboard(t *testing.T) {
 }
 
 func TestCompletedShowsAHundredAndLoadsOlderOnRequest(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
+	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 130; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "done " + itoa(i), Status: data.Done})
 	}

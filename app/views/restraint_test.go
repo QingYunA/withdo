@@ -60,8 +60,8 @@ func TestInspectorTopLineHasTheProjectItsRepositoryAndTheNumber(t *testing.T) {
 }
 
 func TestInspectorTopLineOfAProjectWithoutARepository(t *testing.T) {
-	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("local-only", "")
+	f := demoStore(t, fixedNow, false)
+	p := f.SeedProject("local-only", "")
 	task, _ := f.CreateTask(data.CreateTaskInput{Title: "A thing", ProjectID: data.IntPtr(p.ID)})
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow

@@ -9,20 +9,18 @@ import (
 
 // prApp is the seeded workspace with three tasks whose pull requests need attention: one closed
 // without merging (task 101), one failing its checks (102) and one with changes requested (103).
-func prApp(t *testing.T) (*App, *data.Fake, *recorder) {
+func prApp(t *testing.T) (*App, *data.Real, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	add := func(id int, title, branch string, number int, state data.PRState, checks data.PRChecks, review data.PRReview, ago time.Duration, summary string) {
-		ts := store.AddTask(data.Task{
+		ts := store.SeedTask(data.Task{
 			ID: id, ProjectID: data.IntPtr(1), Title: title, Status: data.Doing, Source: data.SourceAgent, Branch: branch,
 			PRNumber: number, PRURL: "https://github.com/QingYunA/adhd-todo/pull/" + itoa(number),
 			UpdatedAt: fixedNow().Add(-ago),
 		})
-		store.AddReport(data.Report{TaskID: ts.ID, Agent: "claude-code", Status: data.Doing, Summary: "Pushed " + branch, CreatedAt: fixedNow().Add(-ago - 20*time.Minute)})
-		if err := store.SetPullRequest(ts.ID, state, checks, review); err != nil {
-			t.Fatal(err)
-		}
-		store.AddReport(data.Report{TaskID: ts.ID, Agent: data.GitHubAgent, Summary: summary, CreatedAt: fixedNow().Add(-ago)})
+		store.SeedReport(data.Report{TaskID: ts.ID, Agent: "claude-code", Status: data.Doing, Summary: "Pushed " + branch, CreatedAt: fixedNow().Add(-ago - 20*time.Minute)})
+		store.SeedPullRequest(ts.ID, state, checks, review)
+		store.SeedReport(data.Report{TaskID: ts.ID, Agent: data.GitHubAgent, Summary: summary, CreatedAt: fixedNow().Add(-ago)})
 	}
 	add(101, "Rework the sync engine", "feat/sync", 14, data.PRClosed, data.PRChecksNone, data.PRReviewNone, 3*time.Hour, "PR #14 was closed without merging")
 	add(102, "Add dark mode icons", "feat/icons", 15, data.PROpen, data.PRChecksFailing, data.PRReviewRequired, 40*time.Minute, "Checks are failing on PR #15")
@@ -155,10 +153,8 @@ func TestClickingAPullRequestRowOpensTheInspector(t *testing.T) {
 func TestAgentWordsIgnoreGitHubReports(t *testing.T) {
 	// A blocked task with a closed pull request is a blocked row, still worded by the agent.
 	app, store, _ := newTestApp(t)
-	if err := store.SetPullRequest(3, data.PRClosed, data.PRChecksNone, data.PRReviewNone); err != nil {
-		t.Fatal(err)
-	}
-	store.AddReport(data.Report{TaskID: 3, Agent: data.GitHubAgent, Summary: "PR #14 was closed without merging", CreatedAt: fixedNow()})
+	store.SeedPullRequest(3, data.PRClosed, data.PRChecksNone, data.PRReviewNone)
+	store.SeedReport(data.Report{TaskID: 3, Agent: data.GitHubAgent, Summary: "PR #14 was closed without merging", CreatedAt: fixedNow()})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	has(t, tt, "Claude Code is stuck: “Needs a decision on the activation policy”")

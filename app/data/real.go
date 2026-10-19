@@ -53,6 +53,10 @@ type Real struct {
 	images imageFiles
 	imgMu  sync.Mutex
 	sweep  *time.Timer
+
+	// demo and tempDir are set by OpenDemo: the clock the seed moves, and the folder Close removes.
+	demo    *demoClock
+	tempDir string
 }
 
 var _ Store = (*Real)(nil)
@@ -121,10 +125,22 @@ func (r *Real) Close() error {
 		cancel()
 		<-done
 	}
-	return r.db.Close()
+	err := r.db.Close()
+	if r.tempDir != "" {
+		_ = os.RemoveAll(r.tempDir)
+	}
+	return err
 }
 
 func (r *Real) ctx() context.Context { return context.Background() }
+
+// Now is the store's clock.
+func (r *Real) Now() time.Time {
+	if r.opts.Now != nil {
+		return r.opts.Now()
+	}
+	return time.Now()
+}
 
 func (r *Real) ListProjects() ([]Project, error) {
 	ps, err := r.core.ListProjects(r.ctx())

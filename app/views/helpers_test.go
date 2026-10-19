@@ -118,10 +118,21 @@ func testConfig() Config {
 	}
 }
 
-// newTestApp is an App over the seeded fake with the fixed clock.
-func newTestApp(t *testing.T) (*App, *data.Fake, *recorder) {
+// demoStore is a data.Real on a temporary SQLite file, seeded or empty, closed with the test.
+func demoStore(t *testing.T, now func() time.Time, seeded bool) *data.Real {
 	t.Helper()
-	store := data.NewFake(fixedNow)
+	r, err := data.OpenDemo(now, seeded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = r.Close() })
+	return r
+}
+
+// newTestApp is an App over the seeded store with the fixed clock.
+func newTestApp(t *testing.T) (*App, *data.Real, *recorder) {
+	t.Helper()
+	store := demoStore(t, fixedNow, true)
 	rec := &recorder{}
 	cfg := testConfig()
 	cfg.AgentSetup = newAgentRig(t).env
@@ -135,7 +146,7 @@ func newEmptyApp(t *testing.T) (*App, *recorder) {
 	rec := &recorder{}
 	cfg := testConfig()
 	cfg.AgentSetup = newAgentRig(t).env
-	app := NewApp(data.NewEmptyFake(fixedNow), rec, cfg)
+	app := NewApp(demoStore(t, fixedNow, false), rec, cfg)
 	app.Now = fixedNow
 	return app, rec
 }
@@ -285,8 +296,8 @@ func dragTo(t *testing.T, tt *ui.Tester, text, column string) {
 // emptyProjectApp is an empty store with one project and nothing in it.
 func emptyProjectApp(t *testing.T) (*App, data.Project) {
 	t.Helper()
-	f := data.NewEmptyFake(fixedNow)
-	p := f.AddProject("scratch", "me/scratch")
+	f := demoStore(t, fixedNow, false)
+	p := f.SeedProject("scratch", "me/scratch")
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	return app, p

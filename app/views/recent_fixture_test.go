@@ -98,7 +98,7 @@ func recentAssistant(ready bool) *data.FakeAssistant {
 // switch on, and an assistant that writes a sentence for each item.
 type recentRig struct {
 	app   *App
-	store *data.Fake
+	store *data.Real
 	read  *data.FakeRecent
 	asst  *data.FakeAssistant
 	rec   *recorder
@@ -108,7 +108,7 @@ type recentRig struct {
 
 // recentApp is the app with the page switched on over the demo week, and an assistant, with or
 // without a model.
-func recentApp(t *testing.T, model bool) (*App, *data.Fake, *data.FakeRecent, *data.FakeAssistant, *recorder) {
+func recentApp(t *testing.T, model bool) (*App, *data.Real, *data.FakeRecent, *data.FakeAssistant, *recorder) {
 	t.Helper()
 	app, store, rec := newTestApp(t)
 	read, asst := data.DemoRecent(fixedNow()), recentAssistant(model)

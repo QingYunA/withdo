@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// summaryStores are the two Summaries: the real one over a database and the fake.
+// summaryStores are the Summaries to test, by name.
 func summaryStores(t *testing.T) map[string]Summaries {
 	t.Helper()
 	now := func() time.Time { return friday }
@@ -16,7 +16,7 @@ func summaryStores(t *testing.T) map[string]Summaries {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = real.Close() })
-	return map[string]Summaries{"real": real, "fake": NewEmptyFake(now)}
+	return map[string]Summaries{"real": real}
 }
 
 func TestSummariesAreKeptPerPeriodAndReadBack(t *testing.T) {

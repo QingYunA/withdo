@@ -29,7 +29,7 @@ func TestReviewWithoutAPullRequestOpensTheSettingAndFallsBackToTheProjectFolder(
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.ReportAs(task.ID, "codex", "docs are tidy", fixedNow().Add(-time.Minute))
+	store.SeedReportAs(task.ID, "codex", "docs are tidy", fixedNow().Add(-time.Minute))
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 
@@ -48,9 +48,9 @@ func TestReviewWithoutAPullRequestOpensTheSettingAndFallsBackToTheProjectFolder(
 func TestTheNewestReportThatNamesAFolderGivesTheWorkingDirectory(t *testing.T) {
 	app, store, _ := newTestApp(t)
 	task, _ := store.CreateTask(data.CreateTaskInput{Title: "Elsewhere", Source: data.SourceAgent, Status: data.Review, ProjectID: data.IntPtr(1)})
-	store.AddReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "old", Cwd: "/old", CreatedAt: fixedNow().Add(-3 * time.Hour)})
-	store.AddReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "new", Cwd: "/new", CreatedAt: fixedNow().Add(-2 * time.Hour)})
-	store.AddReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "newest, says nothing", CreatedAt: fixedNow().Add(-time.Hour)})
+	store.SeedReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "old", Cwd: "/old", CreatedAt: fixedNow().Add(-3 * time.Hour)})
+	store.SeedReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "new", Cwd: "/new", CreatedAt: fixedNow().Add(-2 * time.Hour)})
+	store.SeedReport(data.Report{TaskID: task.ID, Agent: "claude-code", Summary: "newest, says nothing", CreatedAt: fixedNow().Add(-time.Hour)})
 	app.Refresh()
 	got, _ := app.Task(task.ID)
 	if dir := app.workDir(got); dir != "/new" {
@@ -72,7 +72,7 @@ func TestTheOpenWithChoiceIsKeptBetweenRuns(t *testing.T) {
 		t.Fatalf("default %q, want the agent's app", got)
 	}
 	app.SetOpenWith(OpenEditor)
-	again := NewApp(data.NewFake(fixedNow), &recorder{}, testConfig())
+	again := NewApp(demoStore(t, fixedNow, true), &recorder{}, testConfig())
 	again.Prefs = prefs
 	if got := again.OpenWith(); got != OpenEditor {
 		t.Errorf("after a restart %q, want editor", got)
@@ -123,7 +123,7 @@ func TestTheTaskMenuOfAnAgentTaskOpensItsWorkWhereverYouPick(t *testing.T) {
 func TestTheOpenInPageIsQuietWhereTheTaskHasNoFolder(t *testing.T) {
 	app, store, rec := newTestApp(t)
 	task, _ := store.CreateTask(data.CreateTaskInput{Title: "Lost agent", Source: data.SourceAgent, Status: data.Doing})
-	store.AddReport(data.Report{TaskID: task.ID, Agent: "gemini-cli", Summary: "hi", CreatedAt: fixedNow().Add(-time.Minute)})
+	store.SeedReport(data.Report{TaskID: task.ID, Agent: "gemini-cli", Summary: "hi", CreatedAt: fixedNow().Add(-time.Minute)})
 	app.Refresh()
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenInbox})

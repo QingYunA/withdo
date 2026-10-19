@@ -2,30 +2,18 @@ package data
 
 import (
 	"errors"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
 )
 
-// The same contract for both stores: the fake the views are tested against must behave as the real
-// one does.
-func eachStore(t *testing.T, run func(t *testing.T, s Store, clock *time.Time)) {
+// withStore runs a test on a store with nothing in it; the test moves the store's clock through
+// clock.
+func withStore(t *testing.T, run func(t *testing.T, s Store, clock *time.Time)) {
 	t.Helper()
-	t.Run("fake", func(t *testing.T) {
-		now := fixedNow()
-		run(t, NewEmptyFake(func() time.Time { return now }), &now)
-	})
-	t.Run("real", func(t *testing.T) {
-		now := fixedNow()
-		r, err := OpenReal(bg, filepath.Join(t.TempDir(), "t.db"), RealOptions{Now: func() time.Time { return now }})
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(func() { _ = r.Close() })
-		run(t, r, &now)
-	})
+	now := fixedNow()
+	run(t, openDemo(t, func() time.Time { return now }, false), &now)
 }
 
 func must[T any](t *testing.T) func(T, error) T {
@@ -63,7 +51,7 @@ func wantTitles(t *testing.T, what string, got []Task, want ...string) {
 }
 
 func TestCreateProject(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		plain := must[Project](t)(s.CreateProject(NewProject{Name: "  Garden "}))
 		if plain.Name != "Garden" || plain.RepoSlug != "" {
 			t.Errorf("plain = %+v", plain)
@@ -95,7 +83,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestRenameArchiveAndRestoreProject(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "Old", RepoSlug: "acme/old"}))
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "in it", ProjectID: IntPtr(p.ID), Status: Doing, Source: SourceAgent}))
 
@@ -145,7 +133,7 @@ func TestRenameArchiveAndRestoreProject(t *testing.T) {
 }
 
 func TestDeleteProjectAndTask(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "Doomed"}))
 		keep := must[Project](t)(s.CreateProject(NewProject{Name: "Keep"}))
 		must[Milestone](t)(s.CreateMilestone(p.ID, "v1", nil))
@@ -184,7 +172,7 @@ func TestDeleteProjectAndTask(t *testing.T) {
 }
 
 func TestMovingATaskBetweenProjectsAndTheInbox(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		a := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		b := must[Project](t)(s.CreateProject(NewProject{Name: "B"}))
 		ms := must[Milestone](t)(s.CreateMilestone(a.ID, "v1", nil))
@@ -209,7 +197,7 @@ func TestMovingATaskBetweenProjectsAndTheInbox(t *testing.T) {
 }
 
 func TestMilestones(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		due := time.Date(2026, 12, 1, 0, 0, 0, 0, time.Local)
 		m := must[Milestone](t)(s.CreateMilestone(p.ID, " v1 ", &due))
@@ -257,7 +245,7 @@ func TestMilestones(t *testing.T) {
 }
 
 func TestSearchTasks(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, clock *time.Time) {
+	withStore(t, func(t *testing.T, s Store, clock *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		add := func(in CreateTaskInput, patch Patch) {
 			task := must[Task](t)(s.CreateTask(in))
@@ -295,12 +283,12 @@ func TestSearchFindsAPullRequestNumber(t *testing.T) {
 	for _, q := range []string{"#42", "42"} {
 		wantTitles(t, q, must[[]Task](t)(r.SearchTasks(q, 0)), "Ship it")
 	}
-	f := NewFake(fixedNow) // task 2 of the seed is PR #12
+	f := seededDemo(t) // task 2 of the seed is PR #12
 	wantTitles(t, "fake #12", must[[]Task](t)(f.SearchTasks("#12", 0)), "Native UI with mygo")
 }
 
 func TestLogbook(t *testing.T) {
-	eachStore(t, func(t *testing.T, s Store, clock *time.Time) {
+	withStore(t, func(t *testing.T, s Store, clock *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", ProjectID: IntPtr(p.ID)}))
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b"}))

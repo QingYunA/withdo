@@ -75,6 +75,7 @@ func TestClickingTheSummaryNotificationOpensMine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = be.close() })
 	app := views.NewApp(be.store, nil, views.Config{})
 	m := views.NewMain(app)
 	s := &shell{app: app, main: m}
