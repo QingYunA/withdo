@@ -40,6 +40,63 @@ func latestReport(ctx context.Context, q store.Querier, taskID int64) (*Report, 
 		scanReport)
 }
 
+// reportBatch is how many task ids one query of the batched report reads takes, well under SQLite's
+// limit on variables.
+const reportBatch = 5000
+
+// ListReportsOf reads the reports of many tasks at once, each task's oldest first like ListReports. A
+// task without reports is not in the map.
+func (c *Core) ListReportsOf(ctx context.Context, taskIDs []int64) (map[int64][]Report, error) {
+	out := map[int64][]Report{}
+	err := inBatches(taskIDs, func(marks string, args []any) error {
+		rows, err := c.db.QueryContext(ctx,
+			"SELECT "+reportCols+" FROM reports WHERE task_id IN ("+marks+") ORDER BY created_at, id", args...)
+		if err != nil {
+			return fmt.Errorf("list reports: %w", err)
+		}
+		all, err := collect(rows, scanReport)
+		for _, r := range all {
+			out[r.TaskID] = append(out[r.TaskID], r)
+		}
+		return err
+	})
+	return out, err
+}
+
+// latestReportsOf is latestReport for many tasks at once; a task without reports is not in the map.
+func (c *Core) latestReportsOf(ctx context.Context, taskIDs []int64) (map[int64]Report, error) {
+	out := map[int64]Report{}
+	err := inBatches(taskIDs, func(marks string, args []any) error {
+		rows, err := c.db.QueryContext(ctx, `SELECT `+reportCols+` FROM (SELECT `+reportCols+`,
+			ROW_NUMBER() OVER (PARTITION BY task_id ORDER BY created_at DESC, id DESC) AS n
+			FROM reports WHERE task_id IN (`+marks+`)) WHERE n = 1`, args...)
+		if err != nil {
+			return fmt.Errorf("latest reports: %w", err)
+		}
+		all, err := collect(rows, scanReport)
+		for _, r := range all {
+			out[r.TaskID] = r
+		}
+		return err
+	})
+	return out, err
+}
+
+// inBatches calls fn with the placeholders and arguments of each batch of ids.
+func inBatches(ids []int64, fn func(marks string, args []any) error) error {
+	for start := 0; start < len(ids); start += reportBatch {
+		batch := ids[start:min(start+reportBatch, len(ids))]
+		args := make([]any, len(batch))
+		for i, id := range batch {
+			args[i] = id
+		}
+		if err := fn(strings.TrimSuffix(strings.Repeat("?,", len(batch)), ","), args); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // AddReportInput is a progress note. CreatedAt defaults to now.
 type AddReportInput struct {
 	TaskID    int64

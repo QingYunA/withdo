@@ -70,3 +70,20 @@ func (c *Core) ListMilestones(ctx context.Context, projectID int64) ([]Milestone
 	}
 	return collect(rows, scanMilestone)
 }
+
+// ListAllMilestones returns every project's milestones in one query, each project's oldest first.
+func (c *Core) ListAllMilestones(ctx context.Context) (map[int64][]Milestone, error) {
+	rows, err := c.db.QueryContext(ctx, "SELECT "+milestoneCols+" FROM milestones ORDER BY id")
+	if err != nil {
+		return nil, fmt.Errorf("list milestones: %w", err)
+	}
+	all, err := collect(rows, scanMilestone)
+	if err != nil {
+		return nil, err
+	}
+	out := map[int64][]Milestone{}
+	for _, m := range all {
+		out[m.ProjectID] = append(out[m.ProjectID], m)
+	}
+	return out, nil
+}
