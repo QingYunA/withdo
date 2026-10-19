@@ -108,3 +108,32 @@ func TestArchivingAProjectHidesItsSubprojectsFromTheSidebar(t *testing.T) {
 	tt.Frame()
 	hasNot(t, tt, "Research", "Kitchen")
 }
+
+func TestASubprojectWhoseProjectIsArchivedReadsAsTopLevel(t *testing.T) {
+	app, _, _ := newTestApp(t)
+	parent := addProject(t, app, "Research", nil)
+	sub := addProject(t, app, "Kitchen", &parent)
+	tt, _, _ := newTesterFor(app, 1100)
+	tt.Frame()
+
+	if err := app.ArchiveProject(parent.ID); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	hasNot(t, tt, "Research", "Kitchen")
+
+	if err := app.RestoreProject(sub.ID); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	has(t, tt, "Kitchen")
+	hasNot(t, tt, "Research")
+	top, _ := tt.Find("adhd-todo") // a top-level project of the seed
+	subRow, ok := tt.Find("Kitchen")
+	if !ok {
+		t.Fatalf("no Kitchen row in %q", tt.Texts())
+	}
+	if subRow.X != top.X {
+		t.Errorf("the sub-project sits at %.0f, want the top level's %.0f", subRow.X, top.X)
+	}
+}
