@@ -27,6 +27,9 @@ const prefsFile = "prefs.json"
 // recentFile is what the assistant wrote about the Recent changes page, in the data folder.
 const recentFile = "recent-changes.json"
 
+// memoryFile is the assistant's notes about the user, a Markdown file the user can edit, in the data folder.
+const memoryFile = "assistant-memory.md"
+
 // ghRunner runs the gh CLI for the pull request poller. Tests replace it: they never reach GitHub.
 var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 
@@ -34,6 +37,8 @@ var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 type backend struct {
 	store      data.Store
 	dataFolder string
+	// memoryFile is the assistant's memory file; empty when it has none (the demo).
+	memoryFile string
 	// start runs once the subscriptions are in place: it starts the watcher.
 	start func(stop <-chan struct{})
 	// close releases the store.
@@ -81,12 +86,13 @@ func openReal(path string) (*backend, error) {
 	}
 	loc := agent.LocalZone()
 	ag := agent.New(agent.Config{
-		Core: r.Core(), Model: mgr.Model, Now: func() time.Time { return time.Now().In(loc) },
+		Core: r.Core(), Model: mgr.Model, Memory: agent.NewMemory(filepath.Join(dir, memoryFile)), Now: func() time.Time { return time.Now().In(loc) },
 	})
 	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core(), Housekeeping: closeFinishedSubtasks(r.Core())})
 	return &backend{
 		store:       r,
 		dataFolder:  dir,
+		memoryFile:  filepath.Join(dir, memoryFile),
 		start:       func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
 		close:       func() error { poller.Stop(); return r.Close() },
 		assistant:   &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},

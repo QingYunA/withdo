@@ -33,11 +33,12 @@ func main() {
 	}
 	home, _ := os.UserHomeDir()
 	app := views.NewApp(be.store, nil, views.Config{
-		ConnectCommand: connectCommand,
-		DataFolder:     be.dataFolder,
-		Home:           home,
-		Version:        version,
-		AgentSetup:     agentsetup.New(home),
+		ConnectCommand:  connectCommand,
+		DataFolder:      be.dataFolder,
+		AssistantMemory: be.memoryFile,
+		Home:            home,
+		Version:         version,
+		AgentSetup:      agentsetup.New(home),
 	})
 	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed
 	app.Prefs = be.prefs

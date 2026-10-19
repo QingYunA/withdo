@@ -52,8 +52,10 @@ type Actions interface {
 type Config struct {
 	ConnectCommand string // the claude mcp add command
 	DataFolder     string
-	Home           string // the user's home folder, which the data folder is shown relative to
-	Version        string
+	// AssistantMemory is the file the assistant keeps its notes about the user in; empty hides its row.
+	AssistantMemory string
+	Home            string // the user's home folder, which the data folder is shown relative to
+	Version         string
 	// AgentSetup finds the coding agents on this Mac and installs the MCP into them; nil finds none.
 	AgentSetup *agentsetup.Env
 }

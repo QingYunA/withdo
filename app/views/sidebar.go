@@ -195,7 +195,7 @@ func (m *Main) projectRows(c *ui.Context, t *theme.Tokens) {
 func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool, depth int) {
 	to := nav{screen: screenProject, projectID: p.ID}
 	selected := m.shows(to)
-	renaming := m.manage.rename.id == p.ID
+	renaming := m.manage.rename.id == p.ID && !m.manage.rename.page
 	row := sidebarRow(c, t, p.ID, selected)
 	if depth > 0 {
 		row.Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent*float32(depth))
@@ -204,7 +204,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	row.Children(func() {
 		ui.Icon(c, theme.IconFolder).Size(theme.IconRow, theme.IconRow).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
 		if renaming {
-			m.renameInput(c, t)
+			m.renameInput(c, t, theme.Body)
 		} else {
 			sidebarLabel(c, t, p.Name, selected)
 		}

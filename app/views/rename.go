@@ -13,14 +13,20 @@ type renaming struct {
 	id   int
 	buf  string
 	seen bool // the input has had the keyboard; losing it afterwards ends the edit
+	page bool // the input is the page's title, not the sidebar row's label
 }
 
 func (m *Main) startRename(id int, name string) {
 	m.manage.rename = renaming{id: id, buf: name}
 }
 
-// renameInput is the label of the project row while it is renamed.
-func (m *Main) renameInput(c *ui.Context, t *theme.Tokens) {
+// startPageRename is the same edit in the project page's title, which a double click starts.
+func (m *Main) startPageRename(id int, name string) {
+	m.manage.rename = renaming{id: id, buf: name, page: true}
+}
+
+// renameInput is the label of the project row, or the page's title, while it is renamed.
+func (m *Main) renameInput(c *ui.Context, t *theme.Tokens, style theme.Style) {
 	r := &m.manage.rename
 	if focused := m.renameRef.Focused(c); focused {
 		r.seen = true
@@ -30,7 +36,7 @@ func (m *Main) renameInput(c *ui.Context, t *theme.Tokens) {
 	}
 	box := ui.Box(c).Grow(1).MinWidth(0)
 	box.Children(func() {
-		theme.Body.Apply(ui.TextInputBase(c.Key("rename-input"), &r.buf)).TextColor(t.Text).
+		style.Apply(ui.TextInputBase(c.Key("rename-input"), &r.buf)).TextColor(t.Text).
 			Label(m.say.ManageRenameLabel()).AutoFocus().Bind(&m.renameRef).OnTextKey(m.renameKey)
 	})
 }
