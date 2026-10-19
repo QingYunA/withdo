@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
-	"github.com/egoist/mygo/ui"
 )
 
 func TestEveryCuratedIconExistsAndDraws(t *testing.T) {
@@ -90,30 +89,6 @@ func TestCategoryIconIsCachedByBitmap(t *testing.T) {
 	}
 	if CategoryIcon(ic.Bitmap.Invert().Invert()) != CategoryIcon(ic.Bitmap) {
 		t.Error("equal bitmaps built apart gave different SVGs")
-	}
-}
-
-// The sidebar keeps drawing Work and Life from the vendored SVGs until the categories carry their
-// own bitmaps; the two must paint the same pixels, or every screenshot with a category row changes.
-func TestBitmapWorkAndLifeIconsPaintLikeTheVendoredSVGs(t *testing.T) {
-	paint := func(s *ui.SVG, size float32) *ui.Tester {
-		tt := ui.NewTester(func(c *ui.Context) {
-			ui.Column(c).Padding(8).Children(func() {
-				ui.Icon(c, s).Size(size, size).TextColor(ui.Hex("#222222"))
-			})
-		}, 60, 60)
-		tt.Frame()
-		return tt
-	}
-	for _, name := range []string{"briefcase", "home"} {
-		ic, _ := CategoryIconNamed(name)
-		old := map[string]*ui.SVG{"briefcase": IconWork, "home": IconLife}[name]
-		for _, size := range []float32{IconSmall, IconRow, IconBar} {
-			a, b := paint(old, size).Image(), paint(CategoryIcon(ic.Bitmap), size).Image()
-			if a.Bounds() != b.Bounds() || string(a.Pix) != string(b.Pix) {
-				t.Errorf("%s at %v pt paints differently from the vendored SVG", name, size)
-			}
-		}
 	}
 }
 

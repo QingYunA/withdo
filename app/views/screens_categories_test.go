@@ -68,7 +68,7 @@ func TestScreensCategories(t *testing.T) {
 			manageShot(t, "category-sheet-new"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.openNewCategory(0)
 				tt.Frame()
-				tt.Type(typed("Health", "健康"))
+				tt.Type(typed("Garden", "花园"))
 				return nil
 			})
 			manageShot(t, "category-sheet-search"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {

@@ -72,8 +72,6 @@ var (
 	IconDiamond  = pixelIcon("diamond-gem")
 	IconPR       = pixelIcon("git-pull-request")
 	IconFile     = pixelIcon("file-text")
-	IconWork     = pixelIcon("briefcase")
-	IconLife     = pixelIcon("home")
 )
 
 // ProjectColors tint a project's folder; the color follows the project's name.

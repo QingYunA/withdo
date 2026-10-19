@@ -61,6 +61,8 @@ func (a *App) DeleteCategory(id int) (data.DeletedCategory, error) {
 	return d, err
 }
 
+// RestoreCategory is the Undo of DeleteCategory: the category comes back where it was, and so do
+// the tasks it held that are still unsorted.
 func (a *App) RestoreCategory(d data.DeletedCategory) error {
 	return a.fail(a.do(func() error { _, err := a.Store.RestoreCategory(d); return err }))
 }

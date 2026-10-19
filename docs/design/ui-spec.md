@@ -201,7 +201,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | `IconWork` / `IconLife` | `briefcase` / `home` (the sidebar draws the bitmaps of the categories instead, in color; these two stay for tests) |
+| `IconBox` | `checkbox` | | |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -1359,8 +1359,8 @@ editor and image import, is PR2). Plan: `docs/plans/m9-custom-categories.md`.
 The user makes categories; Work and Life are built in, always there, movable and re-iconable but
 neither renamed (their names follow the language) nor deleted. A category has a name (unique in any
 case, at most 32 characters; at most 24 categories), a 12 x 12 icon and one of eight colors, the
-project colors in order: indigo, yellow, green, red, blue, pink, teal, orange (Work blue, Life
-green). The icon is drawn in that color wherever the category shows: sidebar sub-rows (12 pt), the
+project colors in order: indigo, yellow, green, red, blue, pink, teal, orange (Work starts as a
+blue briefcase, Life as a green house). The icon is drawn in that color wherever the category shows: sidebar sub-rows (12 pt), the
 inspector's value, the Category page and the task menu's row (18 pt), the sheet's preview. In dark
 mode the colors are the project folders' (`theme.ProjectColor`); there is no second set. On an
 accent-filled menu row the icon is white, like a project folder in `Move to…`.
