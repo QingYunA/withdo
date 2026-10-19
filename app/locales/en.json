@@ -908,6 +908,16 @@
   "@menuDelete": {
     "description": "Item of the task menu that deletes the task at once; an Undo toast follows."
   },
+  "taskFiled": "Filed under {category}",
+  "@taskFiled": {
+    "description": "Quiet toast after the assistant sorted a new task into a category on its own; its Undo button clears the category.",
+    "placeholders": {
+      "category": {
+        "type": "String",
+        "example": "Life"
+      }
+    }
+  },
   "menuDeleted": "Deleted “{title}”",
   "@menuDeleted": {
     "description": "Toast after a task was deleted; its Undo button puts the task back.",

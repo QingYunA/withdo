@@ -92,6 +92,7 @@ func (m *Main) answered(text string, reply data.Reply, err error) {
 	cv.typed = m.cmp[cv.owner].buf
 	cv.recent = append(cv.recent, reply.Receipts...)
 	m.markReceipts(reply.Receipts)
+	m.noteFiled(reply.Receipts)
 	switch {
 	case errors.Is(err, context.Canceled):
 		m.stopped(text, i)

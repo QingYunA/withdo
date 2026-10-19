@@ -2036,6 +2036,22 @@ func (msgs Messages) MenuDelete() string {
 	return Catalog.Format(msgs.locale, "menuDelete", nil)
 }
 
+// TaskFiled says "Filed under {category}"
+// in the language the app shows.
+//
+// Quiet toast after the assistant sorted a new task into a category on its
+// own; its Undo button clears the category.
+func TaskFiled(category string) string { return In(i18n.Locale()).TaskFiled(category) }
+
+// TaskFiled says "Filed under {category}"
+// in the language of msgs.
+//
+// Quiet toast after the assistant sorted a new task into a category on its
+// own; its Undo button clears the category.
+func (msgs Messages) TaskFiled(category string) string {
+	return Catalog.Format(msgs.locale, "taskFiled", map[string]any{"category": category})
+}
+
 // MenuDeleted says "Deleted “{title}”"
 // in the language the app shows.
 //
