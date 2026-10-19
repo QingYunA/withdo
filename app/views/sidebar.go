@@ -61,7 +61,7 @@ func openCount(tasks []data.Task, match func(data.Task) bool) (n int, blocked bo
 // a red badge, else how many rows wait on you.
 func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
 	to := nav{}
-	selected := m.nav == to && !m.searching()
+	selected := m.shows(to)
 	row := sidebarRow(c, t, "mine", selected)
 	row.ContextMenu(m.mineMenu)
 	m.hop.mine = row.Bounds()
@@ -82,7 +82,7 @@ func (m *Main) mineRow(c *ui.Context, t *theme.Tokens) {
 // agentsRow is Agents: the robot in the accent color, and how many tasks are at work.
 func (m *Main) agentsRow(c *ui.Context, t *theme.Tokens) {
 	to := nav{screen: screenAgents}
-	selected := m.nav == to && !m.searching()
+	selected := m.shows(to)
 	row := sidebarRow(c, t, "agents", selected)
 	m.hop.agents = row.Bounds()
 	row.Children(func() {
@@ -111,7 +111,7 @@ func (m *Main) unseenBadge(c *ui.Context, t *theme.Tokens, n int) {
 }
 
 func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *ui.SVG, label string, count int) {
-	selected := m.nav == to && !m.searching()
+	selected := m.shows(to)
 	row := sidebarRow(c, t, key, selected)
 	row.Children(func() {
 		ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary)
@@ -166,7 +166,7 @@ func (m *Main) projectRows(c *ui.Context, t *theme.Tokens) {
 // parent's label is.
 func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int, blocked bool, depth int) {
 	to := nav{screen: screenProject, projectID: p.ID}
-	selected := m.nav == to && !m.searching()
+	selected := m.shows(to)
 	renaming := m.manage.rename.id == p.ID
 	row := sidebarRow(c, t, p.ID, selected)
 	if depth > 0 {

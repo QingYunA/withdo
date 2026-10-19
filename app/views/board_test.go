@@ -20,10 +20,10 @@ func boardTester(t *testing.T, app *App, project, width int) (*ui.Tester, *Main)
 }
 
 func laneOfTitles(m *Main, lane data.Status) []string {
-	for _, col := range m.boardColumns() {
-		if col.status == lane {
+	for _, col := range m.pg.Sections {
+		if col.Status == lane {
 			var out []string
-			for _, t := range col.shown {
+			for _, t := range col.Tasks {
 				out = append(out, t.Title)
 			}
 			return out
@@ -36,8 +36,8 @@ func TestBoardHasFourFixedLanesWhateverTheProjectHolds(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m := boardTester(t, app, 2, 1100) // answer-me-with-html: one doing task, one backlog task
 	var got []data.Status
-	for _, col := range m.boardColumns() {
-		got = append(got, col.status)
+	for _, col := range m.pg.Sections {
+		got = append(got, col.Status)
 	}
 	if want := []data.Status{data.Todo, data.Doing, data.Review, data.Done}; !slices.Equal(got, want) {
 		t.Fatalf("lanes %v, want %v", got, want)
@@ -77,9 +77,9 @@ func TestBlockedCardsSitFirstInDoingAndBacklogIsNotOnTheBoard(t *testing.T) {
 }
 
 func statusLaneCount(m *Main, lane data.Status) int {
-	for _, col := range m.boardColumns() {
-		if col.status == lane {
-			return len(col.tasks)
+	for _, col := range m.pg.Sections {
+		if col.Status == lane {
+			return col.Total
 		}
 	}
 	return -1

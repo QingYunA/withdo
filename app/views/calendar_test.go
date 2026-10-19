@@ -426,7 +426,7 @@ func TestOverdueOpenTasksAreRed(t *testing.T) {
 func TestTheCalendarHasAComposerAndNotTheOtherPages(t *testing.T) {
 	app, _ := calendarApp(t)
 	_, m := calendarTester(t, app, 1100)
-	if !m.pageHasComposer() {
+	if !m.pg.Composer {
 		t.Error("the calendar has no composer")
 	}
 }

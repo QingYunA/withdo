@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -51,7 +52,7 @@ func (f hopFlight) landed(now time.Time) bool { return now.Sub(f.start) >= theme
 func (f hopFlight) over(now time.Time) bool { return now.Sub(f.start) >= theme.HopDuration }
 
 // mineShown reports whether the user is looking at the Mine screen.
-func (m *Main) mineShown() bool { return m.nav.screen == screenMine && !m.searching() }
+func (m *Main) mineShown() bool { return m.pg.Kind == page.KindMine }
 
 // hopTick runs once a frame before the window is built. Looking at Mine marks what is handed over
 // as seen; elsewhere, what is new starts a hop (or, with Reduce Motion, just the badge), and the

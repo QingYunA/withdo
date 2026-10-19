@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -18,20 +19,7 @@ type searchState struct {
 	was   bool   // the page showed results last frame
 	for_  string // the query the results answer
 	rev   int    // the snapshot they answer
-	model searchModel
-}
-
-// searchGroup is the results that belong to one project, or the Inbox.
-type searchGroup struct {
-	name  string
-	inbox bool
-	tasks []data.Task
-}
-
-type searchModel struct {
-	groups []searchGroup
-	total  int
-	more   bool // there were more results than the page shows
+	found page.Found
 }
 
 // searching is true while there is something in the search field.
@@ -40,59 +28,28 @@ func (m *Main) searching() bool { return strings.TrimSpace(m.manage.search.query
 // clearSearch ends the search.
 func (m *Main) clearSearch() { m.manage.search.query = "" }
 
-// searchModel is the results for the query, grouped by project, newest group first, the Inbox last.
-func (m *Main) searchModel() searchModel {
+// searchFound is the results for the query, looked up again when the query or the data changes.
+func (m *Main) searchFound() page.Found {
 	s := &m.manage.search
 	q := strings.TrimSpace(s.query)
 	if q == s.for_ && m.app.rev == s.rev && s.rev != 0 {
-		return s.model
+		return s.found
 	}
 	s.for_, s.rev = q, m.app.rev
-	s.model = searchModel{}
+	s.found = page.Found{Name: m.app.projectName}
 	if q == "" {
-		return s.model
+		return s.found
 	}
 	tasks, err := m.app.Store.SearchTasks(q, searchLimit+1)
 	if err != nil {
 		m.app.snap.err = err
-		return s.model
+		return s.found
 	}
 	if len(tasks) > searchLimit {
-		tasks, s.model.more = tasks[:searchLimit], true
+		tasks, s.found.More = tasks[:searchLimit], true
 	}
-	s.model.total = len(tasks)
-	index := map[int]int{} // project id (0 for the Inbox) -> group
-	for _, t := range tasks {
-		id := 0
-		if t.ProjectID != nil {
-			id = *t.ProjectID
-		}
-		i, ok := index[id]
-		if !ok {
-			i = len(s.model.groups)
-			index[id] = i
-			s.model.groups = append(s.model.groups, searchGroup{name: m.app.projectName(t.ProjectID), inbox: id == 0})
-		}
-		s.model.groups[i].tasks = append(s.model.groups[i].tasks, t)
-	}
-	for i, g := range s.model.groups { // the Inbox goes last
-		if g.inbox {
-			s.model.groups = append(append(s.model.groups[:i:i], s.model.groups[i+1:]...), g)
-			break
-		}
-	}
-	return s.model
-}
-
-// searchIDs is the task ids of the results in the order they are drawn.
-func (m *Main) searchIDs() []int {
-	var ids []int
-	for _, g := range m.searchModel().groups {
-		for _, t := range g.tasks {
-			ids = append(ids, t.ID)
-		}
-	}
-	return ids
+	s.found.Tasks = tasks
+	return s.found
 }
 
 // searchField is the well at the top of the sidebar. Cmd+F puts the cursor in it.
@@ -137,7 +94,7 @@ func (m *Main) searchKey(k ui.TextKey) bool {
 	}
 	switch k.Key {
 	case ui.KeyEnter:
-		ids := m.searchIDs()
+		ids := m.pageNow().IDs()
 		switch {
 		case m.sel != 0 && containsID(ids, m.sel):
 			m.openRow(m.sel)
@@ -167,42 +124,42 @@ func containsID(ids []int, id int) bool {
 
 // searchScreen is the page of results, in place of the screen under it.
 func (m *Main) searchScreen(c *ui.Context, t *theme.Tokens) {
-	model := m.searchModel()
+	pg := m.pg
 	sub := ""
-	if model.total > 0 {
-		sub = m.say.ManageSearchCount(model.total, strings.TrimSpace(m.manage.search.query))
+	if pg.Total > 0 {
+		sub = m.say.ManageSearchCount(pg.Total, strings.TrimSpace(m.manage.search.query))
 	}
 	m.pageHeader(c, t, m.say.ManageSearch(), sub, nil)
-	if model.total == 0 {
+	if pg.Total == 0 {
 		emptyState(c, t, m.say.ManageSearchNone(strings.TrimSpace(m.manage.search.query)), m.say.ManageSearchNoneBody(), 56, nil)
 		return
 	}
-	for _, g := range model.groups {
+	for _, g := range pg.Sections {
 		m.searchGroup(c, t, g)
 	}
-	if model.more {
+	if pg.More {
 		theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.ManageSearchMore(searchLimit), 0).Margin(20, 0, 0)
 	}
 }
 
 // searchGroup is a header, a hash (the Inbox's tray) and the project's name and count, and its rows.
-func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g searchGroup) {
-	name, key := g.name, g.name
-	if g.inbox {
+func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g page.Section) {
+	name, key := g.Title, g.Title
+	if g.Inbox {
 		name, key = m.say.NavInbox(), "inbox"
 	}
 	ui.Row(c.Key("search-group-"+key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		ui.Box(c).Size(16, theme.Body.Line).Shrink(0).Center().Children(func() {
-			if g.inbox {
+			if g.Inbox {
 				ui.Icon(c, theme.IconInbox).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary)
 				return
 			}
 			theme.Text(c, theme.Body, t.TextTertiary, "#")
 		})
 		theme.Text(c, theme.BodyStrong, t.Text, name)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(g.tasks)))
+		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(g.Tasks)))
 	})
-	for _, task := range g.tasks {
+	for _, task := range g.Tasks {
 		m.searchRow(c, t, task)
 	}
 }

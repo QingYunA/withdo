@@ -113,7 +113,7 @@ func (m *Main) barClear(c *ui.Context, t *theme.Tokens) ui.Element {
 // barUp says whether the bar is drawn: it is wanted, the page can select, and there is something
 // selected on it.
 func (m *Main) barUp() bool {
-	return m.multi.Bar() && m.canSelect() && len(m.multi.IDs()) > 0
+	return m.multi.Bar() && m.pg.Selectable() && len(m.multi.IDs()) > 0
 }
 
 // barInset is the room the bar takes at the bottom of the page while it is up: its height and its

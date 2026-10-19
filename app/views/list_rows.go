@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -82,7 +83,7 @@ func (m *Main) waitingRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			body(c, func() {
 				m.agentTitle(c, t, task, func() {
 					m.rowThumb(c, t, task.ID)
-					plainText(c, t, m.clock.Age(handedAt(task), m.app.Now()))
+					plainText(c, t, m.clock.Age(page.HandedAt(task), m.app.Now()))
 				})
 				agentLine(c, t, m.say.ListWaitingHint(task.ID))
 			})

@@ -252,7 +252,7 @@ func (m *Main) dropStaleReply() {
 	if !cv.open || cv.thinking {
 		return
 	}
-	shown := cv.nav == m.nav && m.pageHasComposer()
+	shown := cv.nav == m.nav && m.pg.Composer
 	if cv.owner == surfaceInspector {
 		shown = m.openID != 0 && cv.place.TaskID == m.openID && m.assistReady()
 	}
