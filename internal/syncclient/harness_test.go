@@ -52,6 +52,11 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	// These run whole devices against Postgres for a minute; -short leaves them to the race pass
+	// of check.sh full, so they do not slow the quick pass alongside the UI tests.
+	if testing.Short() {
+		t.Skip("integration test against Postgres; skipped with -short")
+	}
 	databaseURL := os.Getenv("ADHD_SYNC_TEST_DATABASE_URL")
 	if databaseURL == "" {
 		t.Skip("ADHD_SYNC_TEST_DATABASE_URL is not set")
