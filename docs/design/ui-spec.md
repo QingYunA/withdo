@@ -195,7 +195,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | | |
+| `IconBox` | `checkbox` | `IconWork` / `IconLife` | `briefcase` / `home` |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -235,9 +235,10 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   Receipts keep their green check.
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
-  a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, empty (Work,
-  Life, Unsorted) or holding the agent's avatar (`theme.AvatarSmall`), then its label, so the
-  sub-rows' labels line up with each other;
+  a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, holding the
+  category's icon in `text.secondary` (Work `IconWork`, Life `IconLife`), the agent's avatar
+  (`theme.AvatarSmall`), or nothing (Unsorted), then its label, so the sub-rows' labels line up
+  with each other;
   Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
   does not choose it).
@@ -812,8 +813,9 @@ editable in place (a Branch longer than the pane is ellipsized like every long v
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
-  category strip (`Work` `Life` `None`; the row shows only the category that was set, `None` in
-  `text.tertiary` for a task in a repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+  category strip (`Work` `Life` `None`; the row shows only the category that was set, after its
+  18 pt icon in `text.secondary`, and `None` with no icon in `text.tertiary`, for a task in a
+  repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
@@ -918,8 +920,8 @@ Main page, top to bottom (10 pt padding):
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
    reads `Priority · P1 High` the same way.
-3. `Category` and a strip `Work` `Life` `None` in `compact` text (the current one tinted; `None`
-   unclassifies); its label reads `Category · Life` the same way. The strip takes no letter key;
+3. `Category` and a strip `Work` `Life` `None` in `compact` text, Work and Life after their 18 pt
+   icon in `text.secondary` (the current one tinted; `None` unclassifies); its label reads `Category · Life` the same way. The strip takes no letter key;
 4. a hairline;
 5. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
