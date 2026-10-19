@@ -982,6 +982,14 @@
   "@manageNewProjectTip": {
     "description": "Tooltip and accessibility label of the plus button on the PROJECTS header of the sidebar, and the title of the new project sheet."
   },
+  "manageNewSubproject": "New sub-project…",
+  "@manageNewSubproject": {
+    "description": "Item of a project context menu in the sidebar: opens the new project sheet with that project as the parent."
+  },
+  "manageNewSubprojectTitle": "New sub-project",
+  "@manageNewSubprojectTitle": {
+    "description": "Title of the new project sheet when a project's menu opened it, so the project it makes hangs under that one."
+  },
   "managePropProject": "Project",
   "@managePropProject": {
     "description": "Label of the project row of the inspector."
@@ -1073,6 +1081,16 @@
   "manageSearchNoneBody": "Search looks in titles, notes, branches and pull request numbers, in every project.",
   "@manageSearchNoneBody": {
     "description": "Body of the search page when nothing was found; says where the search looks."
+  },
+  "manageSubprojectUnder": "Under {project}",
+  "@manageSubprojectUnder": {
+    "description": "Line under the title of the new sub-project sheet: the project the new one will hang under.",
+    "placeholders": {
+      "project": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
   },
   "milestoneAll": "All milestones",
   "@milestoneAll": {

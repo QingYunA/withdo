@@ -45,6 +45,17 @@ func (f *Fake) CreateProject(in NewProject) (Project, error) {
 		slug = s
 	}
 	f.mu.Lock()
+	if in.ParentID != nil {
+		parent, ok := f.project(*in.ParentID)
+		if !ok {
+			f.mu.Unlock()
+			return Project{}, fmt.Errorf("parent project %d not found", *in.ParentID)
+		}
+		if parent.ArchivedAt != nil {
+			f.mu.Unlock()
+			return Project{}, fmt.Errorf("parent project %d is archived", *in.ParentID)
+		}
+	}
 	if slug != "" {
 		for _, p := range f.projects {
 			if p.RepoSlug == slug {
@@ -54,7 +65,12 @@ func (f *Fake) CreateProject(in NewProject) (Project, error) {
 		}
 	}
 	now := f.Now()
-	p := Project{ID: f.newID(), Name: name, RepoSlug: slug, CreatedAt: now, UpdatedAt: now}
+	var parentID *int
+	if in.ParentID != nil {
+		id := *in.ParentID
+		parentID = &id
+	}
+	p := Project{ID: f.newID(), Name: name, RepoSlug: slug, CreatedAt: now, UpdatedAt: now, ParentID: parentID}
 	f.projects = append(f.projects, p)
 	f.mu.Unlock()
 	f.notify()
@@ -69,19 +85,69 @@ func (f *Fake) RenameProject(id int, name string) (Project, error) {
 	return f.editProject(id, func(p *Project) { p.Name = name })
 }
 
+// subtree returns the project with every project hanging under it, as pointers into f.projects.
+func (f *Fake) subtree(id int) []*Project {
+	root, ok := f.project(id)
+	if !ok {
+		return nil
+	}
+	out := []*Project{root}
+	for i := 0; i < len(out); i++ {
+		for j := range f.projects {
+			if p := &f.projects[j]; p.ParentID != nil && *p.ParentID == out[i].ID {
+				out = append(out, p)
+			}
+		}
+	}
+	return out
+}
+
 func (f *Fake) ArchiveProject(id int) error {
+	f.mu.Lock()
+	p, ok := f.project(id)
+	if !ok {
+		f.mu.Unlock()
+		return fmt.Errorf("project %d not found", id)
+	}
+	if p.ArchivedAt != nil { // archiving twice keeps the first time, as the real store does
+		f.mu.Unlock()
+		return nil
+	}
 	now := f.Now()
-	_, err := f.editProject(id, func(p *Project) {
+	for _, p := range f.subtree(id) {
 		if p.ArchivedAt == nil {
 			p.ArchivedAt = &now
 		}
-	})
-	return err
+		p.UpdatedAt = now
+	}
+	f.mu.Unlock()
+	f.notify()
+	return nil
 }
 
 func (f *Fake) RestoreProject(id int) error {
-	_, err := f.editProject(id, func(p *Project) { p.ArchivedAt = nil })
-	return err
+	f.mu.Lock()
+	p, ok := f.project(id)
+	if !ok {
+		f.mu.Unlock()
+		return fmt.Errorf("project %d not found", id)
+	}
+	if p.ArchivedAt == nil {
+		f.mu.Unlock()
+		return nil
+	}
+	// The branch archived with this project shares its archive time; what was archived earlier stays.
+	at, now := *p.ArchivedAt, f.Now()
+	for _, q := range f.subtree(id) {
+		if q.ArchivedAt == nil || !q.ArchivedAt.Equal(at) {
+			continue
+		}
+		q.ArchivedAt = nil
+		q.UpdatedAt = now
+	}
+	f.mu.Unlock()
+	f.notify()
+	return nil
 }
 
 func (f *Fake) editProject(id int, change func(*Project)) (Project, error) {
@@ -145,9 +211,13 @@ func (f *Fake) DeleteProject(id int) (Removed, error) {
 	f.milestones = ms
 	var ps []Project
 	for _, p := range f.projects {
-		if p.ID != id {
-			ps = append(ps, p)
+		if p.ID == id {
+			continue
 		}
+		if p.ParentID != nil && *p.ParentID == id {
+			p.ParentID = nil // the sub-project stands as a top-level project
+		}
+		ps = append(ps, p)
 	}
 	f.projects = ps
 	f.mu.Unlock()

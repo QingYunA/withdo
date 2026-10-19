@@ -44,6 +44,8 @@ func Resolve(ctx context.Context, dir string) (*Info, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Git prints forward slashes even on Windows; match filepath conventions.
+	toplevel = filepath.FromSlash(toplevel)
 	// symbolic-ref also works on an unborn branch and fails when detached.
 	branch, _ := git(ctx, toplevel, "symbolic-ref", "--short", "-q", "HEAD")
 	slug := ""
@@ -68,7 +70,7 @@ func repoRoot(ctx context.Context, toplevel string) string {
 	if len(lines) < 2 || lines[0] == "" || lines[1] == "" || lines[0] == lines[1] {
 		return toplevel
 	}
-	common := lines[1]
+	common := filepath.FromSlash(lines[1])
 	// A bare repository's common dir is the repository itself.
 	if filepath.Base(common) == ".git" {
 		return filepath.Dir(common)

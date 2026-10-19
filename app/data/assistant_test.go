@@ -192,7 +192,8 @@ func TestProviderSettingsTest(t *testing.T) {
 	defer srv.Close()
 	ps := &ProviderSettings{Provider: newManager(t, providers.NewMemoryKeyring(), nil)}
 	d, err := ps.Test(bg, "anthropic", ProviderEdit{BaseURL: srv.URL, Key: "sk-good"})
-	if err != nil || d <= 0 {
+	// A coarse clock (Windows) can measure a local roundtrip as exactly zero.
+	if err != nil || d < 0 {
 		t.Fatalf("Test = %v, %v", d, err)
 	}
 	_, err = ps.Test(bg, "anthropic", ProviderEdit{BaseURL: srv.URL, Key: "sk-bad"})

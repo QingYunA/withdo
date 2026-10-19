@@ -45,7 +45,7 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 		"PRAGMA journal_mode": "wal",
 		"PRAGMA busy_timeout": int64(5000),
 		"PRAGMA foreign_keys": int64(1),
-		"PRAGMA user_version": int64(12),
+		"PRAGMA user_version": int64(13),
 	}
 	for q, want := range checks {
 		var got any
@@ -56,8 +56,8 @@ func TestOpenCreatesDirectoriesAppliesPragmasAndMigrations(t *testing.T) {
 			t.Errorf("%s = %v, want %v", q, got, want)
 		}
 	}
-	if store.SchemaVersion() != 12 {
-		t.Errorf("SchemaVersion = %d, want 12", store.SchemaVersion())
+	if store.SchemaVersion() != 13 {
+		t.Errorf("SchemaVersion = %d, want 13", store.SchemaVersion())
 	}
 }
 
@@ -165,7 +165,7 @@ func TestVersionOneDatabaseUpgradesInPlace(t *testing.T) {
 	if title != "old" || reminded.Valid {
 		t.Errorf("got %q, %v", title, reminded)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
 		t.Errorf("user_version = %d", v)
 	}
 }
@@ -201,7 +201,7 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM tasks WHERE title = 'old'").Scan(&parent); err != nil || parent.Valid {
 		t.Fatalf("old task parent_id = %v, %v; want NULL", parent, err)
 	}
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
 		t.Errorf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='tasks_parent'"); n != 1 {
@@ -219,9 +219,64 @@ func TestVersionThreeDatabaseGainsParentID(t *testing.T) {
 	}
 }
 
+func TestVersionEightDatabaseGainsProjectParent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "v8.db")
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := []string{
+		"001_init.sql", "002_reminded_at.sql", "003_pull_requests.sql", "004_subtasks.sql",
+		"005_report_cwd.sql", "006_handoff.sql", "007_category.sql", "008_report_kind.sql",
+	}
+	for _, f := range before {
+		b, err := os.ReadFile("migrations/" + f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := raw.Exec(string(b)); err != nil {
+			t.Fatalf("%s: %v", f, err)
+		}
+	}
+	for _, q := range []string{
+		"PRAGMA user_version = 8",
+		"INSERT INTO projects (name, created_at, updated_at) VALUES ('root','t','t')",
+	} {
+		if _, err := raw.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_ = raw.Close()
+	db, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = db.Close() }()
+	var parent sql.NullInt64
+	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM projects WHERE name = 'root'").Scan(&parent); err != nil || parent.Valid {
+		t.Fatalf("old project parent_id = %v, %v; want NULL", parent, err)
+	}
+	if n := scalar[int](t, db, "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='projects_parent'"); n != 1 {
+		t.Error("index projects_parent missing")
+	}
+	// A sub-project nestles under its project, and a deleted parent leaves it standing.
+	if _, err := db.ExecContext(ctx, "INSERT INTO projects (name, parent_id, created_at, updated_at) VALUES ('kid', 1, 't', 't')"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM projects WHERE name = 'kid'").Scan(&parent); err != nil || !parent.Valid || parent.Int64 != 1 {
+		t.Fatalf("kid parent_id = %v, %v; want 1", parent, err)
+	}
+	if _, err := db.ExecContext(ctx, "DELETE FROM projects WHERE id = 1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, "SELECT parent_id FROM projects WHERE name = 'kid'").Scan(&parent); err != nil || parent.Valid {
+		t.Errorf("kid parent_id = %v, %v; want NULL after the parent is deleted", parent, err)
+	}
+}
+
 func TestOpenRefusesNewerDatabase(t *testing.T) {
 	db, path := open(t)
-	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 13"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA user_version = 14"); err != nil {
 		t.Fatal(err)
 	}
 	_ = db.Close()
@@ -323,8 +378,8 @@ func TestConcurrentWritersDoNotSeeBusy(t *testing.T) {
 // user can still have. Opening it runs every migration since.
 func TestOpensDatabaseCreatedByTypeScriptCore(t *testing.T) {
 	db := openCopyOf(t, "testdata/ts-v2.db")
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
-		t.Fatalf("user_version = %d, want 12 (migrations 005 to 012 applied)", v)
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
+		t.Fatalf("user_version = %d, want 13 (migrations 005 to 013 applied)", v)
 	}
 	var title, branch string
 	var pr int
@@ -436,7 +491,7 @@ func TestMigration012MovesTaskCategoriesToTheCategoriesTable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v := scalar[int](t, db, "PRAGMA user_version"); v != 12 {
+	if v := scalar[int](t, db, "PRAGMA user_version"); v != 13 {
 		t.Fatalf("user_version = %d", v)
 	}
 	if n := scalar[int](t, db, "SELECT COUNT(*) FROM pragma_table_info('tasks') WHERE name = 'category'"); n != 0 {

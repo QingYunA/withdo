@@ -128,7 +128,12 @@ func TestOpenBackendFakes(t *testing.T) {
 }
 
 func TestOpenBackendFailsOnABadPath(t *testing.T) {
-	t.Setenv("ADHD_TODO_DB", "/dev/null/nope/x.db")
+	// A path whose parent is a file cannot become a directory on any OS.
+	blocker := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(blocker, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ADHD_TODO_DB", filepath.Join(blocker, "x.db"))
 	if _, err := openBackend(false, false); err == nil {
 		t.Error("expected an error")
 	}
