@@ -59,17 +59,22 @@ const (
 
 // Mutation is one client change in a push. ID is the device's mutation id, which rises as the
 // device writes; RowID is the row's integer id. Data is column → value and is empty for a delete.
+// Full marks an insert: the outbox entry had no column list, so Data holds every synced column.
+// A full put brings a deleted row back; a partial put on a deleted row is ignored (delete wins).
 type Mutation struct {
 	ID     int64          `json:"id"`
 	Entity string         `json:"entity"`
 	RowID  int64          `json:"row_id"`
 	Op     string         `json:"op"`
 	Data   map[string]any `json:"data,omitempty"`
+	Full   bool           `json:"full,omitempty"`
 }
 
-// CreateDeviceRequest is POST /v1/devices.
+// CreateDeviceRequest is POST /v1/devices. ResumeSeeding asks to take the seeding over from the
+// device that is doing it; without it a registration while another device seeds is 409.
 type CreateDeviceRequest struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	ResumeSeeding bool   `json:"resume_seeding,omitempty"`
 }
 
 // CreateDeviceResponse returns the new device and its workspace. Empty says the workspace has no
@@ -146,3 +151,47 @@ const (
 	// MaxBodyBytes bounds a request body.
 	MaxBodyBytes = 8 << 20
 )
+
+// ReferenceAction is what a delete of a reference's target does to the rows that point at it.
+type ReferenceAction int
+
+const (
+	// DeleteRef deletes the referencing row, recursively.
+	DeleteRef ReferenceAction = iota
+	// SetNullRef clears the referencing column.
+	SetNullRef
+)
+
+// Reference is one foreign key of the synced data. The server keeps these whole inside a push:
+// a delete cascades, and a put that points at a deleted row is nulled or becomes a delete. The
+// client relies on the server for this, so a pulled page never holds an orphan.
+type Reference struct {
+	Entity   string
+	Column   string
+	Target   string
+	OnDelete ReferenceAction
+}
+
+// References lists every reference of the five synced entities, in the order the server resolves
+// them. It matches the local schema and internal/domain: deleting a project or task deletes what
+// hangs off it, the other references are cleared.
+var References = []Reference{
+	{EntityMilestones, "project_id", EntityProjects, DeleteRef},
+	{EntityTasks, "project_id", EntityProjects, DeleteRef},
+	{EntityReports, "task_id", EntityTasks, DeleteRef},
+	{EntityTasks, "milestone_id", EntityMilestones, SetNullRef},
+	{EntityTasks, "parent_id", EntityTasks, SetNullRef},
+	{EntityTasks, "category_id", EntityCategories, SetNullRef},
+	{EntityProjects, "parent_id", EntityProjects, SetNullRef},
+}
+
+// ReferencesTo returns the references whose target is entity.
+func ReferencesTo(entity string) []Reference {
+	var out []Reference
+	for _, ref := range References {
+		if ref.Target == entity {
+			out = append(out, ref)
+		}
+	}
+	return out
+}

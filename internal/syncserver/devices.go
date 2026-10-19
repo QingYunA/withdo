@@ -13,8 +13,8 @@ import (
 )
 
 // createDevice is POST /v1/devices: the server makes a random device id in the caller's
-// workspace. A workspace with no rows and no seeder starts seeding here, and a registration while
-// another device seeds takes the seeding over from it.
+// workspace. A workspace with no rows and no seeder starts seeding here. A registration while
+// another device seeds is 409 unless it asks to resume the seeding, which takes it over.
 func (s *Server) createDevice(w http.ResponseWriter, r *http.Request) {
 	sess := sessionFrom(r.Context())
 	var req syncproto.CreateDeviceRequest
@@ -57,7 +57,11 @@ func (s *Server) createDevice(w http.ResponseWriter, r *http.Request) {
 	}
 	seeding := false
 	if seeder != "" {
-		// A new registration takes over: the old device stops seeding and this one starts.
+		if !req.ResumeSeeding {
+			writeError(w, conflict("workspace is seeding"))
+			return
+		}
+		// An explicit resume takes the seeding over: the old device stops and this one starts.
 		if _, err := tx.Exec(ctx,
 			"UPDATE devices SET seeding = false WHERE workspace_id = $1 AND seeding", sess.workspaceID); err != nil {
 			writeError(w, fmt.Errorf("stop old seeding device: %w", err))

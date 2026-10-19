@@ -43,3 +43,35 @@ func TestS2a7ColumnsMatchMigration014(t *testing.T) {
 		}
 	}
 }
+
+// TestReferencesAreWellFormed keeps the reference table honest: every column is a synced column of
+// its entity and every target is one of the five entities.
+func TestReferencesAreWellFormed(t *testing.T) {
+	want := 7
+	if len(syncproto.References) != want {
+		t.Fatalf("References has %d rows, want %d", len(syncproto.References), want)
+	}
+	for _, ref := range syncproto.References {
+		columns, ok := syncproto.EntityColumns(ref.Entity)
+		if !ok {
+			t.Errorf("reference entity %q is not synced", ref.Entity)
+			continue
+		}
+		found := false
+		for _, column := range columns {
+			if column == ref.Column {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("%s.%s is not a synced column", ref.Entity, ref.Column)
+		}
+		if _, ok := syncproto.EntityColumns(ref.Target); !ok {
+			t.Errorf("%s.%s targets unknown entity %q", ref.Entity, ref.Column, ref.Target)
+		}
+		if ref.OnDelete != syncproto.DeleteRef && ref.OnDelete != syncproto.SetNullRef {
+			t.Errorf("%s.%s has unknown action %v", ref.Entity, ref.Column, ref.OnDelete)
+		}
+	}
+}

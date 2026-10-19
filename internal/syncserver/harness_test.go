@@ -139,9 +139,21 @@ func (h *harness) get(t *testing.T, path, token string, out any) int {
 
 func (h *harness) device(t *testing.T, token, name string) syncproto.CreateDeviceResponse {
 	t.Helper()
+	return h.deviceWith(t, token, name, false)
+}
+
+// resumingDevice registers with resume_seeding, which takes the seeding over from another device
+// of the same workspace.
+func (h *harness) resumingDevice(t *testing.T, token, name string) syncproto.CreateDeviceResponse {
+	t.Helper()
+	return h.deviceWith(t, token, name, true)
+}
+
+func (h *harness) deviceWith(t *testing.T, token, name string, resume bool) syncproto.CreateDeviceResponse {
+	t.Helper()
 	var out syncproto.CreateDeviceResponse
 	if code := h.post(t, "/v1/devices", token,
-		syncproto.CreateDeviceRequest{Name: name}, &out); code != http.StatusOK {
+		syncproto.CreateDeviceRequest{Name: name, ResumeSeeding: resume}, &out); code != http.StatusOK {
 		t.Fatalf("POST /v1/devices = %d, want 200", code)
 	}
 	if out.DeviceID == "" {

@@ -59,7 +59,7 @@ func TestSeedingManyPushes(t *testing.T) {
 func TestSeedingBlocksOtherDevices(t *testing.T) {
 	h := newHarness(t)
 	a := h.device(t, aliceToken, "old")
-	b := h.device(t, aliceToken, "new")
+	b := h.resumingDevice(t, aliceToken, "new")
 	if !a.Seeding || !b.Seeding {
 		t.Fatalf("devices seeding flags = %v/%v, want both true", a.Seeding, b.Seeding)
 	}
@@ -99,7 +99,7 @@ func TestSeedingBlocksOtherDevices(t *testing.T) {
 func TestSeedingSeededForbidden(t *testing.T) {
 	h := newHarness(t)
 	a := h.device(t, aliceToken, "old")
-	b := h.device(t, aliceToken, "new")
+	b := h.resumingDevice(t, aliceToken, "new")
 	requireStatus(t, "old device ends seeding", h.seeded(t, aliceToken, a.DeviceID), http.StatusForbidden)
 	requireStatus(t, "seeding device ends seeding", h.seeded(t, aliceToken, b.DeviceID), http.StatusOK)
 	requireStatus(t, "ended device ends seeding again", h.seeded(t, aliceToken, b.DeviceID), http.StatusForbidden)
@@ -108,8 +108,9 @@ func TestSeedingSeededForbidden(t *testing.T) {
 	requireStatus(t, "another user's device", h.seeded(t, aliceToken, other.DeviceID), http.StatusForbidden)
 }
 
-// TestSeedingTakeover is the fourth seeding test: a new registration while a device seeds takes
-// the seeding over, and the old device waits until the new one is done.
+// TestSeedingTakeover is the fourth seeding test: a registration with resume_seeding while a
+// device seeds takes the seeding over, and the old device waits until the new one is done. A
+// registration without it is 409.
 func TestSeedingTakeover(t *testing.T) {
 	h := newHarness(t)
 	a := h.device(t, aliceToken, "old")
@@ -122,7 +123,13 @@ func TestSeedingTakeover(t *testing.T) {
 	})
 	requireStatus(t, "partial snapshot", code, http.StatusOK)
 
-	b := h.device(t, aliceToken, "new")
+	// Without resume_seeding a registration does not take the seeding over.
+	var plain syncproto.CreateDeviceResponse
+	requireStatus(t, "registration without resume_seeding",
+		h.post(t, "/v1/devices", aliceToken,
+			syncproto.CreateDeviceRequest{Name: "plain"}, &plain), http.StatusConflict)
+
+	b := h.resumingDevice(t, aliceToken, "new")
 	if !b.Seeding || b.Empty {
 		t.Fatalf("takeover device = %+v, want seeding in a non-empty workspace", b)
 	}
