@@ -53,3 +53,9 @@ func TestDefaultDBPathWithoutHome(t *testing.T) {
 		t.Fatalf("override should work without a home directory: %q, %v", got, err)
 	}
 }
+
+func TestImagesDirIsBesideTheDatabase(t *testing.T) {
+	if got := ImagesDir("/data/adhd-todo"); got != "/data/adhd-todo/images" {
+		t.Errorf("ImagesDir = %q", got)
+	}
+}

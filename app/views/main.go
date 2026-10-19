@@ -94,6 +94,7 @@ type Main struct {
 	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
 	convo   convo                        // the answer under the composer that sent the last request
 	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
+	filed   []data.Receipt               // tasks the assistant sorted by itself, waiting for their toast
 	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
 	queue   queued                       // what a text input's last key asked of the next frame
 

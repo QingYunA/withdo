@@ -35,7 +35,7 @@ func TestGetTaskOfAHandedTaskCarriesTheNoteAndChangesNothing(t *testing.T) {
 
 func TestGetTaskOfOtherTasksHasNoNote(t *testing.T) {
 	r := newRig(t)
-	plain := must[*domain.Task](t)(r.core.CreateTask(ctx, domain.CreateTaskInput{Title: "plain"}))
+	plain := must[*domain.Task](t)(r.core.CreateTask(ctx, domain.CreateTaskInput{Title: "plain", Source: domain.SourceAgent}))
 	if res := r.ok("get_task", map[string]any{"task_id": plain.ID}); res.Data["note"] != nil {
 		t.Errorf("plain task note = %v", res.Data["note"])
 	}

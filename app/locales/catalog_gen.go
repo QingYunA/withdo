@@ -2036,6 +2036,22 @@ func (msgs Messages) MenuDelete() string {
 	return Catalog.Format(msgs.locale, "menuDelete", nil)
 }
 
+// TaskFiled says "Filed under {category}"
+// in the language the app shows.
+//
+// Quiet toast after the assistant sorted a new task into a category on its
+// own; its Undo button clears the category.
+func TaskFiled(category string) string { return In(i18n.Locale()).TaskFiled(category) }
+
+// TaskFiled says "Filed under {category}"
+// in the language of msgs.
+//
+// Quiet toast after the assistant sorted a new task into a category on its
+// own; its Undo button clears the category.
+func (msgs Messages) TaskFiled(category string) string {
+	return Catalog.Format(msgs.locale, "taskFiled", map[string]any{"category": category})
+}
+
 // MenuDeleted says "Deleted “{title}”"
 // in the language the app shows.
 //
@@ -4400,6 +4416,50 @@ func (msgs Messages) SettingsAssistantNone() string {
 	return Catalog.Format(msgs.locale, "settingsAssistantNone", nil)
 }
 
+// SettingsAssistantMemory says "Assistant memory"
+// in the language the app shows.
+//
+// Title of the row in Settings > Assistant about the file where the
+// assistant keeps notes about the user.
+func SettingsAssistantMemory() string { return In(i18n.Locale()).SettingsAssistantMemory() }
+
+// SettingsAssistantMemory says "Assistant memory"
+// in the language of msgs.
+//
+// Title of the row in Settings > Assistant about the file where the
+// assistant keeps notes about the user.
+func (msgs Messages) SettingsAssistantMemory() string {
+	return Catalog.Format(msgs.locale, "settingsAssistantMemory", nil)
+}
+
+// SettingsAssistantMemoryBody says "What the assistant remembers about you. It is a plain text file you can edit."
+// in the language the app shows.
+//
+// Second line of the assistant memory row in Settings > Assistant.
+func SettingsAssistantMemoryBody() string { return In(i18n.Locale()).SettingsAssistantMemoryBody() }
+
+// SettingsAssistantMemoryBody says "What the assistant remembers about you. It is a plain text file you can edit."
+// in the language of msgs.
+//
+// Second line of the assistant memory row in Settings > Assistant.
+func (msgs Messages) SettingsAssistantMemoryBody() string {
+	return Catalog.Format(msgs.locale, "settingsAssistantMemoryBody", nil)
+}
+
+// SettingsOpenFile says "Open file"
+// in the language the app shows.
+//
+// Link that opens a file in the app macOS has for it.
+func SettingsOpenFile() string { return In(i18n.Locale()).SettingsOpenFile() }
+
+// SettingsOpenFile says "Open file"
+// in the language of msgs.
+//
+// Link that opens a file in the app macOS has for it.
+func (msgs Messages) SettingsOpenFile() string {
+	return Catalog.Format(msgs.locale, "settingsOpenFile", nil)
+}
+
 // ComposerChipSetUp says "Set up the assistant"
 // in the language the app shows.
 //
@@ -4680,6 +4740,38 @@ func ResultAdded() string { return In(i18n.Locale()).ResultAdded() }
 // Added Fix the login loop · Fri · P1".
 func (msgs Messages) ResultAdded() string {
 	return Catalog.Format(msgs.locale, "resultAdded", nil)
+}
+
+// ResultRemembered says "Remembered"
+// in the language the app shows.
+//
+// First word of the one-line answer after the assistant saved a note to its
+// memory: "✓ Remembered Fitness is Life, not Work".
+func ResultRemembered() string { return In(i18n.Locale()).ResultRemembered() }
+
+// ResultRemembered says "Remembered"
+// in the language of msgs.
+//
+// First word of the one-line answer after the assistant saved a note to its
+// memory: "✓ Remembered Fitness is Life, not Work".
+func (msgs Messages) ResultRemembered() string {
+	return Catalog.Format(msgs.locale, "resultRemembered", nil)
+}
+
+// ResultForgot says "Forgot"
+// in the language the app shows.
+//
+// First word of the one-line answer after the assistant deleted notes from
+// its memory; the title is the text the notes matched.
+func ResultForgot() string { return In(i18n.Locale()).ResultForgot() }
+
+// ResultForgot says "Forgot"
+// in the language of msgs.
+//
+// First word of the one-line answer after the assistant deleted notes from
+// its memory; the title is the text the notes matched.
+func (msgs Messages) ResultForgot() string {
+	return Catalog.Format(msgs.locale, "resultForgot", nil)
 }
 
 // ResultMore says "and {n} more"
@@ -5794,6 +5886,38 @@ func A11yMineUnseen(count int) string { return In(i18n.Locale()).A11yMineUnseen(
 // Accessibility label of the red badge beside Mine in the sidebar.
 func (msgs Messages) A11yMineUnseen(count int) string {
 	return Catalog.Format(msgs.locale, "a11yMineUnseen", map[string]any{"count": count})
+}
+
+// NavSectionExpand says "Expand {name}"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that shows its sub-rows.
+func NavSectionExpand(name string) string { return In(i18n.Locale()).NavSectionExpand(name) }
+
+// NavSectionExpand says "Expand {name}"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that shows its sub-rows.
+func (msgs Messages) NavSectionExpand(name string) string {
+	return Catalog.Format(msgs.locale, "navSectionExpand", map[string]any{"name": name})
+}
+
+// NavSectionCollapse says "Collapse {name}"
+// in the language the app shows.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that hides its sub-rows.
+func NavSectionCollapse(name string) string { return In(i18n.Locale()).NavSectionCollapse(name) }
+
+// NavSectionCollapse says "Collapse {name}"
+// in the language of msgs.
+//
+// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
+// Agents) that hides its sub-rows.
+func (msgs Messages) NavSectionCollapse(name string) string {
+	return Catalog.Format(msgs.locale, "navSectionCollapse", map[string]any{"name": name})
 }
 
 // ComposerPlaceholderAgents says "Ask what your agents are doing"

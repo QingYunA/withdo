@@ -151,3 +151,31 @@ func (a *App) recentChoice() (repo string, days int) {
 func (a *App) setRecentChoice(repo string, days int) {
 	a.savePrefs(func(p *data.Prefs) { p.RecentRepo, p.RecentDays = repo, days })
 }
+
+// MineOpen says whether the sidebar shows the sub-rows of Mine, which it does not until the user
+// unfolds them.
+func (a *App) MineOpen() bool {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return a.prefs.MineOpen
+}
+
+// SetMineOpen folds or unfolds the sub-rows of Mine, and keeps the choice.
+func (a *App) SetMineOpen(on bool) {
+	a.savePrefs(func(p *data.Prefs) { p.MineOpen = on })
+}
+
+// AgentsOpen says whether the sidebar shows the sub-rows of Agents, which it does not until the user
+// unfolds them.
+func (a *App) AgentsOpen() bool {
+	a.prefsMu.Lock()
+	defer a.prefsMu.Unlock()
+	a.loadPrefs()
+	return a.prefs.AgentsOpen
+}
+
+// SetAgentsOpen folds or unfolds the sub-rows of Agents, and keeps the choice.
+func (a *App) SetAgentsOpen(on bool) {
+	a.savePrefs(func(p *data.Prefs) { p.AgentsOpen = on })
+}

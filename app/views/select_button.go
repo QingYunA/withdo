@@ -51,11 +51,21 @@ func (m *Main) flashLit(c *ui.Context) bool {
 
 // selectControls is the Select button, or in select mode the count, Select all and Done.
 func (m *Main) selectControls(c *ui.Context, t *theme.Tokens) {
-	if !m.pg.Selectable() {
+	if m.pg.Selectable() {
+		m.selectControlsIn(c, t, 0, nil)
+	}
+}
+
+// selectControlsIn is selectControls for the part of the page named by scope (a column; 0 is the
+// whole page) and its rows. A part other than the one in select mode draws nothing.
+func (m *Main) selectControlsIn(c *ui.Context, t *theme.Tokens, scope int, ids []int) {
+	if !m.multi.Mode() {
+		if scope == 0 || len(ids) > 0 {
+			m.selectButton(c, t, scope, ids)
+		}
 		return
 	}
-	if !m.multi.Mode() {
-		m.selectButton(c, t)
+	if m.multi.Scope() != scope {
 		return
 	}
 	ui.Row(c.Key("select-bar")).Shrink(0).Gap(14).AlignItems(ui.Center).Margin(0, 8, 0, 0).Children(func() {
@@ -70,7 +80,7 @@ func (m *Main) selectControls(c *ui.Context, t *theme.Tokens) {
 }
 
 // selectButton is the quiet button that turns select mode on.
-func (m *Main) selectButton(c *ui.Context, t *theme.Tokens) {
+func (m *Main) selectButton(c *ui.Context, t *theme.Tokens, scope int, ids []int) {
 	btn := ui.ButtonBase(c.Key("select")).Height(28).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).
 		Label(m.say.A11ySelectButton()).AlignItems(ui.Center).Shrink(0).Margin(0, 8, 0, 0).Cursor(ui.CursorPointer)
 	ink := t.TextSecondary
@@ -88,7 +98,11 @@ func (m *Main) selectButton(c *ui.Context, t *theme.Tokens) {
 		theme.Text(c, theme.Meta, ink, m.say.SelectButton())
 	})
 	if btn.Clicked() {
-		m.multi.EnterMode()
+		if scope == 0 {
+			m.multi.EnterMode()
+		} else {
+			m.multi.EnterModeIn(scope, ids)
+		}
 	}
 }
 
@@ -103,7 +117,7 @@ func (m *Main) checkbox(c *ui.Context, t *theme.Tokens, id int, size float32) ui
 // lead is the picture at the start of a row: the author's avatar, or in select mode the checkbox in
 // its place and of its size.
 func (m *Main) lead(c *ui.Context, t *theme.Tokens, key string, id int, who theme.Who, size float32) ui.Element {
-	if m.multi.Mode() {
+	if m.multi.Picks(id) {
 		return m.checkbox(c, t, id, size)
 	}
 	return theme.AvatarIcon(c.Key(key), who, size)
@@ -113,7 +127,7 @@ func (m *Main) lead(c *ui.Context, t *theme.Tokens, key string, id int, who them
 // holds the checkbox, 4 pt wider than the room, so the title keeps its place.
 func (m *Main) indentSlot(c *ui.Context, t *theme.Tokens, id int) {
 	room := listIndent - rowGap
-	if !m.multi.Mode() {
+	if !m.multi.Picks(id) {
 		ui.Box(c.Key("indent")).Width(room).Shrink(0)
 		return
 	}
