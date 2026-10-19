@@ -15,10 +15,12 @@ own tasks, milestones and repository field; the parent only says where its row s
   and is not archived (a sub-project under an archived project would be invisible), and inserts
   `parent_id`. There is no depth limit and no reparent method: a project is nested when it is made,
   so the tree cannot grow a cycle.
-- `ArchiveProject` archives the whole branch (recursive CTE); `RestoreProject` brings back the
-  project, its sub-projects and the projects above it, so a visible row never hangs under a hidden
-  project. Both keep the first archive time of each project, and both are what `unarchiveByID` (an
-  agent reporting in an archived project) uses.
+- `ArchiveProject` archives the whole branch (a recursive CTE). `RestoreProject` brings back the
+  project and the sub-projects archived by that same action (one archive stamps the branch with one
+  time), not what was archived earlier, and it leaves the project above alone: a sub-project whose
+  parent is still hidden reads as a top-level project in the sidebar. Both are what `unarchiveByID`
+  (an agent reporting in an archived project) uses, and both keep the first archive time of a
+  project archived twice.
 - `app/data`: `Project.ParentID`, `NewProject.ParentID`, and the fake mirrors the branch rules
   (archive, restore, promote on delete) so the views are tested against the contract the real store
   keeps. `ListProjects` stays one flat list in name order; the tree is built where it is drawn.

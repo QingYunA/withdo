@@ -332,10 +332,12 @@ project's own active tasks, never those of its sub-projects. A sub-project is ma
 sub-project…` in its parent's menu (below): the **New project** sheet opens titled `New sub-project`,
 with `Under adhd-todo` under the title, and the project it makes hangs under that one and opens.
 Archiving a project archives its sub-projects with it, so no row is left under a project that is not
-shown; restoring one brings back the projects above and below it. Deleting a project leaves its
-sub-projects standing as top-level projects, as deleting a task leaves its subtasks. A sub-project is
-made by hand only: it is a project like any other, so it takes a repository from the sheet if the
-user gives it one.
+shown. Restoring it brings back the project and the sub-projects archived by that same action; what
+was archived earlier stays archived, and the project above is left as it is. A sub-project whose
+parent is still archived reads as a top-level project, and comes back under its parent when that one
+is restored. Deleting a project leaves its sub-projects standing as top-level projects, as deleting a
+task leaves its subtasks. A sub-project is made by hand only: it is a project like any other, so it
+takes a repository from the sheet if the user gives it one.
 
 - **`+` on Projects** opens the **New project** sheet (below). It is a 24 pt target in `text.tertiary`,
   `text.secondary` on hover.
