@@ -10,7 +10,7 @@ import (
 
 // withStore runs a test on a store with nothing in it; the test moves the store's clock through
 // clock.
-func withStore(t *testing.T, run func(t *testing.T, s Store, clock *time.Time)) {
+func withStore(t *testing.T, run func(t *testing.T, s *Real, clock *time.Time)) {
 	t.Helper()
 	now := fixedNow()
 	run(t, openDemo(t, func() time.Time { return now }, false), &now)
@@ -51,7 +51,7 @@ func wantTitles(t *testing.T, what string, got []Task, want ...string) {
 }
 
 func TestCreateProject(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		plain := must[Project](t)(s.CreateProject(NewProject{Name: "  Garden "}))
 		if plain.Name != "Garden" || plain.RepoSlug != "" {
 			t.Errorf("plain = %+v", plain)
@@ -83,7 +83,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestRenameArchiveAndRestoreProject(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "Old", RepoSlug: "acme/old"}))
 		task := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "in it", ProjectID: IntPtr(p.ID), Status: Doing, Source: SourceAgent}))
 
@@ -133,7 +133,7 @@ func TestRenameArchiveAndRestoreProject(t *testing.T) {
 }
 
 func TestDeleteProjectAndTask(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "Doomed"}))
 		keep := must[Project](t)(s.CreateProject(NewProject{Name: "Keep"}))
 		must[Milestone](t)(s.CreateMilestone(p.ID, "v1", nil))
@@ -172,7 +172,7 @@ func TestDeleteProjectAndTask(t *testing.T) {
 }
 
 func TestMovingATaskBetweenProjectsAndTheInbox(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		a := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		b := must[Project](t)(s.CreateProject(NewProject{Name: "B"}))
 		ms := must[Milestone](t)(s.CreateMilestone(a.ID, "v1", nil))
@@ -197,7 +197,7 @@ func TestMovingATaskBetweenProjectsAndTheInbox(t *testing.T) {
 }
 
 func TestMilestones(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, _ *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, _ *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		due := time.Date(2026, 12, 1, 0, 0, 0, 0, time.Local)
 		m := must[Milestone](t)(s.CreateMilestone(p.ID, " v1 ", &due))
@@ -245,7 +245,7 @@ func TestMilestones(t *testing.T) {
 }
 
 func TestSearchTasks(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, clock *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, clock *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		add := func(in CreateTaskInput, patch Patch) {
 			task := must[Task](t)(s.CreateTask(in))
@@ -288,7 +288,7 @@ func TestSearchFindsAPullRequestNumber(t *testing.T) {
 }
 
 func TestLogbook(t *testing.T) {
-	withStore(t, func(t *testing.T, s Store, clock *time.Time) {
+	withStore(t, func(t *testing.T, s *Real, clock *time.Time) {
 		p := must[Project](t)(s.CreateProject(NewProject{Name: "A"}))
 		a := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "a", ProjectID: IntPtr(p.ID)}))
 		b := must[Task](t)(s.CreateTask(CreateTaskInput{Title: "b"}))

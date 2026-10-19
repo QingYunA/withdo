@@ -34,10 +34,13 @@ func (l *ledger) done(id int, title string, when time.Time, by string) *Task {
 }
 
 func (l *ledger) build(p Period) Summary {
+	snap := snapshotWith(l.tasks, func(id int) *Report { return l.agent[id] }, func(id int) *Report { return l.github[id] })
+	for i := range snap.Tasks {
+		snap.Tasks[i].ProjectID = IntPtr(1)
+	}
+	snap.Projects = []Project{{ID: 1, Name: "adhd-todo"}}
 	return BuildSummary(SummaryInput{
-		Now: friday, Period: p, Tasks: l.tasks,
-		Latest: func(id int) *Report { return l.agent[id] }, Event: func(id int) *Report { return l.github[id] },
-		ProjectName: func(*int) string { return "adhd-todo" },
+		Now: friday, Period: p, Snapshot: snap,
 		Agent: func(name string) string {
 			if strings.Contains(name, "claude") {
 				return "Claude Code"

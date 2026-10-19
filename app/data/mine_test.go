@@ -9,46 +9,17 @@ import (
 // mineInputOf is what the views hand to BuildMine, read from a fake store.
 func mineInputOf(t *testing.T, f *Real) MineInput {
 	t.Helper()
-	tasks, err := f.ListTasks(Filter{})
+	snap, err := f.Snapshot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	projects, _ := f.ListProjects()
-	names := map[int]string{}
-	for _, p := range projects {
-		names[p.ID] = p.Name
-	}
-	return MineInput{
-		Now: f.Now(), Tasks: tasks,
-		Latest: func(id int) *Report { return firstReport(f, id, false) },
-		Event:  func(id int) *Report { return firstReport(f, id, true) },
-		ProjectName: func(id *int) string {
-			if id == nil {
-				return ""
-			}
-			return names[*id]
-		},
-	}
+	return MineInput{Now: f.Now(), Snapshot: snap}
 }
 
 // mineOf builds the Mine screen of a fake store the way the views do.
 func mineOf(t *testing.T, f *Real) Mine {
 	t.Helper()
 	return BuildMine(mineInputOf(t, f))
-}
-
-// firstReport is the newest report of a task from GitHub or, with github false, from an agent.
-func firstReport(f *Real, id int, github bool) *Report {
-	d, err := f.GetTask(id)
-	if err != nil {
-		return nil
-	}
-	for _, r := range d.Reports {
-		if (r.Agent == GitHubAgent) == github {
-			return &r
-		}
-	}
-	return nil
 }
 
 func titles(items []Item) []string {

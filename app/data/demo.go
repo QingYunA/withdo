@@ -191,9 +191,9 @@ func (r *Real) exec(query string, args ...any) {
 }
 
 func (r *Real) mustTask(id int) Task {
-	d, err := r.GetTask(id)
-	if err != nil {
-		panic(err)
+	t, err := r.core.GetTask(r.ctx(), int64(id))
+	if err != nil || t == nil {
+		panic(fmt.Sprintf("task %d: %v", id, err))
 	}
-	return d.Task
+	return fromTask(*t)
 }

@@ -3,28 +3,13 @@ package views
 import (
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 )
 
-// overviewTask describes a task the way Store.Overview does: with its latest report and whether
-// it has gone stale.
-func (a *App) overviewTask(t data.Task) data.OverviewTask {
-	ot := data.OverviewTask{Task: t}
-	since := t.UpdatedAt
-	if r := a.latestReport(t.ID); r != nil {
-		ot.LatestReport = r
-		since = r.CreatedAt
-	}
-	ot.HoursSinceActivity = int(a.Now().Sub(since) / time.Hour)
-	stale := a.snap.overview.StaleHours
-	if stale == 0 {
-		stale = data.DefaultStaleHours
-	}
-	ot.Stale = ot.HoursSinceActivity >= stale
-	return ot
-}
+// overviewTask describes a task the way the overview does: with its latest report and whether it
+// has gone stale.
+func (a *App) overviewTask(t data.Task) data.OverviewTask { return a.snap.all.Describe(t, a.Now()) }
 
 // withTilde writes a path under the home folder the way the user writes it: "~/Library/…".
 func withTilde(path, home string) string {

@@ -68,21 +68,6 @@ func (r *Real) RestoreProject(id int) error {
 	return err
 }
 
-func (r *Real) ListArchivedProjects() ([]Project, error) {
-	ps, err := r.core.ListProjects(r.ctx())
-	if err != nil {
-		return nil, err
-	}
-	var out []Project
-	for _, p := range ps {
-		if p.ArchivedAt != nil {
-			out = append(out, fromProject(p))
-		}
-	}
-	sortByName(out)
-	return out, nil
-}
-
 func (r *Real) DeleteProject(id int) (Removed, error) {
 	d, err := r.core.DeleteProject(r.ctx(), int64(id))
 	if err == nil {
@@ -213,21 +198,6 @@ func fromTasks(ts []domain.Task) []Task {
 		out[i] = fromTask(t)
 	}
 	return out
-}
-
-// archivedIDs are the projects hidden from the lists.
-func (r *Real) archivedIDs() (map[int]bool, error) {
-	ps, err := r.core.ListProjects(r.ctx())
-	if err != nil {
-		return nil, err
-	}
-	out := map[int]bool{}
-	for _, p := range ps {
-		if p.ArchivedAt != nil {
-			out[int(p.ID)] = true
-		}
-	}
-	return out, nil
 }
 
 func sortByName(ps []Project) {

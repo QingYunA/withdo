@@ -336,15 +336,11 @@ func TestRealFeedsTheNowScreen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tasks, _ := r.ListTasks(Filter{})
-	latest := func(id int) *Report {
-		d, err := r.GetTask(id)
-		if err != nil || len(d.Reports) == 0 {
-			return nil
-		}
-		return &d.Reports[0]
+	snap, err := r.Snapshot()
+	if err != nil {
+		t.Fatal(err)
 	}
-	n := BuildMine(MineInput{Now: now, Tasks: tasks, Latest: latest, ProjectName: func(*int) string { return "rocket" }})
+	n := BuildMine(MineInput{Now: now, Snapshot: snap})
 	if len(n.FromAgents) != 2 || len(n.Today) != 1 || len(n.Later) != 0 {
 		t.Fatalf("sections %d/%d/%d: %+v", len(n.FromAgents), len(n.Today), len(n.Later), n.FromAgents)
 	}

@@ -102,8 +102,8 @@ func TestScreensChineseRealShape(t *testing.T) {
 		app := NewApp(r, &recorder{}, testConfig())
 		app.Now = func() time.Time { return now }
 		zhShot(t, "mine-real-zh-"+a.suffix+".png", app, a.dark, nil)
-		ps, _ := r.ListProjects()
-		for _, p := range ps {
+		snap, _ := r.Snapshot()
+		for _, p := range snap.Projects {
 			if p.RepoSlug != "" {
 				zhShot(t, "project-real-zh-"+a.suffix+".png", app, a.dark, toProject(p.ID))
 			}

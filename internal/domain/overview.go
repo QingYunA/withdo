@@ -66,13 +66,22 @@ func (c *Core) GetOverview(ctx context.Context, opts OverviewOptions) (*Overview
 	if err != nil {
 		return nil, err
 	}
+	ids := make([]int64, len(tasks))
+	for i, t := range tasks {
+		ids[i] = t.ID
+	}
+	latest, err := c.latestReportsOf(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("latest reports: %w", err)
+	}
 	byProject := map[int64][]OverviewTask{}
 	var inbox []OverviewTask
 	for _, t := range tasks {
-		ot, err := c.describe(ctx, t, now, staleHours)
-		if err != nil {
-			return nil, err
+		var report *Report
+		if r, ok := latest[t.ID]; ok {
+			report = &r
 		}
+		ot := describe(t, report, now, staleHours)
 		if t.ProjectID == nil {
 			inbox = append(inbox, ot)
 		} else {
@@ -133,11 +142,7 @@ func (c *Core) activeProjectIndex(ctx context.Context) (map[int64]Project, error
 	return out, nil
 }
 
-func (c *Core) describe(ctx context.Context, t Task, now time.Time, staleHours float64) (OverviewTask, error) {
-	report, err := latestReport(ctx, c.db, t.ID)
-	if err != nil {
-		return OverviewTask{}, fmt.Errorf("latest report of task %d: %w", t.ID, err)
-	}
+func describe(t Task, report *Report, now time.Time, staleHours float64) OverviewTask {
 	since := t.UpdatedAt
 	if report != nil {
 		since = report.CreatedAt
@@ -146,7 +151,7 @@ func (c *Core) describe(ctx context.Context, t Task, now time.Time, staleHours f
 	if at, err := time.Parse(time.RFC3339Nano, since); err == nil {
 		hours = int64(math.Floor(now.Sub(at).Hours()))
 	}
-	return OverviewTask{Task: t, LatestReport: report, HoursSinceActivity: hours, Stale: float64(hours) >= staleHours}, nil
+	return OverviewTask{Task: t, LatestReport: report, HoursSinceActivity: hours, Stale: float64(hours) >= staleHours}
 }
 
 func sortByAttention(list []OverviewTask) []OverviewTask {

@@ -106,15 +106,16 @@ type App struct {
 	completing      map[int]completion
 }
 
-// snapshot is the data the views read, loaded on every change rather than every frame.
+// snapshot is the data the views read, loaded on every change rather than every frame. The fields
+// but all and images are views of all, for the code that reads them by name.
 type snapshot struct {
 	loaded     bool
 	err        error
+	all        data.Snapshot
 	projects   []data.Project
 	categories []data.Category
 	archived   []data.Project
 	tasks      []data.Task
-	overview   data.Overview
 	milestones map[int][]data.Milestone
 	details    map[int]data.TaskDetail
 	images     map[int][]data.TaskImage // the pictures of the tasks that have any
@@ -130,35 +131,20 @@ func NewApp(store data.Store, act Actions, cfg Config) *App {
 // Refresh reloads the snapshot. The shell calls it, on the main thread, when the store reports a
 // change.
 func (a *App) Refresh() {
-	s := snapshot{milestones: map[int][]data.Milestone{}, details: map[int]data.TaskDetail{}}
-	var err error
-	if s.projects, err = a.Store.ListProjects(); err == nil {
-		if s.tasks, err = a.Store.ListTasks(data.Filter{}); err == nil {
-			s.overview, err = a.Store.Overview()
-		}
-	}
+	var s snapshot
+	all, err := a.Store.Snapshot()
 	if err == nil {
-		s.archived, err = a.Store.ListArchivedProjects()
-	}
-	if err == nil {
-		s.categories, err = a.Store.ListCategories()
-	}
-	for _, p := range s.projects {
-		if ms, merr := a.Store.ListMilestones(p.ID); merr == nil {
-			s.milestones[p.ID] = ms
+		s = snapshot{
+			all: all, projects: all.Projects, categories: all.Categories, archived: all.Archived,
+			tasks: all.Tasks, milestones: all.Milestones, details: all.Details(),
 		}
-	}
-	for _, t := range s.tasks {
-		if d, derr := a.Store.GetTask(t.ID); derr == nil {
-			s.details[t.ID] = d
+		ids := make([]int, len(s.tasks))
+		for i, t := range s.tasks {
+			ids[i] = t.ID
 		}
-	}
-	ids := make([]int, len(s.tasks))
-	for i, t := range s.tasks {
-		ids[i] = t.ID
-	}
-	if imgs, ierr := a.Store.ImagesOf(ids); ierr == nil { // one read for every list and card
-		s.images = imgs
+		if imgs, ierr := a.Store.ImagesOf(ids); ierr == nil { // one read for every list and card
+			s.images = imgs
+		}
 	}
 	s.loaded, s.err = true, err
 	if err != nil {
@@ -271,15 +257,7 @@ func (a *App) builtinID(key string) int {
 // workID is the id of the built-in Work, which a task in a repository's project counts under.
 func (a *App) workID() int { return a.builtinID(data.BuiltinWork) }
 
-func (a *App) projectName(id *int) string {
-	if id == nil {
-		return ""
-	}
-	if p, ok := a.Project(*id); ok {
-		return p.Name
-	}
-	return ""
-}
+func (a *App) projectName(id *int) string { return a.snap.all.ProjectName(id) }
 
 // Err is the last store error, shown as a calm banner.
 func (a *App) Err() error { return a.snap.err }
@@ -297,30 +275,17 @@ func byPriorityThenRecent(ts []data.Task) {
 	})
 }
 
-// latestReport is the newest report an agent filed against a task, or nil. GitHub's own reports
-// are not the agent speaking, so they do not count as its last word.
-func (a *App) latestReport(id int) *data.Report { return a.firstReport(id, false) }
-
-// githubReport is the newest report GitHub filed against a task, or nil.
-func (a *App) githubReport(id int) *data.Report { return a.firstReport(id, true) }
-
-func (a *App) firstReport(id int, github bool) *data.Report {
-	for _, r := range a.snap.details[id].Reports { // newest first
-		if (r.Agent == data.GitHubAgent) == github {
-			return &r
-		}
-	}
-	return nil
-}
+// latestReport is the newest report an agent filed against a task, githubReport the newest GitHub
+// filed; see data.TaskDetail.
+func (a *App) latestReport(id int) *data.Report { return a.snap.all.LatestReport(id) }
+func (a *App) githubReport(id int) *data.Report { return a.snap.all.GitHubReport(id) }
 
 // mineInput is what the Mine and Agents screens are built from. A task that was just marked done
 // stays in its place while its completion plays.
 func (a *App) mineInput() data.MineInput {
-	tasks := a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
-	return data.MineInput{
-		Now: a.Now(), Tasks: tasks, StaleHours: a.snap.overview.StaleHours,
-		Latest: a.latestReport, Event: a.githubReport, ProjectName: a.projectName,
-	}
+	snap := a.snap.all
+	snap.Tasks = a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
+	return data.MineInput{Snapshot: snap, Now: a.Now()}
 }
 
 // buildMine sorts the snapshot into the sections of the Mine screen, without the handed-over rows

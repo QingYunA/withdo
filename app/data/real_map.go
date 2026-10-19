@@ -135,14 +135,6 @@ func fromOverview(o *domain.Overview) Overview {
 	return out
 }
 
-func toStatuses(in []Status) []domain.Status {
-	out := make([]domain.Status, len(in))
-	for i, s := range in {
-		out[i] = domain.Status(s)
-	}
-	return out
-}
-
 // nullableText maps the UI's "empty clears" convention onto a domain patch value.
 func nullableText(s *string) domain.Nullable[string] {
 	switch {

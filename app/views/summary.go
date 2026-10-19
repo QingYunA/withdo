@@ -88,9 +88,7 @@ func (m *Main) summaryFor(now time.Time) *summaryView {
 		kinds = para.stored.Kinds
 	}
 	sum := data.BuildSummary(data.SummaryInput{
-		Now: now, Period: p, Tasks: m.app.snap.tasks,
-		Latest: m.app.latestReport, Event: m.app.githubReport, ProjectName: m.app.projectName,
-		Kinds: kinds, Agent: agentKey,
+		Now: now, Period: p, Snapshot: m.app.snap.all, Kinds: kinds, Agent: agentKey,
 	})
 	v := &summaryView{period: p, key: key, sum: sum, tasks: sum.Tasks(), who: map[int]int{}}
 	for i, person := range sum.People {
