@@ -7347,15 +7347,17 @@ func (msgs Messages) NotifyDayNothingBody() string {
 // SelectButton says "Select"
 // in the language the app shows.
 //
-// Button at the right of a page title that turns on select mode, where a
-// click ticks a row instead of opening it.
+// Button at the right of a page title, or of a column's header on a project
+// page, that turns on select mode, where a click ticks a row instead of
+// opening it.
 func SelectButton() string { return In(i18n.Locale()).SelectButton() }
 
 // SelectButton says "Select"
 // in the language of msgs.
 //
-// Button at the right of a page title that turns on select mode, where a
-// click ticks a row instead of opening it.
+// Button at the right of a page title, or of a column's header on a project
+// page, that turns on select mode, where a click ticks a row instead of
+// opening it.
 func (msgs Messages) SelectButton() string {
 	return Catalog.Format(msgs.locale, "selectButton", nil)
 }
