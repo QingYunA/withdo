@@ -27,8 +27,9 @@ type Place struct {
 	TaskID    int // PlaceTask
 	// Day is the selected day of the Calendar page as "2006-01-02" (PlaceCalendar).
 	Day string
-	// Category is the Work or Life page of Mine (PlaceNow): a new task is in that category.
-	Category Category
+	// Category is the id of the category page of Mine (PlaceNow), 0 for Mine as a whole: a new
+	// task is in that category.
+	Category int
 }
 
 // Assistant is the built-in agent behind the composer, as the UI sees it.
@@ -48,6 +49,14 @@ type Assistant interface {
 	// the model of the composer; the conversation is not touched. It blocks, so the UI calls it off
 	// its thread. The error's text is fit to show.
 	Summarize(ctx context.Context, req SummaryRequest) (SummaryText, error)
+	// DescribeRecent writes a sentence, and for a merged pull request a category, for each item of
+	// a repository on the Recent changes page, keyed by item number. Like the two below it makes one
+	// request to the model of the composer, blocks, and leaves the conversation alone.
+	DescribeRecent(ctx context.Context, req RecentDescribeRequest) (map[int]RecentNote, error)
+	// WriteRecentLines writes the two or three sentences at the head of a repository's section.
+	WriteRecentLines(ctx context.Context, req RecentLinesRequest) (string, error)
+	// ExplainRecent says what an item did, why and where, from its description and file names.
+	ExplainRecent(ctx context.Context, req RecentExplainRequest) (RecentExplanation, error)
 }
 
 // Attachment is a picture sent with a request, already prepared by PrepareImage. It lives in

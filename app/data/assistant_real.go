@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/agent"
-	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/providers"
 )
 
@@ -30,7 +29,7 @@ func (a *AgentAssistant) Ask(ctx context.Context, text string, place Place, pict
 	for i, p := range pictures {
 		images[i] = agent.Image{MIME: p.MIME, Data: p.Data}
 	}
-	res, err := a.Agent.Ask(ctx, text, agent.Scope{Kind: agent.ScopeKind(place.Kind), ProjectID: int64(place.ProjectID), TaskID: int64(place.TaskID), Day: place.Day, Category: domain.Category(place.Category)}, images...)
+	res, err := a.Agent.Ask(ctx, text, agent.Scope{Kind: agent.ScopeKind(place.Kind), ProjectID: int64(place.ProjectID), TaskID: int64(place.TaskID), Day: place.Day, CategoryID: int64(place.Category)}, images...)
 	out := Reply{Text: res.Reply}
 	for _, r := range res.Receipts {
 		out.Receipts = append(out.Receipts, Receipt{

@@ -1,0 +1,68 @@
+# The icons the category picker shows before anything is typed (docs/plans/m9-custom-categories.md).
+#
+#   [Group]                  a section of the picker, in this order
+#   name keyword keyword     a pixelarticons icon and the Chinese words its search also matches
+#       ............         optional: 12 indented rows of "." and "#" that replace the library's
+#       ...                  drawing with a hand-drawn bitmap (use it where the conversion to
+#                            12 x 12 distorts the icon; a curated icon that neither converts nor
+#                            has rows stops scripts/category-icons.sh)
+#
+# The rest of the library stays searchable by its English name; run scripts/category-icons.sh after
+# editing this file.
+
+[Work]
+briefcase 工作 公事 上班
+laptop 电脑 笔记本 办公
+clipboard-note 清单 任务 文档
+building 公司 办公楼 大楼
+target 目标 靶心 计划
+
+[Study]
+library 图书馆 书 阅读 学习
+notes 笔记 记录 写作 作业
+lightbulb 灵感 想法 创意
+calculator 计算 数学 计算器
+backpack 书包 上学 学校
+
+[Health]
+heart 健康 爱心 心脏
+thermometer 体温 看病 医疗
+leaf 植物 饮食 环保
+fire 运动 健身 热量
+potion 药 药水 保健
+
+[Money]
+wallet 钱包 钱 理财
+banknote 钞票 现金 收入
+credit-card 信用卡 银行卡 支付
+receipt 账单 发票 小票
+trending-up 投资 股票 增长
+
+[Home]
+home 家 房子 居家
+smart-home 智能家居 家电 装修
+shopping-cart 购物 买菜 超市
+door-closed 门 搬家 租房
+dog 宠物 狗 遛狗
+
+[Hobby]
+music 音乐 听歌 唱歌
+video 视频 影视 电影
+joystick 游戏 游戏机 手柄
+colors-swatch 绘画 画画 艺术 调色
+chess 棋 桌游 下棋
+coffee 咖啡 饮品 下午茶
+
+[Travel]
+suitcase 行李 旅行 出差
+car 汽车 开车 出行
+bus 公交 巴士 通勤
+tree-pine 露营 野营 户外 森林
+map 地图 探索 导航 指南
+
+[People]
+avatar-circle 个人 用户 朋友
+message 消息 聊天 沟通
+mail 邮件 信 邮箱
+megaphone 通知 公告 宣传
+laugh 开心 笑 娱乐

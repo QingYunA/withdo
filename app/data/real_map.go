@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/pixmap"
 )
 
 // parseTime reads a stored timestamp. A malformed one maps to the zero time rather than an error:
@@ -39,6 +40,15 @@ func intPtr(v *int64) *int {
 	return &n
 }
 
+// nonZero is the id as a pointer for the domain layer, nil for 0.
+func nonZero(v int) *int64 {
+	if v == 0 {
+		return nil
+	}
+	n := int64(v)
+	return &n
+}
+
 func int64Ptr(v *int) *int64 {
 	if v == nil {
 		return nil
@@ -66,7 +76,7 @@ func fromTask(t domain.Task) Task {
 	out := Task{
 		ID: int(t.ID), ParentID: intPtr(t.ParentID), ProjectID: intPtr(t.ProjectID), MilestoneID: intPtr(t.MilestoneID),
 		Title: t.Title, Notes: str(t.Notes), Status: Status(t.Status), Priority: Priority(t.Priority),
-		Category: fromCategory(t.Category), DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
+		CategoryID: intOf(t.CategoryID), DueAt: parseTimePtr(t.DueAt), RemindAt: parseTimePtr(t.RemindAt), RemindedAt: parseTimePtr(t.RemindedAt),
 		Branch: str(t.Branch), PRURL: str(t.PRURL), Source: Source(t.Source),
 		CreatedAt: parseTime(t.CreatedAt), UpdatedAt: parseTime(t.UpdatedAt), CompletedAt: parseTimePtr(t.CompletedAt),
 		HandedTo: str(t.HandedTo), HandedAt: parseTimePtr(t.HandedAt),
@@ -79,20 +89,16 @@ func fromTask(t domain.Task) Task {
 	return out
 }
 
-func fromCategory(c *domain.Category) Category {
-	if c == nil {
-		return ""
+func intOf(v *int64) int {
+	if v == nil {
+		return 0
 	}
-	return Category(*c)
+	return int(*v)
 }
 
-// toCategory maps "" to no category.
-func toCategory(c Category) *domain.Category {
-	if c == "" {
-		return nil
-	}
-	dc := domain.Category(c)
-	return &dc
+func fromCategory(c domain.Category) Category {
+	icon, _ := pixmap.ParseGrid(c.Icon) // a malformed row draws nothing rather than blanking the sidebar
+	return Category{ID: int(c.ID), Builtin: c.Builtin, Name: c.Name, Icon: icon, Color: c.Color, Position: c.Position}
 }
 
 func fromReport(r domain.Report) Report {
@@ -180,9 +186,9 @@ func toPatch(p Patch) domain.TaskPatch {
 		out.Priority = &pr
 	}
 	if p.Category != nil {
-		out.Category = domain.Clear[domain.Category]()
-		if *p.Category != "" {
-			out.Category = domain.Set(domain.Category(*p.Category))
+		out.CategoryID = domain.Clear[int64]()
+		if *p.Category != 0 {
+			out.CategoryID = domain.Set(int64(*p.Category))
 		}
 	}
 	if p.ProjectID != nil {

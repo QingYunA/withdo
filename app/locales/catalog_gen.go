@@ -7583,3 +7583,1467 @@ func HandOffCopied() string { return In(i18n.Locale()).HandOffCopied() }
 func (msgs Messages) HandOffCopied() string {
 	return Catalog.Format(msgs.locale, "handOffCopied", nil)
 }
+
+// MenuFindCategory says "Find a category"
+// in the language the app shows.
+//
+// Placeholder of the filter field on the Category page of the task menu.
+func MenuFindCategory() string { return In(i18n.Locale()).MenuFindCategory() }
+
+// MenuFindCategory says "Find a category"
+// in the language of msgs.
+//
+// Placeholder of the filter field on the Category page of the task menu.
+func (msgs Messages) MenuFindCategory() string {
+	return Catalog.Format(msgs.locale, "menuFindCategory", nil)
+}
+
+// MenuNoCategoryMatch says "No category matches"
+// in the language the app shows.
+//
+// Shown on the Category page of the task menu when the filter matches no
+// category.
+func MenuNoCategoryMatch() string { return In(i18n.Locale()).MenuNoCategoryMatch() }
+
+// MenuNoCategoryMatch says "No category matches"
+// in the language of msgs.
+//
+// Shown on the Category page of the task menu when the filter matches no
+// category.
+func (msgs Messages) MenuNoCategoryMatch() string {
+	return Catalog.Format(msgs.locale, "menuNoCategoryMatch", nil)
+}
+
+// CategoryNew says "New category…"
+// in the language the app shows.
+//
+// Item of the context menu of Mine and of its categories in the sidebar,
+// and last choice of the Category page of the task menu: opens the New
+// category sheet.
+func CategoryNew() string { return In(i18n.Locale()).CategoryNew() }
+
+// CategoryNew says "New category…"
+// in the language of msgs.
+//
+// Item of the context menu of Mine and of its categories in the sidebar,
+// and last choice of the Category page of the task menu: opens the New
+// category sheet.
+func (msgs Messages) CategoryNew() string {
+	return Catalog.Format(msgs.locale, "categoryNew", nil)
+}
+
+// CategoryEdit says "Edit category…"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: opens the Edit
+// category sheet.
+func CategoryEdit() string { return In(i18n.Locale()).CategoryEdit() }
+
+// CategoryEdit says "Edit category…"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: opens the Edit
+// category sheet.
+func (msgs Messages) CategoryEdit() string {
+	return Catalog.Format(msgs.locale, "categoryEdit", nil)
+}
+
+// CategoryMoveUp says "Move up"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// higher in the list under Mine.
+func CategoryMoveUp() string { return In(i18n.Locale()).CategoryMoveUp() }
+
+// CategoryMoveUp says "Move up"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// higher in the list under Mine.
+func (msgs Messages) CategoryMoveUp() string {
+	return Catalog.Format(msgs.locale, "categoryMoveUp", nil)
+}
+
+// CategoryMoveDown says "Move down"
+// in the language the app shows.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// lower in the list under Mine.
+func CategoryMoveDown() string { return In(i18n.Locale()).CategoryMoveDown() }
+
+// CategoryMoveDown says "Move down"
+// in the language of msgs.
+//
+// Item of the context menu of a category in the sidebar: puts it one place
+// lower in the list under Mine.
+func (msgs Messages) CategoryMoveDown() string {
+	return Catalog.Format(msgs.locale, "categoryMoveDown", nil)
+}
+
+// CategoryDelete says "Delete category"
+// in the language the app shows.
+//
+// Item of the context menu of a category the user made: deletes it at once,
+// its tasks become unsorted, and an Undo toast follows.
+func CategoryDelete() string { return In(i18n.Locale()).CategoryDelete() }
+
+// CategoryDelete says "Delete category"
+// in the language of msgs.
+//
+// Item of the context menu of a category the user made: deletes it at once,
+// its tasks become unsorted, and an Undo toast follows.
+func (msgs Messages) CategoryDelete() string {
+	return Catalog.Format(msgs.locale, "categoryDelete", nil)
+}
+
+// CategorySheetNew says "New category"
+// in the language the app shows.
+//
+// Title of the sheet that makes a category.
+func CategorySheetNew() string { return In(i18n.Locale()).CategorySheetNew() }
+
+// CategorySheetNew says "New category"
+// in the language of msgs.
+//
+// Title of the sheet that makes a category.
+func (msgs Messages) CategorySheetNew() string {
+	return Catalog.Format(msgs.locale, "categorySheetNew", nil)
+}
+
+// CategorySheetEdit says "Edit category"
+// in the language the app shows.
+//
+// Title of the sheet that changes a category's name, icon and color.
+func CategorySheetEdit() string { return In(i18n.Locale()).CategorySheetEdit() }
+
+// CategorySheetEdit says "Edit category"
+// in the language of msgs.
+//
+// Title of the sheet that changes a category's name, icon and color.
+func (msgs Messages) CategorySheetEdit() string {
+	return Catalog.Format(msgs.locale, "categorySheetEdit", nil)
+}
+
+// CategoryFieldIcon says "Icon"
+// in the language the app shows.
+//
+// Label of the line of the category sheet that previews the icon at three
+// sizes.
+func CategoryFieldIcon() string { return In(i18n.Locale()).CategoryFieldIcon() }
+
+// CategoryFieldIcon says "Icon"
+// in the language of msgs.
+//
+// Label of the line of the category sheet that previews the icon at three
+// sizes.
+func (msgs Messages) CategoryFieldIcon() string {
+	return Catalog.Format(msgs.locale, "categoryFieldIcon", nil)
+}
+
+// CategoryFieldColor says "Color"
+// in the language the app shows.
+//
+// Label of the row of color swatches in the category sheet.
+func CategoryFieldColor() string { return In(i18n.Locale()).CategoryFieldColor() }
+
+// CategoryFieldColor says "Color"
+// in the language of msgs.
+//
+// Label of the row of color swatches in the category sheet.
+func (msgs Messages) CategoryFieldColor() string {
+	return Catalog.Format(msgs.locale, "categoryFieldColor", nil)
+}
+
+// CategorySearchIcons says "Search icons"
+// in the language the app shows.
+//
+// Placeholder and accessibility label of the field of the category sheet
+// that searches the icon library by name.
+func CategorySearchIcons() string { return In(i18n.Locale()).CategorySearchIcons() }
+
+// CategorySearchIcons says "Search icons"
+// in the language of msgs.
+//
+// Placeholder and accessibility label of the field of the category sheet
+// that searches the icon library by name.
+func (msgs Messages) CategorySearchIcons() string {
+	return Catalog.Format(msgs.locale, "categorySearchIcons", nil)
+}
+
+// CategoryNoIconMatch says "No icon matches"
+// in the language the app shows.
+//
+// Shown in the icon area of the category sheet when the search finds no
+// icon.
+func CategoryNoIconMatch() string { return In(i18n.Locale()).CategoryNoIconMatch() }
+
+// CategoryNoIconMatch says "No icon matches"
+// in the language of msgs.
+//
+// Shown in the icon area of the category sheet when the search finds no
+// icon.
+func (msgs Messages) CategoryNoIconMatch() string {
+	return Catalog.Format(msgs.locale, "categoryNoIconMatch", nil)
+}
+
+// CategoryBuiltinKeepsName says "Work and Life keep their names."
+// in the language the app shows.
+//
+// Line under the read-only name of the built-in categories in the Edit
+// category sheet.
+func CategoryBuiltinKeepsName() string { return In(i18n.Locale()).CategoryBuiltinKeepsName() }
+
+// CategoryBuiltinKeepsName says "Work and Life keep their names."
+// in the language of msgs.
+//
+// Line under the read-only name of the built-in categories in the Edit
+// category sheet.
+func (msgs Messages) CategoryBuiltinKeepsName() string {
+	return Catalog.Format(msgs.locale, "categoryBuiltinKeepsName", nil)
+}
+
+// CategoryErrLong says "A name can have at most {count} characters."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when the name is too long.
+func CategoryErrLong(count int) string { return In(i18n.Locale()).CategoryErrLong(count) }
+
+// CategoryErrLong says "A name can have at most {count} characters."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when the name is too long.
+func (msgs Messages) CategoryErrLong(count int) string {
+	return Catalog.Format(msgs.locale, "categoryErrLong", map[string]any{"count": count})
+}
+
+// CategoryErrTaken says "A category with that name already exists."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when another category has the
+// name, whatever the case.
+func CategoryErrTaken() string { return In(i18n.Locale()).CategoryErrTaken() }
+
+// CategoryErrTaken says "A category with that name already exists."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when another category has the
+// name, whatever the case.
+func (msgs Messages) CategoryErrTaken() string {
+	return Catalog.Format(msgs.locale, "categoryErrTaken", nil)
+}
+
+// CategoryErrTooMany says "There can be at most {count} categories. Delete one first."
+// in the language the app shows.
+//
+// Under the name field of the category sheet when the list is full.
+func CategoryErrTooMany(count int) string { return In(i18n.Locale()).CategoryErrTooMany(count) }
+
+// CategoryErrTooMany says "There can be at most {count} categories. Delete one first."
+// in the language of msgs.
+//
+// Under the name field of the category sheet when the list is full.
+func (msgs Messages) CategoryErrTooMany(count int) string {
+	return Catalog.Format(msgs.locale, "categoryErrTooMany", map[string]any{"count": count})
+}
+
+// CategoryDeleted says "Deleted “{name}” · {count, plural, one {# task} other {# tasks}} unsorted"
+// in the language the app shows.
+//
+// Toast after a category was deleted; its Undo puts the category back.
+// count is how many tasks became unsorted, at least 1.
+func CategoryDeleted(name string, count int) string {
+	return In(i18n.Locale()).CategoryDeleted(name, count)
+}
+
+// CategoryDeleted says "Deleted “{name}” · {count, plural, one {# task} other {# tasks}} unsorted"
+// in the language of msgs.
+//
+// Toast after a category was deleted; its Undo puts the category back.
+// count is how many tasks became unsorted, at least 1.
+func (msgs Messages) CategoryDeleted(name string, count int) string {
+	return Catalog.Format(msgs.locale, "categoryDeleted", map[string]any{"name": name, "count": count})
+}
+
+// CategoryDeletedEmpty says "Deleted “{name}”"
+// in the language the app shows.
+//
+// Toast after a category with no tasks was deleted; its Undo puts it back.
+func CategoryDeletedEmpty(name string) string { return In(i18n.Locale()).CategoryDeletedEmpty(name) }
+
+// CategoryDeletedEmpty says "Deleted “{name}”"
+// in the language of msgs.
+//
+// Toast after a category with no tasks was deleted; its Undo puts it back.
+func (msgs Messages) CategoryDeletedEmpty(name string) string {
+	return Catalog.Format(msgs.locale, "categoryDeletedEmpty", map[string]any{"name": name})
+}
+
+// A11yCategoryColor says "Color: {name}"
+// in the language the app shows.
+//
+// Accessibility label of a color swatch of the category sheet.
+func A11yCategoryColor(name string) string { return In(i18n.Locale()).A11yCategoryColor(name) }
+
+// A11yCategoryColor says "Color: {name}"
+// in the language of msgs.
+//
+// Accessibility label of a color swatch of the category sheet.
+func (msgs Messages) A11yCategoryColor(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryColor", map[string]any{"name": name})
+}
+
+// CategoryColorIndigo says "Indigo"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorIndigo() string { return In(i18n.Locale()).CategoryColorIndigo() }
+
+// CategoryColorIndigo says "Indigo"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorIndigo() string {
+	return Catalog.Format(msgs.locale, "categoryColorIndigo", nil)
+}
+
+// CategoryColorYellow says "Yellow"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorYellow() string { return In(i18n.Locale()).CategoryColorYellow() }
+
+// CategoryColorYellow says "Yellow"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorYellow() string {
+	return Catalog.Format(msgs.locale, "categoryColorYellow", nil)
+}
+
+// CategoryColorGreen says "Green"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorGreen() string { return In(i18n.Locale()).CategoryColorGreen() }
+
+// CategoryColorGreen says "Green"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorGreen() string {
+	return Catalog.Format(msgs.locale, "categoryColorGreen", nil)
+}
+
+// CategoryColorRed says "Red"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorRed() string { return In(i18n.Locale()).CategoryColorRed() }
+
+// CategoryColorRed says "Red"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorRed() string {
+	return Catalog.Format(msgs.locale, "categoryColorRed", nil)
+}
+
+// CategoryColorBlue says "Blue"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorBlue() string { return In(i18n.Locale()).CategoryColorBlue() }
+
+// CategoryColorBlue says "Blue"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorBlue() string {
+	return Catalog.Format(msgs.locale, "categoryColorBlue", nil)
+}
+
+// CategoryColorPink says "Pink"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorPink() string { return In(i18n.Locale()).CategoryColorPink() }
+
+// CategoryColorPink says "Pink"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorPink() string {
+	return Catalog.Format(msgs.locale, "categoryColorPink", nil)
+}
+
+// CategoryColorTeal says "Teal"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorTeal() string { return In(i18n.Locale()).CategoryColorTeal() }
+
+// CategoryColorTeal says "Teal"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorTeal() string {
+	return Catalog.Format(msgs.locale, "categoryColorTeal", nil)
+}
+
+// CategoryColorOrange says "Orange"
+// in the language the app shows.
+//
+// Name of a category color, for the swatch's accessibility label.
+func CategoryColorOrange() string { return In(i18n.Locale()).CategoryColorOrange() }
+
+// CategoryColorOrange says "Orange"
+// in the language of msgs.
+//
+// Name of a category color, for the swatch's accessibility label.
+func (msgs Messages) CategoryColorOrange() string {
+	return Catalog.Format(msgs.locale, "categoryColorOrange", nil)
+}
+
+// CategoryGroupWork says "Work"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupWork() string { return In(i18n.Locale()).CategoryGroupWork() }
+
+// CategoryGroupWork says "Work"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupWork() string {
+	return Catalog.Format(msgs.locale, "categoryGroupWork", nil)
+}
+
+// CategoryGroupStudy says "Study"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupStudy() string { return In(i18n.Locale()).CategoryGroupStudy() }
+
+// CategoryGroupStudy says "Study"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupStudy() string {
+	return Catalog.Format(msgs.locale, "categoryGroupStudy", nil)
+}
+
+// CategoryGroupHealth says "Health"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHealth() string { return In(i18n.Locale()).CategoryGroupHealth() }
+
+// CategoryGroupHealth says "Health"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHealth() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHealth", nil)
+}
+
+// CategoryGroupMoney says "Money"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupMoney() string { return In(i18n.Locale()).CategoryGroupMoney() }
+
+// CategoryGroupMoney says "Money"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupMoney() string {
+	return Catalog.Format(msgs.locale, "categoryGroupMoney", nil)
+}
+
+// CategoryGroupHome says "Home"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHome() string { return In(i18n.Locale()).CategoryGroupHome() }
+
+// CategoryGroupHome says "Home"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHome() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHome", nil)
+}
+
+// CategoryGroupHobby says "Hobby"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupHobby() string { return In(i18n.Locale()).CategoryGroupHobby() }
+
+// CategoryGroupHobby says "Hobby"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupHobby() string {
+	return Catalog.Format(msgs.locale, "categoryGroupHobby", nil)
+}
+
+// CategoryGroupTravel says "Travel"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupTravel() string { return In(i18n.Locale()).CategoryGroupTravel() }
+
+// CategoryGroupTravel says "Travel"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupTravel() string {
+	return Catalog.Format(msgs.locale, "categoryGroupTravel", nil)
+}
+
+// CategoryGroupPeople says "People"
+// in the language the app shows.
+//
+// Heading of a group of icons in the category sheet.
+func CategoryGroupPeople() string { return In(i18n.Locale()).CategoryGroupPeople() }
+
+// CategoryGroupPeople says "People"
+// in the language of msgs.
+//
+// Heading of a group of icons in the category sheet.
+func (msgs Messages) CategoryGroupPeople() string {
+	return Catalog.Format(msgs.locale, "categoryGroupPeople", nil)
+}
+
+// NavRecent says "Recent changes"
+// in the language the app shows.
+//
+// Sidebar item and title of the page that shows what each project merged
+// lately.
+func NavRecent() string { return In(i18n.Locale()).NavRecent() }
+
+// NavRecent says "Recent changes"
+// in the language of msgs.
+//
+// Sidebar item and title of the page that shows what each project merged
+// lately.
+func (msgs Messages) NavRecent() string {
+	return Catalog.Format(msgs.locale, "navRecent", nil)
+}
+
+// SettingsPages says "Pages"
+// in the language the app shows.
+//
+// Header of the group in Settings > General with the switches of the pages
+// that are off until asked for.
+func SettingsPages() string { return In(i18n.Locale()).SettingsPages() }
+
+// SettingsPages says "Pages"
+// in the language of msgs.
+//
+// Header of the group in Settings > General with the switches of the pages
+// that are off until asked for.
+func (msgs Messages) SettingsPages() string {
+	return Catalog.Format(msgs.locale, "settingsPages", nil)
+}
+
+// SettingsRecentChanges says "Recent changes"
+// in the language the app shows.
+//
+// Title of the switch row that turns the Recent changes page on.
+func SettingsRecentChanges() string { return In(i18n.Locale()).SettingsRecentChanges() }
+
+// SettingsRecentChanges says "Recent changes"
+// in the language of msgs.
+//
+// Title of the switch row that turns the Recent changes page on.
+func (msgs Messages) SettingsRecentChanges() string {
+	return Catalog.Format(msgs.locale, "settingsRecentChanges", nil)
+}
+
+// SettingsRecentChangesMeta says "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in."
+// in the language the app shows.
+//
+// Second line of the Recent changes switch row in Settings.
+func SettingsRecentChangesMeta() string { return In(i18n.Locale()).SettingsRecentChangesMeta() }
+
+// SettingsRecentChangesMeta says "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in."
+// in the language of msgs.
+//
+// Second line of the Recent changes switch row in Settings.
+func (msgs Messages) SettingsRecentChangesMeta() string {
+	return Catalog.Format(msgs.locale, "settingsRecentChangesMeta", nil)
+}
+
+// SettingsRecentChangesSwitch says "Show the Recent changes page"
+// in the language the app shows.
+//
+// Accessibility label of the Recent changes switch.
+func SettingsRecentChangesSwitch() string { return In(i18n.Locale()).SettingsRecentChangesSwitch() }
+
+// SettingsRecentChangesSwitch says "Show the Recent changes page"
+// in the language of msgs.
+//
+// Accessibility label of the Recent changes switch.
+func (msgs Messages) SettingsRecentChangesSwitch() string {
+	return Catalog.Format(msgs.locale, "settingsRecentChangesSwitch", nil)
+}
+
+// SettingsRecentNoGH says "gh isn't installed yet: run brew install gh"
+// in the language the app shows.
+//
+// Second line of the Recent changes switch row, in the warning color, when
+// the switch is on and the GitHub CLI is missing.
+func SettingsRecentNoGH() string { return In(i18n.Locale()).SettingsRecentNoGH() }
+
+// SettingsRecentNoGH says "gh isn't installed yet: run brew install gh"
+// in the language of msgs.
+//
+// Second line of the Recent changes switch row, in the warning color, when
+// the switch is on and the GitHub CLI is missing.
+func (msgs Messages) SettingsRecentNoGH() string {
+	return Catalog.Format(msgs.locale, "settingsRecentNoGH", nil)
+}
+
+// SettingsRecentSignedOut says "gh isn't signed in yet: run gh auth login"
+// in the language the app shows.
+//
+// Second line of the Recent changes switch row, in the warning color, when
+// the switch is on and the GitHub CLI is signed out.
+func SettingsRecentSignedOut() string { return In(i18n.Locale()).SettingsRecentSignedOut() }
+
+// SettingsRecentSignedOut says "gh isn't signed in yet: run gh auth login"
+// in the language of msgs.
+//
+// Second line of the Recent changes switch row, in the warning color, when
+// the switch is on and the GitHub CLI is signed out.
+func (msgs Messages) SettingsRecentSignedOut() string {
+	return Catalog.Format(msgs.locale, "settingsRecentSignedOut", nil)
+}
+
+// RecentAllRepos says "All repositories"
+// in the language the app shows.
+//
+// First item of the repository pop-up on the Recent changes page: every
+// project's repository.
+func RecentAllRepos() string { return In(i18n.Locale()).RecentAllRepos() }
+
+// RecentAllRepos says "All repositories"
+// in the language of msgs.
+//
+// First item of the repository pop-up on the Recent changes page: every
+// project's repository.
+func (msgs Messages) RecentAllRepos() string {
+	return Catalog.Format(msgs.locale, "recentAllRepos", nil)
+}
+
+// RecentRepoPopUp says "Repository"
+// in the language the app shows.
+//
+// Accessibility label of the repository pop-up on the Recent changes page.
+func RecentRepoPopUp() string { return In(i18n.Locale()).RecentRepoPopUp() }
+
+// RecentRepoPopUp says "Repository"
+// in the language of msgs.
+//
+// Accessibility label of the repository pop-up on the Recent changes page.
+func (msgs Messages) RecentRepoPopUp() string {
+	return Catalog.Format(msgs.locale, "recentRepoPopUp", nil)
+}
+
+// RecentDays7 says "7 days"
+// in the language the app shows.
+//
+// Segment on the Recent changes page: the last seven days.
+func RecentDays7() string { return In(i18n.Locale()).RecentDays7() }
+
+// RecentDays7 says "7 days"
+// in the language of msgs.
+//
+// Segment on the Recent changes page: the last seven days.
+func (msgs Messages) RecentDays7() string {
+	return Catalog.Format(msgs.locale, "recentDays7", nil)
+}
+
+// RecentDays30 says "30 days"
+// in the language the app shows.
+//
+// Segment on the Recent changes page: the last thirty days.
+func RecentDays30() string { return In(i18n.Locale()).RecentDays30() }
+
+// RecentDays30 says "30 days"
+// in the language of msgs.
+//
+// Segment on the Recent changes page: the last thirty days.
+func (msgs Messages) RecentDays30() string {
+	return Catalog.Format(msgs.locale, "recentDays30", nil)
+}
+
+// RecentUpdatedNow says "Updated just now"
+// in the language the app shows.
+//
+// At the right of the Recent changes header: the page was read from GitHub
+// under a minute ago. A click reads it again.
+func RecentUpdatedNow() string { return In(i18n.Locale()).RecentUpdatedNow() }
+
+// RecentUpdatedNow says "Updated just now"
+// in the language of msgs.
+//
+// At the right of the Recent changes header: the page was read from GitHub
+// under a minute ago. A click reads it again.
+func (msgs Messages) RecentUpdatedNow() string {
+	return Catalog.Format(msgs.locale, "recentUpdatedNow", nil)
+}
+
+// RecentUpdatedMinutes says "Updated {n} min ago"
+// in the language the app shows.
+//
+// At the right of the Recent changes header: how many minutes ago the page
+// was read from GitHub.
+func RecentUpdatedMinutes(n int) string { return In(i18n.Locale()).RecentUpdatedMinutes(n) }
+
+// RecentUpdatedMinutes says "Updated {n} min ago"
+// in the language of msgs.
+//
+// At the right of the Recent changes header: how many minutes ago the page
+// was read from GitHub.
+func (msgs Messages) RecentUpdatedMinutes(n int) string {
+	return Catalog.Format(msgs.locale, "recentUpdatedMinutes", map[string]any{"n": n})
+}
+
+// RecentUpdatedHours says "Updated {n} h ago"
+// in the language the app shows.
+//
+// At the right of the Recent changes header: how many hours ago the page
+// was read from GitHub.
+func RecentUpdatedHours(n int) string { return In(i18n.Locale()).RecentUpdatedHours(n) }
+
+// RecentUpdatedHours says "Updated {n} h ago"
+// in the language of msgs.
+//
+// At the right of the Recent changes header: how many hours ago the page
+// was read from GitHub.
+func (msgs Messages) RecentUpdatedHours(n int) string {
+	return Catalog.Format(msgs.locale, "recentUpdatedHours", map[string]any{"n": n})
+}
+
+// RecentUpdating says "Updating…"
+// in the language the app shows.
+//
+// At the right of the Recent changes header while GitHub is being read.
+func RecentUpdating() string { return In(i18n.Locale()).RecentUpdating() }
+
+// RecentUpdating says "Updating…"
+// in the language of msgs.
+//
+// At the right of the Recent changes header while GitHub is being read.
+func (msgs Messages) RecentUpdating() string {
+	return Catalog.Format(msgs.locale, "recentUpdating", nil)
+}
+
+// RecentLoading says "Reading GitHub…"
+// in the language the app shows.
+//
+// Quiet line on the Recent changes page before the first answer from
+// GitHub.
+func RecentLoading() string { return In(i18n.Locale()).RecentLoading() }
+
+// RecentLoading says "Reading GitHub…"
+// in the language of msgs.
+//
+// Quiet line on the Recent changes page before the first answer from
+// GitHub.
+func (msgs Messages) RecentLoading() string {
+	return Catalog.Format(msgs.locale, "recentLoading", nil)
+}
+
+// RecentCountMerged says "{n} merged"
+// in the language the app shows.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many pull requests merged.
+func RecentCountMerged(n int) string { return In(i18n.Locale()).RecentCountMerged(n) }
+
+// RecentCountMerged says "{n} merged"
+// in the language of msgs.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many pull requests merged.
+func (msgs Messages) RecentCountMerged(n int) string {
+	return Catalog.Format(msgs.locale, "recentCountMerged", map[string]any{"n": n})
+}
+
+// RecentCountOpen says "{n} open"
+// in the language the app shows.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many pull requests are open.
+func RecentCountOpen(n int) string { return In(i18n.Locale()).RecentCountOpen(n) }
+
+// RecentCountOpen says "{n} open"
+// in the language of msgs.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many pull requests are open.
+func (msgs Messages) RecentCountOpen(n int) string {
+	return Catalog.Format(msgs.locale, "recentCountOpen", map[string]any{"n": n})
+}
+
+// RecentCountIssues says "{count, plural, one {# issue} other {# issues}}"
+// in the language the app shows.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many issues were opened or closed.
+func RecentCountIssues(count int) string { return In(i18n.Locale()).RecentCountIssues(count) }
+
+// RecentCountIssues says "{count, plural, one {# issue} other {# issues}}"
+// in the language of msgs.
+//
+// Part of the right end of a project's head on the Recent changes page: how
+// many issues were opened or closed.
+func (msgs Messages) RecentCountIssues(count int) string {
+	return Catalog.Format(msgs.locale, "recentCountIssues", map[string]any{"count": count})
+}
+
+// RecentWritten says "These {days} days · written by the assistant"
+// in the language the app shows.
+//
+// Small header of the assistant's lines at the head of a project's section
+// on the Recent changes page.
+func RecentWritten(days int) string { return In(i18n.Locale()).RecentWritten(days) }
+
+// RecentWritten says "These {days} days · written by the assistant"
+// in the language of msgs.
+//
+// Small header of the assistant's lines at the head of a project's section
+// on the Recent changes page.
+func (msgs Messages) RecentWritten(days int) string {
+	return Catalog.Format(msgs.locale, "recentWritten", map[string]any{"days": days})
+}
+
+// RecentRewriteNew says "More was merged since this was written"
+// in the language the app shows.
+//
+// Tooltip of the dot beside Rewrite on the Recent changes page.
+func RecentRewriteNew() string { return In(i18n.Locale()).RecentRewriteNew() }
+
+// RecentRewriteNew says "More was merged since this was written"
+// in the language of msgs.
+//
+// Tooltip of the dot beside Rewrite on the Recent changes page.
+func (msgs Messages) RecentRewriteNew() string {
+	return Catalog.Format(msgs.locale, "recentRewriteNew", nil)
+}
+
+// RecentGroupNew says "New"
+// in the language the app shows.
+//
+// Group of the Recent changes page: merged pull requests that add
+// something.
+func RecentGroupNew() string { return In(i18n.Locale()).RecentGroupNew() }
+
+// RecentGroupNew says "New"
+// in the language of msgs.
+//
+// Group of the Recent changes page: merged pull requests that add
+// something.
+func (msgs Messages) RecentGroupNew() string {
+	return Catalog.Format(msgs.locale, "recentGroupNew", nil)
+}
+
+// RecentGroupFixed says "Fixed"
+// in the language the app shows.
+//
+// Group of the Recent changes page: merged pull requests that fix
+// something.
+func RecentGroupFixed() string { return In(i18n.Locale()).RecentGroupFixed() }
+
+// RecentGroupFixed says "Fixed"
+// in the language of msgs.
+//
+// Group of the Recent changes page: merged pull requests that fix
+// something.
+func (msgs Messages) RecentGroupFixed() string {
+	return Catalog.Format(msgs.locale, "recentGroupFixed", nil)
+}
+
+// RecentGroupOpen says "Open"
+// in the language the app shows.
+//
+// Group of the Recent changes page: pull requests that are still open.
+func RecentGroupOpen() string { return In(i18n.Locale()).RecentGroupOpen() }
+
+// RecentGroupOpen says "Open"
+// in the language of msgs.
+//
+// Group of the Recent changes page: pull requests that are still open.
+func (msgs Messages) RecentGroupOpen() string {
+	return Catalog.Format(msgs.locale, "recentGroupOpen", nil)
+}
+
+// RecentGroupIssues says "Issues"
+// in the language the app shows.
+//
+// Group of the Recent changes page: issues opened or closed in the period.
+func RecentGroupIssues() string { return In(i18n.Locale()).RecentGroupIssues() }
+
+// RecentGroupIssues says "Issues"
+// in the language of msgs.
+//
+// Group of the Recent changes page: issues opened or closed in the period.
+func (msgs Messages) RecentGroupIssues() string {
+	return Catalog.Format(msgs.locale, "recentGroupIssues", nil)
+}
+
+// RecentMore says "{count} more: {topics}"
+// in the language the app shows.
+//
+// Folded line of the merged pull requests that are neither new nor fixes
+// (docs, versions, screenshots). A click unfolds them.
+func RecentMore(count int, topics string) string { return In(i18n.Locale()).RecentMore(count, topics) }
+
+// RecentMore says "{count} more: {topics}"
+// in the language of msgs.
+//
+// Folded line of the merged pull requests that are neither new nor fixes
+// (docs, versions, screenshots). A click unfolds them.
+func (msgs Messages) RecentMore(count int, topics string) string {
+	return Catalog.Format(msgs.locale, "recentMore", map[string]any{"count": count, "topics": topics})
+}
+
+// RecentMoreNoTopics says "{count} more"
+// in the language the app shows.
+//
+// Folded line of the other merged pull requests when nothing says what they
+// are.
+func RecentMoreNoTopics(count int) string { return In(i18n.Locale()).RecentMoreNoTopics(count) }
+
+// RecentMoreNoTopics says "{count} more"
+// in the language of msgs.
+//
+// Folded line of the other merged pull requests when nothing says what they
+// are.
+func (msgs Messages) RecentMoreNoTopics(count int) string {
+	return Catalog.Format(msgs.locale, "recentMoreNoTopics", map[string]any{"count": count})
+}
+
+// RecentTopicSep says ", "
+// in the language the app shows.
+//
+// Between the topics of the folded line of other pull requests.
+func RecentTopicSep() string { return In(i18n.Locale()).RecentTopicSep() }
+
+// RecentTopicSep says ", "
+// in the language of msgs.
+//
+// Between the topics of the folded line of other pull requests.
+func (msgs Messages) RecentTopicSep() string {
+	return Catalog.Format(msgs.locale, "recentTopicSep", nil)
+}
+
+// RecentToday says "today"
+// in the language the app shows.
+//
+// When something happened, in the meta line of a pull request or an issue.
+func RecentToday() string { return In(i18n.Locale()).RecentToday() }
+
+// RecentToday says "today"
+// in the language of msgs.
+//
+// When something happened, in the meta line of a pull request or an issue.
+func (msgs Messages) RecentToday() string {
+	return Catalog.Format(msgs.locale, "recentToday", nil)
+}
+
+// RecentYesterday says "yesterday"
+// in the language the app shows.
+//
+// When something happened, in the meta line of a pull request or an issue.
+func RecentYesterday() string { return In(i18n.Locale()).RecentYesterday() }
+
+// RecentYesterday says "yesterday"
+// in the language of msgs.
+//
+// When something happened, in the meta line of a pull request or an issue.
+func (msgs Messages) RecentYesterday() string {
+	return Catalog.Format(msgs.locale, "recentYesterday", nil)
+}
+
+// RecentDaysAgo says "{n} days ago"
+// in the language the app shows.
+//
+// When something happened, in the meta line of a pull request or an issue:
+// two to six days.
+func RecentDaysAgo(n int) string { return In(i18n.Locale()).RecentDaysAgo(n) }
+
+// RecentDaysAgo says "{n} days ago"
+// in the language of msgs.
+//
+// When something happened, in the meta line of a pull request or an issue:
+// two to six days.
+func (msgs Messages) RecentDaysAgo(n int) string {
+	return Catalog.Format(msgs.locale, "recentDaysAgo", map[string]any{"n": n})
+}
+
+// RecentOpenMinutes says "open for {n, plural, one {# minute} other {# minutes}}"
+// in the language the app shows.
+//
+// Meta line of an open pull request: how long it has been open.
+func RecentOpenMinutes(n int) string { return In(i18n.Locale()).RecentOpenMinutes(n) }
+
+// RecentOpenMinutes says "open for {n, plural, one {# minute} other {# minutes}}"
+// in the language of msgs.
+//
+// Meta line of an open pull request: how long it has been open.
+func (msgs Messages) RecentOpenMinutes(n int) string {
+	return Catalog.Format(msgs.locale, "recentOpenMinutes", map[string]any{"n": n})
+}
+
+// RecentOpenHours says "open for {n, plural, one {# hour} other {# hours}}"
+// in the language the app shows.
+//
+// Meta line of an open pull request: how long it has been open.
+func RecentOpenHours(n int) string { return In(i18n.Locale()).RecentOpenHours(n) }
+
+// RecentOpenHours says "open for {n, plural, one {# hour} other {# hours}}"
+// in the language of msgs.
+//
+// Meta line of an open pull request: how long it has been open.
+func (msgs Messages) RecentOpenHours(n int) string {
+	return Catalog.Format(msgs.locale, "recentOpenHours", map[string]any{"n": n})
+}
+
+// RecentOpenDays says "open for {n, plural, one {# day} other {# days}}"
+// in the language the app shows.
+//
+// Meta line of an open pull request: how long it has been open.
+func RecentOpenDays(n int) string { return In(i18n.Locale()).RecentOpenDays(n) }
+
+// RecentOpenDays says "open for {n, plural, one {# day} other {# days}}"
+// in the language of msgs.
+//
+// Meta line of an open pull request: how long it has been open.
+func (msgs Messages) RecentOpenDays(n int) string {
+	return Catalog.Format(msgs.locale, "recentOpenDays", map[string]any{"n": n})
+}
+
+// RecentIssueNew says "New"
+// in the language the app shows.
+//
+// Start of the meta line of an issue opened in the period.
+func RecentIssueNew() string { return In(i18n.Locale()).RecentIssueNew() }
+
+// RecentIssueNew says "New"
+// in the language of msgs.
+//
+// Start of the meta line of an issue opened in the period.
+func (msgs Messages) RecentIssueNew() string {
+	return Catalog.Format(msgs.locale, "recentIssueNew", nil)
+}
+
+// RecentIssueSolved says "Solved"
+// in the language the app shows.
+//
+// Start of the meta line of an issue closed in the period.
+func RecentIssueSolved() string { return In(i18n.Locale()).RecentIssueSolved() }
+
+// RecentIssueSolved says "Solved"
+// in the language of msgs.
+//
+// Start of the meta line of an issue closed in the period.
+func (msgs Messages) RecentIssueSolved() string {
+	return Catalog.Format(msgs.locale, "recentIssueSolved", nil)
+}
+
+// RecentFixedBy says "fixed by #{number}"
+// in the language the app shows.
+//
+// Meta line of a solved issue: the pull request that closed it.
+func RecentFixedBy(number int) string { return In(i18n.Locale()).RecentFixedBy(number) }
+
+// RecentFixedBy says "fixed by #{number}"
+// in the language of msgs.
+//
+// Meta line of a solved issue: the pull request that closed it.
+func (msgs Messages) RecentFixedBy(number int) string {
+	return Catalog.Format(msgs.locale, "recentFixedBy", map[string]any{"number": number})
+}
+
+// RecentWhoYouLower says "you"
+// in the language the app shows.
+//
+// Who opened an issue, in its meta line: the user.
+func RecentWhoYouLower() string { return In(i18n.Locale()).RecentWhoYouLower() }
+
+// RecentWhoYouLower says "you"
+// in the language of msgs.
+//
+// Who opened an issue, in its meta line: the user.
+func (msgs Messages) RecentWhoYouLower() string {
+	return Catalog.Format(msgs.locale, "recentWhoYouLower", nil)
+}
+
+// RecentExplainSource says "Read the description and the changed files"
+// in the language the app shows.
+//
+// Small line above the assistant's explanation of a pull request.
+func RecentExplainSource() string { return In(i18n.Locale()).RecentExplainSource() }
+
+// RecentExplainSource says "Read the description and the changed files"
+// in the language of msgs.
+//
+// Small line above the assistant's explanation of a pull request.
+func (msgs Messages) RecentExplainSource() string {
+	return Catalog.Format(msgs.locale, "recentExplainSource", nil)
+}
+
+// RecentExplainSourceIssue says "Read the description"
+// in the language the app shows.
+//
+// Small line above the assistant's explanation of an issue.
+func RecentExplainSourceIssue() string { return In(i18n.Locale()).RecentExplainSourceIssue() }
+
+// RecentExplainSourceIssue says "Read the description"
+// in the language of msgs.
+//
+// Small line above the assistant's explanation of an issue.
+func (msgs Messages) RecentExplainSourceIssue() string {
+	return Catalog.Format(msgs.locale, "recentExplainSourceIssue", nil)
+}
+
+// RecentExplainReading says "Reading it…"
+// in the language the app shows.
+//
+// Quiet line under an item of the Recent changes page while the assistant
+// writes its explanation.
+func RecentExplainReading() string { return In(i18n.Locale()).RecentExplainReading() }
+
+// RecentExplainReading says "Reading it…"
+// in the language of msgs.
+//
+// Quiet line under an item of the Recent changes page while the assistant
+// writes its explanation.
+func (msgs Messages) RecentExplainReading() string {
+	return Catalog.Format(msgs.locale, "recentExplainReading", nil)
+}
+
+// RecentExplainFailed says "Couldn't write the explanation."
+// in the language the app shows.
+//
+// Quiet line under an item of the Recent changes page when the explanation
+// failed.
+func RecentExplainFailed() string { return In(i18n.Locale()).RecentExplainFailed() }
+
+// RecentExplainFailed says "Couldn't write the explanation."
+// in the language of msgs.
+//
+// Quiet line under an item of the Recent changes page when the explanation
+// failed.
+func (msgs Messages) RecentExplainFailed() string {
+	return Catalog.Format(msgs.locale, "recentExplainFailed", nil)
+}
+
+// RecentWhat says "What"
+// in the language the app shows.
+//
+// First point of the assistant's explanation of a pull request or an issue.
+func RecentWhat() string { return In(i18n.Locale()).RecentWhat() }
+
+// RecentWhat says "What"
+// in the language of msgs.
+//
+// First point of the assistant's explanation of a pull request or an issue.
+func (msgs Messages) RecentWhat() string {
+	return Catalog.Format(msgs.locale, "recentWhat", nil)
+}
+
+// RecentWhy says "Why"
+// in the language the app shows.
+//
+// Second point of the assistant's explanation of a pull request or an
+// issue.
+func RecentWhy() string { return In(i18n.Locale()).RecentWhy() }
+
+// RecentWhy says "Why"
+// in the language of msgs.
+//
+// Second point of the assistant's explanation of a pull request or an
+// issue.
+func (msgs Messages) RecentWhy() string {
+	return Catalog.Format(msgs.locale, "recentWhy", nil)
+}
+
+// RecentWhere says "Where"
+// in the language the app shows.
+//
+// Third point of the assistant's explanation of a pull request: which parts
+// of the code it touched.
+func RecentWhere() string { return In(i18n.Locale()).RecentWhere() }
+
+// RecentWhere says "Where"
+// in the language of msgs.
+//
+// Third point of the assistant's explanation of a pull request: which parts
+// of the code it touched.
+func (msgs Messages) RecentWhere() string {
+	return Catalog.Format(msgs.locale, "recentWhere", nil)
+}
+
+// RecentOpenOnGitHub says "Open on GitHub"
+// in the language the app shows.
+//
+// Link under an item of the Recent changes page that opens it in the
+// browser.
+func RecentOpenOnGitHub() string { return In(i18n.Locale()).RecentOpenOnGitHub() }
+
+// RecentOpenOnGitHub says "Open on GitHub"
+// in the language of msgs.
+//
+// Link under an item of the Recent changes page that opens it in the
+// browser.
+func (msgs Messages) RecentOpenOnGitHub() string {
+	return Catalog.Format(msgs.locale, "recentOpenOnGitHub", nil)
+}
+
+// RecentTask says "Task #{id}"
+// in the language the app shows.
+//
+// Link under an item of the Recent changes page that opens the task whose
+// pull request it is.
+func RecentTask(id int) string { return In(i18n.Locale()).RecentTask(id) }
+
+// RecentTask says "Task #{id}"
+// in the language of msgs.
+//
+// Link under an item of the Recent changes page that opens the task whose
+// pull request it is.
+func (msgs Messages) RecentTask(id int) string {
+	return Catalog.Format(msgs.locale, "recentTask", map[string]any{"id": id})
+}
+
+// RecentEmptyTitle says "Nothing changed in the last {days} days"
+// in the language the app shows.
+//
+// Title of the Recent changes page when nothing happened in the period.
+func RecentEmptyTitle(days int) string { return In(i18n.Locale()).RecentEmptyTitle(days) }
+
+// RecentEmptyTitle says "Nothing changed in the last {days} days"
+// in the language of msgs.
+//
+// Title of the Recent changes page when nothing happened in the period.
+func (msgs Messages) RecentEmptyTitle(days int) string {
+	return Catalog.Format(msgs.locale, "recentEmptyTitle", map[string]any{"days": days})
+}
+
+// RecentNoReposTitle says "No project has a repository yet"
+// in the language the app shows.
+//
+// Title of the Recent changes page when no project has a GitHub repository.
+func RecentNoReposTitle() string { return In(i18n.Locale()).RecentNoReposTitle() }
+
+// RecentNoReposTitle says "No project has a repository yet"
+// in the language of msgs.
+//
+// Title of the Recent changes page when no project has a GitHub repository.
+func (msgs Messages) RecentNoReposTitle() string {
+	return Catalog.Format(msgs.locale, "recentNoReposTitle", nil)
+}
+
+// RecentNoReposBody says "Give a project its GitHub repository and its changes will be listed here."
+// in the language the app shows.
+//
+// Body of the Recent changes page when no project has a GitHub repository.
+func RecentNoReposBody() string { return In(i18n.Locale()).RecentNoReposBody() }
+
+// RecentNoReposBody says "Give a project its GitHub repository and its changes will be listed here."
+// in the language of msgs.
+//
+// Body of the Recent changes page when no project has a GitHub repository.
+func (msgs Messages) RecentNoReposBody() string {
+	return Catalog.Format(msgs.locale, "recentNoReposBody", nil)
+}
+
+// RecentNoGHTitle says "Install the GitHub CLI first"
+// in the language the app shows.
+//
+// Title of the Recent changes page when gh is missing.
+func RecentNoGHTitle() string { return In(i18n.Locale()).RecentNoGHTitle() }
+
+// RecentNoGHTitle says "Install the GitHub CLI first"
+// in the language of msgs.
+//
+// Title of the Recent changes page when gh is missing.
+func (msgs Messages) RecentNoGHTitle() string {
+	return Catalog.Format(msgs.locale, "recentNoGHTitle", nil)
+}
+
+// RecentSignedOutTitle says "Sign in to the GitHub CLI first"
+// in the language the app shows.
+//
+// Title of the Recent changes page when gh is signed out.
+func RecentSignedOutTitle() string { return In(i18n.Locale()).RecentSignedOutTitle() }
+
+// RecentSignedOutTitle says "Sign in to the GitHub CLI first"
+// in the language of msgs.
+//
+// Title of the Recent changes page when gh is signed out.
+func (msgs Messages) RecentSignedOutTitle() string {
+	return Catalog.Format(msgs.locale, "recentSignedOutTitle", nil)
+}
+
+// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:"
+// in the language the app shows.
+//
+// Body of the Recent changes page when gh is missing or signed out; the
+// command to run follows.
+func RecentGHBody() string { return In(i18n.Locale()).RecentGHBody() }
+
+// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:"
+// in the language of msgs.
+//
+// Body of the Recent changes page when gh is missing or signed out; the
+// command to run follows.
+func (msgs Messages) RecentGHBody() string {
+	return Catalog.Format(msgs.locale, "recentGHBody", nil)
+}
+
+// RecentSectionFailed says "Couldn't read this repository. Check that gh can open it:"
+// in the language the app shows.
+//
+// One line in a project's section of the Recent changes page when GitHub
+// refused its repository; the command to copy follows.
+func RecentSectionFailed() string { return In(i18n.Locale()).RecentSectionFailed() }
+
+// RecentSectionFailed says "Couldn't read this repository. Check that gh can open it:"
+// in the language of msgs.
+//
+// One line in a project's section of the Recent changes page when GitHub
+// refused its repository; the command to copy follows.
+func (msgs Messages) RecentSectionFailed() string {
+	return Catalog.Format(msgs.locale, "recentSectionFailed", nil)
+}
+
+// RecentSectionOffline says "Couldn't reach GitHub. It will try again."
+// in the language the app shows.
+//
+// One line in a project's section of the Recent changes page when GitHub
+// could not be reached.
+func RecentSectionOffline() string { return In(i18n.Locale()).RecentSectionOffline() }
+
+// RecentSectionOffline says "Couldn't reach GitHub. It will try again."
+// in the language of msgs.
+//
+// One line in a project's section of the Recent changes page when GitHub
+// could not be reached.
+func (msgs Messages) RecentSectionOffline() string {
+	return Catalog.Format(msgs.locale, "recentSectionOffline", nil)
+}
+
+// RecentSectionError says "GitHub answered with an error: {text}"
+// in the language the app shows.
+//
+// One line in a project's section of the Recent changes page when gh failed
+// in a way that is none of the others.
+func RecentSectionError(text string) string { return In(i18n.Locale()).RecentSectionError(text) }
+
+// RecentSectionError says "GitHub answered with an error: {text}"
+// in the language of msgs.
+//
+// One line in a project's section of the Recent changes page when gh failed
+// in a way that is none of the others.
+func (msgs Messages) RecentSectionError(text string) string {
+	return Catalog.Format(msgs.locale, "recentSectionError", map[string]any{"text": text})
+}
+
+// RecentRefresh says "Update now"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the Updated … text of the Recent
+// changes page, which reads GitHub again when clicked.
+func RecentRefresh() string { return In(i18n.Locale()).RecentRefresh() }
+
+// RecentRefresh says "Update now"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the Updated … text of the Recent
+// changes page, which reads GitHub again when clicked.
+func (msgs Messages) RecentRefresh() string {
+	return Catalog.Format(msgs.locale, "recentRefresh", nil)
+}
+
+// RecentPickRepo says "Show only {repo}"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the project name in a section of the
+// Recent changes page: it picks that repository.
+func RecentPickRepo(repo string) string { return In(i18n.Locale()).RecentPickRepo(repo) }
+
+// RecentPickRepo says "Show only {repo}"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the project name in a section of the
+// Recent changes page: it picks that repository.
+func (msgs Messages) RecentPickRepo(repo string) string {
+	return Catalog.Format(msgs.locale, "recentPickRepo", map[string]any{"repo": repo})
+}
+
+// RecentToggleItem says "Show what it does: {title}"
+// in the language the app shows.
+//
+// Accessibility label of an item of the Recent changes page that unfolds
+// the explanation.
+func RecentToggleItem(title string) string { return In(i18n.Locale()).RecentToggleItem(title) }
+
+// RecentToggleItem says "Show what it does: {title}"
+// in the language of msgs.
+//
+// Accessibility label of an item of the Recent changes page that unfolds
+// the explanation.
+func (msgs Messages) RecentToggleItem(title string) string {
+	return Catalog.Format(msgs.locale, "recentToggleItem", map[string]any{"title": title})
+}
+
+// RecentFoldOther says "Show the other changes"
+// in the language the app shows.
+//
+// Accessibility label of the folded line of other pull requests.
+func RecentFoldOther() string { return In(i18n.Locale()).RecentFoldOther() }
+
+// RecentFoldOther says "Show the other changes"
+// in the language of msgs.
+//
+// Accessibility label of the folded line of other pull requests.
+func (msgs Messages) RecentFoldOther() string {
+	return Catalog.Format(msgs.locale, "recentFoldOther", nil)
+}
+
+// RecentLink says "Recent changes"
+// in the language the app shows.
+//
+// Link in the title bar of a project page that opens the Recent changes
+// page on that project's repository.
+func RecentLink() string { return In(i18n.Locale()).RecentLink() }
+
+// RecentLink says "Recent changes"
+// in the language of msgs.
+//
+// Link in the title bar of a project page that opens the Recent changes
+// page on that project's repository.
+func (msgs Messages) RecentLink() string {
+	return Catalog.Format(msgs.locale, "recentLink", nil)
+}
+
+// RecentLinkTip says "See what changed lately in this repository"
+// in the language the app shows.
+//
+// Tooltip of the Recent changes link on a project page.
+func RecentLinkTip() string { return In(i18n.Locale()).RecentLinkTip() }
+
+// RecentLinkTip says "See what changed lately in this repository"
+// in the language of msgs.
+//
+// Tooltip of the Recent changes link on a project page.
+func (msgs Messages) RecentLinkTip() string {
+	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
+}

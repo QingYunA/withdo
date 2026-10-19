@@ -1,0 +1,128 @@
+[
+ {
+  "author": {
+   "is_bot": true,
+   "login": "app/devin-ai-integration"
+  },
+  "body": "## Bug\n\nOn Windows, every code path that opens the SQLite database fails with:\n\n```\nSQL logic error: invalid uri authority: C: (1)\n```\n\n`internal/store/store.go` `dsn()` builds the URI as `url.URL{Scheme: \"file\", Path: filepath.ToSlash(abs)}`. On Windows `filepath.ToSlash` yields `C:/Users/...`, and",
+  "closedAt": null,
+  "closedByPullRequestsReferences": [
+   {
+    "number": 38,
+    "url": "https://github.com/QingYunA/adhd-todo/pull/38"
+   }
+  ],
+  "createdAt": "2026-10-19T02:07:12Z",
+  "labels": [],
+  "number": 37,
+  "state": "OPEN",
+  "title": "Windows: SQLite DSN `file://C:/...` breaks all database access (\"invalid uri authority: C:\")",
+  "updatedAt": "2026-10-19T02:07:12Z",
+  "url": "https://github.com/QingYunA/adhd-todo/issues/37"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "Follow-up to #24. `create_task` and `create_milestone` describe `due_at` / `remind_at` with `timestampDesc` (\"ISO 8601 date or datetime; a datetime without an offset is local time\"), but `update_task` still uses `nullable(timestamp(\"\"), …)` in `internal/mcpserver/tools_tasks.go`. Parsing already tre",
+  "closedAt": null,
+  "closedByPullRequestsReferences": [],
+  "createdAt": "2026-10-18T08:59:59Z",
+  "labels": [
+   {
+    "id": "LA_kwDOVIsjoc8AAAAC87wEzg",
+    "name": "documentation",
+    "description": "Improvements or additions to documentation",
+    "color": "0075ca"
+   }
+  ],
+  "number": 28,
+  "state": "OPEN",
+  "title": "update_task: due_at / remind_at descriptions don't say an offset-less datetime is local time",
+  "updatedAt": "2026-10-18T08:59:59Z",
+  "url": "https://github.com/QingYunA/adhd-todo/issues/28"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "Found in the 2026-10-18 dogfood pass (docs/dogfood/2026-10-18.md, #20).\n\nSettings > General lists the archived project `adhd-todo-mcp-visibility-018c09`. It is named after a worktree directory and has no repo slug. It looks left over from before worktrees resolved to their repo's project; nothing ne",
+  "closedAt": null,
+  "closedByPullRequestsReferences": [],
+  "createdAt": "2026-10-18T08:59:57Z",
+  "labels": [
+   {
+    "id": "LA_kwDOVIsjoc8AAAAC87wFCw",
+    "name": "question",
+    "description": "Further information is requested",
+    "color": "d876e3"
+   }
+  ],
+  "number": 27,
+  "state": "OPEN",
+  "title": "Archived project named after a worktree directory",
+  "updatedAt": "2026-10-18T08:59:57Z",
+  "url": "https://github.com/QingYunA/adhd-todo/issues/27"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "Found in the 2026-10-18 dogfood pass (docs/dogfood/2026-10-18.md, #20).\n\n`create_task {category: \"life\"}` with no project lands in the Inbox, and **Mine > Life** stays empty. Mine seems to show only the user's own tasks (`source = user`), so a life task an agent files for the user is not shown there",
+  "closedAt": null,
+  "closedByPullRequestsReferences": [],
+  "createdAt": "2026-10-18T08:59:54Z",
+  "labels": [
+   {
+    "id": "LA_kwDOVIsjoc8AAAAC87wFCw",
+    "name": "question",
+    "description": "Further information is requested",
+    "color": "d876e3"
+   }
+  ],
+  "number": 26,
+  "state": "OPEN",
+  "title": "An agent's life task lands in the Inbox, not in Mine > Life",
+  "updatedAt": "2026-10-18T08:59:54Z",
+  "url": "https://github.com/QingYunA/adhd-todo/issues/26"
+ },
+ {
+  "author": {
+   "id": "MDQ6VXNlcjQxMTc3MzEy",
+   "is_bot": false,
+   "login": "QingYunA",
+   "name": "Cyan"
+  },
+  "body": "Found in the 2026-10-18 dogfood pass (docs/dogfood/2026-10-18.md, #20).\n\nTask #103 was created by Claude Code. After another client (`dogfood-probe`) reported on the same branch, the Inspector's **From**, the board card and the Agents page all show `dogfood-probe`.\n\nThis is fine if **From** means \"w",
+  "closedAt": "2026-10-18T10:00:00Z",
+  "closedByPullRequestsReferences": [
+   {
+    "number": 41,
+    "url": "https://github.com/QingYunA/adhd-todo/pull/41"
+   }
+  ],
+  "createdAt": "2026-10-18T08:59:52Z",
+  "labels": [
+   {
+    "id": "LA_kwDOVIsjoc8AAAAC87wFCw",
+    "name": "question",
+    "description": "Further information is requested",
+    "color": "d876e3"
+   }
+  ],
+  "number": 25,
+  "state": "CLOSED",
+  "title": "\"From\" follows the latest reporter, not the agent that created the task",
+  "updatedAt": "2026-10-18T10:00:00Z",
+  "url": "https://github.com/QingYunA/adhd-todo/issues/25"
+ }
+]

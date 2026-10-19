@@ -18,5 +18,7 @@ func (e *Env) Guide() string {
 		Command string   `json:"command"`
 		Args    []string `json:"args"`
 	}{core, []string{"mcp"}}, "", "  ")
-	return strings.NewReplacer("{{CORE}}", core, "{{ENTRY}}", string(entry)).Replace(guideTemplate)
+	// A checkout on Windows may carry CRLF endings; render the guide in LF.
+	template := strings.ReplaceAll(guideTemplate, "\r\n", "\n")
+	return strings.NewReplacer("{{CORE}}", core, "{{ENTRY}}", string(entry)).Replace(template)
 }

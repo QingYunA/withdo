@@ -101,15 +101,15 @@ func (m *Main) priorityRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 // counts as work without one; the row shows only what was set.
 func (m *Main) categoryRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.propRow(c, t, "category", m.say.PropCategory(), func() {
-		label, color := m.categoryText(task.Category), t.Text
-		if task.Category == "" {
+		label, color := m.categoryText(task.CategoryID), t.Text
+		if task.CategoryID == 0 {
 			color = t.TextTertiary
 		}
 		btn := valueButton(c, t, "category").Label(m.say.A11yCategory(label))
 		if btn.Clicked() {
 			m.openMenuBelow(btn, task.ID, pageCategory)
 		}
-		btn.Children(func() { categoryValue(c, t, task.Category, color, label) })
+		btn.Children(func() { m.categoryValue(c, task.CategoryID, color) })
 	})
 }
 

@@ -8,7 +8,7 @@ own tasks, milestones and repository field; the parent only says where its row s
 
 ## P1: a project can have a parent
 
-- Migration `012_project_parent.sql`: `projects.parent_id INTEGER REFERENCES projects(id) ON DELETE
+- Migration `013_project_parent.sql`: `projects.parent_id INTEGER REFERENCES projects(id) ON DELETE
   SET NULL`, indexed. Deleting a parent promotes its sub-projects to top-level, the way a deleted
   task promotes its subtasks.
 - `domain.Project.ParentID`; `CreateProjectInput.ParentID`. `CreateProject` checks the parent exists

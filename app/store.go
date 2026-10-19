@@ -24,6 +24,9 @@ const dismissedFile = "dismissed.json"
 // prefsFile is the app's own choices from Settings, in the data folder.
 const prefsFile = "prefs.json"
 
+// recentFile is what the assistant wrote about the Recent changes page, in the data folder.
+const recentFile = "recent-changes.json"
+
 // ghRunner runs the gh CLI for the pull request poller. Tests replace it: they never reach GitHub.
 var ghRunner ghpoll.Runner = &ghpoll.ExecRunner{}
 
@@ -47,6 +50,10 @@ type backend struct {
 	dismissed data.SeenStore
 	// prefs keeps the choices made in Settings that the app keeps itself, between runs.
 	prefs data.PrefsStore
+	// recent reads the repositories for the Recent changes page, and recentCache keeps what the
+	// assistant wrote about them.
+	recent      data.Recent
+	recentCache *data.RecentCache
 }
 
 // openBackend returns the fake (with seed data, or empty) when asked for, otherwise the shared
@@ -78,16 +85,18 @@ func openReal(path string) (*backend, error) {
 	})
 	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core(), Housekeeping: closeFinishedSubtasks(r.Core())})
 	return &backend{
-		store:      r,
-		dataFolder: dir,
-		start:      func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
-		close:      func() error { poller.Stop(); return r.Close() },
-		assistant:  &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},
-		models:     &data.ProviderSettings{Provider: mgr},
-		github:     data.PollerGitHub{Poller: poller},
-		seen:       data.FileSeen{Path: filepath.Join(dir, seenFile)},
-		dismissed:  data.FileSeen{Path: filepath.Join(dir, dismissedFile)},
-		prefs:      data.FilePrefs{Path: filepath.Join(dir, prefsFile)},
+		store:       r,
+		dataFolder:  dir,
+		start:       func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
+		close:       func() error { poller.Stop(); return r.Close() },
+		assistant:   &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},
+		models:      &data.ProviderSettings{Provider: mgr},
+		github:      data.PollerGitHub{Poller: poller},
+		seen:        data.FileSeen{Path: filepath.Join(dir, seenFile)},
+		dismissed:   data.FileSeen{Path: filepath.Join(dir, dismissedFile)},
+		prefs:       data.FilePrefs{Path: filepath.Join(dir, prefsFile)},
+		recent:      data.GHRecent{Runner: ghRunner},
+		recentCache: data.NewRecentCache(filepath.Join(dir, recentFile)),
 	}, nil
 }
 
@@ -111,14 +120,16 @@ func openFake(empty bool) *backend {
 		f = data.NewFake(time.Now)
 	}
 	return &backend{
-		store:      f,
-		dataFolder: "(in-memory demo data)",
-		start:      func(stop <-chan struct{}) { go tickFake(f, stop) },
-		models:     demoModels(),
-		seen:       &data.MemorySeen{},
-		dismissed:  &data.MemorySeen{},
-		prefs:      &data.MemoryPrefs{},
-		github:     data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: time.Now()}),
+		store:       f,
+		dataFolder:  "(in-memory demo data)",
+		start:       func(stop <-chan struct{}) { go tickFake(f, stop) },
+		models:      demoModels(),
+		seen:        &data.MemorySeen{},
+		dismissed:   &data.MemorySeen{},
+		prefs:       &data.MemoryPrefs{},
+		github:      data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubReady, Account: "QingYunA", CheckedAt: time.Now()}),
+		recent:      data.DemoRecent(time.Now()),
+		recentCache: data.NewRecentCache(""),
 	}
 }
 

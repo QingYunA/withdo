@@ -16,6 +16,7 @@ type Fake struct {
 
 	mu         sync.Mutex
 	projects   []Project
+	categories []Category
 	milestones []Milestone
 	tasks      []Task
 	reports    []Report
@@ -30,14 +31,14 @@ type Fake struct {
 
 // NewFake returns a Fake filled with the seed data, relative to now().
 func NewFake(now func() time.Time) *Fake {
-	f := &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){}, nextID: 1000}
+	f := NewEmptyFake(now)
 	f.seed()
 	return f
 }
 
 // NewEmptyFake returns a Fake with no data at all, for the empty states.
 func NewEmptyFake(now func() time.Time) *Fake {
-	return &Fake{Now: now, subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){}, nextID: 1000}
+	return &Fake{Now: now, categories: builtinCategories(), subs: map[int]func(){}, remSubs: map[int]func(Reminder){}, evSubs: map[int]func(Event){}, nextID: 1000}
 }
 
 // AddProject adds a project with no tasks, for demos and tests of the empty states.
@@ -141,10 +142,14 @@ func (f *Fake) CreateTask(in CreateTaskInput) (Task, error) {
 		return Task{}, fmt.Errorf("title must not be empty")
 	}
 	f.mu.Lock()
+	if err := f.checkCategoryRef(in.Category); err != nil {
+		f.mu.Unlock()
+		return Task{}, err
+	}
 	now := f.Now()
 	t := Task{
 		ID: f.newID(), ParentID: in.ParentID, ProjectID: in.ProjectID, Title: in.Title, Status: orStatus(in.Status, Todo),
-		Priority: orPriority(in.Priority, P2), Category: in.Category, Source: orSource(in.Source, SourceUser),
+		Priority: orPriority(in.Priority, P2), CategoryID: in.Category, Source: orSource(in.Source, SourceUser),
 		CreatedAt: now, UpdatedAt: now, DueAt: in.DueAt,
 	}
 	if t.Status.Terminal() {
@@ -187,10 +192,10 @@ func (f *Fake) apply(t *Task, p Patch) error {
 		t.Priority = *p.Priority
 	}
 	if p.Category != nil {
-		if *p.Category != "" && *p.Category != CategoryWork && *p.Category != CategoryLife {
-			return fmt.Errorf("category must be work or life")
+		if err := f.checkCategoryRef(*p.Category); err != nil {
+			return err
 		}
-		t.Category = *p.Category
+		t.CategoryID = *p.Category
 	}
 	if p.Branch != nil {
 		t.Branch = *p.Branch

@@ -64,11 +64,11 @@ func restoreTask(ctx context.Context, q store.Querier, s TaskSnapshot) (*Task, e
 	}
 	if _, err := q.ExecContext(ctx, `INSERT INTO tasks (id, project_id, milestone_id, title, notes, status,
 		priority, due_at, remind_at, branch, pr_url, pr_number, source, created_at, updated_at, completed_at,
-		reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at, category)
+		reminded_at, pr_state, pr_checks, pr_review, pr_checked_at, pr_closed_seen_at, handed_to, handed_at, category_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		t.ID, t.ProjectID, t.MilestoneID, t.Title, t.Notes, t.Status, t.Priority, t.DueAt, t.RemindAt,
 		t.Branch, t.PRURL, t.PRNumber, t.Source, t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RemindedAt,
-		t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt, t.Category); err != nil {
+		t.PRState, t.PRChecks, t.PRReview, t.PRCheckedAt, t.PRClosedSeenAt, t.HandedTo, t.HandedAt, t.CategoryID); err != nil {
 		return nil, fmt.Errorf("insert task: %w", err)
 	}
 	for _, r := range s.Reports {
@@ -104,7 +104,7 @@ func relinkImage(ctx context.Context, q store.Querier, taskID int64, im TaskImag
 	return nil
 }
 
-// dropGoneRefs clears the project and milestone of t that no longer exist.
+// dropGoneRefs clears the project, milestone and category of t that no longer exist.
 func dropGoneRefs(ctx context.Context, q store.Querier, t *Task) error {
 	if t.MilestoneID != nil {
 		m, err := getMilestone(ctx, q, *t.MilestoneID)
@@ -113,6 +113,15 @@ func dropGoneRefs(ctx context.Context, q store.Querier, t *Task) error {
 		}
 		if m == nil {
 			t.MilestoneID = nil
+		}
+	}
+	if t.CategoryID != nil {
+		cat, err := getCategory(ctx, q, *t.CategoryID)
+		if err != nil {
+			return err
+		}
+		if cat == nil {
+			t.CategoryID = nil
 		}
 	}
 	if t.ProjectID != nil {

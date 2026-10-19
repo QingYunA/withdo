@@ -46,11 +46,17 @@ func SchemaVersion() int {
 // several processes at once: each step re-checks user_version under BEGIN
 // IMMEDIATE. A database newer than this build is refused.
 func Migrate(ctx context.Context, db *sql.DB) error {
+	return migrateTo(ctx, db, SchemaVersion())
+}
+
+// migrateTo applies the pending migrations up to version limit, so a test can stop short of the
+// latest and write the rows a migration has to carry over.
+func migrateTo(ctx context.Context, db *sql.DB, limit int) error {
 	all, err := migrations()
 	if err != nil {
 		return err
 	}
-	for i := range all {
+	for i := 0; i < limit && i < len(all); i++ {
 		version := i + 1
 		err := Immediate(ctx, db, func(q Querier) error {
 			current, err := userVersion(ctx, q)

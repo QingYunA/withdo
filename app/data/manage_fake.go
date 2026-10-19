@@ -278,6 +278,9 @@ func (f *Fake) RestoreTask(s TaskSnapshot) (Task, error) {
 			t.ProjectID, t.MilestoneID = nil, nil
 		}
 	}
+	if _, ok := f.category(t.CategoryID); !ok {
+		t.CategoryID = 0 // the category went meanwhile
+	}
 	f.tasks = append(f.tasks, t)
 	f.reports = append(f.reports, s.Reports...)
 	if links, ok := s.raw.([]TaskImage); ok && len(links) > 0 {

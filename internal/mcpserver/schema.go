@@ -39,7 +39,6 @@ func enum[T ~string](desc string, values []T) *jsonschema.Schema {
 
 func statusEnum(desc string) *jsonschema.Schema   { return enum(desc, domain.Statuses) }
 func priorityEnum(desc string) *jsonschema.Schema { return enum(desc, domain.Priorities) }
-func categoryEnum(desc string) *jsonschema.Schema { return enum(desc, domain.Categories) }
 
 // timestamp is an ISO 8601 date or datetime; the handler normalises it to UTC.
 func timestamp(desc string) *jsonschema.Schema { return text(desc) }

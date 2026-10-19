@@ -42,7 +42,7 @@ func TestEveryIconVariableIsSet(t *testing.T) {
 		"Trash": IconTrash, "List": IconList, "Board": IconBoard, "Back": IconBack, "Forward": IconForward,
 		"Done": IconDone, "Box": IconBox, "Status": IconStatus, "Agent": IconAgent, "Branch": IconBranch, "General": IconGeneral,
 		"Terminal": IconTerminal, "Star": IconStar, "Octocat": IconOctocat, "Flag": IconFlag, "Diamond": IconDiamond,
-		"PR": IconPR, "Send": IconSend, "Agents": IconAgents, "GitHub": IconGitHub, "Folder": IconFolder, "Work": IconWork, "Life": IconLife,
+		"PR": IconPR, "Send": IconSend, "Agents": IconAgents, "GitHub": IconGitHub, "Folder": IconFolder,
 	}
 	for name, s := range all {
 		if s == nil {

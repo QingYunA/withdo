@@ -116,6 +116,11 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
 - **Text and layout stay native.** The system font, and smooth layout motion (rows sliding, a panel
   opening, a fade): 160 ms ease-out and 220 ms spring, as above. The art is pixels; the typography and
   the layout are not.
+- **Category icons are 12 x 12 one-bit bitmaps** (M9, v24): kept in the database as 144 characters
+  (`.` and `#`), drawn as one path of 2-unit squares in the category's color (`theme.CategoryIcon`),
+  only at 12, 18 and 36 pt. The library icons of the picker are pixelarticons reduced to that grid
+  (`scripts/category-icons.sh`); an icon that does not reduce cleanly carries a hand-drawn grid.
+  The color swatches are 12 x 12 pixel circles drawn at 18 pt. See **Categories (M9)**.
 - **Floating panels may be pixel panels.** The day card's shape (v8 B): two-step corners, a 2 pt
   solid edge, a hard 4 pt shadow with no blur.
 - **Provider marks use an 18 x 18 grid** (v11): their official shapes do not
@@ -180,8 +185,9 @@ Reference: `docs/design/mockups/v4.html` (frames 2 to 4) and `v6.html` (M6b, one
 The avatars and empty-state art are sprites, PNG files under `app/theme/sprites/avatars/` (12 x 12
 pixels each, drawn as rectangles, so they stay sharp at any size; see **Sprites are files**).
 
-**Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox drawn in
-2-unit pixels, so also a 12 x 12 pixel grid), vendored under `app/theme/pixel-icons/` with their
+**Interface icons** are pixelarticons (MIT, `pixelarticons@2.4.2`; a 24-unit viewBox whose strokes
+are mostly 2 units wide, so most sit on a 12 x 12 pixel grid; some use 1-unit coordinates and do not,
+which is why the category picker reduces them, see **Categories (M9)**), vendored under `app/theme/pixel-icons/` with their
 LICENSE and a README line, embedded with `go:embed` and tinted with the color of the surrounding
 text (`fill="currentColor"`, no strokes). Provider logos are pixel marks too (see **Pixel language**). Icons
 are drawn only at whole multiples of the pixel grid: `theme.IconSmall` 12 pt (meta lines, chevrons,
@@ -195,7 +201,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconInbox` | `inbox` | `IconBoard` | `grid-3x2` |
 | `IconCalendar` | `calendar` | `IconList` | `bulletlist` |
 | `IconDone` | `checkbox-on` | `IconBack` / `IconForward` | `chevron-left` / `chevron-right` |
-| `IconBox` | `checkbox` | `IconWork` / `IconLife` | `briefcase` / `home` |
+| `IconBox` | `checkbox` | | |
 | `IconFolder` | `folder` | `IconChevron` | `chevron-down` |
 | `IconGear` | `gear` | `IconCheck` | `check` |
 | `IconSearch` | `search` | `IconClose` | `close` |
@@ -236,7 +242,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 - **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
   a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, holding the
-  category's icon in `text.secondary` (Work `IconWork`, Life `IconLife`), the agent's avatar
+  category's 12 x 12 icon in the category's own color, the agent's avatar
   (`theme.AvatarSmall`), or nothing (Unsorted), then its label, so the sub-rows' labels line up
   with each other;
   Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
@@ -305,8 +311,9 @@ it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A
 task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
 (the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
 
-**Sub-rows.** Under `Mine`: `Work` / `工作` and `Life` / `生活`, always, and `Unsorted` / `未分类`
-only while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
+**Sub-rows.** Under `Mine`: every category by its position, empty ones too (Work / `工作` and Life /
+`生活` first until the user moves them, then the user's own), and `Unsorted` / `未分类` last, only
+while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
 or finished today, named as the Agents screen names it (`claude-code` and `Claude Code` are one
 `Claude Code` row), in the order of that screen; an agent with no name is `Agent`. A sub-row is a
 normal 32 pt sidebar row (selection, hover) whose content is indented 28 pt (an icon and the gap),
@@ -317,15 +324,18 @@ on `Mine` alone. A click opens the parent's screen showing only that slice: the 
 built from the tasks of the slice, so their counts and the "Show all" links are the slice's; the
 page title is the slice's name (`Work`, `Claude Code`); the composer of a Mine slice files new tasks
 in its category (see **Category**). `⌘1` and `⌘2` still go to the whole of Mine and Agents. A
-subtask goes where its parent goes. The slice is `nav.sub`, a category or an agent's name.
+subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or `catUnsorted`) on
+Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
+Right-click: see **Categories (M9)**.
 
-**Category.** A task is `work`, `life` or none (`tasks.category`, NULL for none; migration 007).
-The category it counts under is its own, else `work` when its project is a repository, else none
+**Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
+before M9 only `work` and `life`, migration 007).
+The category it counts under is its own, else Work when its project is a repository, else none
 (Unsorted): a category set by hand or by an agent always wins. The assistant classifies the tasks it
 writes from the words and leaves it out when unsure or when the task goes into a repository's project.
-A task typed in the composer of the Work or Life page gets that category, with or without a model.
+A task typed in the composer of a category's page gets that category, with or without a model.
 
-**Sub-projects.** A project can hang under another one (`projects.parent_id`, migration 012), as deep
+**Sub-projects.** A project can hang under another one (`projects.parent_id`, migration 013), as deep
 as the user likes. Its row is indented 28 pt per step, so a sub-project's folder sits where its
 parent's label is, and the projects under a parent follow it in name order; the row still shows the
 project's own active tasks, never those of its sub-projects. A sub-project is made with `New
@@ -828,9 +838,9 @@ editable in place (a Branch longer than the pane is ellipsized like every long v
 
 - The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
-  category strip (`Work` `Life` `None`; the row shows only the category that was set, after its
-  18 pt icon in `text.secondary`, and `None` with no icon in `text.tertiary`, for a task in a
-  repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+  Category page (a filter field and the categories; the row shows only the category that was set,
+  after its 18 pt icon in the category's color, and `None` with no icon in `text.tertiary`, for a
+  task in a repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
@@ -935,8 +945,12 @@ Main page, top to bottom (10 pt padding):
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
    reads `Priority · P1 High` the same way.
-3. `Category` and a strip `Work` `Life` `None` in `compact` text, Work and Life after their 18 pt
-   icon in `text.secondary` (the current one tinted; `None` unclassifies); its label reads `Category · Life` the same way. The strip takes no letter key;
+3. One row, `Category` with the 18 pt icon of the task's category in its color (`IconList` when it
+   has none), its name as the hint at the right and a `›`: it opens the **Category page**, which is
+   the `Move to…` page for categories (v24 frame 2): a filter field `Find a category`, a row per
+   category with its icon (the current one checked), `None` (unsorts), a hairline and `New
+   category…`, which opens the category sheet and gives the new category to the task. The row takes
+   no letter key;
 4. a hairline;
 5. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
    projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
@@ -959,7 +973,7 @@ Main page, top to bottom (10 pt padding):
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
-Priority the priority strip, Category the category strip, Project the `Move to…` list, Remind the presets.
+Priority the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
 
 A project's menu is in the Sidebar and stays a system menu.
 
@@ -1259,6 +1273,122 @@ turned down). The scene makes a few quiet sounds while it plays, and nothing any
 **Stored**: a `summaries` table (migration 010): period (`day`/`week`), its first date, the
 paragraph, the model, the goods kinds by task id (JSON), created_at. Rewriting replaces the row.
 
+### Recent changes
+
+What changed in your projects lately (#110), read the way a changelog reads: not a review queue.
+Reference: `docs/design/mockups/v25.html` (decided); an earlier draft grouped by review state was
+turned down. Reviewing, checks and who does what stay with the agents; this page only helps you understand
+what was shipped and what is being worked on, and the assistant does the reading for you.
+
+**Off by default.** Settings > General gets a group **Pages** (`页面`) with one switch row, **Recent
+changes** (`最近变化`), `meta` `See what each project merged lately, each pull request and issue in a
+sentence. Needs gh signed in.` (`按项目看最近合并的 PR 和 issue，助手用一句话说清每条做了什么。需要已登录的
+gh。`), off; kept in `prefs.json`. While it is off nothing below exists: no sidebar row, no `⌘7`, no
+entry on project pages, nothing fetched.
+
+**Where.** A sidebar row `Recent changes` (`最近变化`) under Summary, icon `git-branch`
+(pixelarticons), no count, `⌘7`. Header: the title, a repository pop-up (`All repositories` /
+`全部仓库` ▾), a `7 days | 30 days` segment (`7 天 | 30 天`), and `Updated 2 min ago` (`2 分钟前更新`)
+at the right, which refreshes on click. With the switch on, a project page's title bar has a
+`Recent changes` link that opens this page with that repository picked.
+
+**Which repositories.** Those of the projects (their `repo_slug`), archived ones left out; every pull
+request and issue in them, not only yours. The pop-up lists `All repositories`, then each repository
+with its count for the period; one with nothing in the period is dimmed but can be picked. Picking one
+shows only its section. The repository and the period are remembered. Clicking a section's project
+name picks that repository.
+
+**A section per project**, those with something in the period, the one changed last first. Its head:
+folder icon, project name (`body` 600), the full repository in `meta`, and at the right `9 merged · 2
+open · 2 issues` (`合并 9 · 在做 2 · 问题 2`). Then, in order:
+
+- **The assistant's lines**: the assistant's avatar (24 pt) and the pixel speech bubble of Summary
+  (smaller, 2 pt frame), header `These 7 days · written by the assistant` (`这 7 天 · 助手写的`) and
+  `Rewrite` (`重写`): two or three sentences on what the project gained, what was fixed and what is
+  still open. Written once per project and period, stored; a dot beside Rewrite when more was merged
+  since (as in Summary).
+- **New** (`新功能`) and **Fixed** (`修复`): the merged pull requests, newest first. Each line: the good
+  of Summary as its icon (`gem` new, `jar` fixed, 18 pt), one sentence, and under it in `meta` who did
+  it (the agent's avatar and name when a task has the PR's URL, else the GitHub author), when (`today`,
+  `2 days ago`) and `#41`.
+- **Other** (`其他`): docs, refactors, dependencies, versions, screenshots, folded as one line `3 more:
+  docs, version, screenshots` (`其他 3 项：文档、版本号、截图`); a click unfolds them, one line each.
+- **Open** (`在做`): the open pull requests, drafts too: a green pull-request icon, one sentence, who and
+  `open for 2 hours` (`开了 2 小时`). No checks, no review state.
+- **Issues** (`问题`): issues opened or closed in the period: an issue icon (a ring with a dot; green
+  open, purple closed), one sentence, `New · you · yesterday · #58` (`新问题 · 你 · 昨天 · #58`) or
+  `Solved · fixed by #41 · today · #56` (`已解决 · 由 #41 修好 · 今天 · #56`) when gh names the pull
+  request that closed it.
+
+An empty group is left out. A repository gh cannot read says so in its section in one line with a
+command to copy; the others show as usual.
+
+**One sentence per item.** The assistant reads a pull request's title and description (an issue's title
+and the first 2000 characters of its body) and writes, in the window's language, one plain sentence of
+at most 30 characters in Chinese or 12 words in English saying what it does for the user (`周报总数是两位数
+时，不再被截成省略号`, not `fix(summary): ...`), and puts it in New, Fixed or Other. Written once per
+item and kept by its URL and `updatedAt`, so it is written again only when the title or description
+changed. No model: the title without a conventional-commit prefix (`feat(scope): `), New for `feat`,
+Fixed for `fix`, Other for the rest.
+
+**Click an item** to unfold **the assistant's explanation** under it, three points: **What** (做了什么),
+**Why** (为什么), **Where** (动了哪), from the description and the names of the changed files (never the
+code), with `Read the description and the changed files` (`读了 PR 描述和改动的文件`) in `meta` above.
+Written the first time it is opened and kept. Under it `Open on GitHub` (`在 GitHub 打开`, with the
+pixel external-link icon) and, when a task has the URL, `Task #121` which opens it in the inspector.
+Issues unfold the same way (What, Why, and the pull request that fixed it when there is one).
+
+**Data**, through the `gh` the user is signed in to, per repository: `gh pr list --state merged
+--search "merged:>=<date>"`, `gh pr list --state open`, `gh issue list --state all --search
+"updated:>=<date>"` (fields: number, title, body, url, author, dates, draft, head branch, labels, and
+the changed files' names for the explanation). Fetched when the page opens and every 10 minutes while it
+is shown and the window is key; never while the switch is off.
+
+**Stored**: not in the database. The sentences, categories, the per-project lines and the explanations
+are a cache file in the data folder (`recent-changes.json`), keyed by URL and `updatedAt` (lines by
+repository and period); deleting it only costs the assistant's time.
+
+**Empty**: no project has anything in the period: `Nothing changed in the last 7 days` (`最近 7 天没有变
+化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`
+/ `gh auth login`) with Copy.
+
+**As built** (what the spec above leaves to the code; screens `recent-*.png`):
+
+- Fetching goes through `ghpoll.Runner` (the one the poller uses, `ExecRunner` in the app): per repository
+  `gh pr list --state merged`, `--state open` and `gh issue list --state all`, one after the other, 100 at
+  most each, four repositories at a time, off the UI thread (`data.GHRecent`, `data.FetchRepos`; the demo
+  and the tests use `data.FakeRecent`). The period is 7 or 30 calendar days ending today, from local
+  midnight; the search date is the UTC date of that midnight, a superset, and the exact moment cuts the
+  rest. An issue counts when it was opened or closed in the period; an open pull request counts however
+  old it is. `fixed by #N` is the first of the issue's `closedByPullRequestsReferences`. A pull request is
+  by the agent of the task whose `pr_url` is its URL, else by its author: `You` (`you` for an issue) when
+  that is the account gh is signed in to, with the robot for an app, else the login alone.
+- The page reads when it opens, on a click on `Updated …`, when the period changes, and every ten
+  minutes while it is shown and the window is key (`App.WindowKey`); the answer of an older read is
+  dropped. The repository and the period are in `prefs.json` (`recentRepo`, `recentDays`) beside the
+  switch (`recentChanges`); a remembered repository that is no project's is All repositories.
+- The assistant is asked, for the sections on screen, off the UI thread and once for each read:
+  sentences, category and topic for the items that have none kept (12 items a request, language of the
+  window), then the lines of the section, then, when an item is unfolded for the first time, its
+  explanation. A failure is not retried by itself: sentences fall back to titles until the next read, the
+  lines show `Couldn't write it. Try Rewrite.`, an explanation shows a Retry. The three are
+  `Assistant.DescribeRecent`, `WriteRecentLines` and `ExplainRecent` (`internal/agent/recent.go`).
+- `recent-changes.json` holds the sentences keyed by `<language> <url>` with the `updatedAt` they were
+  written for, the explanations in the same entry (so a changed item loses both), and the lines keyed by
+  `<language> <days> <repo>` with when they were written (a dot beside Rewrite when something merged
+  after). An item not updated for 90 days is dropped when the file is next written.
+- With no model the titles stand in (`FallbackNote`: the conventional-commit prefix off; feat New, fix
+  Fixed, the rest Other, with no topics, so the fold reads `3 more`), there are no lines, and an
+  unfolded item offers `Open on GitHub` and `Task #n` only.
+- The pop-up lists the projects by name with their count (dimmed at 0, still pickable); a project name in
+  a section picks its repository. The good beside a line is drawn at one point a cell (17 pt in the 18 pt
+  slot) to keep its pixels square; a pull request in Other has the good its title points to.
+- gh missing or signed out shows as the page's state only when every repository failed so; one that
+  failed alone says so in its section (a `gh repo view owner/name` to copy when GitHub refused it). In
+  Settings the switch's second line turns to what to run when the switch is on and gh cannot be used.
+- Not done: the typing-in of the assistant's lines (they show whole), more than the first pull request
+  that closed an issue, and a state of its own for GitHub being offline besides the section line.
+
 ### Calendar
 
 The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
@@ -1345,6 +1475,7 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
   the new project opens. Opened from `New sub-project…` in a project's menu, the title is `New
   sub-project`, a line under it reads `Under adhd-todo`, and the project it makes is that project's
   sub-project; there is no other difference and no extra field.
+- **Category sheet**: `New category` / `Edit category` (400 pt); see **Categories (M9)**.
 - **Milestone sheet**: `New milestone` (Title, Due date optional), `Rename milestone` (Title) and
   `Due date` (a calendar and a Clear link). Done is the primary button; Enter saves.
 - **Delete confirmation** (a project, a task): title `Delete “name”?`; body in `text.secondary`.
@@ -1353,12 +1484,49 @@ Small sheets on the dimmed window, built like Settings (12 pt radius, 24 pt padd
   task.) For a task: `Its progress reports go with it. This can't be undone.` Buttons `Cancel`
   (focused, so Enter does not delete) and `Delete` (accent, not red). Esc cancels.
 
+### Categories (M9)
+
+References: `docs/design/mockups/v24.html` (frames 1 to 6 and 8 are built; frame 7, the 12 x 12
+editor and image import, is PR2). Plan: `docs/plans/m9-custom-categories.md`.
+
+The user makes categories; Work and Life are built in, always there, movable and re-iconable but
+neither renamed (their names follow the language) nor deleted. A category has a name (unique in any
+case, at most 32 characters; at most 24 categories), a 12 x 12 icon and one of eight colors, the
+project colors in order: indigo, yellow, green, red, blue, pink, teal, orange (Work starts as a
+blue briefcase, Life as a green house). The icon is drawn in that color wherever the category shows: sidebar sub-rows (12 pt), the
+inspector's value, the Category page and the task menu's row (18 pt), the sheet's preview. In dark
+mode the colors are the project folders' (`theme.ProjectColor`); there is no second set. On an
+accent-filled menu row the icon is white, like a project folder in `Move to…`.
+
+- **Sidebar menus** (system menus, like a project's; v24 frame 1): right-click a category: `New
+  category…`, `Edit category…`, `Move up`, `Move down` (each left out at its end of the list),
+  and, for the user's own, a separator and `Delete category`. Right-click `Mine` or `Unsorted`: `New
+  category…` only.
+- **Category sheet** (frames 3 to 5, 8): title `New category` / `Edit category`; `Name` (focused;
+  Work and Life show their localized name read-only with the line `Work and Life keep their names.`);
+  `Icon`: the chosen icon at 36, 18 and 12 pt in the chosen color, on `bg.subtle`; `Color`: eight 18
+  pt pixel circles (a 24 pt target, a ring on the current one; a11y `Color: Red`); a `Search icons`
+  field; a 240 pt scroll area with a hairline border: nothing typed, the curated groups (Work, Study,
+  Health, Money, Home, Hobby, Travel, People, `meta` headings, localized), typed, the matches as one
+  flat grid, or `No icon matches`; 36 pt cells, 9 to a row, the icon at 18 pt in the text color (a11y
+  label: the icon's name); the chosen cell has a 2 pt accent ring and a faint accent fill and shows
+  its icon in the chosen color. A new category starts on the first curated icon and on the color its
+  name hashes to, which follows the name until a swatch is clicked. Create / Save is off while a new
+  name is blank; Enter in `Name` creates or saves. Problems read under the field in `text.secondary`,
+  never red. After Create the category's page opens, unless the sheet came from the task menu, which
+  gives the category to the task instead.
+- **Delete** is immediate (the list is the user's own); a toast `Deleted “Reading” · 5 tasks
+  unsorted` (no count when 0) with **Undo** for six seconds, which puts the category back with its
+  icon, color, place and tasks (only the ones still unsorted).
+- **Chinese** (frame 8): `新建类别…`, `编辑类别…`, `上移`, `下移`, `删除类别`, `名称`, `图标`, `颜色`,
+  `搜索图标`, `没有匹配的图标`, `查找类别`, `工作和生活不能改名。`.
+
 ### Keyboard
 
 `⌘K` the page's composer · `⌘Z` the assistant's last change (see **Assistant**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
-(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary.
+(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
@@ -1374,7 +1542,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |
 | Rename project (sidebar) | saves | puts the old name back | |
-| New project, milestone sheets | creates / saves | closes the sheet | |
+| New project, milestone, category sheets | creates / saves | closes the sheet | |
 
 ### Notifications
 

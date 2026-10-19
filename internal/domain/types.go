@@ -64,28 +64,6 @@ func (p Priority) Valid() bool {
 	return false
 }
 
-// Category says what a task is for the user: work or life. A task nobody classified has none.
-type Category string
-
-// Task categories.
-const (
-	CategoryWork Category = "work"
-	CategoryLife Category = "life"
-)
-
-// Categories lists every category.
-var Categories = []Category{CategoryWork, CategoryLife}
-
-// Valid reports whether c is a known category.
-func (c Category) Valid() bool {
-	for _, k := range Categories {
-		if c == k {
-			return true
-		}
-	}
-	return false
-}
-
 // Source says who created a task.
 type Source string
 
@@ -151,8 +129,10 @@ type Task struct {
 	// agent (rows of an earlier build may hold an agent's id); HandedAt is when. Both are nil otherwise.
 	HandedTo *string `json:"handed_to"`
 	HandedAt *string `json:"handed_at"`
-	// Category is what the task is for the user, work or life; nil until someone classifies it.
-	Category *Category `json:"category"`
+	// CategoryID is the category the user sorted the task under; nil until someone does. Category is
+	// that category's name, read-only (a patch writes CategoryID).
+	CategoryID *int64  `json:"category_id"`
+	Category   *string `json:"category"`
 }
 
 // Report is one progress note an agent filed against a task.

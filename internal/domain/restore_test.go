@@ -15,7 +15,7 @@ func richTask(t *testing.T, c *domain.Core, projectID, milestoneID *int64) *doma
 		Title: "Port the store", Source: domain.SourceAgent, ProjectID: projectID, MilestoneID: milestoneID,
 		Status: domain.StatusReview, Priority: domain.P1, Notes: ptr("notes"), Branch: ptr("feat/store"),
 		PRURL: ptr("https://github.com/acme/widgets/pull/7"), DueAt: ptr("2026-10-20T00:00:00.000Z"),
-		RemindAt: ptr("2026-10-19T09:00:00.000Z"), Category: ptr(domain.CategoryWork),
+		RemindAt: ptr("2026-10-19T09:00:00.000Z"), CategoryID: ptr(int64(1)),
 	})
 	st := domain.StatusDoing
 	must[*domain.Report](t)(c.AddReport(ctx, domain.AddReportInput{TaskID: task.ID, Agent: "claude-code", Summary: "first", Status: &st, NextStep: ptr("second"), Cwd: "/work/tree"}))
@@ -103,5 +103,19 @@ func noErr(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestRestoreLeavesTheTaskUnsortedWhenItsCategoryIsGone(t *testing.T) {
+	c, _ := newCore(t)
+	reading := newCategory(t, c, "Reading")
+	task := mustTask(t, c, domain.CreateTaskInput{Title: "book", CategoryID: &reading.ID})
+	snap := must[*domain.TaskSnapshot](t)(c.SnapshotTask(ctx, task.ID))
+	noErr(t, c.DeleteTask(ctx, task.ID))
+	must[domain.DeletedCategory](t)(c.DeleteCategory(ctx, reading.ID))
+
+	got := must[*domain.Task](t)(c.RestoreTask(ctx, *snap))
+	if got.CategoryID != nil || got.Category != nil {
+		t.Errorf("category = %v %v, want none", got.CategoryID, got.Category)
 	}
 }

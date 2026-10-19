@@ -21,12 +21,19 @@ func moveFullHeight(n int) float32 {
 // movePage replaces the menu with a filter field and the Inbox and the projects, the task's own
 // checked. Typing narrows the list, the arrows walk it and Enter moves the task.
 func (m *Main) movePage(c *ui.Context, t *theme.Tokens, task data.Task) {
-	m.movePageOf(c, t, func() []popSpec { return m.moveChoices(task) })
+	m.movePageOf(c, t, finder{placeholder: m.say.MenuFindProject(), noMatch: m.say.MenuNoProjectMatch()}, func() []popSpec { return m.moveChoices(task) })
+}
+
+// finder is what a filtered page says: the filter field's placeholder, the line for no match and,
+// when it has one, the line under the list, after a hairline.
+type finder struct {
+	placeholder, noMatch string
+	footer               *popSpec
 }
 
 // movePageOf is movePage for the choices choose lists: it is called once the filter field is built,
 // so it reads what is typed.
-func (m *Main) movePageOf(c *ui.Context, t *theme.Tokens, choose func() []popSpec) {
+func (m *Main) movePageOf(c *ui.Context, t *theme.Tokens, words finder, choose func() []popSpec) {
 	pm := &m.pop
 	if pm.filter != pm.seen {
 		pm.seen, pm.hl = pm.filter, 0
@@ -37,23 +44,27 @@ func (m *Main) movePageOf(c *ui.Context, t *theme.Tokens, choose func() []popSpe
 		box := ui.Box(c).Grow(1).MinWidth(0)
 		box.Children(func() {
 			theme.Compact.Apply(ui.TextInputBase(c.Key("pop-filter-input"), &pm.filter)).TextColor(t.Text).
-				Label(m.say.MenuFindProject()).AutoFocus().OnTextKey(m.filterKey)
+				Label(words.placeholder).AutoFocus().OnTextKey(m.filterKey)
 			if pm.filter == "" {
-				theme.Text(c, theme.Compact, t.TextTertiary, m.say.MenuFindProject()).Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Compact, t.TextTertiary, words.placeholder).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 	})
 	choices := choose()
 	if len(choices) == 0 {
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.MenuNoProjectMatch()).Padding(8, 10, 10)
-		return
+		theme.Text(c, theme.Meta, t.TextTertiary, words.noMatch).Padding(8, 10, 10)
+	} else {
+		list := ui.Scroll(c.Key("pop-list")).Shrink(0).Height(float32(min(len(choices), maxMoveRows)) * popRowH)
+		list.Children(func() {
+			for _, ch := range choices {
+				m.popRow(c, t, ch)
+			}
+		})
 	}
-	list := ui.Scroll(c.Key("pop-list")).Shrink(0).Height(float32(min(len(choices), maxMoveRows)) * popRowH)
-	list.Children(func() {
-		for _, ch := range choices {
-			m.popRow(c, t, ch)
-		}
-	})
+	if words.footer != nil {
+		menuRule(c, t)
+		m.popRow(c, t, *words.footer)
+	}
 }
 
 // moveChoices are the Inbox and the projects whose name holds what is typed.

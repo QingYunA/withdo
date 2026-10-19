@@ -27,6 +27,7 @@ const (
 	screenCompleted
 	screenCalendar
 	screenSummary
+	screenRecent
 )
 
 // nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
@@ -34,8 +35,9 @@ const (
 type nav struct {
 	screen    screen
 	projectID int
-	// sub narrows Mine or Agents to one slice: a category (subWork, subLife, subUnsorted) or an
-	// agent's name; "" is the whole screen.
+	// cat narrows Mine to one category's page: its id, or catUnsorted; 0 is the whole of Mine.
+	cat int
+	// sub narrows Agents to one agent's page, by the agent's name; "" is the whole screen.
 	sub string
 }
 
@@ -53,7 +55,7 @@ type Main struct {
 	mine   data.Mine         // all of Mine this frame: the sidebar's count and the hop read it
 	agents data.AgentsScreen // all of Agents this frame
 	// minePage and agentsPage are what the open Mine or Agents page lists: the same as mine and
-	// agents, or one slice of them when nav.sub names one. slices holds the parts of Mine.
+	// agents, or one slice of them when nav.cat or nav.sub names one. slices holds the parts of Mine.
 	minePage   data.Mine
 	agentsPage data.AgentsScreen
 	slices     mineSlices
@@ -82,6 +84,7 @@ type Main struct {
 
 	cal       calendarState // the Calendar page: its month and its selected day
 	sum       summaryState  // the Summary page: its period, its scene, its paragraphs
+	recent    recentState   // the Recent changes page: what was read, and what the assistant wrote
 	manage    manageState   // the sheets, renaming, search and Completed
 	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle     // the input that renames a project in the sidebar
@@ -175,6 +178,9 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Project(m.nav.projectID); m.nav.screen == screenProject && !ok {
 		m.goTo(nav{}) // archived or deleted, here or by another process
 	}
+	if _, ok := m.app.Category(m.nav.cat); m.nav.cat > 0 && !ok {
+		m.goTo(nav{}) // deleted, here or by another process
+	}
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
 		m.clearMulti()
@@ -184,6 +190,12 @@ func (m *Main) View(c *ui.Context) {
 	m.onSummary.Store(onSummary)
 	if !onSummary {
 		m.leaveSummary()
+	}
+	if m.nav.screen == screenRecent && !m.app.RecentChangesOn() {
+		m.goTo(nav{}) // switched off in Settings while it was open
+	}
+	if m.nav.screen != screenRecent || m.searching() {
+		m.recent.shown = false // the page reads GitHub when it opens
 	}
 	m.dropStaleReply()
 	m.popTick()
@@ -204,6 +216,7 @@ func (m *Main) View(c *ui.Context) {
 		m.inspectorPane(c, t)
 	})
 	m.newProjectSheet(c, t)
+	m.categorySheet(c, t)
 	m.milestoneSheet(c, t)
 	m.confirmSheet(c, t)
 	m.dayCardView(c, t)
@@ -231,6 +244,8 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 			m.pageIn(c, t, theme.CalendarMax, func() { m.calendarScreen(c, t) })
 		case m.nav.screen == screenSummary:
 			m.summaryScreen(c, t)
+		case m.nav.screen == screenRecent:
+			m.recentScreen(c, t)
 		case m.boardActive():
 			m.boardScreen(c, t)
 		case m.columnsActive():

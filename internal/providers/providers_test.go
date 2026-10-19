@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -176,7 +177,7 @@ func TestConfigStoreRoundTrip(t *testing.T) {
 	if err != nil || got.Active != "openai" || got.Providers["openai"].Model != "gpt-x" {
 		t.Fatalf("loaded %+v, %v", got, err)
 	}
-	if fi, _ := os.Stat(path); fi.Mode().Perm() != 0o600 {
+	if fi, _ := os.Stat(path); runtime.GOOS != "windows" && fi.Mode().Perm() != 0o600 {
 		t.Errorf("mode = %v", fi.Mode().Perm())
 	}
 	if _, err := os.Stat(path + ".tmp"); err == nil {
@@ -271,7 +272,8 @@ func TestManagerTestButton(t *testing.T) {
 		t.Fatalf("no key: %v", err)
 	}
 	d, err := m.Test(context.Background(), "anthropic", Entry{BaseURL: srv.URL, Model: "typed"}, "sk-typed")
-	if err != nil || d <= 0 {
+	// A coarse clock (Windows) can measure a local roundtrip as exactly zero.
+	if err != nil || d < 0 {
 		t.Fatalf("Test = %v, %v", d, err)
 	}
 	if got.Key != "sk-typed" || got.Body["model"] != "typed" {

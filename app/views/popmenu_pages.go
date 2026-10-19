@@ -2,6 +2,7 @@ package views
 
 import (
 	"cmp"
+	"strings"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -16,6 +17,7 @@ type popSpec struct {
 	tint             ui.Color // the icon's color at rest, when it is not the text's (a project's folder)
 	mark             string   // text in that slot instead of an icon
 	checked, danger  bool
+	more             bool // a chevron after the hint: the choice opens a page
 	disabled         bool // drawn quiet; the pointer and the arrow keys pass over it
 	run              func()
 }
@@ -62,11 +64,17 @@ func (m *Main) popRow(c *ui.Context, t *theme.Tokens, s popSpec) {
 		case s.hint != "":
 			theme.Text(c, theme.Meta, quiet, s.hint).Shrink(0)
 		}
+		if s.more {
+			ui.Icon(c, theme.IconForward).Size(theme.IconSmall, theme.IconSmall).TextColor(quiet).Shrink(0).Margin(0, 0, 0, -4)
+		}
 	})
 	if row.Clicked() && !s.disabled {
 		s.run()
 	}
 }
+
+// menuRuleH is the height of the hairline between groups of lines with its margins.
+const menuRuleH float32 = 11
 
 // menuRule is the hairline between groups of lines.
 func menuRule(c *ui.Context, t *theme.Tokens) {
@@ -80,9 +88,8 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.statusStrip(c, t, task, false)
 	m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
 	m.priorityStrip(c, t, task, false)
-	m.stripLabel(c, t, "category", m.say.PropCategory(), m.categoryText(task.Category))
-	m.categoryStrip(c, t, task, false)
 	menuRule(c, t)
+	m.popRow(c, t, m.categoryPopRow(task))
 	m.popRow(c, t, popSpec{key: "move", icon: theme.IconMove, label: m.say.MenuMoveTo(), hint: "M", run: func() {
 		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""
 	}})
@@ -193,54 +200,68 @@ func (m *Main) priorityStripOf(c *ui.Context, t *theme.Tokens, current func(data
 	})
 }
 
-// categoryChoices are the choices of the category strip: work, life, and none, which unclassifies.
-var categoryChoices = []data.Category{data.CategoryWork, data.CategoryLife, ""}
-
-// categoryText is a task's own category as the row and the strip read it: Work, Life or None.
-func (m *Main) categoryText(c data.Category) string {
-	if c == "" {
-		return m.say.ValueNone()
+// categoryText is a category as the rows read it: its name, or None.
+func (m *Main) categoryText(id int) string {
+	if c, ok := m.app.Category(id); ok {
+		return categoryTitle(m.say, c)
 	}
-	return categoryName(m.say, c)
+	return m.say.ValueNone()
 }
 
-// categoryIcon is the icon of a category: a briefcase for Work, a house for Life, and none for a
-// task nobody classified.
-func categoryIcon(c data.Category) *ui.SVG {
-	switch c {
-	case data.CategoryWork:
-		return theme.IconWork
-	case data.CategoryLife:
-		return theme.IconLife
-	}
-	return nil
-}
-
-// categoryValue draws a category's icon, when it has one, before its name.
-func categoryValue(c *ui.Context, t *theme.Tokens, cat data.Category, ink ui.Color, name string) {
+// categoryValue is a category as the inspector's value shows it: its icon in its color, when it
+// has one, before its name.
+func (m *Main) categoryValue(c *ui.Context, id int, ink ui.Color) {
+	cat, ok := m.app.Category(id)
 	ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(1).MinWidth(0).Children(func() {
-		if icon := categoryIcon(cat); icon != nil {
-			ui.Icon(c, icon).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary).Shrink(0)
+		if ok {
+			categoryGlyph(c, cat, theme.IconRow)
 		}
-		theme.Text(c, theme.Compact, ink, name).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Compact, ink, m.categoryText(id)).Shrink(1).MinWidth(0).Ellipsis("…")
 	})
 }
 
-// categoryStrip is Work, Life and None in a row; one click sets the category.
-func (m *Main) categoryStrip(c *ui.Context, t *theme.Tokens, task data.Task, keyboard bool) {
-	ui.Row(c.Key("pop-category")).Gap(2).Padding(0, 2, 4).Shrink(0).Children(func() {
-		for _, cat := range categoryChoices {
-			name := m.categoryText(cat)
-			ink := t.Text
-			if cat == "" {
-				ink = t.TextTertiary
-			}
-			m.stripButton(c, t, "category", "pop-category-"+string(cat), m.say.A11yMenuCategory(name), name, task.Category == cat, keyboard,
-				func() {
-					m.closeMenu()
-					_ = m.app.Update(task.ID, data.Patch{Category: data.CategoryPtr(cat)})
-				},
-				func() { categoryValue(c, t, cat, ink, name) })
+// categoryPopRow is the line of the whole menu that opens the Category page: the icon of the task's
+// category (a list when it has none), its name at the right.
+func (m *Main) categoryPopRow(task data.Task) popSpec {
+	spec := popSpec{key: "category", icon: theme.IconList, label: m.say.PropCategory(), hint: m.categoryText(task.CategoryID), more: true, run: func() {
+		m.pop.page, m.pop.back, m.pop.hl, m.pop.filter = pageCategory, true, 0, ""
+	}}
+	if cat, ok := m.app.Category(task.CategoryID); ok {
+		spec.icon, spec.tint = theme.CategoryIcon(cat.Icon), theme.CategoryColor(cat.Color)
+	}
+	return spec
+}
+
+// categoryPage is the Move to page for categories: a filter field, the categories with their icons,
+// the task's own checked, and None, which unsorts.
+func (m *Main) categoryPage(c *ui.Context, t *theme.Tokens, task data.Task) {
+	more := popSpec{key: "cat-new", icon: theme.IconPlus, label: m.say.CategoryNew(), run: func() {
+		m.closeMenu()
+		m.openNewCategory(task.ID)
+	}}
+	m.movePageOf(c, t, finder{placeholder: m.say.MenuFindCategory(), noMatch: m.say.MenuNoCategoryMatch(), footer: &more},
+		func() []popSpec { return m.categoryChoices(task) })
+}
+
+// categoryChoices are the categories and None whose name holds what is typed.
+func (m *Main) categoryChoices(task data.Task) []popSpec {
+	q := strings.ToLower(strings.TrimSpace(m.pop.filter))
+	hit := func(name string) bool { return q == "" || strings.Contains(strings.ToLower(name), q) }
+	set := func(id int) func() {
+		return func() {
+			m.closeMenu()
+			_ = m.app.Update(task.ID, data.Patch{Category: data.IntPtr(id)})
 		}
-	})
+	}
+	var out []popSpec
+	for _, cat := range m.app.snap.categories {
+		if name := categoryTitle(m.say, cat); hit(name) {
+			out = append(out, popSpec{key: "cat-" + itoa(cat.ID), icon: theme.CategoryIcon(cat.Icon), tint: theme.CategoryColor(cat.Color), label: name,
+				a11y: m.say.A11yMenuCategory(name), checked: task.CategoryID == cat.ID, run: set(cat.ID)})
+		}
+	}
+	if none := m.say.ValueNone(); hit(none) {
+		out = append(out, popSpec{key: "cat-none", label: none, a11y: m.say.A11yMenuCategory(none), checked: task.CategoryID == 0, run: set(0)})
+	}
+	return out
 }

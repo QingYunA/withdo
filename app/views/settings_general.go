@@ -18,7 +18,7 @@ const archivedRows = 5
 // settingsURLNotifications opens the Notifications pane of System Settings.
 const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
 
-// generalPane is the language, the notifications, the archived projects, and where the data lives.
+// generalPane is the language, the notifications, the pages, the archived projects, and where the data lives.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
@@ -29,6 +29,8 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 		s.endOfDayRows(c, t)
 	})
 	group(c, t, "sound", func() { s.soundRow(c, t) })
+	groupLabel(c, t, s.say.SettingsPages())
+	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
@@ -98,6 +100,27 @@ func (s *Settings) soundRow(c *ui.Context, t *theme.Tokens) {
 	})
 	if on != s.app.SoundEffects() {
 		s.app.SetSoundEffects(on)
+	}
+}
+
+// recentChangesRow is the switch of the Recent changes page, which is off until the user turns it on.
+// Switched on with gh missing or signed out, its second line says what to run; the switch still turns.
+func (s *Settings) recentChangesRow(c *ui.Context, t *theme.Tokens) {
+	on := s.app.RecentChangesOn()
+	meta, ink := s.say.SettingsRecentChangesMeta(), t.TextSecondary
+	if on && s.app.GitHub != nil {
+		switch s.app.GitHub.Status().State {
+		case data.GitHubMissing:
+			meta, ink = s.say.SettingsRecentNoGH(), t.Stale
+		case data.GitHubSignedOut:
+			meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
+		}
+	}
+	settingsRowInk(c, t, "recent-changes", s.say.SettingsRecentChanges(), meta, ink, true, func() {
+		ui.Switch(c.Key("recent-changes-switch"), &on).Label(s.say.SettingsRecentChangesSwitch())
+	}, nil)
+	if on != s.app.RecentChangesOn() {
+		s.app.SetRecentChangesOn(on)
 	}
 }
 

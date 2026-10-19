@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<title>adhd-todo · v24 草稿 — 自定义类别和 12 × 12 像素图标</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; background: #e4e4ea; font: 15px/22px -apple-system, "PingFang SC", system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  h1 { font: 700 24px/32px -apple-system, "PingFang SC"; margin: 0 0 6px 4px; }
+  h2 { font: 700 18px/26px -apple-system, "PingFang SC"; margin: 36px 0 12px 4px; }
+  .lead { font-size: 14px; line-height: 22px; color: #6e6e73; max-width: 1180px; margin: 0 4px 8px; }
+  code { font: 12px/18px ui-monospace, Menlo; background: rgba(0,0,0,.06); padding: 1px 4px; border-radius: 4px; }
+  .row { display: flex; gap: 32px; align-items: flex-start; margin-bottom: 36px; }
+  .cap { font: 600 14px/20px -apple-system, "PingFang SC"; color: #3a3a3f; margin: 0 0 10px 4px; }
+  .cap b { display: inline-block; background: #1d1d1f; color: #fff; border-radius: 10px; padding: 0 8px; margin-right: 8px; font-size: 12px; }
+  .stage { border-radius: 14px; padding: 24px; display: flex; gap: 24px; align-items: flex-start; }
+  .soft { background: #ececf1; } .dim { background: #a8a8ad; } .dimd { background: #0c0c0e; } .zhs { background: #dedee4; }
+  .note { font: 400 12px/16px -apple-system, "PingFang SC"; color: #6e6e73; margin: 0 0 8px 2px; }
+  .col { display: flex; flex-direction: column; }
+
+  /* theme tokens (ui-spec Tokens) */
+  .t { --bg:#fff; --subtle:#f5f5f7; --sb:#f2f2f5; --hover:rgba(0,0,0,.05); --sel:rgba(91,91,214,.12); --bd:rgba(0,0,0,.1);
+       --tx:#1d1d1f; --t2:#6e6e73; --t3:#aeaeb2; --ac:#5b5bd6; color: var(--tx); }
+  .t.dark { --bg:#1c1c1e; --subtle:#232326; --sb:#262629; --hover:rgba(255,255,255,.06); --sel:rgba(124,124,240,.22); --bd:rgba(255,255,255,.1);
+       --tx:#f5f5f7; --t2:#a1a1a6; --t3:#636366; --ac:#7c7cf0; }
+  .ic { display: block; flex: none; }
+
+  /* window fragment + sidebar */
+  .win { display: flex; position: relative; width: 656px; height: 340px; background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.06); }
+  .sb { width: 216px; flex: none; background: var(--sb); padding: 14px 10px; border-right: 1px solid var(--bd); }
+  .srch { height: 28px; border-radius: 7px; background: var(--hover); display: flex; align-items: center; gap: 8px; padding: 0 10px; color: var(--t3); margin-bottom: 14px; }
+  .srch em { margin-left: auto; font: 13px -apple-system; }
+  .row1 { height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 12px 0 10px; border-radius: 9px; position: relative; }
+  .row1 .n { margin-left: auto; font-size: 14px; color: var(--t3); }
+  .row1.sub { padding-left: 38px; } .row1.sub .ic { color: var(--t2); }
+  .row1.un { padding-left: 60px; }
+  .row1.hot { background: var(--sel); }
+  .main { flex: 1; padding: 28px 28px; background: var(--bg); }
+  .main h3 { font: 700 26px/32px -apple-system, "PingFang SC"; margin: 0 0 18px; }
+  .sk { height: 12px; border-radius: 6px; background: var(--subtle); margin: 16px 0; }
+
+  /* system menu (project menu look) */
+  .sm { position: absolute; min-width: 208px; padding: 5px; border-radius: 10px; background: #fff; border: 1px solid rgba(0,0,0,.14); box-shadow: 0 10px 30px rgba(0,0,0,.22); color: #1d1d1f; z-index: 5; }
+  .sm div { height: 24px; line-height: 24px; padding: 0 26px 0 20px; white-space: nowrap; }
+  .sm hr { border: 0; border-top: 1px solid rgba(0,0,0,.12); margin: 5px 6px; }
+
+  /* task menu popover */
+  .tm { width: 268px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--bd); box-shadow: 0 10px 28px rgba(0,0,0,.18); }
+  .lab { font: 600 13px/18px -apple-system; color: var(--t2); padding: 2px 8px 0; }
+  .lab i { font-style: normal; font-weight: 400; color: var(--t3); margin-left: 6px; }
+  .strip { display: flex; gap: 2px; padding: 3px 0 8px; }
+  .strip b { flex: 1; height: 34px; display: grid; place-items: center; border-radius: 8px; font: 600 15px -apple-system; }
+  .strip b.cur { background: var(--sel); }
+  .hr { height: 1px; background: var(--bd); margin: 4px 8px; }
+  .prow { height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 8px; border-radius: 8px; }
+  .prow .h { margin-left: auto; color: var(--t3); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .prow.on { background: var(--ac); color: #fff; }
+  .prow.red { color: #e5484d; }
+  .fld { height: 32px; border-radius: 8px; background: var(--subtle); display: flex; align-items: center; gap: 8px; padding: 0 10px; color: var(--t3); margin-bottom: 6px; }
+  .caret { display: inline-block; width: 1.5px; height: 18px; background: var(--ac); vertical-align: -4px; margin-left: 1px; }
+
+  /* sheet */
+  .sheet { width: 400px; padding: 24px; border-radius: 12px; background: var(--bg); box-shadow: 0 12px 40px rgba(0,0,0,.28), 0 0 0 1px var(--bd); }
+  .sheet h4 { font: 700 26px/32px -apple-system, "PingFang SC"; margin: 0 0 18px; }
+  .sheet label { display: block; font: 400 13px/18px -apple-system, "PingFang SC"; color: var(--t2); margin: 0 0 6px; }
+  .inp { height: 32px; border-radius: 6px; background: var(--subtle); padding: 0 10px; line-height: 32px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .inp.ro { color: var(--t2); }
+  .inp .ph { color: var(--t3); }
+  .hint { font: 400 13px/18px -apple-system, "PingFang SC"; color: var(--t2); margin: -8px 0 14px; }
+  .iconline { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .prev { background: var(--subtle); border-radius: 9px; padding: 10px 14px; display: flex; gap: 14px; height: 56px; align-items: center; }
+  .btn { height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--bd); background: var(--bg); display: inline-flex; align-items: center; gap: 6px; font-size: 14px; line-height: 26px; white-space: nowrap; }
+  .btn.big { height: 30px; padding: 0 18px; font-size: 15px; }
+  .btn.pri { background: var(--ac); border-color: var(--ac); color: #fff; }
+  .btn.sq { width: 28px; padding: 0; justify-content: center; }
+  .area { position: relative; border: 1px solid var(--bd); border-radius: 9px; overflow: hidden; padding: 4px 8px 6px; margin-top: 10px; }
+  .area .thumb { position: absolute; right: 3px; width: 4px; border-radius: 2px; background: rgba(128,128,134,.45); }
+  .glab { font: 600 13px/18px -apple-system, "PingFang SC"; color: var(--t2); margin: 8px 0 2px; }
+  .cells { display: flex; flex-wrap: wrap; width: 324px; }
+  .cell { width: 36px; height: 36px; border-radius: 7px; display: grid; place-items: center; }
+  .cell.sel { background: var(--sel); box-shadow: inset 0 0 0 2px var(--ac); }
+  .foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .empty { height: 76px; display: grid; place-items: center; color: var(--t2); }
+  .grid12 { display: grid; grid-template-columns: repeat(12, 18px); grid-auto-rows: 18px; box-shadow: 0 0 0 1px var(--bd); flex: none; }
+  .grid12 i { border-right: 1px solid var(--bd); border-bottom: 1px solid var(--bd); }
+  .grid12 i.on { background: var(--c, var(--tx)); }
+  .tools { display: flex; flex-direction: column; gap: 8px; }
+  .tools .r { display: flex; gap: 6px; }
+  .step { display: inline-flex; align-items: center; gap: 8px; }
+  .step span { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+  canvas { display: block; }
+  .sws { display: flex; gap: 8px; margin: 0 0 14px; }
+  .sw { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
+  .sw .rg { position: absolute; left: 0; top: 0; color: var(--tx); }
+  .tog { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--t2); }
+  .tog i { width: 36px; height: 20px; background: var(--ac); border-radius: 10px; position: relative; display: block; }
+  .tog i::after { content: ''; position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 8px; background: #fff; }
+  .pal { display: flex; gap: 4px; margin-top: 8px; }
+  .pal i { width: 18px; height: 18px; display: block; }
+  .pal i.cur { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--tx); }
+
+  /* toast (views/toast.go: inverse of the theme) */
+  .toast { position: absolute; left: calc(216px + (100% - 216px) / 2); bottom: 22px; transform: translateX(-50%); height: 45px; padding: 0 24px; border-radius: 10px; background: #1c1c1e; color: #fff; display: flex; align-items: center; gap: 22px; font-size: 16px; box-shadow: 0 6px 16px rgba(0,0,0,.28); white-space: nowrap; }
+  .toast b { color: #8c8cf2; font-weight: 500; }
+</style>
+</head>
+<body>
+<h1>v24 · 自定义类别和 12 × 12 像素图标</h1>
+<p class="lead">M9 的界面稿（计划见 <code>m9-plan.md</code> 第 3、4、5、8 节）。内置只剩 Work 和 Life，用户自己建类别，每个类别一个 12 × 12 的位图和<b>一个颜色</b>（8 色里选一个，Work 蓝、Life 绿），图标在侧栏、任务菜单、预览里都用这个颜色画；选择器格子里的图标仍是文字色。多色图标（编辑器调色板、导入保留颜色）留到 PR2。图标都画成真的 12 × 12 位图：Work 和 Life 是计划里的十六进制行，其他取 pixelarticons 2.4.2 的 SVG（mockup 里直接缩放，<code>crispEdges</code>），做进 app 时按计划先转成 12 × 12。侧栏小图标 12 pt，任务菜单行 18 pt，选择器格子里 18 pt，预览行 36 / 18 / 12 pt，色块是 12 × 12 的像素圆（18 pt），都是 12 的整数倍。</p>
+
+<h2>PR1</h2>
+<div class="row"><div id="f1"></div></div>
+<div class="row"><div id="f2"></div><div id="f6"></div></div>
+<div class="row"><div id="f3"></div><div id="f3d"></div><div id="f5"></div></div>
+<div class="row"><div id="f4"></div></div>
+<div class="row"><div id="f8"></div></div>
+<h2>PR2 预览</h2>
+<div class="row"><div id="f7a"></div><div id="f7b"></div><div id="f7c"></div></div>
+<div class="row"><div id="f7d"></div></div>
+
+<script>
+const ICONS = {"briefcase":["M2 8h2v12H2zm18 0h2v12h-2zM4 6h16v2H4zm0 14h16v2H4zM8 4h2v2H8zm2-2h4v2h-4zm4 2h2v2h-2z",0],"laptop":["M3 18h18v-2h2v4H1v-4h2v2Zm2-4h14V6h2v10H3V6h2v8Zm14-8H5V4h14v2Z",0],"clipboard":["M4 6h2v14H4zm2 14h12v2H6zM18 6h2v14h-2zM6 4h2v2H6zm10 0h2v2h-2zm-6-2h4v2h-4zm0 4h4v2h-4zM8 2h2v6H8zm6 0h2v6h-2z",0],"calendar":["M5 4h14v2H5zm0 16h14v2H5zM3 10h2v10H3zm0-4h2v2H3zm16 0h2v2h-2zm0 4h2v10h-2zM3 8h18v2H3zm12-6h2v2h-2zM7 2h2v2H7z",0],"presentation":["M1 3h22v2H1zm1 2h2v11H2zm2 11h16v2H4zM20 5h2v11h-2zM9 18h2v2H9zm-2 2h2v2H7zm6-2h2v2h-2zm2 2h2v2h-2z",0],"book-open":["M2 3h9v2H2zM0 19h11v2H0zM13 3h9v2h-9zm0 16h11v2H13zM11 5h2v18h-2zM0 5h2v14H0zm22 0h2v14h-2zm-7 2h5v2h-5zm0 4h5v2h-5zm0 4h2v2h-2z",0],"notebook":["M6 2h14v2H6zm0 18h14v2H6zM20 4h2v16h-2zM4 4h2v16H4z M2 7h6v2H2zm0 4h6v2H2zm0 4h6v2H2zM16 4h2v16h-2z",0],"teach":["M3 2h4v4H3zM2 8h12v2H2zm7-4h11v2H9zm1 10h10v2H10z M2 9h6v7H2zm0 7h2v4H2zm4 0h2v4H6zM20 6h2v8h-2z",0],"university":["M1 10h2v10H1zm2 10h18v2H3zm18-10h2v10h-2zM3 8h4v2H3zm14 0h4v2h-4zM7 6h2v2H7zm2-2h2v2H9zm2-2h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zm-4 2h2v2h-2zm-2 2h2v2H9zm2 2h2v2h-2zm2-2h2v2h-2zm-8 3h2v2H5zm0 4h2v2H5zm12 0h2v2h-2zm0-4h2v2h-2zm-8 5h2v2H9zm0-2h6v2H9zm4 2h2v2h-2z",0],"pencil":["M4 16H6V18H8V20H10V22H2V14H4V16ZM12 20H10V18H12V20ZM14 18H12V16H14V18ZM10 16H8V14H10V16ZM16 16H14V14H16V16ZM6 14H4V12H6V14ZM12 14H10V12H12V14ZM18 14H16V12H18V14ZM8 12H6V10H8V12ZM14 12H12V10H14V12ZM20 12H18V10H20V12ZM10 10H8V8H10V10ZM18 10H16V8H18V10ZM22 10H20V8H22V10ZM12 8H10V6H12V8ZM16 8H14V6H16V8ZM20 8H18V6H20V8ZM14 6H12V4H14V6ZM18 6H16V4H18V6ZM16 4H14V2H16V4Z",0],"heart":["M13 22h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 16H5v-2h2v2Zm12 0h-2v-2h2v2ZM5 14H3v-2h2v2Zm16 0h-2v-2h2v2ZM3 12H1V6h2v6Zm20 0h-2V6h2v6ZM13 8h-2V6h2v2ZM5 6H3V4h2v2Zm6 0H9V4h2v2Zm4 0h-2V4h2v2Zm6 0h-2V4h2v2ZM9 4H5V2h4v2Zm10 0h-4V2h4v2Z",0],"bed":["M2 4h2v16H2zm18 6h2v10h-2z M2 16h20v2H2zm2-8h16v2H4zm2 2h2v6H6z",0],"potion":["M8 6h8v2H8zm0-4h8v2H8zm0 6h2v2H8zm6 0h2v2h-2zM6 20h12v2H6zm-2-8h2v8H4zm14 0h2v8h-2zM6 10h2v2H6zm10 0h2v2h-2zM6 4h2v2H6zm10 0h2v2h-2z",0],"leaf":["M1 18h2v4H1zm2-2h2v2H3zm2-2h6v2H5zm6-2h2v2h-2zm-6 6h4v2H5zm4 2h4v2H9zm4-2h4v2h-4zm4-2h2v2h-2zm2-8h2v8h-2zm0-4h2v4h-2zm-2-2h2v2h-2zm-4 2h4v2h-4zM7 6h6v2H7zM5 8h2v2H5zm-2 2h2v4H3z",0],"sun":["M13 22h-2v-3h2v3Zm-6-3H5v-2h2v2Zm12 0h-2v-2h2v2Zm-4-2H9v-2h6v2Zm-6-2H7V9h2v6Zm8 0h-2V9h2v6ZM5 13H2v-2h3v2Zm17 0h-3v-2h3v2Zm-7-4H9V7h6v2ZM7 7H5V5h2v2Zm12 0h-2V5h2v2Zm-6-2h-2V2h2v3Z",0],"wallet":["M18 5h2v2h-2zM4 3h14v2H4zM2 5h2v14H2zm2 14h16v2H4zm12-4h6v2h-6zm0-4h6v2h-6zm-2 0h2v6h-2z M20 7h2v12h-2zM4 7h16v2H4z",0],"coins":["M6 2h6v2H6zM4 4h2v2H4zm8 0h2v2h-2zm-8 8h2v2H4zm8 0h2v2h-2zm-6 2h6v2H6zM2 6h2v6H2zm12 0h2v6h-2z M14 8h4v2h-4zm-4 10h2v2h-2zm8-8h2v2h-2zm-6 10h2v2h-2zm6-2h2v2h-2z M12 20h6v2h-6zm-4-6h2v4H8zm12-2h2v6h-2zM7 6h4v2H7z M9 6h2v6H9zm6 8h2v4h-2zm-1-2h3v2h-3z",0],"credit-card":["M4 4h16v2H4zm0 14h16v2H4zM2 6h2v12H2zm18 0h2v12h-2zM4 8h16v4H4zm2 6h6v2H6z",0],"banknote":["M3 5h18v2H3zM1 7h2v10H1zm2 10h18v2H3zM21 7h2v10h-2zM11 9h2v2h-2zm-2 2h2v2H9zm2 2h2v2h-2zm2-2h2v2h-2zm4 0h2v2h-2zM5 11h2v2H5z",0],"dollar":["M17 18h-4v4h-2v-4H7v-2h10v2Zm2-2h-2v-3h2v3Zm-2-3H7v-2h10v2ZM7 11H5V8h2v3Zm6-5h4v2H7V6h4V2h2v4Z",0],"home":["M4 20h16v2H4zm16-10h2v10h-2zM2 10h2v10H2zm2-2h2v2H4zm2-2h2v2H6zm2-2h2v2H8zm2-2h4v2h-4zm4 2h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zM8 14h2v6H8zm2-2h4v2h-4zm4 2h2v6h-2z",0],"sofa":["M5 3h14v2H5zM3 5h2v3H3zM1 8h6v2H1zm0 2h2v7H1zm2 7h18v2H3zm18-7h2v7h-2zm-4-2h6v2h-6zm0 2h2v2h-2zM7 12h10v2H7zm-2-2h2v2H5zm6-5h2v7h-2zm8 0h2v3h-2zm0 14h2v2h-2zM3 19h2v2H3z",0],"key":["M11 18H3V16H11V18ZM23 15H21V18H17V16H19V13H21V11H11V8H13V9H23V15ZM3 16H1V8H3V16ZM17 16H15V15H13V16H11V13H17V16ZM9 14H5V10H9V14ZM11 8H3V6H11V8Z",0],"door-closed":["M3 19h18v2H3zM5 5h2v14H5zm2-2h10v2H7zm10 2h2v14h-2zm-8 6h2v2H9z",0],"smart-home":["M4 20h16v2H4zm16-10h2v10h-2zM2 10h2v10H2zm2-2h2v2H4zm2-2h2v2H6zm2-2h2v2H8zm2-2h4v2h-4zm4 2h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zm-9 8h6v2H9zm-2-2h2v2H7zm8 0h2v2h-2z",0],"music":["M4 12h4v2H4zm-2 2h2v4H2zm2 4h4v2H4zM8 6h2v12H8zm10 0h2v12h-2zm-6 8h2v4h-2zm2-2h4v2h-4zm0 6h4v2h-4zM10 4h8v2h-8z",0],"gamepad":["M4 4h16v2H4zm0 14h16v2H4zM2 6h2v12H2zm18 0h2v12h-2zM8 9h2v6H8z M6 11h6v2H6zm8-2h2v2h-2zm2 4h2v2h-2z",0],"camera":["M4 5h4v2H4zm4-2h8v2H8zm8 2h4v2h-4zM2 7h2v12H2zm2 12h16v2H4zM20 7h2v12h-2zM10 8h4v2h-4zm0 6h4v2h-4zm-2-4h2v4H8zm6 0h2v4h-2z",0],"coffee":["M4 4h16v2H4zm0 2h2v8H4zm2 8h10v2H6zm14-8h2v4h-2zm-2 4h2v2h-2zm-2-4h2v8h-2zM2 18h18v2H2z",0],"brush":["M7 2h10v2H7zM5 4h2v10H5zm12-2h2v12h-2z M13 2h2v6h-2zM9 2h2v4H9zm-4 8h14v2H5zm2 4h10v2H7zm2 2h2v4H9zm4 0h2v4h-2zm-4 4h6v2H9z",0],"drum":["M8 3h8v2H8zm0 10h8v2H8zm0 6h8v2H8zm-4-8h4v2H4zm0 6h4v2H4zm16-6h-4v2h4zm0 6h-4v2h4zM2 7h2v4H2zm0 4h2v6H2zm20-4h-2v4h2zm0 4h-2v6h2zM6 5h2v2H6zM4 3h2v2H4zM2 1h2v2H2zm6 6h2v2H8zm4 2h2v2h-2zm2-2h2v2h-2zm2-2h2v2h-2zm2-2h2v2h-2z",0],"car":["M4 13h6v2H4zm10 0h6v2h-6zM4 17h6v2H4zm10 0h6v2h-6zM2 15h4v2H2zm6 0h8v2H8zm10 0h4v2h-4zm4-4h2v4h-2zm-6-4h2v2h-2zM4 5h12v2H4zm-4 6h2v4H0zm12-2h10v2H12zM2 7h2v4H2zm8 0h2v2h-2z",0],"ship":["M14 8h2v2h-2zm4 8h2v2h-2zM8 4h2v4H8z M6 6h8v2H6zm-4 4h20v2H2zm18 2h2v4h-2zM2 12h2v6H2zm4-4h2v2H6z M0 16h4v2H0zm4 2h4v2H4zm4-2h4v2H8zm4 2h4v2h-4zm4-2h4v2h-4zm4 2h4v2h-4z",0],"helicopter":["M2 8h2v8H2zm2 4h2v2H4zm2-4h2v8H6zm2-2h10v2H8zm10 2h2v2h-2zm2 2h2v6h-2zM8 16h12v2H8zm2 2h2v2h-2zm6 0h2v2h-2zM6 20h16v2H6zM4 2h18v2H4z M12 4h2v8h-2zm2 8h6v2h-6z",0],"map":["M4 20h2v2H2V6h2v14Zm12 0h2v2h-4v-2h-2v-2h2V8h-2V6h4v14Zm-8 0H6v-2h2v2Zm12 0h-2v-2h2v2ZM10 4h2v2h-2v10h2v2H8V4H6V2h4v2Zm12 14h-2V4h-2V2h4v16ZM6 6H4V4h2v2Zm12 0h-2V4h2v2Z",0],"compass":["M18 22H6V20H18V22ZM6 20H4V18H6V20ZM20 20H18V18H20V20ZM10 16H12V18H10V19H8V10H10V16ZM4 18H2V6H4V18ZM22 18H20V6H22V18ZM14 16H12V14H14V16ZM16 14H14V8H12V6H14V5H16V14ZM13 13H11V11H13V13ZM12 10H10V8H12V10ZM6 6H4V4H6V6ZM20 6H18V4H20V6ZM18 4H6V2H18V4Z",0],"tent":["M1 19h22v2H1z M3 17h2v3H3zm2-3h2v3H5zm2-3h2v3H7zm2-3h2v3H9zm2-3h2v3h-2zM9 3h2v2H9zm4 5h2v3h-2zm2 3h2v3h-2zm2 3h2v3h-2zm2 3h2v3h-2zM9 17h2v2H9zm4 0h2v2h-2zm-2-2h2v2h-2zm2-12h2v2h-2z",0],"bus":["M4 15h6v2H4zm10 0h6v2h-6zM4 19h6v2H4zm10 0h6v2h-6zM0 7h2v10H0zm2-2h18v2H2zm20 4h2v8h-2zM2 11h20v2H2zm2 6h2v2H4zm4 0h8v2H8zm-6 0h2v2H2zm16 0h4v2h-4zm2-10h2v2h-2zm-6 0h2v4h-2zM7 7h2v4H7z",0],"user":["M9 2h6v2H9zm0 8h6v2H9zm6-6h2v6h-2zM7 4h2v6H7zM4 18h2v4H4zm14 0h2v4h-2zM8 14h8v2H8zm-2 2h2v2H6zm10 0h2v2h-2z",0],"users":["M5 2h6v2H5zm10 0h4v2h-4zM5 10h6v2H5zm10 0h4v2h-4zm4-6h2v6h-2zm-8 0h2v6h-2zM3 4h2v6H3zM0 18h2v4H0zm14 0h2v4h-2zm8 0h2v4h-2zM4 14h8v2H4zm12 0h4v2h-4zM2 16h2v2H2zm10 0h2v2h-2zm8 0h2v2h-2z",0],"dog":["M14 22H10V20H14V22ZM16 20H14V18H10V20H8V18H5V16H11V14H13V16H19V18H16V20ZM3 10H5V16H3V12H1V6H3V10ZM23 12H21V16H19V10H21V6H23V12ZM11 12H9V8H11V12ZM15 12H13V8H15V12ZM7 10H5V6H7V10ZM19 10H17V6H19V10ZM5 6H3V4H5V6ZM19 4H17V6H15V4H9V6H7V4H5V2H19V4ZM21 6H19V4H21V6Z",0],"smile":["M6 20h12v2H6zM6 2h12v2H6zm12 2h2v2h-2zM4 4h2v2H4zm0 14h2v2H4zm14 0h2v2h-2zM2 6h2v12H2zm18 0h2v12h-2zM7 13h2v2H7zm2 2h6v2H9zm6-2h2v2h-2zM8 8h2v2H8zm6 0h2v2h-2z",0],"gift":["M4 6h16v2H4zM2 8h2v4H2zm2 4h16v2H4zm16-4h2v4h-2zM6 4h2v2H6zm2-2h3v2H8zm3 2h2v2h-2zm2-2h3v2h-3zm3 2h2v2h-2zM4 14h2v6H4zm2 6h12v2H6zm12-6h2v6h-2zm-7-6h2v4h-2zm0 6h2v6h-2z",0],"search":["M22 22h-2v-2h2v2Zm-2-2h-2v-2h2v2Zm-6-2H6v-2h8v2Zm4 0h-2v-2h2v2ZM6 16H4v-2h2v2Zm10 0h-2v-2h2v2ZM4 14H2V6h2v8Zm14 0h-2V6h2v8ZM6 6H4V4h2v2Zm10 0h-2V4h2v2Zm-2-2H6V2h8v2Z",0],"check":["M10 18H8v-2h2v2Zm-2-2H6v-2h2v2Zm4-2v2h-2v-2h2Zm-6 0H4v-2h2v2Zm8 0h-2v-2h2v2Zm2-2h-2v-2h2v2Zm2-2h-2V8h2v2Zm2-2h-2V6h2v2Z",0],"chevron-right":["M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z",0],"plus":["M13 11h7v2h-7v7h-2v-7H4v-2h7V4h2v7Z",0],"move":["M13 2h2v2h2v2h-4v5h5V7h2v2h2v2h2v2h-2v2h-2v2h-2v-4h-5v5h4v2h-2v2h-2v2h-2v-2H9v-2H7v-2h4v-5H6v4H4v-2H2v-2H0v-2h2V9h2V7h2v4h5V6H7V4h2V2h2V0h2v2Z",0],"clock":["M6 2h12v2H6zM2 6h2v12H2zm18 0h2v12h-2zm-2-2h2v2h-2zM4 4h2v2H4zm2 18h12v-2H6zm12-2h2v-2h-2zM4 20h2v-2H4zm7-14h2v7h-2zm2 7h2v2h-2zm2 2h2v2h-2z",0],"terminal":["M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM6 16h2v2H6zm2-2h2v2H8zm-2-2h2v2H6z",0],"sparkle":["M11 1h2v4h-2zm0 22h2v-4h-2zM9 5h2v4H9zm0 14h2v-4H9zm4-14h2v4h-2zm0 14h2v-4h-2zM5 9h4v2H5zm14 0h-4v2h4zM1 11h4v2H1zm22 0h-4v2h4zM5 13h4v2H5zm14 0h-4v2h4z",0],"trash":["M18 22H6V20H18V22ZM9 6H15V4H17V6H22V8H20V20H18V8H6V20H4V8H2V6H7V4H9V6ZM15 4H9V2H15V4Z",0],"image":["M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zm-4 8h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm-8 0h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2z M20 16h2v2h-2zM8 16h2v2H8zm-2 2h2v2H6zM8 6h2v2H8zM6 8h2v2H6zm2 2h2v2H8zm2-2h2v2h-2z",0],"flip-horizontal-2":["M11 7h2v4h-2zm0-6h2v4h-2zm0 12h2v4h-2zm0 6h2v4h-2zm-4-8h2v2H7zm10 0h-2v2h2zM5 13h2v2H5zm14 0h-2v2h2zM5 9h2v4H5zm14 0h-2v4h2zM3 7h2v10H3zm18 0h-2v10h2z",0],"arrow-left":["M20 11v2H4v-2zM8 13v2H6v-2zm2 2v2H8v-2zm2 2v2h-2v-2zm-4-6V9H6v2z M10 15V7H8v8zm2 2V5h-2v12z",0],"arrow-up":["M11 20h2V4h-2zm2-12h2V6h-2zm2 2h2V8h-2zm2 2h2v-2h-2zm-6-4H9V6h2z M15 10H7V8h8zm2 2H5v-2h12z",0],"arrow-down":["M13 12h6v2h-2v2h-2v2h-2v2h-2v-2H9v-2H7v-2H5v-2h6V4h2v8Z",0],"arrow-right":["M4 11v2h16v-2zm12 2v2h2v-2zm-2 2v2h2v-2zm-2 2v2h2v-2zm4-6V9h2v2z M14 15V7h2v8zm-2 2V5h2v12z",0],"invert":["M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM4 18h2v2H4zm0-2h4v2H4zm0-2h6v2H4zm0-2h8v2H4zm0-2h10v2H4zm0-2h12v2H4zm0-2h14v2H4zm0-2h16v2H4z",0],"minus":["M4 11h16v2H4z",0],"code":["M11 18H9v-4h2v4Zm-4-1H5v-2h2v2Zm12-2v2h-2v-2h2ZM5 15H3v-2h2v2Zm16 0h-2v-2h2v2Zm-8-1h-2v-4h2v4ZM3 13H1v-2h2v2Zm20 0h-2v-2h2v2ZM5 11H3V9h2v2Zm16 0h-2V9h2v2Zm-6-1h-2V6h2v4ZM7 9H5V7h2v2Zm12 0h-2V7h2v2Z",0],"collapse":["M7 19h2v-2h2v-2h2v2h2v2h2v2H7v-2Zm13-6H4v-2h16v2Zm-3-8h-2v2h-2v2h-2V7H9V5H7V3h10v2Z",0],"colors-swatch":["M14 2h6v2h-6zm0 18h6v2h-6zM4 20h10v2H4zm8-16h2v16h-2zm8 0h2v16h-2zM2 16h2v4H2zm2-2h8v2H4zm12 2h2v2h-2zM6 12h2v2H6zM4 8h2v4H4zm2-2h4v2H6zm4 2h2v2h-2z",0],"comment":["M4 2h16v2H4zm0 14h14v2H4zM2 4h2v12H2zm18 0h2v18h-2zm-2 14h2v2h-2z",0],"comment-text":["M4 2h16v2H4zm0 14h14v2H4zm2-6h6v2H6zm0-4h12v2H6zM2 4h2v12H2zm18 0h2v18h-2zm-2 14h2v2h-2z",0],"computer":["M6 1h12v2H6zm0 8h12v2H6zM4 3h2v6H4zm14 0h2v6h-2zM4 13h16v2H4zm0 8h16v2H4zm-2-6h2v6H2zm18 0h2v6h-2zM6 17h2v2H6zm4 0h8v2h-8zm-2-6h2v2H8zm6 0h2v2h-2z",0],"contact":["M2 2h20v2H2zM0 4h2v16H0zm22 0h2v16h-2zM2 20h20v2H2zM14 7h6v2h-6zm0 4h6v2h-6zm0 4h4v2h-4zM6 7h4v4H6zm0 6h4v2H6zm4 2h2v2h-2zm-6 0h2v2H4z",0],"copy":["M8 6h12v2H8zM4 2h12v2H4zm2 6h2v12H6zM2 4h2v12H2zm6 16h12v2H8zM20 8h2v12h-2zm-4-4h2v2h-2zM4 16h2v2H4z",0],"copy-x":["M8 6h12v2H8zM4 2h12v2H4zm2 6h2v12H6zM2 4h2v12H2zm6 16h12v2H8zM20 8h2v12h-2zm-4-4h2v2h-2zM4 16h2v2H4zm7-5h2v2h-2zm4 4h2v2h-2zm0-4h2v2h-2zm-4 4h2v2h-2zm2-2h2v2h-2z",0],"thermometer":["M9 2h6v2H9zm0 18h6v2H9zm2-4h2v2h-2zM7 4h2v16H7zm8 0h2v16h-2z M5 16h4v2H5zM5 6h4v2H5zm0 5h4v2H5z",0],"fire":["M9 2h2v4H9zM7 6h2v2H7zM5 8h2v2H5zm8 2h2v2h-2zm2-2h2v2h-2zm2 2h2v2h-2zm2 2h2v6h-2zM3 10h2v8H3zm8-4h2v4h-2zm6 12h2v2h-2zM7 20h10v2H7zm-2-2h2v2H5zm4-2h6v4H9z M11 14h2v3h-2z",0],"robot":["M5 7h14v2H5zm0 12h14v2H5zM3 9h2v10H3zm16 0h2v10h-2zM1 13h2v2H1zm20 0h2v2h-2zM11 5h2v2h-2zM7 3h4v2H7zm1 9h2v4H8zm6 0h2v4h-2z",0],"inbox":["M2 4h2v16H2zm2 16h16v2H4zM20 4h2v16h-2zM4 2h16v2H4zm0 12h4v2H4zm4 2h8v2H8zm8-2h4v2h-4z",0],"note":["M2 4h2v16H2zm18 0h2v12h-2zM4 2h16v2H4zm14 14h2v2h-2zm-2 2h2v2h-2zM4 20h12v2H4zm10-8h6v2h-6zm-2 2h2v6h-2z",0],"script":["M16 19h2v2H4v-2h10v-2h2v2ZM6 15h8v2H4v2H2v-4h2V5h2v10ZM20 5h2v6h-2v8h-2V5H6V3h14v2Z",0],"bookmark":["M6 2h12v2H6zM4 4h2v18H4zm14 0h2v18h-2zm-2 16h2v2h-2zm-2-2h2v2h-2zm-8 2h2v2H6zm2-2h2v2H8zm2-2h4v2h-4z",0],"printer":["M6 4h2v4H6zm2-2h8v2H8zm8 2h2v4h-2z M4 6h16v2H4zM2 8h2v10H2zm2 10h2v2H4zm2-4h12v2H6z M6 14h2v8H6zm2 6h8v2H8zm8-6h2v8h-2zm2 4h2v2h-2zm2-10h2v10h-2zm-4 2h2v2h-2zm-4 0h2v2h-2z",0],"money":["M8 8h12v2H8zm0 10h12v2H8zm-2-8h2v8H6zm14 0h2v8h-2zM4 4h12v2H4zm0 10h2v2H4zM2 6h2v8H2zm14 0h2v2h-2zm-4 6h4v4h-4z",0],"receipt":["M3 2h2v18H3zm16 0h2v18h-2zM5 4h2v2H5zm4 0h2v2H9zM5 20h14v2H5zm8-16h2v2h-2zM7 2h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm2 2h2v2h-2zM7 8h10v2H7zm0 4h10v2H7zm0 4h4v2H7z",0],"lock":["M5 8h14v2H5zm0 12h14v2H5zM3 10h2v10H3zm16 0h2v10h-2zM7 4h2v4H7zm2-2h6v2H9zm6 2h2v4h-2z",0],"box":["M14 4h4v2h-4zm-4-2h4v2h-4zM6 8h4v2H6zm0 10h4v2H6zm4-8h4v2h-4zm0 10h4v2h-4zm4-12h4v2h-4zm0 10h4v2h-4zM6 4h4v2H6zM2 6h4v2H2zm0 10h4v2H2zM18 6h4v2h-4zm0 10h4v2h-4z M2 6h2v12H2zm18 0h2v12h-2zm-8 6h2v8h-2z",0],"video":["M20 17V7h2v10zm-2-2V9h2v6zM2 7h2v10H2zm14 0h2v10h-2zM4 5h12v2H4zm0 12h12v2H4z",0],"suitcase":["M4 6h16v2H4zM2 8h2v12H2zm18 0h2v12h-2zM4 20h16v2H4zM8 4h2v2H8zm2-2h4v2h-4zm4 2h2v2h-2zm-8 6h2v8H6zm10 0h2v8h-2z",0],"avatar-circle":["M6 2h12v2H6zm0 18h12v2H6zM2 6h2v12H2zm18 0h2v12h-2zM6 18h2v2H6zm10 0h2v2h-2zm2-14h2v2h-2zM4 4h2v2H4zm0 14h2v2H4zm14 0h2v2h-2zM8 16h8v2H8zm2-4h4v2h-4zM8 8h2v4H8zm2-2h4v2h-4zm4 2h2v4h-2z",0],"hand":["M21 7h2v5h-2zm-4-2h2v7h-2zm-4-2h2v8h-2zM9 3h2v8H9zM5 5h2v8H5zm14 0h2v2h-2zm-4-2h2v2h-2zm-4-2h2v2h-2zM7 3h2v2H7zm-4 8h2v2H3zm-2 2h2v2H1zm0 2h2v2H1zm2 2h2v2H3zm2 2h2v2H5zm2 2h12v2H7zm12-2h2v2h-2zm2-7h2v7h-2zM5 13h2v2H5zm2 2h2v2H7z",0],"thumbs-up":["M2 12h2v8H2zm2 8h14v2H4zm14-4h2v4h-2zm2-4h2v4h-2zm-6-2h6v2h-6zm0-2h2v2h-2zm2-4h2v4h-2zm-2-2h2v2h-2zm-2 2h2v2h-2zm-2 2h2v2h-2zM8 8h2v2H8zm-4 2h4v2H4zm2 2h2v8H6z",0],"mail":["M6 8h2v2H6zm2 2h2v2H8zm10-2h-2v2h2zm-2 2h-2v2h2zm-6 2h4v2h-4zM2 6h2v12H2zm18 0h2v12h-2zM4 4h16v2H4zm0 14h16v2H4z",0],"message":["M20 2H4v2h16zm0 14H6v2h14zm2-12h-2v12h2zM4 4H2v18h2zm2 14H4v2h2z",0]};
+/* book-open does not land on the grid (error 44), so the curated list overrides it with a hand-drawn bitmap (plan: 12-row .# override) */
+const OVERRIDE = { 'book-open': ['............', '............', '.##########.', '.#.#......#.', '.#.#.####.#.', '.#.#......#.', '.#.#.####.#.', '.#.#......#.', '.#.#......#.', '.##########.', '............', '............'] };
+const HEX = {
+  briefcase: '000 060 090 3fc 402 402 402 402 402 402 3fc 000',
+  home: '000 060 090 108 204 402 462 492 492 492 3fc 000',
+};
+/* ---- bitmap helpers ---- */
+const hexBits = (s) => s.split(' ').map((h) => parseInt(h, 16).toString(2).padStart(12, '0'));
+const asciiBits = (rows) => rows.map((r) => [...r].map((c) => (c === '#' ? 1 : 0)).join(''));
+const fnBits = (f) => Array.from({ length: 12 }, (_, y) => Array.from({ length: 12 }, (_, x) => (f(x, y) ? 1 : 0)).join(''));
+const bitsPath = (b) => { let d = ''; b.forEach((r, y) => { for (const m of r.matchAll(/1+/g)) d += `M${m.index} ${y}h${m[0].length}v1h-${m[0].length}z`; }); return d; };
+const svg = (vb, d, s, st) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 ${vb} ${vb}" shape-rendering="crispEdges" fill="currentColor"${st ? ` style="${st}"` : ''}><path d="${d}"/></svg>`;
+const bm = (bits, s, st) => svg(12, bitsPath(bits), s, st);
+const ic = (n, s, st) => (HEX[n] ? bm(hexBits(HEX[n]), s, st) : svg(24, ICONS[n][0], s, st));
+
+/* category icons: rasterise the 24-unit SVG, best of 4 offsets, a 2 x 2 block is lit when >= 2 of its 4 sub-pixels are */
+const _cv = document.createElement('canvas').getContext('2d'), _bits = {};
+function toBitmap(n) {
+  if (HEX[n]) return hexBits(HEX[n]);
+  if (OVERRIDE[n]) return asciiBits(OVERRIDE[n]);
+  if (_bits[n]) return _bits[n];
+  const p = new Path2D(ICONS[n][0]); let best = null, be = 1e9;
+  for (const dx of [0, 1]) for (const dy of [0, 1]) {
+    let err = 0; const rows = [];
+    for (let j = 0; j < 12; j++) { let r = ''; for (let i = 0; i < 12; i++) { let c = 0;
+      for (const a of [0, 1]) for (const b of [0, 1]) if (_cv.isPointInPath(p, 2 * i + a + .5 - dx, 2 * j + b + .5 - dy)) c++;
+      err += Math.min(c, 4 - c); r += c >= 2 ? '1' : '0'; } rows.push(r); }
+    if (err < be) { be = err; best = rows; }
+  }
+  return (_bits[n] = best);
+}
+const ci = (n, s, st) => bm(toBitmap(n), s, st);
+
+/* ---- status glyphs (12 x 12 discs and rings) ---- */
+const d2 = (x, y) => (x - 5.5) ** 2 + (y - 5.5) ** 2;
+const DISC = (x, y) => d2(x, y) <= 36.5, IN = (x, y) => d2(x, y) <= 27, RING = (x, y) => DISC(x, y) && !IN(x, y);
+const mid = (x) => (x === 5 || x === 6);
+const TICK = new Set(['2,6', '3,7', '4,8', '5,7', '6,6', '7,5', '8,4', '3,6', '4,7', '5,6', '6,5', '7,4']);
+const G = {
+  backlog: ['#aeaeb2', (x, y) => RING(x, y) && Math.floor((Math.atan2(y - 5.5, x - 5.5) + Math.PI) / (Math.PI / 6)) % 2 === 0],
+  todo: ['#8e8e93', RING],
+  doing: ['#3b82f6', (x, y) => RING(x, y) || (IN(x, y) && x <= 5)],
+  blocked: ['#e5484d', (x, y) => DISC(x, y) && !(mid(x) && ((y >= 2 && y <= 6) || y === 8 || y === 9))],
+  review: ['#e0a800', (x, y) => RING(x, y) || (mid(x) && (y === 5 || y === 6))],
+  done: ['#30a46c', (x, y) => DISC(x, y) && !TICK.has(x + ',' + y)],
+  cancelled: ['#aeaeb2', (x, y) => RING(x, y) || (IN(x, y) && x + y === 11)],
+};
+const glyph = (k, s) => bm(fnBits(G[k][1]), s, `color:${G[k][0]}`);
+
+/* ---- colors: the 8 theme.ProjectColors (light), and lighter ones on the dark theme ---- */
+const PC = [['indigo', '#5B5BD6', '#7C7CF0'], ['yellow', '#E0A800', '#F5C542'], ['green', '#30A46C', '#4CC38A'], ['red', '#E5484D', '#FF6369'],
+  ['blue', '#3B82F6', '#60A5FA'], ['pink', '#D9488B', '#EC6AA6'], ['teal', '#0EA5A4', '#2DD4BF'], ['orange', '#E08A1E', '#F0A040']];
+const col = (k, dark) => { const c = PC.find((p) => p[0] === k); return dark ? c[2] : c[1]; };
+const disc = (s, c) => bm(fnBits(DISC), s, `color:${c}`);
+const ringBits = fnBits(RING);
+
+/* ---- strings ---- */
+const S = {
+  en: { mine: 'Mine', agents: 'Agents', inbox: 'Inbox', search: 'Search', unsorted: 'Unsorted', work: 'Work', life: 'Life',
+    newc: 'New category…', editc: 'Edit category…', up: 'Move up', down: 'Move down', del: 'Delete category',
+    tNew: 'New category', tEdit: 'Edit category', name: 'Name', icon: 'Icon', sIcons: 'Search icons', cancel: 'Cancel', create: 'Create', save: 'Save',
+    none: 'No icon matches', color: 'Color', groups: ['Work', 'Study', 'Health', 'Money', 'Home', 'Hobby', 'Travel', 'People'],
+    ro: 'Work and Life keep their names.', draw: 'Draw', imp: 'Import image…', clear: 'Clear', invert: 'Invert', flip: 'Flip', thr: 'Threshold' },
+  zh: { mine: '我的', agents: 'Agent', inbox: '收件箱', search: '搜索', unsorted: '未分类', work: '工作', life: '生活',
+    newc: '新建类别…', editc: '编辑类别…', up: '上移', down: '下移', del: '删除类别',
+    tNew: '新建类别', tEdit: '编辑类别', name: '名称', icon: '图标', sIcons: '搜索图标', cancel: '取消', create: '创建', save: '保存',
+    none: '没有匹配的图标', color: '颜色', groups: ['工作', '学习', '健康', '理财', '家居', '爱好', '旅行', '人物'],
+    ro: '工作和生活的名称不能修改。', draw: '画一个', imp: '导入图片…', clear: '清空', invert: '反相', flip: '翻转', thr: '阈值' },
+};
+const GROUPS = [
+  ['briefcase', 'laptop', 'clipboard', 'calendar', 'printer'], ['book-open', 'note', 'script', 'bookmark', 'pencil'],
+  ['heart', 'thermometer', 'fire', 'leaf', 'potion'], ['wallet', 'money', 'credit-card', 'banknote', 'receipt'],
+  ['home', 'bed', 'door-closed', 'lock', 'box'], ['music', 'drum', 'brush', 'coffee', 'video'],
+  ['car', 'ship', 'helicopter', 'map', 'suitcase'], ['avatar-circle', 'hand', 'thumbs-up', 'mail', 'message'],
+];
+
+/* ---- sidebar window ---- */
+function sidebar(o) {
+  const L = S[o.l || 'en'];
+  const sub = o.cats.map((c, i) => `<div class="row1 sub${o.hot === i ? ' hot' : ''}">${ci(c.icon, 12, 'color:' + col(c.col))}<span>${c.name}</span>${c.n ? `<span class="n">${c.n}</span>` : ''}</div>`).join('');
+  return `<div class="sb"><div class="srch">${ic('search', 12)}<span>${L.search}</span><em>⌘F</em></div>
+    <div class="row1">${ic('user', 18, 'color:#5b5bd6')}<span>${L.mine}</span><span class="n">${o.mine}</span></div>
+    ${sub}<div class="row1 un"><span>${L.unsorted}</span><span class="n">${o.un}</span></div>
+    <div class="row1">${ic('robot', 18, 'color:#5b5bd6')}<span>${L.agents}</span><span class="n">3</span></div>
+    <div class="row1">${ic('inbox', 18)}<span>${L.inbox}</span><span class="n">3</span></div></div>`;
+}
+const skel = '<div class="sk" style="width:62%"></div><div class="sk" style="width:84%"></div><div class="sk" style="width:48%"></div><div class="sk" style="width:73%"></div>';
+const menu = (items, x, y) => `<div class="sm" style="left:${x}px;top:${y}px">${items.map((i) => (i === '-' ? '<hr>' : `<div>${i}</div>`)).join('')}</div>`;
+const win = (o, inner = '', title = '', w = 656) => `<div class="t win${o.dark ? ' dark' : ''}" style="width:${w}px">${sidebar(o)}<div class="main"><h3>${title}</h3>${skel}</div>${inner}</div>`;
+const frame = (id, n, cap, body) => { document.getElementById(id).innerHTML = `<div class="cap" style="max-width:${id === 'f1' || id === 'f8' ? 1200 : id === 'f4' ? 860 : 440}px"><b>${n}</b>${cap}</div>${body}`; };
+
+const cats = (l) => [{ name: S[l].work, icon: 'briefcase', col: 'blue', n: 4 }, { name: S[l].life, icon: 'home', col: 'green', n: 2 },
+  { name: l === 'zh' ? '阅读' : 'Reading', icon: 'book-open', col: 'orange', n: 5 }, { name: l === 'zh' ? '健康' : 'Health', icon: 'heart', col: 'red', n: 0 }];
+
+/* ---- task menu ---- */
+function strip(keys, cur) { return `<div class="strip">${keys.map((k) => `<b class="${k === cur ? 'cur' : ''}">${glyph(k, 18)}</b>`).join('')}</div>`; }
+function taskMain() {
+  const pr = ['P0', 'P1', 'P2', 'P3'].map((p) => `<b class="${p === 'P0' ? 'cur' : ''}" style="${p === 'P0' ? 'color:#e5484d' : ''}">${p}</b>`).join('');
+  const row = (icon, label, h) => `<div class="prow">${ic(icon, 18)}<span>${label}</span><span class="h">${h || ''}</span></div>`;
+  return `<div class="t tm"><div class="lab">Status<i>· Blocked</i></div>${strip(['backlog', 'todo', 'doing', 'blocked', 'review', 'done', 'cancelled'], 'blocked')}
+    <div class="lab">Priority<i>· P0 Urgent</i></div><div class="strip">${pr}</div><div class="hr"></div>
+    <div class="prow" style="background:var(--sel)">${ci('book-open', 18, 'color:' + col('orange'))}<span>Category</span><span class="h"><span>Reading</span>${ic('chevron-right', 12)}</span></div>
+    ${row('move', 'Move to…', 'M')}${row('clock', 'Remind me…', 'R')}${row('terminal', 'Open in…')}${row('sparkle', 'Ask about this task…', '⌘J')}
+    <div class="hr"></div><div class="prow red">${ic('trash', 18)}<span>Delete</span><span class="h" style="color:#e5484d">⌘⌫</span></div></div>`;
+}
+function taskCat() {
+  const r = (n, label, o = {}) => `<div class="prow${o.on ? ' on' : ''}">${n && n !== 'plus' ? ci(n, 18, o.on ? '' : 'color:' + col(o.c)) : n ? ic(n, 18) : '<span style="width:18px"></span>'}<span>${label}</span><span class="h">${o.chk ? ic('check', 12, 'color:var(--tx)') : ''}</span></div>`;
+  return `<div class="t tm"><div class="fld">${ic('search', 12)}<span>Find a category</span></div>
+    ${r('briefcase', 'Work', { on: 1, c: 'blue' })}${r('home', 'Life', { c: 'green' })}${r('book-open', 'Reading', { chk: 1, c: 'orange' })}${r('heart', 'Health', { c: 'red' })}${r('', 'None')}
+    <div class="hr"></div>${r('plus', 'New category…')}</div>`;
+}
+
+/* ---- sheet ---- */
+const previews = (n, c) => `<div class="prev">${ci(n, 36, 'color:' + c)}${ci(n, 18, 'color:' + c)}${ci(n, 12, 'color:' + c)}</div>`;
+const cellsOf = (names, sel, c) => names.map((n) => `<div class="cell${n === sel ? ' sel' : ''}" title="${n}">${ci(n, 18, n === sel ? 'color:' + c : '')}</div>`).join('');
+function curated(l, sel, c) { return GROUPS.map((g, i) => `<div class="glab">${S[l].groups[i]}</div><div class="cells">${cellsOf(g, sel, c)}</div>`).join(''); }
+function area(inner, h, thumb) { return `<div class="area" style="height:${h}px">${inner}${thumb ? `<div class="thumb" style="top:${thumb[0]}px;height:${thumb[1]}px"></div>` : ''}</div>`; }
+const search = (ph, q) => `<div class="inp" style="margin:0">${ic('search', 12, 'color:var(--t3)')}${q ? `<span>${q}<i class="caret"></i></span>` : `<span class="ph">${ph}</span>`}</div>`;
+function colorRow(L, key, dark) {
+  const sw = PC.map((p) => `<div class="sw">${disc(18, dark ? p[2] : p[1])}${p[0] === key ? bm(ringBits, 24, '').replace('<svg', '<svg class="rg"') : ''}</div>`).join('');
+  return `<label>${L.color}</label><div class="sws">${sw}</div>`;
+}
+function sheet(o) {
+  const l = o.l || 'en', L = S[l], cc = col(o.ck, o.dark);
+  const name = o.ro ? `<div class="inp ro">${o.name}</div><div class="hint">${L.ro}</div>` : `<div class="inp"><span>${o.name}${o.focus ? '<i class="caret"></i>' : ''}</span></div>`;
+  const btns = o.draw ? `<span class="btn" style="padding:0 10px">${L.draw}</span><span class="btn" style="padding:0 10px">${L.imp}</span>` : '';
+  let mid;
+  if (o.mode === 'editor') mid = editorBody(l, o, cc) + colorRow(L, o.ck, o.dark);
+  else if (o.mode === 'import') mid = importBody(l, o, cc) + colorRow(L, o.ck, o.dark);
+  else {
+    const head = `<label>${L.icon}</label><div class="iconline">${previews(o.sel, cc)}${btns}</div>${colorRow(L, o.ck, o.dark)}`;
+    let a;
+    if (o.mode === 'search') a = area(`<div class="cells" style="padding-top:4px">${cellsOf(['coffee'], o.sel, cc)}</div>`, o.ah || 240);
+    else a = area(curated(l, o.sel, cc), 240, [6, 112]);
+    mid = head + search(L.sIcons, o.q) + a;
+  }
+  return `<div class="t sheet${o.dark ? ' dark' : ''}"><h4>${o.edit ? L.tEdit : L.tNew}</h4><label>${L.name}</label>${name}${mid}
+    <div class="foot"><span class="btn big">${L.cancel}</span><span class="btn big pri">${o.edit ? L.save : L.create}</span></div></div>`;
+}
+const dim = (inner, cls = 'dim') => `<div class="stage ${cls}">${inner}</div>`;
+
+/* ---- PR2: editor ---- */
+const CUP = asciiBits(['............', '...#..#.....', '..#..#......', '............', '.########...', '.#......###.', '.#......#.#.', '.#......#.#.', '.#......###.', '..#....#....', '...####.....', '............']);
+function editorBody(l, o, c) {
+  const L = S[l], teal = col('teal', o.dark);
+  const g = CUP.map((r, y) => [...r].map((ch) => `<i class="${ch === '1' ? 'on' : ''}" style="--c:${y < 3 ? teal : c}"></i>`).join('')).join('');
+  const arrows = ['arrow-left', 'arrow-up', 'arrow-down', 'arrow-right'].map((a) => `<span class="btn sq">${ic(a, 12)}</span>`).join('');
+  const prv = (s) => bm(CUP, s, `color:${c}`);
+  const pal = PC.map((p) => `<i class="${p[0] === o.ck ? 'cur' : ''}" style="background:${o.dark ? p[2] : p[1]}"></i>`).join('');
+  return `<label>${L.icon}</label><div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:6px"><div class="grid12" style="--c:${c}">${g}</div>
+    <div class="tools"><div class="prev" style="padding:10px 12px;gap:12px;height:auto;align-items:flex-end">${prv(24)}${prv(18)}${prv(12)}</div>
+    <div class="r"><span class="btn">${L.clear}</span><span class="btn">${L.invert}</span></div>
+    <div class="r">${arrows}</div><div class="r"><span class="btn">${ic('flip-horizontal-2', 12)}${L.flip}</span></div></div></div>
+    <div class="pal">${pal}</div>
+    <div class="hint" style="margin:8px 0 14px">Palette: a cell takes the picked color. Click to draw, drag to keep going. ⌘Z undoes.</div>`;
+}
+
+/* ---- PR2: import (a real pipeline on a synthetic photo) ---- */
+let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+function drawPhoto(c) {
+  const x = c.getContext('2d', { willReadFrequently: true });
+  const g = x.createLinearGradient(0, 0, 144, 144); g.addColorStop(0, '#e6dccb'); g.addColorStop(1, '#c9b99e');
+  x.fillStyle = g; x.fillRect(0, 0, 144, 144);
+  x.filter = 'blur(5px)'; x.fillStyle = 'rgba(60,40,20,.35)'; x.beginPath(); x.ellipse(76, 118, 44, 9, 0, 0, 7); x.fill();
+  x.filter = 'blur(0.8px)';
+  x.fillStyle = '#3b3431'; x.beginPath(); x.roundRect(36, 46, 64, 70, [4, 4, 14, 14]); x.fill();
+  x.strokeStyle = '#3b3431'; x.lineWidth = 10; x.beginPath(); x.arc(103, 78, 15, -1.4, 1.4); x.stroke();
+  x.fillStyle = '#d9cfbd'; x.beginPath(); x.ellipse(68, 47, 30, 7, 0, 0, 7); x.fill();
+  x.fillStyle = '#4a3f3a'; x.beginPath(); x.ellipse(68, 48, 24, 4, 0, 0, 7); x.fill();
+  x.filter = 'none';
+  const im = x.getImageData(0, 0, 144, 144);
+  for (let i = 0; i < im.data.length; i += 4) { const n = (rnd() - .5) * 18; im.data[i] += n; im.data[i + 1] += n; im.data[i + 2] += n; }
+  x.putImageData(im, 0, 0);
+}
+function inkGrid(c) {
+  const x = c.getContext('2d'), W = 144, im = x.getImageData(0, 0, W, W).data, lum = [];
+  for (let i = 0; i < im.length; i += 4) lum.push((0.299 * im[i] + 0.587 * im[i + 1] + 0.114 * im[i + 2]) / 255);
+  let bg = 0, nb = 0; for (let i = 0; i < W; i++) for (const j of [0, W - 1]) { bg += lum[i * W + j] + lum[j * W + i]; nb += 2; } bg /= nb;
+  const ink = lum.map((v) => Math.max(0, (bg - v) / bg));
+  let x0 = W, x1 = 0, y0 = W, y1 = 0; ink.forEach((v, i) => { if (v > .3) { const a = i % W, b = (i / W) | 0; x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); } });
+  const side = Math.max(x1 - x0, y1 - y0) + 1, sx = (x0 + x1) / 2 - side / 2, sy = (y0 + y1) / 2 - side / 2, grid = [];
+  for (let j = 0; j < 10; j++) for (let i = 0; i < 10; i++) { let s = 0, n = 0;
+    for (let b = Math.floor(sy + j * side / 10); b < Math.floor(sy + (j + 1) * side / 10); b++) for (let a = Math.floor(sx + i * side / 10); a < Math.floor(sx + (i + 1) * side / 10); a++) if (a >= 0 && b >= 0 && a < W && b < W) { s += ink[b * W + a]; n++; }
+    grid.push(n ? s / n : 0); }
+  return grid;
+}
+function importBody(l, o, c) {
+  const L = S[l], id = o.tag;
+  const tog = o.outline ? `<div class="tog"><i></i>${l === 'zh' ? '只留轮廓' : 'Outline only'}</div>` : '';
+  return `<label>${L.icon}</label><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px"><div><canvas id="ph${id}" width="144" height="144" style="border-radius:6px"></canvas><div class="hint" style="margin:6px 0 0">coffee.png</div></div>${ic('arrow-right', 18, 'color:var(--t2)')}
+    <div><div id="res${id}" style="width:144px;height:144px;background:var(--subtle);border-radius:6px;display:grid;place-items:center"></div><div class="hint" style="margin:6px 0 0">12 × 12</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${o.outline ? 8 : 14}px"><div class="step"><span style="color:var(--t2);font-size:13px">${L.thr}</span><b class="btn sq">${ic('minus', 12)}</b><span id="thv${id}"></span><b class="btn sq">${ic('plus', 12)}</b></div>
+    <div class="prev" id="pv${id}" style="height:48px;padding:6px 14px;gap:14px"></div></div>${tog ? `<div style="margin-bottom:14px">${tog}</div>` : ''}`;
+}
+function finishImport(id, outline, c) {
+  const cv = document.getElementById('ph' + id); if (!cv) return;
+  drawPhoto(cv);
+  const grid = inkGrid(cv);
+  const hist = new Array(64).fill(0); grid.forEach((v) => hist[Math.min(63, Math.floor(v * 64))]++);
+  let best = 0, bt = 0; for (let t = 1; t < 64; t++) { let w0 = 0, s0 = 0, w1 = 0, s1 = 0; hist.forEach((h, i) => { if (i < t) { w0 += h; s0 += h * i; } else { w1 += h; s1 += h * i; } });
+    if (!w0 || !w1) continue; const v = w0 * w1 * (s0 / w0 - s1 / w1) ** 2; if (v > best) { best = v; bt = t; } }
+  const thr = bt / 64;
+  const on = (x, y) => x >= 1 && x <= 10 && y >= 1 && y <= 10 && grid[(y - 1) * 10 + x - 1] >= thr;
+  const bits = fnBits((x, y) => on(x, y) && (!outline || !(on(x - 1, y) && on(x + 1, y) && on(x, y - 1) && on(x, y + 1))));
+  const st = `color:${c}`;
+  document.getElementById('res' + id).innerHTML = bm(bits, 144, st);
+  document.getElementById('thv' + id).textContent = Math.round(thr * 100) + '%';
+  document.getElementById('pv' + id).innerHTML = bm(bits, 24, st) + bm(bits, 18, st) + bm(bits, 12, st);
+}
+
+/* ---- frames ---- */
+const en = S.en, zh = S.zh, CATS = cats('en');
+frame('f1', '1', '侧栏里 Mine 展开：Work、Life、两个自定义类别（Reading 书本、Health 爱心）、Unsorted。左：右键 Reading 的菜单；右：右键 Work 的同一个菜单，到了列表的头尾就少一个 Move up / Move down，内置的没有 Delete。系统菜单，和项目的右键菜单同一个样子。',
+  `<div class="stage soft">${win({ cats: CATS, mine: 11, un: 3, hot: 2 }, menu([en.newc, en.editc, en.up, en.down, '-', en.del], 120, 168), 'Reading')}${win({ cats: CATS, mine: 11, un: 3, hot: 0 }, menu([en.newc, en.editc, en.down], 120, 104), 'Work')}</div>`);
+
+frame('f2', '2', '任务菜单：三按钮条变成一行 Category（左边是当前类别的图标，右边是名字和 ›）；点进去是类别页，和 Move to… 同一套（过滤框、18 pt 图标行、当前项打勾、键盘高亮在第一行），最后一行 New category…，新建的类别直接给这个任务。',
+  `<div class="stage soft"><div class="col"><div class="note">主页</div>${taskMain()}</div><div class="col"><div class="note">类别页</div>${taskCat()}</div></div>`);
+
+frame('f6', '6', '删除 Reading 之后的撤销 toast（6 秒）：5 个任务回到 Unsorted（3 → 8）。Undo 把类别连同图标和位置放回来。',
+  `<div class="stage soft">${win({ cats: [CATS[0], CATS[1], CATS[3]], mine: 11, un: 8 }, `<div class="toast"><span>Deleted “Reading” · 5 tasks unsorted</span><b>Undo</b></div>`, 'Mine')}</div>`);
+
+frame('f3', '3', 'New category，图标未搜索（精选分组）：名字、36 / 18 / 12 pt 预览（用类别的颜色）、Color 一行 8 个色块（当前这个套一圈环）、Search icons、240 pt 滚动区，分组标题 + 36 pt 格子（18 pt 图标，每行 9 个）。格子里的图标用文字色；选中的格子不用强调色底（红、橙在靛蓝底上看不清），改成强调色 2 pt 描边加淡底，图标显示所选颜色。',
+  dim(sheet({ sel: 'heart', name: 'Health', ck: 'red', focus: 1 })));
+frame('f3d', '3 · 暗', '同一张表，暗色，选中 Reading 的书本。8 个色块在暗底上换成各自更亮的一档（theme 的暗色版本），靛蓝、蓝、红都看得清。', dim(sheet({ sel: 'book-open', name: 'Reading', ck: 'orange', dark: 1 }), 'dimd'));
+frame('f5', '5', 'Edit category（内置的 Work）：名字只读（按语言显示），下面一行说明原因；图标可改，这里从公文包换成笔记本电脑，Save 是主按钮。',
+  dim(sheet({ sel: 'laptop', name: 'Work', ck: 'blue', ro: 1, edit: 1 })));
+
+const insetCo = `<div class="t sheet" style="width:372px;padding:16px">${search(en.sIcons, 'co')}${area(`<div class="cells" style="padding-top:4px">${cellsOf(['code', 'coffee', 'collapse', 'colors-swatch', 'comment', 'comment-text', 'compass', 'computer', 'contact', 'copy', 'copy-x'], 'coffee')}</div>`, 100)}</div>`;
+const insetNo = `<div class="t sheet" style="width:372px;padding:16px">${search(en.sIcons, 'cofx')}<div class="area" style="margin-top:10px"><div class="empty">${en.none}</div></div></div>`;
+frame('f4', '4', '搜索状态：输入 cof，滚动区换成平铺的匹配（名字里含 cof 的只有 coffee），点中就选上；右边两个小块是输入 co（十几个匹配，一行 9 个平铺）和 cofx（空状态 “No icon matches”）。',
+  dim(`${sheet({ sel: 'coffee', name: 'Coffee', ck: 'orange', q: 'cof', mode: 'search', ah: 76 })}<div class="col" style="gap:20px">${insetCo}${insetNo}</div>`));
+
+frame('f8', '8', '中文：侧栏（工作、生活、阅读、健康、未分类）里右键「阅读」的菜单，和「新建类别」的表。内置类别的名字用本地语言，图标位图不变。',
+  `<div class="stage zhs"><div class="t win" style="width:520px">${sidebar({ l: 'zh', cats: cats('zh'), mine: 11, un: 3, hot: 2 })}<div class="main" style="padding-left:20px"><h3>阅读</h3>${skel}</div>${menu([zh.newc, zh.editc, zh.up, zh.down, '-', zh.del], 120, 168)}</div>${sheet({ l: 'zh', sel: 'book-open', name: '阅读', ck: 'orange' })}</div>`);
+
+frame('f7a', '7a', 'PR2：表里图标行多了 Draw 和 Import image… 两个按钮（紧挨着预览），其余同 3。', dim(sheet({ sel: 'heart', name: 'Health', ck: 'red', draw: 1 })));
+frame('f7b', '7b', 'PR2：Draw 之后的 12 × 12 编辑器（现在有一排调色板，一个类别可以多色，这里蒸汽用青色、杯身用橙色）：18 pt 格子、1 pt 格线（边框色），亮格用文字色；Clear、Invert、四个平移箭头、水平翻转；实时 24 / 18 / 12 pt 预览。', dim(sheet({ name: 'Coffee', ck: 'orange', mode: 'editor' })));
+frame('f7c', '7c', 'PR2：Import image… 之后，左边是原图（一张像照片的杯子），右边是缩到 12 × 12 的结果（墨量、取框、10 × 10 面积平均、Otsu），阈值 − / + 步进，预览同上。', dim(sheet({ name: 'Coffee', ck: 'orange', mode: 'import', tag: 'a' })));
+frame('f7d', '7d', 'PR2：导入再多一个 Outline only（只留轮廓）开关，打开后只留边缘一圈像素（内部抠空）；这里是 7c 的同一张图、开关打开的样子。导入会把图里的颜色映射到编辑器的调色板，打开开关前 7c 是单色的。',
+  dim(sheet({ name: 'Coffee', ck: 'orange', mode: 'import', tag: 'b', outline: 1 })));
+finishImport('a', 0, col('orange'));
+finishImport('b', 1, col('orange'));
+</script>
+</body>
+</html>

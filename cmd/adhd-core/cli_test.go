@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -212,6 +213,9 @@ func TestDatabaseOpenFailureExitsOne(t *testing.T) {
 func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 	testutil.IsolateGit(t)
 	bin := filepath.Join(t.TempDir(), "adhd-core")
+	if runtime.GOOS == "windows" {
+		bin += ".exe" // Windows LookPath requires the extension
+	}
 	if out, err := exec.Command("go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, out)
 	}
@@ -231,7 +235,7 @@ func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 		t.Fatalf("connect: %v\n%s", err, stderr.String())
 	}
 	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 8 {
+	if err != nil || len(tools.Tools) != 9 {
 		t.Fatalf("tools = %v, err = %v", tools, err)
 	}
 	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "report_progress",

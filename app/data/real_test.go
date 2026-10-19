@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sync/atomic"
 	"testing"
@@ -149,10 +150,12 @@ func TestRealMilestonesAndGetTask(t *testing.T) {
 	if err != nil || len(d.Reports) != 2 || d.Reports[0].Summary != "second" || d.Reports[0].Status != Doing || d.Reports[0].NextStep != "go on" {
 		t.Fatalf("detail = %+v, %v", d, err)
 	}
-	if _, err := core.AddReport(bg, domain.AddReportInput{TaskID: int64(task.ID), Agent: "claude", Summary: "third", Cwd: "/work/tree"}); err != nil {
+	// filepath.Clean keeps a native path stable; /work/tree is how it looks on Unix.
+	cwd := filepath.FromSlash("/work/tree")
+	if _, err := core.AddReport(bg, domain.AddReportInput{TaskID: int64(task.ID), Agent: "claude", Summary: "third", Cwd: cwd}); err != nil {
 		t.Fatal(err)
 	}
-	if d, err := r.GetTask(task.ID); err != nil || len(d.Reports) != 3 || d.Reports[0].Cwd != "/work/tree" || d.Reports[1].Cwd != "" {
+	if d, err := r.GetTask(task.ID); err != nil || len(d.Reports) != 3 || d.Reports[0].Cwd != cwd || d.Reports[1].Cwd != "" {
 		t.Fatalf("cwd of the reports = %+v, %v", d, err)
 	}
 	if _, err := r.GetTask(4242); err == nil {
@@ -291,7 +294,12 @@ func TestRealCloseStopsTheWatcher(t *testing.T) {
 }
 
 func TestOpenRealReportsBadPath(t *testing.T) {
-	if _, err := OpenReal(bg, "/dev/null/nope/x.db", RealOptions{}); err == nil {
+	// A path whose parent is a file cannot become a directory on any OS.
+	blocker := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(blocker, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OpenReal(bg, filepath.Join(blocker, "x.db"), RealOptions{}); err == nil {
 		t.Error("expected an error")
 	}
 }
@@ -366,32 +374,53 @@ func TestRealCreatesATaskWithADueDate(t *testing.T) {
 
 func TestRealReadsAndWritesACategory(t *testing.T) {
 	r, core := realPair(t, nil)
-	made, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Pay rent", Category: ptrTo(domain.CategoryLife)})
+	made, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Pay rent", CategoryID: ptrTo(int64(lifeID))})
 	if err != nil {
 		t.Fatal(err)
 	}
 	tasks, _ := r.ListTasks(Filter{})
-	if len(tasks) != 1 || tasks[0].Category != CategoryLife {
+	if len(tasks) != 1 || tasks[0].CategoryID != lifeID {
 		t.Fatalf("read %+v, want life", tasks)
 	}
-	created, err := r.CreateTask(CreateTaskInput{Title: "Ship it", Category: CategoryWork})
-	if err != nil || created.Category != CategoryWork {
+	created, err := r.CreateTask(CreateTaskInput{Title: "Ship it", Category: workID})
+	if err != nil || created.CategoryID != workID {
 		t.Fatalf("created %+v, %v", created, err)
 	}
-	moved, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr(CategoryWork)})
-	if err != nil || moved.Category != CategoryWork {
+	moved, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(workID)})
+	if err != nil || moved.CategoryID != workID {
 		t.Fatalf("moved %+v, %v", moved, err)
 	}
 	kept, _ := r.UpdateTask(int(made.ID), Patch{Title: StrPtr("Pay the rent")})
-	if kept.Category != CategoryWork {
-		t.Errorf("a patch without a category changed it to %q", kept.Category)
+	if kept.CategoryID != workID {
+		t.Errorf("a patch without a category changed it to %d", kept.CategoryID)
 	}
-	cleared, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("")})
-	if err != nil || cleared.Category != "" {
+	cleared, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(0)})
+	if err != nil || cleared.CategoryID != 0 {
 		t.Errorf("cleared %+v, %v", cleared, err)
 	}
-	if _, err := r.UpdateTask(int(made.ID), Patch{Category: CategoryPtr("play")}); err == nil {
-		t.Error("an unknown category was accepted")
+	if _, err := r.UpdateTask(int(made.ID), Patch{Category: IntPtr(99)}); err == nil {
+		t.Error("a category that does not exist was accepted")
+	}
+}
+
+// A category the MCP side cannot make but the window can: it shows up for the app after the watcher
+// sees the change, with the name the task read through the domain layer.
+func TestRealReadsACategoryAnotherProcessSortedATaskInto(t *testing.T) {
+	r, core := realPair(t, nil)
+	cat, err := core.CreateCategory(bg, domain.CreateCategoryInput{Name: "Reading", Icon: dotGrid})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := core.CreateTask(bg, domain.CreateTaskInput{Title: "Finish the novel", CategoryID: &cat.ID}); err != nil {
+		t.Fatal(err)
+	}
+	cats, err := r.ListCategories()
+	if err != nil || len(cats) != 3 || cats[2].Name != "Reading" || int64(cats[2].ID) != cat.ID {
+		t.Fatalf("categories %+v, %v", cats, err)
+	}
+	tasks, _ := r.ListTasks(Filter{})
+	if len(tasks) != 1 || int64(tasks[0].CategoryID) != cat.ID {
+		t.Errorf("tasks %+v", tasks)
 	}
 }
 

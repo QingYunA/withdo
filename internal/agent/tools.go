@@ -33,12 +33,14 @@ type toolbox struct {
 	now      func() time.Time
 	journal  *journal
 	projects []domain.Project
+	// categories are the user's categories as of the start of the turn; receipts label with them.
+	categories []domain.Category
 	// defaultProject is where create_task puts a task whose project the model did not name: the
 	// project whose page the request came from.
 	defaultProject *int64
 	// defaultCategory is the category create_task gives a task whose category the model did not
-	// name: the Work or Life page of Mine the request came from; nil elsewhere.
-	defaultCategory *domain.Category
+	// name: the category page of Mine the request came from; nil elsewhere.
+	defaultCategory *int64
 	// images is how many pictures the request carries; the tools take their indexes.
 	images int
 
@@ -128,17 +130,32 @@ func (tb *toolbox) view(t domain.Task) taskView {
 	loc := tb.now().Location()
 	return taskView{
 		ID: t.ID, Title: t.Title, Status: string(t.Status), Priority: string(t.Priority),
-		Category: categoryName(t.Category), Project: tb.projectName(t.ProjectID), DueAt: localRFC3339(t.DueAt, loc),
+		Category: categoryName(t), Project: tb.projectName(t.ProjectID), DueAt: localRFC3339(t.DueAt, loc),
 		RemindAt: localRFC3339(t.RemindAt, loc), Source: string(t.Source),
 	}
 }
 
-// categoryName is a category as the tools and receipts say it; "" for a task nobody classified.
-func categoryName(c *domain.Category) string {
-	if c == nil {
+// categoryName is the name of a task's category as the model reads it; "" for a task nobody sorted.
+func categoryName(t domain.Task) string {
+	if t.Category == nil {
 		return ""
 	}
-	return string(*c)
+	return *t.Category
+}
+
+// categoryLabel is a task's category as a receipt carries it: the key (work, life) for a built-in
+// one, which the app words in the user's language, and the name for one of the user's own; "" for a
+// task nobody sorted.
+func (tb *toolbox) categoryLabel(t domain.Task) string {
+	if t.CategoryID == nil {
+		return ""
+	}
+	for _, c := range tb.categories {
+		if c.ID == *t.CategoryID && c.Builtin != "" {
+			return c.Builtin
+		}
+	}
+	return categoryName(t)
 }
 
 // reply is what every tool returns. A failure is a result, not an error, so the model can read it

@@ -94,10 +94,10 @@ func TestScreensSubRows(t *testing.T) {
 		app, store := mineApp(t)
 		store.ReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
 		app.Refresh()
-		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subWork}) })
-		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subLife}) })
+		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
+		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: lifeID}) })
 		mainShot(t, "agents-codex-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents, sub: "Codex"}) })
-		zhShot(t, "mine-work-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, sub: subWork}) })
+		zhShot(t, "mine-work-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
 		mainShot(t, "inspector-category-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			m.OpenTask(18)
 			tt.Frame()
