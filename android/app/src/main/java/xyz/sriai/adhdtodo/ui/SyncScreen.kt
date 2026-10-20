@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.Device
+import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
@@ -58,6 +59,10 @@ data class SyncModel(
     val status: SyncStatus,
     val account: Account = Account(),
     val devices: List<Device> = emptyList(),
+    /** The counts of SignIn's choose answer, for the both-have-tasks sheet. */
+    val choose: SignInState = SignInState(),
+    /** The Go error's sentence after a failed sign-in, shown under the button. */
+    val signInError: String? = null,
 )
 
 /** The account's display name, else its email, else the quiet "Account". */
@@ -94,8 +99,11 @@ fun SyncScreen(
 
     Column(Modifier.fillMaxWidth()) {
         when (model.phase) {
-            SyncPhase.SIGNED_OUT -> SignedOutCard(signingIn = false, onSignIn = onSignIn)
-            SyncPhase.SIGNING_IN -> SignedOutCard(signingIn = true, onSignIn = onSignIn)
+            SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignedOutCard(
+                signingIn = model.phase == SyncPhase.SIGNING_IN,
+                error = model.signInError,
+                onSignIn = onSignIn,
+            )
             SyncPhase.CHOOSE -> {
                 GroupCard {
                     SyncAccountRow(model, words, onSignOut)
@@ -151,6 +159,7 @@ fun SyncScreen(
             contentColor = tokens.text,
         ) {
             ChooseSheet(
+                counts = model.choose,
                 onCancel = {
                     sheetOpen = false
                     onCancelChoose()
@@ -165,7 +174,7 @@ fun SyncScreen(
 }
 
 @Composable
-private fun SignedOutCard(signingIn: Boolean, onSignIn: () -> Unit) {
+private fun SignedOutCard(signingIn: Boolean, error: String?, onSignIn: () -> Unit) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     GroupCard {
@@ -198,6 +207,15 @@ private fun SignedOutCard(signingIn: Boolean, onSignIn: () -> Unit) {
                     },
                     enabled = !signingIn,
                     onClick = onSignIn,
+                )
+            }
+            if (error != null && !signingIn) {
+                Text(
+                    error,
+                    style = type.meta,
+                    color = tokens.statusBlocked,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 2.dp).widthIn(max = 340.dp),
                 )
             }
             if (signingIn) {
@@ -431,7 +449,11 @@ private fun ServerFooter(
 }
 
 @Composable
-private fun ChooseSheet(onCancel: () -> Unit, onContinue: (Boolean) -> Unit) {
+private fun ChooseSheet(
+    counts: SignInState,
+    onCancel: () -> Unit,
+    onContinue: (Boolean) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     var merge by remember { mutableStateOf(true) }
@@ -445,7 +467,12 @@ private fun ChooseSheet(onCancel: () -> Unit, onContinue: (Boolean) -> Unit) {
             color = tokens.text,
         )
         Text(
-            stringResource(R.string.sync_both_body),
+            stringResource(
+                R.string.sync_both_body,
+                counts.accountDevices,
+                counts.localTasks,
+                counts.localProjects,
+            ),
             style = type.meta,
             color = tokens.textSecondary,
         )

@@ -273,7 +273,7 @@ func (r *Real) SyncSignOut() {
 		r.mu.Unlock()
 	}
 	if cfg.Issuer != "" && r.opts.Secrets != nil {
-		_ = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, r.opts.Secrets).Logout()
+		_ = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes).Logout()
 	}
 	if r.syncPath != "" && cfg.Server != "" {
 		_ = syncclient.SaveConfigAt(r.syncPath, cfg)
@@ -416,7 +416,7 @@ func (r *Real) syncClientFor(cfg syncclient.Config) (*syncclient.Client, error) 
 		if r.opts.Secrets == nil {
 			return nil, errors.New("sync has no secrets store")
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, r.opts.Secrets)
+		tokens = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:

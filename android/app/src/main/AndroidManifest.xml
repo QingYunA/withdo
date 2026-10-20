@@ -9,6 +9,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- The sign-in's loopback sends the browser here, which brings the app back to the
+                 front before the code is exchanged (Android cuts a background app's network). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="xyz.sriai.adhdtodo" android:host="signed-in" />
+            </intent-filter>
         </activity>
         <receiver android:name=".platform.ReminderReceiver" android:exported="false">
             <intent-filter>

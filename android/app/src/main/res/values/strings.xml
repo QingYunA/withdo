@@ -160,7 +160,7 @@
     <string name="sync_retrying_minutes">Retrying in %1$d min</string>
     <string name="sync_retrying_hours">Retrying in %1$d h</string>
     <string name="sync_both_title">This phone and your account both have tasks</string>
-    <string name="sync_both_body">The account already has tasks. Merging keeps both sides; using the account backs this phone’s data up first.</string>
+    <string name="sync_both_body">The account already has data from %1$d devices. This phone has %2$d tasks and %3$d projects.</string>
     <string name="sync_merge">Merge into the account</string>
     <string name="sync_merge_body">This phone’s tasks join the account. They get new numbers from the account’s blocks (for example, #45 becomes #2045); agents use the new number the next time they report.</string>
     <string name="sync_recommended">Recommended</string>

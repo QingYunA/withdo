@@ -58,7 +58,7 @@ func runSync(ctx context.Context, args []string, d deps) error {
 	case "login":
 		return syncLogin(ctx, args[1:], dbPath, core, d)
 	case "logout":
-		return syncLogout(args[1:], d)
+		return syncLogout(args[1:], dbPath, d)
 	case "status":
 		return syncStatus(ctx, core, d)
 	case "now":
@@ -151,6 +151,7 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 		return errors.New("sync login: no keychain available; use the desktop app")
 	}
 	source := syncclient.NewOIDCSource(*issuer, *clientID, scopes, d.secrets)
+	source.DBPath = dbPath
 	open := d.openBrowser
 	if open == nil {
 		open = openBrowser
@@ -182,14 +183,14 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 }
 
 // syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
-func syncLogout(args []string, d deps) error {
+func syncLogout(args []string, dbPath string, d deps) error {
 	if len(args) > 0 {
 		return errors.New("usage: adhd-core sync logout")
 	}
 	if d.secrets == nil {
 		return errors.New("sync logout: no keychain available; use the desktop app")
 	}
-	if err := syncclient.DeleteRefreshToken(d.secrets); err != nil {
+	if err := syncclient.DeleteRefreshTokenAt(d.secrets, dbPath); err != nil {
 		return err
 	}
 	_, _ = io.WriteString(d.stdout, "signed out\n")
@@ -375,7 +376,9 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 		if d.secrets == nil {
 			return errors.New("sync now: OIDC sign-in needs the desktop app's keychain")
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, d.secrets)
+		source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, d.secrets)
+		source.DBPath = dbPath
+		tokens = source
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:

@@ -256,10 +256,16 @@ data class Reminder(
     @SerialName("project") val project: String? = null,
 )
 
-/** SignIn()'s answer: "linked" or "choose". */
+/**
+ * SignIn()'s answer: "linked" or "choose". The choose answer carries the counts the
+ * both-have-tasks sheet shows: this phone's tasks and projects and the account's synced devices.
+ */
 @Serializable
 data class SignInState(
     @SerialName("state") val state: String = "",
+    @SerialName("local_tasks") val localTasks: Int = 0,
+    @SerialName("local_projects") val localProjects: Int = 0,
+    @SerialName("account_devices") val accountDevices: Int = 0,
 )
 
 /**

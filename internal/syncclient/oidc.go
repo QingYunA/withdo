@@ -30,7 +30,7 @@ const (
 
 // OIDCSource signs in through the system browser and supplies OIDC access tokens to the sync
 // client. The refresh token lives in Secrets; the access token only in memory. A zero LoginTimeout
-// means five minutes. Scopes are asked for on top of "openid offline_access".
+// means five minutes. Scopes are asked for on top of "openid offline_access profile email".
 type OIDCSource struct {
 	Issuer       string
 	ClientID     string
@@ -38,6 +38,13 @@ type OIDCSource struct {
 	Secrets      Secrets
 	HTTP         *http.Client
 	LoginTimeout time.Duration
+	// DBPath is the database whose key holds the refresh token. Empty keeps the old fixed key,
+	// which is what the package's tests and a caller with no database use.
+	DBPath string
+	// DoneURL, when set, is where the loopback sends the browser as soon as the code arrives,
+	// before the exchange: the phone's app link, which brings the app back to the front. Android
+	// cuts a background app's network, so the exchange must not run while the browser is in front.
+	DoneURL string
 
 	mu           sync.Mutex
 	oauth        *oauth2.Config
@@ -128,20 +135,41 @@ func (s *OIDCSource) Login(ctx context.Context, open func(url string) error) err
 			finish(loginResult{err: errors.New("syncclient: OIDC sign-in returned no code")})
 			return
 		}
-		token, err := oauthConfig.Exchange(httpContext(ctx, s.HTTP), code,
-			oauth2.SetAuthURLParam("code_verifier", verifier))
+		// The phone goes back to the app first; the exchange's retries cover the moment until
+		// Android gives the app its network back. Errors then reach the app, not the browser.
+		answered := false
+		if s.DoneURL != "" {
+			http.Redirect(w, r, s.DoneURL, http.StatusFound)
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+			answered = true
+		}
+		var token *oauth2.Token
+		err := retryTransient(ctx, func() error {
+			var exchangeErr error
+			token, exchangeErr = oauthConfig.Exchange(httpContext(ctx, s.HTTP), code,
+				oauth2.SetAuthURLParam("code_verifier", verifier))
+			return exchangeErr
+		})
 		if err != nil {
-			http.Error(w, "sign-in failed", http.StatusBadGateway)
+			if !answered {
+				http.Error(w, "sign-in failed", http.StatusBadGateway)
+			}
 			finish(loginResult{err: fmt.Errorf("syncclient: exchange the OIDC code: %w", err)})
 			return
 		}
 		if err := s.storeToken(token); err != nil {
-			http.Error(w, "sign-in failed", http.StatusInternalServerError)
+			if !answered {
+				http.Error(w, "sign-in failed", http.StatusInternalServerError)
+			}
 			finish(loginResult{err: err})
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = io.WriteString(w, "<!doctype html><title>Signed in</title><p>You can close this tab.</p>")
+		if !answered {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = io.WriteString(w, "<!doctype html><title>Signed in</title><p>You can close this tab.</p>")
+		}
 		finish(loginResult{token: token})
 	})
 
@@ -184,7 +212,7 @@ func (s *OIDCSource) Token(ctx context.Context) (string, error) {
 	if s.accessToken != "" && (s.accessExpiry.IsZero() || time.Now().Before(s.accessExpiry.Add(-tokenRefreshSkew))) {
 		return s.accessToken, nil
 	}
-	refreshToken, err := s.Secrets.Get(RefreshTokenKey)
+	refreshToken, err := s.loadRefreshToken()
 	if errors.Is(err, ErrSecretNotFound) || (err == nil && refreshToken == "") {
 		return "", ErrSignedOut
 	}
@@ -197,10 +225,20 @@ func (s *OIDCSource) Token(ctx context.Context) (string, error) {
 	}
 	token, err := oauthConfig.TokenSource(httpContext(ctx, s.HTTP),
 		&oauth2.Token{RefreshToken: refreshToken}).Token()
+	if err != nil && refreshRefused(err) {
+		// The issuer rotates refresh tokens: another source or process (the app and adhd-core share
+		// a database's key) may have refreshed first and stored the next one. Use that one before
+		// concluding the sign-in is gone.
+		if stored, loadErr := s.loadRefreshToken(); loadErr == nil && stored != "" && stored != refreshToken {
+			refreshToken = stored
+			token, err = oauthConfig.TokenSource(httpContext(ctx, s.HTTP),
+				&oauth2.Token{RefreshToken: refreshToken}).Token()
+		}
+	}
 	if err != nil {
 		if refreshRefused(err) {
 			s.accessToken, s.accessExpiry = "", time.Time{}
-			_ = DeleteRefreshToken(s.Secrets)
+			_ = s.deleteRefreshToken()
 			return "", ErrSignedOut
 		}
 		return "", fmt.Errorf("syncclient: refresh the OIDC token: %w", err)
@@ -220,7 +258,7 @@ func (s *OIDCSource) Logout() error {
 	s.accessToken, s.accessExpiry = "", time.Time{}
 	s.account, s.hasAccount = Account{}, false
 	s.mu.Unlock()
-	return DeleteRefreshToken(s.Secrets)
+	return s.deleteRefreshToken()
 }
 
 // Account returns who this source signed in as, from the ID token of the last sign-in or refresh.
@@ -254,7 +292,8 @@ func (s *OIDCSource) oauthConfigLocked(ctx context.Context) (*oauth2.Config, err
 	if err != nil {
 		return nil, fmt.Errorf("syncclient: discover OIDC issuer %s: %w", issuer, err)
 	}
-	scopes := []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess}
+	// profile and email put the name and email in the ID token, which Settings shows as the account.
+	scopes := []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "profile", "email"}
 	for _, scope := range s.Scopes {
 		if scope = strings.TrimSpace(scope); scope != "" && !slices.Contains(scopes, scope) {
 			scopes = append(scopes, scope)
@@ -279,7 +318,7 @@ func (s *OIDCSource) storeTokenLocked(token *oauth2.Token, refreshToken string) 
 		nextRefresh = refreshToken
 	}
 	if nextRefresh != "" && nextRefresh != refreshToken {
-		if err := s.Secrets.Set(RefreshTokenKey, nextRefresh); err != nil {
+		if err := s.storeRefreshToken(nextRefresh); err != nil {
 			s.accessToken, s.accessExpiry = "", time.Time{}
 			return fmt.Errorf("syncclient: store the OIDC refresh token: %w", err)
 		}
@@ -292,6 +331,31 @@ func (s *OIDCSource) storeTokenLocked(token *oauth2.Token, refreshToken string) 
 		}
 	}
 	return nil
+}
+
+// loadRefreshToken reads this source's refresh token. With a database it uses that database's key
+// and moves an old fixed-key token over; without one it keeps the old key.
+func (s *OIDCSource) loadRefreshToken() (string, error) {
+	if strings.TrimSpace(s.DBPath) == "" {
+		return getSecret(s.Secrets, RefreshTokenKey)
+	}
+	return LoadRefreshToken(s.Secrets, s.DBPath)
+}
+
+// storeRefreshToken writes this source's refresh token under its key.
+func (s *OIDCSource) storeRefreshToken(token string) error {
+	if strings.TrimSpace(s.DBPath) == "" {
+		return s.Secrets.Set(RefreshTokenKey, token)
+	}
+	return SaveRefreshToken(s.Secrets, s.DBPath, token)
+}
+
+// deleteRefreshToken removes this source's refresh token.
+func (s *OIDCSource) deleteRefreshToken() error {
+	if strings.TrimSpace(s.DBPath) == "" {
+		return DeleteRefreshToken(s.Secrets)
+	}
+	return DeleteRefreshTokenAt(s.Secrets, s.DBPath)
 }
 
 // refreshRefused reports whether the token endpoint answered a refresh with a client error, which

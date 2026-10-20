@@ -1,3 +1,6 @@
 {
-  "state": "choose"
+  "state": "choose",
+  "local_tasks": 128,
+  "local_projects": 6,
+  "account_devices": 2
 }

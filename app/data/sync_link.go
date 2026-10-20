@@ -51,7 +51,7 @@ func (r *Real) signIn(server string) {
 		r.failSignIn(errors.New("the server does not offer sign-in"))
 		return
 	}
-	tokens := syncclient.NewOIDCSource(public.Issuer, public.ClientID, public.Scopes, r.opts.Secrets)
+	tokens := r.oidcSource(public.Issuer, public.ClientID, public.Scopes)
 	if err := tokens.Login(ctx, r.opts.SyncOpen); err != nil {
 		r.failSignIn(err)
 		return

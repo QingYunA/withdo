@@ -56,7 +56,7 @@ func (m *mapSecrets) has(key string) bool {
 func TestAccountGolden(t *testing.T) {
 	dir := t.TempDir()
 	secrets := newMapSecrets()
-	if err := secrets.Set(syncclient.RefreshTokenKey, "refresh-token"); err != nil {
+	if err := syncclient.SaveRefreshToken(secrets, filepath.Join(dir, "adhd-todo.db"), "refresh-token"); err != nil {
 		t.Fatal(err)
 	}
 	if err := syncclient.SaveConfigAt(filepath.Join(dir, "sync.json"), syncclient.Config{
@@ -100,5 +100,28 @@ func TestAccountGolden(t *testing.T) {
 // TestSignInStateGoldens pins the two JSON answers of SignIn.
 func TestSignInStateGoldens(t *testing.T) {
 	checkGolden(t, "signin-linked.golden.json", signInLinkedJSON)
-	checkGolden(t, "signin-choose.golden.json", signInChooseJSON)
+	choose, err := encodeSignInChoose(128, 6, 2)
+	if err != nil {
+		t.Fatalf("encode the choose answer: %v", err)
+	}
+	checkGolden(t, "signin-choose.golden.json", choose)
+}
+
+// TestOneTokenSourceForTheSameSettings: the runner and a Sync now share one OIDC source, because
+// the issuer rotates refresh tokens and two sources refreshing at once sign each other out.
+func TestOneTokenSourceForTheSameSettings(t *testing.T) {
+	phone, err := open(t.TempDir(), newMapSecrets(), func() time.Time { return demoNow })
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer func() { _ = phone.Close() }()
+	cfg := syncclient.Config{Issuer: "https://issuer.example", ClientID: "client", Scopes: []string{"aud"}}
+	if phone.oidcSource(cfg) != phone.oidcSource(cfg) {
+		t.Error("the same settings got two token sources")
+	}
+	other := cfg
+	other.Issuer = "https://other.example"
+	if phone.oidcSource(cfg) == phone.oidcSource(other) {
+		t.Error("another issuer reused the old token source")
+	}
 }

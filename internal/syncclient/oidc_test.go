@@ -44,11 +44,16 @@ type fakeOIDC struct {
 	email         string
 	expiresIn     int
 	refreshRefuse bool
-	refreshes     int
-	accesses      int
-	challenge     string
-	method        string
-	subjects      []string
+	// rotate accepts only the latest refresh token issued, as Zitadel does; onRefuse runs when a
+	// rotated-out token is refused, before the answer.
+	rotate    bool
+	current   string
+	onRefuse  func()
+	refreshes int
+	accesses  int
+	challenge string
+	method    string
+	subjects  []string
 }
 
 func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
@@ -151,8 +156,13 @@ func (f *fakeOIDC) token(w http.ResponseWriter, r *http.Request) {
 		}
 		f.mu.Lock()
 		refused := f.refreshRefuse
+		stale := f.rotate && r.PostForm.Get("refresh_token") != f.current
+		onRefuse := f.onRefuse
 		f.mu.Unlock()
-		if refused {
+		if stale && onRefuse != nil {
+			onRefuse()
+		}
+		if refused || stale {
 			writeOAuthError(w, "invalid_grant")
 			return
 		}
@@ -180,6 +190,7 @@ func (f *fakeOIDC) respondToken(w http.ResponseWriter, grant string) {
 	email := f.email
 	expiresIn := f.expiresIn
 	f.subjects = append(f.subjects, subject)
+	f.current = fmt.Sprintf("refresh-%d", n)
 	f.mu.Unlock()
 	exp := time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
 	access, err := f.sign(map[string]any{
@@ -359,6 +370,42 @@ func TestS4a2Login(t *testing.T) {
 		}
 		if forged != http.StatusBadRequest {
 			t.Errorf("forged redirect answered %d, want 400", forged)
+		}
+		if refresh, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || refresh == "" {
+			t.Fatalf("refresh token = %q, %v", refresh, err)
+		}
+	})
+
+	t.Run("a DoneURL sends the browser back to the app, then the exchange finishes", func(t *testing.T) {
+		issuer := newFakeOIDC(t, clientID)
+		secrets := newFakeSecrets()
+		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
+		source.DoneURL = "xyz.sriai.adhdtodo://signed-in"
+		var location string
+		err := source.Login(ctx, func(authURL string) error {
+			// A browser hands the app link to the app: stop at it instead of following it.
+			client := &http.Client{Timeout: 10 * time.Second, CheckRedirect: func(req *http.Request, _ []*http.Request) error {
+				if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
+					return http.ErrUseLastResponse
+				}
+				return nil
+			}}
+			resp, err := client.Get(authURL)
+			if err != nil {
+				return err
+			}
+			_ = resp.Body.Close()
+			if resp.StatusCode != http.StatusFound {
+				return fmt.Errorf("loopback answered %d, want 302", resp.StatusCode)
+			}
+			location = resp.Header.Get("Location")
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("Login: %v", err)
+		}
+		if location != source.DoneURL {
+			t.Errorf("the browser was sent to %q, want %q", location, source.DoneURL)
 		}
 		if refresh, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || refresh == "" {
 			t.Fatalf("refresh token = %q, %v", refresh, err)
@@ -546,4 +593,46 @@ func isolatedDatabase(t *testing.T, databaseURL string) string {
 	q.Set("search_path", schema)
 	u.RawQuery = q.Encode()
 	return u.String()
+}
+
+// TestARotatedRefreshTokenIsReadAgain: the issuer rotates refresh tokens, and another source (the
+// app's runner beside its Settings pane, or adhd-core beside the app) refreshed first and stored the
+// next one. The refused source reads the stored token again instead of signing out.
+func TestARotatedRefreshTokenIsReadAgain(t *testing.T) {
+	ctx := context.Background()
+	issuer := newFakeOIDC(t, "adhd-desktop")
+	secrets := newFakeSecrets()
+	first := syncclient.NewOIDCSource(issuer.URL, "adhd-desktop", nil, secrets)
+	if err := first.Login(ctx, followBrowser(t)); err != nil {
+		t.Fatalf("Login: %v", err)
+	}
+	issued, err := secrets.Get(syncclient.RefreshTokenKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	issuer.mu.Lock()
+	issuer.rotate = true
+	issuer.mu.Unlock()
+
+	// The other source refreshes with the issued token, which rotates it and stores the next one.
+	other := syncclient.NewOIDCSource(issuer.URL, "adhd-desktop", nil, secrets)
+	if _, err := other.Token(ctx); err != nil {
+		t.Fatalf("the other source's refresh: %v", err)
+	}
+	// This source raced it: it read the issued token before the other stored the next one.
+	if err := secrets.Set(syncclient.RefreshTokenKey, issued); err != nil {
+		t.Fatal(err)
+	}
+	next := issuer.current
+	issuer.mu.Lock()
+	issuer.onRefuse = func() { _ = secrets.Set(syncclient.RefreshTokenKey, next) }
+	issuer.mu.Unlock()
+
+	racer := syncclient.NewOIDCSource(issuer.URL, "adhd-desktop", nil, secrets)
+	if token, err := racer.Token(ctx); err != nil || token == "" {
+		t.Fatalf("Token after a rotation elsewhere = %q, %v; want a fresh token", token, err)
+	}
+	if stored, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || stored == "" {
+		t.Fatalf("the refresh token was deleted: %q, %v", stored, err)
+	}
 }

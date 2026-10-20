@@ -245,7 +245,7 @@ in to a test account) found these. Each needs a test where one is possible.
    to `could not reach the server; check the connection`. Never log tokens: errors from `net/http`
    carry the URL, which holds none here; do not log request bodies.
 3. **Transient network errors end the sign-in.** Retry the OIDC code exchange and each request of
-   `Link` (device create, id lease, seed or join) up to 3 times, 1 s then 2 s apart, only for errors
+   `Link` (device create, id lease, seed or join), 4 attempts 1 s, 2 s and 3 s apart, only for errors
    where the request may not have reached the server (DNS, dial, connection refused/reset/abort).
    Put the rule in one helper in `internal/syncclient` with a unit test over fake errors.
 4. **The runner races the link.** The logs show the runner refreshing the token while `Link` was
@@ -269,6 +269,27 @@ in to a test account) found these. Each needs a test where one is possible.
    `sync/refresh-token/<first 16 hex of sha256 of the absolute database path>`. On read, when the
    new key is missing and the old one exists, move the old one to the new key (the app's existing
    sign-in keeps working). Tests in `internal/syncclient` and `app/data` with a fake secrets store.
+
+9. **Android cuts a background app's network** (Android 15: after the app has been in the back for
+   some seconds, its DNS answers "no such host" and its connections are destroyed, "software caused
+   connection abort"). The code was exchanged while the browser was in front, so every sign-in
+   failed. `OIDCSource.DoneURL`: the loopback answers the code with a 302 to the app link
+   `xyz.sriai.adhdtodo://signed-in` (registered on `MainActivity`), which brings the app to the
+   front, and then exchanges; the retries of 3 cover the moment until the network is back.
+10. **The old refresh-token key belongs to one database.** Only the platform's default database
+   (`internal/paths`, `ADHD_TODO_DB` ignored) moves or deletes the old fixed key; any other database
+   neither takes it nor deletes it on sign-out.
+11. **Two token sources sign each other out.** Zitadel rotates refresh tokens. `mobile/core` and
+   `app/data` built a new `OIDCSource` per client, so the runner and a Sync now (or the Settings
+   pane) refreshed with the same token at once; the loser was refused and deleted the stored
+   token: signed out a minute after signing in. One source per database and settings in each
+   process, and a refused refresh first reads the stored token again (another process, the app
+   beside `adhd-core`, may have rotated it) before signing out.
+12. **Sync now, Retry, Merge and Replace never ran.** `App.kt` passed the action as `perform`'s
+   `onError` and the failure message as the action, so each tap showed "Couldn't sync" and a merge
+   or replace never linked. Pass `onError` by name; `perform` logs what failed.
+13. **No account name.** The ID token carries the name and email only with the `profile` and
+   `email` scopes, which the sign-in did not ask for, so Settings showed no account on either side.
 
 ### Verification
 

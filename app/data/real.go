@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,17 +43,24 @@ type Real struct {
 	db   *sql.DB
 	opts RealOptions
 
-	mu      sync.Mutex
-	subs    map[int]func()
-	remSubs map[int]func(Reminder)
-	evSubs  map[int]func(Event)
-	nextSub int
+	mu       sync.Mutex
+	dbPathMu sync.Mutex
+	// tokens is the one OIDC source of this database: the issuer rotates refresh tokens, so two
+	// sources refreshing at once (the runner and the Settings pane) would sign each other out.
+	tokensMu  sync.Mutex
+	tokens    *syncclient.OIDCSource
+	tokensKey string
+	subs      map[int]func()
+	remSubs   map[int]func(Reminder)
+	evSubs    map[int]func(Event)
+	nextSub   int
 	// eventMark is how far the reports were told; only the watcher's goroutine touches it, after
 	// Start.
 	eventMark eventMark
 	cancel    context.CancelFunc
 	done      chan struct{}
 	syncPath  string
+	dbPath    string
 	runner    *syncclient.Runner
 	sync      syncTask
 	// syncNotify asks the shell to redraw after a sync status change; set by the app.
@@ -79,6 +87,7 @@ func OpenReal(ctx context.Context, path string, opts RealOptions) (*Real, error)
 		return nil, err
 	}
 	r := NewReal(db, opts)
+	r.dbPath = path
 	if opts.SyncConfigPath == "" {
 		r.syncPath = syncclient.ConfigPath(path)
 	}
@@ -165,7 +174,7 @@ func (r *Real) startSync(ctx context.Context) {
 		if r.opts.Secrets == nil {
 			return
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, r.opts.Secrets)
+		tokens = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
@@ -193,6 +202,52 @@ func (r *Real) startSync(ctx context.Context) {
 		}
 		r.mu.Unlock()
 	}
+}
+
+// oidcSource is this database's token source, keyed to it so a second profile or the CLI cannot
+// replace this Mac's refresh token. The same settings get the same source, so the runner and the
+// pane share one refresh.
+func (r *Real) oidcSource(issuer, clientID string, scopes []string) *syncclient.OIDCSource {
+	key := issuer + "\n" + clientID + "\n" + strings.Join(scopes, " ")
+	r.tokensMu.Lock()
+	defer r.tokensMu.Unlock()
+	if r.tokens != nil && r.tokensKey == key {
+		return r.tokens
+	}
+	source := syncclient.NewOIDCSource(issuer, clientID, scopes, r.opts.Secrets)
+	source.DBPath = r.databasePath()
+	r.tokens, r.tokensKey = source, key
+	return source
+}
+
+// databasePath is this database's file path, for keying the refresh token. OpenReal knows it; a
+// database opened by NewReal is asked once through PRAGMA database_list.
+func (r *Real) databasePath() string {
+	r.dbPathMu.Lock()
+	defer r.dbPathMu.Unlock()
+	if r.dbPath != "" {
+		return r.dbPath
+	}
+	if r.db == nil {
+		return ""
+	}
+	rows, err := r.db.Query("PRAGMA database_list")
+	if err != nil {
+		return ""
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var seq int
+		var name, file string
+		if err := rows.Scan(&seq, &name, &file); err != nil {
+			return ""
+		}
+		if name == "main" {
+			r.dbPath = file
+			return file
+		}
+	}
+	return ""
 }
 
 // syncRunner is the running background runner, for the tests.
