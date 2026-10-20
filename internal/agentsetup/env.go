@@ -79,17 +79,30 @@ func (e *Env) exists(p string) bool {
 
 func (e *Env) path(rel string) string { return filepath.Join(e.Home, filepath.FromSlash(rel)) }
 
-// extraDirs are where a command line tool usually lives and a GUI app's PATH does not reach.
-func (e *Env) extraDirs() []string {
+func (e *Env) extraDirs() []string { return extraDirs(runtime.GOOS, e.Home) }
+
+// extraDirs are where a command line tool usually lives on a system and a GUI app's PATH may not
+// reach.
+func extraDirs(goos, home string) []string {
+	if goos == "windows" {
+		return []string{
+			filepath.Join(home, ".local", "bin"),
+			filepath.Join(home, "AppData", "Roaming", "npm"),
+			filepath.Join(home, ".bun", "bin"),
+			filepath.Join(home, ".cargo", "bin"),
+			filepath.Join(home, "go", "bin"),
+			filepath.Join(home, "AppData", "Local", "Programs", "Microsoft VS Code", "bin"),
+		}
+	}
 	return []string{
 		"/opt/homebrew/bin", "/usr/local/bin",
-		filepath.Join(e.Home, ".local", "bin"),
-		filepath.Join(e.Home, ".claude", "local"),
-		filepath.Join(e.Home, ".npm-global", "bin"),
-		filepath.Join(e.Home, ".bun", "bin"),
-		filepath.Join(e.Home, ".cargo", "bin"),
-		filepath.Join(e.Home, ".volta", "bin"),
-		filepath.Join(e.Home, "go", "bin"),
+		filepath.Join(home, ".local", "bin"),
+		filepath.Join(home, ".claude", "local"),
+		filepath.Join(home, ".npm-global", "bin"),
+		filepath.Join(home, ".bun", "bin"),
+		filepath.Join(home, ".cargo", "bin"),
+		filepath.Join(home, ".volta", "bin"),
+		filepath.Join(home, "go", "bin"),
 		"/Applications/Visual Studio Code.app/Contents/Resources/app/bin",
 	}
 }
@@ -101,9 +114,9 @@ func (e *Env) lookPath(name string) (string, error) {
 	if p, err := exec.LookPath(name); err == nil {
 		return p, nil
 	}
+	// LookPath on a path checks it is executable, and on Windows tries the PATHEXT endings (.exe, .cmd).
 	for _, d := range e.extraDirs() {
-		p := filepath.Join(d, name)
-		if fi, err := os.Stat(p); err == nil && !fi.IsDir() && fi.Mode()&0o111 != 0 {
+		if p, err := exec.LookPath(filepath.Join(d, name)); err == nil {
 			return p, nil
 		}
 	}
