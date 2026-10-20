@@ -1,0 +1,47 @@
+# The adhd-todo sync server and its own Postgres, behind the host's nginx for todo.sri-ai.xyz.
+#   docker compose --env-file sync.env -f sync.compose.yml up -d
+# bin/adhd-sync is a static linux/amd64 build: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/adhd-sync
+name: adhd-sync
+
+services:
+  sync:
+    image: gcr.io/distroless/static-debian12:nonroot
+    restart: unless-stopped
+    command:
+      - /adhd-sync
+      - -addr=:8080
+      - -database-url=postgres://adhd_sync:${SYNC_DB_PASSWORD}@postgres:5432/adhd_sync?sslmode=disable
+      - -oidc-issuer=${OIDC_ISSUER}
+      - -oidc-audience=${OIDC_AUDIENCE}
+    volumes:
+      - ./bin/adhd-sync:/adhd-sync:ro
+    ports:
+      - 127.0.0.1:18080:8080
+    networks:
+      - sync
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: adhd_sync
+      POSTGRES_PASSWORD: ${SYNC_DB_PASSWORD}
+      POSTGRES_DB: adhd_sync
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sync
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adhd_sync -d adhd_sync"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  sync:
+
+volumes:
+  postgres-data:

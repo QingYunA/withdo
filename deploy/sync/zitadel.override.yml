@@ -1,0 +1,42 @@
+# Zitadel behind the host's nginx, which terminates TLS for auth.todo.sri-ai.xyz.
+# Based on Zitadel's docker-compose.mode-external-tls.yml (deploy/compose upstream), with the
+# proxy published on loopback only, so nothing but nginx reaches it.
+#   docker compose --env-file .env -f zitadel.compose.yml -f zitadel.override.yml up -d --wait
+services:
+  proxy:
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=zitadel
+      - --entrypoints.web.address=:80
+      # nginx reaches the proxy through Docker's port mapping, from the bridge's gateway.
+      - --entrypoints.web.forwardedHeaders.trustedIPs=${TRAEFIK_TRUSTED_IPS}
+      - --api.dashboard=false
+      - --api.insecure=false
+      - --ping=true
+      - --ping.entrypoint=web
+      - --log.level=${TRAEFIK_LOG_LEVEL}
+      - --accesslog=${TRAEFIK_ACCESSLOG_ENABLED}
+    ports: !override
+      - 127.0.0.1:18081:80
+
+  zitadel-api:
+    environment:
+      ZITADEL_EXTERNALPORT: 443
+      ZITADEL_EXTERNALSECURE: true
+      ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI: https://${ZITADEL_DOMAIN}/ui/v2/login/
+      ZITADEL_OIDC_DEFAULTLOGINURLV2: https://${ZITADEL_DOMAIN}/ui/v2/login/login?authRequest=
+      ZITADEL_OIDC_DEFAULTLOGOUTURLV2: https://${ZITADEL_DOMAIN}/ui/v2/login/logout?post_logout_redirect=
+      ZITADEL_SAML_DEFAULTLOGINURLV2: https://${ZITADEL_DOMAIN}/ui/v2/login/login?samlRequest=
+      # The first admin's password replaces the public default; it is generated on the server.
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${ADMIN_HUMAN_PASSWORD}
+      # A service account with a personal access token, written once at first start, so the
+      # project and the app for adhd-todo are set up through the API (see README.md).
+      ZITADEL_FIRSTINSTANCE_PATPATH: /zitadel/bootstrap/admin-sa.pat
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME: adhd-todo-admin-sa
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME: adhd-todo provisioning
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE: ${ADMIN_SA_PAT_EXPIRATION}
+
+  zitadel-login:
+    environment:
+      CUSTOM_REQUEST_HEADERS: Host:${ZITADEL_DOMAIN},X-Forwarded-Proto:https
