@@ -65,9 +65,6 @@ type Core struct {
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool
-	// signInFn replaces syncclient's in-app sign-in in tests, so the arguments SignIn sends and
-	// the device it links can be checked without the real server.
-	signInFn func(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

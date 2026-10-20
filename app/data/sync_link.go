@@ -54,7 +54,7 @@ func (r *Real) signIn(server, loginName, password string) {
 		return
 	}
 	tokens := r.oidcSource(public.Issuer, public.ClientID, public.Scopes)
-	if err := r.passwordSignIn(ctx, tokens, server, loginName, password); err != nil {
+	if err := tokens.SignIn(ctx, server, loginName, password); err != nil {
 		r.failSignIn(err)
 		return
 	}
@@ -121,14 +121,6 @@ func (r *Real) signIn(server, loginName, password string) {
 	r.mu.Unlock()
 	r.startSync(context.Background())
 	r.syncChanged()
-}
-
-// passwordSignIn is syncclient's in-app sign-in, replaced in tests to check what the pane sends.
-func (r *Real) passwordSignIn(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error {
-	if r.signInFn != nil {
-		return r.signInFn(ctx, source, server, loginName, password)
-	}
-	return source.SignIn(ctx, server, loginName, password)
 }
 
 // watchSeed keeps the upload count up to date while Link pushes the first snapshot.

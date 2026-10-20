@@ -140,7 +140,7 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 		}
 	}
 	source := c.oidcSource(cfg)
-	if err := c.passwordSignIn(context.Background(), source, cfg.Server, loginName, password); err != nil {
+	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
 		return "", syncError(err)
 	}
 	if account, ok := source.Account(); ok {
@@ -514,14 +514,6 @@ func (c *Core) finishLink() {
 		c.links--
 	}
 	c.mu.Unlock()
-}
-
-// passwordSignIn is syncclient's in-app sign-in, replaced in tests to check what SignIn sends.
-func (c *Core) passwordSignIn(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error {
-	if c.signInFn != nil {
-		return c.signInFn(ctx, source, server, loginName, password)
-	}
-	return source.SignIn(ctx, server, loginName, password)
 }
 
 // oidcSource is the OIDC token source for cfg, keyed to this database so another profile cannot

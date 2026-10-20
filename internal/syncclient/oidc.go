@@ -18,32 +18,24 @@ import (
 )
 
 const (
-	// LoginTimeout is how long Login waits for the browser when the source does not set one.
-	LoginTimeout = 5 * time.Minute
 	// tokenRefreshSkew refreshes an access token that expires within this much time.
 	tokenRefreshSkew = 60 * time.Second
-	// callbackPath is the loopback redirect's path.
+	// callbackPath is the path of the registered loopback redirect the sign-in callback names.
 	callbackPath = "/callback"
 )
 
-// OIDCSource supplies OIDC access tokens to the sync client. Login signs in through the system
-// browser; SignIn signs in inside the app with an account and password. The refresh token lives in
-// Secrets; the access token only in memory. A zero LoginTimeout means five minutes. Scopes are
-// asked for on top of "openid offline_access profile email".
+// OIDCSource signs in inside the app with an account and password and supplies OIDC access tokens
+// to the sync client. The refresh token lives in Secrets; the access token only in memory. Scopes
+// are asked for on top of "openid offline_access profile email".
 type OIDCSource struct {
-	Issuer       string
-	ClientID     string
-	Scopes       []string
-	Secrets      Secrets
-	HTTP         *http.Client
-	LoginTimeout time.Duration
+	Issuer   string
+	ClientID string
+	Scopes   []string
+	Secrets  Secrets
+	HTTP     *http.Client
 	// DBPath is the database whose key holds the refresh token. Empty keeps the old fixed key,
 	// which is what the package's tests and a caller with no database use.
 	DBPath string
-	// DoneURL, when set, is where the loopback sends the browser as soon as the code arrives,
-	// before the exchange: the phone's app link, which brings the app back to the front. Android
-	// cuts a background app's network, so the exchange must not run while the browser is in front.
-	DoneURL string
 
 	mu           sync.Mutex
 	oauth        *oauth2.Config
@@ -53,13 +45,13 @@ type OIDCSource struct {
 	hasAccount   bool
 }
 
-// NewOIDCSource returns a source for one issuer and client. It does not touch the network; Login,
-// SignIn or Token discovers the issuer's endpoints.
+// NewOIDCSource returns a source for one issuer and client. It does not touch the network; SignIn
+// or Token discovers the issuer's endpoints.
 func NewOIDCSource(issuer, clientID string, scopes []string, secrets Secrets) *OIDCSource {
 	return &OIDCSource{Issuer: issuer, ClientID: clientID, Scopes: scopes, Secrets: secrets}
 }
 
-// SignIn runs the same authorization code flow with PKCE as Login, but without a browser. It asks
+// SignIn runs the authorization code flow with PKCE (S256) and a random state, without a browser. It asks
 // the issuer for a pending auth request, has server check the account and password through
 // Zitadel, and finishes the exchange with its own verifier. The password is only sent to server;
 // it is not stored or put into an error.

@@ -63,9 +63,6 @@ type Real struct {
 	sync      syncTask
 	// syncNotify asks the shell to redraw after a sync status change; set by the app.
 	syncNotify func()
-	// signInFn replaces syncclient's in-app sign-in in tests, so the account and password the
-	// pane sends can be checked without the real server.
-	signInFn func(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error
 
 	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
 	// collection in between. sweep is the pending collection after a detach or a delete.

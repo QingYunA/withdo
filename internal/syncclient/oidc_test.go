@@ -9,12 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -327,144 +325,6 @@ func (s *fakeSecrets) Delete(key string) error {
 	return nil
 }
 
-// followBrowser returns an opener that behaves like a browser: it follows the authorization URL to
-// the loopback redirect and requires the sign-in page.
-func followBrowser(t *testing.T) func(url string) error {
-	t.Helper()
-	client := &http.Client{Timeout: 10 * time.Second}
-	return func(authURL string) error {
-		resp, err := client.Get(authURL)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = resp.Body.Close() }()
-		body, _ := io.ReadAll(resp.Body)
-		if resp.StatusCode/100 != 2 {
-			return fmt.Errorf("sign-in page returned %d: %s", resp.StatusCode, body)
-		}
-		if !strings.Contains(string(body), "close this tab") {
-			return fmt.Errorf("sign-in page = %q", body)
-		}
-		return nil
-	}
-}
-
-// TestS4a2Login is acceptance criterion 2: a fake browser follows the authorization URL to the
-// loopback redirect, the refresh token lands in the fake Secrets, a redirect with the wrong state
-// does not end the sign-in, and a timeout fails without storing anything.
-func TestS4a2Login(t *testing.T) {
-	const clientID = "adhd-desktop"
-	ctx := context.Background()
-
-	t.Run("browser sign-in uses PKCE and stores the refresh token", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		var authURL string
-		if err := source.Login(ctx, func(url string) error {
-			authURL = url
-			return followBrowser(t)(url)
-		}); err != nil {
-			t.Fatalf("Login: %v", err)
-		}
-		if !strings.Contains(authURL, "code_challenge_method=S256") {
-			t.Errorf("authorization URL lacks S256: %s", authURL)
-		}
-		refresh, err := secrets.Get(syncclient.RefreshTokenKey)
-		if err != nil || refresh == "" {
-			t.Fatalf("refresh token = %q, %v", refresh, err)
-		}
-		if _, _, method := issuer.stats(); method != "S256" {
-			t.Errorf("issuer saw code_challenge_method %q, want S256", method)
-		}
-		token, err := source.Token(ctx)
-		if err != nil || token == "" {
-			t.Fatalf("Token = %q, %v", token, err)
-		}
-	})
-
-	t.Run("a redirect with the wrong state is refused and the sign-in goes on", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		forged := 0
-		err := source.Login(ctx, func(authURL string) error {
-			u, err := url.Parse(authURL)
-			if err != nil {
-				return err
-			}
-			// A page in the browser probes the loopback port first.
-			resp, err := http.Get(u.Query().Get("redirect_uri") + "?code=forged&state=wrong")
-			if err != nil {
-				return err
-			}
-			forged = resp.StatusCode
-			_, _ = io.Copy(io.Discard, resp.Body)
-			_ = resp.Body.Close()
-			return followBrowser(t)(authURL)
-		})
-		if err != nil {
-			t.Fatalf("Login after a forged redirect: %v, want the real sign-in to finish", err)
-		}
-		if forged != http.StatusBadRequest {
-			t.Errorf("forged redirect answered %d, want 400", forged)
-		}
-		if refresh, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || refresh == "" {
-			t.Fatalf("refresh token = %q, %v", refresh, err)
-		}
-	})
-
-	t.Run("a DoneURL sends the browser back to the app, then the exchange finishes", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		source.DoneURL = "xyz.sriai.adhdtodo://signed-in"
-		var location string
-		err := source.Login(ctx, func(authURL string) error {
-			// A browser hands the app link to the app: stop at it instead of following it.
-			client := &http.Client{Timeout: 10 * time.Second, CheckRedirect: func(req *http.Request, _ []*http.Request) error {
-				if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
-					return http.ErrUseLastResponse
-				}
-				return nil
-			}}
-			resp, err := client.Get(authURL)
-			if err != nil {
-				return err
-			}
-			_ = resp.Body.Close()
-			if resp.StatusCode != http.StatusFound {
-				return fmt.Errorf("loopback answered %d, want 302", resp.StatusCode)
-			}
-			location = resp.Header.Get("Location")
-			return nil
-		})
-		if err != nil {
-			t.Fatalf("Login: %v", err)
-		}
-		if location != source.DoneURL {
-			t.Errorf("the browser was sent to %q, want %q", location, source.DoneURL)
-		}
-		if refresh, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || refresh == "" {
-			t.Fatalf("refresh token = %q, %v", refresh, err)
-		}
-	})
-
-	t.Run("timeout fails and stores nothing", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		source.LoginTimeout = 100 * time.Millisecond
-		if err := source.Login(ctx, func(string) error { return nil }); err == nil ||
-			!strings.Contains(err.Error(), "timed out") {
-			t.Fatalf("Login error = %v, want a timeout", err)
-		}
-		if _, err := secrets.Get(syncclient.RefreshTokenKey); err == nil {
-			t.Fatal("a timed-out sign-in stored a refresh token")
-		}
-	})
-}
-
 // TestS4a3Refresh is acceptance criterion 3: an access token about to expire is refreshed; a
 // refused refresh deletes the stored token, returns ErrSignedOut, and signs a Runner out.
 func TestS4a3Refresh(t *testing.T) {
@@ -476,8 +336,8 @@ func TestS4a3Refresh(t *testing.T) {
 		issuer.setExpiresIn(30)
 		secrets := newFakeSecrets()
 		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		if err := source.Login(ctx, followBrowser(t)); err != nil {
-			t.Fatalf("Login: %v", err)
+		if err := source.SignIn(ctx, issuer.URL, "ada@example.com", "correct horse"); err != nil {
+			t.Fatalf("SignIn: %v", err)
 		}
 		refreshes, accesses, _ := issuer.stats()
 		if refreshes != 0 || accesses != 1 {
@@ -550,8 +410,8 @@ func TestS4a4EndToEnd(t *testing.T) {
 	signIn := func() *syncclient.OIDCSource {
 		secrets := newFakeSecrets()
 		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		if err := source.Login(ctx, followBrowser(t)); err != nil {
-			t.Fatalf("Login: %v", err)
+		if err := source.SignIn(ctx, issuer.URL, "ada@example.com", "correct horse"); err != nil {
+			t.Fatalf("SignIn: %v", err)
 		}
 		return source
 	}
@@ -641,8 +501,8 @@ func TestARotatedRefreshTokenIsReadAgain(t *testing.T) {
 	issuer := newFakeOIDC(t, "adhd-desktop")
 	secrets := newFakeSecrets()
 	first := syncclient.NewOIDCSource(issuer.URL, "adhd-desktop", nil, secrets)
-	if err := first.Login(ctx, followBrowser(t)); err != nil {
-		t.Fatalf("Login: %v", err)
+	if err := first.SignIn(ctx, issuer.URL, "ada@example.com", "correct horse"); err != nil {
+		t.Fatalf("SignIn: %v", err)
 	}
 	issued, err := secrets.Get(syncclient.RefreshTokenKey)
 	if err != nil {

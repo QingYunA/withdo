@@ -17,14 +17,18 @@ import (
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
+	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
-// configIssuer is the public half of an OIDC issuer, enough for a sign-in to reach the browser.
+// configIssuer is a sync server and the public half of its OIDC issuer: /v1/config, discovery, an
+// authorize endpoint that starts a pending auth request, and a /v1/sign-in that refuses every
+// password and records what it got.
 type configIssuer struct {
 	*httptest.Server
-	mu     sync.Mutex
-	config int
-	opened string
+	mu       sync.Mutex
+	config   int
+	login    string
+	password string
 }
 
 func newConfigIssuer(t *testing.T) *configIssuer {
@@ -39,6 +43,19 @@ func newConfigIssuer(t *testing.T) *configIssuer {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"issuer": f.Server.URL, "client_id": "adhd-todo", "scopes": []string{"openid", "offline_access"},
 		})
+	})
+	mux.HandleFunc("GET /authorize", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, f.Server.URL+"/ui/v2/login/login?authRequest=V2_1", http.StatusFound)
+	})
+	mux.HandleFunc("POST /v1/sign-in", func(w http.ResponseWriter, r *http.Request) {
+		var req syncproto.SignInRequest
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		f.mu.Lock()
+		f.login, f.password = req.LoginName, req.Password
+		f.mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid_credentials"})
 	})
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -58,9 +75,8 @@ func newConfigIssuer(t *testing.T) *configIssuer {
 }
 
 // TestTheAppSignsInWithTheServerConfig is the client half: Sign in and sync first reads
-// /v1/config, then uses the issuer and client it names. It needs the real SignIn.
+// /v1/config, then uses the issuer and client it names.
 func TestTheAppSignsInWithTheServerConfig(t *testing.T) {
-	t.Skip("needs the real SignIn; enabled when dsh/inapp-signin is merged")
 	ctx := context.Background()
 	issuer := newConfigIssuer(t)
 	path := filepath.Join(t.TempDir(), "app.db")
@@ -143,14 +159,6 @@ func TestSyncSignInSendsTheAccountAndPassword(t *testing.T) {
 	if err := r.SyncSetServer(issuer.URL); err != nil {
 		t.Fatal(err)
 	}
-	var mu sync.Mutex
-	var gotServer, gotLogin, gotPassword string
-	r.signInFn = func(_ context.Context, _ *syncclient.OIDCSource, server, loginName, password string) error {
-		mu.Lock()
-		gotServer, gotLogin, gotPassword = server, loginName, password
-		mu.Unlock()
-		return syncclient.ErrInvalidCredentials
-	}
 	changed := make(chan struct{}, 16)
 	r.SetSyncNotify(func() {
 		select {
@@ -174,11 +182,11 @@ func TestSyncSignInSendsTheAccountAndPassword(t *testing.T) {
 			t.Fatal("the sign-in never failed")
 		}
 	}
-	mu.Lock()
-	server, login, password := gotServer, gotLogin, gotPassword
-	mu.Unlock()
-	if server != issuer.URL || login != "cyan@example.com" || password != "hunter2" {
-		t.Errorf("sign-in got server %q, account %q, password %q", server, login, password)
+	issuer.mu.Lock()
+	login, password := issuer.login, issuer.password
+	issuer.mu.Unlock()
+	if login != "cyan@example.com" || password != "hunter2" {
+		t.Errorf("/v1/sign-in got account %q, password %q", login, password)
 	}
 	raw, err := os.ReadFile(syncclient.ConfigPath(path))
 	if err != nil {

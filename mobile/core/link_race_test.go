@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -9,8 +8,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
 // TestStartSyncWhileLinkRunsStartsNoRunner is A3-fix 4: the runner must wait for SignIn and Link to
@@ -28,7 +25,7 @@ func TestStartSyncWhileLinkRunsStartsNoRunner(t *testing.T) {
 			reachedOnce.Do(func() { close(reached) })
 			<-release
 		}
-		f.h.server.Handler().ServeHTTP(w, r)
+		f.sync.Config.Handler.ServeHTTP(w, r)
 	}))
 	defer slow.Close()
 	defer releaseOnce.Do(func() { close(release) })
@@ -37,9 +34,6 @@ func TestStartSyncWhileLinkRunsStartsNoRunner(t *testing.T) {
 	}
 
 	done := make(chan error, 1)
-	phone.signInFn = func(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error {
-		return source.Login(ctx, browserOpener{}.Open)
-	}
 	go func() {
 		state, err := phone.SignIn("ada@example.com", "secret", "phone")
 		if err == nil && !strings.Contains(state, `"choose"`) {
