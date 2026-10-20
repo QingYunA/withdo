@@ -39,5 +39,5 @@ func (m *Main) menuLabel(a taskAction, n int) string {
 
 // actionSpec is the line of the menu for an action: its icon, hint and danger are the action's.
 func actionSpec(a taskAction, keyPrefix, label string, run func()) popSpec {
-	return popSpec{key: keyPrefix + a.Name, icon: a.Icon, label: label, hint: a.Key.hint, danger: a.Danger, run: run}
+	return popSpec{key: keyPrefix + a.Name, icon: a.Icon, label: label, hint: a.Key.hint(), danger: a.Danger, run: run}
 }

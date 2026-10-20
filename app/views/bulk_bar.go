@@ -68,8 +68,8 @@ func (m *Main) bulkBar(c *ui.Context, t *theme.Tokens) {
 func (m *Main) barButton(c *ui.Context, t *theme.Tokens, a taskAction, narrow bool) ui.Element {
 	label, icon, danger := m.barLabel(a), a.Icon, a.Danger
 	tip := label
-	if a.Key.hint != "" {
-		tip += "  " + a.Key.hint
+	if hint := a.Key.hint(); hint != "" {
+		tip += "  " + hint
 	}
 	btn := ui.ButtonBase(c.Key("bulk-"+a.Name)).Height(barButton).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).
 		AlignItems(ui.Center).Shrink(0).Label(label).Tooltip(tip).Cursor(ui.CursorPointer)
