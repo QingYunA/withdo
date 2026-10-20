@@ -223,6 +223,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 | `IconBranch` | `git-branch` | `IconArrowOut` | `external-link` |
 | `IconTerminal` / `IconAgents` | `terminal` | `IconSparkle` / `IconStar` | `sparkle` |
 | `IconOctocat` / `IconGitHub` | `github` | `IconGeneral` | `sliders` |
+| `IconCloud` (M11) | `cloud` | `IconLaptop` / `IconPhone` (M11) | `laptop` / `smartphone` |
 | `IconNow` | `circle` | `IconFile` | `file-text` |
 
 - **Who wrote a task.** `Source == user` is `theme.You`, the pixel person (a task the assistant wrote
@@ -1712,7 +1713,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
 `settings-github-*`.
 
 - **Toolbar panes**, as in System Settings: General (`IconGeneral`), Assistant (`IconStar`), Agents
-  (`IconTerminal`), GitHub (`IconOctocat`), each an icon above a
+  (`IconTerminal`), GitHub (`IconOctocat`), Sync (`IconCloud`, M11), each an icon above a
   label (`meta`), 78 pt wide; the open one gets a 6 % black (white in dark) 8 pt well and an `accent` icon.
   The window title is the open pane's name. The top of the window is **one band** (the toolbar
   fill, a hairline under it): the title bar is hidden, the traffic lights sit in the band's first
@@ -1868,11 +1869,70 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
+- **Sync** (M11, reference `docs/design/mockups/v27.html`): the account and this Mac, in one group,
+  and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz · Change`; Change edits it in
+  place, for people who host their own). Signing in is OIDC in the browser (PKCE, a loopback redirect),
+  so the pane has no fields for passwords or tokens.
+  - *Signed out*: one centered card: the 36 pt pixel cloud in `accent`, `Sync with your phone and other
+    computers` (`在手机和其他电脑上同步`, 17 pt 600), one `meta` line on what syncs (tasks, projects and
+    agents' reports), the accent button **Sign in and sync** (`登录并开始同步`), and under it in
+    `text.tertiary` that the sign-in page opens in the browser and that keys and model settings stay
+    on this Mac.
+  - *Synced*: row 1 the account's display name with `Signed in · 3 devices` and **Sign out** at the
+    right; row 2 `This Mac` with `Synced · just now` (`已同步`, the done green) and **Sync now**. Under it
+    the group **Devices**: an 18 pt pixel laptop or phone in `text.tertiary`, the device's name, a
+    `This Mac` badge (the outlined `badge` of P1) on this one, and the time it last synced at the right.
+  - *Both have tasks*: the first sign-in of a Mac with tasks to an account with tasks opens a sheet
+    over the pane: `This Mac and your account both have tasks`, a line with the counts, two choices
+    as 10 pt rounded options with a radio, **Merge into the account** (`合并到账号`, marked
+    `Recommended`, picked) and **Use the account** (`以账号为准`); merging gives this Mac's tasks new
+    numbers from the account's blocks (`#45` becomes `#2045`, said in the option), using the account
+    first backs this Mac's data up into the data folder. **Cancel** and the accent **Continue**.
+  - *Uploading* (the first device seeds): row 2 reads `Uploading this Mac's data`, `1,240 / 3,512 ·
+    other devices wait until it is done`, and a pixel progress bar: 40 cells 9 x 8 pt, 2 pt apart,
+    `accent` for the done share and 8 % black for the rest. Under the group: the window can close and
+    the upload goes on.
+  - *Failed*: row 2's `meta` starts with the reason in `status.blocked` (`Sync failed: the server did
+    not answer`), then when it retries, and a second line that the changes waiting (`3 changes wait on
+    this Mac and are not lost`); the button is **Retry**. *Offline* is the same row in `text.secondary`
+    (`Offline · changes sync when you are back online (3 waiting)`) with no button and no red.
+  - **The main window stays quiet.** It shows nothing about sync while it works. When a sync has failed
+    for more than 15 minutes, or the account signed out, a 12 pt pixel cloud in `status.blocked` sits at
+    the right of the sidebar's Settings row; clicking the row opens Settings on Sync.
 - A report from an agent in an archived project's repository restores the project too.
 - A test says `Connected · 640 ms` or the error in the words of **Assistant**; nothing is tested
   unless the user asks (Test, Use, Save and test).
 - Keys live in the system keychain (service `adhd-todo`), never in the database, the provider file or
   the logs. The active provider and per-provider overrides are in `models.json` next to the database.
+
+## Android (M11, reference `docs/design/mockups/v26.html`)
+
+The phone app is the same product: the palette, the type tokens, the pixel sprites, the status
+glyphs and the pixelarticons above, at the same sizes; Jetpack Compose draws them (the sprites as
+bitmaps with nearest-neighbour scaling, the glyphs from the same 12 x 12 grids). Screens are 412 dp
+wide; rows are at least 48 dp tall (Android's touch target). Light and dark follow the system.
+
+- **Navigation** replaces the sidebar with a bottom bar of four: Mine (the pixel you), Agents (the
+  robot), Calendar and Projects, an 18 dp icon over a 12 sp label; the open one has an `bg.selected`
+  pill 56 x 28 dp behind its icon and its label in `text` 600. Mine carries the sidebar's red unseen
+  badge. The Calendar tab opens the desktop's month view; the first version may ship without it.
+- **Header**: the page's title in `title` and its quiet second line (the date, `3 working`), and at the
+  right the sync state as an 18 dp pixel cloud in `text.tertiary`; it only turns `status.blocked` for
+  the reasons the desktop's sidebar does.
+- **The composer** is pinned above the bottom bar, as on the desktop.
+- **Mine** and **Agents** keep the desktop's sections and rows. In **From your agents** the buttons go
+  under the summary (the rule for content under 420 pt), left-aligned, with the age at the right of
+  that line. **Answer** on a phone writes a reply that is filed in the task's activity, which the
+  agent reads with its next report: a phone cannot open the agent's app.
+- **A project** stacks the desktop's two columns as a segmented control, `Mine 5 | Agents 3`, under the
+  title; groups by status with the glyph in the header, rows 26 dp in with the author's avatar; Done
+  folds into one `Completed 12` row.
+- **A task** opens full screen (the inspector's content): a back bar with the task's number at the right
+  in `mono` `text.tertiary`, the title at 22 sp 700, the property rows with their 18 dp icons and a
+  104 dp label column, the priority strip, Subtasks, then Activity on its rail. The composer at the
+  bottom answers the agent.
+- **Notifications**: reminders that come due use Android's notifications; agents being stuck do not
+  push in the first version.
 
 ## Writing
 
