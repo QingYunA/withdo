@@ -1822,6 +1822,10 @@
   "@settingsShowInFinder": {
     "description": "Link in Settings > General that reveals the data folder in Finder."
   },
+  "settingsShowInExplorer": "Show in File Explorer",
+  "@settingsShowInExplorer": {
+    "description": "Link in Settings > General on Windows that shows the data folder in File Explorer."
+  },
   "settingsAssistantNone": "The assistant isn't available here.",
   "@settingsAssistantNone": {
     "description": "Line of Settings > Assistant when the app has no assistant."
@@ -2434,6 +2438,10 @@
   "@openWithFinder": {
     "description": "Choice of where to open an agent's work: the folder the agent works in, shown in Finder."
   },
+  "openWithExplorer": "File Explorer",
+  "@openWithExplorer": {
+    "description": "Choice of where to open an agent's work on Windows: the folder the agent works in, shown in File Explorer."
+  },
   "settingsOpenWith": "Open agent work in",
   "@settingsOpenWith": {
     "description": "Label of the setting in Settings > Agents that says where Review and Answer on a handed-over row take the user."
@@ -2639,6 +2647,10 @@
   "viewerOpenInPreview": "Open in Preview",
   "@viewerOpenInPreview": {
     "description": "Button in the viewer's bar that opens the image file in macOS Preview."
+  },
+  "viewerOpen": "Open",
+  "@viewerOpen": {
+    "description": "Button in the viewer's bar on Windows that opens the image file in the default app."
   },
   "viewerClose": "Close",
   "@viewerClose": {
@@ -3512,9 +3524,15 @@
   "@settingsRecentChangesSwitch": {
     "description": "Accessibility label of the Recent changes switch."
   },
-  "settingsRecentNoGH": "gh isn't installed yet: run brew install gh",
+  "settingsRecentNoGH": "gh isn't installed yet: run {command}",
   "@settingsRecentNoGH": {
-    "description": "Second line of the Recent changes switch row, in the warning color, when the switch is on and the GitHub CLI is missing."
+    "description": "Second line of the Recent changes switch row, in the warning color, when the switch is on and the GitHub CLI is missing. command installs it: brew install gh on a Mac, winget install --id GitHub.cli on Windows.",
+    "placeholders": {
+      "command": {
+        "type": "String",
+        "example": "brew install gh"
+      }
+    }
   },
   "settingsRecentSignedOut": "gh isn't signed in yet: run gh auth login",
   "@settingsRecentSignedOut": {

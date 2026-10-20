@@ -171,18 +171,20 @@ func (m *Main) viewerRound(c *ui.Context, key string, icon *ui.SVG, label string
 	return btn.Clicked()
 }
 
-// viewerBar is the bottom bar: the name, the place among the pictures and the size, and Preview.
+// viewerBar is the bottom bar: the name, the place among the pictures and the size, and Open in
+// Preview (the default app on Windows).
 func (m *Main) viewerBar(c *ui.Context, im data.TaskImage, at, n int, w, h float32) {
 	ui.Row(c.Key("viewer-bar")).Absolute().Left(0).Top(h-viewerBarH).Size(w, viewerBarH).Padding(0, 18).Gap(14).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Meta, viewerInk, m.say.ViewerPosition(im.Name, at+1, n, itoa(im.Width), itoa(im.Height))).Shrink(1).MinWidth(0).Ellipsis("…")
 		ui.Spacer(c)
+		label := viewerOpenLabel(m.say)
 		open := ui.ButtonBase(c.Key("viewer-preview")).Padding(4, 8).Radius(theme.RadiusControl).Shrink(0).
-			Label(m.say.ViewerOpenInPreview()).Cursor(ui.CursorPointer)
+			Label(label).Cursor(ui.CursorPointer)
 		if open.Hovered() {
 			open.Background(viewerWell)
 		}
 		open.Gap(4).AlignItems(ui.Center).Children(func() {
-			theme.Text(c, theme.Meta, viewerLink, m.say.ViewerOpenInPreview())
+			theme.Text(c, theme.Meta, viewerLink, label)
 			ui.Icon(c.Key("preview-out"), theme.IconArrowOut).Size(theme.IconSmall, theme.IconSmall).TextColor(viewerLink).Shrink(0)
 		})
 		if open.Clicked() {

@@ -492,7 +492,8 @@ folder, else none. The places:
 - **Terminal**: `open -a Terminal <folder>`;
 - **Editor**: the first installed of Cursor, Visual Studio Code and Zed (found with `open -Ra`, which
   does not launch it), opened on the folder;
-- **Finder**: the folder.
+- **Finder**: the folder. On Windows the choice is **File Explorer** (`文件资源管理器`), and the folder
+  opens there.
 Terminal, Editor and Finder need a folder. When opening fails, one quiet line in `meta` and the blocked
 red shows under the row's reason line (`Couldn't open it: …`, `Nothing to open: the agent did not
 say where it works.`, `No editor found. Install Cursor, Visual Studio Code or Zed.`); it goes away
@@ -926,7 +927,8 @@ v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user ca
   `bg.subtle`, a hairline under it, the `+2` badge at its bottom right when there are more.
 - **The viewer.** A click on any thumbnail opens the image over the window: the window dims (90 %
   near-black), the image fits the window whole, a bottom bar says `name · 1 / 2 · 1200 × 900` and
-  offers **Open in Preview** (`在预览中打开` and the external-link icon, the file in macOS Preview). Round pixel `chevron-left`
+  offers **Open in Preview** (`在预览中打开` and the external-link icon, the file in macOS Preview; on
+  Windows **Open** / `打开`, the file in its default app). Round pixel `chevron-left`
   / `chevron-right` and `close` buttons; `←` `→` step through the task's images, `Esc` or a click
   outside closes.
 - **Storage.** The original file is kept (up to 20 MB; a larger one keeps the composer's shrunk copy)
@@ -1413,8 +1415,8 @@ are a cache file in the data folder (`recent-changes.json`), keyed by URL and `u
 repository and period); deleting it only costs the assistant's time.
 
 **Empty**: no project has anything in the period: `Nothing changed in the last 7 days` (`最近 7 天没有变
-化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`
-/ `gh auth login`) with Copy.
+化`) with the assistant's avatar. gh missing or signed out: the page says what to run (`brew install gh`, on
+Windows `winget install --id GitHub.cli` / `gh auth login`) with Copy.
 
 **As built** (what the spec above leaves to the code; screens `recent-*.png`):
 
@@ -1739,10 +1741,10 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   and a switch at the right, on by default. When the last notification was refused by macOS
   (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
   notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings** link
-  (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings; **Archived projects** (a row per
+  (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings (macOS only: Windows shows notification-area balloons and never refuses one, so the line never shows there); **Archived projects** (a row per
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
-  reveals the real path); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
+  reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
   link). **Software updates** (M10; only in a build that can update): a group of one row between Sound effects and Pages, `Software
   updates` (`软件更新`), `meta` `Checked once a day; you choose when to install` (`每天检查一次，装不装由你决定`),
   and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
@@ -1874,7 +1876,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads
     `Checking…` and is inert; before the first check ends the line says `Checking GitHub…`.
   - *No `gh`*: `The GitHub CLI isn't installed. Install it to follow your pull requests.` and the
-    command `brew install gh` in a mono well.
+    command `brew install gh` (on Windows `winget install --id GitHub.cli`) in a mono well.
   - *Signed out*: `You're not signed in to GitHub. Sign in to follow your pull requests.` and
     `gh auth login` in the mono well.
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.

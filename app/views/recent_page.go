@@ -239,7 +239,7 @@ func (m *Main) quietState(c *ui.Context, t *theme.Tokens, title, body string, ex
 func (m *Main) ghMissingState(c *ui.Context, t *theme.Tokens, problem data.RecentProblem) {
 	title, command := m.say.RecentSignedOutTitle(), ghLoginCommand
 	if problem == data.RecentNoGH {
-		title, command = m.say.RecentNoGHTitle(), ghInstallCommand
+		title, command = m.say.RecentNoGHTitle(), ghInstallCommand()
 	}
 	m.quietState(c, t, title, m.say.RecentGHBody(), func() {
 		ui.Column(c).Margin(12, 0, 0).Gap(6).AlignItems(ui.Center).Children(func() {

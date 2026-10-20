@@ -104,6 +104,9 @@ func openWithName(say locales.Messages, o OpenWith) string {
 	case OpenEditor:
 		return say.OpenWithEditor()
 	case OpenFinder:
+		if systemGOOS == "windows" {
+			return say.OpenWithExplorer()
+		}
 		return say.OpenWithFinder()
 	}
 	return say.OpenWithAgentApp()
