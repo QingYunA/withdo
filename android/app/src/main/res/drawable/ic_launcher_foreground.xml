@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The desktop icon's check on the 12 x 12 grid of app/theme/sprites/tray.png, 6 dp a cell,
+     centered in the 108 dp adaptive canvas (inside its 66 dp safe zone). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M66,36h6v6h-6zM72,36h6v6h-6zM60,42h6v6h-6zM66,42h6v6h-6zM54,48h6v6h-6zM60,48h6v6h-6zM30,54h6v6h-6zM36,54h6v6h-6zM48,54h6v6h-6zM54,54h6v6h-6zM36,60h6v6h-6zM42,60h6v6h-6zM48,60h6v6h-6zM42,66h6v6h-6z" />
+</vector>

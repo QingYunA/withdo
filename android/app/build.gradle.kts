@@ -15,6 +15,29 @@ android {
         versionCode = 1
         versionName = "0.1.0"
     }
+    // Release signing comes from the environment (scripts/android-release.sh reads the passwords
+    // from the keychain); the keystore lives outside the repo. Without it a release build is
+    // unsigned.
+    val releaseStore = System.getenv("ADHD_RELEASE_STORE_FILE")
+    signingConfigs {
+        if (releaseStore != null) {
+            create("release") {
+                storeFile = file(releaseStore)
+                storePassword = System.getenv("ADHD_RELEASE_STORE_PASSWORD")
+                keyAlias = System.getenv("ADHD_RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("ADHD_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            // No shrinking yet: R8 needs keep rules for the gomobile classes and serialization.
+            isMinifyEnabled = false
+            if (releaseStore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
     buildFeatures {
         compose = true
         buildConfig = true

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The desktop icon's navy (app/resources/icon.png, app/theme/sprites/tray.png). -->
+    <color name="ic_launcher_background">#1E293B</color>
+</resources>
