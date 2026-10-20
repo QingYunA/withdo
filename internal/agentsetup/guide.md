@@ -30,7 +30,7 @@ Do not install anything else.
 
 Reload your MCP servers (or ask the user to restart you), then call the `get_overview` tool. If it answers, the server works.
 
-If it fails, check that the command path exists and runs: `{{CORE}} --help`.
+If it fails, check that the file at the command path exists, and that running it with the single argument `--help` prints its usage.
 
 ## 5. How to use it
 

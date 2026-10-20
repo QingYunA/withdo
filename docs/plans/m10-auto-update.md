@@ -55,15 +55,23 @@ version built so is the last one to install by hand.
   developer's own build), a directory. The swap is a symlink renamed over the path, so the path is
   never missing. The app logs what it did; there is no UI.
 
+  A run from `/Volumes` (a disk image) or from an `AppTranslocation` path makes no link: it would
+  point at a path that is gone once the image is ejected or the app moved. Installing into
+  /Applications and starting it again makes the link.
+
+  On Windows the agents run the console `adhd-core.exe` the installer puts next to `ADHD Todo.exe`
+  (`agentsetup.defaultCore`; the build script puts it in `app/resources/windows-amd64/`, which mygo
+  installs beside the executable): no link and no PATH change, so agents are given its absolute path.
+
 ## Release steps (for the release PR)
 
 1. Bump the version in `app/mygo.json`, `app/main.go` and `internal/mcpserver/server.go`; finish the
    `CHANGELOG.md` section of that version.
 2. `scripts/build-release.sh`: builds macOS and Windows x64, which every release ships, and gathers
    into `app/build/release/` `ADHD-Todo-<v>-macos-universal.dmg`,
-   `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe`,
-   `adhd-core-<v>-windows-x64.zip`, the signed update archives and manifests when updates are on,
-   and `SHA256SUMS.txt`.
+   `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe` (which carries
+   `adhd-core.exe`), the signed update archives and manifests when updates are on, and
+   `SHA256SUMS.txt`.
 3. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
    the latest, which is what installed apps ask.
 

@@ -24,9 +24,14 @@ func linkOwnExecutable(link string) {
 	linkBundledCore(exe, link)
 }
 
-// linkBundledCore links link at exe when exe is inside an app bundle.
+// linkBundledCore links link at exe when exe is inside an installed app bundle. A bundle run from
+// a disk image or translocated by Gatekeeper is not: the link would outlive the path it points at.
 func linkBundledCore(exe, link string) {
 	if !strings.Contains(exe, ".app/") {
+		return
+	}
+	if strings.HasPrefix(exe, "/Volumes/") || strings.Contains(exe, "/AppTranslocation/") {
+		log.Printf("adhd-core link %s: not linking from a disk image or a translocated app (%s)", link, exe)
 		return
 	}
 	res, err := corelink.Ensure(link, exe)

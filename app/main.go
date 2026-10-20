@@ -7,6 +7,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -20,8 +22,17 @@ import (
 
 const version = "0.5.2"
 
-// connectCommand registers the MCP server with Claude Code.
-const connectCommand = "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp"
+// connectCommand registers the MCP server with Claude Code. core is the adhd-core path the agents
+// run: shown under ~ outside Windows, where neither PowerShell nor cmd expands it, and there in
+// quotes, since the install folder has a space.
+func connectCommand(goos, core, home string) string {
+	if goos == "windows" {
+		core = `"` + core + `"`
+	} else if rest, ok := strings.CutPrefix(core, home+"/"); ok {
+		core = "~/" + rest
+	}
+	return "claude mcp add --scope user adhd-todo -- " + core + " mcp"
+}
 
 func main() {
 	if args, ok := cliArgs(os.Args); ok {
@@ -36,13 +47,14 @@ func main() {
 		log.Fatalf("open data: %v", err)
 	}
 	home, _ := os.UserHomeDir()
+	setup := agentsetup.New(home)
 	app := views.NewApp(be.store, nil, views.Config{
-		ConnectCommand:  connectCommand,
+		ConnectCommand:  connectCommand(runtime.GOOS, setup.CorePath(), home),
 		DataFolder:      be.dataFolder,
 		AssistantMemory: be.memoryFile,
 		Home:            home,
 		Version:         version,
-		AgentSetup:      agentsetup.New(home),
+		AgentSetup:      setup,
 	})
 	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed
 	app.Prefs = be.prefs

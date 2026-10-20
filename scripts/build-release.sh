@@ -3,7 +3,7 @@
 # the ones to upload into app/build/release with their SHA256SUMS.txt:
 #   macOS:   the DMG of the universal app (which is adhd-core too), the standalone adhd-core tarball,
 #            and the signed update archive and manifest when updates are on;
-#   Windows: the NSIS installer of the app and the standalone adhd-core.exe zip.
+#   Windows: the NSIS installer of the app, which carries the console adhd-core.exe next to it.
 # It uploads nothing.
 #   scripts/build-release.sh
 # The update key is the secret half of mygo's key pair (mygo keygen). It stays out of the repository;
@@ -26,18 +26,21 @@ release="$PWD/app/build/release"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# The app is adhd-core too (app/cli.go), so the macOS bundle carries one program. makensis, which
-# makes the Windows installer, aborts with std::bad_alloc unless the locale is UTF-8.
+# The app is adhd-core too (app/cli.go), so the macOS bundle carries one program. On Windows the
+# app is a GUI program that cannot be an MCP stdio server, so the console adhd-core.exe the agents
+# run is built into app/resources/windows-amd64/, which mygo installs next to the app. makensis,
+# which makes the Windows installer, aborts with std::bad_alloc unless the locale is UTF-8.
+mkdir -p app/resources/windows-amd64
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/adhd-core.exe ./cmd/adhd-core
 (cd app && LC_ALL=en_US.UTF-8 go tool mygo build -platform darwin/universal,windows/amd64)
 
-# The standalone adhd-core, for machines without the app (and, on Windows, the one the coding agents
-# run): built on its own, unsigned. macOS gets one universal file for both architectures.
+# The standalone adhd-core for macOS, for machines without the app: built on its own, unsigned. One
+# universal file for both architectures.
 for arch in arm64 amd64; do
   GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$work/adhd-core-$arch" ./cmd/adhd-core
 done
-mkdir -p "$work/mac" "$work/win"
+mkdir -p "$work/mac"
 lipo -create -output "$work/mac/adhd-core" "$work/adhd-core-arm64" "$work/adhd-core-amd64"
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$work/win/adhd-core.exe" ./cmd/adhd-core
 
 # Everything to upload, under the names the releases give it (GitHub turns spaces into dots).
 rm -rf "$release"
@@ -45,7 +48,6 @@ mkdir -p "$release"
 cp "$mac/ADHD Todo $version.dmg" "$release/ADHD-Todo-$version-macos-universal.dmg"
 tar -czf "$release/adhd-core-$version-macos-universal.tar.gz" -C "$work/mac" adhd-core
 cp "$win/ADHD Todo Setup $version amd64.exe" "$release/ADHD-Todo-Setup-$version-windows-x64.exe"
-(cd "$work/win" && zip -q "$release/adhd-core-$version-windows-x64.zip" adhd-core.exe)
 for f in "$mac"/adhd-todo-* "$mac"/update-*.json "$win"/adhd-todo-* "$win"/update-*.json; do
   if [ -e "$f" ]; then cp "$f" "$release/"; fi
 done

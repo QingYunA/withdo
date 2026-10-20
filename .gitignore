@@ -1,6 +1,7 @@
 # Go / mygo
 app/build/
 app/.mygo/
+app/resources/windows-amd64/
 dist/
 mygo-update.key
 coverage/
