@@ -18,3 +18,9 @@ android/core/*.aar
 android/core/*.jar
 
 .DS_Store
+# Android app build output and machine-local settings
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/local.properties
+/android/.kotlin/
