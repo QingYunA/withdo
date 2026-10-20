@@ -53,6 +53,7 @@ func TestASmallPictureGoesOutAsItCame(t *testing.T) {
 }
 
 func TestALargePictureIsDownscaledToTheLongSide(t *testing.T) {
+	skipUnderRace(t)
 	big := image.NewNRGBA(image.Rect(0, 0, 3200, 1800))
 	a, err := PrepareImage("big.png", pngOf(t, big))
 	if err != nil {
@@ -67,6 +68,7 @@ func TestALargePictureIsDownscaledToTheLongSide(t *testing.T) {
 }
 
 func TestAJPEGStaysAJPEGWhenItIsDownscaled(t *testing.T) {
+	skipUnderRace(t)
 	var b bytes.Buffer
 	if err := jpeg.Encode(&b, noise(2000, 1000), nil); err != nil {
 		t.Fatal(err)
@@ -90,6 +92,7 @@ func TestAGIFIsReEncodedAsPNG(t *testing.T) {
 }
 
 func TestAHugeNoisyPNGFallsBackToAJPEGUnder5MB(t *testing.T) {
+	skipUnderRace(t)
 	a, err := PrepareImage("n.png", pngOf(t, noise(1600, 1600)))
 	if err != nil {
 		t.Fatal(err)
