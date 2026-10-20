@@ -4,3 +4,4 @@
 - UI changes: run `scripts/screens.sh` and commit the changed PNGs in `docs/design/screens`.
 - Design work: mockups are `docs/design/mockups/vN.html` (+ png via `docs/design/tools/shot.sh`); decisions go into `docs/design/ui-spec.md`, and graphics follow its Pixel language section.
 - The spec is ~1200 lines: `grep -n '^#' docs/design/ui-spec.md` to find a section.
+- Releases ship macOS and Windows x64 every time: `scripts/build-release.sh` builds both into `app/build/release/`; steps in `docs/plans/m10-auto-update.md` (Release steps).
