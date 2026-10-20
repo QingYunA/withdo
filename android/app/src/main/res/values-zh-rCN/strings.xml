@@ -91,4 +91,92 @@
         <item quantity="one">%1$d 个子任务</item>
         <item quantity="other">%1$d 个子任务</item>
     </plurals>
+
+    <!-- Projects -->
+    <string name="empty_projects_title">还没有项目</string>
+    <string name="empty_projects_body">在电脑上新建一个，或等 Agent 的汇报开一个。</string>
+    <string name="empty_project_title">这个项目还没有任务</string>
+    <string name="empty_project_body">在下面的输入框里加一条。</string>
+    <string name="project_completed">已完成 %1$d</string>
+    <string name="group_blocked">已阻塞</string>
+    <string name="group_review">待审查</string>
+    <string name="group_doing">进行中</string>
+    <string name="group_todo">待办</string>
+    <string name="group_backlog">之后再说</string>
+    <string name="composer_add_to_project">加到 %1$s</string>
+    <string name="added_to_project">已添加到 %1$s</string>
+
+    <!-- A task -->
+    <string name="section_subtasks">子任务</string>
+    <string name="section_activity">动态</string>
+    <string name="property_status">状态</string>
+    <string name="property_from">来自</string>
+    <string name="property_priority">优先级</string>
+    <string name="property_project">项目</string>
+    <string name="property_branch">分支</string>
+    <string name="property_pr">PR</string>
+    <string name="pr_state_merged">已合并</string>
+    <string name="pr_state_closed">已关闭</string>
+    <string name="pr_state_failing">检查没通过</string>
+    <string name="pr_state_pending">检查中</string>
+    <string name="pr_state_changes">要改</string>
+    <string name="pr_state_approved">已通过</string>
+    <string name="pr_state_review">等审查</string>
+    <string name="activity_next">下一步：%1$s</string>
+    <string name="composer_reply_to">回复 %1$s</string>
+    <string name="composer_add_note">加一条备注</string>
+    <string name="reply_sent">已发送</string>
+    <string name="reply_failed">没能发送</string>
+
+    <!-- Sync -->
+    <string name="sync_title">同步</string>
+    <string name="sync_signed_out_title">在手机和其他电脑上同步</string>
+    <string name="sync_signed_out_body">任务、项目和 Agent 的汇报会同步到你的服务器，出门在外也能在手机上看到 Agent 在做什么。</string>
+    <string name="sync_sign_in">登录并开始同步</string>
+    <string name="sync_sign_in_note">会在浏览器里打开登录页。密钥和模型设置只留在这台手机上。</string>
+    <string name="sync_signing_in">等待浏览器…</string>
+    <string name="sync_signing_in_body">请在浏览器里完成登录。</string>
+    <string name="sync_signed_in">已登录</string>
+    <string name="sync_signed_in_one_device">已登录 · 1 台设备</string>
+    <string name="sync_signed_in_devices">已登录 · %1$d 台设备</string>
+    <string name="sync_account">账号</string>
+    <string name="sync_sign_out">退出登录</string>
+    <string name="sync_this_phone">这台手机</string>
+    <string name="sync_this_phone_badge">本机</string>
+    <string name="sync_synced">已同步</string>
+    <string name="sync_now">立即同步</string>
+    <string name="sync_retry">重试</string>
+    <string name="sync_devices">设备</string>
+    <string name="sync_never">从未</string>
+    <string name="sync_uploading">正在上传这台手机的数据</string>
+    <string name="sync_upload_progress">%1$s / %2$s · 上传完之前，其他设备会先等一会儿</string>
+    <string name="sync_upload_note">可以离开这个页面，上传会在后台继续。</string>
+    <string name="sync_failed">同步失败：%1$s</string>
+    <string name="sync_failed_no_answer">服务器没有响应</string>
+    <string name="sync_failed_auth">登录已过期</string>
+    <string name="sync_waiting">%1$d 个改动在本机等着上传，不会丢</string>
+    <string name="sync_offline">离线 · 改动会在联网后自动同步（%1$d 个待上传）</string>
+    <string name="sync_retrying_soon">稍后重试</string>
+    <string name="sync_retrying_minutes">%1$d 分钟后重试</string>
+    <string name="sync_retrying_hours">%1$d 小时后重试</string>
+    <string name="sync_both_title">这台手机和账号里都有任务</string>
+    <string name="sync_both_body">账号里已经有任务。合并会保留两边的任务，以账号为准会先备份这台手机的数据。</string>
+    <string name="sync_merge">合并到账号</string>
+    <string name="sync_merge_body">本机的任务加进账号。编号会改成账号里的新号（例如 #45 变成 #2045），Agent 下次汇报时用新号。</string>
+    <string name="sync_recommended">推荐</string>
+    <string name="sync_use_account">以账号为准</string>
+    <string name="sync_use_account_body">本机数据先备份到数据文件夹，再换成账号里的任务。</string>
+    <string name="sync_continue">继续</string>
+    <string name="sync_server">服务器</string>
+    <string name="sync_change">更改</string>
+    <string name="sync_change_save">保存</string>
+    <string name="sync_server_saving">保存中…</string>
+    <string name="sync_server_invalid">请填 https:// 开头的地址，例如 https://todo.example.com。</string>
+    <string name="sync_sign_in_failed">没能登录，请再试一次。</string>
+    <string name="sync_now_failed">没能同步，请再试一次。</string>
+    <string name="sync_link_failed">没能完成链接，请再试一次。</string>
+    <string name="time_just_now">刚刚</string>
+    <string name="title_inbox">收件箱</string>
+    <string name="notification_channel_reminders">提醒</string>
+    <string name="notification_channel_reminders_description">任务到点时的提醒</string>
 </resources>

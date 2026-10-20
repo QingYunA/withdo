@@ -58,10 +58,11 @@ type Core struct {
 	cancel context.CancelFunc
 	done   chan struct{}
 
-	listener   Listener
-	runner     *syncclient.Runner
-	lastStatus syncclient.Status
-	closed     bool
+	listener    Listener
+	runner      *syncclient.Runner
+	lastStatus  syncclient.Status
+	failedSince time.Time
+	closed      bool
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

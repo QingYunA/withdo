@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Mine sprite's outline on the 12 x 12 grid, one square per cell, for notifications. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6 0h12v2h-12zM4 2h16v2h-16zM2 4h20v2h-20zM2 6h18v2h-18zM2 8h18v2h-18zM4 10h16v2h-16zM4 12h16v2h-16zM6 14h12v2h-12zM4 16h16v2h-16zM2 18h20v2h-20zM2 20h20v2h-20zM2 22h20v2h-20z" />
+</vector>

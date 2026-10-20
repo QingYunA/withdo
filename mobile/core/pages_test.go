@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -142,7 +143,7 @@ func TestPagesMatchTheDesktop(t *testing.T) {
 
 // projectPageOf is the desktop's project page: the project, its tasks and its milestones.
 func projectPageOf(snap data.Snapshot, id int) projectPage {
-	out := projectPage{Tasks: []data.Task{}, Milestones: []data.Milestone{}}
+	out := projectPage{Tasks: []data.Task{}, Milestones: []data.Milestone{}, Agents: map[string]string{}}
 	for _, p := range append(append([]data.Project{}, snap.Projects...), snap.Archived...) {
 		if p.ID == id {
 			out.Project = p
@@ -152,6 +153,9 @@ func projectPageOf(snap data.Snapshot, id int) projectPage {
 	for _, task := range snap.Tasks {
 		if task.ProjectID != nil && *task.ProjectID == id {
 			out.Tasks = append(out.Tasks, task)
+			if r := snap.LatestReport(task.ID); r != nil {
+				out.Agents[strconv.Itoa(task.ID)] = r.Agent
+			}
 		}
 	}
 	out.Milestones = append(out.Milestones, snap.Milestones[id]...)

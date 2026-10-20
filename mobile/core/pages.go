@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 )
@@ -60,13 +61,14 @@ type projectPage struct {
 	Project    data.Project
 	Tasks      []data.Task // newest first
 	Milestones []data.Milestone
+	Agents     map[string]string // task id → the agent of its latest report, for the row's avatar
 }
 
 // Project returns one project's page as JSON: its data.Project, its tasks (newest first, subtasks
 // included) and its milestones. An archived project is returned too; its tasks are then empty
 // because the snapshot leaves them out of the lists, as it does on the desktop.
 //
-//	{"Project":{...},"Tasks":[Task...],"Milestones":[Milestone...]}
+//	{"Project":{...},"Tasks":[Task...],"Milestones":[Milestone...],"Agents":{"3":"claude-code"}}
 func (c *Core) Project(id int64) (string, error) {
 	snap, err := c.real.Snapshot()
 	if err != nil {
@@ -90,10 +92,13 @@ func (c *Core) Project(id int64) (string, error) {
 	if project == nil {
 		return "", fmt.Errorf("project %d not found", id)
 	}
-	page := projectPage{Project: *project, Tasks: []data.Task{}, Milestones: []data.Milestone{}}
+	page := projectPage{Project: *project, Tasks: []data.Task{}, Milestones: []data.Milestone{}, Agents: map[string]string{}}
 	for _, t := range snap.Tasks {
 		if t.ProjectID != nil && int64(*t.ProjectID) == id {
 			page.Tasks = append(page.Tasks, t)
+			if r := snap.LatestReport(t.ID); r != nil {
+				page.Agents[strconv.Itoa(t.ID)] = r.Agent
+			}
 		}
 	}
 	page.Milestones = append(page.Milestones, snap.Milestones[int(id)]...)

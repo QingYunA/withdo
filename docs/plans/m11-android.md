@@ -123,3 +123,110 @@ The skeleton in `android/` builds and loads the core (an emulator showed the Min
 4. Screens are checked on an emulator by the reviewer against v26 frames 1 and 2, light and dark, with
    the demo data; a `debug` build seeds the demo data when started with an intent extra `demo=true`
    (through a small `SeedDemo(dataDir)` added to `mobile/core`, reusing `app/data`'s demo seeding).
+
+## A2b-core: what the phone's sync screens need, below the UI
+
+Runs beside A2a, so it adds files and touches no screen: the Go API the Sync settings and the
+reminders need, and the two Android pieces the core's interfaces ask for. The screens that use them
+are A2b-UI, after A2a.
+
+### Go (`mobile/core`, new file `account.go`; tests in new `*_test.go` files)
+
+- **Sign-in with a choice**: `SignIn(opener, deviceName) (string, error)` now returns JSON
+  `{"state":"linked"}` or, when the phone has tasks and the account has tasks too
+  (`syncclient.ErrLocalData`), `{"state":"choose"}`, keeping the tokens so the user does not sign in
+  again. Then `LinkMerge(deviceName string) error` (`Client.LinkMerge`) or
+  `LinkReplace(deviceName string) (string, error)` (`Client.LinkReplace`, returning the backup's
+  path) links the phone. `SignIn` when already linked returns `{"state":"linked"}`.
+- `Account() (string, error)`: `{"name":..,"email":..}` from `sync.json`, `{}` when signed out.
+- `Devices() (string, error)`: the server's device list as JSON (`syncproto.Device` fields), plus
+  `"this":true` on this phone's device (`sync_state` `device_id`).
+- `ClaimDueReminders() (string, error)`: `domain.ClaimDueReminders(now)` as a JSON list
+  `[{"task_id":..,"title":..,"project":..}]`; `[]` when none. Each reminder comes back once.
+- `NextReminderAt() (int64, error)`: the earliest `remind_at` of an open task not reminded yet, as
+  Unix milliseconds, `0` when there is none (the phone sets an alarm for it).
+- Golden files for each JSON shape in `mobile/core/testdata/`; the bindable test covers the new
+  functions.
+
+### Kotlin (`android/app/src/main/java/xyz/sriai/adhdtodo/platform/`, new files only)
+
+- `KeystoreSecrets(context) : Secrets`: an AES-256-GCM key in `AndroidKeyStore` (alias
+  `adhd-todo-secrets`), each value encrypted with a fresh IV and kept as base64 in a private
+  `SharedPreferences` file. `get` of a missing key throws an exception whose message is `not found`.
+  The storage logic sits behind a small `Cipher`-like interface, so a JVM unit test checks set, get,
+  overwrite, delete and the `not found` message with a fake cipher.
+- `CustomTabOpener(context) : BrowserOpener`: opens the URL in a Custom Tab
+  (`androidx.browser`, already a dependency), with `FLAG_ACTIVITY_NEW_TASK`; when no browser handles
+  Custom Tabs, an `ACTION_VIEW` intent.
+
+### Verification
+
+1. Go: `go test -race ./mobile/...` with and without `ADHD_SYNC_TEST_DATABASE_URL`; on Postgres, a
+   phone with tasks signing in to an account with tasks gets `choose`, then `LinkMerge` keeps both
+   sides' tasks; `LinkReplace` leaves the account's; `Devices` marks this phone; a due reminder is
+   claimed once; `NextReminderAt` is the earliest.
+2. `scripts/android-core.sh` rebuilds the `.aar`; `./gradlew --offline assembleDebug
+   testDebugUnitTest` passes with the new unit test.
+3. `scripts/check.sh full` passes.
+
+## A2b-UI: projects, a task, sync and reminders
+
+The second half of the Compose app, on A2a's shell and A2b-core's API. Mockup: v26 frames 3 and 4;
+the Sync screen has no phone mockup and follows the rules below (v27's groups in one column).
+
+### Screens
+
+- **Projects tab**: the project list (folder icon in the project's color, name, open count), then a
+  project page per v26 frame 3: back bar `Projects`, the title with its folder, the segmented
+  control `Mine 5 | Agents 3`, groups by status with the glyph in the header, rows 26 dp in with the
+  author's avatar, Done folded into one `Completed 12` row that unfolds. The composer adds to the
+  project (`CreateTask` with its project id).
+- **A task** (tap any row on Mine, Agents or a project): full screen per v26 frame 4: back bar with
+  the task's `#N` at the right in `mono` `text.tertiary`, the title at 22 sp 700, property rows (18 dp
+  icons, 104 dp label column): status, from, priority strip P0–P3 (tapping sets it, `UpdateTask`),
+  project, branch, PR (tapping opens it); Subtasks with status pills; Activity on its rail, the
+  user's replies as `You`. The composer at the bottom says `Reply to <agent>` for an agent's task
+  (`Reply`) and `Add a note` for the user's own (`UpdateTask` notes append is out of scope: reply too).
+- **Sync** (tap the header's cloud on any tab): back bar `Sync`, then by state, the same states and
+  words as the desktop's pane (`app/locales` keys `settingsSync*` are the source for the strings;
+  copy them into `strings.xml`, en and zh):
+  - signed out: a card with the 36 dp pixel cloud, the title, the body, the accent button
+    `Sign in and sync` (`SignIn` through `CustomTabOpener`, device name `Build.MODEL`), the note;
+  - signing in: the button disabled with `Waiting for the browser…`; when the app comes back to the
+    front without the sign-in finished, the button is enabled again;
+  - `choose`: a modal bottom sheet with the two radio cards of v27 (Merge recommended and picked),
+    `Cancel` and `Continue` (`LinkMerge` or `LinkReplace`);
+  - signed in: the account group (name, `Signed in · 3 devices`, `Sign out` as a text button), the
+    This phone row (status line in `status.done` / `status.blocked` / `text.secondary`, `Sync now`);
+    `Devices` section: laptop or phone pixelarticon by name (a name with Mac/Book/PC is a laptop),
+    the name, a `This phone` tag, the age at the right; the first upload's 40-cell pixel bar while
+    seeding; a failure's reason, retry time and `Retry`;
+  - the footer `Server todo.sri-ai.xyz · Change`, Change edits the address in place.
+  The header cloud turns `status.blocked` when the sync status is failed for 15 minutes or signed
+  out after having been linked, as on the desktop.
+- **Server settings**: the phone's default server is `https://todo.sri-ai.xyz`. Changing it calls a
+  new `SyncSetServer(server string) error` in `mobile/core` that fetches `GET /v1/config`
+  (`syncclient.FetchConfig`, https only) and writes `sync.json` with the issuer, client id and
+  scopes; signing in calls it first when `sync.json` has no issuer.
+- **Sync running**: `StartSync` when the app comes to the front and the phone is linked, `StopSync`
+  when it goes to the back; `SyncNow` on `Sync now` / `Retry`.
+
+### Reminders
+
+- `NotificationChannel` `reminders` (`Reminders` / `提醒`). A `BroadcastReceiver` claims due
+  reminders (`ClaimDueReminders`) and posts one notification each: the title, the project (or
+  Inbox) as the text, the app's pixel mark as the small icon (a monochrome vector of the Mine
+  sprite's outline), tapping opens the task.
+- After any change (`OnChange`), at start and on `BOOT_COMPLETED`, the app sets one alarm at
+  `NextReminderAt` with `AlarmManager.setAndAllowWhileIdle(RTC_WAKEUP, …)` (inexact; no exact-alarm
+  permission). `POST_NOTIFICATIONS` is asked the first time an alarm is set on Android 13+.
+
+### Verification
+
+1. `./gradlew --offline assembleDebug testDebugUnitTest`: unit tests for the device-icon rule, the
+   header cloud's red rule, and decoding of every new golden JSON.
+2. Go: `SyncSetServer` test against an `httptest` server's `/v1/config`; `go test ./mobile/...`.
+3. `scripts/check.sh full` passes.
+4. The reviewer checks on the emulator with `demo=true`: Projects, a project, a task (light, dark,
+   zh) against v26 frames 3–4; each Sync state (a debug intent extra `sync_state=<name>` may fake
+   the state for screenshots); a reminder set a minute ahead posts a notification.

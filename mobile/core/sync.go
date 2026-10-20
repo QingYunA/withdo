@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
@@ -61,48 +63,118 @@ func (c *Core) SyncConfigure(server, issuer, clientID, scopes string) error {
 	return nil
 }
 
-// SignIn signs in with OIDC through the system browser (PKCE on a loopback redirect), then links
-// this database as a device named deviceName when it is not linked yet. BrowserOpener.Open gets
-// the authorization URL. It is a no-op beyond the sign-in when the phone is already linked.
-func (c *Core) SignIn(opener BrowserOpener, deviceName string) error {
-	if opener == nil {
-		return errors.New("there is no browser to sign in with")
+// SyncSetServer saves a self-hosted server in dataDir/sync.json. It asks the server's public
+// GET /v1/config first, so the file gets the sign-in it names (issuer, client id and scopes)
+// rather than a guessed one; an address that is not https, a server that does not answer and a
+// server without sign-in are all left unwritten. The address is the one the Sync screen's
+// "Server … · Change" edits.
+func (c *Core) SyncSetServer(server string) error {
+	base, err := syncclient.ServerURL(server)
+	if err != nil {
+		return errors.New("use an https address, such as https://todo.example.com")
 	}
-	if c.secrets == nil {
-		return errors.New("this phone has no secure store for the sign-in")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	public, err := syncclient.FetchConfig(ctx, base, nil)
+	if err != nil {
+		return errors.New("could not reach the sync server")
 	}
+	if public.Issuer == "" || public.ClientID == "" {
+		return errors.New("the server does not offer sign-in")
+	}
+	_ = c.StopSync()
 	cfg, found, err := c.loadConfig()
 	if err != nil {
 		return err
 	}
+	if !found {
+		cfg = syncclient.Config{Server: base}
+	}
+	cfg.Server = base
+	cfg.Issuer = strings.TrimRight(strings.TrimSpace(public.Issuer), "/")
+	cfg.ClientID = strings.TrimSpace(public.ClientID)
+	cfg.Scopes = public.Scopes
+	if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
+		return errors.New("could not save the sync settings")
+	}
+	return nil
+}
+
+// SignIn signs in with OIDC through the system browser (PKCE on a loopback redirect), then links
+// this database as a device named deviceName when it is not linked yet. BrowserOpener.Open gets
+// the authorization URL. It returns {"state":"linked"} once the phone is linked, or
+// {"state":"choose"} when both the phone and the account have tasks; the tokens stay stored, so
+// LinkMerge or LinkReplace finishes without a second sign-in. Signing in an already linked phone
+// returns {"state":"linked"}. With no issuer in sync.json it first reads the server's /v1/config
+// through SyncSetServer.
+func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
+	if opener == nil {
+		return "", errors.New("there is no browser to sign in with")
+	}
+	if c.secrets == nil {
+		return "", errors.New("this phone has no secure store for the sign-in")
+	}
+	cfg, found, err := c.loadConfig()
+	if err != nil {
+		return "", err
+	}
+	// A phone that never changed its server has no issuer yet: ask the default server what its
+	// sign-in is before opening the browser. SyncSetServer writes both, so the next sign-in is
+	// one call.
 	if !found || cfg.Issuer == "" || cfg.ClientID == "" {
-		return errors.New("sign-in is not set up; set the issuer first")
+		server := data.DefaultSyncServer
+		if found && cfg.Server != "" {
+			server = cfg.Server
+		}
+		if err := c.SyncSetServer(server); err != nil {
+			return "", err
+		}
+		cfg, found, err = c.loadConfig()
+		if err != nil {
+			return "", err
+		}
+		if !found || cfg.Issuer == "" || cfg.ClientID == "" {
+			return "", errors.New("sign-in is not set up; set the issuer first")
+		}
 	}
 	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
 	if err := source.Login(context.Background(), opener.Open); err != nil {
-		return syncError(err)
+		return "", syncError(err)
+	}
+	if account, ok := source.Account(); ok {
+		cfg.Account = &account
+		if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
+			return "", errors.New("could not save the account")
+		}
 	}
 	device, linked, err := c.dom.SyncState(context.Background(), "device_id")
 	if err != nil {
-		return errors.New("could not read the link")
+		return "", errors.New("could not read the link")
 	}
 	if linked && device != "" {
-		return nil
+		return signInLinkedJSON, nil
 	}
 	client, err := c.newClient(false)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if err := client.Link(context.Background(), strings.TrimSpace(deviceName)); err != nil {
-		return syncError(err)
+		if errors.Is(err, syncclient.ErrLocalData) {
+			return signInChooseJSON, nil
+		}
+		return "", syncError(err)
 	}
-	return nil
+	return signInLinkedJSON, nil
 }
 
 // SignOut forgets the refresh token, so the next sync is signed out until SignIn runs again. The
 // database stays linked to its device.
 func (c *Core) SignOut() error {
 	_ = c.StopSync()
+	c.mu.Lock()
+	c.lastStatus = syncclient.Status{State: syncclient.StateSignedOut}
+	c.failedSince = time.Time{}
+	c.mu.Unlock()
 	if c.secrets == nil {
 		return nil
 	}
@@ -112,11 +184,16 @@ func (c *Core) SignOut() error {
 	return nil
 }
 
-// SyncNow pushes and pulls once, then refills the id blocks. StartSync, the background loop, must
-// not be running at the same time.
+// SyncNow syncs at once. With the background runner working it nudges the runner; without one it
+// pushes and pulls once, then refills the id blocks (StartSync, the background loop, must not be
+// running at the same time in that case).
 func (c *Core) SyncNow() error {
-	if c.hasRunner() {
-		return errors.New("the background sync is running")
+	c.mu.Lock()
+	runner := c.runner
+	c.mu.Unlock()
+	if runner != nil {
+		runner.SyncNow()
+		return nil
 	}
 	client, err := c.client()
 	if err != nil {
@@ -180,13 +257,16 @@ func (c *Core) StopSync() error {
 	return runner.Close()
 }
 
-// SyncStatus returns the Runner's status as JSON:
+// SyncStatus returns the Runner's status as JSON, the sync settings the screens need, and the
+// first upload's size:
 //
-//	{"state":"idle","last_synced":"2026-10-20T09:00:00Z","last_error":"","pending":0}
+//	{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":true,"signed_in":true}
 //
-// state is idle, syncing, offline, error, seeding or signed out; last_synced and last_error are
-// left out when empty. Without a running Runner it is the last status the Runner reported, with
-// the outbox count read now.
+// state is idle, syncing, offline, error, seeding or signed out; last_synced, last_error,
+// retry_at, failed_since and seed_total are left out when empty. linked says this database has a
+// device id, signed_in says it still has a token, and server is the address in sync.json (the
+// default before one is written). Without a running Runner it is the last status the Runner
+// reported, with the outbox count read now.
 func (c *Core) SyncStatus() string {
 	c.mu.Lock()
 	status := c.lastStatus
@@ -194,7 +274,7 @@ func (c *Core) SyncStatus() string {
 	if pending, err := c.dom.SyncPending(context.Background()); err == nil {
 		status.Pending = pending
 	}
-	raw, err := encodeStatus(status)
+	raw, err := c.encodeStatus(status)
 	if err != nil {
 		return `{"state":"error","pending":0}`
 	}
@@ -203,17 +283,48 @@ func (c *Core) SyncStatus() string {
 
 // statusJSON is SyncStatus's shape.
 type statusJSON struct {
-	State      string `json:"state"`
-	LastSynced string `json:"last_synced,omitempty"`
-	LastError  string `json:"last_error,omitempty"`
-	Pending    int64  `json:"pending"`
+	State       string `json:"state"`
+	LastSynced  string `json:"last_synced,omitempty"`
+	LastError   string `json:"last_error,omitempty"`
+	Pending     int64  `json:"pending"`
+	RetryAt     string `json:"retry_at,omitempty"`
+	FailedSince string `json:"failed_since,omitempty"`
+	SeedTotal   int64  `json:"seed_total,omitempty"`
+	Server      string `json:"server,omitempty"`
+	Linked      bool   `json:"linked"`
+	SignedIn    bool   `json:"signed_in"`
 }
 
-// encodeStatus encodes one Runner status.
-func encodeStatus(status syncclient.Status) (string, error) {
-	out := statusJSON{State: string(status.State), LastError: status.LastError, Pending: int64(status.Pending)}
+// encodeStatus encodes one Runner status with the settings the Sync screen reads.
+func (c *Core) encodeStatus(status syncclient.Status) (string, error) {
+	out := statusJSON{
+		State: string(status.State), LastError: status.LastError, Pending: int64(status.Pending),
+		Server: data.DefaultSyncServer,
+	}
 	if !status.LastSynced.IsZero() {
 		out.LastSynced = status.LastSynced.UTC().Format(time.RFC3339)
+	}
+	if !status.RetryAt.IsZero() {
+		out.RetryAt = status.RetryAt.UTC().Format(time.RFC3339)
+	}
+	c.mu.Lock()
+	failedSince := c.failedSince
+	c.mu.Unlock()
+	if !failedSince.IsZero() {
+		out.FailedSince = failedSince.UTC().Format(time.RFC3339)
+	}
+	ctx := context.Background()
+	if device, linked, err := c.dom.SyncState(ctx, "device_id"); err == nil && linked && device != "" {
+		out.Linked = true
+	}
+	if raw, found, err := c.dom.SyncState(ctx, "seed_total"); err == nil && found && raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil {
+			out.SeedTotal = int64(n)
+		}
+	}
+	if cfg, found, err := c.loadConfig(); err == nil && found {
+		out.Server = cfg.Server
+		out.SignedIn = c.hasCredentials(cfg)
 	}
 	raw, err := json.Marshal(out)
 	if err != nil {
@@ -222,25 +333,41 @@ func encodeStatus(status syncclient.Status) (string, error) {
 	return string(raw), nil
 }
 
-// runnerStatus stores the Runner's newest status and tells the listener.
+// hasCredentials says whether a config can still authenticate: a development token in the file,
+// or a refresh token in the phone's secure store.
+func (c *Core) hasCredentials(cfg syncclient.Config) bool {
+	if cfg.Token != "" {
+		return true
+	}
+	if cfg.Issuer == "" || c.secrets == nil {
+		return false
+	}
+	_, err := (secretAdapter{c.secrets}).Get(syncclient.RefreshTokenKey)
+	return err == nil
+}
+
+// runnerStatus stores the Runner's newest status, remembers when a failure started, and tells the
+// listener.
 func (c *Core) runnerStatus(status syncclient.Status) {
 	c.mu.Lock()
 	c.lastStatus = status
+	switch status.State {
+	case syncclient.StateError:
+		if c.failedSince.IsZero() {
+			c.failedSince = c.nowTime()
+		}
+	case syncclient.StateOffline, syncclient.StateIdle, syncclient.StateSyncing:
+		// A success or a retry in flight is not a failure that turns the header's cloud red.
+		c.failedSince = time.Time{}
+	}
 	l := c.listener
 	c.mu.Unlock()
 	if l == nil {
 		return
 	}
-	if raw, err := encodeStatus(status); err == nil {
+	if raw, err := c.encodeStatus(status); err == nil {
 		l.OnStatus(raw)
 	}
-}
-
-// hasRunner says whether a background sync is running.
-func (c *Core) hasRunner() bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.runner != nil
 }
 
 // loadConfig reads dataDir/sync.json.

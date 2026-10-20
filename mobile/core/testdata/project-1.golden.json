@@ -504,5 +504,18 @@
       "Open": false,
       "CreatedAt": "2026-09-22T09:00:00Z"
     }
-  ]
+  ],
+  "Agents": {
+    "1": "claude-code",
+    "10": "claude-code",
+    "11": "claude-code",
+    "12": "claude-code",
+    "2": "claude-code",
+    "20": "claude-code",
+    "22": "claude-code",
+    "23": "claude-code",
+    "24": "claude-code",
+    "25": "claude-code",
+    "3": "claude-code"
+  }
 }
