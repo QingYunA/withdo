@@ -1,13 +1,13 @@
 package cli
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -30,12 +30,13 @@ const syncUsage = `Usage: adhd-core sync <command>
 Commands:
   link --server URL --token-file FILE --name NAME [--merge|--replace]
              Link this device to a sync server with a static token (development)
-  login --server URL --issuer URL --client-id ID --name NAME [--scope SCOPE]... [--merge|--replace]
-             Sign in to an OIDC account and link this device
-  logout     Forget the OIDC sign-in on this device
+  login --server URL --issuer URL --client-id ID --user LOGIN --password-stdin --name NAME [--scope SCOPE]... [--merge|--replace]
+             Sign in with an account and password, then link this device
+  logout     Forget the sign-in on this device
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
 
+--password-stdin reads the password from the first line of stdin, like docker login.
 --merge and --replace choose what happens when both this device and the account have tasks:
 --merge joins this device's tasks to the account; --replace backs this device up and uses the account's data.
 `
@@ -116,14 +117,17 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 		*name, hasData, seedRows, *merge, *replace, d)
 }
 
-// syncLogin signs in through the system browser, writes sync.json without a token and links this
-// Mac like sync link does. The refresh token goes to the keychain, never to the file.
+// syncLogin signs in with an account and password read from stdin, writes sync.json without a
+// token and links this Mac like sync link does. The refresh token goes to the keychain, never to
+// the file.
 func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.Core, d deps) error {
 	fs := flag.NewFlagSet("sync login", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	server := fs.String("server", "", "sync server URL")
 	issuer := fs.String("issuer", "", "OIDC issuer URL")
 	clientID := fs.String("client-id", "", "OIDC client id")
+	user := fs.String("user", "", "account login name")
+	passwordStdin := fs.Bool("password-stdin", false, "read the password from the first line of stdin")
 	name := fs.String("name", "", "device name")
 	merge := fs.Bool("merge", false, "join this device's tasks to the account's when both have data")
 	replace := fs.Bool("replace", false, "back this device up and use the account's data when both have data")
@@ -144,22 +148,25 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if strings.TrimSpace(*clientID) == "" {
 		return errors.New("sync login: --client-id is required")
 	}
+	if strings.TrimSpace(*user) == "" {
+		return errors.New("sync login: --user is required")
+	}
+	if !*passwordStdin {
+		return errors.New("sync login: --password-stdin is required")
+	}
 	if strings.TrimSpace(*name) == "" {
 		return errors.New("sync login: --name is required")
 	}
 	if d.secrets == nil {
 		return errors.New("sync login: no keychain available; use the desktop app")
 	}
+	password, err := readPassword(d.stdin)
+	if err != nil {
+		return err
+	}
 	source := syncclient.NewOIDCSource(*issuer, *clientID, scopes, d.secrets)
 	source.DBPath = dbPath
-	open := d.openBrowser
-	if open == nil {
-		open = openBrowser
-	}
-	if err := source.Login(ctx, func(url string) error {
-		_, _ = fmt.Fprintf(d.stdout, "open this URL to sign in:\n%s\n", url)
-		return open(url)
-	}); err != nil {
+	if err := source.SignIn(ctx, *server, *user, password); err != nil {
 		return syncFriendlyError(err)
 	}
 	client, err := syncclient.New(core, syncclient.Options{BaseURL: *server, TokenSource: source})
@@ -180,6 +187,19 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	}
 	_, _ = io.WriteString(d.stdout, "signed in\n")
 	return linkAndSave(ctx, client, dbPath, cfg, *name, hasData, seedRows, *merge, *replace, d)
+}
+
+// readPassword reads the password from the first line of stdin and drops its line ending, as
+// docker login does. The password is not trimmed.
+func readPassword(stdin io.Reader) (string, error) {
+	if stdin == nil {
+		return "", errors.New("sync login: no stdin to read the password from")
+	}
+	line, err := bufio.NewReader(stdin).ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return "", fmt.Errorf("sync login: read the password: %w", err)
+	}
+	return strings.TrimRight(line, "\r\n"), nil
 }
 
 // syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
@@ -407,6 +427,16 @@ func syncFriendlyError(err error) error {
 		return errors.New("the workspace is still uploading its first snapshot; try again later")
 	case errors.Is(err, syncclient.ErrNotLinked):
 		return errors.New("this database is not linked; run adhd-core sync link first")
+	case errors.Is(err, syncclient.ErrInvalidCredentials):
+		return errors.New("the login name or password is wrong")
+	case errors.Is(err, syncclient.ErrAccountLocked):
+		return errors.New("this account is locked or disabled")
+	case errors.Is(err, syncclient.ErrSecondFactor):
+		return errors.New("this account uses a second factor; in-app sign-in supports passwords only")
+	case errors.Is(err, syncclient.ErrTooManyAttempts):
+		return errors.New("too many sign-in attempts; wait a few minutes and try again")
+	case errors.Is(err, syncclient.ErrSignInUnsupported):
+		return errors.New("this sync server does not support in-app sign-in; update it")
 	case syncclient.IsSignedOut(err):
 		return errors.New("not signed in; run adhd-core sync login")
 	case syncclient.IsUnauthorized(err):
@@ -414,26 +444,6 @@ func syncFriendlyError(err error) error {
 	default:
 		return err
 	}
-}
-
-// openBrowser opens url in the platform's browser. Tests and the app replace it.
-func openBrowser(url string) error {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("open", url)
-	case "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
-	default:
-		cmd = exec.Command("xdg-open", url)
-	}
-	if out, err := cmd.CombinedOutput(); err != nil {
-		if msg := strings.TrimSpace(string(out)); msg != "" {
-			return errors.New(msg)
-		}
-		return err
-	}
-	return nil
 }
 
 // scopeList collects a repeated --scope flag.
