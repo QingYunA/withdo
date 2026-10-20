@@ -49,7 +49,9 @@ func TestAgentAvatarRecognizesTheAgentsByTheirClientName(t *testing.T) {
 		"opencode": AvatarOpencode, "Visual Studio Code": AvatarCopilot, "Visual Studio Code - Insiders": AvatarCopilot,
 		"github-copilot": AvatarCopilot, "qwen-code-mcp-client": AvatarQwen, "qwen-cli-mcp-client-adhd-todo": AvatarQwen,
 		"kimi-cli": AvatarKimi, "Zed": AvatarZed, "zed": AvatarZed, "windsurf-client": AvatarWindsurf, "cline": AvatarCline,
-		"optimized-agent": AvatarOther,
+		"optimized-agent": AvatarOther, "deepseek-harness": AvatarDeepSeek, "dsh": AvatarDeepSeek, "dsh-desktop": AvatarDeepSeek,
+		"amp": AvatarAmp, "Amp": AvatarAmp, "amp-cli": AvatarAmp, "kiro": AvatarKiro, "Kiro IDE": AvatarKiro,
+		"campfire": AvatarOther, "dshell": AvatarOther,
 	} {
 		if got := AgentAvatar(name).Kind; got != want {
 			t.Errorf("%q: kind %d, want %d", name, got, want)
