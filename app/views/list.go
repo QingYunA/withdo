@@ -195,7 +195,7 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, n int, open bool, above 
 func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	title, body := m.say.ListEmptyTitle(), m.say.ListEmptyBody()
 	if m.nav.screen == screenInbox {
-		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody()
+		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody(keyHint("⌘K"))
 	}
 	emptyState(c, t, title, body, 56, func() {
 		if m.nav.screen == screenProject {

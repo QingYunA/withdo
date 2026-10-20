@@ -40,9 +40,9 @@ func emptyMacRig(t *testing.T) *settingsRig {
 
 func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
 	r := agentsRig(t)
-	has(t, r.tt, "Coding agents", "On this Mac", "More", "adds adhd-todo's MCP server to that agent")
+	has(t, r.tt, "Coding agents", "On this computer", "More", "adds adhd-todo's MCP server to that agent")
 	// The counts sit beside their labels: six on this Mac, eight in More.
-	for label, count := range map[string]string{"On this Mac": "6", "More": "8"} {
+	for label, count := range map[string]string{"On this computer": "6", "More": "8"} {
 		head, ok := r.tt.Find(label)
 		if !ok {
 			t.Fatalf("no section label %q", label)
@@ -100,7 +100,7 @@ func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
 
 func TestBothSectionsFitTheWindowBeforeItScrolls(t *testing.T) {
 	r := agentsRig(t)
-	for _, n := range []string{"On this Mac", "6", "More", "8", "Kiro", "Cline"} {
+	for _, n := range []string{"On this computer", "6", "More", "8", "Kiro", "Cline"} {
 		f, ok := r.tt.Find(n)
 		if !ok {
 			t.Fatalf("no %s", n)
@@ -184,7 +184,7 @@ func TestAnAgentThatOnlyReportedStaysOnThisMac(t *testing.T) {
 
 func TestAnEmptyMacShowsTheEmptyRowAndAllAgentsUnderMore(t *testing.T) {
 	r := emptyMacRig(t)
-	has(t, r.tt, "On this Mac", "No agent found on this Mac yet", "See how to connect", "More", "14")
+	has(t, r.tt, "On this computer", "No agent found on this computer yet", "See how to connect", "More", "14")
 	hasNot(t, r.tt, "Install MCP")
 	if got := countText(r.tt, "Get it"); got != 14 {
 		t.Errorf("%d Get it links, want 14", got)
@@ -201,7 +201,7 @@ func TestAnEmptyMacSaysSoInChinese(t *testing.T) {
 	inChinese(r.tt)
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "本机已有", "还没在这台 Mac 上找到 Agent", "去看看怎么接", "更多", "14", "去下载")
+	has(t, r.tt, "本机已有", "还没在这台电脑上找到 Agent", "去看看怎么接", "更多", "14", "去下载")
 }
 
 func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
@@ -371,7 +371,7 @@ func TestAgentsPaneWithoutAnEnvFindsNothingAndDoesNotPanic(t *testing.T) {
 	r.app.Store = demoStore(t, fixedNow, false)
 	r.app.Refresh()
 	r.pane(t, "Agents")
-	has(t, r.tt, "No agent found on this Mac yet", "See how to connect", "Claude Code", "Get it")
+	has(t, r.tt, "No agent found on this computer yet", "See how to connect", "Claude Code", "Get it")
 	hasNot(t, r.tt, "Install MCP")
 }
 

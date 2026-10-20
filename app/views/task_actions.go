@@ -29,10 +29,10 @@ var (
 	keyPriority = binding{0, ui.KeyP, "P"}
 	keyMove     = binding{0, ui.KeyM, "M"}
 	keyRemind   = binding{0, ui.KeyR, "R"}
-	keyAsk      = binding{ui.Cmd, ui.KeyJ, "⌘J"}
-	keyDone     = binding{ui.Cmd, ui.KeyEnter, "⌘↵"}
-	keyHandOff  = binding{ui.Cmd | ui.Shift, ui.KeyA, "⌘⇧A"}
-	keyDelete   = binding{ui.Cmd, ui.KeyBackspace, "⌘⌫"}
+	keyAsk      = binding{ui.Cmd, ui.KeyJ, keyHint("⌘J")}
+	keyDone     = binding{ui.Cmd, ui.KeyEnter, keyHint("⌘↵")}
+	keyHandOff  = binding{ui.Cmd | ui.Shift, ui.KeyA, keyHint("⌘⇧A")}
+	keyDelete   = binding{ui.Cmd, ui.KeyBackspace, keyHint("⌘⌫")}
 )
 
 // actionKind names an action.

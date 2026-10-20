@@ -275,7 +275,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 			ui.Icon(c, theme.IconCloud).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Blocked()).
 				Shrink(0).Label(m.say.SettingsSyncAlert())
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, "⌘,").Shrink(0)
+		theme.Text(c, theme.Meta, t.TextTertiary, keyHint("⌘,")).Shrink(0)
 	})
 	if row.Clicked() {
 		if alert {

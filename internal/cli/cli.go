@@ -30,7 +30,7 @@ const usage = `Usage: adhd-core <command>
 Commands:
   mcp        Run the MCP server on stdio
   overview   Print active tasks per project, with stale flags
-  sync       Link this Mac to a sync server, show its status, or sync once
+  sync       Link this device to a sync server, show its status, or sync once
   guide      Print a setup guide to paste to any coding agent, so it adds this MCP server itself
   version    Print the version (also --version)
 `
@@ -102,7 +102,11 @@ func run(ctx context.Context, args []string, d deps) int {
 		return exitUsage
 	}
 	if wantsHelp(args) {
-		_, _ = io.WriteString(d.stdout, usage)
+		if args[0] == "sync" {
+			_, _ = io.WriteString(d.stdout, syncUsage)
+		} else {
+			_, _ = io.WriteString(d.stdout, usage)
+		}
 		return exitOK
 	}
 	switch args[0] {
@@ -131,7 +135,7 @@ func run(ctx context.Context, args []string, d deps) int {
 }
 
 // wantsHelp reports whether args ask for the usage: help, --help or -h on their own, or --help or
-// -h after a command. There is one usage for all commands, so that is what each of them prints.
+// -h after a command. Each command prints the usage, except sync, which has its own.
 func wantsHelp(args []string) bool {
 	switch args[0] {
 	case "help", "--help", "-h":

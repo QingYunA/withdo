@@ -208,7 +208,7 @@ func TestS3Core4CLI(t *testing.T) {
 		if code != 0 {
 			t.Fatalf("link exit %d: %s", code, errOut)
 		}
-		if !strings.Contains(out, "uploaded this Mac's data (") {
+		if !strings.Contains(out, "uploaded this device's data (") {
 			t.Errorf("link output = %q, want the uploaded rows line", out)
 		}
 		if pushes, mutations := server.pushed(); pushes == 0 || mutations == 0 {

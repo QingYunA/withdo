@@ -1,0 +1,61 @@
+<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><title>v28 · Windows 托盘与菜单</title><style>
+:root{--text:#1D1D1F;--text2:#6E6E73;--accent:#5B5BD6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E4E3EA;font-family:"Segoe UI Variable","Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);padding:40px 48px 48px;width:1600px}
+.st{font-size:26px;line-height:32px;font-weight:700}.ss{font-size:15px;line-height:22px;color:var(--text2);margin-top:4px}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:20px 0 28px}
+.notes h3{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}.notes li{font-size:13px;line-height:19px;color:#3A3A3C;margin-left:16px}
+.grid{display:grid;grid-template-columns:repeat(2,740px);gap:36px 24px}
+.cap{font-size:13px;color:var(--text2);text-align:center;margin-top:10px}
+.desk{height:330px;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.desk.light{background:linear-gradient(160deg,#C9D6EA,#E9EEF6)}.desk.dark{background:linear-gradient(160deg,#1B2333,#2B3550)}
+.bar{position:absolute;left:0;right:0;bottom:0;height:48px;display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:0 10px}
+.light .bar{background:rgba(243,243,243,.92);border-top:1px solid rgba(0,0,0,.08);color:#1A1A1A}
+.dark .bar{background:rgba(32,32,32,.94);border-top:1px solid rgba(255,255,255,.06);color:#FFF}
+.ti{width:32px;height:40px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.ti.hot{background:rgba(127,127,127,.18)}
+.ti img{image-rendering:pixelated}
+.sys{font-size:12px;line-height:16px;text-align:right;padding:0 8px}
+.glyph{width:16px;height:16px;border-radius:3px;border:1.5px solid currentColor;opacity:.75}
+.menu{position:absolute;right:120px;bottom:60px;width:248px;border-radius:8px;padding:4px;font-size:14px;line-height:20px}
+.light .menu{background:#F9F9F9;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.18);color:#1A1A1A}
+.dark .menu{background:#2C2C2C;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.5);color:#FFF}
+.mi{height:32px;display:flex;align-items:center;padding:0 12px;border-radius:4px}.mi.hl{background:rgba(127,127,127,.16)}
+.mi .acc{margin-left:auto;opacity:.6;font-size:12px}
+.sep{height:1px;margin:4px 8px;background:rgba(127,127,127,.3)}
+.tip{position:absolute;right:118px;bottom:58px;font-size:12px;padding:6px 8px;border-radius:4px;background:#F9F9F9;box-shadow:0 0 0 1px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.15)}
+.win{position:absolute;left:24px;top:20px;width:420px;height:250px;border-radius:8px;background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.1),0 16px 40px rgba(0,0,0,.2);overflow:hidden;font-size:14px}
+.tb{height:32px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#1A1A1A}.tb .ctl{margin-left:auto;letter-spacing:22px;opacity:.6}
+.mb{height:30px;display:flex;gap:2px;padding:0 6px;align-items:center;border-bottom:1px solid #EEE}.mb span{padding:4px 10px;border-radius:4px}.mb span.on{background:#E8E8E8}
+.drop{position:absolute;left:30px;top:84px;width:236px;border-radius:8px;padding:4px;background:#F9F9F9;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.18)}
+.sizes{position:absolute;left:24px;top:24px;display:flex;gap:28px;align-items:flex-end}.sizes div{text-align:center;font-size:12px}
+.light .sizes div{color:#3A3A3C}.dark .sizes div{color:#C7C7CC}.sizes img{image-rendering:pixelated;display:block;margin:0 auto 6px}
+</style></head><body>
+<div class="st">v28 · Windows 托盘与菜单</div>
+<div class="ss">只在 Windows 上有托盘（2026-10-20 决定）：Windows 没有 Dock，关掉窗口后从托盘或再次启动找回。macOS 仍然没有托盘。</div>
+<div class="notes">
+<div><h3>托盘图标</h3><ul><li>应用图标在 12×12 网格上的像素版：深色方块 #1E293B，白色对勾 #F8FAFC，四角各缺一格。</li><li>文件 <code>app/theme/sprites/tray.png</code>（1x），代码放大 2 倍给出 24×24：150% 缩放时一格是 2 个像素，100% 和 200% 由系统缩放。</li><li>悬停提示：ADHD Todo。</li></ul></div>
+<div><h3>行为</h3><ul><li>左键单击：打开主窗口（隐藏或最小化时都调出来）。</li><li>右键单击：菜单 打开 ADHD Todo / 设置… / 退出。</li><li>关窗口：窗口隐藏，提醒、日终总结和 PR 通知照常在后台。</li><li>再次启动：不开第二个进程，调出已有的窗口（双平台单实例）。</li></ul></div>
+<div><h3>菜单栏</h3><ul><li>Windows 的 File 菜单：设置…（Ctrl+,）、分隔线、退出。macOS 的应用菜单不变。</li><li>界面上的快捷键提示在 Windows 写成 Ctrl+K、Ctrl+F、Ctrl+Shift+A、Ctrl+Enter、Ctrl+Backspace。</li></ul></div>
+</div>
+<div class="grid">
+<div><div class="desk light">
+ <div class="sizes"><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="16" height="16">16 px · 100%</div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="24" height="24">24 px · 150%</div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="32" height="32">32 px · 200%</div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="96" height="96">12×12 网格</div></div>
+ <div class="tip">ADHD Todo</div>
+ <div class="bar"><div class="ti"><div class="glyph"></div></div><div class="ti hot"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="16" height="16"></div><div class="ti"><div class="glyph"></div></div><div class="sys">17:42<br>2026/10/20</div></div>
+</div><div class="cap">浅色任务栏 · 100% · 悬停</div></div>
+<div><div class="desk dark">
+ <div class="sizes"><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="16" height="16">16 px</div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="24" height="24">24 px</div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="32" height="32">32 px</div></div>
+ <div class="menu"><div class="mi hl">打开 ADHD Todo</div><div class="mi">设置…</div><div class="sep"></div><div class="mi">退出</div></div>
+ <div class="bar"><div class="ti"><div class="glyph"></div></div><div class="ti hot"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="24" height="24"></div><div class="ti"><div class="glyph"></div></div><div class="sys">17:42<br>2026/10/20</div></div>
+</div><div class="cap">深色任务栏 · 150% · 右键菜单（中文）</div></div>
+<div><div class="desk light">
+ <div class="menu"><div class="mi">Open ADHD Todo</div><div class="mi hl">Settings…</div><div class="sep"></div><div class="mi">Exit</div></div>
+ <div class="bar"><div class="ti"><div class="glyph"></div></div><div class="ti hot"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="16" height="16"></div><div class="ti"><div class="glyph"></div></div><div class="sys">5:42 PM<br>10/20/2026</div></div>
+</div><div class="cap">右键菜单（英文）</div></div>
+<div><div class="desk light">
+ <div class="win"><div class="tb">ADHD Todo<span class="ctl">–□✕</span></div><div class="mb"><span class="on">文件</span><span>编辑</span><span>视图</span><span>窗口</span></div></div>
+ <div class="drop"><div class="mi hl">设置…<span class="acc">Ctrl+,</span></div><div class="sep"></div><div class="mi">退出</div></div>
+ <div class="bar"><div class="ti hot"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAW0lEQVR4nGNkYGBgkNO0/s9ABHh0/SgjI7GKYYCJgUTAREjBrYsHwZgoDTCFavr2hDVgU4yiAdlqXIoZGBgYUEIJ2a3YFKPYgKwIl2IMG4gBpMcDKLqJVQxSCwBHgSRuuhsmqAAAAABJRU5ErkJggg==" width="16" height="16"></div><div class="sys">17:42<br>2026/10/20</div></div>
+</div><div class="cap">按 Alt 后的 File 菜单（Windows）</div></div>
+</div></body></html>

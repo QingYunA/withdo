@@ -126,7 +126,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 			case typed:
 				m.sendButton(c, t, s)
 			case !focused && s == surfacePage:
-				theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle()).Shrink(0)
+				theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle(keyHint("⌘K"))).Shrink(0)
 			}
 		})
 		if bar {

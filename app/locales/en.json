@@ -668,9 +668,15 @@
   "@foldShowShort": {
     "description": "End of the folded line under a list while closed."
   },
-  "inboxEmptyBody": "Tasks without a project land here. Write one in the box above, or press ⌘K.",
+  "inboxEmptyBody": "Tasks without a project land here. Write one in the box above, or press {key}.",
   "@inboxEmptyBody": {
-    "description": "Body of an empty Inbox. ⌘K is the shortcut of the ask field."
+    "description": "Body of an empty Inbox. key is the shortcut of the ask field, such as ⌘K on a Mac or Ctrl+K elsewhere.",
+    "placeholders": {
+      "key": {
+        "type": "String",
+        "example": "⌘K"
+      }
+    }
   },
   "inboxEmptyTitle": "Your inbox is clear.",
   "@inboxEmptyTitle": {
@@ -1570,7 +1576,7 @@
   "@providerNoteMagpie": {
     "description": "Note of the Magpie provider."
   },
-  "providerNoteOllama": "Runs on this Mac. No key needed.",
+  "providerNoteOllama": "Runs on this computer. No key needed.",
   "@providerNoteOllama": {
     "description": "Note of the Ollama provider."
   },
@@ -1742,6 +1748,10 @@
   "@menuSettings": {
     "description": "Item of the app menu that opens the Settings window (⌘,)."
   },
+  "trayOpen": "Open ADHD Todo",
+  "@trayOpen": {
+    "description": "Item of the menu of the tray icon (Windows) that brings the main window back."
+  },
   "modelsBaseURLHelp": "Change only for a gateway such as Magpie",
   "@modelsBaseURLHelp": {
     "description": "Line under the Base URL label in Settings > Assistant."
@@ -1832,9 +1842,15 @@
   "@composerChipSetUp": {
     "description": "Quiet link under the composer while it is focused and no model is connected. It opens Settings > Assistant."
   },
-  "composerHintIdle": "⌘K",
+  "composerHintIdle": "{key}",
   "@composerHintIdle": {
-    "description": "The shortcut that focuses the composer, at its right while it is not focused."
+    "description": "The shortcut that focuses the composer, at its right while it is not focused. key is written for the platform, such as ⌘K on a Mac or Ctrl+K elsewhere.",
+    "placeholders": {
+      "key": {
+        "type": "String",
+        "example": "⌘K"
+      }
+    }
   },
   "composerLabel": "Ask the assistant",
   "@composerLabel": {
@@ -2022,7 +2038,7 @@
   },
   "settingsAgentFound": "Found · {where}",
   "@settingsAgentFound": {
-    "description": "Line under an agent that is on this Mac but has not reported today; where is the command or folder found, such as gemini or ~/.cursor.",
+    "description": "Line under an agent that is on this computer but has not reported today; where is the command or folder found, such as gemini or ~/.cursor.",
     "placeholders": {
       "where": {
         "type": "String",
@@ -2030,21 +2046,21 @@
       }
     }
   },
-  "settingsAgentsLocal": "On this Mac",
+  "settingsAgentsLocal": "On this computer",
   "@settingsAgentsLocal": {
-    "description": "Section label above the agents found on this Mac in Settings > Agents; the count follows it quietly."
+    "description": "Section label above the agents found on this computer in Settings > Agents; the count follows it quietly."
   },
   "settingsAgentsMore": "More",
   "@settingsAgentsMore": {
-    "description": "Section label above the agents not on this Mac in Settings > Agents; the count follows it quietly."
+    "description": "Section label above the agents not on this computer in Settings > Agents; the count follows it quietly."
   },
-  "settingsAgentsEmpty": "No agent found on this Mac yet",
+  "settingsAgentsEmpty": "No agent found on this computer yet",
   "@settingsAgentsEmpty": {
-    "description": "The one row under On this Mac when no agent was found on this Mac and none has reported."
+    "description": "The one row under On this computer when no agent was found on this computer and none has reported."
   },
   "settingsAgentsConnect": "See how to connect",
   "@settingsAgentsConnect": {
-    "description": "Link in the empty On this Mac row; it opens the README's section on connecting an agent."
+    "description": "Link in the empty On this computer row; it opens the README's section on connecting an agent."
   },
   "settingsAgentInstall": "Install MCP",
   "@settingsAgentInstall": {
@@ -2060,7 +2076,7 @@
   },
   "settingsAgentGet": "Get it",
   "@settingsAgentGet": {
-    "description": "Link to the website of an agent that is not on this Mac."
+    "description": "Link to the website of an agent that is not on this computer."
   },
   "a11yInstallMCP": "Install the MCP in {agent}",
   "@a11yInstallMCP": {
@@ -2108,7 +2124,7 @@
       }
     }
   },
-  "settingsAgentGone": "{agent} isn't on this Mac anymore.",
+  "settingsAgentGone": "{agent} isn't on this computer anymore.",
   "@settingsAgentGone": {
     "description": "Why Install MCP did nothing: the agent's command is gone.",
     "placeholders": {
@@ -3384,9 +3400,15 @@
   "@categoryPenOwn": {
     "description": "Accessibility label of the first swatch of the icon editor's palette: pixels drawn with it follow the category's color."
   },
-  "categoryDrawHelp": "Click a cell to draw, drag to keep going. ⌘Z undoes.",
+  "categoryDrawHelp": "Click a cell to draw, drag to keep going. {key} undoes.",
   "@categoryDrawHelp": {
-    "description": "Help line under the icon editor's palette."
+    "description": "Help line under the icon editor's palette. key is the undo shortcut, such as ⌘Z on a Mac or Ctrl+Z elsewhere.",
+    "placeholders": {
+      "key": {
+        "type": "String",
+        "example": "⌘Z"
+      }
+    }
   },
   "categoryThreshold": "Threshold",
   "@categoryThreshold": {
@@ -3772,7 +3794,7 @@
   "@recentSignedOutTitle": {
     "description": "Title of the Recent changes page when gh is signed out."
   },
-  "recentGHBody": "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:",
+  "recentGHBody": "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:",
   "@recentGHBody": {
     "description": "Body of the Recent changes page when gh is missing or signed out; the command to run follows."
   },

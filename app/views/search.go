@@ -81,7 +81,7 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 				m.clearSearch()
 			}
 		case !focused:
-			theme.Text(c, theme.Meta, t.TextTertiary, "⌘F").Shrink(0)
+			theme.Text(c, theme.Meta, t.TextTertiary, keyHint("⌘F")).Shrink(0)
 		}
 	})
 }

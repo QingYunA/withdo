@@ -79,7 +79,7 @@ func (m *Main) categoryDraw(c *ui.Context, t *theme.Tokens, s *categorySheet) {
 			m.drawTools(c, t, s)
 		})
 		m.drawPalette(c, t, s)
-		theme.Paragraph(c, theme.Meta, t.TextSecondary, m.say.CategoryDrawHelp(), 0)
+		theme.Paragraph(c, theme.Meta, t.TextSecondary, m.say.CategoryDrawHelp(keyHint("⌘Z")), 0)
 	})
 }
 
