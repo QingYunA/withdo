@@ -40,7 +40,7 @@ Commands:
 // runSync runs one `adhd-core sync` subcommand.
 func runSync(ctx context.Context, args []string, d deps) error {
 	if len(args) == 0 {
-		return errors.New("usage: adhd-core sync link|status|now")
+		return errors.New("usage: adhd-core sync link|login|logout|status|now")
 	}
 	dbPath := paths.DBPath(d.getenv, runtime.GOOS, d.home)
 	db, err := store.Open(ctx, dbPath)
