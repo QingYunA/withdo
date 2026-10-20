@@ -13,4 +13,8 @@ coverage/
 *.db-shm
 !internal/store/testdata/*.db
 
+# the gomobile build output; scripts/android-core.sh makes it
+android/core/*.aar
+android/core/*.jar
+
 .DS_Store

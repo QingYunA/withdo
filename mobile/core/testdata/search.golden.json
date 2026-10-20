@@ -1,0 +1,30 @@
+[
+  {
+    "ID": 2,
+    "ParentID": null,
+    "ProjectID": 1,
+    "MilestoneID": 1,
+    "Title": "Native UI with mygo",
+    "Notes": "",
+    "Status": "review",
+    "Priority": "P2",
+    "CategoryID": 0,
+    "DueAt": null,
+    "RemindAt": null,
+    "RemindedAt": null,
+    "Branch": "feat/native-ui",
+    "PRURL": "https://github.com/QingYunA/adhd-todo/pull/12",
+    "PRNumber": 12,
+    "Source": "agent",
+    "CreatedAt": "2026-10-18T08:35:00Z",
+    "UpdatedAt": "2026-10-20T08:35:00Z",
+    "CompletedAt": null,
+    "PRState": "",
+    "PRChecks": "",
+    "PRReview": "",
+    "PRCheckedAt": null,
+    "PRClosedSeenAt": null,
+    "HandedTo": "",
+    "HandedAt": null
+  }
+]
