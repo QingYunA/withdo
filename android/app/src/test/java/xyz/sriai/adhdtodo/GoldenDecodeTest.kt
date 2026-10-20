@@ -1,14 +1,20 @@
 package xyz.sriai.adhdtodo
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentsPage
+import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectPage
+import xyz.sriai.adhdtodo.data.Reminder
+import xyz.sriai.adhdtodo.data.SignInState
+import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.Task
 import xyz.sriai.adhdtodo.data.TaskPage
 import java.io.File
@@ -23,7 +29,7 @@ class GoldenDecodeTest {
     fun `every golden file decodes`() {
         val dir = repoFile("mobile/core/testdata")
         val files = dir.listFiles { file -> file.name.endsWith(".golden.json") }.orEmpty().sortedBy { it.name }
-        assertEquals("golden files", 6, files.size)
+        assertEquals("golden files", 11, files.size)
         for (file in files) {
             val text = file.readText()
             when (file.name) {
@@ -51,6 +57,7 @@ class GoldenDecodeTest {
                     val page = PageJson.decodeFromString<ProjectPage>(text)
                     assertEquals("adhd-todo", page.project.name)
                     assertTrue(page.tasks.isNotEmpty())
+                    assertEquals("claude-code", page.agents["1"])
                 }
                 "projects.golden.json" -> {
                     val projects = PageJson.decodeFromString<List<Project>>(text)
@@ -71,9 +78,54 @@ class GoldenDecodeTest {
                     assertEquals("claude-code", page.latestAgent)
                     assertNotNull(page.task.createdAt)
                 }
+                "account.golden.json" -> {
+                    val account = PageJson.decodeFromString<Account>(text)
+                    assertEquals("Ada Lovelace", account.name)
+                    assertEquals("ada@example.com", account.email)
+                    assertEquals("Ada Lovelace", account.display)
+                }
+                "devices.golden.json" -> {
+                    val devices = PageJson.decodeFromString<List<Device>>(text)
+                    assertEquals(2, devices.size)
+                    assertEquals("d1", devices[0].id)
+                    assertEquals("Pixel", devices[0].name)
+                    assertTrue(devices[0].isThis)
+                    assertNotNull(devices[0].lastSeenAt)
+                    assertFalse(devices[1].isThis)
+                    assertEquals(null, devices[1].lastSeenAt)
+                }
+                "reminders.golden.json" -> {
+                    val reminders = PageJson.decodeFromString<List<Reminder>>(text)
+                    assertEquals(2, reminders.size)
+                    assertEquals(7L, reminders[0].taskId)
+                    assertEquals("Pay rent", reminders[0].title)
+                    assertEquals("Home", reminders[0].project)
+                    assertEquals(null, reminders[1].project)
+                }
+                "signin-linked.golden.json" -> {
+                    assertEquals("linked", PageJson.decodeFromString<SignInState>(text).state)
+                }
+                "signin-choose.golden.json" -> {
+                    assertEquals("choose", PageJson.decodeFromString<SignInState>(text).state)
+                }
                 else -> error("a golden file with no data class: ${file.name}")
             }
         }
+    }
+
+    @Test
+    fun `the sync status decodes the settings the screen reads`() {
+        val json = """{"state":"error","last_error":"the server did not answer","pending":3,"retry_at":"2026-10-20T09:02:00Z","failed_since":"2026-10-20T08:40:00Z","seed_total":3512,"server":"https://todo.sri-ai.xyz","linked":true,"signed_in":true}"""
+        val status = PageJson.decodeFromString<SyncStatus>(json)
+        assertEquals("error", status.state)
+        assertEquals(3L, status.pending)
+        assertEquals(3512L, status.seedTotal)
+        assertEquals(3509L, status.seedDone)
+        assertEquals("https://todo.sri-ai.xyz", status.server)
+        assertTrue(status.linked)
+        assertTrue(status.signedIn)
+        assertNotNull(status.retryAt)
+        assertNotNull(status.failedSince)
     }
 
     @Test

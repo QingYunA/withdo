@@ -183,6 +183,8 @@ data class ProjectPage(
     @SerialName("Project") val project: Project = Project(),
     @SerialName("Tasks") val tasks: List<Task> = emptyList(),
     @SerialName("Milestones") val milestones: List<Milestone> = emptyList(),
+    /** Task id → the agent of its latest report: the row's avatar. */
+    @SerialName("Agents") val agents: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -214,3 +216,68 @@ data class NewTask(
     @SerialName("title") val title: String,
     @SerialName("project_id") val projectId: Long? = null,
 )
+
+/** The shape UpdateTask takes. An absent key is left alone. */
+@Serializable
+data class TaskPatch(
+    @SerialName("title") val title: String? = null,
+    @SerialName("notes") val notes: String? = null,
+    @SerialName("status") val status: String? = null,
+    @SerialName("priority") val priority: String? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("remind_at") val remindAt: String? = null,
+    @SerialName("category") val category: Long? = null,
+    @SerialName("project_id") val projectId: Long? = null,
+)
+
+/** Account()'s JSON: who this phone signed in as. Both are "" when signed out. */
+@Serializable
+data class Account(
+    @SerialName("name") val name: String = "",
+    @SerialName("email") val email: String = "",
+) {
+    val display: String get() = name.ifBlank { email }
+}
+
+/** One device of the account, as Devices() lists it. */
+@Serializable
+data class Device(
+    @SerialName("id") val id: String = "",
+    @SerialName("name") val name: String = "",
+    @SerialName("last_seen_at") val lastSeenAt: String? = null,
+    @SerialName("this") val isThis: Boolean = false,
+)
+
+/** One due reminder, as ClaimDueReminders returns it. Project is null for an Inbox task. */
+@Serializable
+data class Reminder(
+    @SerialName("task_id") val taskId: Long = 0,
+    @SerialName("title") val title: String = "",
+    @SerialName("project") val project: String? = null,
+)
+
+/** SignIn()'s answer: "linked" or "choose". */
+@Serializable
+data class SignInState(
+    @SerialName("state") val state: String = "",
+)
+
+/**
+ * SyncStatus()'s JSON: the runner's state plus the settings the Sync screen reads. A missing
+ * retry_at, failed_since or seed_total means the runner is not in that state.
+ */
+@Serializable
+data class SyncStatus(
+    @SerialName("state") val state: String = "idle",
+    @SerialName("last_synced") val lastSynced: String? = null,
+    @SerialName("last_error") val lastError: String = "",
+    @SerialName("pending") val pending: Long = 0,
+    @SerialName("retry_at") val retryAt: String? = null,
+    @SerialName("failed_since") val failedSince: String? = null,
+    @SerialName("seed_total") val seedTotal: Long = 0,
+    @SerialName("server") val server: String = "",
+    @SerialName("linked") val linked: Boolean = false,
+    @SerialName("signed_in") val signedIn: Boolean = false,
+) {
+    val seedDone: Long get() = (seedTotal - pending).coerceAtLeast(0)
+}

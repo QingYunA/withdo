@@ -72,7 +72,7 @@
     <string name="pill_cancelled">Cancelled</string>
     <string name="done_by_you">You</string>
     <string name="agent_unnamed">Agent</string>
-    <string name="next_step_prefix">; next: </string>
+    <string name="next_step_prefix">; next:\u0020</string>
 
     <string name="show_all_in_inbox">Show all in Inbox</string>
     <string name="show_all_in_completed">Show all in Completed</string>
@@ -91,4 +91,92 @@
         <item quantity="one">%1$d subtask</item>
         <item quantity="other">%1$d subtasks</item>
     </plurals>
+
+    <!-- Projects -->
+    <string name="empty_projects_title">No projects yet</string>
+    <string name="empty_projects_body">Make one on your computer, or let an agent’s report start one.</string>
+    <string name="empty_project_title">Nothing in this project yet</string>
+    <string name="empty_project_body">Write one in the box below.</string>
+    <string name="project_completed">Completed %1$d</string>
+    <string name="group_blocked">Blocked</string>
+    <string name="group_review">In review</string>
+    <string name="group_doing">Doing</string>
+    <string name="group_todo">To do</string>
+    <string name="group_backlog">Backlog</string>
+    <string name="composer_add_to_project">Add to %1$s</string>
+    <string name="added_to_project">Added to %1$s</string>
+
+    <!-- A task -->
+    <string name="section_subtasks">Subtasks</string>
+    <string name="section_activity">Activity</string>
+    <string name="property_status">Status</string>
+    <string name="property_from">From</string>
+    <string name="property_priority">Priority</string>
+    <string name="property_project">Project</string>
+    <string name="property_branch">Branch</string>
+    <string name="property_pr">PR</string>
+    <string name="pr_state_merged">Merged</string>
+    <string name="pr_state_closed">Closed</string>
+    <string name="pr_state_failing">Checks failing</string>
+    <string name="pr_state_pending">Checks running</string>
+    <string name="pr_state_changes">Changes requested</string>
+    <string name="pr_state_approved">Approved</string>
+    <string name="pr_state_review">Review needed</string>
+    <string name="activity_next">Next: %1$s</string>
+    <string name="composer_reply_to">Reply to %1$s</string>
+    <string name="composer_add_note">Add a note</string>
+    <string name="reply_sent">Reply sent</string>
+    <string name="reply_failed">Couldn’t send the reply</string>
+
+    <!-- Sync -->
+    <string name="sync_title">Sync</string>
+    <string name="sync_signed_out_title">Sync with your phone and other computers</string>
+    <string name="sync_signed_out_body">Your tasks, projects and agents’ reports sync to your server, so you can see what your agents are doing from your phone.</string>
+    <string name="sync_sign_in">Sign in and sync</string>
+    <string name="sync_sign_in_note">The sign-in page opens in the browser. Keys and model settings stay on this phone.</string>
+    <string name="sync_signing_in">Waiting for the browser…</string>
+    <string name="sync_signing_in_body">Finish signing in in your browser.</string>
+    <string name="sync_signed_in">Signed in</string>
+    <string name="sync_signed_in_one_device">Signed in · 1 device</string>
+    <string name="sync_signed_in_devices">Signed in · %1$d devices</string>
+    <string name="sync_account">Account</string>
+    <string name="sync_sign_out">Sign out</string>
+    <string name="sync_this_phone">This phone</string>
+    <string name="sync_this_phone_badge">This phone</string>
+    <string name="sync_synced">Synced</string>
+    <string name="sync_now">Sync now</string>
+    <string name="sync_retry">Retry</string>
+    <string name="sync_devices">Devices</string>
+    <string name="sync_never">Never</string>
+    <string name="sync_uploading">Uploading this phone’s data</string>
+    <string name="sync_upload_progress">%1$s / %2$s · other devices wait until it is done</string>
+    <string name="sync_upload_note">You can leave this screen; the upload goes on in the background.</string>
+    <string name="sync_failed">Sync failed: %1$s</string>
+    <string name="sync_failed_no_answer">the server did not answer</string>
+    <string name="sync_failed_auth">the sign-in expired</string>
+    <string name="sync_waiting">%1$d changes wait on this phone and are not lost</string>
+    <string name="sync_offline">Offline · changes sync when you are back online (%1$d waiting)</string>
+    <string name="sync_retrying_soon">Retrying soon</string>
+    <string name="sync_retrying_minutes">Retrying in %1$d min</string>
+    <string name="sync_retrying_hours">Retrying in %1$d h</string>
+    <string name="sync_both_title">This phone and your account both have tasks</string>
+    <string name="sync_both_body">The account already has tasks. Merging keeps both sides; using the account backs this phone’s data up first.</string>
+    <string name="sync_merge">Merge into the account</string>
+    <string name="sync_merge_body">This phone’s tasks join the account. They get new numbers from the account’s blocks (for example, #45 becomes #2045); agents use the new number the next time they report.</string>
+    <string name="sync_recommended">Recommended</string>
+    <string name="sync_use_account">Use the account</string>
+    <string name="sync_use_account_body">This phone’s data is backed up to the data folder first, then replaced with the account’s tasks.</string>
+    <string name="sync_continue">Continue</string>
+    <string name="sync_server">Server</string>
+    <string name="sync_change">Change</string>
+    <string name="sync_change_save">Save</string>
+    <string name="sync_server_saving">Saving…</string>
+    <string name="sync_server_invalid">Use an https:// address, such as https://todo.example.com.</string>
+    <string name="sync_sign_in_failed">Couldn’t sign in. Try again.</string>
+    <string name="sync_now_failed">Couldn’t sync. Try again.</string>
+    <string name="sync_link_failed">Couldn’t finish linking. Try again.</string>
+    <string name="time_just_now">just now</string>
+    <string name="title_inbox">Inbox</string>
+    <string name="notification_channel_reminders">Reminders</string>
+    <string name="notification_channel_reminders_description">Reminders when a task comes due</string>
 </resources>

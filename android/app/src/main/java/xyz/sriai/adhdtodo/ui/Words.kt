@@ -3,6 +3,7 @@ package xyz.sriai.adhdtodo.ui
 import android.content.res.Resources
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Item
+import xyz.sriai.adhdtodo.data.Task
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -47,11 +48,17 @@ class Words(private val res: Resources) {
     }
 
     /** A task's due label: Today, Tomorrow, Fri, Oct 20, or the time of day for a reminder today. */
-    fun due(item: Item, now: ZonedDateTime = ZonedDateTime.now(zone)): String {
+    fun due(item: Item, now: ZonedDateTime = ZonedDateTime.now(zone)): String =
+        dueLabel(item.remindAt, item.dueAt, now)
+
+    fun due(task: Task, now: ZonedDateTime = ZonedDateTime.now(zone)): String =
+        dueLabel(task.remindAt, task.dueAt, now)
+
+    private fun dueLabel(remindAt: String?, dueAt: String?, now: ZonedDateTime): String {
         val today = now.toLocalDate()
-        val remind = instant(item.remindAt)?.atZone(zone)
+        val remind = instant(remindAt)?.atZone(zone)
         if (remind != null && remind.toLocalDate() == today) return clock.format(remind)
-        val due = instant(item.dueAt)?.atZone(zone) ?: return ""
+        val due = instant(dueAt)?.atZone(zone) ?: return ""
         val day = due.toLocalDate()
         val diff = ChronoUnit.DAYS.between(today, day)
         return when {
@@ -70,6 +77,8 @@ class Words(private val res: Resources) {
     fun agent(raw: String): String {
         val n = raw.lowercase(Locale.ROOT)
         return when {
+            n == "you" -> res.getString(R.string.done_by_you)
+            n == "github" -> "GitHub"
             n.contains("claude") -> "Claude Code"
             n.contains("codex") -> "Codex"
             n.contains("cursor") -> "Cursor"
@@ -112,4 +121,35 @@ class Words(private val res: Resources) {
         else -> status
     }
 
+    /** The heading of a project's status group, which is worded for the list, not the row pill. */
+    fun groupLabel(status: String): String = when (status) {
+        "blocked" -> res.getString(R.string.group_blocked)
+        "review" -> res.getString(R.string.group_review)
+        "doing" -> res.getString(R.string.group_doing)
+        "todo" -> res.getString(R.string.group_todo)
+        "backlog" -> res.getString(R.string.group_backlog)
+        else -> statusLabel(status)
+    }
+
+    /** A sync age says "just now" where a task age says "now". */
+    fun syncAge(value: String?): String {
+        val then = instant(value) ?: return ""
+        val minutes = ChronoUnit.MINUTES.between(then, Instant.now()).coerceAtLeast(0)
+        return if (minutes < 1) res.getString(R.string.time_just_now) else ago(value)
+    }
+
+    /** A device that never synced says Never. */
+    fun deviceAge(value: String?): String =
+        if (value.isNullOrBlank()) res.getString(R.string.sync_never) else syncAge(value)
+
+    /** The time of a failed retry as a line: Retrying soon / in 3 min / in 2 h. */
+    fun retryLine(value: String?, now: Instant = Instant.now()): String {
+        val at = instant(value) ?: return res.getString(R.string.sync_retrying_soon)
+        val minutes = ChronoUnit.MINUTES.between(now, at)
+        return when {
+            minutes < 1 -> res.getString(R.string.sync_retrying_soon)
+            minutes < 60 -> res.getString(R.string.sync_retrying_minutes, minutes)
+            else -> res.getString(R.string.sync_retrying_hours, minutes / 60)
+        }
+    }
 }

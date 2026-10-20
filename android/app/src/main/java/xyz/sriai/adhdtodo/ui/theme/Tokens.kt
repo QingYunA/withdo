@@ -30,6 +30,7 @@ data class Tokens(
     val textSecondary: Color,
     val textTertiary: Color,
     val accent: Color,
+    val onAccent: Color,
     val statusBacklog: Color,
     val statusTodo: Color,
     val statusDoing: Color,
@@ -37,6 +38,8 @@ data class Tokens(
     val statusReview: Color,
     val statusDone: Color,
     val stale: Color,
+    /** The eight folder colors of app/theme/icons.go, in the same order. */
+    val projectColors: List<Color>,
 ) {
     fun status(status: String): Color = when (status) {
         "backlog" -> statusBacklog
@@ -57,7 +60,26 @@ data class Tokens(
         if (priority == "P0") statusBlocked.copy(alpha = 0.35f) else border
 
     fun priorityInk(priority: String): Color = if (priority == "P0") statusBlocked else textSecondary
+
+    /**
+     * The folder color of a project: app/theme/icons.go's FNV-1a hash of the name into the eight
+     * colors. It follows the name, as on the desktop; the user does not choose it.
+     */
+    fun projectColor(name: String): Color {
+        var hash = -2128831035 // 2166136261 as a signed 32-bit int
+        for (byte in name.toByteArray(Charsets.UTF_8)) {
+            hash = (hash xor (byte.toInt() and 0xff)) * 16777619
+        }
+        val index = ((hash.toLong() and 0xffffffffL) % projectColors.size).toInt()
+        return projectColors[index]
+    }
 }
+
+/** app/theme/icons.go's ProjectColors, the same eight in both appearances. */
+private val ProjectPalette = listOf(
+    Color(0xFF5B5BD6), Color(0xFFE0A800), Color(0xFF30A46C), Color(0xFFE5484D),
+    Color(0xFF3B82F6), Color(0xFFD9488B), Color(0xFF0EA5A4), Color(0xFFE08A1E),
+)
 
 val LightTokens = Tokens(
     dark = false,
@@ -69,6 +91,7 @@ val LightTokens = Tokens(
     textSecondary = Color(0xFF6E6E73),
     textTertiary = Color(0xFFAEAEB2),
     accent = Color(0xFF5B5BD6),
+    onAccent = Color(0xFFFFFFFF),
     statusBacklog = Color(0xFFAEAEB2),
     statusTodo = Color(0xFF8E8E93),
     statusDoing = Color(0xFF3B82F6),
@@ -76,6 +99,7 @@ val LightTokens = Tokens(
     statusReview = Color(0xFFE0A800),
     statusDone = Color(0xFF30A46C),
     stale = Color(0xFFD97706),
+    projectColors = ProjectPalette,
 )
 
 val DarkTokens = Tokens(
@@ -88,6 +112,7 @@ val DarkTokens = Tokens(
     textSecondary = Color(0xFFA1A1A6),
     textTertiary = Color(0xFF636366),
     accent = Color(0xFF7C7CF0),
+    onAccent = Color(0xFFFFFFFF),
     statusBacklog = Color(0xFF636366),
     statusTodo = Color(0xFF8E8E93),
     statusDoing = Color(0xFF60A5FA),
@@ -95,11 +120,13 @@ val DarkTokens = Tokens(
     statusReview = Color(0xFFF5C542),
     statusDone = Color(0xFF4CC38A),
     stale = Color(0xFFF59E0B),
+    projectColors = ProjectPalette,
 )
 
 @Immutable
 data class Type(
     val title: TextStyle,
+    val taskTitle: TextStyle,
     val input: TextStyle,
     val body: TextStyle,
     val bodyStrong: TextStyle,
@@ -115,6 +142,7 @@ private val system = FontFamily.Default
 
 val AppType = Type(
     title = TextStyle(fontFamily = system, fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold),
+    taskTitle = TextStyle(fontFamily = system, fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold),
     input = TextStyle(fontFamily = system, fontSize = 17.sp, lineHeight = 25.sp),
     body = TextStyle(fontFamily = system, fontSize = 15.sp, lineHeight = 22.sp),
     bodyStrong = TextStyle(fontFamily = system, fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),

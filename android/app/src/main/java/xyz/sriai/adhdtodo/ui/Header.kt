@@ -1,5 +1,7 @@
 package xyz.sriai.adhdtodo.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +18,7 @@ import xyz.sriai.adhdtodo.ui.theme.PixelIcon
 
 /** The page's title and its quiet second line, with the sync cloud at the right. */
 @Composable
-fun PageHeader(title: String, subtitle: String, syncBlocked: Boolean) {
+fun PageHeader(title: String, subtitle: String, syncBlocked: Boolean, onSync: () -> Unit) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     Row(
@@ -34,10 +36,18 @@ fun PageHeader(title: String, subtitle: String, syncBlocked: Boolean) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = 10.dp).weight(1f),
         )
-        PixelIcon(
-            "cloud",
-            size = Dims.icon,
-            tint = if (syncBlocked) tokens.statusBlocked else tokens.textTertiary,
-        )
+        SyncCloud(blocked = syncBlocked, onSync = onSync)
     }
+}
+
+/** The 18 dp pixel cloud that opens Sync; red only for the desktop's two reasons. */
+@Composable
+fun SyncCloud(blocked: Boolean, onSync: () -> Unit) {
+    val tokens = LocalTokens.current
+    PixelIcon(
+        "cloud",
+        size = Dims.icon,
+        tint = if (blocked) tokens.statusBlocked else tokens.textTertiary,
+        modifier = Modifier.clickable(onClick = onSync).padding(4.dp),
+    )
 }
