@@ -17,6 +17,7 @@ const (
 	PaneAssistant
 	PaneAgents
 	PaneGitHub
+	PaneSync
 )
 
 // settingsWidth is the window's width.
@@ -42,6 +43,15 @@ type Settings struct {
 	lastTitle string
 
 	agents agentsCache
+
+	// Settings > Sync: whether this opening asked for the devices, and the inline Change field.
+	syncAsked         bool
+	syncLastSynced    time.Time
+	syncHadConflict   bool
+	syncChoice        SyncChoice
+	syncEditingServer bool
+	syncServerDraft   string
+	syncServerErr     bool
 }
 
 // ContentSize is the size of the window's content: one size for every pane, so that changing the
@@ -53,8 +63,23 @@ func (s *Settings) ContentSize() (width, height float32) {
 // NewSettings opens on General.
 func NewSettings(a *App) *Settings { return &Settings{app: a} }
 
-// Show opens a pane.
-func (s *Settings) Show(p Pane) { s.pane = p }
+// Show opens a pane. Opening Sync again asks the server for its devices again.
+func (s *Settings) Show(p Pane) {
+	if p == PaneSync {
+		s.syncAsked = false
+		s.syncEditingServer, s.syncServerErr = false, false
+	}
+	s.pane = p
+}
+
+// openPane switches panes from the toolbar.
+func (s *Settings) openPane(p Pane) {
+	if p == PaneSync && s.pane != PaneSync {
+		s.syncAsked = false
+	}
+	s.syncEditingServer, s.syncServerErr = false, false
+	s.pane = p
+}
 
 // View builds the window for one frame. The toolbar keeps its height; the pane under it fills the
 // rest and scrolls, and has a key of its own so that its scroll position is its own.
@@ -67,6 +92,9 @@ func (s *Settings) View(c *ui.Context) {
 			ui.Column(c).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
 		})
 	})
+	if s.pane == PaneSync && s.app.Sync != nil {
+		s.syncSheet(c, t, s.app.Sync.SyncSnapshot())
+	}
 	if title := s.paneName(s.pane); s.OnTitle != nil && title != s.lastTitle {
 		s.lastTitle = title
 		s.OnTitle(title)
@@ -81,12 +109,15 @@ func (s *Settings) paneName(p Pane) string {
 		return s.say.SettingsPaneAgents()
 	case PaneGitHub:
 		return s.say.SettingsGitHub()
+	case PaneSync:
+		return s.say.SettingsSync()
 	}
 	return s.say.SettingsGeneral()
 }
 
 var paneIcons = map[Pane]*ui.SVG{
 	PaneGeneral: theme.IconGeneral, PaneAssistant: theme.IconStar, PaneAgents: theme.IconTerminal, PaneGitHub: theme.IconOctocat,
+	PaneSync: theme.IconCloud,
 }
 
 // SettingsTitleBarHeight is the height of the band's title row: tall enough for the traffic
@@ -102,7 +133,7 @@ func (s *Settings) toolbar(c *ui.Context, t *theme.Tokens) ui.Element {
 			theme.Text(c, theme.Section, t.Text, s.paneName(s.pane))
 		})
 		ui.Row(c).Justify(ui.Center).Gap(4).Padding(0, 0, 12).Children(func() {
-			for _, p := range []Pane{PaneGeneral, PaneAssistant, PaneAgents, PaneGitHub} {
+			for _, p := range []Pane{PaneGeneral, PaneAssistant, PaneAgents, PaneGitHub, PaneSync} {
 				s.tab(c, t, p)
 			}
 		})
@@ -130,7 +161,7 @@ func (s *Settings) tab(c *ui.Context, t *theme.Tokens, p Pane) {
 		theme.Text(c, theme.Meta, label, name)
 	})
 	if btn.Clicked() {
-		s.pane = p
+		s.openPane(p)
 	}
 }
 
@@ -142,6 +173,8 @@ func (s *Settings) paneBody(c *ui.Context, t *theme.Tokens) {
 		s.agentsPane(c, t)
 	case PaneGitHub:
 		s.githubPane(c, t)
+	case PaneSync:
+		s.syncPane(c, t)
 	default:
 		s.generalPane(c, t)
 	}

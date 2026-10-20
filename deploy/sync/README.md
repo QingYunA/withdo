@@ -23,7 +23,8 @@ HTTP challenge itself, and the sync server's SSE stream would be cut by the prox
 │   └── provisioned.env         PROJECT_ID, CLIENT_ID of the adhd-todo app
 └── sync/
     ├── sync.compose.yml        adhd-sync + its own Postgres
-    ├── sync.env                SYNC_DB_PASSWORD, OIDC_ISSUER, OIDC_AUDIENCE (= PROJECT_ID), mode 600
+    ├── sync.env                SYNC_DB_PASSWORD, OIDC_ISSUER, OIDC_AUDIENCE (= PROJECT_ID), OIDC_CLIENT_ID,
+    │                           OIDC_SCOPES (= urn:zitadel:iam:org:project:id:PROJECT_ID:aud), mode 600
     └── bin/adhd-sync           static linux/amd64 build
 /etc/nginx/sites-available/adhd-todo   nginx-adhd-todo.conf, linked from sites-enabled
 /etc/letsencrypt/live/adhd-todo/       one certificate for both names; certbot.timer renews it

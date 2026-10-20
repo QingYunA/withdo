@@ -160,7 +160,7 @@ func (r *Real) SeedTask(t Task) Task {
 // SeedReport files a report as given; a zero CreatedAt means now.
 func (r *Real) SeedReport(rep Report) {
 	r.mustBeDemo()
-	in := domain.AddReportInput{TaskID: int64(rep.TaskID), Agent: rep.Agent, Summary: rep.Summary, Cwd: rep.Cwd}
+	in := domain.AddReportInput{TaskID: int64(rep.TaskID), Agent: rep.Agent, Summary: rep.Summary, Cwd: rep.Cwd, Kind: domain.ReportKind(rep.Kind)}
 	if rep.Status != "" {
 		st := domain.Status(rep.Status)
 		in.Status = &st

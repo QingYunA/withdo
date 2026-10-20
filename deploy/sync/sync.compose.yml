@@ -13,6 +13,8 @@ services:
       - -database-url=postgres://adhd_sync:${SYNC_DB_PASSWORD}@postgres:5432/adhd_sync?sslmode=disable
       - -oidc-issuer=${OIDC_ISSUER}
       - -oidc-audience=${OIDC_AUDIENCE}
+      - -oidc-client-id=${OIDC_CLIENT_ID}
+      - -oidc-scopes=${OIDC_SCOPES}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
     ports:

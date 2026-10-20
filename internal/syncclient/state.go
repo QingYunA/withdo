@@ -14,6 +14,7 @@ const (
 	stateCookie      = "cookie"
 	stateEnabled     = "enabled"
 	stateLastError   = "last_error"
+	stateSeedTotal   = "seed_total"
 )
 
 // entities is the order a seeding snapshot writes the five synced tables: parents first. Within a
@@ -97,6 +98,21 @@ func (c *Client) DeviceWorkspaceID(ctx context.Context) (int64, error) {
 
 // Pending is the number of local changes still waiting to upload.
 func (c *Client) Pending(ctx context.Context) (int, error) { return c.core.SyncPending(ctx) }
+
+// SeedTotal is how many outbox entries the first snapshot queued when this database seeded the
+// workspace, 0 for a device that joined or never linked. The Settings pane reads it with Pending
+// to show the upload of a first device.
+func (c *Client) SeedTotal(ctx context.Context) (int, error) {
+	raw, found, err := c.core.SyncState(ctx, stateSeedTotal)
+	if err != nil || !found || raw == "" {
+		return 0, err
+	}
+	total, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("read sync %s %q: %w", stateSeedTotal, raw, err)
+	}
+	return total, nil
+}
 
 // IDsLeft is how many row ids each entity's local blocks still hand out.
 func (c *Client) IDsLeft(ctx context.Context) (map[string]int64, error) {

@@ -24,6 +24,8 @@ type Server struct {
 	auth Authenticator
 	hub  *hub
 	mux  *http.ServeMux
+	// public is what GET /v1/config tells clients; set before serving.
+	public PublicConfig
 }
 
 // Open builds the connection pool from databaseURL, applies the schema migrations and returns the
@@ -55,6 +57,7 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	}
 	s := &Server{pool: pool, auth: auth, hub: newHub(), mux: http.NewServeMux()}
 	s.mux.HandleFunc("GET /healthz", s.healthz)
+	s.mux.HandleFunc("GET /v1/config", s.config)
 	s.mux.HandleFunc("POST /v1/devices", s.withSession(s.createDevice))
 	s.mux.HandleFunc("GET /v1/devices", s.withSession(s.listDevices))
 	s.mux.HandleFunc("POST /v1/devices/seeded", s.withSession(s.deviceSeeded))

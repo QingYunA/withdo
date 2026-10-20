@@ -76,6 +76,8 @@ type App struct {
 	Models    data.ModelSettings
 	// GitHub is the pull request poller behind Settings > GitHub; nil leaves the pane empty.
 	GitHub data.GitHub
+	// Sync is the sync service behind Settings > Sync and the sidebar cloud; nil leaves the pane empty.
+	Sync SyncService
 	// Seen keeps which handed-over items the user has seen; nil keeps that for this run only.
 	Seen data.SeenStore
 	// Dismissed keeps which handed-over rows the user put aside with Not now; nil keeps that for

@@ -3829,5 +3829,249 @@
   "recentLinkTip": "See what changed lately in this repository",
   "@recentLinkTip": {
     "description": "Tooltip of the Recent changes link on a project page."
+  },
+  "settingsSync": "Sync",
+  "@settingsSync": {
+    "description": "The Sync tab of Settings and its window title."
+  },
+  "settingsSyncUnavailable": "Sync isn't available here.",
+  "@settingsSyncUnavailable": {
+    "description": "Shown in Settings > Sync when the app has no sync service."
+  },
+  "settingsSyncSignedOutTitle": "Sync with your phone and other computers",
+  "@settingsSyncSignedOutTitle": {
+    "description": "Title of the signed-out Sync pane."
+  },
+  "settingsSyncSignedOutBody": "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone.",
+  "@settingsSyncSignedOutBody": {
+    "description": "The signed-out Sync pane's explanation of what syncs."
+  },
+  "settingsSyncSignIn": "Sign in and sync",
+  "@settingsSyncSignIn": {
+    "description": "The accent button that starts an OIDC sign-in."
+  },
+  "settingsSyncSignInNote": "The sign-in page opens in the browser. Keys and model settings stay on this Mac.",
+  "@settingsSyncSignInNote": {
+    "description": "The quiet line under the sign-in button."
+  },
+  "settingsSyncSigningIn": "Signing in…",
+  "@settingsSyncSigningIn": {
+    "description": "The disabled button while the browser owns the sign-in."
+  },
+  "settingsSyncSigningInBody": "Finish signing in in your browser.",
+  "@settingsSyncSigningInBody": {
+    "description": "The line under the title while signing in."
+  },
+  "settingsSyncServer": "Server",
+  "@settingsSyncServer": {
+    "description": "The label before the server address at the foot of the Sync pane."
+  },
+  "settingsSyncChange": "Change",
+  "@settingsSyncChange": {
+    "description": "The link that edits the server address."
+  },
+  "settingsSyncServerAddress": "Server address",
+  "@settingsSyncServerAddress": {
+    "description": "Accessibility label of the server address field and Change link."
+  },
+  "settingsSyncServerInvalid": "Use an https:// address, such as https://todo.example.com.",
+  "@settingsSyncServerInvalid": {
+    "description": "Shown when the typed server address is not an https URL (http only for this computer)."
+  },
+  "settingsSyncAccount": "Account",
+  "@settingsSyncAccount": {
+    "description": "The account's name when sync.json has neither a name nor an email."
+  },
+  "settingsSyncSignedIn": "Signed in",
+  "@settingsSyncSignedIn": {
+    "description": "The account row's line before the device count is known."
+  },
+  "settingsSyncSignedInOneDevice": "Signed in · 1 device",
+  "@settingsSyncSignedInOneDevice": {
+    "description": "The account row's line when the account has one device."
+  },
+  "settingsSyncSignedInDevices": "Signed in · {count} devices",
+  "@settingsSyncSignedInDevices": {
+    "description": "The account row's line with the number of devices.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "settingsSyncSignOut": "Sign out",
+  "@settingsSyncSignOut": {
+    "description": "The link that signs out and stops the sync runner."
+  },
+  "settingsSyncThisMac": "This Mac",
+  "@settingsSyncThisMac": {
+    "description": "The row of this Mac in the Sync pane."
+  },
+  "settingsSyncThisMacBadge": "This Mac",
+  "@settingsSyncThisMacBadge": {
+    "description": "The badge on this Mac's row in the device list."
+  },
+  "settingsSyncSynced": "Synced",
+  "@settingsSyncSynced": {
+    "description": "The green word before when this Mac last synced."
+  },
+  "settingsSyncNow": "Sync now",
+  "@settingsSyncNow": {
+    "description": "The button that syncs at once."
+  },
+  "settingsSyncDevices": "Devices",
+  "@settingsSyncDevices": {
+    "description": "The label above the account's devices."
+  },
+  "settingsSyncNever": "Never",
+  "@settingsSyncNever": {
+    "description": "A device that never synced."
+  },
+  "settingsSyncUploading": "Uploading this Mac's data",
+  "@settingsSyncUploading": {
+    "description": "The row of the first device while it seeds the account."
+  },
+  "settingsSyncUploadProgress": "{done} / {total} · other devices wait until it is done",
+  "@settingsSyncUploadProgress": {
+    "description": "The upload count of the first device.",
+    "placeholders": {
+      "done": {
+        "type": "String",
+        "example": "1,240"
+      },
+      "total": {
+        "type": "String",
+        "example": "3,512"
+      }
+    }
+  },
+  "settingsSyncUploadNote": "You can close this window; the upload goes on in the background.",
+  "@settingsSyncUploadNote": {
+    "description": "The note under the first upload."
+  },
+  "settingsSyncFailed": "Sync failed: {reason}",
+  "@settingsSyncFailed": {
+    "description": "The failed row's reason.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "The server did not answer"
+      }
+    }
+  },
+  "settingsSyncRetryingSoon": "Retrying soon",
+  "@settingsSyncRetryingSoon": {
+    "description": "When the runner retries in less than a minute."
+  },
+  "settingsSyncRetryingMinutes": "Retrying in {count} min",
+  "@settingsSyncRetryingMinutes": {
+    "description": "When the runner retries in minutes.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "settingsSyncRetryingHours": "Retrying in {count} h",
+  "@settingsSyncRetryingHours": {
+    "description": "When the runner retries in hours.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "settingsSyncWaiting": "{count} changes wait on this Mac and are not lost",
+  "@settingsSyncWaiting": {
+    "description": "The second line of a failed sync.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "settingsSyncOffline": "Offline · changes sync when you are back online ({count} waiting)",
+  "@settingsSyncOffline": {
+    "description": "The offline row.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "settingsSyncRetry": "Retry",
+  "@settingsSyncRetry": {
+    "description": "The button of a failed sync."
+  },
+  "settingsSyncBothTitle": "This Mac and your account both have tasks",
+  "@settingsSyncBothTitle": {
+    "description": "The title of the both-have-tasks sheet."
+  },
+  "settingsSyncBothBody": "The account already has data from {devices} devices. This Mac has {tasks} tasks and {projects} projects.",
+  "@settingsSyncBothBody": {
+    "description": "The counts under the both-have-tasks title.",
+    "placeholders": {
+      "devices": {
+        "type": "String",
+        "example": "2"
+      },
+      "tasks": {
+        "type": "String",
+        "example": "128"
+      },
+      "projects": {
+        "type": "String",
+        "example": "6"
+      }
+    }
+  },
+  "settingsSyncMerge": "Merge into the account",
+  "@settingsSyncMerge": {
+    "description": "The recommended choice of the both-have-tasks sheet."
+  },
+  "settingsSyncRecommended": "Recommended",
+  "@settingsSyncRecommended": {
+    "description": "The badge on the merge choice."
+  },
+  "settingsSyncMergeBody": "This Mac's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); agents use the new number the next time they report.",
+  "@settingsSyncMergeBody": {
+    "description": "What merging does to this Mac's tasks."
+  },
+  "settingsSyncUseAccount": "Use the account",
+  "@settingsSyncUseAccount": {
+    "description": "The other choice of the both-have-tasks sheet."
+  },
+  "settingsSyncUseAccountBody": "This Mac's data is backed up to the data folder first, then replaced with the account's tasks.",
+  "@settingsSyncUseAccountBody": {
+    "description": "What using the account does to this Mac."
+  },
+  "settingsSyncCancel": "Cancel",
+  "@settingsSyncCancel": {
+    "description": "Cancel of the both-have-tasks sheet."
+  },
+  "settingsSyncContinue": "Continue",
+  "@settingsSyncContinue": {
+    "description": "The accent button of the both-have-tasks sheet."
+  },
+  "settingsSyncAlert": "Sync needs attention",
+  "@settingsSyncAlert": {
+    "description": "Accessibility label of the red cloud beside Settings in the sidebar."
+  },
+  "settingsSyncJustNow": "just now",
+  "@settingsSyncJustNow": {
+    "description": "When this Mac synced less than a minute ago, after the green Synced."
+  },
+  "settingsSyncFailedNoAnswer": "the server did not answer",
+  "@settingsSyncFailedNoAnswer": {
+    "description": "The reason of a failed sync when the server could not be reached or answered badly."
+  },
+  "settingsSyncFailedAuth": "the sign-in expired",
+  "@settingsSyncFailedAuth": {
+    "description": "The reason of a failed sync when the account has to be signed in again."
   }
 }

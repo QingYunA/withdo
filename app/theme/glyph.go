@@ -121,6 +121,23 @@ func drawCompleting(p *ui.Painter, r ui.Rect, t *Tokens, k float32) {
 // completeCheckAt is how far through the completion the check appears.
 const completeCheckAt float32 = 0.5
 
+// RadioGlyph draws a choice's radio on the status ring's grid at one point a pixel: the ring, and
+// when on, the centered dot of the review glyph inside it.
+func RadioGlyph(c *ui.Context, col ui.Color, on bool) ui.Element {
+	rows := glyphRadioOff
+	if on {
+		rows = glyphRadioOn
+	}
+	return ui.Box(c).Size(IconSmall, IconSmall).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+		DrawSprite(p, r, &Sprite{Rows: rows, Palette: map[rune]ui.Color{'c': col}})
+	})
+}
+
+var (
+	glyphRadioOff = glyphRows(glyphRing, 'c')
+	glyphRadioOn  = glyphRows(glyphRing, 'c', glyphReviewDot)
+)
+
 // ShowsPriority reports whether a priority is drawn on a row or a card: only the deliberate ones.
 // P2 is the default and P3 means "whenever", so both stay quiet.
 func ShowsPriority(p data.Priority) bool { return p == data.P0 || p == data.P1 }

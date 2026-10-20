@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -70,6 +71,8 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 			"-addr", addr,
 			"-database-url", u.String(),
 			"-tokens", tokensPath,
+			"-oidc-client-id", "adhd-todo",
+			"-oidc-scopes", "openid offline_access urn:example:audience",
 		})
 	}()
 
@@ -85,6 +88,28 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 			}
 			if resp.StatusCode != http.StatusOK || string(body) != "ok" {
 				t.Fatalf("GET /healthz = %d %q, want 200 ok", resp.StatusCode, body)
+			}
+			resp, err = http.Get("http://" + addr + "/v1/config")
+			if err != nil {
+				t.Fatalf("GET /v1/config: %v", err)
+			}
+			body, err = io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			if err != nil {
+				t.Fatalf("read /v1/config: %v", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("GET /v1/config = %d %q", resp.StatusCode, body)
+			}
+			var cfg struct {
+				ClientID string   `json:"client_id"`
+				Scopes   []string `json:"scopes"`
+			}
+			if err := json.Unmarshal(body, &cfg); err != nil {
+				t.Fatalf("decode /v1/config: %v", err)
+			}
+			if cfg.ClientID != "adhd-todo" || len(cfg.Scopes) != 3 || cfg.Scopes[2] != "urn:example:audience" {
+				t.Fatalf("GET /v1/config = %s", body)
 			}
 			break
 		}

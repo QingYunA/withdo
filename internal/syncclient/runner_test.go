@@ -400,6 +400,15 @@ func TestS3Core1Runner(t *testing.T) {
 		server.waitPulls(t, before+1)
 		waitState(t, statuses, syncclient.StateOffline)
 		waitTimer(t, clock, 2*time.Second) // a success reset the backoff
+		wantRetry := clock.Now().Add(2 * time.Second)
+		select {
+		case status := <-statuses:
+			if !status.RetryAt.Equal(wantRetry) {
+				t.Errorf("RetryAt = %v, want %v", status.RetryAt, wantRetry)
+			}
+		case <-time.After(10 * time.Second):
+			t.Fatal("the retry time never reached the status callback")
+		}
 	})
 
 	t.Run("401 stops in signed out and Start runs again", func(t *testing.T) {
@@ -432,6 +441,19 @@ func TestS3Core1Runner(t *testing.T) {
 		server.waitPulls(t, 2)
 		waitState(t, statuses, syncclient.StateIdle)
 		// The fake clock was never advanced, so only the poke can have caused this sync.
+	})
+
+	t.Run("SyncNow syncs without the debounce", func(t *testing.T) {
+		server := newRunnerServer(t)
+		clock := newFakeClock()
+		runner, statuses := startRunner(t, newRunnerClient(t, linkedCore(t), server), clock)
+		waitState(t, statuses, syncclient.StateIdle)
+		server.waitPulls(t, 1)
+
+		runner.SyncNow()
+		server.waitPulls(t, 2)
+		waitState(t, statuses, syncclient.StateIdle)
+		// The fake clock was never advanced, so no debounce or timer can have caused this sync.
 	})
 
 	t.Run("status changes reach OnStatus", func(t *testing.T) {

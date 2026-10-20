@@ -266,14 +266,23 @@ func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
 }
 
 func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
+	alert := m.app.SyncNeedsAttention()
 	row := sidebarRow(c, t, "settings", false)
 	row.Children(func() {
 		ui.Icon(c, theme.IconGear).Size(theme.IconRow, theme.IconRow).TextColor(t.TextSecondary)
 		sidebarLabel(c, t, m.say.NavSettings(), false)
+		if alert {
+			ui.Icon(c, theme.IconCloud).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Blocked()).
+				Shrink(0).Label(m.say.SettingsSyncAlert())
+		}
 		theme.Text(c, theme.Meta, t.TextTertiary, "⌘,").Shrink(0)
 	})
 	if row.Clicked() {
-		m.openSettings(PaneGeneral)
+		if alert {
+			m.openSettings(PaneSync)
+		} else {
+			m.openSettings(PaneGeneral)
+		}
 	}
 }
 
