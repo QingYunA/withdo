@@ -63,40 +63,52 @@ func (c *Core) SyncConfigure(server, issuer, clientID, scopes string) error {
 
 // SignIn signs in with OIDC through the system browser (PKCE on a loopback redirect), then links
 // this database as a device named deviceName when it is not linked yet. BrowserOpener.Open gets
-// the authorization URL. It is a no-op beyond the sign-in when the phone is already linked.
-func (c *Core) SignIn(opener BrowserOpener, deviceName string) error {
+// the authorization URL. It returns {"state":"linked"} once the phone is linked, or
+// {"state":"choose"} when both the phone and the account have tasks; the tokens stay stored, so
+// LinkMerge or LinkReplace finishes without a second sign-in. Signing in an already linked phone
+// returns {"state":"linked"}.
+func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 	if opener == nil {
-		return errors.New("there is no browser to sign in with")
+		return "", errors.New("there is no browser to sign in with")
 	}
 	if c.secrets == nil {
-		return errors.New("this phone has no secure store for the sign-in")
+		return "", errors.New("this phone has no secure store for the sign-in")
 	}
 	cfg, found, err := c.loadConfig()
 	if err != nil {
-		return err
+		return "", err
 	}
 	if !found || cfg.Issuer == "" || cfg.ClientID == "" {
-		return errors.New("sign-in is not set up; set the issuer first")
+		return "", errors.New("sign-in is not set up; set the issuer first")
 	}
 	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
 	if err := source.Login(context.Background(), opener.Open); err != nil {
-		return syncError(err)
+		return "", syncError(err)
+	}
+	if account, ok := source.Account(); ok {
+		cfg.Account = &account
+		if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
+			return "", errors.New("could not save the account")
+		}
 	}
 	device, linked, err := c.dom.SyncState(context.Background(), "device_id")
 	if err != nil {
-		return errors.New("could not read the link")
+		return "", errors.New("could not read the link")
 	}
 	if linked && device != "" {
-		return nil
+		return signInLinkedJSON, nil
 	}
 	client, err := c.newClient(false)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if err := client.Link(context.Background(), strings.TrimSpace(deviceName)); err != nil {
-		return syncError(err)
+		if errors.Is(err, syncclient.ErrLocalData) {
+			return signInChooseJSON, nil
+		}
+		return "", syncError(err)
 	}
-	return nil
+	return signInLinkedJSON, nil
 }
 
 // SignOut forgets the refresh token, so the next sync is signed out until SignIn runs again. The
