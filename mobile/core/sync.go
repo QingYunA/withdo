@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -80,10 +81,10 @@ func (c *Core) SyncSetServer(server string) error {
 	defer cancel()
 	public, err := syncclient.FetchConfig(ctx, base, nil)
 	if err != nil {
-		return errors.New("could not reach the sync server")
+		return fmt.Errorf("could not reach the sync server: %w", err)
 	}
 	if public.Issuer == "" || public.ClientID == "" {
-		return errors.New("the server does not offer sign-in")
+		return fmt.Errorf("the server does not offer sign-in: %w", syncclient.ErrSignInUnsupported)
 	}
 	_ = c.StopSync()
 	cfg, found, err := c.loadConfig()
@@ -103,17 +104,13 @@ func (c *Core) SyncSetServer(server string) error {
 	return nil
 }
 
-// SignIn signs in with OIDC through the system browser (PKCE on a loopback redirect), then links
-// this database as a device named deviceName when it is not linked yet. BrowserOpener.Open gets
-// the authorization URL. It returns {"state":"linked"} once the phone is linked, or
-// {"state":"choose"} when both the phone and the account have tasks; the tokens stay stored, so
-// LinkMerge or LinkReplace finishes without a second sign-in. Signing in an already linked phone
-// returns {"state":"linked"}. With no issuer in sync.json it first reads the server's /v1/config
-// through SyncSetServer.
-func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
-	if opener == nil {
-		return "", errors.New("there is no browser to sign in with")
-	}
+// SignIn signs in with an account and password through the sync server's /v1/sign-in, then links
+// this database as a device named deviceName when it is not linked yet. It returns
+// {"state":"linked"} once the phone is linked, or {"state":"choose"} when both the phone and the
+// account have tasks; the tokens stay stored, so LinkMerge or LinkReplace finishes without a
+// second sign-in. Signing in an already linked phone returns {"state":"linked"}. With no issuer in
+// sync.json it first reads the server's /v1/config through SyncSetServer.
+func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	if c.secrets == nil {
 		return "", errors.New("this phone has no secure store for the sign-in")
 	}
@@ -124,7 +121,7 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 		return "", err
 	}
 	// A phone that never changed its server has no issuer yet: ask the default server what its
-	// sign-in is before opening the browser. SyncSetServer writes both, so the next sign-in is
+	// sign-in is before sending the password. SyncSetServer writes both, so the next sign-in is
 	// one call.
 	if !found || cfg.Issuer == "" || cfg.ClientID == "" {
 		server := data.DefaultSyncServer
@@ -132,7 +129,7 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 			server = cfg.Server
 		}
 		if err := c.SyncSetServer(server); err != nil {
-			return "", err
+			return "", syncError(err)
 		}
 		cfg, found, err = c.loadConfig()
 		if err != nil {
@@ -143,7 +140,7 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 		}
 	}
 	source := c.oidcSource(cfg)
-	if err := source.Login(context.Background(), opener.Open); err != nil {
+	if err := c.passwordSignIn(context.Background(), source, cfg.Server, loginName, password); err != nil {
 		return "", syncError(err)
 	}
 	if account, ok := source.Account(); ok {
@@ -440,6 +437,16 @@ func syncError(err error) error {
 	}
 	log.Printf("adhd-todo sync: %v", err)
 	switch {
+	case errors.Is(err, syncclient.ErrInvalidCredentials):
+		return errors.New("wrong account or password")
+	case errors.Is(err, syncclient.ErrTooManyAttempts):
+		return errors.New("too many tries; wait a few minutes")
+	case errors.Is(err, syncclient.ErrSecondFactor):
+		return errors.New("this account uses two-step verification, which in-app sign-in does not support yet")
+	case errors.Is(err, syncclient.ErrAccountLocked):
+		return errors.New("this account is deactivated; ask the admin")
+	case errors.Is(err, syncclient.ErrSignInUnsupported):
+		return errors.New("this server does not support signing in from the app")
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("another device is still uploading this workspace; try again later")
 	case errors.Is(err, syncclient.ErrLocalData):
@@ -509,9 +516,13 @@ func (c *Core) finishLink() {
 	c.mu.Unlock()
 }
 
-// signedInURL is the app link the sign-in's loopback sends the browser to, which brings the app
-// back to the front (AndroidManifest.xml registers it) before the code is exchanged.
-const signedInURL = "xyz.sriai.adhdtodo://signed-in"
+// passwordSignIn is syncclient's in-app sign-in, replaced in tests to check what SignIn sends.
+func (c *Core) passwordSignIn(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error {
+	if c.signInFn != nil {
+		return c.signInFn(ctx, source, server, loginName, password)
+	}
+	return source.SignIn(ctx, server, loginName, password)
+}
 
 // oidcSource is the OIDC token source for cfg, keyed to this database so another profile cannot
 // replace this phone's refresh token.
@@ -525,7 +536,6 @@ func (c *Core) oidcSource(cfg syncclient.Config) *syncclient.OIDCSource {
 	}
 	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
 	source.DBPath = c.dbPath
-	source.DoneURL = signedInURL
 	c.tokens, c.tokensKey = source, key
 	return source
 }

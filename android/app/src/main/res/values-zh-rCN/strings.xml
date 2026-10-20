@@ -133,9 +133,10 @@
     <string name="sync_signed_out_title">在手机和其他电脑上同步</string>
     <string name="sync_signed_out_body">任务、项目和 Agent 的汇报会同步到你的服务器，出门在外也能在手机上看到 Agent 在做什么。</string>
     <string name="sync_sign_in">登录并开始同步</string>
-    <string name="sync_sign_in_note">会在浏览器里打开登录页。密钥和模型设置只留在这台手机上。</string>
-    <string name="sync_signing_in">等待浏览器…</string>
-    <string name="sync_signing_in_body">请在浏览器里完成登录。</string>
+    <string name="sync_email">邮箱或用户名</string>
+    <string name="sync_password">密码</string>
+    <string name="sync_sign_in_note">账号由服务器管理员创建。密钥和模型设置只留在这台手机上。</string>
+    <string name="sync_signing_in">正在登录…</string>
     <string name="sync_signed_in">已登录</string>
     <string name="sync_signed_in_one_device">已登录 · 1 台设备</string>
     <string name="sync_signed_in_devices">已登录 · %1$d 台设备</string>
@@ -173,6 +174,12 @@
     <string name="sync_server_saving">保存中…</string>
     <string name="sync_server_invalid">请填 https:// 开头的地址，例如 https://todo.example.com。</string>
     <string name="sync_sign_in_failed">没能登录，请再试一次。</string>
+    <string name="sync_sign_in_invalid">账号或密码不对</string>
+    <string name="sync_sign_in_too_many">试的次数太多了，过几分钟再试</string>
+    <string name="sync_sign_in_second_factor">这个账号开了两步验证，应用内登录暂时不支持</string>
+    <string name="sync_sign_in_locked">账号已停用，请联系管理员</string>
+    <string name="sync_sign_in_unsupported">这个服务器不支持从应用内登录</string>
+    <string name="sync_sign_in_network">连不上服务器，检查一下网络</string>
     <string name="sync_now_failed">没能同步，请再试一次。</string>
     <string name="sync_link_failed">没能完成链接，请再试一次。</string>
     <string name="time_just_now">刚刚</string>

@@ -125,7 +125,9 @@ type draftSpec struct {
 	placeholder string
 	value       string // the text it starts with
 	secret      bool
-	focus       bool
+	focus       bool // takes the keyboard as it appears, once
+	focusNow    bool // takes the keyboard even if it was already there
+	disabled    bool
 }
 
 // draftField is a text field of a form: it keeps its text in buf and tells whether Enter was
@@ -145,8 +147,14 @@ func draftField(c *ui.Context, t *theme.Tokens, fs fields, s draftSpec, buf *str
 		if s.secret {
 			el.Password()
 		}
+		if s.disabled {
+			el.Disabled(true).ReadOnly(true)
+		}
 		if s.focus {
 			el.AutoFocus()
+		}
+		if s.focusNow {
+			el.Focus()
 		}
 		if *buf == "" {
 			shown := s.placeholder

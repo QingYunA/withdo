@@ -352,6 +352,7 @@ func (s *shell) createSettings() {
 		Content:         ui.View(s.settings.View),
 	})
 	win.OnClosed(func() {
+		s.settings.ClearSyncPassword()
 		s.mu.Lock()
 		s.settingsWin = nil
 		s.mu.Unlock()

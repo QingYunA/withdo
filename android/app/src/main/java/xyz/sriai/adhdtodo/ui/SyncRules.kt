@@ -1,5 +1,6 @@
 package xyz.sriai.adhdtodo.ui
 
+import xyz.sriai.adhdtodo.R
 import java.util.Locale
 
 /** The 40 cells of the first upload's bar, as v27 and the desktop's pane draw them. */
@@ -63,4 +64,32 @@ fun isAuthFailure(message: String): Boolean {
     val m = message.lowercase(Locale.ROOT)
     return m.contains("401") || m.contains("unauthorized") || m.contains("signed out") ||
         m.contains("refresh token")
+}
+
+/** Why an in-app sign-in failed, as the Sync card words it. */
+enum class SignInFailure { CREDENTIALS, TOO_MANY, SECOND_FACTOR, LOCKED, UNSUPPORTED, NETWORK }
+
+/**
+ * The kind of a failed sign-in from mobile/core's sentence. Go keeps these six sentences stable so
+ * the app can map them to resources; an unknown failure keeps the raw sentence.
+ */
+fun signInFailureOf(message: String?): SignInFailure? = when (message?.trim()) {
+    "wrong account or password" -> SignInFailure.CREDENTIALS
+    "too many tries; wait a few minutes" -> SignInFailure.TOO_MANY
+    "this account uses two-step verification, which in-app sign-in does not support yet" ->
+        SignInFailure.SECOND_FACTOR
+    "this account is deactivated; ask the admin" -> SignInFailure.LOCKED
+    "this server does not support signing in from the app" -> SignInFailure.UNSUPPORTED
+    "could not reach the server; check the connection" -> SignInFailure.NETWORK
+    else -> null
+}
+
+/** The localized sentence of a failed sign-in. */
+fun signInFailureText(failure: SignInFailure): Int = when (failure) {
+    SignInFailure.CREDENTIALS -> R.string.sync_sign_in_invalid
+    SignInFailure.TOO_MANY -> R.string.sync_sign_in_too_many
+    SignInFailure.SECOND_FACTOR -> R.string.sync_sign_in_second_factor
+    SignInFailure.LOCKED -> R.string.sync_sign_in_locked
+    SignInFailure.UNSUPPORTED -> R.string.sync_sign_in_unsupported
+    SignInFailure.NETWORK -> R.string.sync_sign_in_network
 }

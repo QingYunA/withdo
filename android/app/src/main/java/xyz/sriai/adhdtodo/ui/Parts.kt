@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,16 +73,22 @@ fun BackBar(
 
 /** The accent button of the Sync card and the sheets. */
 @Composable
-fun PrimaryButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+fun PrimaryButton(
+    label: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     Box(
-        modifier = Modifier
-            .heightIn(min = 40.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(if (enabled) tokens.accent else tokens.statusTodo.copy(alpha = 0.35f))
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .alpha(if (enabled) 1f else 0.45f)
+            .clip(RoundedCornerShape(10.dp))
+            .background(tokens.accent)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 9.dp),
+            .padding(horizontal = 16.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = type.bodyStrong, color = tokens.onAccent)

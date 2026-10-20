@@ -23,18 +23,28 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +73,8 @@ data class SyncModel(
     val choose: SignInState = SignInState(),
     /** The Go error's sentence after a failed sign-in, shown under the button. */
     val signInError: String? = null,
+    /** The kind of that failure, for the password clearing the card does. */
+    val signInFailure: SignInFailure? = null,
 )
 
 /** The account's display name, else its email, else the quiet "Account". */
@@ -81,7 +93,7 @@ fun SyncScreen(
     serverDraft: String,
     serverError: Boolean,
     serverSaving: Boolean,
-    onSignIn: () -> Unit,
+    onSignIn: (String, String) -> Unit,
     onSignOut: () -> Unit,
     onSyncNow: () -> Unit,
     onRetry: () -> Unit,
@@ -101,6 +113,7 @@ fun SyncScreen(
         when (model.phase) {
             SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignedOutCard(
                 signingIn = model.phase == SyncPhase.SIGNING_IN,
+                failure = model.signInFailure,
                 error = model.signInError,
                 onSignIn = onSignIn,
             )
@@ -174,9 +187,30 @@ fun SyncScreen(
 }
 
 @Composable
-private fun SignedOutCard(signingIn: Boolean, error: String?, onSignIn: () -> Unit) {
+private fun SignedOutCard(
+    signingIn: Boolean,
+    failure: SignInFailure?,
+    error: String?,
+    onSignIn: (String, String) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
+    var login by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var loginFocused by remember { mutableStateOf(false) }
+    var passwordFocused by remember { mutableStateOf(false) }
+    val loginFocus = remember { FocusRequester() }
+    val passwordFocus = remember { FocusRequester() }
+    val ready = login.isNotBlank() && password.isNotEmpty() && !signingIn
+
+    LaunchedEffect(Unit) { loginFocus.requestFocus() }
+    LaunchedEffect(signingIn, failure) {
+        if (!signingIn && failure == SignInFailure.CREDENTIALS) {
+            password = ""
+            passwordFocus.requestFocus()
+        }
+    }
+
     GroupCard {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 28.dp),
@@ -198,18 +232,51 @@ private fun SignedOutCard(signingIn: Boolean, error: String?, onSignIn: () -> Un
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 340.dp),
             )
-            Box(Modifier.padding(top = 8.dp)) {
-                PrimaryButton(
-                    label = if (signingIn) {
-                        stringResource(R.string.sync_signing_in)
-                    } else {
-                        stringResource(R.string.sync_sign_in)
-                    },
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SignInField(
+                    value = login,
+                    onValueChange = { login = it },
+                    placeholder = stringResource(R.string.sync_email),
                     enabled = !signingIn,
-                    onClick = onSignIn,
+                    focused = loginFocused,
+                    onFocused = { loginFocused = it },
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
+                    contentType = ContentType.Username,
+                    focus = loginFocus,
+                    onNext = { passwordFocus.requestFocus() },
+                    modifier = Modifier.alpha(if (signingIn) 0.5f else 1f),
+                )
+                SignInField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = stringResource(R.string.sync_password),
+                    enabled = !signingIn,
+                    focused = passwordFocused,
+                    onFocused = { passwordFocused = it },
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                    contentType = ContentType.Password,
+                    focus = passwordFocus,
+                    secret = true,
+                    onDone = { if (ready) onSignIn(login.trim(), password) },
+                    modifier = Modifier.alpha(if (signingIn) 0.5f else 1f),
                 )
             }
-            if (error != null && !signingIn) {
+            PrimaryButton(
+                label = if (signingIn) {
+                    stringResource(R.string.sync_signing_in)
+                } else {
+                    stringResource(R.string.sync_sign_in)
+                },
+                enabled = ready,
+                onClick = { onSignIn(login.trim(), password) },
+                modifier = Modifier.padding(top = 6.dp).fillMaxWidth(),
+            )
+            if (!signingIn && error != null) {
                 Text(
                     error,
                     style = type.meta,
@@ -218,24 +285,69 @@ private fun SignedOutCard(signingIn: Boolean, error: String?, onSignIn: () -> Un
                     modifier = Modifier.padding(top = 2.dp).widthIn(max = 340.dp),
                 )
             }
-            if (signingIn) {
-                Text(
-                    stringResource(R.string.sync_signing_in_body),
-                    style = type.meta,
-                    color = tokens.textSecondary,
-                    textAlign = TextAlign.Center,
-                )
-            } else {
-                Text(
-                    stringResource(R.string.sync_sign_in_note),
-                    style = type.meta,
-                    color = tokens.textTertiary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 6.dp).widthIn(max = 340.dp),
-                )
-            }
+            Text(
+                stringResource(R.string.sync_sign_in_note),
+                style = type.meta,
+                color = tokens.textTertiary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp).widthIn(max = 340.dp),
+            )
         }
     }
+}
+
+/** One 48 dp field of the sign-in card, drawn as the Server footer's editor. */
+@Composable
+private fun SignInField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    enabled: Boolean,
+    focused: Boolean,
+    onFocused: (Boolean) -> Unit,
+    keyboardType: KeyboardType,
+    imeAction: ImeAction,
+    contentType: ContentType,
+    focus: FocusRequester,
+    secret: Boolean = false,
+    onNext: () -> Unit = {},
+    onDone: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        enabled = enabled,
+        textStyle = type.body.copy(color = tokens.text),
+        cursorBrush = SolidColor(tokens.accent),
+        singleLine = true,
+        visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = KeyboardActions(onNext = { onNext() }, onDone = { onDone() }),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .focusRequester(focus)
+            .onFocusChanged { onFocused(it.isFocused) }
+            .semantics { this.contentType = contentType }
+            .background(tokens.bg, RoundedCornerShape(10.dp))
+            .border(
+                if (focused) 2.dp else 1.dp,
+                if (focused) tokens.accent else tokens.border,
+                RoundedCornerShape(10.dp),
+            )
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        decorationBox = { inner ->
+            Box(contentAlignment = Alignment.CenterStart) {
+                if (value.isEmpty()) {
+                    Text(placeholder, style = type.body, color = tokens.textTertiary, maxLines = 1)
+                }
+                inner()
+            }
+        },
+    )
 }
 
 @Composable

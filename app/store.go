@@ -13,7 +13,6 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/ghpoll"
 	"github.com/QingYunA/adhd-todo/internal/paths"
 	"github.com/QingYunA/adhd-todo/internal/providers"
-	"github.com/egoist/mygo"
 )
 
 // seenFile is the record of the handed-over rows the user has seen, in the data folder.
@@ -82,7 +81,6 @@ func openReal(path string) (*backend, error) {
 	r, err := data.OpenReal(context.Background(), path,
 		data.RealOptions{
 			DataFolder: dir, Secrets: newSyncSecrets(),
-			SyncOpen: func(link string) error { return mygo.Shell.OpenExternal(link) },
 		})
 	if err != nil {
 		return nil, err

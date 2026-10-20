@@ -650,9 +650,10 @@
   "settingsSyncSignedOutTitle": "在手机和其他电脑上同步",
   "settingsSyncSignedOutBody": "任务、项目和 Agent 的汇报会同步到你的服务器，出门在外也能在手机上看到 Agent 在做什么。",
   "settingsSyncSignIn": "登录并开始同步",
-  "settingsSyncSignInNote": "会在浏览器里打开登录页。密钥和模型设置只留在这台 Mac 上。",
+  "settingsSyncEmail": "邮箱或用户名",
+  "settingsSyncPassword": "密码",
+  "settingsSyncSignInNote": "账号由服务器管理员创建。密钥和模型设置只留在这台 Mac 上。",
   "settingsSyncSigningIn": "正在登录…",
-  "settingsSyncSigningInBody": "请在浏览器里完成登录。",
   "settingsSyncServer": "服务器",
   "settingsSyncChange": "更改",
   "settingsSyncServerAddress": "服务器地址",
@@ -690,5 +691,11 @@
   "settingsSyncAlert": "同步需要处理",
   "settingsSyncJustNow": "刚刚",
   "settingsSyncFailedNoAnswer": "服务器没有响应",
-  "settingsSyncFailedAuth": "登录已过期"
+  "settingsSyncFailedAuth": "登录已过期",
+  "settingsSyncWrongCredentials": "账号或密码不对",
+  "settingsSyncTooManyTries": "试的次数太多了，过几分钟再试",
+  "settingsSyncSecondFactor": "这个账号开了两步验证，应用内登录暂时不支持",
+  "settingsSyncAccountLocked": "账号已停用，请联系管理员",
+  "settingsSyncSignInUnsupported": "这个服务器不支持从应用内登录",
+  "settingsSyncSignInFailed": "没能登录，请再试一次。"
 }

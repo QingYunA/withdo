@@ -30,11 +30,6 @@ type Secrets interface {
 	Delete(key string) error
 }
 
-// BrowserOpener opens a URL in the system browser, a Custom Tab on Android.
-type BrowserOpener interface {
-	Open(url string) error
-}
-
 // Listener receives the core's calls. Both methods run on Go goroutines, never on the UI thread.
 type Listener interface {
 	// OnChange says the database changed, including changes a sync made.
@@ -70,6 +65,9 @@ type Core struct {
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool
+	// signInFn replaces syncclient's in-app sign-in in tests, so the arguments SignIn sends and
+	// the device it links can be checked without the real server.
+	signInFn func(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

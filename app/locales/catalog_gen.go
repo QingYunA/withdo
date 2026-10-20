@@ -9719,24 +9719,52 @@ func (msgs Messages) SettingsSyncSignedOutBody() string {
 // SettingsSyncSignIn says "Sign in and sync"
 // in the language the app shows.
 //
-// The accent button that starts an OIDC sign-in.
+// The accent button that signs in with an account and password.
 func SettingsSyncSignIn() string { return In(i18n.Locale()).SettingsSyncSignIn() }
 
 // SettingsSyncSignIn says "Sign in and sync"
 // in the language of msgs.
 //
-// The accent button that starts an OIDC sign-in.
+// The accent button that signs in with an account and password.
 func (msgs Messages) SettingsSyncSignIn() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignIn", nil)
 }
 
-// SettingsSyncSignInNote says "The sign-in page opens in the browser. Keys and model settings stay on this Mac."
+// SettingsSyncEmail says "Email or username"
+// in the language the app shows.
+//
+// The account field of the signed-out Sync pane.
+func SettingsSyncEmail() string { return In(i18n.Locale()).SettingsSyncEmail() }
+
+// SettingsSyncEmail says "Email or username"
+// in the language of msgs.
+//
+// The account field of the signed-out Sync pane.
+func (msgs Messages) SettingsSyncEmail() string {
+	return Catalog.Format(msgs.locale, "settingsSyncEmail", nil)
+}
+
+// SettingsSyncPassword says "Password"
+// in the language the app shows.
+//
+// The password field of the signed-out Sync pane.
+func SettingsSyncPassword() string { return In(i18n.Locale()).SettingsSyncPassword() }
+
+// SettingsSyncPassword says "Password"
+// in the language of msgs.
+//
+// The password field of the signed-out Sync pane.
+func (msgs Messages) SettingsSyncPassword() string {
+	return Catalog.Format(msgs.locale, "settingsSyncPassword", nil)
+}
+
+// SettingsSyncSignInNote says "Accounts are made by the server's admin. Keys and model settings stay on this Mac."
 // in the language the app shows.
 //
 // The quiet line under the sign-in button.
 func SettingsSyncSignInNote() string { return In(i18n.Locale()).SettingsSyncSignInNote() }
 
-// SettingsSyncSignInNote says "The sign-in page opens in the browser. Keys and model settings stay on this Mac."
+// SettingsSyncSignInNote says "Accounts are made by the server's admin. Keys and model settings stay on this Mac."
 // in the language of msgs.
 //
 // The quiet line under the sign-in button.
@@ -9747,29 +9775,15 @@ func (msgs Messages) SettingsSyncSignInNote() string {
 // SettingsSyncSigningIn says "Signing in…"
 // in the language the app shows.
 //
-// The disabled button while the browser owns the sign-in.
+// The disabled button while the sign-in runs.
 func SettingsSyncSigningIn() string { return In(i18n.Locale()).SettingsSyncSigningIn() }
 
 // SettingsSyncSigningIn says "Signing in…"
 // in the language of msgs.
 //
-// The disabled button while the browser owns the sign-in.
+// The disabled button while the sign-in runs.
 func (msgs Messages) SettingsSyncSigningIn() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSigningIn", nil)
-}
-
-// SettingsSyncSigningInBody says "Finish signing in in your browser."
-// in the language the app shows.
-//
-// The line under the title while signing in.
-func SettingsSyncSigningInBody() string { return In(i18n.Locale()).SettingsSyncSigningInBody() }
-
-// SettingsSyncSigningInBody says "Finish signing in in your browser."
-// in the language of msgs.
-//
-// The line under the title while signing in.
-func (msgs Messages) SettingsSyncSigningInBody() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSigningInBody", nil)
 }
 
 // SettingsSyncServer says "Server"
@@ -10316,4 +10330,88 @@ func SettingsSyncFailedAuth() string { return In(i18n.Locale()).SettingsSyncFail
 // The reason of a failed sync when the account has to be signed in again.
 func (msgs Messages) SettingsSyncFailedAuth() string {
 	return Catalog.Format(msgs.locale, "settingsSyncFailedAuth", nil)
+}
+
+// SettingsSyncWrongCredentials says "Wrong account or password"
+// in the language the app shows.
+//
+// The sign-in error line when the account or password was refused.
+func SettingsSyncWrongCredentials() string { return In(i18n.Locale()).SettingsSyncWrongCredentials() }
+
+// SettingsSyncWrongCredentials says "Wrong account or password"
+// in the language of msgs.
+//
+// The sign-in error line when the account or password was refused.
+func (msgs Messages) SettingsSyncWrongCredentials() string {
+	return Catalog.Format(msgs.locale, "settingsSyncWrongCredentials", nil)
+}
+
+// SettingsSyncTooManyTries says "Too many tries; wait a few minutes"
+// in the language the app shows.
+//
+// The sign-in error line when the server is rate limiting attempts.
+func SettingsSyncTooManyTries() string { return In(i18n.Locale()).SettingsSyncTooManyTries() }
+
+// SettingsSyncTooManyTries says "Too many tries; wait a few minutes"
+// in the language of msgs.
+//
+// The sign-in error line when the server is rate limiting attempts.
+func (msgs Messages) SettingsSyncTooManyTries() string {
+	return Catalog.Format(msgs.locale, "settingsSyncTooManyTries", nil)
+}
+
+// SettingsSyncSecondFactor says "This account uses two-step verification, which in-app sign-in does not support yet"
+// in the language the app shows.
+//
+// The sign-in error line when the account has a second factor.
+func SettingsSyncSecondFactor() string { return In(i18n.Locale()).SettingsSyncSecondFactor() }
+
+// SettingsSyncSecondFactor says "This account uses two-step verification, which in-app sign-in does not support yet"
+// in the language of msgs.
+//
+// The sign-in error line when the account has a second factor.
+func (msgs Messages) SettingsSyncSecondFactor() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSecondFactor", nil)
+}
+
+// SettingsSyncAccountLocked says "This account is deactivated; ask the admin"
+// in the language the app shows.
+//
+// The sign-in error line when the account is locked or deactivated.
+func SettingsSyncAccountLocked() string { return In(i18n.Locale()).SettingsSyncAccountLocked() }
+
+// SettingsSyncAccountLocked says "This account is deactivated; ask the admin"
+// in the language of msgs.
+//
+// The sign-in error line when the account is locked or deactivated.
+func (msgs Messages) SettingsSyncAccountLocked() string {
+	return Catalog.Format(msgs.locale, "settingsSyncAccountLocked", nil)
+}
+
+// SettingsSyncSignInUnsupported says "This server does not support signing in from the app"
+// in the language the app shows.
+//
+// The sign-in error line when the server has no POST /v1/sign-in.
+func SettingsSyncSignInUnsupported() string { return In(i18n.Locale()).SettingsSyncSignInUnsupported() }
+
+// SettingsSyncSignInUnsupported says "This server does not support signing in from the app"
+// in the language of msgs.
+//
+// The sign-in error line when the server has no POST /v1/sign-in.
+func (msgs Messages) SettingsSyncSignInUnsupported() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignInUnsupported", nil)
+}
+
+// SettingsSyncSignInFailed says "Couldn't sign in. Try again."
+// in the language the app shows.
+//
+// The sign-in error line for a failure with no sentence of its own.
+func SettingsSyncSignInFailed() string { return In(i18n.Locale()).SettingsSyncSignInFailed() }
+
+// SettingsSyncSignInFailed says "Couldn't sign in. Try again."
+// in the language of msgs.
+//
+// The sign-in error line for a failure with no sentence of its own.
+func (msgs Messages) SettingsSyncSignInFailed() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignInFailed", nil)
 }

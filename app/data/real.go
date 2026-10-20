@@ -32,8 +32,6 @@ type RealOptions struct {
 	SyncConfigPath string
 	// Secrets is where an OIDC sync keeps its refresh token; nil means the app has no keychain.
 	Secrets syncclient.Secrets
-	// SyncOpen opens a URL in the browser for the OIDC sign-in; nil means the app cannot sign in.
-	SyncOpen func(string) error
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and
@@ -65,6 +63,9 @@ type Real struct {
 	sync      syncTask
 	// syncNotify asks the shell to redraw after a sync status change; set by the app.
 	syncNotify func()
+	// signInFn replaces syncclient's in-app sign-in in tests, so the account and password the
+	// pane sends can be checked without the real server.
+	signInFn func(ctx context.Context, source *syncclient.OIDCSource, server, loginName, password string) error
 
 	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
 	// collection in between. sweep is the pending collection after a detach or a delete.

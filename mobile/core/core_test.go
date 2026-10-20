@@ -84,7 +84,6 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	}
 	for _, typ := range []reflect.Type{
 		reflect.TypeOf((*Secrets)(nil)).Elem(),
-		reflect.TypeOf((*BrowserOpener)(nil)).Elem(),
 		reflect.TypeOf((*Listener)(nil)).Elem(),
 	} {
 		if !bindable(typ) {

@@ -16,7 +16,7 @@ import (
 // internal/syncclient; tests use a fake.
 type SyncService interface {
 	SyncSnapshot() data.SyncSnapshot
-	SyncSignIn()
+	SyncSignIn(loginName, password string)
 	SyncMerge()
 	SyncUseAccount()
 	SyncCancel()
@@ -61,6 +61,13 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		return
 	}
 	snap := svc.SyncSnapshot()
+	// A refused account keeps the account and empties the password, with the cursor back in it.
+	if s.syncPrevPhase == data.SyncSigningIn && snap.Phase == data.SyncSignedOut &&
+		snap.SignInFailure == data.SignInFailureCredentials {
+		s.syncPassword = ""
+		s.syncFocusPassword = true
+	}
+	s.syncPrevPhase = snap.Phase
 	if !s.syncAsked {
 		s.syncAsked = true
 		s.syncLastSynced = snap.LastSynced
@@ -76,10 +83,8 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		c.After(30 * time.Second)
 	}
 	switch snap.Phase {
-	case data.SyncSignedOut:
-		s.syncSignedOut(c, t, svc)
-	case data.SyncSigningIn:
-		s.syncSigningIn(c, t)
+	case data.SyncSignedOut, data.SyncSigningIn:
+		s.syncSignInCard(c, t, svc, snap)
 	case data.SyncBothHaveTasks:
 		group(c, t, "sync-account", func() { s.syncAccountRow(c, t, svc, snap, true) })
 	case data.SyncUploading, data.SyncSynced:
@@ -101,38 +106,102 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// syncSignedOut is the centered card of a Mac that is not signed in.
-func (s *Settings) syncSignedOut(c *ui.Context, t *theme.Tokens, svc SyncService) {
+// syncSignInCard is the centered card of a Mac that is not signed in: the account and password go
+// straight to the sync server, and the same card stays while it signs in.
+func (s *Settings) syncSignInCard(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+	signing := snap.Phase == data.SyncSigningIn
 	group(c, t, "sync-hero", func() {
-		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 24).Children(func() {
+		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
 			ui.Icon(c, theme.IconCloud).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
 			hero := theme.Input
 			hero.Weight = 600
 			theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncSignedOutTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncSignedOutBody(), 0).
 				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-			if settingsButton(c, t, "sync-signin", s.say.SettingsSyncSignIn(), true).Margin(16, 0, 0).Clicked() {
-				svc.SyncSignIn()
+			ui.Column(c.Key("sync-form")).Width(280).Shrink(0).Gap(8).Margin(16, 0, 0).Children(func() {
+				account := fieldWell(c, t, "sync-account", 280, func() {
+					entered, _ := draftField(c, t, s.syncFields, draftSpec{
+						name: "sync-account", label: s.say.SettingsSyncEmail(),
+						placeholder: s.say.SettingsSyncEmail(), focus: s.syncFocusAccount,
+						disabled: signing,
+					}, &s.syncLogin)
+					if entered {
+						s.syncFocusPassword = true
+					}
+				})
+				if signing {
+					account.Opacity(0.5)
+				} else if account.FocusWithin() {
+					account.Border(1, t.Accent)
+				}
+				password := fieldWell(c, t, "sync-password", 280, func() {
+					entered, _ := draftField(c, t, s.syncFields, draftSpec{
+						name: "sync-password", label: s.say.SettingsSyncPassword(),
+						placeholder: s.say.SettingsSyncPassword(), secret: true,
+						focusNow: s.syncFocusPassword, disabled: signing,
+					}, &s.syncPassword)
+					if entered {
+						s.submitSyncSignIn(svc, signing)
+					}
+				})
+				if signing {
+					password.Opacity(0.5)
+				} else if password.FocusWithin() {
+					password.Border(1, t.Accent)
+				}
+			})
+			s.syncFocusAccount, s.syncFocusPassword = false, false
+			label := s.say.SettingsSyncSignIn()
+			if signing {
+				label = s.say.SettingsSyncSigningIn()
+			}
+			button := settingsButton(c, t, "sync-signin", label, true).Margin(16, 0, 0)
+			if signing || !s.syncSignInReady() {
+				button.Disabled(true).Opacity(0.45)
+			}
+			if button.Clicked() {
+				s.submitSyncSignIn(svc, signing)
+			}
+			if !signing && snap.SignInFailure != data.SignInFailureNone {
+				theme.Paragraph(c, theme.Meta, t.Blocked(), s.syncSignInFailureText(snap.SignInFailure), 0).
+					TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
 			}
 			theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncSignInNote(), 0).
-				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(10, 0, 0)
+				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
 		})
 	})
 }
 
-// syncSigningIn is the card while the browser owns the sign-in.
-func (s *Settings) syncSigningIn(c *ui.Context, t *theme.Tokens) {
-	group(c, t, "sync-hero", func() {
-		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 24).Children(func() {
-			ui.Icon(c, theme.IconCloud).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
-			hero := theme.Input
-			hero.Weight = 600
-			theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncSignedOutTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncSigningInBody(), 0).
-				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-			settingsButton(c, t, "sync-signing", s.say.SettingsSyncSigningIn(), true).Disabled(true).Margin(16, 0, 0)
-		})
-	})
+// syncSignInReady says whether both fields have text, the button's rule.
+func (s *Settings) syncSignInReady() bool {
+	return strings.TrimSpace(s.syncLogin) != "" && s.syncPassword != ""
+}
+
+// submitSyncSignIn sends the fields once; the account is trimmed, a password's spaces are kept.
+func (s *Settings) submitSyncSignIn(svc SyncService, signing bool) {
+	if signing || !s.syncSignInReady() {
+		return
+	}
+	svc.SyncSignIn(strings.TrimSpace(s.syncLogin), s.syncPassword)
+}
+
+// syncSignInFailureText words the sign-in failure in the window's language.
+func (s *Settings) syncSignInFailureText(failure data.SignInFailure) string {
+	switch failure {
+	case data.SignInFailureCredentials:
+		return s.say.SettingsSyncWrongCredentials()
+	case data.SignInFailureTooMany:
+		return s.say.SettingsSyncTooManyTries()
+	case data.SignInFailureSecondFactor:
+		return s.say.SettingsSyncSecondFactor()
+	case data.SignInFailureLocked:
+		return s.say.SettingsSyncAccountLocked()
+	case data.SignInFailureUnsupported:
+		return s.say.SettingsSyncSignInUnsupported()
+	case data.SignInFailureNetwork:
+		return s.say.SettingsSyncFailedNoAnswer()
+	}
+	return s.say.SettingsSyncSignInFailed()
 }
 
 // syncAccountGroup is the account row over this Mac's row.
