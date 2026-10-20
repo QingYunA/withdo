@@ -3,6 +3,27 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.6.0
+
+No database change: upgrading from 0.5.2 or 0.5.3 is installing the app (from an older version the
+database moves to schema 14 on the first start). On Windows, quit ADHD Todo and your coding agents
+before you install. Restart your coding agents afterwards.
+
+- **Sync between devices.** Settings has a Sync tab: sign in through the browser and this computer
+  syncs its tasks, projects and agents' reports through todo.sri-ai.xyz with your other computers
+  and the Android app. When both this computer and the account have tasks, you choose to merge them
+  into the account (task numbers change to the account's, agents use the new ones the next time
+  they report) or to use the account's (this computer's data is backed up first). The first
+  upload shows its progress; the tab lists your devices and says when a sync failed and when it
+  retries. The sidebar's Settings row shows a red cloud only when sync needs you.
+- A reply you write on your phone shows in the task's activity as yours.
+- **Windows:** a tray icon (left click opens the window, right click has Open, Settings and Exit),
+  one instance (a second launch brings the window back), a File menu, and keyboard hints written
+  as Ctrl and Shift.
+- **Windows:** Terminal, Editor and the agent's app open (Windows Terminal or cmd; Cursor, VS Code
+  or Zed); folders open in File Explorer, pictures in their default app; the GitHub CLI hint names
+  winget; Copilot, Cline and Zed are found where Windows keeps their settings.
+
 ## 0.5.3
 
 No database change: upgrading from 0.5.2 is installing the app. On Windows, quit ADHD Todo and your
