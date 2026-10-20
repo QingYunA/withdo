@@ -48,7 +48,15 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 			m.composerBox(c, t, surfacePage, theme.Input)
 		})
 	})
-	m.dockHeight = dock.Bounds().H
+	// The toasts and the bulk bar ride above the dock. Bounds would be the previous frame's height,
+	// a frame behind with nothing to build another; painting has this frame's, and a change asks
+	// for the frame that moves them.
+	dock.Draw(func(_ *ui.Painter, r ui.Rect) {
+		if r.H != m.dockHeight {
+			m.dockHeight = r.H
+			c.AnimationFrame()
+		}
+	})
 }
 
 // composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with the
