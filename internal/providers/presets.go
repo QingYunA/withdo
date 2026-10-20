@@ -65,7 +65,7 @@ var Presets = []Preset{
 	{ID: "siliconflow", Name: "硅基流动", Protocol: OpenAI, BaseURL: "https://api.siliconflow.cn/v1", Monogram: "SF",
 		KeyURL: "https://cloud.siliconflow.cn/account/ak", Models: []string{"Qwen/Qwen3-8B", "deepseek-ai/DeepSeek-V3", "moonshotai/Kimi-K2-Instruct"}},
 	{ID: "ollama", Name: "Ollama", Protocol: OpenAI, BaseURL: "http://127.0.0.1:11434/v1", FixedKey: "ollama", Monogram: "◉",
-		Models: []string{"qwen3:8b", "llama3.1:8b"}, Note: "Runs on this Mac. No key needed."},
+		Models: []string{"qwen3:8b", "llama3.1:8b"}, Note: "Runs on this computer. No key needed."},
 	{ID: IDMagpie, Name: "Magpie", Protocol: Anthropic, BaseURL: "http://127.0.0.1:3425", FixedKey: "magpie", Monogram: "M",
 		Models: []string{"claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"},
 		Note:   "Uses your Magpie gateway at 127.0.0.1:3425"},

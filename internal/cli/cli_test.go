@@ -86,6 +86,23 @@ func TestUsageAndHelp(t *testing.T) {
 	}
 }
 
+func TestSyncHelpPrintsTheSyncUsage(t *testing.T) {
+	for _, args := range [][]string{{"sync", "--help"}, {"sync", "-h"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			h := newHarness(t, filepath.Join(t.TempDir(), "never-opened.db"))
+			if code := run(context.Background(), args, h.d); code != 0 {
+				t.Errorf("exit code = %d, stderr = %q", code, h.err.String())
+			}
+			if out := h.out.String(); out != syncUsage {
+				t.Errorf("stdout = %q, want the sync usage", out)
+			}
+			if h.err.Len() != 0 {
+				t.Errorf("stderr = %q", h.err.String())
+			}
+		})
+	}
+}
+
 func TestHelpWordAndSubcommandHelpFlagsPrintUsageAndDoNothingElse(t *testing.T) {
 	for _, args := range [][]string{
 		{"help"}, {"overview", "--help"}, {"overview", "-h"}, {"mcp", "--help"}, {"mcp", "-h"}, {"guide", "--help"}, {"guide", "-h"},

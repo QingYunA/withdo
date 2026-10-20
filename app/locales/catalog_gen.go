@@ -1344,18 +1344,20 @@ func (msgs Messages) FoldShowShort() string {
 	return Catalog.Format(msgs.locale, "foldShowShort", nil)
 }
 
-// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press ⌘K."
+// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press {key}."
 // in the language the app shows.
 //
-// Body of an empty Inbox. ⌘K is the shortcut of the ask field.
-func InboxEmptyBody() string { return In(i18n.Locale()).InboxEmptyBody() }
+// Body of an empty Inbox. key is the shortcut of the ask field, such as
+// ⌘K on a Mac or Ctrl+K elsewhere.
+func InboxEmptyBody(key string) string { return In(i18n.Locale()).InboxEmptyBody(key) }
 
-// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press ⌘K."
+// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press {key}."
 // in the language of msgs.
 //
-// Body of an empty Inbox. ⌘K is the shortcut of the ask field.
-func (msgs Messages) InboxEmptyBody() string {
-	return Catalog.Format(msgs.locale, "inboxEmptyBody", nil)
+// Body of an empty Inbox. key is the shortcut of the ask field, such as
+// ⌘K on a Mac or Ctrl+K elsewhere.
+func (msgs Messages) InboxEmptyBody(key string) string {
+	return Catalog.Format(msgs.locale, "inboxEmptyBody", map[string]any{"key": key})
 }
 
 // InboxEmptyTitle says "Your inbox is clear."
@@ -3734,13 +3736,13 @@ func (msgs Messages) ProviderNoteMagpie() string {
 	return Catalog.Format(msgs.locale, "providerNoteMagpie", nil)
 }
 
-// ProviderNoteOllama says "Runs on this Mac. No key needed."
+// ProviderNoteOllama says "Runs on this computer. No key needed."
 // in the language the app shows.
 //
 // Note of the Ollama provider.
 func ProviderNoteOllama() string { return In(i18n.Locale()).ProviderNoteOllama() }
 
-// ProviderNoteOllama says "Runs on this Mac. No key needed."
+// ProviderNoteOllama says "Runs on this computer. No key needed."
 // in the language of msgs.
 //
 // Note of the Ollama provider.
@@ -4170,6 +4172,22 @@ func (msgs Messages) MenuSettings() string {
 	return Catalog.Format(msgs.locale, "menuSettings", nil)
 }
 
+// TrayOpen says "Open ADHD Todo"
+// in the language the app shows.
+//
+// Item of the menu of the tray icon (Windows) that brings the main window
+// back.
+func TrayOpen() string { return In(i18n.Locale()).TrayOpen() }
+
+// TrayOpen says "Open ADHD Todo"
+// in the language of msgs.
+//
+// Item of the menu of the tray icon (Windows) that brings the main window
+// back.
+func (msgs Messages) TrayOpen() string {
+	return Catalog.Format(msgs.locale, "trayOpen", nil)
+}
+
 // ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
 // in the language the app shows.
 //
@@ -4476,20 +4494,22 @@ func (msgs Messages) ComposerChipSetUp() string {
 	return Catalog.Format(msgs.locale, "composerChipSetUp", nil)
 }
 
-// ComposerHintIdle says "⌘K"
+// ComposerHintIdle says "{key}"
 // in the language the app shows.
 //
 // The shortcut that focuses the composer, at its right while it is not
-// focused.
-func ComposerHintIdle() string { return In(i18n.Locale()).ComposerHintIdle() }
+// focused. key is written for the platform, such as ⌘K on a Mac or Ctrl+K
+// elsewhere.
+func ComposerHintIdle(key string) string { return In(i18n.Locale()).ComposerHintIdle(key) }
 
-// ComposerHintIdle says "⌘K"
+// ComposerHintIdle says "{key}"
 // in the language of msgs.
 //
 // The shortcut that focuses the composer, at its right while it is not
-// focused.
-func (msgs Messages) ComposerHintIdle() string {
-	return Catalog.Format(msgs.locale, "composerHintIdle", nil)
+// focused. key is written for the platform, such as ⌘K on a Mac or Ctrl+K
+// elsewhere.
+func (msgs Messages) ComposerHintIdle(key string) string {
+	return Catalog.Format(msgs.locale, "composerHintIdle", map[string]any{"key": key})
 }
 
 // ComposerLabel says "Ask the assistant"
@@ -5045,31 +5065,31 @@ func (msgs Messages) SettingsAgentsBody() string {
 // SettingsAgentFound says "Found · {where}"
 // in the language the app shows.
 //
-// Line under an agent that is on this Mac but has not reported today; where
-// is the command or folder found, such as gemini or ~/.cursor.
+// Line under an agent that is on this computer but has not reported today;
+// where is the command or folder found, such as gemini or ~/.cursor.
 func SettingsAgentFound(where string) string { return In(i18n.Locale()).SettingsAgentFound(where) }
 
 // SettingsAgentFound says "Found · {where}"
 // in the language of msgs.
 //
-// Line under an agent that is on this Mac but has not reported today; where
-// is the command or folder found, such as gemini or ~/.cursor.
+// Line under an agent that is on this computer but has not reported today;
+// where is the command or folder found, such as gemini or ~/.cursor.
 func (msgs Messages) SettingsAgentFound(where string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentFound", map[string]any{"where": where})
 }
 
-// SettingsAgentsLocal says "On this Mac"
+// SettingsAgentsLocal says "On this computer"
 // in the language the app shows.
 //
-// Section label above the agents found on this Mac in Settings > Agents;
-// the count follows it quietly.
+// Section label above the agents found on this computer in Settings >
+// Agents; the count follows it quietly.
 func SettingsAgentsLocal() string { return In(i18n.Locale()).SettingsAgentsLocal() }
 
-// SettingsAgentsLocal says "On this Mac"
+// SettingsAgentsLocal says "On this computer"
 // in the language of msgs.
 //
-// Section label above the agents found on this Mac in Settings > Agents;
-// the count follows it quietly.
+// Section label above the agents found on this computer in Settings >
+// Agents; the count follows it quietly.
 func (msgs Messages) SettingsAgentsLocal() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsLocal", nil)
 }
@@ -5077,31 +5097,31 @@ func (msgs Messages) SettingsAgentsLocal() string {
 // SettingsAgentsMore says "More"
 // in the language the app shows.
 //
-// Section label above the agents not on this Mac in Settings > Agents; the
-// count follows it quietly.
+// Section label above the agents not on this computer in Settings > Agents;
+// the count follows it quietly.
 func SettingsAgentsMore() string { return In(i18n.Locale()).SettingsAgentsMore() }
 
 // SettingsAgentsMore says "More"
 // in the language of msgs.
 //
-// Section label above the agents not on this Mac in Settings > Agents; the
-// count follows it quietly.
+// Section label above the agents not on this computer in Settings > Agents;
+// the count follows it quietly.
 func (msgs Messages) SettingsAgentsMore() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsMore", nil)
 }
 
-// SettingsAgentsEmpty says "No agent found on this Mac yet"
+// SettingsAgentsEmpty says "No agent found on this computer yet"
 // in the language the app shows.
 //
-// The one row under On this Mac when no agent was found on this Mac and
-// none has reported.
+// The one row under On this computer when no agent was found on this
+// computer and none has reported.
 func SettingsAgentsEmpty() string { return In(i18n.Locale()).SettingsAgentsEmpty() }
 
-// SettingsAgentsEmpty says "No agent found on this Mac yet"
+// SettingsAgentsEmpty says "No agent found on this computer yet"
 // in the language of msgs.
 //
-// The one row under On this Mac when no agent was found on this Mac and
-// none has reported.
+// The one row under On this computer when no agent was found on this
+// computer and none has reported.
 func (msgs Messages) SettingsAgentsEmpty() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsEmpty", nil)
 }
@@ -5109,14 +5129,14 @@ func (msgs Messages) SettingsAgentsEmpty() string {
 // SettingsAgentsConnect says "See how to connect"
 // in the language the app shows.
 //
-// Link in the empty On this Mac row; it opens the README's section on
+// Link in the empty On this computer row; it opens the README's section on
 // connecting an agent.
 func SettingsAgentsConnect() string { return In(i18n.Locale()).SettingsAgentsConnect() }
 
 // SettingsAgentsConnect says "See how to connect"
 // in the language of msgs.
 //
-// Link in the empty On this Mac row; it opens the README's section on
+// Link in the empty On this computer row; it opens the README's section on
 // connecting an agent.
 func (msgs Messages) SettingsAgentsConnect() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsConnect", nil)
@@ -5169,13 +5189,13 @@ func (msgs Messages) SettingsAgentInstalled() string {
 // SettingsAgentGet says "Get it"
 // in the language the app shows.
 //
-// Link to the website of an agent that is not on this Mac.
+// Link to the website of an agent that is not on this computer.
 func SettingsAgentGet() string { return In(i18n.Locale()).SettingsAgentGet() }
 
 // SettingsAgentGet says "Get it"
 // in the language of msgs.
 //
-// Link to the website of an agent that is not on this Mac.
+// Link to the website of an agent that is not on this computer.
 func (msgs Messages) SettingsAgentGet() string {
 	return Catalog.Format(msgs.locale, "settingsAgentGet", nil)
 }
@@ -5286,13 +5306,13 @@ func (msgs Messages) SettingsAgentNoCore(path string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentNoCore", map[string]any{"path": path})
 }
 
-// SettingsAgentGone says "{agent} isn't on this Mac anymore."
+// SettingsAgentGone says "{agent} isn't on this computer anymore."
 // in the language the app shows.
 //
 // Why Install MCP did nothing: the agent's command is gone.
 func SettingsAgentGone(agent string) string { return In(i18n.Locale()).SettingsAgentGone(agent) }
 
-// SettingsAgentGone says "{agent} isn't on this Mac anymore."
+// SettingsAgentGone says "{agent} isn't on this computer anymore."
 // in the language of msgs.
 //
 // Why Install MCP did nothing: the agent's command is gone.
@@ -8362,18 +8382,20 @@ func (msgs Messages) CategoryPenOwn() string {
 	return Catalog.Format(msgs.locale, "categoryPenOwn", nil)
 }
 
-// CategoryDrawHelp says "Click a cell to draw, drag to keep going. ⌘Z undoes."
+// CategoryDrawHelp says "Click a cell to draw, drag to keep going. {key} undoes."
 // in the language the app shows.
 //
-// Help line under the icon editor's palette.
-func CategoryDrawHelp() string { return In(i18n.Locale()).CategoryDrawHelp() }
+// Help line under the icon editor's palette. key is the undo shortcut, such
+// as ⌘Z on a Mac or Ctrl+Z elsewhere.
+func CategoryDrawHelp(key string) string { return In(i18n.Locale()).CategoryDrawHelp(key) }
 
-// CategoryDrawHelp says "Click a cell to draw, drag to keep going. ⌘Z undoes."
+// CategoryDrawHelp says "Click a cell to draw, drag to keep going. {key} undoes."
 // in the language of msgs.
 //
-// Help line under the icon editor's palette.
-func (msgs Messages) CategoryDrawHelp() string {
-	return Catalog.Format(msgs.locale, "categoryDrawHelp", nil)
+// Help line under the icon editor's palette. key is the undo shortcut, such
+// as ⌘Z on a Mac or Ctrl+Z elsewhere.
+func (msgs Messages) CategoryDrawHelp(key string) string {
+	return Catalog.Format(msgs.locale, "categoryDrawHelp", map[string]any{"key": key})
 }
 
 // CategoryThreshold says "Threshold"
@@ -9432,14 +9454,14 @@ func (msgs Messages) RecentSignedOutTitle() string {
 	return Catalog.Format(msgs.locale, "recentSignedOutTitle", nil)
 }
 
-// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:"
+// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
 // in the language the app shows.
 //
 // Body of the Recent changes page when gh is missing or signed out; the
 // command to run follows.
 func RecentGHBody() string { return In(i18n.Locale()).RecentGHBody() }
 
-// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this Mac, with no token of its own. Run this in a terminal:"
+// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
 // in the language of msgs.
 //
 // Body of the Recent changes page when gh is missing or signed out; the

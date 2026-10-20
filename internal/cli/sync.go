@@ -29,15 +29,15 @@ const syncUsage = `Usage: adhd-core sync <command>
 
 Commands:
   link --server URL --token-file FILE --name NAME [--merge|--replace]
-             Link this Mac to a sync server with a static token (development)
+             Link this device to a sync server with a static token (development)
   login --server URL --issuer URL --client-id ID --name NAME [--scope SCOPE]... [--merge|--replace]
-             Sign in to an OIDC account and link this Mac
-  logout     Forget the OIDC sign-in on this Mac
+             Sign in to an OIDC account and link this device
+  logout     Forget the OIDC sign-in on this device
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
 
---merge and --replace choose what happens when both this Mac and the account have tasks:
---merge joins this Mac's tasks to the account; --replace backs this Mac up and uses the account's data.
+--merge and --replace choose what happens when both this device and the account have tasks:
+--merge joins this device's tasks to the account; --replace backs this device up and uses the account's data.
 `
 
 // runSync runs one `adhd-core sync` subcommand.
@@ -75,8 +75,8 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 	server := fs.String("server", "", "sync server URL")
 	tokenFile := fs.String("token-file", "", "file holding the bearer token")
 	name := fs.String("name", "", "device name")
-	merge := fs.Bool("merge", false, "join this Mac's tasks to the account's when both have data")
-	replace := fs.Bool("replace", false, "back this Mac up and use the account's data when both have data")
+	merge := fs.Bool("merge", false, "join this device's tasks to the account's when both have data")
+	replace := fs.Bool("replace", false, "back this device up and use the account's data when both have data")
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("sync link: %w", err)
 	}
@@ -125,8 +125,8 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	issuer := fs.String("issuer", "", "OIDC issuer URL")
 	clientID := fs.String("client-id", "", "OIDC client id")
 	name := fs.String("name", "", "device name")
-	merge := fs.Bool("merge", false, "join this Mac's tasks to the account's when both have data")
-	replace := fs.Bool("replace", false, "back this Mac up and use the account's data when both have data")
+	merge := fs.Bool("merge", false, "join this device's tasks to the account's when both have data")
+	replace := fs.Bool("replace", false, "back this device up and use the account's data when both have data")
 	var scopes scopeList
 	fs.Var(&scopes, "scope", "an extra OIDC scope, repeatable")
 	if err := fs.Parse(args); err != nil {
@@ -223,7 +223,7 @@ func linkAndSave(ctx context.Context, client *syncclient.Client, dbPath string, 
 			if err := printLinkedDevice(ctx, client, d); err != nil {
 				return err
 			}
-			_, _ = fmt.Fprintf(d.stdout, "merged this Mac's %d tasks into the account\n", len(tasks))
+			_, _ = fmt.Fprintf(d.stdout, "merged this device's %d tasks into the account\n", len(tasks))
 			return nil
 		case replace:
 			backup, replaceErr := client.LinkReplace(ctx, name)
@@ -245,7 +245,7 @@ func linkAndSave(ctx context.Context, client *syncclient.Client, dbPath string, 
 			if err := printLinkedDevice(ctx, client, d); err != nil {
 				return err
 			}
-			_, _ = fmt.Fprintf(d.stdout, "replaced this Mac's data with the account's; backup at %s\n", backup)
+			_, _ = fmt.Fprintf(d.stdout, "replaced this device's data with the account's; backup at %s\n", backup)
 			return nil
 		default:
 			return syncFriendlyError(err)
@@ -264,7 +264,7 @@ func linkAndSave(ctx context.Context, client *syncclient.Client, dbPath string, 
 		return err
 	}
 	if hasData {
-		_, _ = fmt.Fprintf(d.stdout, "uploaded this Mac's data (%d rows)\n", seedRows)
+		_, _ = fmt.Fprintf(d.stdout, "uploaded this device's data (%d rows)\n", seedRows)
 	} else {
 		_, _ = io.WriteString(d.stdout, "joined the account\n")
 	}
@@ -402,7 +402,7 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 func syncFriendlyError(err error) error {
 	switch {
 	case errors.Is(err, syncclient.ErrLocalData):
-		return errors.New("this Mac already has tasks and the account already has data; use --merge to join them or --replace to use the account's data (this Mac is backed up first)")
+		return errors.New("this device already has tasks and the account already has data; use --merge to join them or --replace to use the account's data (this device is backed up first)")
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("the workspace is still uploading its first snapshot; try again later")
 	case errors.Is(err, syncclient.ErrNotLinked):

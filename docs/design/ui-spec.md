@@ -138,7 +138,7 @@ piece of UI follows it; a mockup that breaks it is redrawn before it is built.
 - **Harness marks are the second exception, on a 24 x 24 and an 18 x 18 grid** (v14): the official
   marks of the coding agents do not survive 12 x 12 either, and the user again has to recognize
   them. Settings > Agents draws them in the official colours, light and dark: 24 x 24 (drawn at
-  24 pt) in the rows of **On this Mac**, 18 x 18 (drawn at 18 pt) in the compact rows of **More**.
+  24 pt) in the rows of **On this computer**, 18 x 18 (drawn at 18 pt) in the compact rows of **More**.
   They are the lobe-icons / Iconify drawings the approved mockup embeds
   (`docs/design/mockups/v14.html`, its ICONS); `docs/design/tools/harness_marks.py` quantises each
   light and dark pixel mark to at most 24 colours and writes `app/theme/harness_marks.go`.
@@ -299,9 +299,17 @@ else changes.
 
 ## Surfaces
 
-One window. No tray icon, no flyout panel, no global shortcut (decided 2026-10-14: the user
-found the tray pointless and shortcuts conflict). The Dock icon opens the window; closing the
-window hides it; Quit quits. The high-fidelity reference for this section is
+One window. No flyout panel, no global shortcut (decided 2026-10-14: shortcuts conflict). Closing
+the window hides it, so reminders, the end of the day and pull request news keep coming; Quit quits.
+A second launch starts no second process: it brings the window back (one instance on both systems).
+
+- **macOS:** no tray icon (2026-10-14: the user found it pointless); the Dock icon opens the window.
+- **Windows** has no Dock, so the app has a tray icon there (decided 2026-10-20, v28,
+  `docs/design/mockups/v28.html`): the app icon redrawn on the 12 x 12 grid
+  (`app/theme/sprites/tray.png`, shown 2x as 24 x 24 px), tooltip `ADHD Todo`. A left click opens the
+  window; a right click opens its menu: `Open ADHD Todo` / `打开 ADHD Todo`, `Settings…` / `设置…`, a
+  separator, `Exit` / `退出`. The menu bar's File menu holds `Settings…` (Ctrl+,) and `Exit`, since
+  Windows has no app menu. The high-fidelity reference for this section is
 `docs/design/mockups/now.html` (rendered: `now.png`). Match it.
 
 ### Window (1100 x 720, min 860 x 540)
@@ -1643,6 +1651,9 @@ With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each ope
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
 about the task (opens the inspector with its composer focused); `⌘⌫` deletes it, with Undo.
 
+On Windows every `⌘` is Ctrl, and the hints the app shows say so: `keyHint` (`app/views/keyhint.go`)
+writes `⌘` `⇧` `⌥` `↵` `⌫` as `Ctrl+` `Shift+` `Alt+` `Enter` `Backspace` there (`⌘⇧A` is `Ctrl+Shift+A`).
+
 While a text input has the keyboard its keys are its own (`Element.OnTextKey`), and the window's
 arrows, `↵`, `Space` and `Esc` stay out of the way:
 
@@ -1778,7 +1789,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
 - **Agents** (M6, v14, `docs/design/mockups/v14.html`): the label **Coding agents** (`编程 Agent`),
   one plain `meta` line under it (the M6 wording: what Install MCP does and does not do), then two
   sections, both on the first screen of the 680 x 520 window, before the pane scrolls:
-  - **On this Mac** with its count (`On this Mac 6`, `本机已有 6`; the number is quiet, in
+  - **On this computer** with its count (`On this computer 6`, `本机已有 6`; the number is quiet, in
     `text.tertiary`, after the section label): every agent whose command is on PATH, whose config
     folder or file is there, or that ever reported. A report keeps an agent here even when this
     look no longer finds its command, because its MCP is installed somewhere. The section is two
@@ -1793,13 +1804,13 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
     The line is `N reports today`, else `No reports today`, else `Found · gemini` / `Found ·
     ~/.dsh` (what was found). An install that fails says why under the line, in `meta` and the
     blocked red, in plain words. With no agent found and none reported, the section is one empty
-    row: `No agent found on this Mac yet` / `还没在这台 Mac 上找到 Agent`, with **See how to
+    row: `No agent found on this computer yet` / `还没在这台电脑上找到 Agent`, with **See how to
     connect** / **去看看怎么接**, which opens the README's connect section; More still lists the
     whole catalog.
-  - **More** with its count: every catalog agent not on this Mac, one white block of compact two
+  - **More** with its count: every catalog agent not on this computer, one white block of compact two
     column rows (8 in the design, four rows). A row (31 pt in the app; the mockup draws 32): the
     18 pt official mark, the name in `meta` size and primary ink, and `Get it` / `去下载` and the 12 pt pixel external-link icon at the
-    right, which opens the agent's URL. There is no status line and no "Not on this Mac" (the
+    right, which opens the agent's URL. There is no status line and no "Not on this computer" (the
     group says it), and More never folds.
   Under the two sections, exactly as before: the manual snippet when a config file is not plain
   JSON, or when a Cordis patch is not a patch list adhd-todo can append to; then the **Open agent
@@ -1947,6 +1958,8 @@ wide; rows are at least 48 dp tall (Android's touch target). Light and dark foll
   Management words: "新建项目", "重命名", "归档", "删除…", "移到" (Move to), "搜索", "已完成" for
   Completed (as macOS Reminders names it; the page's subtitle says it holds cancelled tasks too, and
   "日志" would read as log files to a developer).
+- The app runs on macOS and Windows: no "this Mac" / 「这台 Mac」 in shared copy. Say "this computer" /
+  「这台电脑」 (「本机」 where short), and "this device" in sync, where devices are what is linked.
 - Section headers are sentence case, `section` style, not tracked capitals, in both languages.
 - Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12"); in Chinese "刚刚", "2分钟前",
   "3小时前", "2天前", then "10月12日". Due labels: "Today", "Tomorrow", "Fri", "Oct 20", the time of

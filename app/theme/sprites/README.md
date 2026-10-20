@@ -29,6 +29,7 @@ so a picture changes by replacing its file.
 | `avatars/copilot.png`, `avatars/copilot.dark.png` | 12 x 12 | the Copilot (VS Code) avatar; the dark file in dark mode |
 | `avatars/bot.png` | 12 x 12 | the robot of every agent without a drawing of its own (Qwen, Kimi, Windsurf, Zed, Cline, unknown agents), the Agents row of the sidebar and Magpie |
 | `avatars/parcel.png` | 12 x 12 | the parcel of a hand-off, in the header of "Waiting for an agent" (a pixel of room all round) |
+| `tray.png` | 12 x 12 | the icon in the notification area of Windows, drawn 2x (24 x 24) by `TrayIcon`; made by `docs/design/tools/tray_icon.py` |
 
 ## The robot is a template
 

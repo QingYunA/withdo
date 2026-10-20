@@ -42,6 +42,11 @@ func main() {
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
 
+	// A second launch hands over to the running app and ends here, before it opens the database. The
+	// demo modes use a database of their own and may run beside the real one.
+	if !*fake && !*empty && !mygo.App.RequestSingleInstanceLock() {
+		return
+	}
 	be, err := openBackend(*fake, *empty)
 	if err != nil {
 		log.Fatalf("open data: %v", err)
@@ -84,16 +89,27 @@ func main() {
 		}
 	})
 	mygo.App.OnNotificationClick(s.openFromNotification)
+	// The window is only hidden when it is closed, and Windows has no Dock to click, so launching the
+	// app again brings the window back (the tray does too, below).
+	mygo.App.OnSecondInstance(func([]string, string) { s.showMain() })
 
 	stop := make(chan struct{})
+	// The tray icon is Windows only: the Mac has the Dock.
+	var tray *mygo.Tray
 	mygo.App.OnQuit(func() {
 		close(stop)
+		if tray != nil {
+			tray.Destroy()
+		}
 		_ = be.close()
 	})
 	mygo.App.WhenReady(func() {
 		s.setMenu()
 		go linkOwnExecutable(app.Config.AgentSetup.CorePath())
 		s.createMain()
+		if runtime.GOOS == "windows" {
+			tray = s.newTray()
+		}
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go s.notifier.Reminder(r) })
 		be.store.SubscribeEvents(func(e data.Event) { go s.notifier.Event(e) })
