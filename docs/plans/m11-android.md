@@ -123,3 +123,48 @@ The skeleton in `android/` builds and loads the core (an emulator showed the Min
 4. Screens are checked on an emulator by the reviewer against v26 frames 1 and 2, light and dark, with
    the demo data; a `debug` build seeds the demo data when started with an intent extra `demo=true`
    (through a small `SeedDemo(dataDir)` added to `mobile/core`, reusing `app/data`'s demo seeding).
+
+## A2b-core: what the phone's sync screens need, below the UI
+
+Runs beside A2a, so it adds files and touches no screen: the Go API the Sync settings and the
+reminders need, and the two Android pieces the core's interfaces ask for. The screens that use them
+are A2b-UI, after A2a.
+
+### Go (`mobile/core`, new file `account.go`; tests in new `*_test.go` files)
+
+- **Sign-in with a choice**: `SignIn(opener, deviceName) (string, error)` now returns JSON
+  `{"state":"linked"}` or, when the phone has tasks and the account has tasks too
+  (`syncclient.ErrLocalData`), `{"state":"choose"}`, keeping the tokens so the user does not sign in
+  again. Then `LinkMerge(deviceName string) error` (`Client.LinkMerge`) or
+  `LinkReplace(deviceName string) (string, error)` (`Client.LinkReplace`, returning the backup's
+  path) links the phone. `SignIn` when already linked returns `{"state":"linked"}`.
+- `Account() (string, error)`: `{"name":..,"email":..}` from `sync.json`, `{}` when signed out.
+- `Devices() (string, error)`: the server's device list as JSON (`syncproto.Device` fields), plus
+  `"this":true` on this phone's device (`sync_state` `device_id`).
+- `ClaimDueReminders() (string, error)`: `domain.ClaimDueReminders(now)` as a JSON list
+  `[{"task_id":..,"title":..,"project":..}]`; `[]` when none. Each reminder comes back once.
+- `NextReminderAt() (int64, error)`: the earliest `remind_at` of an open task not reminded yet, as
+  Unix milliseconds, `0` when there is none (the phone sets an alarm for it).
+- Golden files for each JSON shape in `mobile/core/testdata/`; the bindable test covers the new
+  functions.
+
+### Kotlin (`android/app/src/main/java/xyz/sriai/adhdtodo/platform/`, new files only)
+
+- `KeystoreSecrets(context) : Secrets`: an AES-256-GCM key in `AndroidKeyStore` (alias
+  `adhd-todo-secrets`), each value encrypted with a fresh IV and kept as base64 in a private
+  `SharedPreferences` file. `get` of a missing key throws an exception whose message is `not found`.
+  The storage logic sits behind a small `Cipher`-like interface, so a JVM unit test checks set, get,
+  overwrite, delete and the `not found` message with a fake cipher.
+- `CustomTabOpener(context) : BrowserOpener`: opens the URL in a Custom Tab
+  (`androidx.browser`, already a dependency), with `FLAG_ACTIVITY_NEW_TASK`; when no browser handles
+  Custom Tabs, an `ACTION_VIEW` intent.
+
+### Verification
+
+1. Go: `go test -race ./mobile/...` with and without `ADHD_SYNC_TEST_DATABASE_URL`; on Postgres, a
+   phone with tasks signing in to an account with tasks gets `choose`, then `LinkMerge` keeps both
+   sides' tasks; `LinkReplace` leaves the account's; `Devices` marks this phone; a due reminder is
+   claimed once; `NextReminderAt` is the earliest.
+2. `scripts/android-core.sh` rebuilds the `.aar`; `./gradlew --offline assembleDebug
+   testDebugUnitTest` passes with the new unit test.
+3. `scripts/check.sh full` passes.
