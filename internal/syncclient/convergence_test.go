@@ -2,11 +2,13 @@ package syncclient_test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 
 	"github.com/QingYunA/adhd-todo/internal/domain"
+	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
 // TestS2b2Convergence is acceptance criterion 2: a seeded random sequence of 300 operations spread
@@ -23,7 +25,48 @@ func TestS2b2Convergence(t *testing.T) {
 	}
 }
 
+// TestS3UIa5ConvergenceAfterMerge is S3-UI-a acceptance criterion 5: the S2b convergence run still
+// ends equal when one of its three devices joined by merging its own data into the account. One
+// seed keeps the race pass under Go's per-package timeout; S2b2 already runs five unmerged seeds.
+func TestS3UIa5ConvergenceAfterMerge(t *testing.T) {
+	for _, seed := range []int64{11} {
+		seed := seed
+		t.Run(fmt.Sprintf("seed %d", seed), func(t *testing.T) {
+			t.Logf("seed %d", seed)
+			h := newHarness(t)
+			runConvergenceWith(t, h, seed, func(devices [3]*device, labels [3]string) {
+				seedSmall(t, devices[0].core)
+				devices[0].link(t, labels[0])
+
+				// B has its own rows and merges them into A's workspace before C joins.
+				category := must[*domain.Category](t)(devices[1].core.CreateCategory(testCtx,
+					domain.CreateCategoryInput{Name: "bhome", Icon: dotIcon}))
+				project := newProject(t, devices[1].core, "b-project", nil)
+				task := newTask(t, devices[1].core, domain.CreateTaskInput{
+					Title: "b-task", ProjectID: &project.ID, CategoryID: &category.ID,
+				})
+				must[*domain.Report](t)(devices[1].core.AddReport(testCtx,
+					domain.AddReportInput{TaskID: task.ID, Agent: "agent", Summary: "b-report"}))
+				if err := devices[1].client.Link(testCtx, labels[1]); !errors.Is(err, syncclient.ErrLocalData) {
+					t.Fatalf("B's Link = %v, want ErrLocalData", err)
+				}
+				if _, err := devices[1].client.LinkMerge(testCtx, labels[1]); err != nil {
+					t.Fatalf("B's merge: %v", err)
+				}
+				devices[2].link(t, labels[2])
+			})
+		})
+	}
+}
+
 func runConvergence(t *testing.T, h *harness, seed int64) {
+	t.Helper()
+	runConvergenceWith(t, h, seed, nil)
+}
+
+// runConvergenceWith lets a test prepare the three devices and leave all three linked before the
+// random operations start. nil keeps the plain S2b setup: A seeds and B and C join.
+func runConvergenceWith(t *testing.T, h *harness, seed int64, prepare func([3]*device, [3]string)) {
 	t.Helper()
 	devices := [3]*device{
 		h.newDevice(t, nil),
@@ -32,11 +75,15 @@ func runConvergence(t *testing.T, h *harness, seed int64) {
 	}
 	labels := [3]string{"A", "B", "C"}
 
-	// A starts with a little of everything, then seeds the workspace; B and C join.
-	seedSmall(t, devices[0].core)
-	devices[0].link(t, labels[0])
-	for i := 1; i < len(devices); i++ {
-		devices[i].link(t, labels[i])
+	if prepare != nil {
+		prepare(devices, labels)
+	} else {
+		// A starts with a little of everything, then seeds the workspace; B and C join.
+		seedSmall(t, devices[0].core)
+		devices[0].link(t, labels[0])
+		for i := 1; i < len(devices); i++ {
+			devices[i].link(t, labels[i])
+		}
 	}
 
 	r := rand.New(rand.NewSource(seed))

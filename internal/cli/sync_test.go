@@ -120,8 +120,8 @@ func oneLineError(t *testing.T, stderr string) {
 }
 
 // TestS3Core4CLI is acceptance criterion 4: link joins an empty database and seeds one with data,
-// status and now print their fields, a missing token file is one line, and ErrLocalData explains
-// the Settings page.
+// status and now print their fields, a missing token file is one line, and ErrLocalData names the
+// two flags that choose what happens when both sides have data.
 func TestS3Core4CLI(t *testing.T) {
 	t.Run("link joins an empty database and status and now print their fields", func(t *testing.T) {
 		server := newCLISyncServer(t, true)
@@ -133,7 +133,7 @@ func TestS3Core4CLI(t *testing.T) {
 		if code != 0 {
 			t.Fatalf("link exit %d: %s", code, errOut)
 		}
-		for _, want := range []string{"linked device cli-device", "joined workspace"} {
+		for _, want := range []string{"linked device cli-device", "joined the account"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("link output lacks %q:\n%s", want, out)
 			}
@@ -208,8 +208,8 @@ func TestS3Core4CLI(t *testing.T) {
 		if code != 0 {
 			t.Fatalf("link exit %d: %s", code, errOut)
 		}
-		if !strings.Contains(out, "seeded workspace") {
-			t.Errorf("link output = %q, want seeded workspace", out)
+		if !strings.Contains(out, "uploaded this Mac's data (") {
+			t.Errorf("link output = %q, want the uploaded rows line", out)
 		}
 		if pushes, mutations := server.pushed(); pushes == 0 || mutations == 0 {
 			t.Errorf("server got %d pushes and %d mutations, want the snapshot", pushes, mutations)
@@ -234,8 +234,8 @@ func TestS3Core4CLI(t *testing.T) {
 		if code == 0 {
 			t.Fatal("linking two databases with data should fail")
 		}
-		if !strings.Contains(errOut, "Settings page") {
-			t.Errorf("stderr = %q, want the Settings page explanation", errOut)
+		if !strings.Contains(errOut, "--merge") || !strings.Contains(errOut, "--replace") {
+			t.Errorf("stderr = %q, want both ways on named", errOut)
 		}
 		oneLineError(t, errOut)
 		if _, err := os.Stat(syncclient.ConfigPath(path)); err == nil {

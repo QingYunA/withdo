@@ -43,6 +43,8 @@ type OIDCSource struct {
 	oauth        *oauth2.Config
 	accessToken  string
 	accessExpiry time.Time
+	account      Account
+	hasAccount   bool
 }
 
 // NewOIDCSource returns a source for one issuer and client. It does not touch the network; Login
@@ -209,15 +211,30 @@ func (s *OIDCSource) Token(ctx context.Context) (string, error) {
 	return s.accessToken, nil
 }
 
-// Logout forgets the access token and deletes the stored refresh token.
+// Logout forgets the access token, the account and deletes the stored refresh token.
 func (s *OIDCSource) Logout() error {
 	if s == nil {
 		return nil
 	}
 	s.mu.Lock()
 	s.accessToken, s.accessExpiry = "", time.Time{}
+	s.account, s.hasAccount = Account{}, false
 	s.mu.Unlock()
 	return DeleteRefreshToken(s.Secrets)
+}
+
+// Account returns who this source signed in as, from the ID token of the last sign-in or refresh.
+// ok is false before the first token and for a static token, which has no account.
+func (s *OIDCSource) Account() (Account, bool) {
+	if s == nil {
+		return Account{}, false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.hasAccount {
+		return Account{}, false
+	}
+	return s.account, true
 }
 
 // oauthConfigLocked discovers the issuer once. The caller holds s.mu.
@@ -268,6 +285,12 @@ func (s *OIDCSource) storeTokenLocked(token *oauth2.Token, refreshToken string) 
 		}
 	}
 	s.accessToken, s.accessExpiry = token.AccessToken, token.Expiry
+	// A refresh may omit the ID token; keeping the previous account is what the pane needs.
+	if raw, ok := token.Extra("id_token").(string); ok {
+		if account, ok := accountFromIDToken(raw); ok {
+			s.account, s.hasAccount = account, true
+		}
+	}
 	return nil
 }
 

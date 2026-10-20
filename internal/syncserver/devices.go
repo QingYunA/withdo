@@ -8,9 +8,45 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
+
+// listDevices is GET /v1/devices: the caller's workspace's devices, the one that synced most
+// recently first. A device that has never pushed or pulled has no last_seen_at.
+func (s *Server) listDevices(w http.ResponseWriter, r *http.Request) {
+	sess := sessionFrom(r.Context())
+	rows, err := s.pool.Query(r.Context(), `SELECT id, name, last_seen_at FROM devices
+		WHERE workspace_id = $1
+		ORDER BY last_seen_at DESC NULLS LAST, created_at DESC, id`, sess.workspaceID)
+	if err != nil {
+		writeError(w, fmt.Errorf("list devices: %w", err))
+		return
+	}
+	defer rows.Close()
+	devices := make([]syncproto.Device, 0, 4)
+	for rows.Next() {
+		var (
+			device syncproto.Device
+			seen   pgtype.Timestamptz
+		)
+		if err := rows.Scan(&device.ID, &device.Name, &seen); err != nil {
+			writeError(w, fmt.Errorf("scan device: %w", err))
+			return
+		}
+		if seen.Valid {
+			at := seen.Time
+			device.LastSeenAt = &at
+		}
+		devices = append(devices, device)
+	}
+	if err := rows.Err(); err != nil {
+		writeError(w, fmt.Errorf("list devices: %w", err))
+		return
+	}
+	writeJSON(w, http.StatusOK, syncproto.DevicesResponse{Devices: devices})
+}
 
 // createDevice is POST /v1/devices: the server makes a random device id in the caller's
 // workspace. A workspace with no rows and no seeder starts seeding here. A registration while

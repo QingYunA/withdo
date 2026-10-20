@@ -28,13 +28,16 @@ var syncEntities = []string{
 const syncUsage = `Usage: adhd-core sync <command>
 
 Commands:
-  link --server URL --token-file FILE --name NAME
+  link --server URL --token-file FILE --name NAME [--merge|--replace]
              Link this Mac to a sync server with a static token (development)
-  login --server URL --issuer URL --client-id ID --name NAME [--scope SCOPE]...
+  login --server URL --issuer URL --client-id ID --name NAME [--scope SCOPE]... [--merge|--replace]
              Sign in to an OIDC account and link this Mac
   logout     Forget the OIDC sign-in on this Mac
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
+
+--merge and --replace choose what happens when both this Mac and the account have tasks:
+--merge joins this Mac's tasks to the account; --replace backs this Mac up and uses the account's data.
 `
 
 // runSync runs one `adhd-core sync` subcommand.
@@ -72,8 +75,13 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 	server := fs.String("server", "", "sync server URL")
 	tokenFile := fs.String("token-file", "", "file holding the bearer token")
 	name := fs.String("name", "", "device name")
+	merge := fs.Bool("merge", false, "join this Mac's tasks to the account's when both have data")
+	replace := fs.Bool("replace", false, "back this Mac up and use the account's data when both have data")
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("sync link: %w", err)
+	}
+	if *merge && *replace {
+		return errors.New("sync link: --merge and --replace cannot be used together")
 	}
 	if strings.TrimSpace(*server) == "" {
 		return errors.New("sync link: --server is required")
@@ -100,7 +108,12 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 	if err != nil {
 		return err
 	}
-	return linkAndSave(ctx, client, dbPath, syncclient.Config{Server: *server, Token: token}, *name, hasData, d)
+	seedRows, err := localRowCount(ctx, core)
+	if err != nil {
+		return err
+	}
+	return linkAndSave(ctx, client, dbPath, syncclient.Config{Server: *server, Token: token},
+		*name, hasData, seedRows, *merge, *replace, d)
 }
 
 // syncLogin signs in through the system browser, writes sync.json without a token and links this
@@ -112,10 +125,15 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	issuer := fs.String("issuer", "", "OIDC issuer URL")
 	clientID := fs.String("client-id", "", "OIDC client id")
 	name := fs.String("name", "", "device name")
+	merge := fs.Bool("merge", false, "join this Mac's tasks to the account's when both have data")
+	replace := fs.Bool("replace", false, "back this Mac up and use the account's data when both have data")
 	var scopes scopeList
 	fs.Var(&scopes, "scope", "an extra OIDC scope, repeatable")
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("sync login: %w", err)
+	}
+	if *merge && *replace {
+		return errors.New("sync login: --merge and --replace cannot be used together")
 	}
 	if strings.TrimSpace(*server) == "" {
 		return errors.New("sync login: --server is required")
@@ -151,9 +169,16 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if err != nil {
 		return err
 	}
+	seedRows, err := localRowCount(ctx, core)
+	if err != nil {
+		return err
+	}
+	cfg := syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID, Scopes: scopes}
+	if account, ok := source.Account(); ok {
+		cfg.Account = &account
+	}
 	_, _ = io.WriteString(d.stdout, "signed in\n")
-	return linkAndSave(ctx, client, dbPath,
-		syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID, Scopes: scopes}, *name, hasData, d)
+	return linkAndSave(ctx, client, dbPath, cfg, *name, hasData, seedRows, *merge, *replace, d)
 }
 
 // syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
@@ -171,34 +196,117 @@ func syncLogout(args []string, d deps) error {
 	return nil
 }
 
-// linkAndSave links the database, writes sync.json and prints what happened. The config is written
-// only after the server accepted the link, so a failed link leaves the Mac unconfigured.
+// linkAndSave links the database, writes sync.json and prints what happened. When both this Mac and
+// the account have data, Link returns ErrLocalData and --merge or --replace chooses the way on. The
+// config is written only once the link exists on this Mac, so a refused link leaves it unconfigured.
 func linkAndSave(ctx context.Context, client *syncclient.Client, dbPath string, cfg syncclient.Config,
-	name string, hasData bool, d deps) error {
+	name string, hasData bool, seedRows int64, merge, replace bool, d deps) error {
 	name = strings.TrimSpace(name)
-	if err := client.Link(ctx, name); err != nil {
-		return syncFriendlyError(err)
-	}
-	if err := syncclient.SaveConfigAt(syncclient.ConfigPath(dbPath), cfg); err != nil {
-		return err
-	}
-	// A write made by another process during the link is still in the outbox.
-	if pending, err := client.Pending(ctx); err == nil && pending > 0 {
-		if _, err := client.SyncWithStats(ctx); err != nil {
+	err := client.Link(ctx, name)
+	if errors.Is(err, syncclient.ErrLocalData) {
+		switch {
+		case merge:
+			tasks, mergeErr := client.LinkMerge(ctx, name)
+			if tasks != nil {
+				// The local merge committed; sync.json must exist even if the first push failed.
+				if saveErr := saveLinkConfig(dbPath, cfg); saveErr != nil {
+					return saveErr
+				}
+			}
+			if mergeErr != nil {
+				return syncFriendlyError(mergeErr)
+			}
+			if err := drainLink(ctx, client); err != nil {
+				return err
+			}
+			if err := printLinkedDevice(ctx, client, d); err != nil {
+				return err
+			}
+			_, _ = fmt.Fprintf(d.stdout, "merged this Mac's %d tasks into the account\n", len(tasks))
+			return nil
+		case replace:
+			backup, replaceErr := client.LinkReplace(ctx, name)
+			// The backup is made before the wipe, so its presence alone does not mean this Mac
+			// joined; sync.json waits for the device id.
+			if backup != "" {
+				if _, idErr := client.DeviceID(ctx); idErr == nil {
+					if saveErr := saveLinkConfig(dbPath, cfg); saveErr != nil {
+						return saveErr
+					}
+				}
+			}
+			if replaceErr != nil {
+				return syncFriendlyError(replaceErr)
+			}
+			if err := drainLink(ctx, client); err != nil {
+				return err
+			}
+			if err := printLinkedDevice(ctx, client, d); err != nil {
+				return err
+			}
+			_, _ = fmt.Fprintf(d.stdout, "replaced this Mac's data with the account's; backup at %s\n", backup)
+			return nil
+		default:
 			return syncFriendlyError(err)
 		}
 	}
+	if err != nil {
+		return syncFriendlyError(err)
+	}
+	if err := saveLinkConfig(dbPath, cfg); err != nil {
+		return err
+	}
+	if err := drainLink(ctx, client); err != nil {
+		return err
+	}
+	if err := printLinkedDevice(ctx, client, d); err != nil {
+		return err
+	}
+	if hasData {
+		_, _ = fmt.Fprintf(d.stdout, "uploaded this Mac's data (%d rows)\n", seedRows)
+	} else {
+		_, _ = io.WriteString(d.stdout, "joined the account\n")
+	}
+	return nil
+}
+
+func saveLinkConfig(dbPath string, cfg syncclient.Config) error {
+	return syncclient.SaveConfigAt(syncclient.ConfigPath(dbPath), cfg)
+}
+
+// drainLink uploads whatever another process wrote during the link. A write made by another process
+// while the link ran is still in the outbox.
+func drainLink(ctx context.Context, client *syncclient.Client) error {
+	pending, err := client.Pending(ctx)
+	if err != nil || pending == 0 {
+		return err
+	}
+	if _, err := client.SyncWithStats(ctx); err != nil {
+		return syncFriendlyError(err)
+	}
+	return nil
+}
+
+func printLinkedDevice(ctx context.Context, client *syncclient.Client, d deps) error {
 	device, err := client.DeviceID(ctx)
 	if err != nil {
 		return err
 	}
 	_, _ = fmt.Fprintf(d.stdout, "linked device %s\n", device)
-	if hasData {
-		_, _ = io.WriteString(d.stdout, "seeded workspace\n")
-	} else {
-		_, _ = io.WriteString(d.stdout, "joined workspace\n")
-	}
 	return nil
+}
+
+// localRowCount is the number of synced rows `sync link` reports as uploaded after seeding.
+func localRowCount(ctx context.Context, core *domain.Core) (int64, error) {
+	counts, err := core.SyncCounts(ctx)
+	if err != nil {
+		return 0, err
+	}
+	var total int64
+	for _, n := range counts {
+		total += n
+	}
+	return total, nil
 }
 
 // syncStatus prints the local sync state. It reads only this Mac, so it works offline.
@@ -287,11 +395,11 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 }
 
 // syncFriendlyError turns the client's exported errors into the one line the user reads. The
-// ErrLocalData line explains the choice S3-UI will offer.
+// ErrLocalData line names the two flags that choose what happens when both sides have data.
 func syncFriendlyError(err error) error {
 	switch {
 	case errors.Is(err, syncclient.ErrLocalData):
-		return errors.New("this Mac already has tasks and the account already has data; merging comes with the Settings page")
+		return errors.New("this Mac already has tasks and the account already has data; use --merge to join them or --replace to use the account's data (this Mac is backed up first)")
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("the workspace is still uploading its first snapshot; try again later")
 	case errors.Is(err, syncclient.ErrNotLinked):

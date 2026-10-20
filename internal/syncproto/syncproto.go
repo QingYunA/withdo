@@ -2,6 +2,8 @@
 // server (S2a) and the clients (S2b, S3) share it, so the two sides cannot disagree about a name.
 package syncproto
 
+import "time"
+
 // The five entities synced since S1. images, task_images and summaries arrive in S3.
 const (
 	EntityProjects   = "projects"
@@ -95,6 +97,19 @@ type SeededRequest struct {
 // SeededResponse reports that the workspace is no longer seeding.
 type SeededResponse struct {
 	Seeded bool `json:"seeded"`
+}
+
+// Device is one device of the caller's workspace as GET /v1/devices lists it. LastSeenAt is when
+// the device last pushed or pulled, and nil before its first sync.
+type Device struct {
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	LastSeenAt *time.Time `json:"last_seen_at"`
+}
+
+// DevicesResponse is GET /v1/devices: the caller's devices, newest first.
+type DevicesResponse struct {
+	Devices []Device `json:"devices"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.
