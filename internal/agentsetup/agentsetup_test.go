@@ -44,7 +44,7 @@ func newRig(t *testing.T) *rig {
 	t.Helper()
 	home := t.TempDir()
 	r := &rig{t: t, home: home, run: &fakeRun{}, path: map[string]string{}}
-	r.env = &Env{Home: home, Run: r.run.run, LookPath: func(name string) (string, error) {
+	r.env = &Env{Home: home, Core: r.core(), Run: r.run.run, LookPath: func(name string) (string, error) {
 		if p, ok := r.path[name]; ok {
 			return p, nil
 		}
@@ -622,5 +622,32 @@ func TestInstallAmpUsesItsOwnMCPCommand(t *testing.T) {
 	want := []string{"/usr/local/bin/amp", "mcp", "add", "adhd-todo", "--", r.core(), "mcp"}
 	if len(r.run.calls) != 1 || !slices.Equal(r.run.calls[0], want) {
 		t.Errorf("ran %q, want %q", r.run.calls, want)
+	}
+}
+
+func TestDefaultCore(t *testing.T) {
+	cases := []struct{ name, goos, home, exe, want string }{
+		// filepath is the host's, so the Windows case uses slashes to run the same on every OS
+		{"windows runs the one next to the app", "windows", "/home/me", "/home/me/Programs/ADHD Todo/ADHD Todo.exe", filepath.Join("/home/me", "Programs", "ADHD Todo", "adhd-core.exe")},
+		{"windows without a known executable", "windows", "/home/me", "", filepath.Join("/home/me", ".local", "bin", "adhd-core")},
+		{"darwin", "darwin", "/Users/me", "/Applications/ADHD Todo.app/Contents/MacOS/ADHD Todo", filepath.Join("/Users/me", ".local", "bin", "adhd-core")},
+		{"linux", "linux", "/home/me", "/usr/bin/adhd-todo", filepath.Join("/home/me", ".local", "bin", "adhd-core")},
+	}
+	for _, c := range cases {
+		if got := defaultCore(c.goos, c.home, c.exe); got != c.want {
+			t.Errorf("%s: defaultCore = %q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
+func TestSearchPathPutsTheDirsFirstAndKeepsTheOldPathIntact(t *testing.T) {
+	sep := string(filepath.ListSeparator)
+	old := strings.Join([]string{"first", "second"}, sep)
+	got := searchPath([]string{"a", "b"}, old)
+	if want := strings.Join([]string{"a", "b", "first", "second"}, sep); got != want {
+		t.Errorf("searchPath = %q, want %q", got, want)
+	}
+	if got := searchPath([]string{"a"}, ""); got != "a"+sep {
+		t.Errorf("with no old PATH: %q", got)
 	}
 }

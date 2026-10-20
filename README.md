@@ -42,7 +42,7 @@ go build -o ~/.local/bin/adhd-core ./cmd/adhd-core
 `scripts/build-release.sh` makes the release files of both platforms each release ships into
 `app/build/release/`: for macOS the DMG of the universal app (which is `adhd-core` too) and the
 standalone `adhd-core` tarball, plus the signed update archive when updates are on; for Windows x64
-the installer and the `adhd-core.exe` zip. See `docs/plans/m10-auto-update.md`.
+the installer, which carries the console `adhd-core.exe` next to the app. See `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 
@@ -51,6 +51,9 @@ Register the MCP server once (user scope):
 ```sh
 claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp
 ```
+
+On Windows use the command shown in Settings > Agents instead: it names the `adhd-core.exe` in the
+install folder.
 
 Other agents can add the server themselves: paste them the output of `adhd-core guide` (or use
 Settings > Agents > Copy setup guide in the app).
