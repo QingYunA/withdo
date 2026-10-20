@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,6 +35,8 @@ func run(ctx context.Context, args []string) error {
 	tokensPath := fs.String("tokens", "", "JSON file mapping bearer tokens to user subjects (development)")
 	issuer := fs.String("oidc-issuer", "", "OIDC issuer URL whose access tokens are accepted")
 	audience := fs.String("oidc-audience", "", "audience the OIDC access tokens must carry")
+	clientID := fs.String("oidc-client-id", "", "OIDC client id GET /v1/config tells clients to sign in with")
+	scopes := fs.String("oidc-scopes", "", "extra OIDC scopes for GET /v1/config, separated by spaces")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -71,6 +74,9 @@ func run(ctx context.Context, args []string) error {
 		return err
 	}
 	defer server.Close()
+	server.SetPublicConfig(syncserver.PublicConfig{
+		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes),
+	})
 
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {

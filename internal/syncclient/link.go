@@ -96,7 +96,12 @@ func (c *Client) startSeeding(ctx context.Context, deviceID string, workspaceID 
 				return err
 			}
 		}
-		return nil
+		// The Settings pane shows how much of this first upload is done: done = total - pending.
+		var total int
+		if err := q.QueryRowContext(ctx, "SELECT COUNT(*) FROM sync_outbox").Scan(&total); err != nil {
+			return fmt.Errorf("count the seed snapshot: %w", err)
+		}
+		return setState(ctx, q, stateSeedTotal, strconv.Itoa(total))
 	})
 	if err != nil {
 		return fmt.Errorf("seed the local snapshot: %w", err)

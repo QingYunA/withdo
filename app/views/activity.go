@@ -23,6 +23,7 @@ func (m *Main) activity(c *ui.Context, t *theme.Tokens, task data.Task) {
 }
 
 func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, first bool) {
+	you := r.Kind == data.ReportReply && (r.Agent == data.You || r.Agent == "")
 	ui.Row(c.Key(r.ID)).AlignItems(ui.Stretch).Gap(10).Children(func() {
 		ui.Column(c).Width(theme.AvatarRow).Shrink(0).AlignItems(ui.Center).Children(func() {
 			m.reportAvatar(c, t, r)
@@ -32,7 +33,11 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Padding(0, 0, 16).Children(func() {
 			ui.Row(c).Gap(6).Children(func() {
-				name := theme.Text(c, theme.Meta, t.TextSecondary, agentName(r.Agent))
+				who := agentName(r.Agent)
+				if you {
+					who = m.say.DoneByYou()
+				}
+				name := theme.Text(c, theme.Meta, t.TextSecondary, who)
 				if first && r.Status == data.Blocked {
 					name.TextColor(t.Blocked()) // the one report that needs attention
 				}
@@ -52,6 +57,10 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 // reportAvatar starts a report: the avatar of the agent that wrote it, or GitHub's mark for the
 // events the poller files.
 func (m *Main) reportAvatar(c *ui.Context, t *theme.Tokens, r data.Report) {
+	if r.Kind == data.ReportReply && (r.Agent == data.You || r.Agent == "") {
+		theme.AvatarIcon(c, theme.You, theme.AvatarRow).Shrink(0)
+		return
+	}
 	if r.Agent == data.GitHubAgent {
 		ui.Box(c).Size(theme.AvatarRow, theme.AvatarRow).Shrink(0).Center().Children(func() {
 			ui.Icon(c, theme.IconOctocat).Size(theme.AvatarRow, theme.AvatarRow).TextColor(t.TextSecondary)

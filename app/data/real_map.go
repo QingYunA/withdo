@@ -104,7 +104,7 @@ func fromCategory(c domain.Category) Category {
 func fromReport(r domain.Report) Report {
 	out := Report{
 		ID: int(r.ID), TaskID: int(r.TaskID), Agent: r.Agent, Summary: r.Summary,
-		NextStep: str(r.NextStep), CreatedAt: parseTime(r.CreatedAt), Cwd: r.Cwd,
+		NextStep: str(r.NextStep), CreatedAt: parseTime(r.CreatedAt), Cwd: r.Cwd, Kind: string(r.Kind),
 	}
 	if r.Status != nil {
 		out.Status = Status(*r.Status)

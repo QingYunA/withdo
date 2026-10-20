@@ -52,16 +52,16 @@ func (r *settingsRig) pane(t *testing.T, name string) {
 	r.tt.Frame()
 }
 
-func TestSettingsToolbarHasFourPanesAndTheTitleIsTheOpenOne(t *testing.T) {
+func TestSettingsToolbarHasFivePanesAndTheTitleIsTheOpenOne(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "General", "Assistant", "Agents", "GitHub")
+	has(t, r.tt, "General", "Assistant", "Agents", "GitHub", "Sync")
 	if r.title != "General" {
 		t.Errorf("title %q, want the open pane's name", r.title)
 	}
 	for _, want := range []struct {
 		click, title string
 		pane         Pane
-	}{{"Assistant", "Assistant", PaneAssistant}, {"Agents", "Agents", PaneAgents}, {"GitHub", "GitHub", PaneGitHub}, {"General", "General", PaneGeneral}} {
+	}{{"Assistant", "Assistant", PaneAssistant}, {"Agents", "Agents", PaneAgents}, {"GitHub", "GitHub", PaneGitHub}, {"Sync", "Sync", PaneSync}, {"General", "General", PaneGeneral}} {
 		r.pane(t, want.click)
 		if r.s.pane != want.pane || r.title != want.title {
 			t.Errorf("after %q: pane %v, title %q", want.click, r.s.pane, r.title)
@@ -196,11 +196,13 @@ func TestGitHubPaneShowsTheStatusAndChecksNow(t *testing.T) {
 
 func TestSettingsWithoutPollerOrModelsStillHasEveryPane(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.GitHub, a.Models = nil, nil })
-	has(t, r.tt, "General", "Assistant", "Agents", "GitHub")
+	has(t, r.tt, "General", "Assistant", "Agents", "GitHub", "Sync")
 	r.pane(t, "GitHub")
 	has(t, r.tt, "Following pull requests isn't available here.")
 	r.pane(t, "Assistant")
 	has(t, r.tt, "The assistant isn't available here.")
+	r.pane(t, "Sync")
+	has(t, r.tt, "Sync isn't available here.")
 }
 
 func modelOf(fm *data.FakeModels, id string) string {

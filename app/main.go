@@ -61,6 +61,10 @@ func main() {
 	app.Recent, app.RecentCache = be.recent, be.recentCache
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
+	app.Sync = be.sync
+	if be.sync != nil {
+		be.sync.SetSyncNotify(func() { s.Post(func() {}) })
+	}
 	app.Sound, app.SystemSounds, app.WindowKey = theme.LoadVoices(), uiSoundsOn, s.windowKey
 	s.notifier = s.newNotifier()
 

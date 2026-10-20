@@ -139,8 +139,12 @@ type Report struct {
 	NextStep  string
 	CreatedAt time.Time
 	Cwd       string // the working directory the agent reported from; empty when it did not say
+	Kind      string // "reply" for a note the user wrote, empty for a progress report
 	Links     []Link // pages the agent attached, in the order it gave them
 }
+
+// ReportReply is the kind of a note the user wrote on a task.
+const ReportReply = "reply"
 
 // Link is a page an agent attached to a report. Title may be empty.
 type Link struct {

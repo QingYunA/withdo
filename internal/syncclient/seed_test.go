@@ -112,7 +112,16 @@ func TestS2b1SeedAndJoin(t *testing.T) {
 	h := newHarness(t)
 	a := h.newDevice(t, nil)
 	seedRich(t, a.db)
+	wantSeed := count(t, a.db, `SELECT
+		(SELECT COUNT(*) FROM projects) + (SELECT COUNT(*) FROM categories)
+		+ (SELECT COUNT(*) FROM milestones) + (SELECT COUNT(*) FROM tasks)
+		+ (SELECT COUNT(*) FROM reports)`)
 	a.link(t, "A")
+
+	// The Settings pane reads this to show how much of the first upload is done.
+	if got := count(t, a.db, "SELECT CAST(value AS INTEGER) FROM sync_state WHERE key = 'seed_total'"); got != wantSeed {
+		t.Errorf("seed_total = %d, want %d", got, wantSeed)
+	}
 
 	if got := count(t, a.db, "SELECT COUNT(*) FROM tasks"); got != 1500 {
 		t.Fatalf("A has %d tasks after linking, want 1500", got)

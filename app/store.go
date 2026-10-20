@@ -13,6 +13,7 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/ghpoll"
 	"github.com/QingYunA/adhd-todo/internal/paths"
 	"github.com/QingYunA/adhd-todo/internal/providers"
+	"github.com/egoist/mygo"
 )
 
 // seenFile is the record of the handed-over rows the user has seen, in the data folder.
@@ -59,6 +60,8 @@ type backend struct {
 	// assistant wrote about them.
 	recent      data.Recent
 	recentCache *data.RecentCache
+	// sync is the background sync runner and the Sync pane's service; nil in the demo.
+	sync *data.Real
 }
 
 // openBackend returns the demo store (with seed data, or empty) when asked for, otherwise the shared
@@ -77,7 +80,10 @@ func openBackend(fake, empty bool) (*backend, error) {
 func openReal(path string) (*backend, error) {
 	dir := filepath.Dir(path)
 	r, err := data.OpenReal(context.Background(), path,
-		data.RealOptions{DataFolder: dir, Secrets: newSyncSecrets()})
+		data.RealOptions{
+			DataFolder: dir, Secrets: newSyncSecrets(),
+			SyncOpen: func(link string) error { return mygo.Shell.OpenExternal(link) },
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +110,7 @@ func openReal(path string) (*backend, error) {
 		prefs:       data.FilePrefs{Path: filepath.Join(dir, prefsFile)},
 		recent:      data.GHRecent{Runner: ghRunner},
 		recentCache: data.NewRecentCache(filepath.Join(dir, recentFile)),
+		sync:        r,
 	}, nil
 }
 

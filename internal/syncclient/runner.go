@@ -51,6 +51,8 @@ type Status struct {
 	LastSynced time.Time
 	LastError  string
 	Pending    int
+	// RetryAt is when a failed runner will try again; zero when it is not waiting to retry.
+	RetryAt time.Time
 }
 
 // RunnerOptions tune a Runner. The zero value uses RealClock and the documented durations.
@@ -184,6 +186,18 @@ func (r *Runner) Nudge() {
 	}
 }
 
+// SyncNow syncs at once, without the debounce a nudge waits for. It is what Settings' Sync now
+// asks for.
+func (r *Runner) SyncNow() {
+	if r == nil {
+		return
+	}
+	select {
+	case r.pokes <- struct{}{}:
+	default:
+	}
+}
+
 // Status is the current state. It is safe to call at any time.
 func (r *Runner) Status() Status {
 	if r == nil {
@@ -231,6 +245,7 @@ func (r *Runner) runLoop(ctx context.Context) {
 			return false
 		}
 		retryCh = r.clock.After(retryWait)
+		r.setRetryAt(r.clock.Now().Add(retryWait))
 		retryWait = nextWait(retryWait, r.maxWait)
 		return false
 	}
@@ -335,6 +350,20 @@ func (r *Runner) refreshPending(ctx context.Context) {
 	r.mu.Lock()
 	next := r.status
 	next.Pending = n
+	changed := next != r.status
+	r.status = next
+	callback := r.onStatus
+	r.mu.Unlock()
+	if changed && callback != nil {
+		callback(next)
+	}
+}
+
+// setRetryAt says when the next retry is due, for a pane that shows it.
+func (r *Runner) setRetryAt(at time.Time) {
+	r.mu.Lock()
+	next := r.status
+	next.RetryAt = at
 	changed := next != r.status
 	r.status = next
 	callback := r.onStatus

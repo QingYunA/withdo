@@ -112,6 +112,13 @@ type DevicesResponse struct {
 	Devices []Device `json:"devices"`
 }
 
+// ConfigResponse is GET /v1/config: the public values a client needs to sign in through OIDC.
+type ConfigResponse struct {
+	Issuer   string   `json:"issuer"`
+	ClientID string   `json:"client_id"`
+	Scopes   []string `json:"scopes"`
+}
+
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.
 type IDsRequest struct {
 	DeviceID string `json:"device_id"`

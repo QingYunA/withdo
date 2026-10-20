@@ -31,6 +31,8 @@ type RealOptions struct {
 	SyncConfigPath string
 	// Secrets is where an OIDC sync keeps its refresh token; nil means the app has no keychain.
 	Secrets syncclient.Secrets
+	// SyncOpen opens a URL in the browser for the OIDC sign-in; nil means the app cannot sign in.
+	SyncOpen func(string) error
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and
@@ -51,7 +53,10 @@ type Real struct {
 	cancel    context.CancelFunc
 	done      chan struct{}
 	syncPath  string
-	sync      *syncclient.Runner
+	runner    *syncclient.Runner
+	sync      syncTask
+	// syncNotify asks the shell to redraw after a sync status change; set by the app.
+	syncNotify func()
 
 	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
 	// collection in between. sweep is the pending collection after a detach or a delete.
@@ -124,10 +129,23 @@ func (r *Real) Start() {
 }
 
 // startSync starts the background sync runner when sync.json is next to the database and the
-// database is linked. It is a no-op otherwise, and after the first call.
+// database is linked. It is a no-op otherwise; a runner a 401 stopped is started again.
 func (r *Real) startSync(ctx context.Context) {
 	r.mu.Lock()
-	if r.sync != nil || r.syncPath == "" {
+	existing := r.runner
+	if existing != nil {
+		r.mu.Unlock()
+		// A runner a 401 stopped can start again once the user signed in; its client reads the
+		// refresh token the sign-in just stored.
+		if existing.Status().State == syncclient.StateSignedOut {
+			r.mu.Lock()
+			r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
+			r.mu.Unlock()
+			_ = existing.Start(ctx)
+		}
+		return
+	}
+	if r.syncPath == "" {
 		r.mu.Unlock()
 		return
 	}
@@ -157,10 +175,10 @@ func (r *Real) startSync(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	runner := syncclient.NewRunner(client)
+	runner := syncclient.NewRunner(client, syncclient.RunnerOptions{OnStatus: r.syncStatusChanged})
 	r.mu.Lock()
-	if r.sync == nil && r.cancel != nil {
-		r.sync = runner
+	if r.runner == nil && r.cancel != nil {
+		r.runner = runner
 	} else {
 		runner = nil
 	}
@@ -170,8 +188,8 @@ func (r *Real) startSync(ctx context.Context) {
 	}
 	if err := runner.Start(ctx); err != nil {
 		r.mu.Lock()
-		if r.sync == runner {
-			r.sync = nil
+		if r.runner == runner {
+			r.runner = nil
 		}
 		r.mu.Unlock()
 	}
@@ -181,7 +199,7 @@ func (r *Real) startSync(ctx context.Context) {
 func (r *Real) syncRunner() *syncclient.Runner {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.sync
+	return r.runner
 }
 
 // nudgeSync asks the runner to upload a local change. Changes made by the sync itself (the cookie,
@@ -201,8 +219,8 @@ func (r *Real) Close() error {
 	r.mu.Lock()
 	cancel, done := r.cancel, r.done
 	r.cancel = nil
-	runner := r.sync
-	r.sync = nil
+	runner := r.runner
+	r.runner = nil
 	if r.sweep != nil {
 		r.sweep.Stop()
 	}

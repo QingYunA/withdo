@@ -9587,3 +9587,659 @@ func RecentLinkTip() string { return In(i18n.Locale()).RecentLinkTip() }
 func (msgs Messages) RecentLinkTip() string {
 	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
 }
+
+// SettingsSync says "Sync"
+// in the language the app shows.
+//
+// The Sync tab of Settings and its window title.
+func SettingsSync() string { return In(i18n.Locale()).SettingsSync() }
+
+// SettingsSync says "Sync"
+// in the language of msgs.
+//
+// The Sync tab of Settings and its window title.
+func (msgs Messages) SettingsSync() string {
+	return Catalog.Format(msgs.locale, "settingsSync", nil)
+}
+
+// SettingsSyncUnavailable says "Sync isn't available here."
+// in the language the app shows.
+//
+// Shown in Settings > Sync when the app has no sync service.
+func SettingsSyncUnavailable() string { return In(i18n.Locale()).SettingsSyncUnavailable() }
+
+// SettingsSyncUnavailable says "Sync isn't available here."
+// in the language of msgs.
+//
+// Shown in Settings > Sync when the app has no sync service.
+func (msgs Messages) SettingsSyncUnavailable() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUnavailable", nil)
+}
+
+// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// in the language the app shows.
+//
+// Title of the signed-out Sync pane.
+func SettingsSyncSignedOutTitle() string { return In(i18n.Locale()).SettingsSyncSignedOutTitle() }
+
+// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// in the language of msgs.
+//
+// Title of the signed-out Sync pane.
+func (msgs Messages) SettingsSyncSignedOutTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignedOutTitle", nil)
+}
+
+// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// in the language the app shows.
+//
+// The signed-out Sync pane's explanation of what syncs.
+func SettingsSyncSignedOutBody() string { return In(i18n.Locale()).SettingsSyncSignedOutBody() }
+
+// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// in the language of msgs.
+//
+// The signed-out Sync pane's explanation of what syncs.
+func (msgs Messages) SettingsSyncSignedOutBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignedOutBody", nil)
+}
+
+// SettingsSyncSignIn says "Sign in and sync"
+// in the language the app shows.
+//
+// The accent button that starts an OIDC sign-in.
+func SettingsSyncSignIn() string { return In(i18n.Locale()).SettingsSyncSignIn() }
+
+// SettingsSyncSignIn says "Sign in and sync"
+// in the language of msgs.
+//
+// The accent button that starts an OIDC sign-in.
+func (msgs Messages) SettingsSyncSignIn() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignIn", nil)
+}
+
+// SettingsSyncSignInNote says "The sign-in page opens in the browser. Keys and model settings stay on this Mac."
+// in the language the app shows.
+//
+// The quiet line under the sign-in button.
+func SettingsSyncSignInNote() string { return In(i18n.Locale()).SettingsSyncSignInNote() }
+
+// SettingsSyncSignInNote says "The sign-in page opens in the browser. Keys and model settings stay on this Mac."
+// in the language of msgs.
+//
+// The quiet line under the sign-in button.
+func (msgs Messages) SettingsSyncSignInNote() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignInNote", nil)
+}
+
+// SettingsSyncSigningIn says "Signing in…"
+// in the language the app shows.
+//
+// The disabled button while the browser owns the sign-in.
+func SettingsSyncSigningIn() string { return In(i18n.Locale()).SettingsSyncSigningIn() }
+
+// SettingsSyncSigningIn says "Signing in…"
+// in the language of msgs.
+//
+// The disabled button while the browser owns the sign-in.
+func (msgs Messages) SettingsSyncSigningIn() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSigningIn", nil)
+}
+
+// SettingsSyncSigningInBody says "Finish signing in in your browser."
+// in the language the app shows.
+//
+// The line under the title while signing in.
+func SettingsSyncSigningInBody() string { return In(i18n.Locale()).SettingsSyncSigningInBody() }
+
+// SettingsSyncSigningInBody says "Finish signing in in your browser."
+// in the language of msgs.
+//
+// The line under the title while signing in.
+func (msgs Messages) SettingsSyncSigningInBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSigningInBody", nil)
+}
+
+// SettingsSyncServer says "Server"
+// in the language the app shows.
+//
+// The label before the server address at the foot of the Sync pane.
+func SettingsSyncServer() string { return In(i18n.Locale()).SettingsSyncServer() }
+
+// SettingsSyncServer says "Server"
+// in the language of msgs.
+//
+// The label before the server address at the foot of the Sync pane.
+func (msgs Messages) SettingsSyncServer() string {
+	return Catalog.Format(msgs.locale, "settingsSyncServer", nil)
+}
+
+// SettingsSyncChange says "Change"
+// in the language the app shows.
+//
+// The link that edits the server address.
+func SettingsSyncChange() string { return In(i18n.Locale()).SettingsSyncChange() }
+
+// SettingsSyncChange says "Change"
+// in the language of msgs.
+//
+// The link that edits the server address.
+func (msgs Messages) SettingsSyncChange() string {
+	return Catalog.Format(msgs.locale, "settingsSyncChange", nil)
+}
+
+// SettingsSyncServerAddress says "Server address"
+// in the language the app shows.
+//
+// Accessibility label of the server address field and Change link.
+func SettingsSyncServerAddress() string { return In(i18n.Locale()).SettingsSyncServerAddress() }
+
+// SettingsSyncServerAddress says "Server address"
+// in the language of msgs.
+//
+// Accessibility label of the server address field and Change link.
+func (msgs Messages) SettingsSyncServerAddress() string {
+	return Catalog.Format(msgs.locale, "settingsSyncServerAddress", nil)
+}
+
+// SettingsSyncServerInvalid says "That doesn't look like a server address."
+// in the language the app shows.
+//
+// Shown when the typed server address is not an http or https URL.
+func SettingsSyncServerInvalid() string { return In(i18n.Locale()).SettingsSyncServerInvalid() }
+
+// SettingsSyncServerInvalid says "That doesn't look like a server address."
+// in the language of msgs.
+//
+// Shown when the typed server address is not an http or https URL.
+func (msgs Messages) SettingsSyncServerInvalid() string {
+	return Catalog.Format(msgs.locale, "settingsSyncServerInvalid", nil)
+}
+
+// SettingsSyncAccount says "Account"
+// in the language the app shows.
+//
+// The account's name when sync.json has neither a name nor an email.
+func SettingsSyncAccount() string { return In(i18n.Locale()).SettingsSyncAccount() }
+
+// SettingsSyncAccount says "Account"
+// in the language of msgs.
+//
+// The account's name when sync.json has neither a name nor an email.
+func (msgs Messages) SettingsSyncAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncAccount", nil)
+}
+
+// SettingsSyncSignedIn says "Signed in"
+// in the language the app shows.
+//
+// The account row's line before the device count is known.
+func SettingsSyncSignedIn() string { return In(i18n.Locale()).SettingsSyncSignedIn() }
+
+// SettingsSyncSignedIn says "Signed in"
+// in the language of msgs.
+//
+// The account row's line before the device count is known.
+func (msgs Messages) SettingsSyncSignedIn() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignedIn", nil)
+}
+
+// SettingsSyncSignedInOneDevice says "Signed in · 1 device"
+// in the language the app shows.
+//
+// The account row's line when the account has one device.
+func SettingsSyncSignedInOneDevice() string { return In(i18n.Locale()).SettingsSyncSignedInOneDevice() }
+
+// SettingsSyncSignedInOneDevice says "Signed in · 1 device"
+// in the language of msgs.
+//
+// The account row's line when the account has one device.
+func (msgs Messages) SettingsSyncSignedInOneDevice() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignedInOneDevice", nil)
+}
+
+// SettingsSyncSignedInDevices says "Signed in · {count} devices"
+// in the language the app shows.
+//
+// The account row's line with the number of devices.
+func SettingsSyncSignedInDevices(count string) string {
+	return In(i18n.Locale()).SettingsSyncSignedInDevices(count)
+}
+
+// SettingsSyncSignedInDevices says "Signed in · {count} devices"
+// in the language of msgs.
+//
+// The account row's line with the number of devices.
+func (msgs Messages) SettingsSyncSignedInDevices(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignedInDevices", map[string]any{"count": count})
+}
+
+// SettingsSyncSignOut says "Sign out"
+// in the language the app shows.
+//
+// The link that signs out and stops the sync runner.
+func SettingsSyncSignOut() string { return In(i18n.Locale()).SettingsSyncSignOut() }
+
+// SettingsSyncSignOut says "Sign out"
+// in the language of msgs.
+//
+// The link that signs out and stops the sync runner.
+func (msgs Messages) SettingsSyncSignOut() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignOut", nil)
+}
+
+// SettingsSyncThisMac says "This Mac"
+// in the language the app shows.
+//
+// The row of this Mac in the Sync pane.
+func SettingsSyncThisMac() string { return In(i18n.Locale()).SettingsSyncThisMac() }
+
+// SettingsSyncThisMac says "This Mac"
+// in the language of msgs.
+//
+// The row of this Mac in the Sync pane.
+func (msgs Messages) SettingsSyncThisMac() string {
+	return Catalog.Format(msgs.locale, "settingsSyncThisMac", nil)
+}
+
+// SettingsSyncThisMacBadge says "This Mac"
+// in the language the app shows.
+//
+// The badge on this Mac's row in the device list.
+func SettingsSyncThisMacBadge() string { return In(i18n.Locale()).SettingsSyncThisMacBadge() }
+
+// SettingsSyncThisMacBadge says "This Mac"
+// in the language of msgs.
+//
+// The badge on this Mac's row in the device list.
+func (msgs Messages) SettingsSyncThisMacBadge() string {
+	return Catalog.Format(msgs.locale, "settingsSyncThisMacBadge", nil)
+}
+
+// SettingsSyncSynced says "Synced"
+// in the language the app shows.
+//
+// The green word before when this Mac last synced.
+func SettingsSyncSynced() string { return In(i18n.Locale()).SettingsSyncSynced() }
+
+// SettingsSyncSynced says "Synced"
+// in the language of msgs.
+//
+// The green word before when this Mac last synced.
+func (msgs Messages) SettingsSyncSynced() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSynced", nil)
+}
+
+// SettingsSyncNow says "Sync now"
+// in the language the app shows.
+//
+// The button that syncs at once.
+func SettingsSyncNow() string { return In(i18n.Locale()).SettingsSyncNow() }
+
+// SettingsSyncNow says "Sync now"
+// in the language of msgs.
+//
+// The button that syncs at once.
+func (msgs Messages) SettingsSyncNow() string {
+	return Catalog.Format(msgs.locale, "settingsSyncNow", nil)
+}
+
+// SettingsSyncDevices says "Devices"
+// in the language the app shows.
+//
+// The label above the account's devices.
+func SettingsSyncDevices() string { return In(i18n.Locale()).SettingsSyncDevices() }
+
+// SettingsSyncDevices says "Devices"
+// in the language of msgs.
+//
+// The label above the account's devices.
+func (msgs Messages) SettingsSyncDevices() string {
+	return Catalog.Format(msgs.locale, "settingsSyncDevices", nil)
+}
+
+// SettingsSyncNever says "Never"
+// in the language the app shows.
+//
+// A device that never synced.
+func SettingsSyncNever() string { return In(i18n.Locale()).SettingsSyncNever() }
+
+// SettingsSyncNever says "Never"
+// in the language of msgs.
+//
+// A device that never synced.
+func (msgs Messages) SettingsSyncNever() string {
+	return Catalog.Format(msgs.locale, "settingsSyncNever", nil)
+}
+
+// SettingsSyncUploading says "Uploading this Mac's data"
+// in the language the app shows.
+//
+// The row of the first device while it seeds the account.
+func SettingsSyncUploading() string { return In(i18n.Locale()).SettingsSyncUploading() }
+
+// SettingsSyncUploading says "Uploading this Mac's data"
+// in the language of msgs.
+//
+// The row of the first device while it seeds the account.
+func (msgs Messages) SettingsSyncUploading() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUploading", nil)
+}
+
+// SettingsSyncUploadProgress says "{done} / {total} · other devices wait until it is done"
+// in the language the app shows.
+//
+// The upload count of the first device.
+func SettingsSyncUploadProgress(done string, total string) string {
+	return In(i18n.Locale()).SettingsSyncUploadProgress(done, total)
+}
+
+// SettingsSyncUploadProgress says "{done} / {total} · other devices wait until it is done"
+// in the language of msgs.
+//
+// The upload count of the first device.
+func (msgs Messages) SettingsSyncUploadProgress(done string, total string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncUploadProgress", map[string]any{"done": done, "total": total})
+}
+
+// SettingsSyncUploadNote says "You can close this window; the upload goes on in the background."
+// in the language the app shows.
+//
+// The note under the first upload.
+func SettingsSyncUploadNote() string { return In(i18n.Locale()).SettingsSyncUploadNote() }
+
+// SettingsSyncUploadNote says "You can close this window; the upload goes on in the background."
+// in the language of msgs.
+//
+// The note under the first upload.
+func (msgs Messages) SettingsSyncUploadNote() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUploadNote", nil)
+}
+
+// SettingsSyncFailed says "Sync failed: {reason}"
+// in the language the app shows.
+//
+// The failed row's reason.
+func SettingsSyncFailed(reason string) string { return In(i18n.Locale()).SettingsSyncFailed(reason) }
+
+// SettingsSyncFailed says "Sync failed: {reason}"
+// in the language of msgs.
+//
+// The failed row's reason.
+func (msgs Messages) SettingsSyncFailed(reason string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncFailed", map[string]any{"reason": reason})
+}
+
+// SettingsSyncRetryingSoon says "Retrying soon"
+// in the language the app shows.
+//
+// When the runner retries in less than a minute.
+func SettingsSyncRetryingSoon() string { return In(i18n.Locale()).SettingsSyncRetryingSoon() }
+
+// SettingsSyncRetryingSoon says "Retrying soon"
+// in the language of msgs.
+//
+// When the runner retries in less than a minute.
+func (msgs Messages) SettingsSyncRetryingSoon() string {
+	return Catalog.Format(msgs.locale, "settingsSyncRetryingSoon", nil)
+}
+
+// SettingsSyncRetryingMinutes says "Retrying in {count} min"
+// in the language the app shows.
+//
+// When the runner retries in minutes.
+func SettingsSyncRetryingMinutes(count string) string {
+	return In(i18n.Locale()).SettingsSyncRetryingMinutes(count)
+}
+
+// SettingsSyncRetryingMinutes says "Retrying in {count} min"
+// in the language of msgs.
+//
+// When the runner retries in minutes.
+func (msgs Messages) SettingsSyncRetryingMinutes(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncRetryingMinutes", map[string]any{"count": count})
+}
+
+// SettingsSyncRetryingHours says "Retrying in {count} h"
+// in the language the app shows.
+//
+// When the runner retries in hours.
+func SettingsSyncRetryingHours(count string) string {
+	return In(i18n.Locale()).SettingsSyncRetryingHours(count)
+}
+
+// SettingsSyncRetryingHours says "Retrying in {count} h"
+// in the language of msgs.
+//
+// When the runner retries in hours.
+func (msgs Messages) SettingsSyncRetryingHours(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncRetryingHours", map[string]any{"count": count})
+}
+
+// SettingsSyncWaiting says "{count} changes wait on this Mac and are not lost"
+// in the language the app shows.
+//
+// The second line of a failed sync.
+func SettingsSyncWaiting(count string) string { return In(i18n.Locale()).SettingsSyncWaiting(count) }
+
+// SettingsSyncWaiting says "{count} changes wait on this Mac and are not lost"
+// in the language of msgs.
+//
+// The second line of a failed sync.
+func (msgs Messages) SettingsSyncWaiting(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncWaiting", map[string]any{"count": count})
+}
+
+// SettingsSyncOffline says "Offline · changes sync when you are back online ({count} waiting)"
+// in the language the app shows.
+//
+// The offline row.
+func SettingsSyncOffline(count string) string { return In(i18n.Locale()).SettingsSyncOffline(count) }
+
+// SettingsSyncOffline says "Offline · changes sync when you are back online ({count} waiting)"
+// in the language of msgs.
+//
+// The offline row.
+func (msgs Messages) SettingsSyncOffline(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOffline", map[string]any{"count": count})
+}
+
+// SettingsSyncRetry says "Retry"
+// in the language the app shows.
+//
+// The button of a failed sync.
+func SettingsSyncRetry() string { return In(i18n.Locale()).SettingsSyncRetry() }
+
+// SettingsSyncRetry says "Retry"
+// in the language of msgs.
+//
+// The button of a failed sync.
+func (msgs Messages) SettingsSyncRetry() string {
+	return Catalog.Format(msgs.locale, "settingsSyncRetry", nil)
+}
+
+// SettingsSyncBothTitle says "This Mac and your account both have tasks"
+// in the language the app shows.
+//
+// The title of the both-have-tasks sheet.
+func SettingsSyncBothTitle() string { return In(i18n.Locale()).SettingsSyncBothTitle() }
+
+// SettingsSyncBothTitle says "This Mac and your account both have tasks"
+// in the language of msgs.
+//
+// The title of the both-have-tasks sheet.
+func (msgs Messages) SettingsSyncBothTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncBothTitle", nil)
+}
+
+// SettingsSyncBothBody says "The account already has data from {devices} devices. This Mac has {tasks} tasks and {projects} projects."
+// in the language the app shows.
+//
+// The counts under the both-have-tasks title.
+func SettingsSyncBothBody(devices string, tasks string, projects string) string {
+	return In(i18n.Locale()).SettingsSyncBothBody(devices, tasks, projects)
+}
+
+// SettingsSyncBothBody says "The account already has data from {devices} devices. This Mac has {tasks} tasks and {projects} projects."
+// in the language of msgs.
+//
+// The counts under the both-have-tasks title.
+func (msgs Messages) SettingsSyncBothBody(devices string, tasks string, projects string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncBothBody", map[string]any{"devices": devices, "tasks": tasks, "projects": projects})
+}
+
+// SettingsSyncMerge says "Merge into the account"
+// in the language the app shows.
+//
+// The recommended choice of the both-have-tasks sheet.
+func SettingsSyncMerge() string { return In(i18n.Locale()).SettingsSyncMerge() }
+
+// SettingsSyncMerge says "Merge into the account"
+// in the language of msgs.
+//
+// The recommended choice of the both-have-tasks sheet.
+func (msgs Messages) SettingsSyncMerge() string {
+	return Catalog.Format(msgs.locale, "settingsSyncMerge", nil)
+}
+
+// SettingsSyncRecommended says "Recommended"
+// in the language the app shows.
+//
+// The badge on the merge choice.
+func SettingsSyncRecommended() string { return In(i18n.Locale()).SettingsSyncRecommended() }
+
+// SettingsSyncRecommended says "Recommended"
+// in the language of msgs.
+//
+// The badge on the merge choice.
+func (msgs Messages) SettingsSyncRecommended() string {
+	return Catalog.Format(msgs.locale, "settingsSyncRecommended", nil)
+}
+
+// SettingsSyncMergeBody says "This Mac's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); a…"
+// in the language the app shows.
+//
+// What merging does to this Mac's tasks.
+func SettingsSyncMergeBody() string { return In(i18n.Locale()).SettingsSyncMergeBody() }
+
+// SettingsSyncMergeBody says "This Mac's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); a…"
+// in the language of msgs.
+//
+// What merging does to this Mac's tasks.
+func (msgs Messages) SettingsSyncMergeBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncMergeBody", nil)
+}
+
+// SettingsSyncUseAccount says "Use the account"
+// in the language the app shows.
+//
+// The other choice of the both-have-tasks sheet.
+func SettingsSyncUseAccount() string { return In(i18n.Locale()).SettingsSyncUseAccount() }
+
+// SettingsSyncUseAccount says "Use the account"
+// in the language of msgs.
+//
+// The other choice of the both-have-tasks sheet.
+func (msgs Messages) SettingsSyncUseAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUseAccount", nil)
+}
+
+// SettingsSyncUseAccountBody says "This Mac's data is backed up to the data folder first, then replaced with the account's tasks."
+// in the language the app shows.
+//
+// What using the account does to this Mac.
+func SettingsSyncUseAccountBody() string { return In(i18n.Locale()).SettingsSyncUseAccountBody() }
+
+// SettingsSyncUseAccountBody says "This Mac's data is backed up to the data folder first, then replaced with the account's tasks."
+// in the language of msgs.
+//
+// What using the account does to this Mac.
+func (msgs Messages) SettingsSyncUseAccountBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUseAccountBody", nil)
+}
+
+// SettingsSyncCancel says "Cancel"
+// in the language the app shows.
+//
+// Cancel of the both-have-tasks sheet.
+func SettingsSyncCancel() string { return In(i18n.Locale()).SettingsSyncCancel() }
+
+// SettingsSyncCancel says "Cancel"
+// in the language of msgs.
+//
+// Cancel of the both-have-tasks sheet.
+func (msgs Messages) SettingsSyncCancel() string {
+	return Catalog.Format(msgs.locale, "settingsSyncCancel", nil)
+}
+
+// SettingsSyncContinue says "Continue"
+// in the language the app shows.
+//
+// The accent button of the both-have-tasks sheet.
+func SettingsSyncContinue() string { return In(i18n.Locale()).SettingsSyncContinue() }
+
+// SettingsSyncContinue says "Continue"
+// in the language of msgs.
+//
+// The accent button of the both-have-tasks sheet.
+func (msgs Messages) SettingsSyncContinue() string {
+	return Catalog.Format(msgs.locale, "settingsSyncContinue", nil)
+}
+
+// SettingsSyncAlert says "Sync needs attention"
+// in the language the app shows.
+//
+// Accessibility label of the red cloud beside Settings in the sidebar.
+func SettingsSyncAlert() string { return In(i18n.Locale()).SettingsSyncAlert() }
+
+// SettingsSyncAlert says "Sync needs attention"
+// in the language of msgs.
+//
+// Accessibility label of the red cloud beside Settings in the sidebar.
+func (msgs Messages) SettingsSyncAlert() string {
+	return Catalog.Format(msgs.locale, "settingsSyncAlert", nil)
+}
+
+// SettingsSyncJustNow says "just now"
+// in the language the app shows.
+//
+// When this Mac synced less than a minute ago, after the green Synced.
+func SettingsSyncJustNow() string { return In(i18n.Locale()).SettingsSyncJustNow() }
+
+// SettingsSyncJustNow says "just now"
+// in the language of msgs.
+//
+// When this Mac synced less than a minute ago, after the green Synced.
+func (msgs Messages) SettingsSyncJustNow() string {
+	return Catalog.Format(msgs.locale, "settingsSyncJustNow", nil)
+}
+
+// SettingsSyncFailedNoAnswer says "the server did not answer"
+// in the language the app shows.
+//
+// The reason of a failed sync when the server could not be reached or
+// answered badly.
+func SettingsSyncFailedNoAnswer() string { return In(i18n.Locale()).SettingsSyncFailedNoAnswer() }
+
+// SettingsSyncFailedNoAnswer says "the server did not answer"
+// in the language of msgs.
+//
+// The reason of a failed sync when the server could not be reached or
+// answered badly.
+func (msgs Messages) SettingsSyncFailedNoAnswer() string {
+	return Catalog.Format(msgs.locale, "settingsSyncFailedNoAnswer", nil)
+}
+
+// SettingsSyncFailedAuth says "the sign-in expired"
+// in the language the app shows.
+//
+// The reason of a failed sync when the account has to be signed in again.
+func SettingsSyncFailedAuth() string { return In(i18n.Locale()).SettingsSyncFailedAuth() }
+
+// SettingsSyncFailedAuth says "the sign-in expired"
+// in the language of msgs.
+//
+// The reason of a failed sync when the account has to be signed in again.
+func (msgs Messages) SettingsSyncFailedAuth() string {
+	return Catalog.Format(msgs.locale, "settingsSyncFailedAuth", nil)
+}
