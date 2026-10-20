@@ -10,56 +10,80 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
+// SyncStats is what one Sync uploaded and downloaded: the number of mutations the server accepted
+// and the number of changes it sent back.
+type SyncStats struct {
+	Pushed int
+	Pulled int
+}
+
 // Sync uploads the local changes, downloads the server's changes after the cookie, and leases new
 // id blocks for entities that are running out. It is the whole client loop; S3 calls it when the
 // app is active and after a sync event.
 func (c *Client) Sync(ctx context.Context) error {
+	_, err := c.SyncWithStats(ctx)
+	return err
+}
+
+// SyncWithStats is Sync with the counts `adhd-core sync now` prints.
+func (c *Client) SyncWithStats(ctx context.Context) (SyncStats, error) {
+	var stats SyncStats
 	if _, err := c.deviceID(ctx); err != nil {
-		return err
+		return stats, err
 	}
-	if err := c.pushAll(ctx); err != nil {
-		return err
+	pushed, err := c.pushAll(ctx)
+	if err != nil {
+		return stats, err
 	}
-	if err := c.pullAll(ctx); err != nil {
-		return err
+	stats.Pushed = pushed
+	pulled, err := c.pullAll(ctx)
+	if err != nil {
+		return stats, err
 	}
-	return c.refill(ctx)
+	stats.Pulled = pulled
+	if err := c.refill(ctx); err != nil {
+		return stats, err
+	}
+	return stats, nil
 }
 
 // pushAll sends the outbox oldest first, at most one push request's worth at a time, and
 // acknowledges a batch only after the server accepted it. A queued put whose row is already gone
-// sends nothing; its delete follows in the same or a later batch.
-func (c *Client) pushAll(ctx context.Context) error {
+// sends nothing; its delete follows in the same or a later batch. It returns how many mutations
+// the server accepted.
+func (c *Client) pushAll(ctx context.Context) (int, error) {
 	deviceID, err := c.deviceID(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
+	pushed := 0
 	for {
 		changes, err := c.core.Outbox(ctx, math.MaxInt64)
 		if err != nil {
-			return err
+			return pushed, err
 		}
 		if len(changes) == 0 {
-			return nil
+			return pushed, nil
 		}
 		if len(changes) > syncproto.MaxPushMutations {
 			changes = changes[:syncproto.MaxPushMutations]
 		}
 		mutations, err := c.mutations(ctx, changes)
 		if err != nil {
-			return err
+			return pushed, err
 		}
 		lastSeq := changes[len(changes)-1].Seq
 		if len(mutations) > 0 {
 			if err := c.push(ctx, syncproto.PushRequest{DeviceID: deviceID, Mutations: mutations}); err != nil {
 				if isStatus(err, http.StatusConflict) {
-					return ErrSeeding
+					return pushed, ErrSeeding
 				}
-				return err
+				return pushed, err
 			}
+			pushed += len(mutations)
 		}
 		if err := c.core.DeleteOutbox(ctx, lastSeq); err != nil {
-			return err
+			return pushed, err
 		}
 	}
 }

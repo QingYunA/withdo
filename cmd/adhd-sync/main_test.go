@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -106,5 +107,28 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("adhd-sync did not shut down")
+	}
+}
+
+// TestS4aCommandOIDCFlags checks the flag combinations: a static token and OIDC are each enough,
+// both are allowed, and the OIDC pair must be given together.
+func TestS4aCommandOIDCFlags(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"no authenticator", []string{"-database-url", "postgres://ignored"}, "one of -tokens or -oidc-issuer"},
+		{"issuer without audience", []string{"-database-url", "postgres://ignored", "-oidc-issuer", "https://issuer.example"}, "must be given together"},
+		{"audience without issuer", []string{"-database-url", "postgres://ignored", "-oidc-audience", "client"}, "must be given together"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := run(ctx, tt.args)
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("run error = %v, want %q", err, tt.want)
+			}
+		})
 	}
 }

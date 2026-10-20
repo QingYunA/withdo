@@ -12,8 +12,8 @@ import (
 // ErrUnauthenticated says a request carries no bearer token the authenticator knows.
 var ErrUnauthenticated = errors.New("unauthenticated")
 
-// Authenticator turns a request into the OIDC subject of its user, or ErrUnauthenticated. S4 adds
-// an OIDC implementation; S2a only needs the development and test tokens.
+// Authenticator turns a request into the subject of its user, or ErrUnauthenticated. StaticTokens
+// and OIDCAuthenticator implement it; Chain combines them.
 type Authenticator interface {
 	Subject(r *http.Request) (string, error)
 }
@@ -24,16 +24,30 @@ type StaticTokens map[string]string
 
 // Subject implements Authenticator.
 func (t StaticTokens) Subject(r *http.Request) (string, error) {
+	token, err := bearerToken(r)
+	if err != nil {
+		return "", err
+	}
+	subject, ok := t[token]
+	if !ok || subject == "" {
+		return "", ErrUnauthenticated
+	}
+	return subject, nil
+}
+
+// bearerToken returns the token of an Authorization: Bearer header, or ErrUnauthenticated when
+// there is none. The error intentionally never includes the header's value.
+func bearerToken(r *http.Request) (string, error) {
 	header := r.Header.Get("Authorization")
 	const prefix = "bearer "
 	if len(header) <= len(prefix) || !strings.EqualFold(header[:len(prefix)], prefix) {
 		return "", ErrUnauthenticated
 	}
-	subject, ok := t[strings.TrimSpace(header[len(prefix):])]
-	if !ok || subject == "" {
+	token := strings.TrimSpace(header[len(prefix):])
+	if token == "" {
 		return "", ErrUnauthenticated
 	}
-	return subject, nil
+	return token, nil
 }
 
 // LoadTokens reads a JSON object of token → subject, the file named by cmd/adhd-sync's -tokens.

@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	stateDeviceID = "device_id"
-	stateCookie   = "cookie"
-	stateEnabled  = "enabled"
+	stateDeviceID    = "device_id"
+	stateWorkspaceID = "workspace_id"
+	stateCookie      = "cookie"
+	stateEnabled     = "enabled"
+	stateLastError   = "last_error"
 )
 
 // entities is the order a seeding snapshot writes the five synced tables: parents first. Within a
@@ -71,4 +73,54 @@ func setState(ctx context.Context, q store.Querier, key, value string) error {
 // storeDevice writes the device id the server just gave this database.
 func (c *Client) storeDevice(ctx context.Context, deviceID string) error {
 	return c.setState(ctx, stateDeviceID, deviceID)
+}
+
+// DeviceID is the server's id for this database. ErrNotLinked says Link has not linked it.
+func (c *Client) DeviceID(ctx context.Context) (string, error) { return c.deviceID(ctx) }
+
+// Cookie is the last server version this device pulled, 0 before the first pull.
+func (c *Client) Cookie(ctx context.Context) (int64, error) { return c.cookie(ctx) }
+
+// DeviceWorkspaceID is the workspace the server put this device in, 0 when the database linked
+// before S3 started storing it.
+func (c *Client) DeviceWorkspaceID(ctx context.Context) (int64, error) {
+	raw, found, err := c.core.SyncState(ctx, stateWorkspaceID)
+	if err != nil || !found || raw == "" {
+		return 0, err
+	}
+	id, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("read sync workspace %q: %w", raw, err)
+	}
+	return id, nil
+}
+
+// Pending is the number of local changes still waiting to upload.
+func (c *Client) Pending(ctx context.Context) (int, error) { return c.core.SyncPending(ctx) }
+
+// IDsLeft is how many row ids each entity's local blocks still hand out.
+func (c *Client) IDsLeft(ctx context.Context) (map[string]int64, error) {
+	out := make(map[string]int64, len(entities))
+	for _, entity := range entities {
+		left, err := c.core.SyncIDsLeft(ctx, entity)
+		if err != nil {
+			return nil, err
+		}
+		out[entity] = left
+	}
+	return out, nil
+}
+
+// RecordResult stores the outcome of a sync so a later `sync status` can report it. It does not
+// touch the outbox: the applying write records nothing.
+func (c *Client) RecordResult(ctx context.Context, syncErr error) {
+	value := ""
+	if syncErr != nil {
+		value = syncErr.Error()
+	}
+	old, found, err := c.core.SyncState(ctx, stateLastError)
+	if err != nil || (found && old == value) {
+		return
+	}
+	_ = c.setState(ctx, stateLastError, value)
 }

@@ -21,16 +21,18 @@ var errPullConflict = errors.New("syncclient: pull conflict")
 // pullAll pages through the server's changes from the stored cookie until there are none left, in
 // one ApplyChanges write for the whole pull. A 409 with a cookie of 0 can only be the workspace
 // seeding, because 0 is never ahead of the workspace version; a 409 with a real cookie means the
-// cookie is from a reset workspace, so it starts again from 0.
-func (c *Client) pullAll(ctx context.Context) error {
+// cookie is from a reset workspace, so it starts again from 0. It returns how many changes it
+// applied.
+func (c *Client) pullAll(ctx context.Context) (int, error) {
 	deviceID, err := c.deviceID(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
+	applied := 0
 	for {
 		cookie, err := c.cookie(ctx)
 		if err != nil {
-			return err
+			return applied, err
 		}
 		err = c.core.ApplyChanges(ctx, func(q store.Querier) error {
 			if _, err := q.ExecContext(ctx, "PRAGMA defer_foreign_keys = ON"); err != nil {
@@ -51,22 +53,23 @@ func (c *Client) pullAll(ctx context.Context) error {
 					return err
 				}
 				cookie = page.Cookie
+				applied += len(page.Changes)
 				if !page.More {
 					return nil
 				}
 			}
 		})
 		if err == nil {
-			return nil
+			return applied, nil
 		}
 		if !errors.Is(err, errPullConflict) {
-			return fmt.Errorf("pull: %w", err)
+			return applied, fmt.Errorf("pull: %w", err)
 		}
 		if cookie == 0 {
-			return ErrSeeding
+			return applied, ErrSeeding
 		}
 		if err := c.setState(ctx, stateCookie, "0"); err != nil {
-			return err
+			return applied, err
 		}
 	}
 }

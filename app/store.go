@@ -76,7 +76,8 @@ func openBackend(fake, empty bool) (*backend, error) {
 
 func openReal(path string) (*backend, error) {
 	dir := filepath.Dir(path)
-	r, err := data.OpenReal(context.Background(), path, data.RealOptions{DataFolder: dir})
+	r, err := data.OpenReal(context.Background(), path,
+		data.RealOptions{DataFolder: dir, Secrets: newSyncSecrets()})
 	if err != nil {
 		return nil, err
 	}

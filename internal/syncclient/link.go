@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/QingYunA/adhd-todo/internal/store"
@@ -45,10 +46,10 @@ func (c *Client) Link(ctx context.Context, name string) error {
 	}
 	switch {
 	case dev.Seeding:
-		if err := c.startSeeding(ctx, dev.DeviceID); err != nil {
+		if err := c.startSeeding(ctx, dev.DeviceID, dev.WorkspaceID); err != nil {
 			return err
 		}
-		if err := c.pushAll(ctx); err != nil {
+		if _, err := c.pushAll(ctx); err != nil {
 			return err
 		}
 		if err := c.endSeeding(ctx); err != nil {
@@ -65,20 +66,23 @@ func (c *Client) Link(ctx context.Context, name string) error {
 			}
 			return err
 		}
-		if err := c.startJoining(ctx, dev.DeviceID); err != nil {
+		if err := c.startJoining(ctx, dev.DeviceID, dev.WorkspaceID); err != nil {
 			return err
 		}
 	}
-	if err := c.pullAll(ctx); err != nil {
+	if _, err := c.pullAll(ctx); err != nil {
 		return err
 	}
 	return c.refill(ctx)
 }
 
 // startSeeding makes the local database a linked seeder and queues its snapshot in one transaction.
-func (c *Client) startSeeding(ctx context.Context, deviceID string) error {
+func (c *Client) startSeeding(ctx context.Context, deviceID string, workspaceID int64) error {
 	err := c.core.ApplyChanges(ctx, func(q store.Querier) error {
 		if err := setState(ctx, q, stateDeviceID, deviceID); err != nil {
+			return err
+		}
+		if err := setState(ctx, q, stateWorkspaceID, strconv.FormatInt(workspaceID, 10)); err != nil {
 			return err
 		}
 		if err := setState(ctx, q, stateEnabled, "1"); err != nil {
@@ -112,9 +116,12 @@ func queueSnapshot(ctx context.Context, q store.Querier, entity string) error {
 }
 
 // startJoining links an empty database to the workspace, ready for the first pull.
-func (c *Client) startJoining(ctx context.Context, deviceID string) error {
+func (c *Client) startJoining(ctx context.Context, deviceID string, workspaceID int64) error {
 	err := c.core.ApplyChanges(ctx, func(q store.Querier) error {
 		if err := setState(ctx, q, stateDeviceID, deviceID); err != nil {
+			return err
+		}
+		if err := setState(ctx, q, stateWorkspaceID, strconv.FormatInt(workspaceID, 10)); err != nil {
 			return err
 		}
 		if err := setState(ctx, q, stateEnabled, "1"); err != nil {
