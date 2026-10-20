@@ -168,3 +168,65 @@ are A2b-UI, after A2a.
 2. `scripts/android-core.sh` rebuilds the `.aar`; `./gradlew --offline assembleDebug
    testDebugUnitTest` passes with the new unit test.
 3. `scripts/check.sh full` passes.
+
+## A2b-UI: projects, a task, sync and reminders
+
+The second half of the Compose app, on A2a's shell and A2b-core's API. Mockup: v26 frames 3 and 4;
+the Sync screen has no phone mockup and follows the rules below (v27's groups in one column).
+
+### Screens
+
+- **Projects tab**: the project list (folder icon in the project's color, name, open count), then a
+  project page per v26 frame 3: back bar `Projects`, the title with its folder, the segmented
+  control `Mine 5 | Agents 3`, groups by status with the glyph in the header, rows 26 dp in with the
+  author's avatar, Done folded into one `Completed 12` row that unfolds. The composer adds to the
+  project (`CreateTask` with its project id).
+- **A task** (tap any row on Mine, Agents or a project): full screen per v26 frame 4: back bar with
+  the task's `#N` at the right in `mono` `text.tertiary`, the title at 22 sp 700, property rows (18 dp
+  icons, 104 dp label column): status, from, priority strip P0–P3 (tapping sets it, `UpdateTask`),
+  project, branch, PR (tapping opens it); Subtasks with status pills; Activity on its rail, the
+  user's replies as `You`. The composer at the bottom says `Reply to <agent>` for an agent's task
+  (`Reply`) and `Add a note` for the user's own (`UpdateTask` notes append is out of scope: reply too).
+- **Sync** (tap the header's cloud on any tab): back bar `Sync`, then by state, the same states and
+  words as the desktop's pane (`app/locales` keys `settingsSync*` are the source for the strings;
+  copy them into `strings.xml`, en and zh):
+  - signed out: a card with the 36 dp pixel cloud, the title, the body, the accent button
+    `Sign in and sync` (`SignIn` through `CustomTabOpener`, device name `Build.MODEL`), the note;
+  - signing in: the button disabled with `Waiting for the browser…`; when the app comes back to the
+    front without the sign-in finished, the button is enabled again;
+  - `choose`: a modal bottom sheet with the two radio cards of v27 (Merge recommended and picked),
+    `Cancel` and `Continue` (`LinkMerge` or `LinkReplace`);
+  - signed in: the account group (name, `Signed in · 3 devices`, `Sign out` as a text button), the
+    This phone row (status line in `status.done` / `status.blocked` / `text.secondary`, `Sync now`);
+    `Devices` section: laptop or phone pixelarticon by name (a name with Mac/Book/PC is a laptop),
+    the name, a `This phone` tag, the age at the right; the first upload's 40-cell pixel bar while
+    seeding; a failure's reason, retry time and `Retry`;
+  - the footer `Server todo.sri-ai.xyz · Change`, Change edits the address in place.
+  The header cloud turns `status.blocked` when the sync status is failed for 15 minutes or signed
+  out after having been linked, as on the desktop.
+- **Server settings**: the phone's default server is `https://todo.sri-ai.xyz`. Changing it calls a
+  new `SyncSetServer(server string) error` in `mobile/core` that fetches `GET /v1/config`
+  (`syncclient.FetchConfig`, https only) and writes `sync.json` with the issuer, client id and
+  scopes; signing in calls it first when `sync.json` has no issuer.
+- **Sync running**: `StartSync` when the app comes to the front and the phone is linked, `StopSync`
+  when it goes to the back; `SyncNow` on `Sync now` / `Retry`.
+
+### Reminders
+
+- `NotificationChannel` `reminders` (`Reminders` / `提醒`). A `BroadcastReceiver` claims due
+  reminders (`ClaimDueReminders`) and posts one notification each: the title, the project (or
+  Inbox) as the text, the app's pixel mark as the small icon (a monochrome vector of the Mine
+  sprite's outline), tapping opens the task.
+- After any change (`OnChange`), at start and on `BOOT_COMPLETED`, the app sets one alarm at
+  `NextReminderAt` with `AlarmManager.setAndAllowWhileIdle(RTC_WAKEUP, …)` (inexact; no exact-alarm
+  permission). `POST_NOTIFICATIONS` is asked the first time an alarm is set on Android 13+.
+
+### Verification
+
+1. `./gradlew --offline assembleDebug testDebugUnitTest`: unit tests for the device-icon rule, the
+   header cloud's red rule, and decoding of every new golden JSON.
+2. Go: `SyncSetServer` test against an `httptest` server's `/v1/config`; `go test ./mobile/...`.
+3. `scripts/check.sh full` passes.
+4. The reviewer checks on the emulator with `demo=true`: Projects, a project, a task (light, dark,
+   zh) against v26 frames 3–4; each Sync state (a debug intent extra `sync_state=<name>` may fake
+   the state for screenshots); a reminder set a minute ahead posts a notification.
