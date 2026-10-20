@@ -111,3 +111,194 @@ All existing tests keep passing; `scripts/check.sh full` exits 0.
 ### Out of scope for S1
 
 Networking, linking a device, the server, images and summaries, Settings UI, Android.
+
+## S2a: the sync server
+
+A Go HTTP service, `cmd/adhd-sync`, with its logic in `internal/syncserver` and the wire types in
+`internal/syncproto` (shared with the S2b client). Postgres through `github.com/jackc/pgx/v5`
+(`pgxpool`). No client, no UI, no OIDC yet.
+
+### Data (Postgres, migrations embedded and applied at start, like `internal/store`)
+
+- `users(id BIGSERIAL PK, subject TEXT UNIQUE NOT NULL, created_at)`: `subject` is the OIDC `sub`.
+- `workspaces(id BIGSERIAL PK, owner_id → users, created_at)`: one per user for now, made on the
+  user's first request.
+- `devices(id TEXT PK, workspace_id, user_id, name, last_mutation_id BIGINT NOT NULL DEFAULT 0,
+  created_at)`: `id` is a random UUID the server makes.
+- `rows(workspace_id, entity TEXT, row_id BIGINT, data JSONB, deleted BOOL NOT NULL DEFAULT false,
+  version BIGINT NOT NULL, PK (workspace_id, entity, row_id))`, index `(workspace_id, version)`.
+- `workspace_versions(workspace_id PK, version BIGINT NOT NULL)`: the workspace's clock; each push
+  transaction takes the next value for every row it changes.
+- `id_counters(workspace_id, entity, next BIGINT NOT NULL, PK (workspace_id, entity))`.
+
+### Entities and columns
+
+The server knows the five S1 entities and, for each, its synced columns (the S1 trigger lists;
+put them once in `internal/syncproto`, with a test that compares them with the triggers of
+migration 014 so the two cannot drift). Anything else is rejected with 400.
+
+### Auth
+
+`Authenticator` interface: request → user subject, or 401. S2a ships `StaticTokens` (a map of bearer
+token → subject, from a file named by a flag) for development and tests; S4 adds OIDC. Every
+query is scoped to the caller's workspace; a device id that belongs to another user is 403.
+
+### Endpoints (JSON; all need a bearer token)
+
+| Method and path | Request | Response |
+|---|---|---|
+| `POST /v1/devices` | `{name}` | `{device_id, workspace_id, empty}` — `empty` is true when the workspace has no rows yet |
+| `POST /v1/ids` | `{device_id, entity, count}` (1–10000) | `{start, end}` — a fresh half-open block from `id_counters` |
+| `POST /v1/push` | `{device_id, mutations: [{id, entity, row_id, op, data}]}` | `{last_mutation_id}` |
+| `GET /v1/pull?device_id=&cookie=&limit=` | | `{cookie, last_mutation_id, changes: [{entity, row_id, deleted, data, version}], more}` |
+| `GET /v1/events?device_id=` | | SSE: an event `poke` when the workspace's version rises |
+| `GET /healthz` | | `ok`, no auth |
+
+Push rules (Replicache's, adapted):
+- Mutations are applied in order in **one transaction**, with the device's `last_mutation_id`
+  updated in the same transaction. A mutation whose `id` is not above `last_mutation_id` is skipped
+  (already applied); ids must rise within a request, else 400 and nothing is applied.
+- `put` merges `data` (column → value, only synced columns of the entity, else 400) into the row's
+  `data`, column by column (last write wins in server order), and sets `version`. A put on a row that
+  is deleted is ignored (delete wins). A put of a new row needs `row_id` below the workspace's
+  `id_counters.next` for that entity, or the workspace empty-snapshot rule below; else 409.
+- `delete` marks the row deleted (`data` NULL), keeps it as a tombstone, sets `version`.
+- **Seeding** (the first device's snapshot, which spans many pushes): `POST /v1/devices` on a
+  workspace with no rows and no seeding device registers the device with `devices.seeding = true`
+  and answers `seeding: true`. A seeding device's puts of new rows may use any ids; every push
+  raises `id_counters.next` above the largest id it wrote. While a workspace has a seeding device,
+  every other device's push, pull and `POST /v1/ids` is 409 `workspace is seeding` (they retry).
+  `POST /v1/devices/seeded {device_id}` (only the seeding device) ends it. A new registration by the
+  same user while a device is seeding takes the seeding over (the old device stops seeding), so a
+  client that crashed before it kept its device id can start again.
+- JSON numbers are decoded with `UseNumber` everywhere the server merges or forwards `data`, so ids
+  above 2^53 survive.
+- Request bodies are limited (8 MiB); a push is at most 1000 mutations.
+
+Pull rules: changes with `version > cookie` in version order, at most `limit` (default 500, max
+1000); `cookie` in the response is the last change's version (or the current version when there are
+none), `more` says whether more remain. `last_mutation_id` is the calling device's, read in the same
+transaction as the changes. A cookie above the workspace's version is 409 (the client resets).
+
+### Tests (acceptance)
+
+Postgres tests run when `ADHD_SYNC_TEST_DATABASE_URL` is set and are skipped otherwise; each test
+uses its own schema or database so they can run in parallel. CI gets a `postgres:17` service and
+sets the variable.
+
+1. **Isolation**: two users' devices never see or change each other's rows; another user's device
+   id is 403; a missing or unknown token is 401.
+2. **Push idempotency**: the same push sent twice applies once; a lower or equal mutation id is
+   skipped; falling ids in one request are 400 and change nothing.
+3. **Column merge**: two devices put different columns of one row; both survive. Two devices put the
+   same column; the later push wins.
+4. **Delete wins**: a put after a delete leaves the row deleted.
+5. **Ids**: blocks from `POST /v1/ids` never overlap, across devices and concurrent requests; a put
+   of a new row outside any leased range is 409; the snapshot push raises the counters.
+6. **Pull**: paging with `limit` returns every change once, in version order, with a correct `more`;
+   a cookie from the future is 409; `last_mutation_id` matches the push.
+7. **Columns**: an unknown entity or column is 400; the column lists match the triggers of
+   migration 014.
+8. **Events**: a push to the workspace wakes an open `/v1/events` stream of another device of it,
+   and not one of another workspace.
+9. `cmd/adhd-sync` starts with `-addr`, `-database-url`, `-tokens`; `GET /healthz` answers.
+
+`scripts/check.sh full` exits 0 with and without the Postgres variable.
+
+## S2b: the sync client
+
+`internal/syncclient`: one Go library for the desktop now and Android (gomobile) later. It talks
+to the S2a server over HTTP and to the local database only through `internal/domain` (S1's
+`Outbox`, `DeleteOutbox`, `ApplyChanges`) plus plain SQL inside `ApplyChanges`. No UI and no
+background loop (S3).
+
+State lives in `sync_state`: `device_id`, `cookie` (the last pulled version), besides S1's
+`enabled` and `applying`.
+
+### Link
+
+`Link(ctx, name)` registers the device (`POST /v1/devices`) and stores `device_id`.
+- **Seeding** (`seeding: true`): in one local transaction, set `enabled = '1'` and put one outbox
+  entry (`put`, all columns) for every existing row of the five entities, parents first (projects,
+  categories, milestones, tasks, reports). The snapshot then uploads through the ordinary push path,
+  in as many pushes as it takes; when the outbox is empty, `POST /v1/devices/seeded`.
+- **Joining** (`seeding: false`): the local database must hold no user rows (the built-in Work and
+  Life categories do not count); otherwise `ErrLocalData` and nothing changes (S3 decides how to
+  merge). Set `enabled = '1'`, then pull everything.
+- A workspace another device is seeding answers 409; `Link` returns `ErrSeeding` (try again later).
+- Then lease an id block of 1000 for each entity (`POST /v1/ids`) into `sync_id_blocks`.
+
+### Sync
+
+`Sync(ctx)` pushes, then pulls, then refills id blocks.
+- **Push**: read the outbox oldest first, at most 1000 entries a push; a `put` sends the row's
+  current values of the listed columns (all synced columns when `columns` is NULL); a `put` whose
+  row is gone sends nothing (its `delete` follows); the mutation id is the outbox `seq`. After a
+  200, `DeleteOutbox` through the last seq sent. Repeat until the outbox is empty.
+- **Pull**: from `cookie`, page until `more` is false. Each page is one `ApplyChanges` write that
+  also stores the new cookie. A change to a row that still has outbox entries is skipped (the local
+  change wins until it is pushed, then the server's merge comes back). A put upserts only the
+  columns in `data` and leaves device-local columns alone; a delete deletes the local row. Foreign
+  keys are deferred inside the write (`PRAGMA defer_foreign_keys = ON`) so a page may hold a child
+  before its parent. A 409 for the cookie resets it to 0 and pulls again.
+- **Refill**: an entity with fewer than 200 ids left leases another 1000.
+- JSON numbers are decoded with `UseNumber` and written as integers.
+
+### Tests (acceptance; need `ADHD_SYNC_TEST_DATABASE_URL`, skipped otherwise)
+
+Each test runs the S2a server in `httptest` and two or three `domain.Core`s on their own temporary
+databases (`testutil.OpenDB`). "Equal" means every synced column of every row of the five tables
+matches, compared with plain SQL.
+
+1. **Seed and join**: device A with existing data (projects with sub-projects, categories,
+   milestones, 1500 tasks with subtasks, reports) links and syncs until done; device B (empty)
+   links; both are equal, and A's `repo_path`, `cwd`, `reminded_at` are unchanged.
+2. **Convergence**: a seeded random sequence of 300 operations (create, update, complete, delete
+   and restore tasks; add reports; create, rename, archive and delete projects; create, update and
+   delete categories) spread over A, B and C, with `Sync` calls of random devices in between; after
+   two rounds of `Sync` on all three they are equal. Run five seeds; print the seed on failure.
+3. **Stable numbers**: a task made on B while it cannot reach the server gets an id from B's block
+   and shows on A under the same id after both sync.
+4. **Columns**: A changes a task's title and B its notes; after syncing both keep both. A and B
+   both change the title; both end with the one the server took last.
+5. **Deletes**: deleting a project on A removes its tasks, reports and milestones on B.
+6. **Join refused**: linking B with its own tasks to A's workspace is `ErrLocalData` and leaves B
+   unlinked and unchanged.
+7. **Seeding wait**: while A is seeding, linking B is `ErrSeeding`; after A finishes, B links.
+
+### Review fixes (S2a/S2b, 2026-10-20)
+
+1. **Seeding is taken over only on purpose.** `POST /v1/devices {name, resume_seeding}`: while
+   another device seeds, a registration without `resume_seeding: true` is 409 `workspace is
+   seeding`; with it, it takes the seeding over. The client sends `resume_seeding: true` only when
+   its local database has user rows (it would seed); an empty joining device gets `ErrSeeding`.
+2. **The server keeps references whole**, as the local foreign keys and `internal/domain` do.
+   `internal/syncproto` lists every reference and what a delete of its target does:
+
+   | Column | Target | On delete of the target |
+   |---|---|---|
+   | `milestones.project_id` | projects | delete the row |
+   | `tasks.project_id` | projects | delete the row |
+   | `reports.task_id` | tasks | delete the row |
+   | `tasks.milestone_id` | milestones | set NULL |
+   | `tasks.parent_id` | tasks | set NULL |
+   | `tasks.category_id` | categories | set NULL |
+   | `projects.parent_id` | projects | set NULL |
+
+   In the push transaction: a delete also deletes or nulls every live row that references the
+   deleted one (recursively, each change taking a version); a put whose reference points at a
+   deleted row nulls it, or becomes a delete for a "delete the row" reference. Clients then never
+   receive an orphan, and the client's `repairReferences` goes.
+3. **A re-insert revives a deleted row.** A mutation carries `full: true` when its outbox entry
+   has `columns` NULL (an insert: every column). A full put on a tombstone brings the row back with
+   exactly that data; a partial put on a tombstone is still ignored (delete wins over an edit). So
+   Undo of a delete (`RestoreTask` re-inserts with the old id) survives a sync.
+4. **One pull, one write.** All pages of one `Sync` pull are applied in a single `ApplyChanges`
+   write with deferred foreign keys, so a child whose parent comes on a later page is fine.
+
+New tests: an empty device linking while another seeds is `ErrSeeding` and does not take over;
+a device with data and `resume_seeding` takes over; deleting a project on A while B adds a task to
+it converges with the task gone everywhere (server and both devices); deleting a task and
+restoring it (Undo) before and after a sync ends with the task on every device; deleting a category
+on A while B files a task under it ends with `category_id` NULL everywhere; the convergence test
+also compares each device with the server's rows.

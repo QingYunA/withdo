@@ -1,0 +1,110 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+)
+
+// TestS2a9CommandStartsAndHealthz is acceptance criterion 9: adhd-sync starts with -addr,
+// -database-url and -tokens, and GET /healthz answers without a bearer token.
+func TestS2a9CommandStartsAndHealthz(t *testing.T) {
+	databaseURL := os.Getenv("ADHD_SYNC_TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("ADHD_SYNC_TEST_DATABASE_URL is not set")
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	schema := fmt.Sprintf("s2a_cmd_%d", time.Now().UnixNano())
+	admin, err := pgx.Connect(ctx, databaseURL)
+	if err != nil {
+		t.Fatalf("connect to Postgres: %v", err)
+	}
+	if _, err := admin.Exec(ctx, "CREATE SCHEMA "+pgx.Identifier{schema}.Sanitize()); err != nil {
+		_ = admin.Close(ctx)
+		t.Fatalf("create schema: %v", err)
+	}
+	t.Cleanup(func() {
+		if _, err := admin.Exec(context.Background(),
+			"DROP SCHEMA IF EXISTS "+pgx.Identifier{schema}.Sanitize()+" CASCADE"); err != nil {
+			t.Errorf("drop schema: %v", err)
+		}
+		_ = admin.Close(context.Background())
+	})
+
+	u, err := url.Parse(databaseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("search_path", schema)
+	u.RawQuery = q.Encode()
+
+	tokensPath := filepath.Join(t.TempDir(), "tokens.json")
+	if err := os.WriteFile(tokensPath, []byte(`{"test-token":"test-subject"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := ln.Addr().String()
+	_ = ln.Close()
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- run(runCtx, []string{
+			"-addr", addr,
+			"-database-url", u.String(),
+			"-tokens", tokensPath,
+		})
+	}()
+
+	deadline := time.Now().Add(10 * time.Second)
+	var body []byte
+	for {
+		resp, err := http.Get("http://" + addr + "/healthz")
+		if err == nil {
+			body, err = io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			if err != nil {
+				t.Fatalf("read /healthz: %v", err)
+			}
+			if resp.StatusCode != http.StatusOK || string(body) != "ok" {
+				t.Fatalf("GET /healthz = %d %q, want 200 ok", resp.StatusCode, body)
+			}
+			break
+		}
+		select {
+		case err := <-errCh:
+			t.Fatalf("adhd-sync exited before /healthz: %v", err)
+		default:
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("GET /healthz did not become ready: %v", err)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	cancel()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("adhd-sync exited with %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("adhd-sync did not shut down")
+	}
+}
