@@ -494,6 +494,13 @@ folder, else none. The places:
   does not launch it), opened on the folder;
 - **Finder**: the folder. On Windows the choice is **File Explorer** (`文件资源管理器`), and the folder
   opens there.
+On Windows, which has no `open`, each place is started by its command with the folder as its working
+folder (the way VS Code's external terminal and GitHub Desktop do it, so a path is never quoted for
+`cmd`): **Terminal** is Windows Terminal (`wt -d .`), else the Command Prompt (`cmd /c start "" cmd`);
+**Editor** is the first of `cursor`, `code` and `zed` on `PATH`, run with `.`; **the agent's app**
+is the command of Cursor, Windsurf, Zed or Visual Studio Code (`cursor`, `windsurf`, `zed`, `code`),
+and Claude and Codex, which have no command that opens their app, go to the terminal. The words do
+not change: "Terminal" names both, and the editors to install are the same.
 Terminal, Editor and Finder need a folder. When opening fails, one quiet line in `meta` and the blocked
 red shows under the row's reason line (`Couldn't open it: …`, `Nothing to open: the agent did not
 say where it works.`, `No editor found. Install Cursor, Visual Studio Code or Zed.`); it goes away

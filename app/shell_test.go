@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -9,12 +10,13 @@ import (
 	"github.com/QingYunA/adhd-todo/app/views"
 )
 
-// fakeOpen replaces openRunner with one that records the open commands and fails those for which
-// fail says so; it restores the real one when the test ends.
+// fakeOpen makes OpenIn act as on a Mac and replaces openRunner with one that records the open
+// commands and fails those for which fail says so; it restores the real ones when the test ends.
 func fakeOpen(t *testing.T, fail func(args []string) bool) *[]string {
 	t.Helper()
 	var calls []string
-	real := openRunner
+	real, realGOOS := openRunner, openGOOS
+	openGOOS = "darwin"
 	openRunner = func(args ...string) error {
 		calls = append(calls, strings.Join(args, " "))
 		if fail != nil && fail(args) {
@@ -22,7 +24,7 @@ func fakeOpen(t *testing.T, fail func(args []string) bool) *[]string {
 		}
 		return nil
 	}
-	t.Cleanup(func() { openRunner = real })
+	t.Cleanup(func() { openRunner, openGOOS = real, realGOOS })
 	return &calls
 }
 
@@ -133,5 +135,120 @@ func TestOpenInEditorWithNoneInstalledSaysSo(t *testing.T) {
 	}
 	if len(*calls) != 3 {
 		t.Errorf("ran %q, want a look for each of the three editors", *calls)
+	}
+}
+
+// fakeStart makes OpenIn act as on Windows and replaces startRunner with one that records what it
+// starts, as "dir: name args", and fails those for which fail says so. It never starts anything.
+func fakeStart(t *testing.T, fail func(name string) bool) *[]string {
+	t.Helper()
+	var calls []string
+	realGOOS, realStart := openGOOS, startRunner
+	openGOOS = "windows"
+	startRunner = func(dir, name string, args ...string) error {
+		calls = append(calls, fmt.Sprintf("%s: %s %q", dir, name, args))
+		if fail != nil && fail(name) {
+			return errors.New("exec: not found")
+		}
+		return nil
+	}
+	t.Cleanup(func() { openGOOS, startRunner = realGOOS, realStart })
+	return &calls
+}
+
+func TestOnWindowsTheTerminalIsWindowsTerminal(t *testing.T) {
+	calls := fakeStart(t, nil)
+	if err := (&shell{}).OpenIn(views.OpenTerminal, "Claude", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{`C:\work\tree: wt ["-d" "."]`}; !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+func TestOnWindowsWithoutWindowsTerminalTheTerminalIsTheCommandPrompt(t *testing.T) {
+	calls := fakeStart(t, func(name string) bool { return name == "wt" })
+	if err := (&shell{}).OpenIn(views.OpenTerminal, "Claude", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`C:\work\tree: wt ["-d" "."]`, `C:\work\tree: cmd ["/c" "start" "" "cmd"]`}
+	if !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+func TestOnWindowsTheEditorIsTheFirstCommandFound(t *testing.T) {
+	calls := fakeStart(t, func(name string) bool { return name == "cursor" })
+	if err := (&shell{}).OpenIn(views.OpenEditor, "Claude", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`C:\work\tree: cursor ["."]`, `C:\work\tree: code ["."]`}
+	if !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+func TestOnWindowsWithNoEditorFoundItSaysSo(t *testing.T) {
+	calls := fakeStart(t, func(string) bool { return true })
+	if err := (&shell{}).OpenIn(views.OpenEditor, "Claude", `C:\work\tree`); !errors.Is(err, views.ErrNoEditor) {
+		t.Errorf("err = %v, want ErrNoEditor", err)
+	}
+	if len(*calls) != 3 {
+		t.Errorf("started %q, want a try of each of the three editors", *calls)
+	}
+}
+
+func TestOnWindowsAnEditorAgentOpensTheFolderWithItsCommand(t *testing.T) {
+	calls := fakeStart(t, nil)
+	s := &shell{}
+	if err := s.OpenIn(views.OpenAgentApp, "Visual Studio Code", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.OpenIn(views.OpenAgentApp, "Zed", ""); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`C:\work\tree: code ["."]`, `: zed []`}
+	if !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+// Claude and Codex have no command that brings their desktop app forward (claude is Claude Code).
+func TestOnWindowsAnAgentAppWithoutACommandFallsBackToTheTerminal(t *testing.T) {
+	calls := fakeStart(t, nil)
+	if err := (&shell{}).OpenIn(views.OpenAgentApp, "Claude", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{`C:\work\tree: wt ["-d" "."]`}; !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+func TestOnWindowsAnEditorAgentNotFoundFallsBackToTheTerminal(t *testing.T) {
+	calls := fakeStart(t, func(name string) bool { return name == "windsurf" })
+	if err := (&shell{}).OpenIn(views.OpenAgentApp, "Windsurf", `C:\work\tree`); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`C:\work\tree: windsurf ["."]`, `C:\work\tree: wt ["-d" "."]`}
+	if !slices.Equal(*calls, want) {
+		t.Errorf("started %q, want %q", *calls, want)
+	}
+}
+
+func TestOnWindowsTheMacOpenCommandIsNeverRun(t *testing.T) {
+	opened := fakeOpen(t, nil)
+	fakeStart(t, nil)
+	fakeOpenPath(t)
+	s := &shell{}
+	for _, how := range []views.OpenWith{views.OpenAgentApp, views.OpenTerminal, views.OpenEditor, views.OpenFinder} {
+		if err := s.OpenIn(how, "Cursor", `C:\work\tree`); err != nil {
+			t.Errorf("%s: %v", how, err)
+		}
+		if err := s.OpenIn(how, "", ""); !errors.Is(err, views.ErrNoDir) {
+			t.Errorf("%s without a folder: err = %v, want ErrNoDir", how, err)
+		}
+	}
+	if len(*opened) != 0 {
+		t.Errorf("ran open %q on Windows", *opened)
 	}
 }
