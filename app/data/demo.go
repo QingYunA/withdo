@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -51,13 +52,39 @@ func OpenDemo(now func() time.Time, seeded bool) (*Real, error) {
 	if err != nil {
 		return nil, err
 	}
-	clock := &demoClock{base: now}
-	r, err := OpenReal(context.Background(), filepath.Join(dir, "demo.db"), RealOptions{Now: clock.now, DataFolder: dir})
+	r, err := openDemoAt(dir, "demo.db", now, seeded)
 	if err != nil {
 		_ = os.RemoveAll(dir)
 		return nil, err
 	}
-	r.demo, r.tempDir = clock, dir
+	r.tempDir = dir
+	return r, nil
+}
+
+// OpenDemoAt opens a demo store on dataDir/adhd-todo.db and leaves the folder in place on Close.
+// With seeded it holds the seed workspace relative to now(). It is OpenDemo without the temporary
+// folder, for a phone that seeds its own data folder for the reviewer's demo.
+func OpenDemoAt(dataDir string, now func() time.Time, seeded bool) (*Real, error) {
+	return openDemoAt(dataDir, "adhd-todo.db", now, seeded)
+}
+
+// openDemoAt opens a demo store at dataDir/dbName, with or without the seed.
+func openDemoAt(dataDir, dbName string, now func() time.Time, seeded bool) (*Real, error) {
+	if dataDir == "" {
+		return nil, errors.New("a data folder is required")
+	}
+	if now == nil {
+		now = time.Now
+	}
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create the data folder: %w", err)
+	}
+	clock := &demoClock{base: now}
+	r, err := OpenReal(context.Background(), filepath.Join(dataDir, dbName), RealOptions{Now: clock.now, DataFolder: dataDir})
+	if err != nil {
+		return nil, err
+	}
+	r.demo = clock
 	if seeded {
 		if err := r.seed(now()); err != nil {
 			_ = r.Close()
@@ -65,6 +92,15 @@ func OpenDemo(now func() time.Time, seeded bool) (*Real, error) {
 		}
 	}
 	return r, nil
+}
+
+// SeedDemo fills a store OpenDemoAt opened with the demo workspace; it is what the phone's
+// SeedDemo calls after it has checked that the database is empty.
+func (r *Real) SeedDemo(now time.Time) error {
+	if r.demo == nil {
+		return errors.New("data: SeedDemo is for a store OpenDemoAt opened")
+	}
+	return r.seed(now)
 }
 
 // The Seed methods write fixtures through the domain layer, for the demo and for tests. They hold

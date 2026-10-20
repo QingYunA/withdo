@@ -15,7 +15,15 @@ android {
         versionCode = 1
         versionName = "0.1.0"
     }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    sourceSets {
+        // The pictures have one home in the repo: no copies under android/.
+        getByName("main").assets.directories.add("../../app/theme/sprites/avatars")
+        getByName("main").assets.directories.add("../../app/theme/pixel-icons")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
