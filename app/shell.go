@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -118,8 +119,25 @@ var openRunner = func(args ...string) error {
 // Tests replace it.
 var openPath = mygo.Shell.OpenPath
 
-// folderApps are the agent apps that open a folder when given one; the others only come forward.
-var folderApps = map[string]bool{"Cursor": true, "Windsurf": true, "Zed": true, "Visual Studio Code": true}
+// openGOOS is the system whose commands OpenIn runs; the tests switch it.
+var openGOOS = runtime.GOOS
+
+// startRunner starts a command in dir without waiting for it: on Windows, which has no open command,
+// the apps are opened by their commands. Tests replace it: they never launch an app.
+var startRunner = func(dir, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	hideConsole(cmd)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go func() { _ = cmd.Wait() }()
+	return nil
+}
+
+// folderApps are the agent apps that open a folder when given one, with the command that opens them
+// on Windows; the others only come forward.
+var folderApps = map[string]string{"Cursor": "cursor", "Windsurf": "windsurf", "Zed": "zed", "Visual Studio Code": "code"}
 
 // editors are the editors an editor choice opens, the first one installed.
 var editors = []string{"Cursor", "Visual Studio Code", "Zed"}
@@ -139,33 +157,62 @@ func (s *shell) OpenIn(how views.OpenWith, agentApp, dir string) error {
 		}
 		return openPath(dir)
 	}
-	if agentApp != "" {
-		args := []string{"-a", agentApp}
-		if folderApps[agentApp] && dir != "" {
-			args = append(args, dir)
-		}
-		if err := openRunner(args...); err == nil {
-			return nil
-		}
+	if agentApp != "" && openApp(agentApp, dir) == nil {
+		return nil
 	}
 	return openTerminal(dir)
 }
 
-// openTerminal opens Terminal at dir.
+// errNoCommand says an app has no command that opens it on Windows.
+var errNoCommand = errors.New("no command opens this app")
+
+// openApp brings an agent's app forward, on the folder for the editors. On Windows only the editors
+// have a command; Claude and Codex have none (claude is Claude Code, not the app).
+func openApp(app, dir string) error {
+	if openGOOS == "windows" {
+		command := folderApps[app]
+		if command == "" {
+			return errNoCommand
+		}
+		if dir == "" {
+			return startRunner("", command)
+		}
+		return startRunner(dir, command, ".")
+	}
+	args := []string{"-a", app}
+	if folderApps[app] != "" && dir != "" {
+		args = append(args, dir)
+	}
+	return openRunner(args...)
+}
+
+// openTerminal opens a terminal at dir: Terminal on a Mac; Windows Terminal on Windows, else the
+// Command Prompt. On Windows the folder is the command's own, so a path is never quoted for cmd.
 func openTerminal(dir string) error {
 	if dir == "" {
 		return views.ErrNoDir
 	}
+	if openGOOS == "windows" {
+		if startRunner(dir, "wt", "-d", ".") == nil {
+			return nil
+		}
+		return startRunner(dir, "cmd", "/c", "start", "", "cmd")
+	}
 	return openRunner("-a", "Terminal", dir)
 }
 
-// openEditor opens the first installed editor on dir; open -Ra finds an app without launching it.
+// openEditor opens the first installed editor on dir. On a Mac open -Ra finds an app without
+// launching it; on Windows the editor's command is started, and one that is not on PATH fails to.
 func openEditor(dir string) error {
 	if dir == "" {
 		return views.ErrNoDir
 	}
 	for _, app := range editors {
-		if openRunner("-Ra", app) == nil {
+		if openGOOS == "windows" {
+			if startRunner(dir, folderApps[app], ".") == nil {
+				return nil
+			}
+		} else if openRunner("-Ra", app) == nil {
 			return openRunner("-a", app, dir)
 		}
 	}
