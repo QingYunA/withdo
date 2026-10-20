@@ -54,6 +54,21 @@ type fakeOIDC struct {
 	challenge string
 	method    string
 	subjects  []string
+
+	// In-app sign-in: the auth requests the authorize endpoint handed out, the account the fake
+	// Zitadel accepts, the sessions it created, and what /v1/sign-in should answer instead.
+	authRequests    map[string]*fakeAuthRequest
+	requestSeq      int
+	loginName       string
+	password        string
+	userID          string
+	methods         []string
+	sessions        map[string]*fakeSession
+	deletedSessions []string
+	signInStatus    int
+	signInCalls     int
+	callbackState   string
+	callbackHost    string
 }
 
 func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
@@ -66,6 +81,9 @@ func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
 		clientID: clientID, key: key, keyID: "test-key",
 		codes: map[string]string{}, subject: "user-1", expiresIn: 3600,
 		name: "Ada Lovelace", email: "ada@example.com",
+		authRequests: map[string]*fakeAuthRequest{}, sessions: map[string]*fakeSession{},
+		loginName: "ada@example.com", password: "correct horse", userID: "user-1",
+		methods: []string{"AUTHENTICATION_METHOD_TYPE_PASSWORD"},
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
@@ -86,6 +104,13 @@ func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
 	})
 	mux.HandleFunc("GET /authorize", f.authorize)
 	mux.HandleFunc("POST /token", f.token)
+	mux.HandleFunc("POST /v1/sign-in", f.signIn)
+	mux.HandleFunc("GET /v2/oidc/auth_requests/{id}", f.zitadelAuthRequest)
+	mux.HandleFunc("POST /v2/sessions", f.zitadelCreateSession)
+	mux.HandleFunc("GET /v2/sessions/{id}", f.zitadelSession)
+	mux.HandleFunc("GET /v2/users/{id}/authentication_methods", f.zitadelAuthMethods)
+	mux.HandleFunc("DELETE /v2/sessions/{id}", f.zitadelDeleteSession)
+	mux.HandleFunc("POST /v2/oidc/auth_requests/{id}", f.zitadelCompleteAuthRequest)
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
 	return f
@@ -104,6 +129,19 @@ func (f *fakeOIDC) authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	if q.Get("code_challenge_method") != "S256" || q.Get("code_challenge") == "" || q.Get("state") == "" {
 		http.Error(w, "no PKCE or state", http.StatusBadRequest)
+		return
+	}
+	if q.Get("redirect_uri") == "http://127.0.0.1/callback" {
+		f.mu.Lock()
+		f.requestSeq++
+		id := fmt.Sprintf("V2_%d", f.requestSeq)
+		f.authRequests[id] = &fakeAuthRequest{
+			clientID: f.clientID, redirectURI: q.Get("redirect_uri"),
+			state: q.Get("state"), challenge: q.Get("code_challenge"),
+		}
+		f.mu.Unlock()
+		http.Redirect(w, r, f.Server.URL+"/ui/v2/login/login?authRequest="+url.QueryEscape(id),
+			http.StatusFound)
 		return
 	}
 	code := fmt.Sprintf("code-%d", time.Now().UnixNano())

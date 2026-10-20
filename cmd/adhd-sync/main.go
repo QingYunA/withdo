@@ -37,6 +37,7 @@ func run(ctx context.Context, args []string) error {
 	audience := fs.String("oidc-audience", "", "audience the OIDC access tokens must carry")
 	clientID := fs.String("oidc-client-id", "", "OIDC client id GET /v1/config tells clients to sign in with")
 	scopes := fs.String("oidc-scopes", "", "extra OIDC scopes for GET /v1/config, separated by spaces")
+	loginPATFile := fs.String("zitadel-login-pat-file", "", "file holding the Zitadel login machine user's PAT, enabling POST /v1/sign-in")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -45,6 +46,20 @@ func run(ctx context.Context, args []string) error {
 	}
 	if (*issuer == "") != (*audience == "") {
 		return errors.New("-oidc-issuer and -oidc-audience must be given together")
+	}
+	var loginPAT string
+	if *loginPATFile != "" {
+		if *issuer == "" || *clientID == "" {
+			return errors.New("-zitadel-login-pat-file requires -oidc-issuer and -oidc-client-id")
+		}
+		raw, err := os.ReadFile(*loginPATFile)
+		if err != nil {
+			return fmt.Errorf("read -zitadel-login-pat-file: %w", err)
+		}
+		loginPAT = strings.TrimSpace(string(raw))
+		if loginPAT == "" {
+			return errors.New("-zitadel-login-pat-file is empty")
+		}
 	}
 	if *tokensPath == "" && *issuer == "" {
 		return errors.New("one of -tokens or -oidc-issuer is required")
@@ -77,6 +92,11 @@ func run(ctx context.Context, args []string) error {
 	server.SetPublicConfig(syncserver.PublicConfig{
 		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes),
 	})
+	if loginPAT != "" {
+		if err := server.EnablePasswordSignIn(*issuer, *clientID, loginPAT); err != nil {
+			return err
+		}
+	}
 
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {

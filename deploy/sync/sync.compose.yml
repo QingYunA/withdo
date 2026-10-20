@@ -15,8 +15,10 @@ services:
       - -oidc-audience=${OIDC_AUDIENCE}
       - -oidc-client-id=${OIDC_CLIENT_ID}
       - -oidc-scopes=${OIDC_SCOPES}
+      - -zitadel-login-pat-file=/run/secrets/login-client.pat
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
+      - ./login-client.pat:/run/secrets/login-client.pat:ro
     ports:
       - 127.0.0.1:18080:8080
     networks:

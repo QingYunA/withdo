@@ -113,10 +113,26 @@ type DevicesResponse struct {
 }
 
 // ConfigResponse is GET /v1/config: the public values a client needs to sign in through OIDC.
+// PasswordSignIn says the server accepts an account and password at POST /v1/sign-in.
 type ConfigResponse struct {
-	Issuer   string   `json:"issuer"`
-	ClientID string   `json:"client_id"`
-	Scopes   []string `json:"scopes"`
+	Issuer         string   `json:"issuer"`
+	ClientID       string   `json:"client_id"`
+	Scopes         []string `json:"scopes"`
+	PasswordSignIn bool     `json:"password_sign_in,omitempty"`
+}
+
+// SignInRequest is POST /v1/sign-in: a pending authorization request and the account to complete
+// it with. The password is checked with Zitadel's Session API and is never stored.
+type SignInRequest struct {
+	AuthRequest string `json:"auth_request"`
+	LoginName   string `json:"login_name"`
+	Password    string `json:"password"`
+}
+
+// SignInResponse carries the loopback callback URL with the authorization code. The client checks
+// the state and exchanges the code with its own PKCE verifier, so the server never sees a token.
+type SignInResponse struct {
+	CallbackURL string `json:"callback_url"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.

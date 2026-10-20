@@ -25,5 +25,6 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{
 		Issuer: s.public.Issuer, ClientID: s.public.ClientID, Scopes: scopes,
+		PasswordSignIn: s.signIn != nil,
 	})
 }
