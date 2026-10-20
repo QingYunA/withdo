@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +30,7 @@ const (
 
 // OIDCSource signs in through the system browser and supplies OIDC access tokens to the sync
 // client. The refresh token lives in Secrets; the access token only in memory. A zero LoginTimeout
-// means five minutes, and empty Scopes mean "openid offline_access".
+// means five minutes. Scopes are asked for on top of "openid offline_access".
 type OIDCSource struct {
 	Issuer       string
 	ClientID     string
@@ -236,9 +237,11 @@ func (s *OIDCSource) oauthConfigLocked(ctx context.Context) (*oauth2.Config, err
 	if err != nil {
 		return nil, fmt.Errorf("syncclient: discover OIDC issuer %s: %w", issuer, err)
 	}
-	scopes := s.Scopes
-	if len(scopes) == 0 {
-		scopes = []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess}
+	scopes := []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess}
+	for _, scope := range s.Scopes {
+		if scope = strings.TrimSpace(scope); scope != "" && !slices.Contains(scopes, scope) {
+			scopes = append(scopes, scope)
+		}
 	}
 	s.oauth = &oauth2.Config{ClientID: s.ClientID, Endpoint: provider.Endpoint(), Scopes: scopes}
 	return s.oauth, nil

@@ -13,12 +13,14 @@ import (
 const ConfigFile = "sync.json"
 
 // Config is sync.json: the server to talk to, and either the development bearer token or the OIDC
-// issuer and client id of the account. The refresh token itself is never written here.
+// issuer and client id of the account, with any scopes the issuer needs beyond "openid
+// offline_access" (Zitadel's project audience). The refresh token itself is never written here.
 type Config struct {
-	Server   string `json:"server"`
-	Token    string `json:"token,omitempty"`
-	Issuer   string `json:"issuer,omitempty"`
-	ClientID string `json:"client_id,omitempty"`
+	Server   string   `json:"server"`
+	Token    string   `json:"token,omitempty"`
+	Issuer   string   `json:"issuer,omitempty"`
+	ClientID string   `json:"client_id,omitempty"`
+	Scopes   []string `json:"scopes,omitempty"`
 }
 
 // ConfigPath returns the sync.json path next to the database at dbPath.

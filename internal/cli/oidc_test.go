@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -184,5 +185,43 @@ func TestS4a5CLILoginLogout(t *testing.T) {
 	}
 	if _, err := secrets.Get(syncclient.RefreshTokenKey); err == nil {
 		t.Fatal("logout kept the refresh token")
+	}
+}
+
+// TestSyncLoginScopes: extra --scope flags reach the authorization request on top of
+// "openid offline_access", and sync.json keeps them for later sign-ins and refreshes. Zitadel needs
+// one to put the project in the access token's audience.
+func TestSyncLoginScopes(t *testing.T) {
+	syncServer := newCLISyncServer(t, true)
+	issuer := newCLIOIDC(t)
+	path := t.TempDir() + "/scopes.db"
+	h := newHarness(t, path)
+	h.d.secrets = newCLISecrets()
+	var authURL string
+	follow := followCLIBrowser(t)
+	h.d.openBrowser = func(u string) error { authURL = u; return follow(u) }
+
+	const audience = "urn:zitadel:iam:org:project:id:42:aud"
+	code, _, errOut := runCLI(t, h, "sync", "login", "--server", syncServer.URL, "--issuer", issuer.URL,
+		"--client-id", "cli-client", "--name", "Mac", "--scope", audience, "--scope", "profile")
+	if code != 0 {
+		t.Fatalf("login exit %d: %s", code, errOut)
+	}
+	u, err := url.Parse(authURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := strings.Fields(u.Query().Get("scope"))
+	for _, want := range []string{"openid", "offline_access", audience, "profile"} {
+		if !slices.Contains(got, want) {
+			t.Errorf("authorization scope %q lacks %q", got, want)
+		}
+	}
+	cfg, found, err := syncclient.LoadConfig(path)
+	if err != nil || !found {
+		t.Fatalf("sync.json: found = %v, %v", found, err)
+	}
+	if !slices.Equal(cfg.Scopes, []string{audience, "profile"}) {
+		t.Errorf("sync.json scopes = %q", cfg.Scopes)
 	}
 }

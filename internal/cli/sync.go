@@ -30,7 +30,7 @@ const syncUsage = `Usage: adhd-core sync <command>
 Commands:
   link --server URL --token-file FILE --name NAME
              Link this Mac to a sync server with a static token (development)
-  login --server URL --issuer URL --client-id ID --name NAME
+  login --server URL --issuer URL --client-id ID --name NAME [--scope SCOPE]...
              Sign in to an OIDC account and link this Mac
   logout     Forget the OIDC sign-in on this Mac
   status     Show the device, workspace, cookie, pending changes and id blocks
@@ -112,6 +112,8 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	issuer := fs.String("issuer", "", "OIDC issuer URL")
 	clientID := fs.String("client-id", "", "OIDC client id")
 	name := fs.String("name", "", "device name")
+	var scopes scopeList
+	fs.Var(&scopes, "scope", "an extra OIDC scope, repeatable")
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("sync login: %w", err)
 	}
@@ -130,7 +132,7 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if d.secrets == nil {
 		return errors.New("sync login: no keychain available; use the desktop app")
 	}
-	source := syncclient.NewOIDCSource(*issuer, *clientID, nil, d.secrets)
+	source := syncclient.NewOIDCSource(*issuer, *clientID, scopes, d.secrets)
 	open := d.openBrowser
 	if open == nil {
 		open = openBrowser
@@ -151,7 +153,7 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	}
 	_, _ = io.WriteString(d.stdout, "signed in\n")
 	return linkAndSave(ctx, client, dbPath,
-		syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID}, *name, hasData, d)
+		syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID, Scopes: scopes}, *name, hasData, d)
 }
 
 // syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
@@ -265,7 +267,7 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 		if d.secrets == nil {
 			return errors.New("sync now: OIDC sign-in needs the desktop app's keychain")
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, nil, d.secrets)
+		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, d.secrets)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
@@ -320,5 +322,15 @@ func openBrowser(url string) error {
 		}
 		return err
 	}
+	return nil
+}
+
+// scopeList collects a repeated --scope flag.
+type scopeList []string
+
+func (l *scopeList) String() string { return strings.Join(*l, " ") }
+
+func (l *scopeList) Set(v string) error {
+	*l = append(*l, v)
 	return nil
 }

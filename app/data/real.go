@@ -147,7 +147,7 @@ func (r *Real) startSync(ctx context.Context) {
 		if r.opts.Secrets == nil {
 			return
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, nil, r.opts.Secrets)
+		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, r.opts.Secrets)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
