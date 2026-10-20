@@ -5,10 +5,15 @@ on:
   push:
     branches: [main]
 
+# A new push to a pull request cancels its run still going; every push to main runs to the end.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Linux, not macOS: the repo is private and Linux minutes cost the least. Its runner has 2 CPUs, so
+# the short tests and the race tests run as two jobs side by side instead of one after the other.
 jobs:
   check:
-    # Linux, not macOS: the repo is private and Linux minutes cost the least. mygo is pure Go and
-    # its tester renders headless, so the app tests run here too.
     runs-on: ubuntu-latest
     services:
       # The sync server's Postgres tests create a schema per test; without this service they skip.
@@ -27,12 +32,59 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - id: go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: false
+      # setup-go's own cache is keyed on go.sum alone, so a changed go.sum started from nothing.
+      # restore-keys falls back to the last cache of this job instead.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-check-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: go-check-${{ steps.go.outputs.go-version }}-
       # mygo loads pango at run time to shape text; without it the first test of a process fails.
       # The Chinese tests measure Han glyphs, so they need a CJK font like the Mac's PingFang.
       - run: sudo apt-get update && sudo apt-get install -y libpangocairo-1.0-0 fonts-noto-cjk
-      - run: scripts/check.sh full
+      - run: scripts/check.sh fast
+        env:
+          ADHD_SYNC_TEST_DATABASE_URL: postgres://postgres:dev@127.0.0.1:5432/adhd_sync_test?sslmode=disable
+
+  race:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: adhd_sync_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      # Its own cache: race builds share nothing with the others.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-race-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: go-race-${{ steps.go.outputs.go-version }}-
+      # The race tests cover internal and app/data, which do not load pango.
+      - run: scripts/check.sh race
         env:
           ADHD_SYNC_TEST_DATABASE_URL: postgres://postgres:dev@127.0.0.1:5432/adhd_sync_test?sslmode=disable
