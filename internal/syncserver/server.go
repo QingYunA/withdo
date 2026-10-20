@@ -26,6 +26,8 @@ type Server struct {
 	mux  *http.ServeMux
 	// public is what GET /v1/config tells clients; set before serving.
 	public PublicConfig
+	// signIn is set by EnablePasswordSignIn; nil keeps POST /v1/sign-in unregistered.
+	signIn *passwordSignIn
 }
 
 // Open builds the connection pool from databaseURL, applies the schema migrations and returns the
@@ -48,6 +50,12 @@ func Open(ctx context.Context, databaseURL string, auth Authenticator) (*Server,
 		return nil, err
 	}
 	return s, nil
+}
+
+// NewServer applies the migrations and wires the routes around an existing pool. Open is the usual
+// constructor; a caller that already owns a pool, such as a test with its own schema, uses this.
+func NewServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Server, error) {
+	return newServer(ctx, pool, auth)
 }
 
 // newServer applies the migrations and wires the routes.

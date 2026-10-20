@@ -1889,15 +1889,25 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
-- **Sync** (M11, reference `docs/design/mockups/v27.html`): the account and this Mac, in one group,
-  and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz · Change`; Change edits it in
-  place, for people who host their own). Signing in is OIDC in the browser (PKCE, a loopback redirect),
-  so the pane has no fields for passwords or tokens.
+- **Sync** (M11, reference `docs/design/mockups/v27.html`; signing in `v29.html`): the account and
+  this Mac, in one group, and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz ·
+  Change`; Change edits it in place, for people who host their own). Signing in happens in the pane:
+  the account and password go to the sync server's `/v1/sign-in`, never through a browser. There is no
+  sign-up and no password reset: the server's admin makes the accounts.
   - *Signed out*: one centered card: the 36 pt pixel cloud in `accent`, `Sync with your phone and other
     computers` (`在手机和其他电脑上同步`, 17 pt 600), one `meta` line on what syncs (tasks, projects and
-    agents' reports), the accent button **Sign in and sync** (`登录并开始同步`), and under it in
-    `text.tertiary` that the sign-in page opens in the browser and that keys and model settings stay
-    on this Mac.
+    agents' reports), then two `fieldWell`s 280 pt wide, 8 pt apart: `Email or username`
+    (`邮箱或用户名`, focused when the pane opens) and `Password` (`密码`, masked). Enter in the first
+    moves to the second; Enter in the second signs in. Under them the accent button **Sign in and
+    sync** (`登录并开始同步`), enabled once both fields have text, and in `text.tertiary` that the
+    server's admin makes accounts and that keys and model settings stay on this Mac.
+  - *Signing in*: the fields and the button disabled, the button saying `Signing in…` (`正在登录…`).
+  - *Sign-in failed*: one `meta` line in `status.blocked` under the button: `Wrong account or password`
+    (`账号或密码不对`; the password field is emptied and focused, the account kept), `Too many tries;
+    wait a few minutes` (`试的次数太多了，过几分钟再试`), `This account uses two-step verification,
+    which in-app sign-in does not support yet` (`这个账号开了两步验证，应用内登录暂时不支持`), `This
+    account is deactivated; ask the admin` (`账号已停用，请联系管理员`), or the sentence a network
+    failure already has.
   - *Synced*: row 1 the account's display name with `Signed in · 3 devices` and **Sign out** at the
     right; row 2 `This Mac` with `Synced · just now` (`已同步`, the done green) and **Sync now**. Under it
     the group **Devices**: an 18 pt pixel laptop or phone in `text.tertiary`, the device's name, a

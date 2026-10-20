@@ -25,7 +25,7 @@ func TestStartSyncWhileLinkRunsStartsNoRunner(t *testing.T) {
 			reachedOnce.Do(func() { close(reached) })
 			<-release
 		}
-		f.h.server.Handler().ServeHTTP(w, r)
+		f.sync.Config.Handler.ServeHTTP(w, r)
 	}))
 	defer slow.Close()
 	defer releaseOnce.Do(func() { close(release) })
@@ -35,7 +35,7 @@ func TestStartSyncWhileLinkRunsStartsNoRunner(t *testing.T) {
 
 	done := make(chan error, 1)
 	go func() {
-		state, err := phone.SignIn(browserOpener{}, "phone")
+		state, err := phone.SignIn("ada@example.com", "secret", "phone")
 		if err == nil && !strings.Contains(state, `"choose"`) {
 			err = fmt.Errorf("SignIn = %s, want choose", state)
 		}

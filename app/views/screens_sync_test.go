@@ -13,11 +13,14 @@ import (
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensSettingsSync
 
 func syncScreenStates() []struct {
-	name string
-	snap data.SyncSnapshot
+	name  string
+	snap  data.SyncSnapshot
+	setup func(r *settingsRig)
 } {
 	now := fixedNow()
 	signedOut := data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz"}
+	errorOut := signedOut
+	errorOut.SignInFailure = data.SignInFailureCredentials
 	signing := signedOut
 	signing.Phase = data.SyncSigningIn
 	both := signedOut
@@ -46,16 +49,24 @@ func syncScreenStates() []struct {
 	offline.Phase = data.SyncOffline
 	offline.Pending = 3
 	return []struct {
-		name string
-		snap data.SyncSnapshot
+		name  string
+		snap  data.SyncSnapshot
+		setup func(r *settingsRig)
 	}{
-		{"signed-out", signedOut},
-		{"signing-in", signing},
-		{"both", both},
-		{"uploading", uploading},
-		{"synced", synced},
-		{"failed", failed},
-		{"offline", offline},
+		{"signed-out", signedOut, nil},
+		{"signed-out-error", errorOut, func(r *settingsRig) {
+			r.s.syncLogin = "cyan@example.com"
+			// The frame after a refused password: the pane empties it and puts the cursor back.
+			r.s.syncPrevPhase = data.SyncSigningIn
+		}},
+		{"signing-in", signing, func(r *settingsRig) {
+			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
+		}},
+		{"both", both, nil},
+		{"uploading", uploading, nil},
+		{"synced", synced, nil},
+		{"failed", failed, nil},
+		{"offline", offline, nil},
 	}
 }
 
@@ -72,7 +83,7 @@ func TestScreensSettingsSync(t *testing.T) {
 			app := settingsApp(t, ready)
 			for _, st := range syncScreenStates() {
 				app.Sync = &fakeSync{snap: st.snap}
-				settingsShot(t, "settings-sync-"+st.name+sfx+".png", app, a.dark, zh, PaneSync, nil)
+				settingsShot(t, "settings-sync-"+st.name+sfx+".png", app, a.dark, zh, PaneSync, st.setup)
 			}
 			// The server address while it is being edited.
 			app.Sync = &fakeSync{snap: signedOutSync()}

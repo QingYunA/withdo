@@ -523,3 +523,40 @@ built on S3-UI-a. Match the spec and the mockup; screens prove it.
 - `GET /v1/config` returns the flags; the app's sign-in uses it.
 - `scripts/screens.sh` renders `settings-sync-*` in light and dark, English and Chinese, for each
   state above; the PNGs are committed in `docs/design/screens`.
+
+## S5: signing in without a browser
+
+A phone that cannot open a browser could not sign in, and the user wants both apps to sign in in
+place. Zitadel's custom-login API does that: a login client (a service account with only
+`IAM_LOGIN_CLIENT`) checks the password with the Session API and finalizes the OIDC auth request.
+adhd-sync holds that account's PAT; the apps keep PKCE, so the server sees a code it cannot redeem
+and never a token. Checked against the live Zitadel (v4.16) on 2026-10-20.
+
+```
+app                                    adhd-sync                       Zitadel
+PKCE, state; GET /oauth/v2/authorize (no redirect following) ───────→ 302 …/login?authRequest=V2_n
+POST /v1/sign-in {auth_request, login_name, password}
+                                       rate limit
+                                       GET  /v2/oidc/auth_requests/V2_n   clientId must be ours
+                                       POST /v2/sessions {user, password checks}         → 201
+                                       GET  /v2/sessions/{id} → user id
+                                       GET  /v2/users/{id}/authentication_methods
+                                         anything but PASSWORD: delete the session, refuse
+                                       POST /v2/oidc/auth_requests/V2_n {session} → callbackUrl
+←──────────────── {callback_url}
+callback must be http://127.0.0.1/callback with our state; exchange code + verifier; store as before
+```
+
+- Zitadel does **not** enforce a second factor here: a TOTP account's password-only session got a
+  code. The authentication-methods check is the only thing that stops it.
+- Zitadel's answers to the session: wrong password 400 / code 3, unknown user 404 / code 5 (both
+  `invalid_credentials`, not told apart), locked or deactivated 400 / code 9 (`locked`).
+- The instance has no lockout limit, so adhd-sync limits: 10 requests per source IP and 10
+  failures per account in 10 minutes (`X-Forwarded-For`'s last hop only from loopback, nginx).
+- `/v1/sign-in` exists and `/v1/config` says `password_sign_in` only with
+  `-zitadel-login-pat-file`. Answers: 200 `{callback_url}`, 401 `invalid_credentials`, 423 `locked`,
+  403 `second_factor`, 429 `too_many_attempts` (with `Retry-After`), 400 `bad_request`, 502
+  `upstream`. The log names the outcome only: no account, password, session token or code.
+- Clients: `OIDCSource.SignIn(ctx, server, login, password)` replaces the loopback `Login`; the
+  CLI's `sync login` takes `--user` and `--password-stdin`. The browser path (`BrowserOpener`,
+  `CustomTabOpener`, `DoneURL`, the `signed-in` app link, `SyncOpen`) goes away. UI: v29.

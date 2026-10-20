@@ -133,6 +133,16 @@ class GoldenDecodeTest {
     }
 
     @Test
+    fun `a signed-out status decodes for the sign-in card`() {
+        val json = """{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":false,"signed_in":false}"""
+        val status = PageJson.decodeFromString<SyncStatus>(json)
+        assertEquals("idle", status.state)
+        assertEquals("https://todo.sri-ai.xyz", status.server)
+        assertFalse(status.linked)
+        assertFalse(status.signedIn)
+    }
+
+    @Test
     fun `unknown keys are ignored`() {
         val json = """{"FromAgents":[],"Today":[],"Later":[],"Done":[],"MoreLater":0,"MoreDone":0,"FromTheFuture":true}"""
         val page = PageJson.decodeFromString<MinePage>(json)

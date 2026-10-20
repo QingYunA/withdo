@@ -133,9 +133,10 @@
     <string name="sync_signed_out_title">Sync with your phone and other computers</string>
     <string name="sync_signed_out_body">Your tasks, projects and agents’ reports sync to your server, so you can see what your agents are doing from your phone.</string>
     <string name="sync_sign_in">Sign in and sync</string>
-    <string name="sync_sign_in_note">The sign-in page opens in the browser. Keys and model settings stay on this phone.</string>
-    <string name="sync_signing_in">Waiting for the browser…</string>
-    <string name="sync_signing_in_body">Finish signing in in your browser.</string>
+    <string name="sync_email">Email or username</string>
+    <string name="sync_password">Password</string>
+    <string name="sync_sign_in_note">Accounts are made by the server’s admin. Keys and model settings stay on this phone.</string>
+    <string name="sync_signing_in">Signing in…</string>
     <string name="sync_signed_in">Signed in</string>
     <string name="sync_signed_in_one_device">Signed in · 1 device</string>
     <string name="sync_signed_in_devices">Signed in · %1$d devices</string>
@@ -173,6 +174,12 @@
     <string name="sync_server_saving">Saving…</string>
     <string name="sync_server_invalid">Use an https:// address, such as https://todo.example.com.</string>
     <string name="sync_sign_in_failed">Couldn’t sign in. Try again.</string>
+    <string name="sync_sign_in_invalid">Wrong account or password</string>
+    <string name="sync_sign_in_too_many">Too many tries; wait a few minutes</string>
+    <string name="sync_sign_in_second_factor">This account uses two-step verification, which in-app sign-in does not support yet</string>
+    <string name="sync_sign_in_locked">This account is deactivated; ask the admin</string>
+    <string name="sync_sign_in_unsupported">This server does not support signing in from the app</string>
+    <string name="sync_sign_in_network">Could not reach the server; check the connection</string>
     <string name="sync_now_failed">Couldn’t sync. Try again.</string>
     <string name="sync_link_failed">Couldn’t finish linking. Try again.</string>
     <string name="time_just_now">just now</string>

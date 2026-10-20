@@ -3,6 +3,7 @@ package views
 import (
 	"time"
 
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/words"
@@ -52,6 +53,13 @@ type Settings struct {
 	syncEditingServer bool
 	syncServerDraft   string
 	syncServerErr     bool
+	// Settings > Sync's sign-in fields. The password leaves with the pane.
+	syncFields        fields
+	syncLogin         string
+	syncPassword      string
+	syncFocusAccount  bool
+	syncFocusPassword bool
+	syncPrevPhase     data.SyncPhase
 }
 
 // ContentSize is the size of the window's content: one size for every pane, so that changing the
@@ -61,21 +69,33 @@ func (s *Settings) ContentSize() (width, height float32) {
 }
 
 // NewSettings opens on General.
-func NewSettings(a *App) *Settings { return &Settings{app: a} }
+func NewSettings(a *App) *Settings { return &Settings{app: a, syncFields: fields{}} }
 
 // Show opens a pane. Opening Sync again asks the server for its devices again.
 func (s *Settings) Show(p Pane) {
 	if p == PaneSync {
 		s.syncAsked = false
 		s.syncEditingServer, s.syncServerErr = false, false
+		s.syncFocusAccount, s.syncFocusPassword = true, false
+		s.syncPassword = ""
 	}
 	s.pane = p
+}
+
+// ClearSyncPassword forgets the password when the Settings window closes or leaves the pane.
+func (s *Settings) ClearSyncPassword() {
+	s.syncPassword = ""
+	s.syncFocusPassword = false
 }
 
 // openPane switches panes from the toolbar.
 func (s *Settings) openPane(p Pane) {
 	if p == PaneSync && s.pane != PaneSync {
 		s.syncAsked = false
+		s.syncFocusAccount, s.syncFocusPassword = true, false
+	}
+	if s.pane == PaneSync && p != PaneSync {
+		s.syncPassword = ""
 	}
 	s.syncEditingServer, s.syncServerErr = false, false
 	s.pane = p

@@ -7,8 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
-	"net"
 	"net/http"
 	"slices"
 	"strings"
@@ -20,31 +18,24 @@ import (
 )
 
 const (
-	// LoginTimeout is how long Login waits for the browser when the source does not set one.
-	LoginTimeout = 5 * time.Minute
 	// tokenRefreshSkew refreshes an access token that expires within this much time.
 	tokenRefreshSkew = 60 * time.Second
-	// callbackPath is the loopback redirect's path.
+	// callbackPath is the path of the registered loopback redirect the sign-in callback names.
 	callbackPath = "/callback"
 )
 
-// OIDCSource signs in through the system browser and supplies OIDC access tokens to the sync
-// client. The refresh token lives in Secrets; the access token only in memory. A zero LoginTimeout
-// means five minutes. Scopes are asked for on top of "openid offline_access profile email".
+// OIDCSource signs in inside the app with an account and password and supplies OIDC access tokens
+// to the sync client. The refresh token lives in Secrets; the access token only in memory. Scopes
+// are asked for on top of "openid offline_access profile email".
 type OIDCSource struct {
-	Issuer       string
-	ClientID     string
-	Scopes       []string
-	Secrets      Secrets
-	HTTP         *http.Client
-	LoginTimeout time.Duration
+	Issuer   string
+	ClientID string
+	Scopes   []string
+	Secrets  Secrets
+	HTTP     *http.Client
 	// DBPath is the database whose key holds the refresh token. Empty keeps the old fixed key,
 	// which is what the package's tests and a caller with no database use.
 	DBPath string
-	// DoneURL, when set, is where the loopback sends the browser as soon as the code arrives,
-	// before the exchange: the phone's app link, which brings the app back to the front. Android
-	// cuts a background app's network, so the exchange must not run while the browser is in front.
-	DoneURL string
 
 	mu           sync.Mutex
 	oauth        *oauth2.Config
@@ -54,25 +45,26 @@ type OIDCSource struct {
 	hasAccount   bool
 }
 
-// NewOIDCSource returns a source for one issuer and client. It does not touch the network; Login
+// NewOIDCSource returns a source for one issuer and client. It does not touch the network; SignIn
 // or Token discovers the issuer's endpoints.
 func NewOIDCSource(issuer, clientID string, scopes []string, secrets Secrets) *OIDCSource {
 	return &OIDCSource{Issuer: issuer, ClientID: clientID, Scopes: scopes, Secrets: secrets}
 }
 
-// Login runs the authorization code flow with PKCE (S256) and a random state. It opens a listener
-// on 127.0.0.1 with a random port (RFC 8252), passes the authorization URL to open, and waits for
-// the browser's redirect. The listener answers with a short page and stops. Nothing is stored
-// unless the exchange succeeds.
-func (s *OIDCSource) Login(ctx context.Context, open func(url string) error) error {
+// SignIn runs the authorization code flow with PKCE (S256) and a random state, without a browser. It asks
+// the issuer for a pending auth request, has server check the account and password through
+// Zitadel, and finishes the exchange with its own verifier. The password is only sent to server;
+// it is not stored or put into an error.
+func (s *OIDCSource) SignIn(ctx context.Context, server, loginName, password string) error {
 	if s == nil || s.Secrets == nil {
 		return errors.New("syncclient: OIDC sign-in needs a secrets store")
 	}
-	if open == nil {
-		return errors.New("syncclient: OIDC sign-in needs a way to open the browser")
-	}
 	if strings.TrimSpace(s.Issuer) == "" || strings.TrimSpace(s.ClientID) == "" {
 		return errors.New("syncclient: OIDC issuer and client id are required")
+	}
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return errors.New("syncclient: sync server URL is required")
 	}
 	state, err := randomURLToken()
 	if err != nil {
@@ -84,120 +76,44 @@ func (s *OIDCSource) Login(ctx context.Context, open func(url string) error) err
 	}
 	challenge := pkceChallenge(verifier)
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return fmt.Errorf("syncclient: open the sign-in listener: %w", err)
-	}
-	redirect := "http://" + listener.Addr().String() + callbackPath
-
 	s.mu.Lock()
-	base, err := s.oauthConfigLocked(ctx)
+	discovered, err := s.oauthConfigLocked(ctx)
 	s.mu.Unlock()
 	if err != nil {
-		_ = listener.Close()
 		return err
 	}
-	oauthConfig := *base
-	oauthConfig.RedirectURL = redirect
+	oauthConfig := *discovered
+	oauthConfig.RedirectURL = signInRedirect
 	authURL := oauthConfig.AuthCodeURL(state,
 		oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("code_challenge", challenge),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
 
-	type loginResult struct {
-		token *oauth2.Token
-		err   error
+	authRequest, err := s.signInAuthRequest(ctx, authURL)
+	if err != nil {
+		return err
 	}
-	results := make(chan loginResult, 1)
-	var finishOnce sync.Once
-	finish := func(result loginResult) {
-		finishOnce.Do(func() { results <- result })
+	callbackURL, err := s.postSignIn(ctx, base, authRequest, loginName, password)
+	if err != nil {
+		return err
+	}
+	code, err := signInCode(callbackURL, state)
+	if err != nil {
+		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc(callbackPath, func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		if query.Get("state") != state {
-			// Not our redirect: any page in the browser can reach a loopback port, so a request
-			// with the wrong state is refused without ending the sign-in it would otherwise abort.
-			http.Error(w, "sign-in failed: state mismatch", http.StatusBadRequest)
-			return
-		}
-		if msg := query.Get("error"); msg != "" {
-			http.Error(w, "sign-in failed", http.StatusBadRequest)
-			finish(loginResult{err: fmt.Errorf("syncclient: OIDC sign-in was refused (%s)", msg)})
-			return
-		}
-		code := query.Get("code")
-		if code == "" {
-			http.Error(w, "sign-in failed: no code", http.StatusBadRequest)
-			finish(loginResult{err: errors.New("syncclient: OIDC sign-in returned no code")})
-			return
-		}
-		// The phone goes back to the app first; the exchange's retries cover the moment until
-		// Android gives the app its network back. Errors then reach the app, not the browser.
-		answered := false
-		if s.DoneURL != "" {
-			http.Redirect(w, r, s.DoneURL, http.StatusFound)
-			if f, ok := w.(http.Flusher); ok {
-				f.Flush()
-			}
-			answered = true
-		}
-		var token *oauth2.Token
-		err := retryTransient(ctx, func() error {
-			var exchangeErr error
-			token, exchangeErr = oauthConfig.Exchange(httpContext(ctx, s.HTTP), code,
-				oauth2.SetAuthURLParam("code_verifier", verifier))
-			return exchangeErr
-		})
-		if err != nil {
-			if !answered {
-				http.Error(w, "sign-in failed", http.StatusBadGateway)
-			}
-			finish(loginResult{err: fmt.Errorf("syncclient: exchange the OIDC code: %w", err)})
-			return
-		}
-		if err := s.storeToken(token); err != nil {
-			if !answered {
-				http.Error(w, "sign-in failed", http.StatusInternalServerError)
-			}
-			finish(loginResult{err: err})
-			return
-		}
-		if !answered {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_, _ = io.WriteString(w, "<!doctype html><title>Signed in</title><p>You can close this tab.</p>")
-		}
-		finish(loginResult{token: token})
+	var token *oauth2.Token
+	err = retryTransient(ctx, func() error {
+		var exchangeErr error
+		token, exchangeErr = oauthConfig.Exchange(httpContext(ctx, s.HTTP), code,
+			oauth2.SetAuthURLParam("code_verifier", verifier))
+		return exchangeErr
 	})
-
-	server := &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
-	go func() { _ = server.Serve(listener) }()
-
-	if err := open(authURL); err != nil {
-		_ = server.Close()
-		return fmt.Errorf("syncclient: open the sign-in page: %w", err)
+	if err != nil {
+		return fmt.Errorf("syncclient: exchange the OIDC code: %w", err)
 	}
-
-	timeout := s.LoginTimeout
-	if timeout <= 0 {
-		timeout = LoginTimeout
-	}
-	timer := time.NewTimer(timeout)
-	defer timer.Stop()
-	select {
-	case result := <-results:
-		_ = server.Close()
-		return result.err
-	case <-timer.C:
-		_ = server.Close()
-		return errors.New("syncclient: OIDC sign-in timed out")
-	case <-ctx.Done():
-		_ = server.Close()
-		return ctx.Err()
-	}
+	return s.storeToken(token)
 }
 
 // Token implements TokenSource. It returns the access token while it has more than 60 seconds

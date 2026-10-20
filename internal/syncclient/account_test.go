@@ -19,8 +19,8 @@ func TestS3UIa2Account(t *testing.T) {
 	if account, ok := source.Account(); ok {
 		t.Fatalf("Account before sign-in = %+v, want none", account)
 	}
-	if err := source.Login(ctx, followBrowser(t)); err != nil {
-		t.Fatalf("Login: %v", err)
+	if err := source.SignIn(ctx, issuer.URL, "ada@example.com", "correct horse"); err != nil {
+		t.Fatalf("SignIn: %v", err)
 	}
 	assertAccount(t, source, "Ada Lovelace", "ada@example.com")
 

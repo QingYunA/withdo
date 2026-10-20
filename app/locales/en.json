@@ -3888,19 +3888,23 @@
   },
   "settingsSyncSignIn": "Sign in and sync",
   "@settingsSyncSignIn": {
-    "description": "The accent button that starts an OIDC sign-in."
+    "description": "The accent button that signs in with an account and password."
   },
-  "settingsSyncSignInNote": "The sign-in page opens in the browser. Keys and model settings stay on this Mac.",
+  "settingsSyncEmail": "Email or username",
+  "@settingsSyncEmail": {
+    "description": "The account field of the signed-out Sync pane."
+  },
+  "settingsSyncPassword": "Password",
+  "@settingsSyncPassword": {
+    "description": "The password field of the signed-out Sync pane."
+  },
+  "settingsSyncSignInNote": "Accounts are made by the server's admin. Keys and model settings stay on this Mac.",
   "@settingsSyncSignInNote": {
     "description": "The quiet line under the sign-in button."
   },
   "settingsSyncSigningIn": "Signing in…",
   "@settingsSyncSigningIn": {
-    "description": "The disabled button while the browser owns the sign-in."
-  },
-  "settingsSyncSigningInBody": "Finish signing in in your browser.",
-  "@settingsSyncSigningInBody": {
-    "description": "The line under the title while signing in."
+    "description": "The disabled button while the sign-in runs."
   },
   "settingsSyncServer": "Server",
   "@settingsSyncServer": {
@@ -4113,5 +4117,29 @@
   "settingsSyncFailedAuth": "the sign-in expired",
   "@settingsSyncFailedAuth": {
     "description": "The reason of a failed sync when the account has to be signed in again."
+  },
+  "settingsSyncWrongCredentials": "Wrong account or password",
+  "@settingsSyncWrongCredentials": {
+    "description": "The sign-in error line when the account or password was refused."
+  },
+  "settingsSyncTooManyTries": "Too many tries; wait a few minutes",
+  "@settingsSyncTooManyTries": {
+    "description": "The sign-in error line when the server is rate limiting attempts."
+  },
+  "settingsSyncSecondFactor": "This account uses two-step verification, which in-app sign-in does not support yet",
+  "@settingsSyncSecondFactor": {
+    "description": "The sign-in error line when the account has a second factor."
+  },
+  "settingsSyncAccountLocked": "This account is deactivated; ask the admin",
+  "@settingsSyncAccountLocked": {
+    "description": "The sign-in error line when the account is locked or deactivated."
+  },
+  "settingsSyncSignInUnsupported": "This server does not support signing in from the app",
+  "@settingsSyncSignInUnsupported": {
+    "description": "The sign-in error line when the server has no POST /v1/sign-in."
+  },
+  "settingsSyncSignInFailed": "Couldn't sign in. Try again.",
+  "@settingsSyncSignInFailed": {
+    "description": "The sign-in error line for a failure with no sentence of its own."
   }
 }

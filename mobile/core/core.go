@@ -30,11 +30,6 @@ type Secrets interface {
 	Delete(key string) error
 }
 
-// BrowserOpener opens a URL in the system browser, a Custom Tab on Android.
-type BrowserOpener interface {
-	Open(url string) error
-}
-
 // Listener receives the core's calls. Both methods run on Go goroutines, never on the UI thread.
 type Listener interface {
 	// OnChange says the database changed, including changes a sync made.

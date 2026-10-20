@@ -1,7 +1,6 @@
 package xyz.sriai.adhdtodo.data
 
 import kotlinx.serialization.encodeToString
-import xyz.sriai.adhdtodo.core.BrowserOpener
 import xyz.sriai.adhdtodo.core.Core_
 
 /**
@@ -67,8 +66,8 @@ class CoreApi(private val core: Core_) {
 
     fun syncStatus(): SyncStatus = PageJson.decodeFromString(core.syncStatus())
 
-    fun signIn(opener: BrowserOpener, deviceName: String): SignInState =
-        PageJson.decodeFromString(core.signIn(opener, deviceName))
+    fun signIn(login: String, password: String, deviceName: String): SignInState =
+        PageJson.decodeFromString(core.signIn(login, password, deviceName))
 
     fun linkMerge(deviceName: String) = core.linkMerge(deviceName)
 

@@ -46,7 +46,6 @@ class MainActivity : ComponentActivity(), Listener {
     private var core: Core_? = null
     private val revision = mutableIntStateOf(0)
     private val status = mutableStateOf("")
-    private val resumeCount = mutableIntStateOf(0)
     private val initialRoute = mutableStateOf<String?>(null)
     private val demoSyncState = mutableStateOf<String?>(null)
 
@@ -83,7 +82,6 @@ class MainActivity : ComponentActivity(), Listener {
                         core = opened,
                         revision = revision.intValue,
                         syncStatusJson = status.value,
-                        resumeCount = resumeCount.intValue,
                         initialRoute = initialRoute.value,
                         demoSyncState = demoSyncState.value,
                         onInitialRouteConsumed = { initialRoute.value = null },
@@ -126,7 +124,6 @@ class MainActivity : ComponentActivity(), Listener {
 
     override fun onResume() {
         super.onResume()
-        resumeCount.intValue++
         scheduleReminders()
     }
 

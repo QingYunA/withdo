@@ -2,6 +2,7 @@ package xyz.sriai.adhdtodo.ui
 
 import androidx.activity.compose.BackHandler
 import android.content.Context
+import android.content.res.Resources
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -35,7 +36,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.sriai.adhdtodo.BuildConfig
-import xyz.sriai.adhdtodo.MainActivity
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentInfo
@@ -52,7 +52,6 @@ import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.core.Core_
-import xyz.sriai.adhdtodo.platform.CustomTabOpener
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import java.time.Instant
@@ -68,7 +67,6 @@ fun App(
     core: Core_,
     revision: Int,
     syncStatusJson: String,
-    resumeCount: Int,
     initialRoute: String? = null,
     demoSyncState: String? = null,
     onInitialRouteConsumed: () -> Unit = {},
@@ -107,13 +105,13 @@ fun App(
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
-    var signInAttempt by remember { mutableIntStateOf(0) }
     var serverEditing by remember { mutableStateOf(false) }
     var serverDraft by remember { mutableStateOf("") }
     var serverError by remember { mutableStateOf(false) }
     var serverSaving by remember { mutableStateOf(false) }
     var syncMessage by remember { mutableStateOf<String?>(null) }
     var signInError by remember { mutableStateOf<String?>(null) }
+    var signInFailure by remember { mutableStateOf<SignInFailure?>(null) }
     var choose by remember { mutableStateOf(SignInState()) }
 
     val route = stack.last()
@@ -121,7 +119,7 @@ fun App(
     val status = remember(syncStatusJson) {
         runCatching { PageJson.decodeFromString<SyncStatus>(syncStatusJson) }.getOrDefault(SyncStatus())
     }
-    val fake = if (BuildConfig.DEBUG) remember(demoSyncState) { demoSyncState?.let { fakeSyncModel(it) } } else null
+    val fake = if (BuildConfig.DEBUG) remember(demoSyncState) { demoSyncState?.let { fakeSyncModel(it, resources) } } else null
     val shownStatus = fake?.status ?: liveStatus ?: status
 
     LaunchedEffect(syncStatusJson) {
@@ -443,6 +441,7 @@ fun App(
                             devices = devices,
                             choose = choose,
                             signInError = signInError,
+                            signInFailure = signInFailure,
                         )
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dims.pagePadding)) {
                             syncMessage?.let {
@@ -460,19 +459,18 @@ fun App(
                                 serverDraft = serverDraft,
                                 serverError = serverError,
                                 serverSaving = serverSaving,
-                                onSignIn = {
+                                onSignIn = { login, password ->
                                     if (!signingIn) {
                                         signingIn = true
                                         choosing = false
                                         signInError = null
+                                        signInFailure = null
                                         syncMessage = null
-                                        signInAttempt++
-                                        val attempt = signInAttempt
                                         scope.launch {
                                             var failure: Exception? = null
                                             val result = try {
                                                 withContext(Dispatchers.IO) {
-                                                    api.signIn(CustomTabOpener(context), Build.MODEL)
+                                                    api.signIn(login, password, Build.MODEL)
                                                 }
                                             } catch (e: CancellationException) {
                                                 throw e
@@ -480,15 +478,17 @@ fun App(
                                                 failure = e
                                                 null
                                             }
-                                            if (attempt != signInAttempt) return@launch
-                                            // SignIn answered (linked, choose or an error): come back
-                                            // over the Custom Tab, whose page says "close this tab".
-                                            returnToApp(context)
                                             signingIn = false
                                             if (failure != null) {
                                                 Log.w("adhd-todo", "sign-in failed", failure)
-                                                signInError = signInFailureText(failure)
-                                                    ?: resources.getString(R.string.sync_sign_in_failed)
+                                                val kind = signInFailureOf(failure.message)
+                                                signInFailure = kind
+                                                signInError = if (kind != null) {
+                                                    resources.getString(signInFailureText(kind))
+                                                } else {
+                                                    signInFailureSentence(failure)
+                                                        ?: resources.getString(R.string.sync_sign_in_failed)
+                                                }
                                             }
                                             when (result?.state) {
                                                 "choose" -> {
@@ -508,6 +508,8 @@ fun App(
                                 onSignOut = {
                                     choosing = false
                                     signingIn = false
+                                    signInError = null
+                                    signInFailure = null
                                     perform { api.signOut() }
                                 },
                                 onSyncNow = {
@@ -660,14 +662,6 @@ fun App(
     if (connect) HowToConnectDialog(onDismiss = { connect = false })
     if (comingSoon) TaskSoonDialog(onDismiss = { comingSoon = false })
 
-    // When the browser has sent the user back without finishing the sign-in, the button is
-    // usable again; an older SignIn call that finishes later is ignored.
-    LaunchedEffect(signingIn, resumeCount) {
-        if (signingIn && resumeCount > 0) {
-            delay(1500)
-            if (signingIn) signingIn = false
-        }
-    }
 }
 
 /** The stack entry of a task: its id and the project it came from (0 for Mine and Agents). */
@@ -685,22 +679,12 @@ internal fun normalizeRoute(raw: String): String = when {
     else -> ""
 }
 
-/** The Go error's sentence for the text under the sign-in button; null when it has none. */
-internal fun signInFailureText(error: Throwable?): String? =
+/** The Go error's sentence for a failure the app has no localized sentence for. */
+internal fun signInFailureSentence(error: Throwable?): String? =
     error?.message?.trim()?.takeIf { it.isNotEmpty() }
 
-/**
- * Comes back over the Custom Tab after SignIn answered. MainActivity is singleTop, so this brings
- * the running app forward instead of opening a second one.
- */
-private fun returnToApp(context: Context) {
-    val intent = Intent(context, MainActivity::class.java)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-    runCatching { context.startActivity(intent) }
-}
-
 /** The debug build's fixture for one Sync state, for the reviewer's screenshots. */
-private fun fakeSyncModel(name: String): SyncModel {
+private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
     val now = Instant.now()
     val mac = Device("mac", "Cyan 的 MacBook Pro", now.minus(3, ChronoUnit.MINUTES).toString(), false)
     val mini = Device("mini", "公司的 Mac mini", now.minus(1, ChronoUnit.DAYS).toString(), false)
@@ -720,6 +704,14 @@ private fun fakeSyncModel(name: String): SyncModel {
             base.copy(linked = false, signedIn = false, lastSynced = null),
             Account(),
             emptyList(),
+        )
+        "signed_out_error" -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            base.copy(linked = false, signedIn = false, lastSynced = null),
+            Account(),
+            emptyList(),
+            signInError = resources.getString(R.string.sync_sign_in_invalid),
+            signInFailure = SignInFailure.CREDENTIALS,
         )
         "signed_out_after_linked" -> SyncModel(
             SyncPhase.SIGNED_OUT,

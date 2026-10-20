@@ -12,8 +12,8 @@ android {
         applicationId = "xyz.sriai.adhdtodo"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.6.1"
     }
     // Release signing comes from the environment (scripts/android-release.sh reads the passwords
     // from the keychain); the keystore lives outside the repo. Without it a release build is
@@ -62,7 +62,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
-    implementation("androidx.browser:browser:1.10.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.compose.ui:ui-tooling-preview")
     testImplementation("junit:junit:4.13.2")

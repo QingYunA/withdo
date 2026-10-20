@@ -32,8 +32,6 @@ type RealOptions struct {
 	SyncConfigPath string
 	// Secrets is where an OIDC sync keeps its refresh token; nil means the app has no keychain.
 	Secrets syncclient.Secrets
-	// SyncOpen opens a URL in the browser for the OIDC sign-in; nil means the app cannot sign in.
-	SyncOpen func(string) error
 }
 
 // Real is the Store backed by the shared SQLite database. Writes go through internal/domain, and

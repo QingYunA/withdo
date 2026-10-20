@@ -15,10 +15,10 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
-// SyncSignIn signs in through the browser, links this database and starts the runner. When both
-// sides have tasks it stops at the conflict the pane asks about.
-func (r *Real) SyncSignIn() {
-	if r.syncPath == "" || r.opts.Secrets == nil || r.opts.SyncOpen == nil {
+// SyncSignIn signs in with an account and password through the sync server, links this database
+// and starts the runner. When both sides have tasks it stops at the conflict the pane asks about.
+func (r *Real) SyncSignIn(loginName, password string) {
+	if r.syncPath == "" || r.opts.Secrets == nil {
 		r.setSyncError(errors.New("sync is not set up on this Mac"))
 		return
 	}
@@ -32,14 +32,16 @@ func (r *Real) SyncSignIn() {
 	r.sync.conflict = nil
 	r.sync.status.LastError = ""
 	r.sync.failedSince = time.Time{}
+	r.sync.signInFailure = SignInFailureNone
 	server := r.sync.server
 	r.mu.Unlock()
 	r.syncChanged()
-	go r.signIn(server)
+	go r.signIn(server, loginName, password)
 }
 
-// signIn is SyncSignIn off the UI thread.
-func (r *Real) signIn(server string) {
+// signIn is SyncSignIn off the UI thread. The password lives only in this call, never in the
+// config, the snapshot or a log line.
+func (r *Real) signIn(server, loginName, password string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 	public, err := syncclient.FetchConfig(ctx, server, nil)
@@ -48,11 +50,11 @@ func (r *Real) signIn(server string) {
 		return
 	}
 	if public.Issuer == "" || public.ClientID == "" {
-		r.failSignIn(errors.New("the server does not offer sign-in"))
+		r.failSignIn(fmt.Errorf("the server does not offer sign-in: %w", syncclient.ErrSignInUnsupported))
 		return
 	}
 	tokens := r.oidcSource(public.Issuer, public.ClientID, public.Scopes)
-	if err := tokens.Login(ctx, r.opts.SyncOpen); err != nil {
+	if err := tokens.SignIn(ctx, server, loginName, password); err != nil {
 		r.failSignIn(err)
 		return
 	}
@@ -85,6 +87,7 @@ func (r *Real) signIn(server string) {
 		// The database kept its device when the user signed out: signing in again resumes it.
 		r.mu.Lock()
 		r.sync.signingIn = false
+		r.sync.signInFailure = SignInFailureNone
 		r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 		r.sync.failedSince = time.Time{}
 		r.mu.Unlock()
@@ -112,6 +115,7 @@ func (r *Real) signIn(server string) {
 	r.sync.linked = true
 	r.sync.signingIn = false
 	r.sync.conflict = nil
+	r.sync.signInFailure = SignInFailureNone
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}
 	r.mu.Unlock()
@@ -244,6 +248,7 @@ func (r *Real) SyncCancel() {
 	conflict := r.sync.conflict
 	r.sync.conflict = nil
 	r.sync.signingIn = false
+	r.sync.signInFailure = SignInFailureNone
 	r.sync.status.LastError = ""
 	r.sync.failedSince = time.Time{}
 	tokens := r.sync.tokens

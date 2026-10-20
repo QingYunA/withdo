@@ -10,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+
+	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
 // timeoutError is a net.Error that is not a DNS or dial error, such as an HTTP client timeout.
@@ -66,6 +68,26 @@ func TestSyncErrorLogsTheRawCause(t *testing.T) {
 	}
 	if strings.Contains(text, "Bearer") {
 		t.Errorf("the log carries a token: %q", text)
+	}
+}
+
+// TestSyncErrorMapsSignInFailures is the five answers /v1/sign-in gives the app: each sentinel
+// becomes the English sentence Kotlin looks up in strings.xml.
+func TestSyncErrorMapsSignInFailures(t *testing.T) {
+	cases := []struct {
+		err  error
+		want string
+	}{
+		{syncclient.ErrInvalidCredentials, "wrong account or password"},
+		{syncclient.ErrTooManyAttempts, "too many tries; wait a few minutes"},
+		{syncclient.ErrSecondFactor, "this account uses two-step verification, which in-app sign-in does not support yet"},
+		{syncclient.ErrAccountLocked, "this account is deactivated; ask the admin"},
+		{syncclient.ErrSignInUnsupported, "this server does not support signing in from the app"},
+	}
+	for _, tc := range cases {
+		if got := syncError(tc.err); got == nil || got.Error() != tc.want {
+			t.Errorf("syncError(%v) = %v, want %q", tc.err, got, tc.want)
+		}
 	}
 }
 

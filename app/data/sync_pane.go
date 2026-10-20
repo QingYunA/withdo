@@ -3,10 +3,12 @@ package data
 import (
 	"context"
 	"errors"
+	"net"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
@@ -48,6 +50,22 @@ const (
 	SyncFailureAuth
 )
 
+// SignInFailure is why the last in-app sign-in failed, so Settings can word it in the user's
+// language without matching the error's text.
+type SignInFailure string
+
+// The answers POST /v1/sign-in gives, and the local failures around it.
+const (
+	SignInFailureNone         SignInFailure = ""
+	SignInFailureCredentials  SignInFailure = "credentials"
+	SignInFailureTooMany      SignInFailure = "tooMany"
+	SignInFailureSecondFactor SignInFailure = "secondFactor"
+	SignInFailureLocked       SignInFailure = "locked"
+	SignInFailureUnsupported  SignInFailure = "unsupported"
+	SignInFailureNetwork      SignInFailure = "network"
+	SignInFailureOther        SignInFailure = "other"
+)
+
 // SyncConflict is what the pane asks before it changes this Mac's task ids: how much data each
 // side has.
 type SyncConflict struct {
@@ -58,22 +76,23 @@ type SyncConflict struct {
 
 // SyncSnapshot is everything Settings > Sync draws in one frame.
 type SyncSnapshot struct {
-	Phase        SyncPhase
-	Server       string
-	Account      string
-	AccountEmail string
-	Linked       bool
-	LastSynced   time.Time
-	FailedSince  time.Time
-	RetryAt      time.Time
-	LastError    string
-	Failure      SyncFailure
-	Pending      int
-	SeedDone     int
-	SeedTotal    int
-	Devices      []SyncDevice
-	ThisDeviceID string
-	Conflict     *SyncConflict
+	Phase         SyncPhase
+	Server        string
+	Account       string
+	AccountEmail  string
+	Linked        bool
+	LastSynced    time.Time
+	FailedSince   time.Time
+	RetryAt       time.Time
+	LastError     string
+	Failure       SyncFailure
+	SignInFailure SignInFailure
+	Pending       int
+	SeedDone      int
+	SeedTotal     int
+	Devices       []SyncDevice
+	ThisDeviceID  string
+	Conflict      *SyncConflict
 }
 
 // The JSON files keyed by task id that a merge must rename, next to the database.
@@ -86,24 +105,25 @@ const (
 // syncTask is the state Settings > Sync keeps about the background runner. Real owns the runner;
 // this file adds the pane's view of it and the sign-in it starts.
 type syncTask struct {
-	loaded      bool
-	cfg         syncclient.Config
-	server      string
-	account     syncclient.Account
-	hasAccount  bool
-	linked      bool
-	status      syncclient.Status
-	signingIn   bool
-	seeding     bool
-	seedTotal   int
-	pending     int
-	failedSince time.Time
-	conflict    *SyncConflict
-	deviceID    string
-	devices     []SyncDevice
-	devicesBusy bool
-	tokens      syncclient.TokenSource
-	client      *syncclient.Client
+	loaded        bool
+	cfg           syncclient.Config
+	server        string
+	account       syncclient.Account
+	hasAccount    bool
+	linked        bool
+	status        syncclient.Status
+	signingIn     bool
+	signInFailure SignInFailure
+	seeding       bool
+	seedTotal     int
+	pending       int
+	failedSince   time.Time
+	conflict      *SyncConflict
+	deviceID      string
+	devices       []SyncDevice
+	devicesBusy   bool
+	tokens        syncclient.TokenSource
+	client        *syncclient.Client
 }
 
 // SetSyncNotify tells the service where to ask for a redraw after a status change. The shell
@@ -123,8 +143,9 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		Server: r.sync.server, Account: r.sync.account.Name, AccountEmail: r.sync.account.Email,
 		Linked: r.sync.linked, LastSynced: r.sync.status.LastSynced, RetryAt: r.sync.status.RetryAt,
 		LastError: r.sync.status.LastError, Failure: syncFailureKind(r.sync.status.LastError),
-		Pending:   r.sync.pending,
-		SeedTotal: r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
+		SignInFailure: r.sync.signInFailure,
+		Pending:       r.sync.pending,
+		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
 	if s.Pending < 0 {
@@ -145,12 +166,9 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 			AccountDevices: r.sync.conflict.AccountDevices,
 		}
 	case !r.sync.linked:
-		if r.sync.status.LastError != "" {
-			s.Phase = SyncFailed
-			s.FailedSince = r.sync.failedSince
-		} else {
-			s.Phase = SyncSignedOut
-		}
+		// An unlinked Mac is always signed out: a failed sign-in belongs in the card's error line,
+		// with the fields still there to try again.
+		s.Phase = SyncSignedOut
 	case r.sync.status.State == syncclient.StateIdle:
 		s.Phase = SyncSynced
 	case r.sync.status.State == syncclient.StateSeeding:
@@ -193,6 +211,53 @@ func syncFailureKind(message string) SyncFailure {
 		return SyncFailureNoAnswer
 	}
 	return SyncFailureUnknown
+}
+
+// signInFailureKind maps a failed sign-in to the code Settings words in the user's language. The
+// five answers of POST /v1/sign-in are sentinels; a network failure is local.
+func signInFailureKind(err error) SignInFailure {
+	switch {
+	case err == nil:
+		return SignInFailureNone
+	case errors.Is(err, syncclient.ErrInvalidCredentials):
+		return SignInFailureCredentials
+	case errors.Is(err, syncclient.ErrTooManyAttempts):
+		return SignInFailureTooMany
+	case errors.Is(err, syncclient.ErrSecondFactor):
+		return SignInFailureSecondFactor
+	case errors.Is(err, syncclient.ErrAccountLocked):
+		return SignInFailureLocked
+	case errors.Is(err, syncclient.ErrSignInUnsupported):
+		return SignInFailureUnsupported
+	case signInNetworkError(err):
+		return SignInFailureNetwork
+	}
+	return SignInFailureOther
+}
+
+// signInNetworkError says whether err is the network refusing the request rather than the server
+// answering.
+func signInNetworkError(err error) bool {
+	if err == nil || errors.Is(err, context.Canceled) {
+		return false
+	}
+	var dns *net.DNSError
+	if errors.As(err, &dns) {
+		return true
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+	for _, target := range []error{
+		syscall.ECONNREFUSED, syscall.ECONNRESET, syscall.ECONNABORTED, syscall.EPIPE,
+		syscall.ETIMEDOUT, syscall.ENETUNREACH, syscall.EHOSTUNREACH,
+	} {
+		if errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
 }
 
 // loadSyncLocked reads sync.json and the linked database once. The caller holds r.mu.
@@ -261,6 +326,7 @@ func (r *Real) SyncSignOut() {
 	r.sync.cfg = cfg
 	r.sync.account, r.sync.hasAccount = syncclient.Account{}, false
 	r.sync.signingIn, r.sync.conflict = false, nil
+	r.sync.signInFailure = SignInFailureNone
 	r.sync.status = syncclient.Status{}
 	r.sync.failedSince = time.Time{}
 	r.sync.tokens, r.sync.client = nil, nil
@@ -298,16 +364,9 @@ func (r *Real) SyncNow() {
 	}
 }
 
-// SyncRetry is the button of a failed row: sign in again when the database is not linked, else
-// sync now.
+// SyncRetry is the button of a failed row. A failed sign-in is not a row: the signed-out card
+// keeps the fields and its own error line, so Retry only syncs a linked Mac again.
 func (r *Real) SyncRetry() {
-	r.mu.Lock()
-	linked := r.sync.linked
-	r.mu.Unlock()
-	if !linked {
-		r.SyncSignIn()
-		return
-	}
 	r.SyncNow()
 }
 
@@ -425,12 +484,14 @@ func (r *Real) syncClientFor(cfg syncclient.Config) (*syncclient.Client, error) 
 	return syncclient.New(r.core, syncclient.Options{BaseURL: cfg.Server, TokenSource: tokens})
 }
 
-// failSignIn clears the busy state and says what went wrong.
+// failSignIn clears the busy state and says what went wrong. The error text goes to LastError for
+// the logs; the pane words the classification instead.
 func (r *Real) failSignIn(err error) {
 	r.mu.Lock()
 	r.sync.signingIn = false
 	r.sync.seeding = false
 	r.sync.status.LastError = err.Error()
+	r.sync.signInFailure = signInFailureKind(err)
 	r.sync.failedSince = r.Now()
 	r.mu.Unlock()
 	r.syncChanged()
