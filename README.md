@@ -39,9 +39,10 @@ cd app && go tool mygo build
 go build -o ~/.local/bin/adhd-core ./cmd/adhd-core
 ```
 
-`scripts/build-mac.sh` makes the release files (the universal app, which is `adhd-core` too, the DMG
-and the standalone `adhd-core` tarball, plus the signed update archive when updates are on) in
-`app/build/darwin-universal/`; see `docs/plans/m10-auto-update.md`.
+`scripts/build-release.sh` makes the release files of both platforms each release ships into
+`app/build/release/`: for macOS the DMG of the universal app (which is `adhd-core` too) and the
+standalone `adhd-core` tarball, plus the signed update archive when updates are on; for Windows x64
+the installer and the `adhd-core.exe` zip. See `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 

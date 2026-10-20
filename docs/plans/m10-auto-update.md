@@ -20,7 +20,7 @@ repository holding only the releases, named in `github`): put back in `app/mygo.
 }
 ```
 
-and build with `scripts/build-mac.sh`, which then asks for the private key (see below). The first
+and build with `scripts/build-release.sh`, which then asks for the private key (see below). The first
 version built so is the last one to install by hand.
 
 ## Decisions
@@ -32,7 +32,7 @@ version built so is the last one to install by hand.
   release are right: one release holds the app and `adhd-core`.
 - **The key.** The secret half of the pair is `~/Library/Application Support/mygo/update-keys/mygo-update.key`.
   It is never in the repository (`mygo-update.key` is in `.gitignore` as a guard); losing it strands
-  every installed app. `scripts/build-mac.sh` reads it, `MYGO_UPDATE_KEY` names another file.
+  every installed app. `scripts/build-release.sh` reads it, `MYGO_UPDATE_KEY` names another file.
 - **Release notes** come from the `## <version>` section of `CHANGELOG.md`; mygo fails the build when
   the file exists without the section of the version being built.
 - **Settings > General > Software updates** is the plugin's `SetAutomaticChecks`. The plugin persists
@@ -41,7 +41,7 @@ version built so is the last one to install by hand.
   starts when it is run under the name `adhd-core`, or with one of the command line's own commands
   or flags (`app/cli.go`); anything else opens the window. The bundle carries that one program (about
   8 MB of DMG less than with a second copy). `cmd/adhd-core` builds the same command line alone:
-  `scripts/build-mac.sh` builds it for arm64 and amd64 (`CGO_ENABLED=0`, `-trimpath -ldflags "-s -w"`)
+  `scripts/build-release.sh` builds it for arm64 and amd64 (`CGO_ENABLED=0`, `-trimpath -ldflags "-s -w"`)
   and publishes it as `adhd-core-<version>-macos-universal.tar.gz`, for machines without the app.
   `adhd-core --version` prints `adhd-core <version>`.
 - **A stable path for the agents.** Agents' MCP configs name `~/.local/bin/adhd-core`
@@ -59,12 +59,13 @@ version built so is the last one to install by hand.
 
 1. Bump the version in `app/mygo.json`, `app/main.go` and `internal/mcpserver/server.go`; finish the
    `CHANGELOG.md` section of that version.
-2. `scripts/build-mac.sh`: writes into `app/build/darwin-universal/` the DMG (also under the release
-   name `ADHD-Todo-<v>-macos-universal.dmg`), the signed update archive
-   `adhd-todo-<v>-darwin-universal.tar.gz`, `update-darwin-universal.json`,
-   `adhd-core-<v>-macos-universal.tar.gz` and `SHA256SUMS.txt`.
-3. Upload them to a draft release `v<v>`, with the notes below, then publish it: that makes it the
-   latest, which is what installed apps ask.
+2. `scripts/build-release.sh`: builds macOS and Windows x64, which every release ships, and gathers
+   into `app/build/release/` `ADHD-Todo-<v>-macos-universal.dmg`,
+   `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe`,
+   `adhd-core-<v>-windows-x64.zip`, the signed update archives and manifests when updates are on,
+   and `SHA256SUMS.txt`.
+3. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
+   the latest, which is what installed apps ask.
 
 The release notes say (the changelog's 0.5.0 entry does too): **a coding agent keeps running the
 old `adhd-core` process until it is restarted**, so after an update restart Claude Code and the other

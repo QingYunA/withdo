@@ -3,6 +3,22 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.5.2
+
+The database moves from schema 13 to 14 (the groundwork of syncing between devices; nothing syncs
+yet), which 0.5.1's adhd-core cannot read. On macOS the app is adhd-core, so installing it is enough;
+on Windows, replace `adhd-core.exe` with the one of this release too. Restart your coding agents
+afterwards.
+
+- **Windows again.** Each release now ships the Windows x64 installer and `adhd-core.exe` next to
+  the macOS files.
+- **Undo everywhere.** Every change that offers Undo in a toast also answers Cmd+Z (Ctrl+Z on
+  Windows), including deleting a task, detaching a picture and dragging a single card, which had no
+  undo before.
+- Undoing one of the assistant's memory edits takes back only that edit; notes it kept later, and
+  your own edits to `assistant-memory.md`, stay.
+- Amp and Kiro are drawn as their own marks instead of the generic robot.
+
 ## 0.5.1
 
 No database change: upgrading from 0.5.0 is installing the app. Restart your coding agents afterwards
