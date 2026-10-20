@@ -377,6 +377,7 @@ func TestTypedAnswerToAQuestion(t *testing.T) {
 	r.answer(t)
 	r.tt.Type("at 7pm")
 	r.tt.Key(0, ui.KeyEnter)
+	r.answer(t) // the answer is sent off the UI thread
 	if got := fa.Asked(); len(got) != 2 || got[1] != "at 7pm" {
 		t.Errorf("asked %v", got)
 	}
@@ -433,14 +434,14 @@ func TestEnterWhileThinkingKeepsWhatIsTyped(t *testing.T) {
 	r.ask("first")
 	r.tt.Type("second")
 	r.tt.Key(0, ui.KeyEnter)
-	if got := fa.Asked(); len(got) != 1 {
-		t.Errorf("a second request went out: %v", got)
-	}
 	if r.pageBuf() != "second" {
 		t.Errorf("buffer %q", r.pageBuf())
 	}
 	close(fa.Block)
-	r.answer(t)
+	r.answer(t) // the request is sent off the UI thread: count once the first came back
+	if got := fa.Asked(); len(got) != 1 {
+		t.Errorf("a second request went out: %v", got)
+	}
 }
 
 func TestCancelAfterChangesKeepsTheReceipts(t *testing.T) {

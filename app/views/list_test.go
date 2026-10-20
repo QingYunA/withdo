@@ -14,6 +14,7 @@ func projectTester(t *testing.T, project int) (*ui.Tester, *Main, *App) {
 	tt, m, app := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: project})
 	tt.Frame()
+	tt.Frame() // what the page keeps of its layout (m.cols.geo) is read from the frame before
 	return tt, m, app
 }
 

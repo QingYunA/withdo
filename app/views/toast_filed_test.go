@@ -44,6 +44,7 @@ func TestAnAutoFiledTaskGetsAQuietToastWithUndoThatUnsortsIt(t *testing.T) {
 	}
 	r.m.closeSheet() // its receipt line has an Undo of its own
 	r.tt.Frame()
+	r.tt.Frame() // the toast rides on the dock's height in the frame before, which closing shrank
 	if err := r.tt.Click("Undo"); err != nil {
 		t.Fatal(err)
 	}

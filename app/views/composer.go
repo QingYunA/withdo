@@ -95,7 +95,7 @@ func (m *Main) takeFocus(c *ui.Context, s surface) {
 		cs.ref.Focus(c)
 		*want = false
 	default:
-		c.After(16 * time.Millisecond)
+		c.AnimationFrame() // the next frames, as the display draws them: not a timer, which may come late
 	}
 }
 

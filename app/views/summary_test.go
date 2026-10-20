@@ -210,6 +210,10 @@ func TestTheParagraphIsWrittenOnceAtFirstOpenKeptAndShownWholeNextTime(t *testin
 	if !tt.HasText("Today · written by the assistant") {
 		t.Fatalf("the bubble is not there: %q", tt.Texts())
 	}
+	if tt.HasText("Eight finished.") {
+		t.Error("the paragraph is shown before it was written")
+	}
+	answered(t, tt, rec) // the assistant is asked off the UI thread
 	if got := len(fa.Summaries()); got != 1 {
 		t.Fatalf("the assistant was asked %d times", got)
 	}
@@ -227,10 +231,6 @@ func TestTheParagraphIsWrittenOnceAtFirstOpenKeptAndShownWholeNextTime(t *testin
 	if !slices.Contains(who, "you") || !slices.Contains(who, "Claude Code") || !slices.Contains(who, "Codex") {
 		t.Errorf("who %v", who)
 	}
-	if tt.HasText("Eight finished.") {
-		t.Error("the paragraph is shown before it was written")
-	}
-	answered(t, tt, rec)
 	if !tt.HasText(fa.Summaries()[0].Label) && !strings.Contains(strings.Join(tt.Texts(), " "), "Eight finished.") {
 		t.Errorf("the paragraph did not arrive: %q", tt.Texts())
 	}
