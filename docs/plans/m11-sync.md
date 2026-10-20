@@ -474,3 +474,52 @@ data with the account's; backup at PATH` after a replace.
 4. **Replace**: same start; `LinkReplace` leaves B equal to A, and the backup file holds B's old rows.
 5. Running the S2b convergence test after a merge (three devices, one of them merged) still ends
    equal.
+
+## S3-UI-b: the Sync pane
+
+The pane of **Settings > Sync** in `docs/design/ui-spec.md` (mockup `docs/design/mockups/v27.html`),
+built on S3-UI-a. Match the spec and the mockup; screens prove it.
+
+### The server tells how to sign in
+
+- `GET /v1/config` (no auth) → `{issuer, client_id, scopes}` from new flags `-oidc-client-id` and
+  `-oidc-scopes` (space separated) of `cmd/adhd-sync`. They are public values.
+- The app needs only the server's URL: the default is `https://todo.sri-ai.xyz`; **Change** edits it
+  in place (Enter saves, Esc keeps the old one); the rest comes from `/v1/config` at sign-in and is
+  written to `sync.json` with the server.
+
+### Behavior
+
+- **Sign in and sync**: fetch `/v1/config`, `OIDCSource.Login` with the browser opened by
+  `mygo.Shell.OpenExternal`, then `Link`. On `ErrLocalData`, the sheet *Both have tasks* with this
+  Mac's counts (tasks, projects) and the account's (devices); **Merge** runs `LinkMerge` and then
+  rewrites the task ids in `seen.json`, `dismissed.json` and `recent-changes.json` through the map it
+  returns; **Use the account** runs `LinkReplace`; **Cancel** signs out again and leaves the data as
+  it was. Then the Runner starts.
+- **Uploading**: `Link` records how many outbox entries the seed queued (`sync_state.seed_total`); the
+  pane shows `done / total` from it and the outbox's size, and the 40-cell pixel bar.
+- **Synced**: the account from `sync.json` (`account.name`, else the email), `Signed in · N devices`
+  from `GET /v1/devices` (asked when the pane opens and after each sync while it is open), **Sign
+  out** (`OIDCSource.Logout`, stop the Runner; the database stays linked, and signing in again
+  resumes the same device), **Sync now** (a Runner nudge without the debounce). The **Devices**
+  group per the spec, this Mac first with its badge.
+- **Failed** and **Offline** from the Runner's status, as the spec words them, with **Retry**.
+- **Sidebar**: the 12 pt `status.blocked` cloud at the right of Settings when the Runner has failed
+  for more than 15 minutes or is signed out (and the database is linked); clicking Settings opens it
+  on Sync then.
+- **Replies on the desktop**: a report of kind `reply` by `you` shows in the inspector's Activity with
+  `theme.You` and `You` / `你`, never the robot.
+- New pixelarticons from 2.4.2 into `app/theme/pixel-icons`: `cloud`, `laptop`, `smartphone`, as
+  `IconCloud`, `IconLaptop`, `IconPhone` (README line, same LICENSE).
+- Every string in English and Simplified Chinese (`app/locales`).
+
+### Tests and screens
+
+- View tests with a fake sync service for each state: signed out, signing in, both have tasks (Merge,
+  Use the account, Cancel), uploading (progress text and bar cells), synced (devices, this Mac first),
+  failed with Retry, offline without a button; Change server (Enter, Esc); the sidebar cloud appears
+  after 15 minutes of failure or when signed out, and not before; a reply shows with `You`.
+- Merge rewrites the three files' task ids (a test with real files in a temp data folder).
+- `GET /v1/config` returns the flags; the app's sign-in uses it.
+- `scripts/screens.sh` renders `settings-sync-*` in light and dark, English and Chinese, for each
+  state above; the PNGs are committed in `docs/design/screens`.
