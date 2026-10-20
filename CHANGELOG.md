@@ -3,6 +3,24 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.5.3
+
+No database change: upgrading from 0.5.2 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install, or the installer cannot replace the files they hold open. Restart
+your coding agents afterwards.
+
+- **adhd-core comes with the Windows app.** The installer puts the console `adhd-core.exe` next to
+  `ADHD Todo.exe`, and Settings > Agents connects agents to it, one click or the copied command.
+  The separate `adhd-core.exe` zip is no longer published. An agent you connected to the zip's copy
+  keeps running that copy: remove the adhd-todo server from it and connect it again from Settings >
+  Agents.
+- On macOS, running the app straight from the disk image, or from a copy macOS runs from a random
+  folder (App Translocation), no longer points `~/.local/bin/adhd-core` at a path that goes away;
+  the link is made once the app runs from Applications.
+- Toasts and the bulk bar move with the composer as it grows or shrinks, in the same frame.
+- The command line gains `adhd-core sync`, groundwork for syncing between devices; the app has no
+  sync settings yet.
+
 ## 0.5.2
 
 The database moves from schema 13 to 14 (the groundwork of syncing between devices; nothing syncs
