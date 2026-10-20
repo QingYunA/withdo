@@ -15,12 +15,26 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-// bigPNG is a picture that PrepareImage shrinks: 2400 x 1200, so its prepared copy differs.
 func noisePNG(t *testing.T, w, h int) []byte { t.Helper(); return pngOf(t, noise(w, h)) }
 
+// bigPNG is a picture that PrepareImage shrinks: 2400 x 1200, so its prepared copy differs. Only
+// the tests of that difference need one; the race detector makes its pixels slow.
 func bigPNG(t *testing.T) []byte {
 	t.Helper()
 	return pngOf(t, image.NewNRGBA(image.Rect(0, 0, 2400, 1200)))
+}
+
+// smallPNG is a picture PrepareImage leaves as it came, for the tests of how pictures are kept,
+// linked and collected. noisePNG(t, 50, 50) is another one.
+func smallPNG(t *testing.T) []byte { t.Helper(); return noisePNG(t, 40, 30) }
+
+// skipUnderRace skips a test that only turns pixels, single-threaded: the race detector has
+// nothing to find there and makes it many times slower. The pass without it still runs it.
+func skipUnderRace(t *testing.T) {
+	t.Helper()
+	if raceDetector {
+		t.Skip("pixel work with nothing concurrent; it runs without -race")
+	}
 }
 
 func openImagesReal(t *testing.T, grace time.Duration) *Real {
@@ -66,6 +80,7 @@ func exists(path string) bool {
 }
 
 func TestAPreparedPictureCarriesItsOriginalOnlyWhenTheyDiffer(t *testing.T) {
+	skipUnderRace(t)
 	small := pngOf(t, image.NewNRGBA(image.Rect(0, 0, 40, 30)))
 	if a := prepared(t, "a.png", small); a.Original != nil {
 		t.Errorf("a picture that went out as it came has no separate original")
@@ -81,6 +96,7 @@ func TestAPreparedPictureCarriesItsOriginalOnlyWhenTheyDiffer(t *testing.T) {
 }
 
 func TestAnOriginalOverTheLimitIsLeftOutAndThePreparedCopyIsKept(t *testing.T) {
+	skipUnderRace(t)
 	defer func(v int) { originalLimit = v }(originalLimit)
 	originalLimit = 100
 	a := prepared(t, "big.png", bigPNG(t))
@@ -126,9 +142,9 @@ func TestAttachFallsBackToThePreparedCopyWithoutAnOriginal(t *testing.T) {
 func TestOnePictureOnTwoTasksIsStoredOnce(t *testing.T) {
 	r := openImagesReal(t, 0)
 	a, b := newTask(t, r, "a"), newTask(t, r, "b")
-	pic := prepared(t, "bill.png", bigPNG(t))
+	pic := prepared(t, "bill.png", smallPNG(t))
 	first := attach(t, r, a, pic)
-	again := attach(t, r, a, prepared(t, "renamed.png", bigPNG(t)))
+	again := attach(t, r, a, prepared(t, "renamed.png", smallPNG(t)))
 	second := attach(t, r, b, pic)
 	if again.Hash != first.Hash || again.Name != "bill.png" || second.Hash != first.Hash || second.File != first.File {
 		t.Fatalf("links %+v %+v %+v", first, again, second)
@@ -145,7 +161,7 @@ func TestOnePictureOnTwoTasksIsStoredOnce(t *testing.T) {
 func TestImagesOfReadsManyTasksAtOnce(t *testing.T) {
 	r := openImagesReal(t, 0)
 	a, b, none := newTask(t, r, "a"), newTask(t, r, "b"), newTask(t, r, "none")
-	attach(t, r, a, prepared(t, "x.png", bigPNG(t)))
+	attach(t, r, a, prepared(t, "x.png", smallPNG(t)))
 	attach(t, r, b, prepared(t, "y.png", noisePNG(t, 50, 50)))
 	got, err := r.ImagesOf([]int{a.ID, b.ID, none.ID})
 	if err != nil || len(got) != 2 || got[a.ID][0].Name != "x.png" || got[b.ID][0].Name != "y.png" {
@@ -156,8 +172,8 @@ func TestImagesOfReadsManyTasksAtOnce(t *testing.T) {
 func TestCollectDeletesTheFilesNoTaskLinks(t *testing.T) {
 	r := openImagesReal(t, 0)
 	a, b := newTask(t, r, "a"), newTask(t, r, "b")
-	shared := attach(t, r, a, prepared(t, "s.png", bigPNG(t)))
-	attach(t, r, b, prepared(t, "s.png", bigPNG(t)))
+	shared := attach(t, r, a, prepared(t, "s.png", smallPNG(t)))
+	attach(t, r, b, prepared(t, "s.png", smallPNG(t)))
 	own := attach(t, r, a, prepared(t, "o.png", noisePNG(t, 50, 50)))
 
 	if err := r.DetachImage(a.ID, shared.Hash); err != nil {
@@ -183,7 +199,7 @@ func TestCollectDeletesTheFilesNoTaskLinks(t *testing.T) {
 func TestDeletingATaskCollectsItsPicturesAfterTheGrace(t *testing.T) {
 	r := openImagesReal(t, 20*time.Millisecond)
 	task := newTask(t, r, "a")
-	link := attach(t, r, task, prepared(t, "s.png", bigPNG(t)))
+	link := attach(t, r, task, prepared(t, "s.png", smallPNG(t)))
 	if err := r.DeleteTask(task.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +209,7 @@ func TestDeletingATaskCollectsItsPicturesAfterTheGrace(t *testing.T) {
 func TestUndoingTheDeleteOfATaskBringsItsPicturesBack(t *testing.T) {
 	r := openImagesReal(t, time.Hour)
 	task := newTask(t, r, "a")
-	link := attach(t, r, task, prepared(t, "s.png", bigPNG(t)))
+	link := attach(t, r, task, prepared(t, "s.png", smallPNG(t)))
 	snap, err := r.SnapshotTask(task.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -213,7 +229,7 @@ func TestUndoingTheDeleteOfATaskBringsItsPicturesBack(t *testing.T) {
 func TestUndoingADetachLinksThePictureAgain(t *testing.T) {
 	r := openImagesReal(t, time.Hour)
 	task := newTask(t, r, "a")
-	link := attach(t, r, task, prepared(t, "s.png", bigPNG(t)))
+	link := attach(t, r, task, prepared(t, "s.png", smallPNG(t)))
 	if err := r.DetachImage(task.ID, link.Hash); err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +249,7 @@ func TestWithoutADataFolderThereIsNowhereToKeepPictures(t *testing.T) {
 	}
 	defer r.Close()
 	task := newTask(t, r, "a")
-	if _, err := r.AttachImages(task.ID, []Attachment{prepared(t, "s.png", bigPNG(t))}); err != ErrNoImageFolder {
+	if _, err := r.AttachImages(task.ID, []Attachment{prepared(t, "s.png", smallPNG(t))}); err != ErrNoImageFolder {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -241,7 +257,7 @@ func TestWithoutADataFolderThereIsNowhereToKeepPictures(t *testing.T) {
 func TestPicturesFollowATaskThroughDeleteAndRestore(t *testing.T) {
 	f := openImagesReal(t, time.Hour) // only the CollectImages below collects, not a sweep a slow machine lets run first
 	task, _ := f.CreateTask(CreateTaskInput{Title: "a"})
-	got, err := f.AttachImages(task.ID, []Attachment{prepared(t, "s.png", bigPNG(t)), prepared(t, "s2.png", noisePNG(t, 50, 50))})
+	got, err := f.AttachImages(task.ID, []Attachment{prepared(t, "s.png", smallPNG(t)), prepared(t, "s2.png", noisePNG(t, 50, 50))})
 	if err != nil || len(got) != 2 {
 		t.Fatalf("AttachImages = %v, %v", got, err)
 	}
@@ -279,7 +295,7 @@ func TestTheTurnsPicturesAreKeptByTheTasksItCreated(t *testing.T) {
 	a, r := imageAssistant(t,
 		toolCall("create_task", `{"title":"Pay rent","images":[0]}`),
 		toolCall("create_task", `{"title":"Buy milk"}`), said("ok"))
-	bill, list := prepared(t, "bill.png", bigPNG(t)), prepared(t, "list.png", noisePNG(t, 50, 50))
+	bill, list := prepared(t, "bill.png", smallPNG(t)), prepared(t, "list.png", noisePNG(t, 50, 50))
 	reply, err := a.Ask(bg, "these", Place{}, bill, list)
 	if err != nil || len(reply.Receipts) != 2 {
 		t.Fatalf("reply %+v, %v", reply, err)
@@ -301,7 +317,7 @@ func TestTheTurnsPicturesAreKeptByTheTasksItCreated(t *testing.T) {
 func TestARequestFromTheInspectorGivesItsPicturesToThatTask(t *testing.T) {
 	a, r := imageAssistant(t, said("Added."))
 	task := newTask(t, r, "Pay rent")
-	if _, err := a.Ask(bg, "add this", Place{Kind: PlaceTask, TaskID: task.ID}, prepared(t, "bill.png", bigPNG(t))); err != nil {
+	if _, err := a.Ask(bg, "add this", Place{Kind: PlaceTask, TaskID: task.ID}, prepared(t, "bill.png", smallPNG(t))); err != nil {
 		t.Fatal(err)
 	}
 	if got, _ := r.TaskImages(task.ID); len(got) != 1 {
@@ -311,7 +327,7 @@ func TestARequestFromTheInspectorGivesItsPicturesToThatTask(t *testing.T) {
 
 func TestUndoingATaskTheTurnCreatedCollectsItsPictures(t *testing.T) {
 	a, r := imageAssistant(t, toolCall("create_task", `{"title":"Pay rent"}`), said("ok"))
-	reply, err := a.Ask(bg, "this", Place{}, prepared(t, "bill.png", bigPNG(t)))
+	reply, err := a.Ask(bg, "this", Place{}, prepared(t, "bill.png", smallPNG(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,7 +341,7 @@ func TestUndoingATaskTheTurnCreatedCollectsItsPictures(t *testing.T) {
 func TestPicturesThatCannotBeKeptAreSaidButTheTasksStay(t *testing.T) {
 	a, r := imageAssistant(t, toolCall("create_task", `{"title":"Pay rent"}`), said("ok"))
 	r.images = imageFiles{} // nowhere to write
-	reply, err := a.Ask(bg, "this", Place{}, prepared(t, "bill.png", bigPNG(t)))
+	reply, err := a.Ask(bg, "this", Place{}, prepared(t, "bill.png", smallPNG(t)))
 	if err == nil || len(reply.Receipts) != 1 {
 		t.Fatalf("reply %+v, err %v", reply, err)
 	}
@@ -337,7 +353,7 @@ func TestPicturesThatCannotBeKeptAreSaidButTheTasksStay(t *testing.T) {
 func TestCollectSoonTakesThePicturesAnotherProcessLetGo(t *testing.T) {
 	r := openImagesReal(t, 20*time.Millisecond)
 	task := newTask(t, r, "a")
-	link := attach(t, r, task, prepared(t, "s.png", bigPNG(t)))
+	link := attach(t, r, task, prepared(t, "s.png", smallPNG(t)))
 	if _, err := r.Core().DetachImage(bg, int64(task.ID), link.Hash); err != nil { // the MCP server's doing: no sweep is scheduled
 		t.Fatal(err)
 	}
