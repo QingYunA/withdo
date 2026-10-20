@@ -114,6 +114,10 @@ var openRunner = func(args ...string) error {
 	return err
 }
 
+// openPath opens a file or folder with the system: a folder in Finder, or File Explorer on Windows.
+// Tests replace it.
+var openPath = mygo.Shell.OpenPath
+
 // folderApps are the agent apps that open a folder when given one; the others only come forward.
 var folderApps = map[string]bool{"Cursor": true, "Windsurf": true, "Zed": true, "Visual Studio Code": true}
 
@@ -133,7 +137,7 @@ func (s *shell) OpenIn(how views.OpenWith, agentApp, dir string) error {
 		if dir == "" {
 			return views.ErrNoDir
 		}
-		return openRunner(dir)
+		return openPath(dir)
 	}
 	if agentApp != "" {
 		args := []string{"-a", agentApp}
