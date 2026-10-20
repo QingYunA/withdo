@@ -84,6 +84,74 @@ func (c *Core) SyncPending(ctx context.Context) (int, error) {
 	return n, nil
 }
 
+// SyncCounts returns the number of rows of each of the five synced entities. It is what a seeding
+// link prints and what a merge leases id blocks for.
+func (c *Core) SyncCounts(ctx context.Context) (map[string]int64, error) {
+	rows, err := c.db.QueryContext(ctx, `SELECT 'projects', COUNT(*) FROM projects
+		UNION ALL SELECT 'categories', COUNT(*) FROM categories
+		UNION ALL SELECT 'milestones', COUNT(*) FROM milestones
+		UNION ALL SELECT 'tasks', COUNT(*) FROM tasks
+		UNION ALL SELECT 'reports', COUNT(*) FROM reports`)
+	if err != nil {
+		return nil, fmt.Errorf("count synced rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := make(map[string]int64, 5)
+	for rows.Next() {
+		var entity string
+		var n int64
+		if err := rows.Scan(&entity, &n); err != nil {
+			return nil, fmt.Errorf("count synced rows: %w", err)
+		}
+		out[entity] = n
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("count synced rows: %w", err)
+	}
+	return out, nil
+}
+
+// DatabasePath returns the file of the open database, so a caller can put a backup next to it. It
+// is empty for an in-memory database.
+func (c *Core) DatabasePath(ctx context.Context) (string, error) {
+	rows, err := c.db.QueryContext(ctx, "PRAGMA database_list")
+	if err != nil {
+		return "", fmt.Errorf("read database path: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var (
+			seq  int
+			name string
+			file string
+		)
+		if err := rows.Scan(&seq, &name, &file); err != nil {
+			return "", fmt.Errorf("read database path: %w", err)
+		}
+		if name == "main" {
+			return file, nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return "", fmt.Errorf("read database path: %w", err)
+	}
+	return "", errors.New("read database path: no main database")
+}
+
+// BackupTo writes a consistent copy of the database to path with VACUUM INTO. It must run outside a
+// transaction; the server's Replace link takes it before it changes anything.
+func (c *Core) BackupTo(ctx context.Context, path string) error {
+	if _, err := c.db.ExecContext(ctx, "VACUUM INTO "+quoteSQLiteString(path)); err != nil {
+		return fmt.Errorf("back up database to %s: %w", path, err)
+	}
+	return nil
+}
+
+// quoteSQLiteString quotes a string literal for the few statements that cannot take a parameter.
+func quoteSQLiteString(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+}
+
 // SyncIDsLeft reports how many ids of entity the local blocks still hand out.
 func (c *Core) SyncIDsLeft(ctx context.Context, entity string) (int64, error) {
 	var n int64

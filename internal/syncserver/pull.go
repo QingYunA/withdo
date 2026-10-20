@@ -42,7 +42,7 @@ func (s *Server) pull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
 	if err != nil {
 		writeError(w, fmt.Errorf("begin pull: %w", err))
 		return
@@ -67,6 +67,11 @@ func (s *Server) pull(w http.ResponseWriter, r *http.Request) {
 	}
 	if seeder != "" && seeder != deviceID {
 		writeError(w, conflict("workspace is seeding"))
+		return
+	}
+	// The same transaction that reads the changes remembers that this device is current.
+	if _, err := tx.Exec(ctx, "UPDATE devices SET last_seen_at = now() WHERE id = $1", deviceID); err != nil {
+		writeError(w, fmt.Errorf("mark device seen: %w", err))
 		return
 	}
 	var version int64

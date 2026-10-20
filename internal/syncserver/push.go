@@ -197,8 +197,9 @@ func (s *Server) applyPush(ctx context.Context, sess *session, req *syncproto.Pu
 			return 0, 0, false, fmt.Errorf("raise id counter: %w", err)
 		}
 	}
-	if _, err := tx.Exec(ctx, "UPDATE devices SET last_mutation_id = $1 WHERE id = $2",
-		maxID, req.DeviceID); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE devices
+		SET last_mutation_id = $1, last_seen_at = now()
+		WHERE id = $2`, maxID, req.DeviceID); err != nil {
 		return 0, 0, false, fmt.Errorf("update device mutation id: %w", err)
 	}
 	if err := tx.Commit(ctx); err != nil {

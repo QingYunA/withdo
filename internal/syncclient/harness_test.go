@@ -25,9 +25,15 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
 
-const testToken = "s2b-token"
+const (
+	testToken  = "s2b-token"
+	otherToken = "s2b-other-token"
+)
 
-var testTokens = syncserver.StaticTokens{testToken: "s2b-subject"}
+var testTokens = syncserver.StaticTokens{
+	testToken:  "s2b-subject",
+	otherToken: "s2b-other-subject",
+}
 
 var testCtx = context.Background()
 
@@ -105,6 +111,7 @@ func newHarness(t *testing.T) *harness {
 // device is one local database and its client on a harness.
 type device struct {
 	db     *sql.DB
+	path   string
 	core   *domain.Core
 	client *syncclient.Client
 }
@@ -112,17 +119,24 @@ type device struct {
 // newDevice opens a fresh migrated SQLite database for the test. httpClient may be nil.
 func (h *harness) newDevice(t *testing.T, httpClient *http.Client) *device {
 	t.Helper()
-	db, _ := testutil.OpenDB(t)
+	return h.newDeviceWithToken(t, httpClient, testToken)
+}
+
+// newDeviceWithToken opens a device for another account, whose data must never show up in the
+// first account's workspace.
+func (h *harness) newDeviceWithToken(t *testing.T, httpClient *http.Client, token string) *device {
+	t.Helper()
+	db, path := testutil.OpenDB(t)
 	core := domain.New(db, domain.Options{})
 	client, err := syncclient.New(core, syncclient.Options{
 		BaseURL: h.http.URL,
-		Token:   testToken,
+		Token:   token,
 		HTTP:    httpClient,
 	})
 	if err != nil {
 		t.Fatalf("new sync client: %v", err)
 	}
-	return &device{db: db, core: core, client: client}
+	return &device{db: db, path: path, core: core, client: client}
 }
 
 func (d *device) link(t *testing.T, name string) {
@@ -257,6 +271,11 @@ func newTask(t *testing.T, c *domain.Core, in domain.CreateTaskInput) *domain.Ta
 	return must[*domain.Task](t)(c.CreateTask(testCtx, in))
 }
 
+// taskInput is a plain task with a title, for tests that do not care about the rest.
+func taskInput(title string) domain.CreateTaskInput {
+	return domain.CreateTaskInput{Title: title}
+}
+
 // dotIcon is a 12 x 12 category icon with one pixel set.
 var dotIcon = strings.Repeat(".", 143) + "#"
 
@@ -341,6 +360,19 @@ func (h *harness) serverSeedingDevices(t *testing.T) int {
 		t.Fatalf("count seeding devices: %v", err)
 	}
 	return n
+}
+
+// serverIDCounter is the first id the workspace has not handed out for entity. A merge leases its
+// fresh ids from here, so every renumbered local row is at or above it.
+func (h *harness) serverIDCounter(t *testing.T, entity string) int64 {
+	t.Helper()
+	var next int64
+	if err := h.admin.QueryRow(testCtx, `SELECT next FROM id_counters
+		WHERE workspace_id = (SELECT id FROM workspaces ORDER BY id LIMIT 1) AND entity = $1`, entity).
+		Scan(&next); err != nil {
+		t.Fatalf("read %s id counter: %v", entity, err)
+	}
+	return next
 }
 
 // assertDeviceMatchesServer checks every live server row of every synced table against the device:

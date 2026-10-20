@@ -404,3 +404,73 @@ signs in through the system browser. Nothing here needs the domain; tests run a 
 4. **End to end**: two devices sign in as the same subject against the S2 server with
    `OIDCAuthenticator` and sync a task between them.
 5. CLI `sync login` and `sync logout` with the fake issuer and a fake `Secrets`.
+
+## S3-UI-a: what the Sync pane needs
+
+The Settings > Sync pane (v27, **Settings > Sync** in `docs/design/ui-spec.md`) is S3-UI-b. Before
+it, the client and the server learn the four things the pane shows or asks.
+
+### Devices and their last sync (server)
+
+- `devices.last_seen_at`, set on every push and pull of the device (one `UPDATE` in the same
+  transaction). A server migration adds it.
+- `GET /v1/devices` → `{devices: [{id, name, last_seen_at}]}` for the caller's workspace, newest first.
+- Client: `Devices(ctx) ([]Device, error)`.
+
+### The account (client)
+
+- `OIDCSource` keeps the ID token's `name` and `email` claims after a sign-in and a refresh;
+  `Account() (Account, bool)`. `sync login` and the app write `account: {name, email}` into
+  `sync.json`, so the pane shows it offline. A static token has no account.
+
+### Linking when both sides have tasks (client)
+
+`Link` already returns `ErrLocalData` when this database has user rows and the workspace has rows.
+Two ways on from there, both new: `LinkMerge(ctx, name)` and `LinkReplace(ctx, name)`.
+
+- **Merge**: this database's rows join the account and get the account's numbers.
+  1. Register (joining), lease id blocks large enough for this database's rows of each entity.
+  2. Pull every page of the account into memory first.
+  3. Map each local row to its id in the account: a built-in category to the account's category with
+     the same `builtin`; a user category to the account's live category with the same name
+     (case-insensitive, `categories.name` is NOCASE unique); a project with a `repo_slug` to the
+     account's live project with the same slug (`repo_slug` is unique); every other row to the next id
+     of its entity's block.
+  4. In one write with `applying` set and foreign keys deferred: renumber every local row and every
+     column that references it (`tasks.project_id`, `milestone_id`, `parent_id`, `category_id`;
+     `milestones.project_id`; `reports.task_id`; `projects.parent_id`; and the local-only
+     `task_images.task_id`); delete local rows that map onto an account row, after moving their
+     references; apply the pulled account rows (local-only columns of a merged project, such as
+     `repo_path`, stay); store the cookie; set `enabled`; put a full outbox entry for every local row
+     that got a new id (not for rows merged into the account's).
+  5. Push until the outbox is empty.
+  `LinkMerge` returns the map of old to new task ids, so the app can rewrite the files it keys by task
+  id (`seen.json`, `dismissed.json`, `recent-changes.json`) in S3-UI-b.
+- **Replace**: back this database up with `VACUUM INTO` to `backups/adhd-todo-<UTC time>.db` next to it,
+  then in one write delete every row of the five entities and of `task_images`, and join as an empty
+  device (pull everything). Returns the backup's path.
+- `sync link` and `sync login` gain `--merge` and `--replace` for the case `ErrLocalData` names; the
+  message for `ErrLocalData` names the two flags.
+
+### Wording
+
+`sync link`/`login` print `uploaded this Mac's data (N rows)` after seeding, `joined the account`
+after joining, `merged this Mac's N tasks into the account` after a merge, and `replaced this Mac's
+data with the account's; backup at PATH` after a replace.
+
+### Tests (Postgres)
+
+1. **Devices**: two devices push and pull; `GET /v1/devices` lists both with `last_seen_at` that moves
+   on each sync, and none of another user's.
+2. **Account**: after a fake-issuer sign-in, `Account()` is the token's name and email, and `sync login`
+   wrote them to `sync.json`.
+3. **Merge**: A seeds an account (categories `Work`, `Life`, `Reading`; a project `acme/app`; tasks with
+   subtasks, milestones, reports). B holds its own data: a category `reading` (other case), a project
+   `acme/app` with a different `repo_path`, a project without a slug, tasks with subtasks and
+   reports, a task image. `Link` is `ErrLocalData`; `LinkMerge` then leaves A and B equal on every
+   synced column; B's `Reading` tasks point at A's `Reading`; B's `acme/app` tasks point at A's
+   project, whose `repo_path` on B is still B's; every reference resolves; B's own tasks have new ids
+   inside B's blocks; the returned map covers every B task.
+4. **Replace**: same start; `LinkReplace` leaves B equal to A, and the backup file holds B's old rows.
+5. Running the S2b convergence test after a merge (three devices, one of them merged) still ends
+   equal.

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -74,8 +75,14 @@ func newCLIOIDC(t *testing.T) *cliOIDC {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		claims, _ := json.Marshal(map[string]any{
+			"sub": "cli-user", "name": "CLI User", "email": "cli@example.com",
+		})
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"access_token": "cli-access", "token_type": "Bearer", "expires_in": 3600,
+			"access_token":  "cli-access",
+			"id_token":      "e30." + base64.RawURLEncoding.EncodeToString(claims) + ".",
+			"token_type":    "Bearer",
+			"expires_in":    3600,
 			"refresh_token": "cli-refresh",
 		})
 	})
@@ -185,6 +192,33 @@ func TestS4a5CLILoginLogout(t *testing.T) {
 	}
 	if _, err := secrets.Get(syncclient.RefreshTokenKey); err == nil {
 		t.Fatal("logout kept the refresh token")
+	}
+}
+
+// TestS3UIa2LoginWritesAccount is S3-UI-a acceptance criterion 2 in the CLI: a fake-issuer sign-in
+// writes the ID token's name and email into sync.json's account object.
+func TestS3UIa2LoginWritesAccount(t *testing.T) {
+	syncServer := newCLISyncServer(t, true)
+	issuer := newCLIOIDC(t)
+	path := t.TempDir() + "/account.db"
+	h := newHarness(t, path)
+	h.d.secrets = newCLISecrets()
+	h.d.openBrowser = followCLIBrowser(t)
+
+	code, _, errOut := runCLI(t, h, "sync", "login",
+		"--server", syncServer.URL, "--issuer", issuer.URL, "--client-id", "cli-client", "--name", "Mac")
+	if code != 0 {
+		t.Fatalf("login exit %d: %s", code, errOut)
+	}
+	cfg, found, err := syncclient.LoadConfig(path)
+	if err != nil || !found {
+		t.Fatalf("sync.json: found = %v, %v", found, err)
+	}
+	if cfg.Account == nil {
+		t.Fatal("sync.json has no account")
+	}
+	if cfg.Account.Name != "CLI User" || cfg.Account.Email != "cli@example.com" {
+		t.Fatalf("sync.json account = %+v, want CLI User <cli@example.com>", *cfg.Account)
 	}
 }
 

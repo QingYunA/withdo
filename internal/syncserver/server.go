@@ -56,6 +56,7 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	s := &Server{pool: pool, auth: auth, hub: newHub(), mux: http.NewServeMux()}
 	s.mux.HandleFunc("GET /healthz", s.healthz)
 	s.mux.HandleFunc("POST /v1/devices", s.withSession(s.createDevice))
+	s.mux.HandleFunc("GET /v1/devices", s.withSession(s.listDevices))
 	s.mux.HandleFunc("POST /v1/devices/seeded", s.withSession(s.deviceSeeded))
 	s.mux.HandleFunc("POST /v1/ids", s.withSession(s.leaseIDs))
 	s.mux.HandleFunc("POST /v1/push", s.withSession(s.push))

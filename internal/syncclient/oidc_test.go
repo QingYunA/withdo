@@ -40,6 +40,8 @@ type fakeOIDC struct {
 	mu            sync.Mutex
 	codes         map[string]string // authorization code -> PKCE challenge
 	subject       string
+	name          string
+	email         string
 	expiresIn     int
 	refreshRefuse bool
 	refreshes     int
@@ -58,6 +60,7 @@ func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
 	f := &fakeOIDC{
 		clientID: clientID, key: key, keyID: "test-key",
 		codes: map[string]string{}, subject: "user-1", expiresIn: 3600,
+		name: "Ada Lovelace", email: "ada@example.com",
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
@@ -173,19 +176,30 @@ func (f *fakeOIDC) respondToken(w http.ResponseWriter, grant string) {
 		f.refreshes++
 	}
 	subject := f.subject
+	name := f.name
+	email := f.email
 	expiresIn := f.expiresIn
 	f.subjects = append(f.subjects, subject)
 	f.mu.Unlock()
+	exp := time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
 	access, err := f.sign(map[string]any{
 		"iss": f.Server.URL, "sub": subject, "aud": f.clientID,
-		"iat": time.Now().Unix(), "exp": time.Now().Add(time.Duration(expiresIn) * time.Second).Unix(),
+		"iat": time.Now().Unix(), "exp": exp,
+	})
+	if err != nil {
+		http.Error(w, "signing failed", http.StatusInternalServerError)
+		return
+	}
+	idToken, err := f.sign(map[string]any{
+		"iss": f.Server.URL, "sub": subject, "aud": f.clientID,
+		"iat": time.Now().Unix(), "exp": exp, "name": name, "email": email,
 	})
 	if err != nil {
 		http.Error(w, "signing failed", http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, map[string]any{
-		"access_token": access, "token_type": "Bearer", "expires_in": expiresIn,
+		"access_token": access, "id_token": idToken, "token_type": "Bearer", "expires_in": expiresIn,
 		"refresh_token": fmt.Sprintf("refresh-%d", n),
 	})
 }
