@@ -3874,9 +3874,9 @@
   "@settingsSyncServerAddress": {
     "description": "Accessibility label of the server address field and Change link."
   },
-  "settingsSyncServerInvalid": "That doesn't look like a server address.",
+  "settingsSyncServerInvalid": "Use an https:// address, such as https://todo.example.com.",
   "@settingsSyncServerInvalid": {
-    "description": "Shown when the typed server address is not an http or https URL."
+    "description": "Shown when the typed server address is not an https URL (http only for this computer)."
   },
   "settingsSyncAccount": "Account",
   "@settingsSyncAccount": {

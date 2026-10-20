@@ -652,7 +652,7 @@
   "settingsSyncServer": "服务器",
   "settingsSyncChange": "更改",
   "settingsSyncServerAddress": "服务器地址",
-  "settingsSyncServerInvalid": "这不像一个服务器地址。",
+  "settingsSyncServerInvalid": "请填 https:// 开头的地址，例如 https://todo.example.com。",
   "settingsSyncAccount": "账号",
   "settingsSyncSignedIn": "已登录",
   "settingsSyncSignedInOneDevice": "已登录 · 1 台设备",

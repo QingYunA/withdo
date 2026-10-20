@@ -9742,16 +9742,18 @@ func (msgs Messages) SettingsSyncServerAddress() string {
 	return Catalog.Format(msgs.locale, "settingsSyncServerAddress", nil)
 }
 
-// SettingsSyncServerInvalid says "That doesn't look like a server address."
+// SettingsSyncServerInvalid says "Use an https:// address, such as https://todo.example.com."
 // in the language the app shows.
 //
-// Shown when the typed server address is not an http or https URL.
+// Shown when the typed server address is not an https URL (http only for
+// this computer).
 func SettingsSyncServerInvalid() string { return In(i18n.Locale()).SettingsSyncServerInvalid() }
 
-// SettingsSyncServerInvalid says "That doesn't look like a server address."
+// SettingsSyncServerInvalid says "Use an https:// address, such as https://todo.example.com."
 // in the language of msgs.
 //
-// Shown when the typed server address is not an http or https URL.
+// Shown when the typed server address is not an https URL (http only for
+// this computer).
 func (msgs Messages) SettingsSyncServerInvalid() string {
 	return Catalog.Format(msgs.locale, "settingsSyncServerInvalid", nil)
 }

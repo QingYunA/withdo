@@ -360,7 +360,7 @@ func syncChoiceCard(c *ui.Context, t *theme.Tokens, key, title, body string, sel
 			ink = t.Accent
 		}
 		ui.Box(c).Size(16, 16).Center().Shrink(0).Margin(3, 0, 0).Children(func() {
-			ui.Icon(c, theme.IconNow).Size(theme.IconSmall, theme.IconSmall).TextColor(ink)
+			theme.RadioGlyph(c, ink, selected)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {

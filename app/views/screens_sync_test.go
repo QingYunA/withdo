@@ -66,7 +66,7 @@ func TestScreensSettingsSync(t *testing.T) {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix
 			if zh {
-				sfx = "-zh" + a.suffix
+				sfx = "-zh-" + a.suffix
 			}
 			// One app for every state: the pane only reads it, and a demo store per picture is slow.
 			app := settingsApp(t, ready)
