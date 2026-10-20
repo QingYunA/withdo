@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/domain"
+)
 
 // Snapshot is everything the windows show, read together: the projects, the tasks outside archived
 // projects with their reports, the milestones and the overview. Store.Snapshot reads it in a fixed
@@ -16,8 +20,8 @@ type Snapshot struct {
 	Overview Overview
 }
 
-// LatestReport is the newest report an agent filed against a task, or nil. GitHub's own reports are
-// not the agent speaking, so they do not count as its last word.
+// LatestReport is the newest report an agent filed against a task, or nil. GitHub's own reports and
+// the user's replies are not the agent speaking, so they do not count as its last word.
 func (d TaskDetail) LatestReport() *Report { return d.newest(false) }
 
 // GitHubReport is the newest report GitHub filed against a task, or nil.
@@ -25,9 +29,15 @@ func (d TaskDetail) GitHubReport() *Report { return d.newest(true) }
 
 func (d TaskDetail) newest(github bool) *Report {
 	for i := range d.Reports { // newest first
-		if (d.Reports[i].Agent == GitHubAgent) == github {
-			return &d.Reports[i]
+		if (d.Reports[i].Agent == GitHubAgent) != github {
+			continue
 		}
+		// A reply the user wrote is not the agent's latest word: it must not reset staleness or
+		// replace what the agent said. It still shows in the task's activity.
+		if !github && d.Reports[i].Agent == domain.ReplyAgent {
+			continue
+		}
+		return &d.Reports[i]
 	}
 	return nil
 }

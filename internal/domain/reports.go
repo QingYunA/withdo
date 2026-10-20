@@ -14,6 +14,10 @@ const (
 	reportCols = "id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links"
 	// maxTitleRunes bounds a title derived from a summary.
 	maxTitleRunes = 60
+	// ReplyAgent is the agent name of a reply the user writes on a task.
+	ReplyAgent = "you"
+	// KindReply marks a report that is the user's reply, not an agent's progress note.
+	KindReply ReportKind = "reply"
 )
 
 func scanReport(s scanner) (Report, error) {
@@ -152,6 +156,56 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 	// The first report on a task handed to an agent means the agent took it.
 	if _, err := q.ExecContext(ctx, "UPDATE tasks SET handed_to = NULL, handed_at = NULL WHERE id = ? AND handed_to IS NOT NULL", in.TaskID); err != nil {
 		return nil, fmt.Errorf("clear hand-off: %w", err)
+	}
+	return one(q.QueryRowContext(ctx, "SELECT "+reportCols+" FROM reports WHERE id = ?", id), scanReport)
+}
+
+// AddReply files the user's reply on a task as a report by ReplyAgent with KindReply. The task
+// itself is left alone: its status, its timestamps and a hand-off waiting for an agent stay as they
+// were. The report syncs like any other report.
+func (c *Core) AddReply(ctx context.Context, taskID int64, text string) (*Report, error) {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return nil, invalid("text", "must not be empty")
+	}
+	var out *Report
+	err := c.write(ctx, func(q store.Querier) error {
+		task, err := getTask(ctx, q, taskID)
+		if err != nil {
+			return err
+		}
+		if task == nil {
+			return notFound("task_id", "task", taskID)
+		}
+		out, err = c.addReply(ctx, q, taskID, text)
+		return err
+	})
+	if err != nil {
+		return nil, fmt.Errorf("add reply: %w", err)
+	}
+	return out, nil
+}
+
+// addReply inserts the reply report inside the caller's transaction. It deliberately does not use
+// addReport: filing a report clears a hand-off, but the user answering a task did not take it.
+func (c *Core) addReply(ctx context.Context, q store.Querier, taskID int64, text string) (*Report, error) {
+	links, err := encodeLinks(nil)
+	if err != nil {
+		return nil, err
+	}
+	newID, err := c.syncID(ctx, q, "reports")
+	if err != nil {
+		return nil, err
+	}
+	res, err := q.ExecContext(ctx,
+		"INSERT INTO reports (id, task_id, agent, status, summary, next_step, created_at, cwd, kind, links) VALUES (?, ?, ?, NULL, ?, NULL, ?, '', ?, ?)",
+		newID, taskID, ReplyAgent, text, c.stamp(), KindReply, links)
+	if err != nil {
+		return nil, fmt.Errorf("insert reply: %w", err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("insert reply: %w", err)
 	}
 	return one(q.QueryRowContext(ctx, "SELECT "+reportCols+" FROM reports WHERE id = ?", id), scanReport)
 }
