@@ -190,10 +190,11 @@ the Sync screen has no phone mockup and follows the rules below (v27's groups in
 - **Sync** (tap the header's cloud on any tab): back bar `Sync`, then by state, the same states and
   words as the desktop's pane (`app/locales` keys `settingsSync*` are the source for the strings;
   copy them into `strings.xml`, en and zh):
-  - signed out: a card with the 36 dp pixel cloud, the title, the body, the accent button
-    `Sign in and sync` (`SignIn` through `CustomTabOpener`, device name `Build.MODEL`), the note;
-  - signing in: the button disabled with `Waiting for the browser…`; when the app comes back to the
-    front without the sign-in finished, the button is enabled again;
+  - signed out (v29): a card with the 36 dp pixel cloud, the title, the body, two 48 dp fields
+    (`Email or username` with the email keyboard and IME Next, `Password` masked with IME Done and
+    the autofill content types), the full-width accent button `Sign in and sync` (`SignIn(login,
+    password, Build.MODEL)`), the note; errors in `status.blocked` under the button as on the desktop;
+  - signing in: the fields and the button disabled, the button saying `Signing in…`;
   - `choose`: a modal bottom sheet with the two radio cards of v27 (Merge recommended and picked),
     `Cancel` and `Continue` (`LinkMerge` or `LinkReplace`);
   - signed in: the account group (name, `Signed in · 3 devices`, `Sign out` as a text button), the
