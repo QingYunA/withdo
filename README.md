@@ -81,7 +81,8 @@ half a second.
 
 ```sh
 scripts/check.sh                                 # while working: gofmt, vet, i18n, short tests
-scripts/check.sh full                            # before a PR: + race on the core (CI runs this)
+scripts/check.sh full                            # before a PR: + race on the core (CI runs it as two jobs)
+scripts/check.sh race                            # only the race tests
 scripts/screens.sh                               # re-render the design screenshots; review them in the PR
 git config core.hooksPath .githooks              # once: the static checks run on every commit
 cd app && go tool mygo dev                       # run the app against the real database (.dev identifier)
