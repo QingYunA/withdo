@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">adhd-todo</string>
+
+    <string name="nav_mine">我的</string>
+    <string name="nav_agents">Agent</string>
+    <string name="nav_calendar">日历</string>
+    <string name="nav_projects">项目</string>
+
+    <string name="title_mine">我的</string>
+    <string name="title_agents">Agent</string>
+    <string name="title_calendar">日历</string>
+    <string name="title_projects">项目</string>
+
+    <string name="section_from_agents">Agent 交过来的</string>
+    <string name="section_today">今天</string>
+    <string name="section_later">之后</string>
+    <string name="section_done_today">今天做完</string>
+    <string name="section_working">在做</string>
+    <string name="agents_working">%1$d 个在做</string>
+
+    <string name="composer_placeholder_mine">告诉我任何事，我来变成任务</string>
+    <string name="composer_placeholder_agents">问问 Agent 们在做什么</string>
+    <string name="composer_placeholder_inbox">加到收件箱</string>
+    <string name="added_to_inbox">已添加到收件箱</string>
+    <string name="add_failed">没能添加任务</string>
+
+    <string name="action_answer">回答</string>
+    <string name="action_accept">收下</string>
+    <string name="action_open_pr">打开 PR</string>
+    <string name="action_open_page">打开页面</string>
+    <string name="action_open">打开</string>
+    <string name="action_review">去看看</string>
+    <string name="action_done">完成</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_send">发送</string>
+
+    <string name="reply_title">回答 %1$s</string>
+    <string name="reply_hint">回复会存进任务动态，Agent 下次汇报时读到。</string>
+
+    <string name="empty_mine_title">现在没有要你处理的事</string>
+    <string name="empty_mine_body">Agent 们在干活，有动静会出现在这里</string>
+    <string name="empty_agents_title">没有 Agent 在做事</string>
+    <string name="empty_agents_body">Agent 汇报进度后，就会出现在这里</string>
+    <string name="how_to_connect">怎么连接</string>
+
+    <string name="connect_title">连接这台手机</string>
+    <string name="connect_body">在 Mac 上打开设置 &gt; 同步，然后链接这台手机。</string>
+    <string name="close">关闭</string>
+
+    <string name="calendar_placeholder_title">日历稍后就有</string>
+    <string name="calendar_placeholder_body">月视图会在下一次 Android 更新里出现</string>
+    <string name="projects_placeholder_title">项目页下一步就来</string>
+    <string name="projects_placeholder_body">项目列表和任务会在下一步加入</string>
+
+    <string name="need_blocked_with_words">%1$s 卡住了：“%2$s”</string>
+    <string name="need_blocked">%1$s 卡住了，在等你</string>
+    <string name="need_reminder">你要求 %1$s 提醒</string>
+    <string name="need_pr_closed">PR #%1$d 未合并就关闭了</string>
+    <string name="need_pr_failing">PR #%1$d 的检查没通过</string>
+    <string name="need_pr_changes">PR #%1$d 被要求修改</string>
+    <string name="need_review_pr">PR #%1$d 等你审查</string>
+    <string name="need_review">%1$s 做完了，等你试用</string>
+    <string name="need_stale">%1$s没更新</string>
+
+    <string name="pill_done">完成</string>
+    <string name="pill_doing">进行中</string>
+    <string name="pill_blocked">已阻塞</string>
+    <string name="pill_review">交回主代理</string>
+    <string name="pill_todo">待办</string>
+    <string name="pill_backlog">之后再说</string>
+    <string name="pill_cancelled">已取消</string>
+    <string name="done_by_you">你</string>
+    <string name="agent_unnamed">Agent</string>
+    <string name="next_step_prefix">；下一步：</string>
+
+    <string name="show_all_in_inbox">在收件箱里看全部</string>
+    <string name="show_all_in_completed">在已完成里看全部</string>
+    <string name="coming_soon_title">任务详情下一步就来</string>
+    <string name="coming_soon_body">完整的任务页会在下一次 Android 更新里加入。</string>
+    <string name="error_core">打不开数据。</string>
+
+    <string name="age_now">刚刚</string>
+    <string name="age_minutes">%1$d分钟前</string>
+    <string name="age_hours">%1$d小时前</string>
+    <string name="age_days">%1$d天前</string>
+    <string name="due_today">今天</string>
+    <string name="due_tomorrow">明天</string>
+
+    <plurals name="subtasks">
+        <item quantity="one">%1$d 个子任务</item>
+        <item quantity="other">%1$d 个子任务</item>
+    </plurals>
+</resources>

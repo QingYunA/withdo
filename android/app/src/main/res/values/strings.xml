@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">adhd-todo</string>
+
+    <string name="nav_mine">Mine</string>
+    <string name="nav_agents">Agents</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_projects">Projects</string>
+
+    <string name="title_mine">Mine</string>
+    <string name="title_agents">Agents</string>
+    <string name="title_calendar">Calendar</string>
+    <string name="title_projects">Projects</string>
+
+    <string name="section_from_agents">From your agents</string>
+    <string name="section_today">Today</string>
+    <string name="section_later">Later</string>
+    <string name="section_done_today">Done today</string>
+    <string name="section_working">Working</string>
+    <string name="agents_working">%1$d working</string>
+
+    <string name="composer_placeholder_mine">Tell me anything and I’ll make it a task</string>
+    <string name="composer_placeholder_agents">Ask what your agents are doing</string>
+    <string name="composer_placeholder_inbox">Add to Inbox</string>
+    <string name="added_to_inbox">Added to Inbox</string>
+    <string name="add_failed">Couldn’t add the task</string>
+
+    <string name="action_answer">Answer</string>
+    <string name="action_accept">Accept</string>
+    <string name="action_open_pr">Open PR</string>
+    <string name="action_open_page">Open page</string>
+    <string name="action_open">Open</string>
+    <string name="action_review">Review</string>
+    <string name="action_done">Done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_send">Send</string>
+
+    <string name="reply_title">Answer %1$s</string>
+    <string name="reply_hint">Your reply is filed in the task’s activity; the agent reads it with its next look.</string>
+
+    <string name="empty_mine_title">Nothing needs you right now</string>
+    <string name="empty_mine_body">Your agents are at work. Whatever happens shows up here.</string>
+    <string name="empty_agents_title">No agents at work</string>
+    <string name="empty_agents_body">When an agent reports its progress, it shows up here.</string>
+    <string name="how_to_connect">How to connect</string>
+
+    <string name="connect_title">Connect this phone</string>
+    <string name="connect_body">Open Settings &gt; Sync on your Mac, then link this phone.</string>
+    <string name="close">Close</string>
+
+    <string name="calendar_placeholder_title">Calendar comes later</string>
+    <string name="calendar_placeholder_body">The month view arrives with the next Android update.</string>
+    <string name="projects_placeholder_title">Projects come next</string>
+    <string name="projects_placeholder_body">The project list and its tasks arrive in the next update.</string>
+
+    <string name="need_blocked_with_words">%1$s is stuck: “%2$s”</string>
+    <string name="need_blocked">%1$s is stuck and waits for you</string>
+    <string name="need_reminder">You asked to be reminded at %1$s</string>
+    <string name="need_pr_closed">PR #%1$d was closed without merging</string>
+    <string name="need_pr_failing">Checks are failing on PR #%1$d</string>
+    <string name="need_pr_changes">Changes were requested on PR #%1$d</string>
+    <string name="need_review_pr">PR #%1$d is ready for your review</string>
+    <string name="need_review">%1$s finished and is waiting for you</string>
+    <string name="need_stale">No update for %1$s</string>
+
+    <string name="pill_done">Done</string>
+    <string name="pill_doing">Doing</string>
+    <string name="pill_blocked">Blocked</string>
+    <string name="pill_review">Handed back</string>
+    <string name="pill_todo">To do</string>
+    <string name="pill_backlog">Backlog</string>
+    <string name="pill_cancelled">Cancelled</string>
+    <string name="done_by_you">You</string>
+    <string name="agent_unnamed">Agent</string>
+    <string name="next_step_prefix">; next: </string>
+
+    <string name="show_all_in_inbox">Show all in Inbox</string>
+    <string name="show_all_in_completed">Show all in Completed</string>
+    <string name="coming_soon_title">Task details come next</string>
+    <string name="coming_soon_body">The full task screen arrives with the next Android update.</string>
+    <string name="error_core">Couldn’t open the data store.</string>
+
+    <string name="age_now">now</string>
+    <string name="age_minutes">%1$dm</string>
+    <string name="age_hours">%1$dh</string>
+    <string name="age_days">%1$dd</string>
+    <string name="due_today">Today</string>
+    <string name="due_tomorrow">Tomorrow</string>
+
+    <plurals name="subtasks">
+        <item quantity="one">%1$d subtask</item>
+        <item quantity="other">%1$d subtasks</item>
+    </plurals>
+</resources>

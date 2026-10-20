@@ -77,3 +77,49 @@ and JAVA_HOME from the environment, with the defaults of a Homebrew openjdk@17 a
 5. **Bindable**: a test runs `go vet` and checks with `golang.org/x/tools/go/packages` (or a simple
    reflection over the exported API) that every exported function and method uses only bindable
    types; `scripts/android-core.sh` produces the `.aar` (run locally; it needs the NDK).
+
+## A2a: the app shell, Mine and Agents
+
+The Compose app on `mobile/core`, first half: everything a user sees on opening it. Spec: **Android**
+in `docs/design/ui-spec.md`; mockup `docs/design/mockups/v26.html` (frames 1 and 2, light and dark).
+The skeleton in `android/` builds and loads the core (an emulator showed the Mine JSON).
+
+### One source for the pictures
+
+- Sprites: the app reads `app/theme/sprites/avatars/*.png` as assets (`sourceSets.main.assets`
+  pointing at the repo's folder, no copies) and draws them with nearest-neighbour filtering
+  (`FilterQuality.None`). Android densities are not whole numbers (420 dpi is 2.625 px a dp), so a
+  12-cell sprite meant for 18 dp is drawn at the nearest whole multiple of 12 *physical pixels*
+  (`round(18 * density / 12) * 12` px) and centered in its 18 dp slot, so every cell is a whole number
+  of pixels. The same rule holds for glyphs and pixelarticons (a 24-unit icon is 12 cells).
+- Interface icons: the pixelarticons SVGs in `app/theme/pixel-icons` as assets too, their `d`
+  attributes parsed with Compose's `PathParser` and filled in the text color.
+- Status glyphs: the 12 x 12 grids of `app/theme/glyph.go` ported to Kotlin as rectangles, with a unit
+  test that the Kotlin grids equal the Go ones (read `glyph.go` in the test with a small parser, or
+  have a Go test write `mobile/core/testdata/glyphs.json` and compare with it).
+- Colors and type: the tokens of ui-spec's tables (light and dark) as a Kotlin theme object; no
+  literal colors in screens.
+
+### Screens and behavior
+
+- `MainActivity` opens the core in `filesDir`, implements `Listener` (refresh the visible page on
+  `OnChange`; keep the sync status), and shows the bottom bar: Mine, Agents, Calendar (a placeholder
+  that says it comes later), Projects (a placeholder for A2b).
+- **Mine**: the header (title, date, sync cloud), From your agents (the one box; buttons under the
+  summary; Accept calls `Accept`, Answer opens a reply sheet that calls `Reply`, Open PR opens the
+  URL), Today, Later, Done today, each section hidden when empty, the empty state per the spec.
+  Tapping a status glyph of my task completes it.
+- **Agents**: Working with subtasks on their rail and pills, Done today, the empty state.
+- **Composer** pinned above the bottom bar: creates a plain task (`CreateTask`), the Inbox on Mine.
+- Data classes for the page JSON with `kotlinx.serialization`, decoded leniently (unknown keys
+  ignored).
+
+### Verification
+
+1. **JSON contract**: a JVM unit test decodes every `mobile/core/testdata/*.golden.json` into the data
+   classes with no error and spot-checks fields.
+2. **Glyphs**: the Kotlin grids equal the Go grids (above).
+3. `./gradlew assembleDebug testDebugUnitTest` passes (offline from `GRADLE_USER_HOME=/tmp/adhd-gradle`).
+4. Screens are checked on an emulator by the reviewer against v26 frames 1 and 2, light and dark, with
+   the demo data; a `debug` build seeds the demo data when started with an intent extra `demo=true`
+   (through a small `SeedDemo(dataDir)` added to `mobile/core`, reusing `app/data`'s demo seeding).
