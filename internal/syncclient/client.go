@@ -163,8 +163,11 @@ func errorMessage(raw []byte) string {
 // seeding over from another device; the server answers 409 without it while one is seeding.
 func (c *Client) register(ctx context.Context, name string, resumeSeeding bool) (syncproto.CreateDeviceResponse, error) {
 	var out syncproto.CreateDeviceResponse
-	err := c.do(ctx, http.MethodPost, "/v1/devices",
-		syncproto.CreateDeviceRequest{Name: name, ResumeSeeding: resumeSeeding}, &out)
+	err := retryTransient(ctx, func() error {
+		out = syncproto.CreateDeviceResponse{}
+		return c.do(ctx, http.MethodPost, "/v1/devices",
+			syncproto.CreateDeviceRequest{Name: name, ResumeSeeding: resumeSeeding}, &out)
+	})
 	if err != nil {
 		return out, err
 	}
@@ -175,15 +178,20 @@ func (c *Client) register(ctx context.Context, name string, resumeSeeding bool) 
 }
 
 func (c *Client) markSeeded(ctx context.Context, deviceID string) error {
-	var out syncproto.SeededResponse
-	return c.do(ctx, http.MethodPost, "/v1/devices/seeded",
-		syncproto.SeededRequest{DeviceID: deviceID}, &out)
+	return retryTransient(ctx, func() error {
+		var out syncproto.SeededResponse
+		return c.do(ctx, http.MethodPost, "/v1/devices/seeded",
+			syncproto.SeededRequest{DeviceID: deviceID}, &out)
+	})
 }
 
 func (c *Client) leaseIDs(ctx context.Context, deviceID, entity string, count int) (syncproto.IDsResponse, error) {
 	var out syncproto.IDsResponse
-	err := c.do(ctx, http.MethodPost, "/v1/ids",
-		syncproto.IDsRequest{DeviceID: deviceID, Entity: entity, Count: count}, &out)
+	err := retryTransient(ctx, func() error {
+		out = syncproto.IDsResponse{}
+		return c.do(ctx, http.MethodPost, "/v1/ids",
+			syncproto.IDsRequest{DeviceID: deviceID, Entity: entity, Count: count}, &out)
+	})
 	if err != nil {
 		return out, err
 	}
@@ -204,6 +212,9 @@ func (c *Client) pull(ctx context.Context, deviceID string, cookie int64, limit 
 	q.Set("device_id", deviceID)
 	q.Set("cookie", strconv.FormatInt(cookie, 10))
 	q.Set("limit", strconv.Itoa(limit))
-	err := c.do(ctx, http.MethodGet, "/v1/pull?"+q.Encode(), nil, &out)
+	err := retryTransient(ctx, func() error {
+		out = syncproto.PullResponse{}
+		return c.do(ctx, http.MethodGet, "/v1/pull?"+q.Encode(), nil, &out)
+	})
 	return out, err
 }

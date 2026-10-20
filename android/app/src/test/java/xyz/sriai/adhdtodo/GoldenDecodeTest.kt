@@ -106,7 +106,11 @@ class GoldenDecodeTest {
                     assertEquals("linked", PageJson.decodeFromString<SignInState>(text).state)
                 }
                 "signin-choose.golden.json" -> {
-                    assertEquals("choose", PageJson.decodeFromString<SignInState>(text).state)
+                    val answer = PageJson.decodeFromString<SignInState>(text)
+                    assertEquals("choose", answer.state)
+                    assertEquals(128, answer.localTasks)
+                    assertEquals(6, answer.localProjects)
+                    assertEquals(2, answer.accountDevices)
                 }
                 else -> error("a golden file with no data class: ${file.name}")
             }

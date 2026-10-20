@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
+	"net"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -114,6 +117,8 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 	if c.secrets == nil {
 		return "", errors.New("this phone has no secure store for the sign-in")
 	}
+	c.startLink()
+	defer c.finishLink()
 	cfg, found, err := c.loadConfig()
 	if err != nil {
 		return "", err
@@ -137,7 +142,7 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 			return "", errors.New("sign-in is not set up; set the issuer first")
 		}
 	}
-	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
+	source := c.oidcSource(cfg)
 	if err := source.Login(context.Background(), opener.Open); err != nil {
 		return "", syncError(err)
 	}
@@ -160,7 +165,7 @@ func (c *Core) SignIn(opener BrowserOpener, deviceName string) (string, error) {
 	}
 	if err := client.Link(context.Background(), strings.TrimSpace(deviceName)); err != nil {
 		if errors.Is(err, syncclient.ErrLocalData) {
-			return signInChooseJSON, nil
+			return c.signInChoose(context.Background(), client)
 		}
 		return "", syncError(err)
 	}
@@ -178,7 +183,7 @@ func (c *Core) SignOut() error {
 	if c.secrets == nil {
 		return nil
 	}
-	if err := syncclient.DeleteRefreshToken(secretAdapter{c.secrets}); err != nil {
+	if err := syncclient.DeleteRefreshTokenAt(secretAdapter{c.secrets}, c.dbPath); err != nil {
 		return errors.New("could not sign out")
 	}
 	return nil
@@ -209,6 +214,12 @@ func (c *Core) SyncNow() error {
 // minute timer. Starting an already running sync is a no-op.
 func (c *Core) StartSync() error {
 	c.mu.Lock()
+	if c.links > 0 {
+		// SignIn, LinkMerge or LinkReplace is still talking to the server. It starts the runner
+		// itself when it is done; a runner now would lease ids and refresh the token underneath it.
+		c.mu.Unlock()
+		return nil
+	}
 	existing := c.runner
 	c.mu.Unlock()
 	if existing != nil {
@@ -342,7 +353,7 @@ func (c *Core) hasCredentials(cfg syncclient.Config) bool {
 	if cfg.Issuer == "" || c.secrets == nil {
 		return false
 	}
-	_, err := (secretAdapter{c.secrets}).Get(syncclient.RefreshTokenKey)
+	_, err := syncclient.LoadRefreshToken(secretAdapter{c.secrets}, c.dbPath)
 	return err == nil
 }
 
@@ -407,7 +418,7 @@ func (c *Core) newClient(requireLinked bool) (*syncclient.Client, error) {
 		if c.secrets == nil {
 			return nil, errors.New("this phone has no secure store for the sign-in")
 		}
-		tokens = syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
+		tokens = c.oidcSource(cfg)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
@@ -420,11 +431,14 @@ func (c *Core) newClient(requireLinked bool) (*syncclient.Client, error) {
 	return client, nil
 }
 
-// syncError turns an internal sync failure into a sentence fit to show the user.
+// syncError turns an internal sync failure into a sentence fit to show the user. The raw error is
+// logged first, for logcat through gomobile's GoLog; errors carry the request URL, which has no
+// token, and request bodies are never logged.
 func syncError(err error) error {
 	if err == nil {
 		return nil
 	}
+	log.Printf("adhd-todo sync: %v", err)
 	switch {
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("another device is still uploading this workspace; try again later")
@@ -434,8 +448,11 @@ func syncError(err error) error {
 		return errors.New("this phone is not linked")
 	case errors.Is(err, syncclient.ErrSignedOut), syncclient.IsUnauthorized(err):
 		return errors.New("sign in again")
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+	case errors.Is(err, context.Canceled):
 		return errors.New("the sync was cancelled")
+	}
+	if isNetworkError(err) {
+		return errors.New("could not reach the server; check the connection")
 	}
 	message := err.Error()
 	switch {
@@ -447,4 +464,68 @@ func syncError(err error) error {
 		return errors.New("could not reach the sign-in server")
 	}
 	return errors.New("could not sync; check the connection and try again")
+}
+
+// isNetworkError says whether err is the network, rather than the server, refusing the request: a
+// name that did not resolve, a dial or another net.Error (a timeout included), or a syscall error
+// such as a refused, reset or aborted connection.
+func isNetworkError(err error) bool {
+	if err == nil || errors.Is(err, context.Canceled) {
+		return false
+	}
+	var dns *net.DNSError
+	if errors.As(err, &dns) {
+		return true
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return true
+	}
+	for _, target := range []error{
+		syscall.ECONNREFUSED, syscall.ECONNRESET, syscall.ECONNABORTED, syscall.EPIPE,
+		syscall.ETIMEDOUT, syscall.ENETUNREACH, syscall.EHOSTUNREACH,
+	} {
+		if errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+// startLink marks a SignIn, LinkMerge or LinkReplace in progress. StartSync does nothing while one
+// runs; the link starts the runner itself once it is done.
+func (c *Core) startLink() {
+	c.mu.Lock()
+	c.links++
+	c.mu.Unlock()
+}
+
+// finishLink clears one startLink.
+func (c *Core) finishLink() {
+	c.mu.Lock()
+	if c.links > 0 {
+		c.links--
+	}
+	c.mu.Unlock()
+}
+
+// signedInURL is the app link the sign-in's loopback sends the browser to, which brings the app
+// back to the front (AndroidManifest.xml registers it) before the code is exchanged.
+const signedInURL = "xyz.sriai.adhdtodo://signed-in"
+
+// oidcSource is the OIDC token source for cfg, keyed to this database so another profile cannot
+// replace this phone's refresh token.
+// The same settings get the same source, so the runner and a Sync now share one refresh.
+func (c *Core) oidcSource(cfg syncclient.Config) *syncclient.OIDCSource {
+	key := cfg.Issuer + "\n" + cfg.ClientID + "\n" + strings.Join(cfg.Scopes, " ")
+	c.tokensMu.Lock()
+	defer c.tokensMu.Unlock()
+	if c.tokens != nil && c.tokensKey == key {
+		return c.tokens
+	}
+	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
+	source.DBPath = c.dbPath
+	source.DoneURL = signedInURL
+	c.tokens, c.tokensKey = source, key
+	return source
 }

@@ -55,14 +55,18 @@ The Zitadel admin's password is also kept on the owner's Mac, in the keychain it
      refresh token, `accessTokenType OIDC_TOKEN_TYPE_JWT` (the sync server verifies JWTs),
      `devMode true` and the redirect `http://127.0.0.1/callback`. Zitadel ignores the port of a
      loopback redirect for native apps (RFC 8252), so the client's random port works; another
-     path is refused.
+     path is refused. Set `idTokenUserinfoAssertion true` too: without it the ID token has no
+     name or email, and Settings shows no account.
+   - `PUT /admin/v1/policies/login` with the current policy and `allowRegister false`: accounts
+     are made by the admin, not by whoever finds the sign-in page.
 6. **adhd-sync**: build `CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/adhd-sync` into
    `sync/bin/`, write `sync.env` (audience = the project id), and
    `docker compose --env-file sync.env -f sync.compose.yml up -d --wait`.
 
 Clients use `server https://todo.sri-ai.xyz`, `issuer https://auth.todo.sri-ai.xyz`, the app's
-client id, and the scopes `openid offline_access urn:zitadel:iam:org:project:id:{PROJECT_ID}:aud`
-(the last one puts the project in the token's audience).
+client id, and the scopes `openid offline_access profile email
+urn:zitadel:iam:org:project:id:{PROJECT_ID}:aud` (the last one puts the project in the token's
+audience). The apps ask for the first four themselves and read the last from `GET /v1/config`.
 
 ## Checks
 

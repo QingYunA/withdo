@@ -71,10 +71,8 @@ func TestSignInChooseThenLinkMerge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SignIn: %v", err)
 	}
-	if state != signInChooseJSON {
-		t.Fatalf("SignIn = %s, want %s", state, signInChooseJSON)
-	}
-	if !secrets.has(syncclient.RefreshTokenKey) {
+	assertChoose(t, state, 1, 0, 1)
+	if !secrets.has(syncclient.RefreshTokenKeyFor(phone.dbPath)) {
 		t.Error("SignIn did not keep the refresh token; the user would sign in again")
 	}
 	var account struct {
@@ -134,9 +132,7 @@ func TestSignInChooseThenLinkReplace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SignIn: %v", err)
 	}
-	if state != signInChooseJSON {
-		t.Fatalf("SignIn = %s, want %s", state, signInChooseJSON)
-	}
+	assertChoose(t, state, 1, 0, 1)
 
 	backup, err := phone.LinkReplace("phone")
 	if err != nil {
@@ -161,6 +157,20 @@ func TestSignInChooseThenLinkReplace(t *testing.T) {
 	}
 
 	assertThisPhone(t, phone, "phone")
+}
+
+// assertChoose checks SignIn's choose answer and the counts the both-have-tasks sheet shows.
+func assertChoose(t *testing.T, state string, tasks, projects, devices int) {
+	t.Helper()
+	var answer signInChooseJSON
+	if err := json.Unmarshal([]byte(state), &answer); err != nil {
+		t.Fatalf("decode the choose answer: %v (%s)", err, state)
+	}
+	if answer.State != "choose" || answer.LocalTasks != tasks ||
+		answer.LocalProjects != projects || answer.AccountDevices != devices {
+		t.Errorf("choose = %+v, want state choose with %d tasks, %d projects and %d devices",
+			answer, tasks, projects, devices)
+	}
 }
 
 // assertThisPhone checks that Devices marks exactly this phone and names it.

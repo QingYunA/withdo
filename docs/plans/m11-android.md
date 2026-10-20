@@ -230,3 +230,69 @@ the Sync screen has no phone mockup and follows the rules below (v27's groups in
 4. The reviewer checks on the emulator with `demo=true`: Projects, a project, a task (light, dark,
    zh) against v26 frames 3–4; each Sync state (a debug intent extra `sync_state=<name>` may fake
    the state for screenshots); a reminder set a minute ahead posts a notification.
+
+## A3-fixes: what the first end-to-end run found
+
+The first run against the real server (a desktop-side client on `internal/cli`, the emulator signing
+in to a test account) found these. Each needs a test where one is possible.
+
+1. **The sign-in error is lost.** `App.kt` catches `signIn`'s exception and shows the generic
+   `Couldn't sign in`. Show the Go error's text (they are short sentences fit for the user) under
+   the button, and log the exception with `Log.w("adhd-todo", ...)`.
+2. **`syncError`'s catch-all hides the cause.** In `mobile/core/sync.go`, log the raw error with
+   `log.Printf` (gomobile sends it to logcat as GoLog) before mapping it, and map network errors
+   (DNS, dial, connection reset or abort, timeout: `net.Error`, `*net.DNSError`, `syscall` errors)
+   to `could not reach the server; check the connection`. Never log tokens: errors from `net/http`
+   carry the URL, which holds none here; do not log request bodies.
+3. **Transient network errors end the sign-in.** Retry the OIDC code exchange and each request of
+   `Link` (device create, id lease, seed or join), 4 attempts 1 s, 2 s and 3 s apart, only for errors
+   where the request may not have reached the server (DNS, dial, connection refused/reset/abort).
+   Put the rule in one helper in `internal/syncclient` with a unit test over fake errors.
+4. **The runner races the link.** The logs show the runner refreshing the token while `Link` was
+   still leasing ids. `mobile/core`: `StartSync` does nothing while a `SignIn`/`LinkMerge`/
+   `LinkReplace` is running (a mutex-guarded flag), and the app starts sync only after `SignIn`
+   answered `linked` (or after a merge or replace finished). Test: `StartSync` during a slow fake
+   link starts no runner.
+5. **The browser stays in front after signing in** with "You can close this tab". When `SignIn`
+   returns (either answer, or an error), bring the app back: start `MainActivity` with
+   `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_REORDER_TO_FRONT` (it is `singleTop`), which comes back
+   over the Custom Tab.
+6. **The choose sheet has no counts.** `SignIn`'s `choose` answer carries `"local_tasks"`,
+   `"local_projects"` (`domain.Core.SyncCounts`) and `"account_devices"` (devices that have synced,
+   as `conflictAfterLink` in `app/data/sync_link.go` counts); update the golden. The sheet uses the
+   desktop's sentence (the `settingsSyncBoth*` keys in `app/locales`, copied to `strings.xml` en and
+   zh) with the counts.
+7. **Debug `route=projects` lands on Mine.** Fix the route so the reviewer can open the Projects tab.
+8. **Desktop: one refresh token for every database.** `syncclient.RefreshTokenKey` is the fixed
+   keychain key `sync/refresh-token`, so a second data directory (a test profile, the CLI with
+   `ADHD_TODO_DB`) signing in replaces the app's token. Key it per database:
+   `sync/refresh-token/<first 16 hex of sha256 of the absolute database path>`. On read, when the
+   new key is missing and the old one exists, move the old one to the new key (the app's existing
+   sign-in keeps working). Tests in `internal/syncclient` and `app/data` with a fake secrets store.
+
+9. **Android cuts a background app's network** (Android 15: after the app has been in the back for
+   some seconds, its DNS answers "no such host" and its connections are destroyed, "software caused
+   connection abort"). The code was exchanged while the browser was in front, so every sign-in
+   failed. `OIDCSource.DoneURL`: the loopback answers the code with a 302 to the app link
+   `xyz.sriai.adhdtodo://signed-in` (registered on `MainActivity`), which brings the app to the
+   front, and then exchanges; the retries of 3 cover the moment until the network is back.
+10. **The old refresh-token key belongs to one database.** Only the platform's default database
+   (`internal/paths`, `ADHD_TODO_DB` ignored) moves or deletes the old fixed key; any other database
+   neither takes it nor deletes it on sign-out.
+11. **Two token sources sign each other out.** Zitadel rotates refresh tokens. `mobile/core` and
+   `app/data` built a new `OIDCSource` per client, so the runner and a Sync now (or the Settings
+   pane) refreshed with the same token at once; the loser was refused and deleted the stored
+   token: signed out a minute after signing in. One source per database and settings in each
+   process, and a refused refresh first reads the stored token again (another process, the app
+   beside `adhd-core`, may have rotated it) before signing out.
+12. **Sync now, Retry, Merge and Replace never ran.** `App.kt` passed the action as `perform`'s
+   `onError` and the failure message as the action, so each tap showed "Couldn't sync" and a merge
+   or replace never linked. Pass `onError` by name; `perform` logs what failed.
+13. **No account name.** The ID token carries the name and email only with the `profile` and
+   `email` scopes, which the sign-in did not ask for, so Settings showed no account on either side.
+
+### Verification
+
+1. `go test -race ./internal/syncclient/... ./mobile/... ./app/data/...` and the new tests above.
+2. `scripts/android-core.sh`; `./gradlew --offline assembleDebug testDebugUnitTest`.
+3. `scripts/check.sh full`.

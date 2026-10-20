@@ -12,12 +12,26 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
-// The two answers of SignIn. "linked" says this phone is a device of the account; "choose" says
-// both the phone and the account have tasks, so the user must pick LinkMerge or LinkReplace.
-const (
-	signInLinkedJSON = `{"state":"linked"}`
-	signInChooseJSON = `{"state":"choose"}`
-)
+// signInLinkedJSON is SignIn's answer when the phone is a device of the account. SignIn's other
+// answer, "choose", carries the counts the both-have-tasks sheet shows; see signInChoose.
+const signInLinkedJSON = `{"state":"linked"}`
+
+// signInChooseJSON is SignIn's "choose" answer. The account's devices are only those that have
+// synced; the device this sign-in just registered has not.
+type signInChooseJSON struct {
+	State          string `json:"state"`
+	LocalTasks     int    `json:"local_tasks"`
+	LocalProjects  int    `json:"local_projects"`
+	AccountDevices int    `json:"account_devices"`
+}
+
+// encodeSignInChoose is SignIn's choose encoder, split out so the golden test can pin its shape.
+func encodeSignInChoose(localTasks, localProjects, accountDevices int) (string, error) {
+	return marshal(signInChooseJSON{
+		State: "choose", LocalTasks: localTasks, LocalProjects: localProjects,
+		AccountDevices: accountDevices,
+	})
+}
 
 // Account returns who this phone signed in as, from sync.json:
 //
@@ -36,7 +50,7 @@ func (c *Core) Account() (string, error) {
 		if c.secrets == nil {
 			return "{}", nil
 		}
-		if _, err := (secretAdapter{c.secrets}).Get(syncclient.RefreshTokenKey); err != nil {
+		if _, err := syncclient.LoadRefreshToken(secretAdapter{c.secrets}, c.dbPath); err != nil {
 			if errors.Is(err, syncclient.ErrSecretNotFound) {
 				return "{}", nil
 			}
@@ -142,6 +156,8 @@ func (c *Core) NextReminderAt() (int64, error) {
 // It is Client.LinkMerge: both sides keep their tasks and the account's rows win where the same
 // project or category exists.
 func (c *Core) LinkMerge(deviceName string) error {
+	c.startLink()
+	defer c.finishLink()
 	client, err := c.newClient(false)
 	if err != nil {
 		return err
@@ -156,6 +172,8 @@ func (c *Core) LinkMerge(deviceName string) error {
 // SignIn answered "choose". It returns the backup file's path. The backup is taken before anything
 // local is deleted.
 func (c *Core) LinkReplace(deviceName string) (string, error) {
+	c.startLink()
+	defer c.finishLink()
 	client, err := c.newClient(false)
 	if err != nil {
 		return "", err
@@ -165,6 +183,23 @@ func (c *Core) LinkReplace(deviceName string) (string, error) {
 		return backup, linkError(err)
 	}
 	return backup, nil
+}
+
+// signInChoose builds the "choose" answer after Link found tasks on both sides: this phone's task
+// and project counts, and how many devices the account has already synced from.
+func (c *Core) signInChoose(ctx context.Context, client *syncclient.Client) (string, error) {
+	counts, err := c.dom.SyncCounts(ctx)
+	if err != nil {
+		return "", errors.New("could not read the task counts")
+	}
+	devices, _ := client.Devices(ctx)
+	seen := 0
+	for _, device := range devices {
+		if device.LastSeenAt != nil {
+			seen++
+		}
+	}
+	return encodeSignInChoose(int(counts["tasks"]), int(counts["projects"]), seen)
 }
 
 // linkError turns a merge or replace failure into a sentence fit to show the user. It never
@@ -182,7 +217,7 @@ func linkError(err error) error {
 		return errors.New("this phone is not linked")
 	case syncclient.IsSignedOut(err), syncclient.IsUnauthorized(err):
 		return errors.New("sign in again")
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+	case errors.Is(err, context.Canceled):
 		return errors.New("the link was cancelled")
 	}
 	message := err.Error()

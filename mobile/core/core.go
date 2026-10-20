@@ -58,11 +58,18 @@ type Core struct {
 	cancel context.CancelFunc
 	done   chan struct{}
 
-	listener    Listener
-	runner      *syncclient.Runner
+	listener Listener
+	runner   *syncclient.Runner
+	// tokens is the phone's one OIDC source: the issuer rotates refresh tokens, so two sources
+	// refreshing at once (the runner and a Sync now) would sign each other out.
+	tokensMu    sync.Mutex
+	tokens      *syncclient.OIDCSource
+	tokensKey   string
 	lastStatus  syncclient.Status
 	failedSince time.Time
-	closed      bool
+	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
+	links  int
+	closed bool
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

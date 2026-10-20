@@ -1,9 +1,11 @@
 package xyz.sriai.adhdtodo.ui
 
 import androidx.activity.compose.BackHandler
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.sriai.adhdtodo.BuildConfig
+import xyz.sriai.adhdtodo.MainActivity
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentInfo
@@ -44,6 +47,7 @@ import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.ProjectEntry
 import xyz.sriai.adhdtodo.data.ProjectPage
+import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.TaskPage
@@ -109,6 +113,8 @@ fun App(
     var serverError by remember { mutableStateOf(false) }
     var serverSaving by remember { mutableStateOf(false) }
     var syncMessage by remember { mutableStateOf<String?>(null) }
+    var signInError by remember { mutableStateOf<String?>(null) }
+    var choose by remember { mutableStateOf(SignInState()) }
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
@@ -148,7 +154,12 @@ fun App(
     LaunchedEffect(initialRoute) {
         if (initialRoute.isNullOrBlank()) return@LaunchedEffect
         val next = normalizeRoute(initialRoute)
-        if (next.isNotBlank()) {
+        if (next.startsWith("tab:")) {
+            // route=projects opens the Projects tab, not Mine with the projects route on top.
+            tabName = runCatching { Tab.valueOf(next.removePrefix("tab:").uppercase()) }
+                .getOrDefault(Tab.MINE).name
+            stack = listOf("home")
+        } else if (next.isNotBlank()) {
             stack = if (next == "home") listOf("home") else listOf("home", next)
         }
         onInitialRouteConsumed()
@@ -249,6 +260,8 @@ fun App(
         }
     }
 
+    // The action is the trailing lambda; name onError when passing it, since both are lambdas of
+    // no arguments and swapping them still compiles.
     fun perform(onError: (() -> Unit)? = null, action: suspend () -> Unit) {
         scope.launch {
             try {
@@ -256,7 +269,8 @@ fun App(
                 tick++
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.w("adhd-todo", "action failed", e)
                 onError?.invoke()
             }
         }
@@ -427,6 +441,8 @@ fun App(
                             status = shownStatus,
                             account = account ?: Account(),
                             devices = devices,
+                            choose = choose,
+                            signInError = signInError,
                         )
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dims.pagePadding)) {
                             syncMessage?.let {
@@ -448,25 +464,41 @@ fun App(
                                     if (!signingIn) {
                                         signingIn = true
                                         choosing = false
+                                        signInError = null
                                         syncMessage = null
                                         signInAttempt++
                                         val attempt = signInAttempt
                                         scope.launch {
+                                            var failure: Exception? = null
                                             val result = try {
                                                 withContext(Dispatchers.IO) {
                                                     api.signIn(CustomTabOpener(context), Build.MODEL)
                                                 }
                                             } catch (e: CancellationException) {
                                                 throw e
-                                            } catch (_: Exception) {
+                                            } catch (e: Exception) {
+                                                failure = e
                                                 null
                                             }
                                             if (attempt != signInAttempt) return@launch
+                                            // SignIn answered (linked, choose or an error): come back
+                                            // over the Custom Tab, whose page says "close this tab".
+                                            returnToApp(context)
                                             signingIn = false
+                                            if (failure != null) {
+                                                Log.w("adhd-todo", "sign-in failed", failure)
+                                                signInError = signInFailureText(failure)
+                                                    ?: resources.getString(R.string.sync_sign_in_failed)
+                                            }
                                             when (result?.state) {
-                                                "choose" -> choosing = true
+                                                "choose" -> {
+                                                    choose = checkNotNull(result)
+                                                    choosing = true
+                                                }
                                                 "linked" -> startSync()
-                                                null -> syncMessage = resources.getString(R.string.sync_sign_in_failed)
+                                                null -> if (failure == null) {
+                                                    syncMessage = resources.getString(R.string.sync_sign_in_failed)
+                                                }
                                                 else -> Unit
                                             }
                                             tick++
@@ -478,18 +510,28 @@ fun App(
                                     signingIn = false
                                     perform { api.signOut() }
                                 },
-                                onSyncNow = { perform({ api.syncNow() }) { syncMessage = resources.getString(R.string.sync_now_failed) } },
-                                onRetry = { perform({ api.syncNow() }) { syncMessage = resources.getString(R.string.sync_now_failed) } },
+                                onSyncNow = {
+                                    syncMessage = null
+                                    perform(onError = { syncMessage = resources.getString(R.string.sync_now_failed) }) { api.syncNow() }
+                                },
+                                onRetry = {
+                                    syncMessage = null
+                                    perform(onError = { syncMessage = resources.getString(R.string.sync_now_failed) }) { api.syncNow() }
+                                },
                                 onMerge = {
                                     choosing = false
-                                    perform({ api.linkMerge(Build.MODEL); api.startSync() }) {
-                                        syncMessage = resources.getString(R.string.sync_link_failed)
+                                    syncMessage = null
+                                    perform(onError = { syncMessage = resources.getString(R.string.sync_link_failed) }) {
+                                        api.linkMerge(Build.MODEL)
+                                        api.startSync()
                                     }
                                 },
                                 onReplace = {
                                     choosing = false
-                                    perform({ api.linkReplace(Build.MODEL); api.startSync() }) {
-                                        syncMessage = resources.getString(R.string.sync_link_failed)
+                                    syncMessage = null
+                                    perform(onError = { syncMessage = resources.getString(R.string.sync_link_failed) }) {
+                                        api.linkReplace(Build.MODEL)
+                                        api.startSync()
                                     }
                                 },
                                 onCancelChoose = {
@@ -639,8 +681,22 @@ internal fun normalizeRoute(raw: String): String = when {
         val id = raw.substringAfter(':').substringBefore(':').toLongOrNull() ?: return ""
         "task:$id:0"
     }
-    raw == "projects" -> "home"
+    raw == "projects" -> "tab:projects"
     else -> ""
+}
+
+/** The Go error's sentence for the text under the sign-in button; null when it has none. */
+internal fun signInFailureText(error: Throwable?): String? =
+    error?.message?.trim()?.takeIf { it.isNotEmpty() }
+
+/**
+ * Comes back over the Custom Tab after SignIn answered. MainActivity is singleTop, so this brings
+ * the running app forward instead of opening a second one.
+ */
+private fun returnToApp(context: Context) {
+    val intent = Intent(context, MainActivity::class.java)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+    runCatching { context.startActivity(intent) }
 }
 
 /** The debug build's fixture for one Sync state, for the reviewer's screenshots. */
@@ -672,7 +728,15 @@ private fun fakeSyncModel(name: String): SyncModel {
             emptyList(),
         )
         "signing_in" -> SyncModel(SyncPhase.SIGNING_IN, base.copy(linked = false, signedIn = true), Account(), emptyList())
-        "choose" -> SyncModel(SyncPhase.CHOOSE, base.copy(linked = false, signedIn = true), account, devices)
+        "choose" -> SyncModel(
+            SyncPhase.CHOOSE,
+            base.copy(linked = false, signedIn = true),
+            account,
+            devices.filterNot { it.isThis },
+            choose = SignInState(
+                state = "choose", localTasks = 128, localProjects = 6, accountDevices = 2,
+            ),
+        )
         "synced" -> SyncModel(SyncPhase.SYNCED, base, account, devices)
         "uploading" -> SyncModel(
             SyncPhase.UPLOADING,
@@ -697,6 +761,13 @@ private fun fakeSyncModel(name: String): SyncModel {
             base.copy(state = "offline", pending = 3),
             account,
             devices,
+        )
+        "sign_in_failed" -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            base.copy(linked = false, signedIn = false, lastSynced = null),
+            Account(),
+            emptyList(),
+            signInError = "could not reach the sign-in server",
         )
         else -> SyncModel(SyncPhase.SIGNED_OUT, base.copy(linked = false, signedIn = false), Account(), emptyList())
     }

@@ -171,7 +171,7 @@ func TestS4a5CLILoginLogout(t *testing.T) {
 	if cfg.Issuer != issuer.URL || cfg.ClientID != "cli-client" || cfg.Token != "" {
 		t.Errorf("sync.json = %+v, want issuer, client id and no token", cfg)
 	}
-	if refresh, err := secrets.Get(syncclient.RefreshTokenKey); err != nil || refresh != "cli-refresh" {
+	if refresh, err := secrets.Get(syncclient.RefreshTokenKeyFor(path)); err != nil || refresh != "cli-refresh" {
 		t.Fatalf("stored refresh token = %q, %v", refresh, err)
 	}
 
@@ -190,7 +190,7 @@ func TestS4a5CLILoginLogout(t *testing.T) {
 	if strings.Count(strings.TrimSpace(out), "\n") != 0 || !strings.Contains(out, "signed out") {
 		t.Errorf("logout output = %q, want one signed out line", out)
 	}
-	if _, err := secrets.Get(syncclient.RefreshTokenKey); err == nil {
+	if _, err := secrets.Get(syncclient.RefreshTokenKeyFor(path)); err == nil {
 		t.Fatal("logout kept the refresh token")
 	}
 }
