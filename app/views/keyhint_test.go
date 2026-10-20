@@ -17,9 +17,9 @@ func TestKeyHintIsTheMacWritingOnMacAndPlainWordsElsewhere(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.goos+" "+tc.mac, func(t *testing.T) {
-			old := hintGOOS
-			hintGOOS = tc.goos
-			t.Cleanup(func() { hintGOOS = old })
+			old := systemGOOS
+			systemGOOS = tc.goos
+			t.Cleanup(func() { systemGOOS = old })
 			if got := keyHint(tc.mac); got != tc.want {
 				t.Errorf("keyHint(%q) on %s = %q, want %q", tc.mac, tc.goos, got, tc.want)
 			}

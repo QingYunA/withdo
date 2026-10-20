@@ -6,7 +6,8 @@ import (
 	"github.com/QingYunA/adhd-todo/app/locales"
 )
 
-// systemGOOS is the system whose own apps and commands the words name; the tests switch it.
+// systemGOOS is the system the words are written for: its key hints, and its own apps and commands.
+// The tests switch it.
 var systemGOOS = runtime.GOOS
 
 // showInFolderLabel is the link that shows a folder in the system's file manager.

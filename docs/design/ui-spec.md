@@ -1962,6 +1962,9 @@ wide; rows are at least 48 dp tall (Android's touch target). Light and dark foll
   "日志" would read as log files to a developer).
 - The app runs on macOS and Windows: no "this Mac" / 「这台 Mac」 in shared copy. Say "this computer" /
   「这台电脑」 (「本机」 where short), and "this device" in sync, where devices are what is linked.
+- A system's own apps and commands are named for the system the app runs on (`systemGOOS`,
+  `app/views/system_words.go`): Finder / File Explorer (`访达` / `文件资源管理器`), Open in Preview /
+  Open (`在预览中打开` / `打开`, the default app), `brew install gh` / `winget install --id GitHub.cli`.
 - Section headers are sentence case, `section` style, not tracked capitals, in both languages.
 - Relative times: "now", "2m", "3h", "2d", then a date ("Oct 12"); in Chinese "刚刚", "2分钟前",
   "3小时前", "2天前", then "10月12日". Due labels: "Today", "Tomorrow", "Fri", "Oct 20", the time of

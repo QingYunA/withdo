@@ -5,9 +5,10 @@ import (
 	"testing"
 )
 
-// TestMain writes the key hints as on a Mac on every system, so that the view tests and the
-// screens read the same on macOS, Linux CI and Windows; keyhint_test.go switches it per case.
+// TestMain writes the words as on a Mac on every system (key hints, Finder, Preview, brew), so that
+// the view tests and the screens read the same on macOS, Linux CI and Windows; keyhint_test.go and
+// system_words_test.go switch it per case.
 func TestMain(m *testing.M) {
-	hintGOOS = "darwin"
+	systemGOOS = "darwin"
 	os.Exit(m.Run())
 }
