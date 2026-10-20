@@ -99,7 +99,7 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.popRow(c, t, m.categoryPopRow(task))
 	one := []data.Task{task}
 	m.popRow(c, t, actionSpec(actionOf(one, actMove), "", m.say.MenuMoveTo(), func() { pm.openPage(pageMove) }))
-	m.popRow(c, t, popSpec{key: "remind", icon: theme.IconClock, label: m.say.MenuRemindMe(), hint: keyRemind.hint, run: func() {
+	m.popRow(c, t, popSpec{key: "remind", icon: theme.IconClock, label: m.say.MenuRemindMe(), hint: keyRemind.hint(), run: func() {
 		pm.page, pm.back, pm.hl = pageRemind, true, -1
 	}})
 	if task.PRURL != "" {
@@ -113,7 +113,7 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 			pm.page, pm.back, pm.hl = pageOpenIn, true, 0
 		}})
 	}
-	m.popRow(c, t, popSpec{key: "ask", icon: theme.IconSparkle, label: m.say.MenuAsk(), hint: keyAsk.hint, run: func() {
+	m.popRow(c, t, popSpec{key: "ask", icon: theme.IconSparkle, label: m.say.MenuAsk(), hint: keyAsk.hint(), run: func() {
 		m.closeMenu()
 		m.askAboutTask(task.ID)
 	}})

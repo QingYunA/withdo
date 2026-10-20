@@ -8,11 +8,8 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// What to run when gh is missing or signed out. They are commands, so they are not translated.
-const (
-	ghInstallCommand = "brew install gh"
-	ghLoginCommand   = "gh auth login"
-)
+// ghLoginCommand is what to run when gh is signed out. It is a command, so it is not translated.
+const ghLoginCommand = "gh auth login"
 
 // ghRefreshEvery redraws the open pane so that "checked 2m ago" keeps up with the clock.
 const ghRefreshEvery = 30 * time.Second
@@ -64,7 +61,7 @@ func (s *Settings) githubLine(st data.GitHubStatus) string {
 func githubFix(st data.GitHubState) string {
 	switch st {
 	case data.GitHubMissing:
-		return ghInstallCommand
+		return ghInstallCommand()
 	case data.GitHubSignedOut:
 		return ghLoginCommand
 	}

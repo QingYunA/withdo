@@ -17,12 +17,27 @@ func TestKeyHintIsTheMacWritingOnMacAndPlainWordsElsewhere(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.goos+" "+tc.mac, func(t *testing.T) {
-			old := hintGOOS
-			hintGOOS = tc.goos
-			t.Cleanup(func() { hintGOOS = old })
+			old := systemGOOS
+			systemGOOS = tc.goos
+			t.Cleanup(func() { systemGOOS = old })
 			if got := keyHint(tc.mac); got != tc.want {
 				t.Errorf("keyHint(%q) on %s = %q, want %q", tc.mac, tc.goos, got, tc.want)
 			}
 		})
+	}
+}
+
+// The task actions' hints are written when they are shown, not when the package starts, so the
+// system they are written for is the one in effect then.
+func TestTaskActionHintsFollowTheSystemWhenShown(t *testing.T) {
+	old := systemGOOS
+	t.Cleanup(func() { systemGOOS = old })
+	systemGOOS = "windows"
+	if got := keyDone.hint(); got != "Ctrl+Enter" {
+		t.Errorf("keyDone on windows hints %q, want Ctrl+Enter", got)
+	}
+	systemGOOS = "darwin"
+	if got := keyDone.hint(); got != "⌘↵" {
+		t.Errorf("keyDone on darwin hints %q, want ⌘↵", got)
 	}
 }

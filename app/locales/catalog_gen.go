@@ -4420,6 +4420,22 @@ func (msgs Messages) SettingsShowInFinder() string {
 	return Catalog.Format(msgs.locale, "settingsShowInFinder", nil)
 }
 
+// SettingsShowInExplorer says "Show in File Explorer"
+// in the language the app shows.
+//
+// Link in Settings > General on Windows that shows the data folder in File
+// Explorer.
+func SettingsShowInExplorer() string { return In(i18n.Locale()).SettingsShowInExplorer() }
+
+// SettingsShowInExplorer says "Show in File Explorer"
+// in the language of msgs.
+//
+// Link in Settings > General on Windows that shows the data folder in File
+// Explorer.
+func (msgs Messages) SettingsShowInExplorer() string {
+	return Catalog.Format(msgs.locale, "settingsShowInExplorer", nil)
+}
+
 // SettingsAssistantNone says "The assistant isn't available here."
 // in the language the app shows.
 //
@@ -6064,6 +6080,22 @@ func (msgs Messages) OpenWithFinder() string {
 	return Catalog.Format(msgs.locale, "openWithFinder", nil)
 }
 
+// OpenWithExplorer says "File Explorer"
+// in the language the app shows.
+//
+// Choice of where to open an agent's work on Windows: the folder the agent
+// works in, shown in File Explorer.
+func OpenWithExplorer() string { return In(i18n.Locale()).OpenWithExplorer() }
+
+// OpenWithExplorer says "File Explorer"
+// in the language of msgs.
+//
+// Choice of where to open an agent's work on Windows: the folder the agent
+// works in, shown in File Explorer.
+func (msgs Messages) OpenWithExplorer() string {
+	return Catalog.Format(msgs.locale, "openWithExplorer", nil)
+}
+
 // SettingsOpenWith says "Open agent work in"
 // in the language the app shows.
 //
@@ -6504,6 +6536,22 @@ func ViewerOpenInPreview() string { return In(i18n.Locale()).ViewerOpenInPreview
 // Button in the viewer's bar that opens the image file in macOS Preview.
 func (msgs Messages) ViewerOpenInPreview() string {
 	return Catalog.Format(msgs.locale, "viewerOpenInPreview", nil)
+}
+
+// ViewerOpen says "Open"
+// in the language the app shows.
+//
+// Button in the viewer's bar on Windows that opens the image file in the
+// default app.
+func ViewerOpen() string { return In(i18n.Locale()).ViewerOpen() }
+
+// ViewerOpen says "Open"
+// in the language of msgs.
+//
+// Button in the viewer's bar on Windows that opens the image file in the
+// default app.
+func (msgs Messages) ViewerOpen() string {
+	return Catalog.Format(msgs.locale, "viewerOpen", nil)
 }
 
 // ViewerClose says "Close"
@@ -8752,20 +8800,22 @@ func (msgs Messages) SettingsRecentChangesSwitch() string {
 	return Catalog.Format(msgs.locale, "settingsRecentChangesSwitch", nil)
 }
 
-// SettingsRecentNoGH says "gh isn't installed yet: run brew install gh"
+// SettingsRecentNoGH says "gh isn't installed yet: run {command}"
 // in the language the app shows.
 //
 // Second line of the Recent changes switch row, in the warning color, when
-// the switch is on and the GitHub CLI is missing.
-func SettingsRecentNoGH() string { return In(i18n.Locale()).SettingsRecentNoGH() }
+// the switch is on and the GitHub CLI is missing. command installs it: brew
+// install gh on a Mac, winget install --id GitHub.cli on Windows.
+func SettingsRecentNoGH(command string) string { return In(i18n.Locale()).SettingsRecentNoGH(command) }
 
-// SettingsRecentNoGH says "gh isn't installed yet: run brew install gh"
+// SettingsRecentNoGH says "gh isn't installed yet: run {command}"
 // in the language of msgs.
 //
 // Second line of the Recent changes switch row, in the warning color, when
-// the switch is on and the GitHub CLI is missing.
-func (msgs Messages) SettingsRecentNoGH() string {
-	return Catalog.Format(msgs.locale, "settingsRecentNoGH", nil)
+// the switch is on and the GitHub CLI is missing. command installs it: brew
+// install gh on a Mac, winget install --id GitHub.cli on Windows.
+func (msgs Messages) SettingsRecentNoGH(command string) string {
+	return Catalog.Format(msgs.locale, "settingsRecentNoGH", map[string]any{"command": command})
 }
 
 // SettingsRecentSignedOut says "gh isn't signed in yet: run gh auth login"

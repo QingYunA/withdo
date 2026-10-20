@@ -26,6 +26,19 @@ func fakeOpen(t *testing.T, fail func(args []string) bool) *[]string {
 	return &calls
 }
 
+// fakeOpenPath replaces openPath with one that records the paths it is given.
+func fakeOpenPath(t *testing.T) *[]string {
+	t.Helper()
+	var paths []string
+	real := openPath
+	openPath = func(p string) error {
+		paths = append(paths, p)
+		return nil
+	}
+	t.Cleanup(func() { openPath = real })
+	return &paths
+}
+
 func TestOpenInTheAgentsAppBringsItForward(t *testing.T) {
 	calls := fakeOpen(t, nil)
 	if err := (&shell{}).OpenIn(views.OpenAgentApp, "Claude", "/work/tree"); err != nil {
@@ -76,8 +89,10 @@ func TestOpenInWithNoAppAndNoFolderSaysThereIsNothingToOpen(t *testing.T) {
 	}
 }
 
+// The folder opens through the system (Finder, File Explorer), not the macOS open command.
 func TestOpenInTerminalAndFinderNeedAFolder(t *testing.T) {
 	calls := fakeOpen(t, nil)
+	paths := fakeOpenPath(t)
 	s := &shell{}
 	if err := s.OpenIn(views.OpenTerminal, "Claude", "/work/tree"); err != nil {
 		t.Fatal(err)
@@ -85,16 +100,19 @@ func TestOpenInTerminalAndFinderNeedAFolder(t *testing.T) {
 	if err := s.OpenIn(views.OpenFinder, "Claude", "/work/tree"); err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"-a Terminal /work/tree", "/work/tree"}; !slices.Equal(*calls, want) {
+	if want := []string{"-a Terminal /work/tree"}; !slices.Equal(*calls, want) {
 		t.Errorf("ran %q, want %q", *calls, want)
+	}
+	if want := []string{"/work/tree"}; !slices.Equal(*paths, want) {
+		t.Errorf("opened %q, want %q", *paths, want)
 	}
 	for _, how := range []views.OpenWith{views.OpenTerminal, views.OpenEditor, views.OpenFinder} {
 		if err := s.OpenIn(how, "Claude", ""); !errors.Is(err, views.ErrNoDir) {
 			t.Errorf("%s without a folder: err = %v, want ErrNoDir", how, err)
 		}
 	}
-	if len(*calls) != 2 {
-		t.Errorf("ran %q for a missing folder", *calls)
+	if len(*calls) != 1 || len(*paths) != 1 {
+		t.Errorf("ran %q and opened %q for a missing folder", *calls, *paths)
 	}
 }
 

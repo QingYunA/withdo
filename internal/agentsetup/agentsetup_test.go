@@ -651,3 +651,71 @@ func TestSearchPathPutsTheDirsFirstAndKeepsTheOldPathIntact(t *testing.T) {
 		t.Errorf("with no old PATH: %q", got)
 	}
 }
+
+// VS Code (Copilot, Cline) and Zed keep their settings in a different folder on each system: on
+// Windows it is %APPDATA%, which is AppData/Roaming under the home folder.
+func TestAgentConfigPathsFollowTheSystem(t *testing.T) {
+	want := map[string]map[string][]string{
+		"darwin": {
+			"copilot": {"Library/Application Support/Code/User/mcp.json"},
+			"cline":   {"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"},
+			"zed":     {".config/zed/settings.json"},
+		},
+		"windows": {
+			"copilot": {"AppData/Roaming/Code/User/mcp.json"},
+			"cline":   {"AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"},
+			"zed":     {"AppData/Roaming/Zed/settings.json"},
+		},
+	}
+	wantDirs := map[string]map[string][]string{
+		"darwin":  {"cline": {"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev"}, "zed": {".config/zed"}},
+		"windows": {"cline": {"AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev"}, "zed": {"AppData/Roaming/Zed"}},
+	}
+	for goos, files := range want {
+		agents := agentsFor(goos)
+		for _, a := range agents {
+			if f, ok := files[a.ID]; ok && !slices.Equal(a.Files, f) {
+				t.Errorf("%s %s: Files = %q, want %q", goos, a.ID, a.Files, f)
+			}
+			if d, ok := wantDirs[goos][a.ID]; ok && !slices.Equal(a.Dirs, d) {
+				t.Errorf("%s %s: Dirs = %q, want %q", goos, a.ID, a.Dirs, d)
+			}
+			if goos == "windows" {
+				for _, p := range slices.Concat(a.Files, a.Dirs) {
+					if strings.HasPrefix(p, "Library/") {
+						t.Errorf("windows %s: macOS path %q", a.ID, p)
+					}
+				}
+			}
+		}
+	}
+	if !slices.EqualFunc(Agents, agentsFor(runtime.GOOS), func(a, b Agent) bool { return a.ID == b.ID && slices.Equal(a.Files, b.Files) }) {
+		t.Error("Agents is not the table of this system")
+	}
+}
+
+// A command line tool's usual places differ by system; Windows has no Homebrew or .app bundles.
+func TestExtraDirsFollowTheSystem(t *testing.T) {
+	home := filepath.Join("H", "me")
+	mac := extraDirs("darwin", home)
+	for _, d := range []string{"/opt/homebrew/bin", filepath.Join(home, ".local", "bin"), "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"} {
+		if !slices.Contains(mac, d) {
+			t.Errorf("darwin: %q missing from %q", d, mac)
+		}
+	}
+	win := extraDirs("windows", home)
+	for _, d := range []string{
+		filepath.Join(home, ".local", "bin"),
+		filepath.Join(home, "AppData", "Roaming", "npm"),
+		filepath.Join(home, "AppData", "Local", "Programs", "Microsoft VS Code", "bin"),
+	} {
+		if !slices.Contains(win, d) {
+			t.Errorf("windows: %q missing from %q", d, win)
+		}
+	}
+	for _, d := range win {
+		if strings.HasPrefix(d, "/") {
+			t.Errorf("windows: Unix path %q", d)
+		}
+	}
+}

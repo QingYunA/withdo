@@ -153,8 +153,8 @@ func TestEveryKeyedActionShowsItsOwnKeyAsItsHint(t *testing.T) {
 	want := map[actionKind]string{actDone: "⌘↵", actMove: "M", actPriority: "P", actHandOff: "⌘⇧A", actDelete: "⌘⌫", actCancel: ""}
 	seen := map[binding]actionKind{}
 	for _, a := range actionsFor([]data.Task{mkTask(1, data.Todo, data.SourceUser)}) {
-		if a.Key.hint != want[a.Kind] {
-			t.Errorf("%s hints %q, want %q", a.Name, a.Key.hint, want[a.Kind])
+		if a.Key.hint() != want[a.Kind] {
+			t.Errorf("%s hints %q, want %q", a.Name, a.Key.hint(), want[a.Kind])
 		}
 		if a.Key == (binding{}) {
 			continue

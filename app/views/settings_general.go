@@ -38,7 +38,7 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
 		settingsRow(c, t, "folder", s.say.SettingsDataFolder(), withTilde(s.app.Config.DataFolder, s.app.Config.Home), true, func() {
-			if settingsLink(c, t, "show-folder", s.say.SettingsShowInFinder(), s.say.SettingsShowInFinder()).Clicked() {
+			if label := showInFolderLabel(s.say); settingsLink(c, t, "show-folder", label, label).Clicked() {
 				s.app.Act.ShowInFinder(s.app.Config.DataFolder)
 			}
 		})
@@ -125,7 +125,7 @@ func (s *Settings) recentChangesRow(c *ui.Context, t *theme.Tokens) {
 	if on && s.app.GitHub != nil {
 		switch s.app.GitHub.Status().State {
 		case data.GitHubMissing:
-			meta, ink = s.say.SettingsRecentNoGH(), t.Stale
+			meta, ink = s.say.SettingsRecentNoGH(ghInstallCommand()), t.Stale
 		case data.GitHubSignedOut:
 			meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
 		}

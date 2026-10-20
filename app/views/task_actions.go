@@ -11,12 +11,16 @@ import (
 // what order, which tasks each one applies to and which key does it are decided here and nowhere
 // else. This file is pure (no Main, no Context): the views draw the list and run its actions.
 
-// binding is a key and the hint that shows it, so the two cannot drift apart.
+// binding is a key and the hint that shows it, so the two cannot drift apart. mac is the hint as a
+// Mac writes it; hint writes it for the system when it is shown.
 type binding struct {
 	mods ui.Modifiers
 	key  ui.Key
-	hint string
+	mac  string
 }
+
+// hint is the key as the system writes it (⌘J on a Mac, Ctrl+J elsewhere).
+func (b binding) hint() string { return keyHint(b.mac) }
 
 // down says whether the key is pressed in the window.
 func (b binding) down(c *ui.Context) bool { return c.Shortcut(b.mods, b.key) }
@@ -29,10 +33,10 @@ var (
 	keyPriority = binding{0, ui.KeyP, "P"}
 	keyMove     = binding{0, ui.KeyM, "M"}
 	keyRemind   = binding{0, ui.KeyR, "R"}
-	keyAsk      = binding{ui.Cmd, ui.KeyJ, keyHint("⌘J")}
-	keyDone     = binding{ui.Cmd, ui.KeyEnter, keyHint("⌘↵")}
-	keyHandOff  = binding{ui.Cmd | ui.Shift, ui.KeyA, keyHint("⌘⇧A")}
-	keyDelete   = binding{ui.Cmd, ui.KeyBackspace, keyHint("⌘⌫")}
+	keyAsk      = binding{ui.Cmd, ui.KeyJ, "⌘J"}
+	keyDone     = binding{ui.Cmd, ui.KeyEnter, "⌘↵"}
+	keyHandOff  = binding{ui.Cmd | ui.Shift, ui.KeyA, "⌘⇧A"}
+	keyDelete   = binding{ui.Cmd, ui.KeyBackspace, "⌘⌫"}
 )
 
 // actionKind names an action.
