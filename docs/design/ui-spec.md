@@ -379,19 +379,49 @@ else changes.
 
 ## Surfaces
 
-Superseded in part by **Input first (v31)** item 6: a menu bar popover and `⌥ Space` are coming.
-
-One window. No flyout panel, no global shortcut (decided 2026-10-14: shortcuts conflict). Closing
-the window hides it, so reminders, the end of the day and pull request news keep coming; Quit quits.
+One window, and a small panel under an icon in the menu bar or the tray (decided 2026-10-21, v31,
+`docs/design/mockups/v31.html` section 6; it replaces the 2026-10-14 decision of no flyout panel, no
+global shortcut and no macOS tray icon). Closing the window hides it, so reminders, the end of the
+day and pull request news keep coming, and the panel works while the window is hidden; Quit quits.
 A second launch starts no second process: it brings the window back (one instance on both systems).
 
-- **macOS:** no tray icon (2026-10-14: the user found it pointless); the Dock icon opens the window.
+- **Menu bar icon (macOS).** The app icon redrawn on the 12 x 12 grid (`app/theme/sprites/tray.png`)
+  as a template image: the dark cells black and the check mark cut out (`theme.TrayTemplateIcon`,
+  36 x 36 px, which the menu bar draws 18 pt tall), so it follows the menu bar's light or dark
+  appearance. Tooltip `ADHD Todo`. A click opens the panel; the icon has no menu (the Dock has
+  `Settings…` and Quit).
+- **The panel** (`app/views/popover.go`, `app/panel.go`). mygo `NewFlyout` anchored to the icon
+  (`Tray`, `PlacementBottom`, `Focusable`) with `Popover` on macOS: an `NSPopover` draws the material,
+  the corners, the shadow and the arrow, so the content draws no background there
+  (`ui.Context.Vibrancy`); on Windows it draws `bg` and the system shadow. It is native UI like the
+  window, 360 pt wide and as tall as its content (12 pt padding), top to bottom:
+  1. the **composer** of Mine (`composerBox`, `theme.Input`), focused as it opens: the same input,
+     reply, receipts, Undo and plain-task confirmation as Mine's, filing into Mine
+     (`data.PlaceNow`). It is its own `Main`, so its draft and reply are its own, and a draft survives
+     closing the panel. Esc cancels a running request, then closes the reply, then closes the panel.
+  2. under it `Today` / `今天` with its count and up to five of today's rows from Mine (the Today
+     section, in its order): status glyph (ticks the task off), title, due label. A click opens the
+     task in the main window (brought to the front, inspector open) and closes the panel. Nothing is
+     edited in the panel. With no row of today the header is not drawn.
+  3. a hairline and one footer line: `2 agents working · 1 stuck` / `2 个 Agent 在干活 · 1 个卡住`
+     at the left, `text.tertiary`, the stuck count in `status.blocked`, the only strong color there
+     (working = agent tasks in doing, stuck = blocked; a part with a zero count is left out, and with
+     both zero the left is empty), and `Open ADHD Todo` / `打开 ADHD Todo` at the right as a link,
+     which brings the main window forward and closes the panel.
+  Esc or a click away closes it; the icon's own click toggles it.
+- **Global shortcut `⌥ Space`** (`Alt+Space` on Windows), `mygo.GlobalShortcut`, registered when the
+  app is ready: toggles the panel with the composer focused, wherever the user is. If another app
+  holds the keys the registration fails, the app logs it and carries on; the icon still works.
 - **Windows** has no Dock, so the app has a tray icon there (decided 2026-10-20, v28,
-  `docs/design/mockups/v28.html`): the app icon redrawn on the 12 x 12 grid
-  (`app/theme/sprites/tray.png`, shown 2x as 24 x 24 px), tooltip `ADHD Todo`. A left click opens the
-  window; a right click opens its menu: `Open ADHD Todo` / `打开 ADHD Todo`, `Settings…` / `设置…`, a
-  separator, `Exit` / `退出`. The menu bar's File menu holds `Settings…` (Ctrl+,) and `Exit`, since
-  Windows has no app menu. The high-fidelity reference for this section is
+  `docs/design/mockups/v28.html`): the same sprite in color (shown 2x as 24 x 24 px), tooltip
+  `ADHD Todo`. A left click opens the panel under the icon (above it with the taskbar at the bottom
+  of the screen: mygo flips it); a right click opens its menu: `Open ADHD Todo` / `打开 ADHD Todo`,
+  `Settings…` / `设置…`, a separator, `Exit` / `退出`. The menu bar's File menu holds `Settings…`
+  (Ctrl+,) and `Exit`, since Windows has no app menu.
+- **Not in the panel (yet):** the microphone and holding the shortcut to listen are decision 4 of
+  **Input first**, built by their own pull request.
+
+The high-fidelity reference for this section is
 `docs/design/mockups/now.html` (rendered: `now.png`). Match it.
 
 ### Window (1100 x 720, min 860 x 540)
@@ -1842,7 +1872,7 @@ composer has none, so there `⌘Z` goes on to the assistant and the toast.
 
 ### Keyboard
 
-`⌘K` the page's composer · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌥ Space` (`Alt+Space` on Windows) opens or closes the menu bar panel from any app, its composer focused (see **Surfaces**) · `⌘K` the page's composer · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
 (see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).
@@ -1860,6 +1890,7 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 | Input | `↵` | `Esc` | `↓` |
 |---|---|---|---|
 | Composer | sends (`⇧↵` breaks the line); on an empty field opens the highlighted row | cancels a running request, else closes the answer, else leaves the field | moves into the rows (Now); `⌘Z` on an empty field undoes the assistant's last change |
+| Menu bar panel composer | as the Composer, filing into Mine | as the Composer; with nothing left to cancel or close it closes the panel | |
 | Inspector title, branch | saves | puts the stored text back and leaves the field | |
 | Inspector notes | breaks a line (saves on blur) | puts the stored text back and leaves the field | |
 | Search field | opens the highlighted result (the first when none) | clears the text and leaves the field | moves into the results |

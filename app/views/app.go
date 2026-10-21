@@ -17,6 +17,7 @@ import (
 // Actions is what the views ask the shell to do.
 type Actions interface {
 	OpenTask(id int)        // show the main window with the task open in the inspector
+	OpenMain()              // bring the main window to the front, on the page it was on
 	OpenSettings(pane Pane) // show the Settings window on a pane
 	OpenURL(url string)
 	ShowInFinder(path string)

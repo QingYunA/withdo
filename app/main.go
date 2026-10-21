@@ -65,7 +65,7 @@ func main() {
 	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed
 	app.Prefs = be.prefs
 	app.Recent, app.RecentCache = be.recent, be.recentCache
-	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
+	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), popover: views.NewPopover(app), github: be.github}
 	app.Act = s
 	app.Sync = be.sync
 	app.Recorder = speech.New()
@@ -97,10 +97,11 @@ func main() {
 	mygo.App.OnSecondInstance(func([]string, string) { s.showMain() })
 
 	stop := make(chan struct{})
-	// The tray icon is Windows only: the Mac has the Dock.
+	// The icon in the menu bar (macOS) or the tray (Windows) opens the panel; so does Option+Space.
 	var tray *mygo.Tray
 	mygo.App.OnQuit(func() {
 		close(stop)
+		mygo.GlobalShortcut.UnregisterAll()
 		if tray != nil {
 			tray.Destroy()
 		}
@@ -110,8 +111,8 @@ func main() {
 		s.setMenu()
 		go linkOwnExecutable(app.Config.AgentSetup.CorePath())
 		s.createMain()
-		if runtime.GOOS == "windows" {
-			tray = s.newTray()
+		if tray = s.newTray(); tray != nil {
+			s.registerShortcut()
 		}
 		be.store.Subscribe(s.storeChanged)
 		be.store.SubscribeReminders(func(r data.Reminder) { go s.notifier.Reminder(r) })
