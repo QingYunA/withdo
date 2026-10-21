@@ -72,12 +72,16 @@ that section in detail. Until then the older text describes the app as it is.
    project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
    1 to Claude`) with **Undo** and `⌘Z`. A chip opens the matching piece of the **Task menu**. Keeps
    **Undo** and **Assistant**'s receipts.
-4. **Voice is the system's speech to text.** The microphone (or holding `⌥ Space`) listens with the
-   system recognizer (macOS and iOS `SFSpeechRecognizer`, Windows `Windows.Media.SpeechRecognition`,
-   Android `SpeechRecognizer`). Words appear in the input as they are heard, the unsettled ones in
-   `text.tertiary`. Releasing sends, Esc cancels. While it listens the microphone is a filled accent
-   square and a pixel waveform steps on the 100 ms loop beat. No text to speech. mygo has no speech
-   API (checked in 0.5.1 and 0.6.0), so this starts with a spike.
+4. **Voice goes through the official service.** The microphone (or holding `⌥ Space`) records
+   while held or until clicked again (60 s at most). The audio goes to our server, which sends it to a
+   cloud speech recognizer (MiMo `mimo-v2.5-asr`, Chinese and English with auto-detection) and
+   returns the text. The server holds the recognizer's key; the app never does. The text fills the
+   input and is sent as if typed. The recognizer takes a whole recording, so there are no words while
+   speaking: the microphone is a filled accent square and a pixel waveform follows the voice's level
+   on the 100 ms loop beat, then `Transcribing…` until the text arrives. Esc cancels. Voice counts
+   against the account's quota; signed out, the microphone says `Sign in to use voice`. No text to
+   speech. Decided 2026-10-21 over the system recognizers: macOS's `SFSpeechRecognizer` refuses
+   while Dictation is off, and one service gives the same result on every platform.
 5. **Understanding comes from the official service.** Signing in (Google or email) gives the input
    its model, with a Free and a paid tier. Without signing in, or past the quota, the input still
    adds tasks: local rules read dates and times, `#category`, `!` (important), and split a sentence
