@@ -42,6 +42,79 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
     reason the existing ones cannot carry.
 
+## Input first (v31)
+
+Decided 2026-10-21. Reference: `docs/design/mockups/v31.html` (rendered: `v31.png`). The feature set
+stays; the way in changes. People should not fill forms: they say or type one sentence, the
+assistant turns it into tasks, and they fix what it got wrong by clicking a chip. Like FocusPomo,
+one thing on the home screen is the main character, and finishing something feels good. Unlike it,
+there is no timer.
+
+Each decision lists the section it replaces. Each is built by its own pull request, which rewrites
+that section in detail. Until then the older text describes the app as it is.
+
+1. **One big input at the top of home.** Home (`Today` / `今天`, today's Mine) opens with the date
+   and a greeting, then a large input (58 pt, 14 pt radius, `bg` with a hairline and a soft shadow,
+   accent ring when focused) with a pixel microphone at its right, and a hint line under it. The
+   lists follow: Today, Later, Done today. The Agents panel sits in a narrow right column (300 pt,
+   `bg.tray`) titled `What your agents are doing`, with the drop target `Drag a to-do here to hand
+   it to an agent` at its foot; dragging a row onto it hands the task over, as today. Replaces the
+   bottom-pinned composer of **Mine (home)** and **Composer** on Mine.
+2. **Project pages keep a small input; other pages lose theirs.** A project keeps the bottom
+   composer, and a sentence typed there goes to that project. Agents, Inbox and Calendar have no
+   composer any more; the inspector keeps its own. Replaces the list of six places in **Composer**.
+3. **Applied at once, with Undo.** A sentence is applied as soon as it is sent, never shown as a
+   preview to confirm. New rows land with the chips the assistant read (date, reminder, category,
+   project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
+   1 to Claude`) with **Undo** and `⌘Z`. A chip opens the matching piece of the **Task menu**. Keeps
+   **Undo** and **Assistant**'s receipts.
+4. **Voice goes through the official service.** The microphone (or holding `⌥ Space`) records
+   while held or until clicked again (60 s at most). The audio goes to our server, which sends it to a
+   cloud speech recognizer (MiMo `mimo-v2.5-asr`, Chinese and English with auto-detection) and
+   returns the text. The server holds the recognizer's key; the app never does. The text fills the
+   input and is sent as if typed. The recognizer takes a whole recording, so there are no words while
+   speaking: the microphone is a filled accent square and a pixel waveform follows the voice's level
+   on the 100 ms loop beat, then `Transcribing…` until the text arrives. Esc cancels. Voice counts
+   against the account's quota; signed out, the microphone says `Sign in to use voice`. No text to
+   speech. Decided 2026-10-21 over the system recognizers: macOS's `SFSpeechRecognizer` refuses
+   while Dictation is off, and one service gives the same result on every platform.
+5. **Understanding comes from the official service.** Signing in (Google or email) gives the input
+   its model, with a Free and a paid tier. Without signing in, or past the quota, the input still
+   adds tasks: local rules read dates and times, `#category`, `!` (important), and split a sentence
+   at `，还有` / `, and`; one quiet line under the receipt offers to sign in, never a dialog. Bringing
+   one's own API key moves to Settings > Advanced. Replaces "With none, Enter creates a plain task"
+   in **Mine (home)** and the setup flow of **Settings** > Assistant.
+6. **Menu bar icon and `⌥ Space`.** On macOS a pixel icon in the menu bar opens a popover (mygo
+   `NewTray` + `NewFlyout` with `Popover`): the same input, up to five of today's rows (a click opens
+   the task in the main window), and one footer line, `2 agents working · 1 stuck` (the stuck number
+   in `status.blocked`, the only strong color there) and `Open ADHD Todo`. `⌥ Space` anywhere opens
+   it with the input focused; holding it listens. On Windows the tray icon's left click opens the
+   same panel. Replaces "No flyout panel, no global shortcut" and "macOS: no tray icon" in
+   **Surfaces**.
+7. **Three sidebar entries.** `Today`, `Agents`, `Calendar`, then Projects and the gear.
+   - Inbox goes into Today: a task with no project lands in Today or Later by its date.
+   - Completed goes into each list's `Done` fold, which opens the full history; search finds it too.
+   - Summary opens from `See today ›` beside Done today, and from the end-of-day notification.
+   - The category sub-rows go: a category is a colored chip on the row; clicking it filters the
+     list (a dismissible filter bar above it).
+   - The agent sub-rows go: the Agents page groups by agent.
+   - Recent changes moves to Settings > Advanced (it is off by default already).
+   Replaces the sidebar of **Window**, **Inbox**, **Completed** and the sub-rows and folding.
+8. **My tasks have three states and a star.** For the user's own tasks, Status is a segmented
+   control: To do, Doing, Done. Backlog and Cancelled stay in the right-click menu. Priority becomes
+   one **important** star (12 pt pixel star, `status.review` color when set; set = P1, unset = P2 in
+   the database, so agents and the MCP keep P0 to P3). Agent tasks keep all seven statuses and
+   their priority badges, since those are the agent telling you what happened.
+9. **The inspector by source.** A task of mine shows: title with the star, Status, `When` (due and
+   reminder chips), `Where` (category and project · milestone chips), notes and images, and `Hand
+   to an agent…`. Branch, Pull request, From and Activity show only on an agent's task. Replaces
+   the property list of **Inspector**.
+10. **Settings: four panes.** Account (sign-in, quota, devices: the old Sync pane), General
+    (language, notifications, menu bar icon, data folder, archived projects, updates, about), Agents
+    (with the old GitHub pane), Advanced (own API key with the twelve providers folded, Recent
+    changes, end-of-day reminder, sound effects). Replaces the panes of **Settings**.
+
+
 ## Tokens
 
 ### Color
@@ -642,6 +715,32 @@ page's title already says where a task goes, so the input has no label, no chip 
   mean it.
 - **Answer.** What comes back shows as one line directly under the box that sent it (above the
   inspector's, which sits at the bottom). Behavior as in **Assistant**.
+
+#### Voice input (m12)
+
+Decision 4 of **Input first (v31)**. The microphone is a 24 pt pixel picture (12 x 12 grid at 2 pt a
+pixel) in a 32 pt button at the right of the page composer's box, after the model chip: on Mine and
+the project pages, not in the inspector. Platforms without a recorder (Windows until its recorder
+lands) do not draw it.
+
+- **Click** asks for the microphone if macOS has not been asked, then records (60 s at most). The
+  button becomes a filled `accent` rounded square (radius 8) with the microphone in `accent.text`,
+  and one line above the box shows a pixel waveform (12 bars of 2 pt cells, 2, 4, 6 or 8 cells tall,
+  the loudest level of each 100 ms beat, oldest at the left) and `Listening… click to stop, Esc to
+  cancel`.
+- **Click again or Enter** ends it: the line shows the pixel busy indicator and `Transcribing…`. The
+  text is put after what is typed and sent through the normal send path. **Esc** cancels the
+  recording or the upload; leaving the page cancels it too.
+- **Failures** are one quiet `text.secondary` line above the box for 6 s: `Sign in to use voice` (a
+  link that opens Settings on the Sync pane; nothing is recorded), `Microphone access is off` with
+  `Open System Settings` (Privacy > Microphone), `Voice limit reached for today`, `Voice isn't set
+  up on this server`, otherwise `Couldn't transcribe. Try again`.
+- **Hold `⌥ Space` to talk is not built**: mygo's `GlobalShortcut.Register(acc, fn)` reports key
+  down only, never key up. It waits for a mygo release that reports both.
+- No menu bar popover exists yet on macOS; it gets the same button when decision 6 is built.
+- The button does not take the field's focus on a click, so the box does not change under the
+  pointer between the two clicks.
+- Screens: `mine-composer-voice`, `-listening`, `-transcribing`, `-voice-signed-out`.
 
 ### Assistant (M3, restrained in M4d)
 
