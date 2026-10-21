@@ -589,6 +589,23 @@ func TestIdBlocksHandOutIdsAndFailWhenEmpty(t *testing.T) {
 			eq(t, "id", task.ID, want)
 		}
 	})
+
+	t.Run("ids a row already holds are skipped", func(t *testing.T) {
+		// A writer that does not know the blocks, such as an adhd-core started before sync
+		// existed, lets SQLite pick the id and can take one a block still holds.
+		c, _, db := newCoreDB(t)
+		enableSync(t, db)
+		exec(t, db, "INSERT INTO sync_id_blocks (entity, next, end) VALUES ('tasks', 1000, 1004)")
+		for _, id := range []int64{1000, 1001, 1003} {
+			exec(t, db, "INSERT INTO tasks (id, title, source, created_at, updated_at) VALUES (?, 'old', 'user', 't', 't')", id)
+		}
+		task := mustTask(t, c, domain.CreateTaskInput{Title: "new"})
+		eq(t, "id", task.ID, int64(1002))
+		_, err := c.CreateTask(ctx, domain.CreateTaskInput{Title: "no ids left"})
+		if !errors.Is(err, domain.ErrNoSyncIDs) {
+			t.Fatalf("err = %v, want ErrNoSyncIDs", err)
+		}
+	})
 }
 
 // TestLinkedCoresNeverHandOutTheSameID is acceptance criterion 6: two Cores on one file, as two
