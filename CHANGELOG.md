@@ -3,6 +3,27 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.6.4
+
+No database change: upgrading from 0.6.3 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Fixed: no new task or report could be saved** on a synced computer, with `UNIQUE constraint
+  failed: tasks.id`. An `adhd-core` started before 0.5.2 and still running took ids the sync had
+  reserved, and every later save tried the same id. Saving now skips an id that is already taken.
+  Restart your coding agents after updating, so none of them keeps running an old `adhd-core`.
+
+## 0.6.3
+
+No database change: upgrading from 0.6.2 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Android: the task menu.** Long-press a task, or tap ⋯ on a task's page, to change its status,
+  priority, category or project, set a reminder, open its pull request, or delete it (Undo brings
+  it back for six seconds). A task's page opens the same pages from its rows.
+- **Android: fixed** a task's page staying blank on a phone with no projects.
+- The desktop's reminder presets now come from the same code as the phone's; they are unchanged.
+
 ## 0.6.2
 
 No database change: upgrading from 0.6.1 is installing the app. On Windows, quit ADHD Todo and your

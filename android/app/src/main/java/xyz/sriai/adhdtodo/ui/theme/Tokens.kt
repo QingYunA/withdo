@@ -25,6 +25,10 @@ data class Tokens(
     val bg: Color,
     val bgSubtle: Color,
     val bgSelected: Color,
+    /** The hover tint a chosen row of the task menu's pages takes. */
+    val bgHover: Color,
+    /** The 32 % black behind a modal sheet. */
+    val scrim: Color,
     val border: Color,
     val text: Color,
     val textSecondary: Color,
@@ -41,6 +45,21 @@ data class Tokens(
     /** The eight folder colors of app/theme/icons.go, in the same order. */
     val projectColors: List<Color>,
 ) {
+    /**
+     * A category's color comes from the eight project colors, in domain.CategoryColors' order, as
+     * the desktop's CategoryColor does; a key from a newer build falls back to the first.
+     */
+    fun categoryColor(key: String): Color {
+        val index = CategoryColorKeys.indexOf(key)
+        return projectColors[if (index >= 0) index else 0]
+    }
+
+    /** The fixed colors of a category icon's palette letters a to l, after the project colors. */
+    val categoryPalette: List<Color>
+        get() = projectColors + listOf(
+            Color(0xFFFFFFFF), Color(0xFF8E8E93), Color(0xFF1C1C1E), Color(0xFF8A5A3B),
+        )
+
     fun status(status: String): Color = when (status) {
         "backlog" -> statusBacklog
         "todo" -> statusTodo
@@ -75,6 +94,11 @@ data class Tokens(
     }
 }
 
+/** internal/domain.CategoryColors, the keys of the eight project colors in the same order. */
+private val CategoryColorKeys = listOf(
+    "indigo", "yellow", "green", "red", "blue", "pink", "teal", "orange",
+)
+
 /** app/theme/icons.go's ProjectColors, the same eight in both appearances. */
 private val ProjectPalette = listOf(
     Color(0xFF5B5BD6), Color(0xFFE0A800), Color(0xFF30A46C), Color(0xFFE5484D),
@@ -86,6 +110,8 @@ val LightTokens = Tokens(
     bg = Color(0xFFFFFFFF),
     bgSubtle = Color(0xFFF5F5F7),
     bgSelected = Color(0xFF5B5BD6).copy(alpha = 0.12f),
+    bgHover = Color(0xFF000000).copy(alpha = 0.05f),
+    scrim = Color(0xFF000000).copy(alpha = 0.32f),
     border = Color(0xFF000000).copy(alpha = 0.10f),
     text = Color(0xFF1D1D1F),
     textSecondary = Color(0xFF6E6E73),
@@ -107,6 +133,8 @@ val DarkTokens = Tokens(
     bg = Color(0xFF1C1C1E),
     bgSubtle = Color(0xFF232326),
     bgSelected = Color(0xFF7C7CF0).copy(alpha = 0.22f),
+    bgHover = Color(0xFFFFFFFF).copy(alpha = 0.06f),
+    scrim = Color(0xFF000000).copy(alpha = 0.32f),
     border = Color(0xFFFFFFFF).copy(alpha = 0.10f),
     text = Color(0xFFF5F5F7),
     textSecondary = Color(0xFFA1A1A6),

@@ -62,6 +62,17 @@ func (c *Core) syncID(ctx context.Context, q store.Querier, entity string) (*int
 				return nil, fmt.Errorf("drop spent %s id block: %w", entity, err)
 			}
 		}
+		// A writer that does not know the blocks (an adhd-core started before sync, still
+		// running) lets SQLite pick ids and can take one a block holds: skip it, or every insert
+		// would fail on it and roll the block back to it.
+		var taken int
+		if err := q.QueryRowContext(ctx,
+			"SELECT COUNT(*) FROM "+entity+" WHERE id = ?", next).Scan(&taken); err != nil {
+			return nil, fmt.Errorf("check %s id %d: %w", entity, next, err)
+		}
+		if taken > 0 {
+			continue
+		}
 		return &next, nil
 	}
 }

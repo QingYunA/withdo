@@ -65,14 +65,19 @@ version built so is the last one to install by hand.
 
 ## Release steps (for the release PR)
 
-1. Bump the version in `app/mygo.json`, `app/main.go` and `internal/mcpserver/server.go`; finish the
-   `CHANGELOG.md` section of that version.
+1. Bump the version in `app/mygo.json`, `app/main.go`, `internal/mcpserver/server.go` and `versionName`
+   in `android/app/build.gradle.kts`, and raise its `versionCode` by one (`TestVersionsAgree` in
+   `app/` fails when they differ); finish the `CHANGELOG.md` section of that version.
 2. `scripts/build-release.sh`: builds macOS and Windows x64, which every release ships, and gathers
    into `app/build/release/` `ADHD-Todo-<v>-macos-universal.dmg`,
    `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe` (which carries
    `adhd-core.exe`), the signed update archives and manifests when updates are on, and
    `SHA256SUMS.txt`.
-3. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
+3. `scripts/android-release.sh`: builds `dist/adhd-todo-<v>.apk`, signed with the release keystore
+   (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK). Copy
+   the APK into `app/build/release/` after step 2 (which empties that folder) and append its line:
+   `(cd app/build/release && shasum -a 256 adhd-todo-<v>.apk >> SHA256SUMS.txt)`.
+4. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
    the latest, which is what installed apps ask.
 
 The release notes say (the changelog's 0.5.0 entry does too): **a coding agent keeps running the

@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,9 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import xyz.sriai.adhdtodo.R
+import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.Report
 import xyz.sriai.adhdtodo.data.Task
@@ -49,12 +52,15 @@ fun TaskScreen(
     onSetPriority: (String) -> Unit,
     onOpenUrl: (String) -> Unit,
     onOpenTask: (Long) -> Unit,
+    categories: List<Category> = emptyList(),
+    onOpenMenu: (TaskMenuPage) -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     if (page == null) return
     val task = page.task
     val project = projects.firstOrNull { it.id == task.projectId }
+    val category = categories.firstOrNull { it.id.toInt() == task.categoryId }
     val agent = page.latestAgent.ifEmpty { if (task.source == "agent") "agent" else "user" }
     val fromLabel = if (agent == "user") stringResource(R.string.done_by_you) else words.agent(agent)
     val fromAvatar = if (agent == "user") "you" else words.avatar(agent)
@@ -72,9 +78,12 @@ fun TaskScreen(
             )
         }
         item(key = "properties") {
-            PropertyRow("invert") {
-                StatusGlyph(task.status, size = 18.dp)
-                Text(words.statusLabel(task.status), style = type.body, color = tokens.text)
+            PropertyRow(
+                "invert",
+                onClick = { onOpenMenu(TaskMenuPage.Main) },
+                leading = { StatusGlyph(task.status, size = Dims.icon) },
+            ) {
+                Text(words.menuStatus(task.status), style = type.body, color = tokens.text)
             }
             PropertyRow("robot") {
                 Avatar(fromAvatar, size = Dims.avatar)
@@ -83,11 +92,32 @@ fun TaskScreen(
             PropertyRow("flag") {
                 PriorityStrip(task.priority, onSetPriority)
             }
-            if (project != null) {
-                PropertyRow("folder") {
+            PropertyRow("bulletlist", onClick = { onOpenMenu(TaskMenuPage.Category) }) {
+                Text(
+                    category?.let { words.categoryName(it) } ?: stringResource(R.string.menu_none),
+                    style = type.body,
+                    color = if (category == null) tokens.textTertiary else tokens.text,
+                )
+            }
+            PropertyRow("folder", onClick = { onOpenMenu(TaskMenuPage.Move) }) {
+                if (project != null) {
                     PixelIcon("folder", size = Dims.icon, tint = tokens.projectColor(project.name))
                     Text(project.name, style = type.body, color = tokens.text)
+                } else {
+                    Text(
+                        stringResource(R.string.menu_none),
+                        style = type.body,
+                        color = tokens.textTertiary,
+                    )
                 }
+            }
+            PropertyRow("clock", onClick = { onOpenMenu(TaskMenuPage.Remind) }) {
+                val remind = task.remindAt?.takeIf { it.isNotBlank() }
+                Text(
+                    remind?.let { words.reminderValue(it) } ?: stringResource(R.string.menu_none),
+                    style = type.body,
+                    color = if (remind == null) tokens.textTertiary else tokens.text,
+                )
             }
             if (task.branch.isNotEmpty()) {
                 PropertyRow("git-branch") {
@@ -127,12 +157,18 @@ fun TaskScreen(
 }
 
 @Composable
-private fun PropertyRow(icon: String, content: @Composable () -> Unit) {
+private fun PropertyRow(
+    icon: String,
+    onClick: (() -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
     val tokens = LocalTokens.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp),
+            .height(40.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -140,7 +176,11 @@ private fun PropertyRow(icon: String, content: @Composable () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            PixelIcon(icon, size = Dims.icon, tint = tokens.textTertiary)
+            if (leading != null) {
+                leading()
+            } else {
+                PixelIcon(icon, size = Dims.icon, tint = tokens.textTertiary)
+            }
             Text(
                 stringResource(
                     when (icon) {
@@ -148,6 +188,8 @@ private fun PropertyRow(icon: String, content: @Composable () -> Unit) {
                         "robot" -> R.string.property_from
                         "flag" -> R.string.property_priority
                         "folder" -> R.string.property_project
+                        "bulletlist" -> R.string.property_category
+                        "clock" -> R.string.property_remind
                         "git-branch" -> R.string.property_branch
                         else -> R.string.property_pr
                     },
@@ -157,12 +199,48 @@ private fun PropertyRow(icon: String, content: @Composable () -> Unit) {
             )
         }
         Row(
+            modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             content()
         }
+        if (onClick != null) {
+            PixelIcon("chevron-right", size = 16.dp, tint = tokens.textTertiary)
+        }
     }
+}
+
+/**
+ * A task's back bar: the page it came from, the ⋯ that opens the whole task menu, and the number
+ * at the right in mono (v30 frame 4).
+ */
+@Composable
+fun TaskBackBar(title: String, number: Long, onBack: () -> Unit, onMenu: () -> Unit) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    val menuLabel = stringResource(R.string.task_menu)
+    BackBar(
+        title = title,
+        onBack = onBack,
+        right = {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clickable(onClick = onMenu)
+                    .semantics { contentDescription = menuLabel },
+                contentAlignment = Alignment.Center,
+            ) {
+                MoreGlyph(size = Dims.icon, tint = tokens.textSecondary)
+            }
+            Text(
+                "#$number",
+                style = type.mono,
+                color = tokens.textTertiary,
+                modifier = Modifier.padding(end = 8.dp),
+            )
+        },
+    )
 }
 
 @Composable

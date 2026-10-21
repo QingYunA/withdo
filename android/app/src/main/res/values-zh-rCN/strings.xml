@@ -111,8 +111,10 @@
     <string name="section_activity">动态</string>
     <string name="property_status">状态</string>
     <string name="property_from">来自</string>
+    <string name="property_category">分类</string>
     <string name="property_priority">优先级</string>
     <string name="property_project">项目</string>
+    <string name="property_remind">提醒</string>
     <string name="property_branch">分支</string>
     <string name="property_pr">PR</string>
     <string name="pr_state_merged">已合并</string>
@@ -127,6 +129,41 @@
     <string name="composer_add_note">加一条备注</string>
     <string name="reply_sent">已发送</string>
     <string name="reply_failed">没能发送</string>
+
+    <!-- Task menu -->
+    <string name="task_menu">任务菜单</string>
+    <string name="menu_back">返回</string>
+    <string name="menu_move_to">移到…</string>
+    <string name="menu_remind_me">提醒我…</string>
+    <string name="menu_remind_title">提醒我</string>
+    <string name="menu_later_today">今天晚些时候</string>
+    <string name="menu_tomorrow">明天</string>
+    <string name="menu_next_monday">下周一</string>
+    <string name="menu_this_weekend">本周末</string>
+    <string name="menu_no_reminder">不提醒</string>
+    <string name="menu_custom">自定义…</string>
+    <string name="menu_delete">删除</string>
+    <string name="menu_deleted">已删除“%1$s”</string>
+    <string name="menu_undo">撤销</string>
+    <string name="menu_none">无</string>
+    <string name="menu_open_pr">打开 PR #%1$d</string>
+    <string name="menu_find_project">查找项目</string>
+    <string name="menu_find_category">查找类别</string>
+    <string name="menu_no_project_match">没有匹配的项目</string>
+    <string name="menu_no_category_match">没有匹配的类别</string>
+    <string name="menu_status_backlog">待规划</string>
+    <string name="menu_status_todo">待办</string>
+    <string name="menu_status_doing">进行中</string>
+    <string name="menu_status_blocked">已阻塞</string>
+    <string name="menu_status_review">待审查</string>
+    <string name="menu_status_done">已完成</string>
+    <string name="menu_status_cancelled">已取消</string>
+    <string name="menu_priority_urgent">紧急</string>
+    <string name="menu_priority_high">高</string>
+    <string name="menu_priority_normal">普通</string>
+    <string name="menu_priority_low">低</string>
+    <string name="category_work">工作</string>
+    <string name="category_life">生活</string>
 
     <!-- Sync -->
     <string name="sync_title">同步</string>

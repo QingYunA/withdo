@@ -74,10 +74,11 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	}
 	sort.Strings(methods)
 	want := []string{
-		"Accept", "Account", "Agents", "ClaimDueReminders", "Close", "Complete", "CreateTask",
-		"DeleteTask", "Devices", "LinkMerge", "LinkReplace", "Mine", "NextReminderAt", "Project",
-		"Projects", "Reply", "RestoreTask", "Search", "SetListener", "SignIn", "SignOut",
-		"StartSync", "StopSync", "SyncConfigure", "SyncNow", "SyncSetServer", "SyncStatus", "Task", "UpdateTask",
+		"Accept", "Account", "Agents", "Categories", "ClaimDueReminders", "Close", "Complete",
+		"CreateTask", "DeleteTask", "Devices", "LinkMerge", "LinkReplace", "Mine", "NextReminderAt",
+		"Project", "Projects", "RemindPresets", "Reply", "RestoreTask", "Search", "SetListener",
+		"SignIn", "SignOut", "StartSync", "StopSync", "SyncConfigure", "SyncNow", "SyncSetServer",
+		"SyncStatus", "Task", "UpdateTask",
 	}
 	if !reflect.DeepEqual(methods, want) {
 		t.Errorf("Core methods = %v\nwant %v", methods, want)

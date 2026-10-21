@@ -2,6 +2,7 @@ package xyz.sriai.adhdtodo.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 
 /**
@@ -26,6 +27,28 @@ data class Project(
     @SerialName("UpdatedAt") val updatedAt: String = "",
     @SerialName("ArchivedAt") val archivedAt: String? = null,
     @SerialName("ParentID") val parentId: Long? = null,
+)
+
+/**
+ * One category of the sidebar and the task menu: data.Category. Builtin is "work", "life" or ""
+ * for the user's own. Icon is the 12 x 12 picture, one byte a pixel: 0 empty, 35 (the Go '#') in
+ * the category's own color, and 97 to 108 for the fixed palette letters a to l.
+ */
+@Serializable
+data class Category(
+    @SerialName("ID") val id: Long = 0,
+    @SerialName("Builtin") val builtin: String = "",
+    @SerialName("Name") val name: String = "",
+    @SerialName("Icon") val icon: List<List<Int>> = emptyList(),
+    @SerialName("Color") val color: String = "",
+    @SerialName("Position") val position: Int = 0,
+)
+
+/** One ready-made reminder of the task menu: kind is later, tomorrow, monday or weekend. */
+@Serializable
+data class RemindPreset(
+    @SerialName("kind") val kind: String = "",
+    @SerialName("at") val at: Long = 0,
 )
 
 @Serializable
@@ -228,6 +251,11 @@ data class TaskPatch(
     @SerialName("remind_at") val remindAt: String? = null,
     @SerialName("category") val category: Long? = null,
     @SerialName("project_id") val projectId: Long? = null,
+    /**
+     * True writes `"remind_at": null`, which the Go core reads as clear. The plain null above is
+     * absent from the JSON (explicitNulls = false) and leaves the reminder alone.
+     */
+    @Transient val clearRemindAt: Boolean = false,
 )
 
 /** Account()'s JSON: who this phone signed in as. Both are "" when signed out. */

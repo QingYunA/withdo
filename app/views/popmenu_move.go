@@ -6,6 +6,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
+	"github.com/QingYunA/adhd-todo/internal/remind"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -128,24 +129,24 @@ func (m *Main) remindPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 			_ = m.app.Update(task.ID, data.Patch{RemindAt: &at})
 		}
 	}
-	for _, p := range remindPresets(now) {
+	for _, p := range remind.Presets(now) {
 		var label string
 		icon := theme.IconCalendar
-		switch p.kind {
-		case remindLater:
+		switch p.Kind {
+		case remind.Later:
 			label, icon = m.say.MenuLaterToday(), theme.IconClock
-		case remindTomorrow:
+		case remind.Tomorrow:
 			label = m.say.MenuTomorrow()
-		case remindMonday:
+		case remind.Monday:
 			label = m.say.MenuNextMonday()
 		default:
 			label = m.say.MenuThisWeekend()
 		}
-		hint := m.clock.When(p.at, now) // "Mon 9:00 AM"; today and tomorrow are in the label already
-		if p.kind == remindLater || p.kind == remindTomorrow {
-			hint = m.clock.Time(p.at)
+		hint := m.clock.When(p.At, now) // "Mon 9:00 AM"; today and tomorrow are in the label already
+		if p.Kind == remind.Later || p.Kind == remind.Tomorrow {
+			hint = m.clock.Time(p.At)
 		}
-		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.kind)), icon: icon, label: label, hint: hint, run: set(p.at)})
+		m.popRow(c, t, popSpec{key: "remind-" + itoa(int(p.Kind)), icon: icon, label: label, hint: hint, run: set(p.At)})
 	}
 	menuRule(c, t)
 	m.popRow(c, t, popSpec{key: "remind-none", icon: theme.IconClose, label: m.say.MenuNoReminder(), run: set(time.Time{})})

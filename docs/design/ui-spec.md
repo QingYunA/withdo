@@ -2051,6 +2051,35 @@ wide; rows are at least 48 dp tall (Android's touch target). Light and dark foll
   in `mono` `text.tertiary`, the title at 22 sp 700, the property rows with their 18 dp icons and a
   104 dp label column, the priority strip, Subtasks, then Activity on its rail. The composer at the
   bottom answers the agent.
+- **The task menu** (reference `docs/design/mockups/v30.html`) is the desktop's **Task menu** as a
+  modal bottom sheet (`bg`, 28 dp top corners, a 32 x 4 dp handle, the scrim at 32 % black). It opens
+  by a **long press** on any task row (Mine, Agents, a project, search): the row takes `bg.selected`
+  at once and the sheet opens when the finger lifts without moving (a long press that moves is kept
+  for dragging rows); and by the `⋯` button in a task's back bar, left of its number. A task page's
+  Status, Category, Project and Remind rows (each with a `›` at the right) open the sheet at their
+  page, and its priority strip stays as it is.
+  - Top: the title (17 sp 600, one line) and `#58 · adhd-todo` in `meta` `text.tertiary` (for an
+    agent's task `#12 · Claude Code · adhd-todo`).
+  - `Status · Doing` in `section` style and the seven status glyphs at 24 dp, each in a 52 dp tall
+    cell sharing the width, the current one tinted `bg.selected`; then `Priority · P1 High` and
+    `P0 P1 P2 P3` in 44 dp cells (P0 in `status.blocked`, the current one tinted). A tap sets the
+    value, gives a light haptic and closes the sheet.
+  - A hairline, then 52 dp rows with 20 dp pixelarticons in `text.secondary`: `Category`, `Move to…`
+    and `Remind me…`, each with its current value and a `›` in `text.tertiary` at the right
+    (`None` when empty); `Open PR #73` (`external-link`, `GitHub` as the hint) only when the task has
+    a pull request; a hairline and `Delete` in `status.blocked`.
+  - `Category`, `Move to…` and `Remind me…` replace the sheet's body with a page: a back chevron and
+    the page's name, then for Move to a 48 dp filter field (focused, the keyboard up) and rows of
+    `Inbox` and the projects with their colored folders, the current one on `bg.hover` with a check in
+    `accent`; Category is the same list of categories with `None` last and no `New category…` (a
+    phone does not make categories). Remind me lists the desktop's presets with their moments at the
+    right (`Later today`, `Tomorrow`, `Next Monday`, `This weekend`, by the same rules), a hairline,
+    `No reminder`, and `Custom…`, which opens Material's date picker and then its time picker. A
+    choice applies and closes the sheet. The system back goes from a page to the main page, then
+    closes the sheet; a swipe down or a tap on the scrim closes it.
+  - `Delete` does not ask: the sheet closes and a snackbar above the composer says `Deleted
+    “title”` with `Undo` for six seconds; Undo puts the task back with its number.
+  - The desktop's `Open in…` and `Ask about this task…` have no phone version.
 - **Notifications**: reminders that come due use Android's notifications; agents being stuck do not
   push in the first version.
 
