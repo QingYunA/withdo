@@ -297,3 +297,13 @@ in to a test account) found these. Each needs a test where one is possible.
 1. `go test -race ./internal/syncclient/... ./mobile/... ./app/data/...` and the new tests above.
 2. `scripts/android-core.sh`; `./gradlew --offline assembleDebug testDebugUnitTest`.
 3. `scripts/check.sh full`.
+
+## A4-tests: screenshots and interaction tests on the JVM
+
+Robolectric and Roborazzi render the phone screens without an emulator; the suite runs in seconds.
+Screenshots live in `docs/design/screens/android`; regenerate them with `scripts/android-screens.sh`
+(light and dark, plus zh-rCN for Mine, a task and Sync signed out). A normal `testDebugUnitTest`
+renders the same screens without recording or comparing, so it writes no PNGs.
+`InteractionTest` clicks Mine rows and completion boxes, the P0–P3 strip, replies, project segments
+and Completed, Composer's IME action, the Sync sign-in fields and stages, and the bottom-nav tabs.
+They stay out of CI because CI does not build the gomobile `android/core/core.aar` the app needs.

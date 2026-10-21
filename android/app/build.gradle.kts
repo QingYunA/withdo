@@ -50,6 +50,14 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // Robolectric resolves android-all from the local Maven cache and takes its download lock
+        // in user.home; keep that lock inside build/ so a sandboxed or read-only home still runs.
+        unitTests.all {
+            val robolectricHome = project.layout.buildDirectory.dir("robolectric-home").get().asFile
+            it.systemProperty("maven.repo.local", File(System.getProperty("user.home"), ".m2/repository").absolutePath)
+            it.systemProperty("user.home", robolectricHome.absolutePath)
+            it.doFirst { robolectricHome.mkdirs() }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
