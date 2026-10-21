@@ -143,6 +143,13 @@ class GoldenDecodeTest {
     }
 
     @Test
+    fun `a signing-in status carries the stage`() {
+        val json = """{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":false,"signed_in":true,"sign_in_stage":"downloading"}"""
+        val status = PageJson.decodeFromString<SyncStatus>(json)
+        assertEquals("downloading", status.signInStage)
+    }
+
+    @Test
     fun `unknown keys are ignored`() {
         val json = """{"FromAgents":[],"Today":[],"Later":[],"Done":[],"MoreLater":0,"MoreDone":0,"FromTheFuture":true}"""
         val page = PageJson.decodeFromString<MinePage>(json)

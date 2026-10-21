@@ -9772,18 +9772,36 @@ func (msgs Messages) SettingsSyncSignInNote() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInNote", nil)
 }
 
-// SettingsSyncSigningIn says "Signing in…"
+// SettingsSyncCheckingAccount says "Checking your account…"
 // in the language the app shows.
 //
-// The disabled button while the sign-in runs.
-func SettingsSyncSigningIn() string { return In(i18n.Locale()).SettingsSyncSigningIn() }
+// The disabled sign-in button while the server checks the account and
+// password.
+func SettingsSyncCheckingAccount() string { return In(i18n.Locale()).SettingsSyncCheckingAccount() }
 
-// SettingsSyncSigningIn says "Signing in…"
+// SettingsSyncCheckingAccount says "Checking your account…"
 // in the language of msgs.
 //
-// The disabled button while the sign-in runs.
-func (msgs Messages) SettingsSyncSigningIn() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSigningIn", nil)
+// The disabled sign-in button while the server checks the account and
+// password.
+func (msgs Messages) SettingsSyncCheckingAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncCheckingAccount", nil)
+}
+
+// SettingsSyncDownloadingTasks says "Downloading your tasks…"
+// in the language the app shows.
+//
+// The disabled sign-in button while the device links and the tasks
+// download.
+func SettingsSyncDownloadingTasks() string { return In(i18n.Locale()).SettingsSyncDownloadingTasks() }
+
+// SettingsSyncDownloadingTasks says "Downloading your tasks…"
+// in the language of msgs.
+//
+// The disabled sign-in button while the device links and the tasks
+// download.
+func (msgs Messages) SettingsSyncDownloadingTasks() string {
+	return Catalog.Format(msgs.locale, "settingsSyncDownloadingTasks", nil)
 }
 
 // SettingsSyncServer says "Server"

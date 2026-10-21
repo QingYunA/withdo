@@ -3902,9 +3902,13 @@
   "@settingsSyncSignInNote": {
     "description": "The quiet line under the sign-in button."
   },
-  "settingsSyncSigningIn": "Signing in…",
-  "@settingsSyncSigningIn": {
-    "description": "The disabled button while the sign-in runs."
+  "settingsSyncCheckingAccount": "Checking your account…",
+  "@settingsSyncCheckingAccount": {
+    "description": "The disabled sign-in button while the server checks the account and password."
+  },
+  "settingsSyncDownloadingTasks": "Downloading your tasks…",
+  "@settingsSyncDownloadingTasks": {
+    "description": "The disabled sign-in button while the device links and the tasks download."
   },
   "settingsSyncServer": "Server",
   "@settingsSyncServer": {

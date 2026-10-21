@@ -35,8 +35,8 @@ type fakeSession struct {
 	loginName string
 }
 
-// signIn is the fake sync server's POST /v1/sign-in. Tests use the issuer's own URL as the sync
-// server, so the direct handler and the Session API can share one auth-request store.
+// signIn is the fake sync server's POST /v1/sign-in. It returns tokens for the right password and
+// can leave one of them out for the client's checks.
 func (f *fakeOIDC) signIn(w http.ResponseWriter, r *http.Request) {
 	var req syncproto.SignInRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -46,19 +46,28 @@ func (f *fakeOIDC) signIn(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	f.signInCalls++
 	status := f.signInStatus
-	auth, ok := f.authRequests[req.AuthRequest]
+	missing := f.signInMissing
 	login, password := f.loginName, f.password
 	f.mu.Unlock()
 	if status != 0 {
 		w.WriteHeader(status)
 		return
 	}
-	if !ok || req.LoginName != login || req.Password != password {
+	if req.LoginName != login || req.Password != password {
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = io.WriteString(w, `{"error":"invalid_credentials"}`)
 		return
 	}
-	writeJSON(w, map[string]string{"callback_url": f.callback(auth)})
+	if missing != "" {
+		answer := map[string]any{
+			"access_token": "access-token", "refresh_token": "refresh-token",
+			"id_token": "id-token", "token_type": "Bearer", "expires_in": 3600,
+		}
+		delete(answer, missing)
+		writeJSON(w, answer)
+		return
+	}
+	f.respondToken(w, "")
 }
 
 // callback builds the loopback URL with a code bound to the auth request's PKCE challenge.
@@ -66,24 +75,14 @@ func (f *fakeOIDC) callback(auth *fakeAuthRequest) string {
 	code := fmt.Sprintf("code-%d", time.Now().UnixNano())
 	f.mu.Lock()
 	f.codes[code] = auth.challenge
-	state, host := auth.state, ""
-	if f.callbackState != "" {
-		state = f.callbackState
-	}
-	if f.callbackHost != "" {
-		host = f.callbackHost
-	}
 	f.mu.Unlock()
 	redirect, err := url.Parse(auth.redirectURI)
 	if err != nil {
 		redirect = &url.URL{Scheme: "http", Host: "127.0.0.1", Path: "/callback"}
 	}
-	if host != "" {
-		redirect.Host = host
-	}
 	query := redirect.Query()
 	query.Set("code", code)
-	query.Set("state", state)
+	query.Set("state", auth.state)
 	redirect.RawQuery = query.Encode()
 	return redirect.String()
 }
@@ -251,35 +250,41 @@ func TestSignInPassword(t *testing.T) {
 	}
 }
 
-// TestSignInCallbackIsChecked: a callback whose state or host is not the one the sign-in started
-// with is refused and stores nothing.
-func TestSignInCallbackIsChecked(t *testing.T) {
+// TestSignInOneRequest: the whole sign-in is one POST to the sync server, with no discovery or
+// issuer request.
+func TestSignInOneRequest(t *testing.T) {
 	const clientID = "adhd-desktop"
-	t.Run("wrong state", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		issuer.mu.Lock()
-		issuer.callbackState = "wrong"
-		issuer.mu.Unlock()
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		err := source.SignIn(context.Background(), issuer.URL, "ada@example.com", "correct horse")
-		if err == nil || !strings.Contains(err.Error(), "state") {
-			t.Fatalf("SignIn error = %v, want the state mismatch", err)
-		}
-		requireNoToken(t, secrets)
-	})
-	t.Run("wrong host", func(t *testing.T) {
-		issuer := newFakeOIDC(t, clientID)
-		issuer.mu.Lock()
-		issuer.callbackHost = "evil.example"
-		issuer.mu.Unlock()
-		secrets := newFakeSecrets()
-		source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
-		if err := source.SignIn(context.Background(), issuer.URL, "ada@example.com", "correct horse"); err == nil {
-			t.Fatal("SignIn accepted a callback on another host")
-		}
-		requireNoToken(t, secrets)
-	})
+	issuer := newFakeOIDC(t, clientID)
+	secrets := newFakeSecrets()
+	source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
+	if err := source.SignIn(context.Background(), issuer.URL, "ada@example.com", "correct horse"); err != nil {
+		t.Fatalf("SignIn: %v", err)
+	}
+	issuer.mu.Lock()
+	hits, calls := issuer.hits, issuer.signInCalls
+	issuer.mu.Unlock()
+	if hits != 1 || calls != 1 {
+		t.Fatalf("requests = %d, sign-in posts = %d, want one of each", hits, calls)
+	}
+}
+
+// TestSignInMissingToken stores nothing when the answer lacks an access or refresh token.
+func TestSignInMissingToken(t *testing.T) {
+	const clientID = "adhd-desktop"
+	for _, missing := range []string{"access_token", "refresh_token"} {
+		t.Run(missing, func(t *testing.T) {
+			issuer := newFakeOIDC(t, clientID)
+			issuer.mu.Lock()
+			issuer.signInMissing = missing
+			issuer.mu.Unlock()
+			secrets := newFakeSecrets()
+			source := syncclient.NewOIDCSource(issuer.URL, clientID, nil, secrets)
+			if err := source.SignIn(context.Background(), issuer.URL, "ada@example.com", "correct horse"); err == nil {
+				t.Fatalf("SignIn accepted an answer without %s", missing)
+			}
+			requireNoToken(t, secrets)
+		})
+	}
 }
 
 // TestSignInStatuses maps the server's answers to the five exported errors and stores nothing.
@@ -334,7 +339,9 @@ func TestSignInEndToEnd(t *testing.T) {
 		t.Fatalf("NewServer: %v", err)
 	}
 	t.Cleanup(server.Close)
-	if err := server.EnablePasswordSignIn(issuer.URL, clientID, "login-pat"); err != nil {
+	if err := server.EnablePasswordSignIn(syncserver.PasswordSignInOptions{
+		Issuer: issuer.URL, ClientID: clientID, PAT: "login-pat",
+	}); err != nil {
 		t.Fatalf("EnablePasswordSignIn: %v", err)
 	}
 	httpServer := httptest.NewServer(server.Handler())

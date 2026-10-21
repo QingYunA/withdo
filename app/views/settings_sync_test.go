@@ -99,13 +99,26 @@ func TestSyncPaneSignedOut(t *testing.T) {
 func TestSyncPaneSigningInDisablesTheFields(t *testing.T) {
 	snap := signedOutSync()
 	snap.Phase = data.SyncSigningIn
-	r, _ := syncPane(t, snap)
-	has(t, r.tt, "Signing in…", "Email or username", "Password")
+	snap.SignInStage = data.SignInStageChecking
+	r, fs := syncPane(t, snap)
+	has(t, r.tt, "Checking your account…", "Email or username", "Password")
 	hasNot(t, r.tt, "Sign in and sync")
 	r.tt.Type("cyan@example.com")
 	if r.s.syncLogin != "" {
 		t.Errorf("a disabled field took text: %q", r.s.syncLogin)
 	}
+
+	fs.snap.SignInStage = data.SignInStageDownloading
+	r.tt.Frame()
+	has(t, r.tt, "Downloading your tasks…")
+	hasNot(t, r.tt, "Checking your account…")
+}
+
+func TestSyncPaneSigningInWithoutAStageChecksTheAccount(t *testing.T) {
+	snap := signedOutSync()
+	snap.Phase = data.SyncSigningIn
+	r, _ := syncPane(t, snap)
+	has(t, r.tt, "Checking your account…")
 }
 
 func TestSyncPaneSignInFailures(t *testing.T) {

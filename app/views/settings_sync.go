@@ -153,7 +153,10 @@ func (s *Settings) syncSignInCard(c *ui.Context, t *theme.Tokens, svc SyncServic
 			s.syncFocusAccount, s.syncFocusPassword = false, false
 			label := s.say.SettingsSyncSignIn()
 			if signing {
-				label = s.say.SettingsSyncSigningIn()
+				label = s.say.SettingsSyncCheckingAccount()
+				if snap.SignInStage == data.SignInStageDownloading {
+					label = s.say.SettingsSyncDownloadingTasks()
+				}
 			}
 			button := settingsButton(c, t, "sync-signin", label, true).Margin(16, 0, 0)
 			if signing || !s.syncSignInReady() {

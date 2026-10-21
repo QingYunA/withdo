@@ -1901,7 +1901,9 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
     moves to the second; Enter in the second signs in. Under them the accent button **Sign in and
     sync** (`登录并开始同步`), enabled once both fields have text, and in `text.tertiary` that the
     server's admin makes accounts and that keys and model settings stay on this Mac.
-  - *Signing in*: the fields and the button disabled, the button saying `Signing in…` (`正在登录…`).
+  - *Signing in*: the fields and the button disabled, the button saying what is happening: `Checking
+    your account…` (`正在验证账号…`) while the server checks the password, then `Downloading your
+    tasks…` (`正在下载任务…`) while the device links and pulls.
   - *Sign-in failed*: one `meta` line in `status.blocked` under the button: `Wrong account or password`
     (`账号或密码不对`; the password field is emptied and focused, the account kept), `Too many tries;
     wait a few minutes` (`试的次数太多了，过几分钟再试`), `This account uses two-step verification,

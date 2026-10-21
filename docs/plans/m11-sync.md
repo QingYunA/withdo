@@ -560,3 +560,27 @@ callback must be http://127.0.0.1/callback with our state; exchange code + verif
 - Clients: `OIDCSource.SignIn(ctx, server, login, password)` replaces the loopback `Login`; the
   CLI's `sync login` takes `--user` and `--password-stdin`. The browser path (`BrowserOpener`,
   `CustomTabOpener`, `DoneURL`, the `signed-in` app link, `SyncOpen`) goes away. UI: v29.
+
+### S5b: a faster sign-in (2026-10-21)
+
+Measured from a Mac with a 330 ms round trip: signing in took 4.7–5.0 s before linking. Each new
+TLS connection costs about 1.15 s and the app opened two (the sync server and Zitadel, plus OIDC
+discovery); inside adhd-sync about 1.4 s, most of it Zitadel's default bcrypt cost of 14 (about 1 s),
+and each Zitadel call went out through the public address (75–120 ms; 4 ms on the host).
+
+- `/v1/sign-in` does the whole flow: `{login_name, password}` in, the token response out
+  (`access_token`, `refresh_token`, `id_token`, `token_type`, `expires_in`; `Cache-Control:
+  no-store`). adhd-sync makes the PKCE verifier and state, calls authorize itself (no redirect
+  following), checks the password, finalizes the auth request, checks the callback's state and
+  exchanges the code. The app talks to the sync server only and stores the token as before; it
+  discovers Zitadel only when it refreshes. adhd-sync now sees the tokens for one request: it is
+  the first-party resource server that verifies them anyway, and it neither logs nor keeps them.
+- A request with `auth_request` still gets the S5 answer `{callback_url}`, for 0.6.1 apps. Remove it
+  after 0.7.
+- `-zitadel-internal-url` (e.g. `http://proxy`, Zitadel's Traefik on the `zitadel` Docker network)
+  sends adhd-sync's Zitadel calls there with the issuer's host as `Host`; without it they go to the
+  issuer. Authorize runs alongside the session check.
+- Zitadel's bcrypt cost goes to 12 (`ZITADEL_SYSTEMDEFAULTS_PASSWORDHASHER_HASHER_COST`); a
+  password is rehashed at its next check.
+- The button says the stage: checking the account, then downloading the tasks (ui-spec, Sync).
+

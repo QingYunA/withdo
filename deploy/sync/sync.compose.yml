@@ -16,6 +16,7 @@ services:
       - -oidc-client-id=${OIDC_CLIENT_ID}
       - -oidc-scopes=${OIDC_SCOPES}
       - -zitadel-login-pat-file=/run/secrets/login-client.pat
+      - -zitadel-internal-url=http://proxy
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       - ./login-client.pat:/run/secrets/login-client.pat:ro
@@ -23,6 +24,7 @@ services:
       - 127.0.0.1:18080:8080
     networks:
       - sync
+      - zitadel
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,6 +48,8 @@ services:
 
 networks:
   sync:
+  zitadel:
+    external: true
 
 volumes:
   postgres-data:

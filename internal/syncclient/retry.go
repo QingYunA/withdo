@@ -3,6 +3,7 @@ package syncclient
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"syscall"
 	"time"
@@ -45,6 +46,14 @@ func retryTransient(ctx context.Context, fn func() error) error {
 	return err
 }
 
+// retryableStatus is a 5xx answer. The server refused the request or failed upstream, so sending
+// it again cannot repeat a change.
+type retryableStatus struct{ status int }
+
+func (e *retryableStatus) Error() string {
+	return fmt.Sprintf("syncclient: the server answered %d", e.status)
+}
+
 // retryable says whether err is one of the failures retryTransient retries. A context error is not
 // retryable: the caller asked to stop.
 func retryable(err error) bool {
@@ -57,6 +66,10 @@ func retryable(err error) bool {
 	}
 	var op *net.OpError
 	if errors.As(err, &op) && op.Op == "dial" {
+		return true
+	}
+	var status *retryableStatus
+	if errors.As(err, &status) {
 		return true
 	}
 	for _, target := range []error{

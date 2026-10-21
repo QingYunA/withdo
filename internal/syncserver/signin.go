@@ -1,6 +1,10 @@
 package syncserver
 
 import (
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -8,7 +12,8 @@ import (
 	"math"
 	"net"
 	"net/http"
-	"regexp"
+	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,7 +24,7 @@ import (
 )
 
 const (
-	// signInMaxBody bounds POST /v1/sign-in: a pending auth request, a login name and a password.
+	// signInMaxBody bounds POST /v1/sign-in: a login name and a password.
 	signInMaxBody = 4 << 10
 	// signInWindow and signInLimit are the fixed-window rate limit of one source IP and of one
 	// login name's failed attempts.
@@ -27,38 +32,63 @@ const (
 	signInLimit  = 10
 	// signInMaxField is the longest login name or password the handler accepts.
 	signInMaxField = 200
+	// loopbackRedirectURI is the redirect registered in Zitadel for in-app sign-in.
+	loopbackRedirectURI = "http://127.0.0.1/callback"
 )
 
-var signInAuthRequest = regexp.MustCompile(`^V2_[0-9]+$`)
+// PasswordSignInOptions configures POST /v1/sign-in. Issuer and ClientID are the OIDC values
+// clients already use; PAT is the login machine user's token; InternalURL, when set, is the base
+// adhd-sync sends its Zitadel requests to instead of the issuer; Scopes are the extra scopes to
+// ask for beyond openid, offline_access, profile and email.
+type PasswordSignInOptions struct {
+	Issuer      string
+	ClientID    string
+	PAT         string
+	InternalURL string
+	Scopes      []string
+}
 
 // passwordSignIn is the configured in-app sign-in: the Zitadel client, the client id an auth
-// request must belong to, and the rate limiter shared by every request.
+// request must belong to, the scopes to ask for, and the rate limiter shared by every request.
 type passwordSignIn struct {
 	zitadel  *zitadelLogin
 	clientID string
+	scopes   []string
 	limiter  *signInLimiter
 }
 
-// EnablePasswordSignIn turns on POST /v1/sign-in and the config flag that advertises it. issuer
-// and clientID are the OIDC values clients already use; pat is the login machine user's token.
-// Call it before the server starts serving.
-func (s *Server) EnablePasswordSignIn(issuer, clientID, pat string) error {
-	if strings.TrimSpace(issuer) == "" || strings.TrimSpace(clientID) == "" {
+// EnablePasswordSignIn turns on POST /v1/sign-in and the config flag that advertises it. Call it
+// before the server starts serving.
+func (s *Server) EnablePasswordSignIn(opts PasswordSignInOptions) error {
+	if strings.TrimSpace(opts.Issuer) == "" || strings.TrimSpace(opts.ClientID) == "" {
 		return errors.New("syncserver: password sign-in needs an OIDC issuer and client id")
 	}
-	if strings.TrimSpace(pat) == "" {
+	if strings.TrimSpace(opts.PAT) == "" {
 		return errors.New("syncserver: password sign-in needs a Zitadel PAT")
 	}
 	if s.signIn != nil {
 		return errors.New("syncserver: password sign-in is already enabled")
 	}
 	s.signIn = &passwordSignIn{
-		zitadel:  newZitadelLogin(issuer, pat),
-		clientID: strings.TrimSpace(clientID),
+		zitadel:  newZitadelLogin(opts.Issuer, opts.PAT, opts.InternalURL),
+		clientID: strings.TrimSpace(opts.ClientID),
+		scopes:   signInScopes(opts.Scopes),
 		limiter:  newSignInLimiter(),
 	}
 	s.mux.HandleFunc("POST /v1/sign-in", s.signInHandler)
 	return nil
+}
+
+// signInScopes is the authorization scope the server asks for: the base scopes the client used to
+// ask for, then the configured extras.
+func signInScopes(extra []string) []string {
+	scopes := []string{"openid", "offline_access", "profile", "email"}
+	for _, scope := range extra {
+		if scope = strings.TrimSpace(scope); scope != "" && !slices.Contains(scopes, scope) {
+			scopes = append(scopes, scope)
+		}
+	}
+	return scopes
 }
 
 // SetSignInClock replaces the limiter's clock. Tests use it to cross a window without sleeping.
@@ -68,8 +98,8 @@ func (s *Server) SetSignInClock(now func() time.Time) {
 	}
 }
 
-// signInHandler is POST /v1/sign-in. It checks the password through Zitadel and returns the
-// callback URL, so the client can finish the PKCE exchange with its own verifier.
+// signInHandler is POST /v1/sign-in. An account and password do the whole flow and come back as
+// tokens; a request with an auth_request keeps the 0.6.1 answer.
 func (s *Server) signInHandler(w http.ResponseWriter, r *http.Request) {
 	login := s.signIn
 	if login == nil {
@@ -92,7 +122,16 @@ func (s *Server) signInHandler(w http.ResponseWriter, r *http.Request) {
 		signInRetry(w, retry)
 		return
 	}
+	if req.AuthRequest != "" {
+		s.signInCallback(w, r, login, loginName, req)
+		return
+	}
+	s.signInTokens(w, r, login, loginName, req)
+}
 
+// signInCallback completes an auth request the app started.
+// The S5 answer for 0.6.1 apps; remove after 0.7.
+func (s *Server) signInCallback(w http.ResponseWriter, r *http.Request, login *passwordSignIn, loginName string, req syncproto.SignInRequest) {
 	ctx := r.Context()
 	auth, err := login.zitadel.getAuthRequest(ctx, req.AuthRequest)
 	if err != nil {
@@ -111,43 +150,12 @@ func (s *Server) signInHandler(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := login.zitadel.createSession(ctx, loginName, req.Password)
 	if err != nil {
-		var ze *zitadelError
-		if !errors.As(err, &ze) {
-			signInResult(w, http.StatusBadGateway, "upstream")
-			return
-		}
-		switch ze.code {
-		case 3, 5:
-			login.limiter.failLogin(strings.ToLower(loginName))
-			signInResult(w, http.StatusUnauthorized, "invalid_credentials")
-		case 9:
-			signInResult(w, http.StatusLocked, "locked")
-		default:
-			signInResult(w, http.StatusBadGateway, "upstream")
-		}
+		signInSessionResult(w, login, loginName, err)
 		return
 	}
-
-	userID, err := login.zitadel.sessionUser(ctx, sess.SessionID)
-	if err != nil || userID == "" {
-		signInResult(w, http.StatusBadGateway, "upstream")
+	if !s.signInUser(ctx, w, login, sess) {
 		return
 	}
-	methods, err := login.zitadel.authMethods(ctx, userID)
-	if err != nil {
-		signInResult(w, http.StatusBadGateway, "upstream")
-		return
-	}
-	for _, method := range methods {
-		if method != "AUTHENTICATION_METHOD_TYPE_PASSWORD" {
-			// Zitadel completes an auth request after the password alone, so a TOTP account would
-			// otherwise sign in with one factor. Delete the session before saying no.
-			_ = login.zitadel.deleteSession(ctx, sess.SessionID, sess.SessionToken)
-			signInResult(w, http.StatusForbidden, "second_factor")
-			return
-		}
-	}
-
 	callback, err := login.zitadel.completeAuthRequest(ctx, req.AuthRequest, sess)
 	if err != nil || callback == "" {
 		signInResult(w, http.StatusBadGateway, "upstream")
@@ -155,6 +163,143 @@ func (s *Server) signInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, syncproto.SignInResponse{CallbackURL: callback})
 	log.Printf("sign-in: ok")
+}
+
+// signInTokens does the whole flow: it starts the authorization and checks the password in
+// parallel, checks the account's factors, completes the auth request, and exchanges its code.
+func (s *Server) signInTokens(w http.ResponseWriter, r *http.Request, login *passwordSignIn, loginName string, req syncproto.SignInRequest) {
+	verifier, err := randomURLToken()
+	if err != nil {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	state, err := randomURLToken()
+	if err != nil {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	challenge := pkceChallenge(verifier)
+
+	ctx := r.Context()
+	type authorizeAnswer struct {
+		id  string
+		err error
+	}
+	authCh := make(chan authorizeAnswer, 1)
+	go func() {
+		id, err := login.zitadel.authorize(ctx, login.clientID, loopbackRedirectURI,
+			login.scopes, challenge, state)
+		authCh <- authorizeAnswer{id: id, err: err}
+	}()
+
+	sess, sessErr := login.zitadel.createSession(ctx, loginName, req.Password)
+	auth := <-authCh
+	if sessErr != nil {
+		signInSessionResult(w, login, loginName, sessErr)
+		return
+	}
+	if auth.err != nil || auth.id == "" {
+		// Nothing may use a session whose auth request never started.
+		_ = login.zitadel.deleteSession(ctx, sess.SessionID, sess.SessionToken)
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	if !s.signInUser(ctx, w, login, sess) {
+		return
+	}
+
+	callback, err := login.zitadel.completeAuthRequest(ctx, auth.id, sess)
+	if err != nil || callback == "" {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	code, ok := signInCallbackCode(callback, state)
+	if !ok {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	token, err := login.zitadel.exchangeCode(ctx, login.clientID, code, verifier)
+	if err != nil {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, http.StatusOK, token)
+	log.Printf("sign-in: ok")
+}
+
+// signInUser checks the session's factors and says no to anything beyond a password. It reports
+// false when it has answered and the caller must stop.
+func (s *Server) signInUser(ctx context.Context, w http.ResponseWriter, login *passwordSignIn, sess zitadelSession) bool {
+	userID, err := login.zitadel.sessionUser(ctx, sess.SessionID)
+	if err != nil || userID == "" {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return false
+	}
+	methods, err := login.zitadel.authMethods(ctx, userID)
+	if err != nil {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return false
+	}
+	for _, method := range methods {
+		if method != "AUTHENTICATION_METHOD_TYPE_PASSWORD" {
+			// Zitadel completes an auth request after the password alone, so a TOTP account would
+			// otherwise sign in with one factor. Delete the session before saying no.
+			_ = login.zitadel.deleteSession(ctx, sess.SessionID, sess.SessionToken)
+			signInResult(w, http.StatusForbidden, "second_factor")
+			return false
+		}
+	}
+	return true
+}
+
+// signInSessionResult maps a failed session check to the answer the clients understand.
+func signInSessionResult(w http.ResponseWriter, login *passwordSignIn, loginName string, err error) {
+	var ze *zitadelError
+	if !errors.As(err, &ze) {
+		signInResult(w, http.StatusBadGateway, "upstream")
+		return
+	}
+	switch ze.code {
+	case 3, 5:
+		login.limiter.failLogin(strings.ToLower(loginName))
+		signInResult(w, http.StatusUnauthorized, "invalid_credentials")
+	case 9:
+		signInResult(w, http.StatusLocked, "locked")
+	default:
+		signInResult(w, http.StatusBadGateway, "upstream")
+	}
+}
+
+// signInCallbackCode checks the callback the server got back: the registered loopback redirect,
+// the state this sign-in started with, and a code.
+func signInCallbackCode(raw, state string) (string, bool) {
+	callback, err := url.Parse(raw)
+	if err != nil || callback.Scheme != "http" || callback.Host != "127.0.0.1" ||
+		callback.Path != "/callback" {
+		return "", false
+	}
+	query := callback.Query()
+	if query.Get("state") != state || query.Get("error") != "" {
+		return "", false
+	}
+	code := query.Get("code")
+	return code, code != ""
+}
+
+// randomURLToken returns 32 random bytes as URL-safe base64 without padding.
+func randomURLToken() (string, error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(raw), nil
+}
+
+// pkceChallenge is BASE64URL(SHA256(verifier)), the S256 code challenge.
+func pkceChallenge(verifier string) string {
+	sum := sha256.Sum256([]byte(verifier))
+	return base64.RawURLEncoding.EncodeToString(sum[:])
 }
 
 // decodeSignIn reads and validates one bounded request. The password is passed through unchanged;
@@ -170,7 +315,7 @@ func decodeSignIn(w http.ResponseWriter, r *http.Request) (syncproto.SignInReque
 	if err := dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
 		return req, errors.New("trailing data")
 	}
-	if !signInAuthRequest.MatchString(req.AuthRequest) {
+	if req.AuthRequest != "" && !authRequestIDPattern.MatchString(req.AuthRequest) {
 		return req, errors.New("bad auth request")
 	}
 	loginName := strings.TrimSpace(req.LoginName)

@@ -2,9 +2,6 @@ package syncclient
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -17,12 +14,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	// tokenRefreshSkew refreshes an access token that expires within this much time.
-	tokenRefreshSkew = 60 * time.Second
-	// callbackPath is the path of the registered loopback redirect the sign-in callback names.
-	callbackPath = "/callback"
-)
+// tokenRefreshSkew refreshes an access token that expires within this much time.
+const tokenRefreshSkew = 60 * time.Second
 
 // OIDCSource signs in inside the app with an account and password and supplies OIDC access tokens
 // to the sync client. The refresh token lives in Secrets; the access token only in memory. Scopes
@@ -46,74 +39,9 @@ type OIDCSource struct {
 }
 
 // NewOIDCSource returns a source for one issuer and client. It does not touch the network; SignIn
-// or Token discovers the issuer's endpoints.
+// posts to the sync server and Token discovers the issuer's endpoints when it refreshes.
 func NewOIDCSource(issuer, clientID string, scopes []string, secrets Secrets) *OIDCSource {
 	return &OIDCSource{Issuer: issuer, ClientID: clientID, Scopes: scopes, Secrets: secrets}
-}
-
-// SignIn runs the authorization code flow with PKCE (S256) and a random state, without a browser. It asks
-// the issuer for a pending auth request, has server check the account and password through
-// Zitadel, and finishes the exchange with its own verifier. The password is only sent to server;
-// it is not stored or put into an error.
-func (s *OIDCSource) SignIn(ctx context.Context, server, loginName, password string) error {
-	if s == nil || s.Secrets == nil {
-		return errors.New("syncclient: OIDC sign-in needs a secrets store")
-	}
-	if strings.TrimSpace(s.Issuer) == "" || strings.TrimSpace(s.ClientID) == "" {
-		return errors.New("syncclient: OIDC issuer and client id are required")
-	}
-	base := strings.TrimRight(strings.TrimSpace(server), "/")
-	if base == "" {
-		return errors.New("syncclient: sync server URL is required")
-	}
-	state, err := randomURLToken()
-	if err != nil {
-		return err
-	}
-	verifier, err := randomURLToken()
-	if err != nil {
-		return err
-	}
-	challenge := pkceChallenge(verifier)
-
-	s.mu.Lock()
-	discovered, err := s.oauthConfigLocked(ctx)
-	s.mu.Unlock()
-	if err != nil {
-		return err
-	}
-	oauthConfig := *discovered
-	oauthConfig.RedirectURL = signInRedirect
-	authURL := oauthConfig.AuthCodeURL(state,
-		oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", challenge),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-	)
-
-	authRequest, err := s.signInAuthRequest(ctx, authURL)
-	if err != nil {
-		return err
-	}
-	callbackURL, err := s.postSignIn(ctx, base, authRequest, loginName, password)
-	if err != nil {
-		return err
-	}
-	code, err := signInCode(callbackURL, state)
-	if err != nil {
-		return err
-	}
-
-	var token *oauth2.Token
-	err = retryTransient(ctx, func() error {
-		var exchangeErr error
-		token, exchangeErr = oauthConfig.Exchange(httpContext(ctx, s.HTTP), code,
-			oauth2.SetAuthURLParam("code_verifier", verifier))
-		return exchangeErr
-	})
-	if err != nil {
-		return fmt.Errorf("syncclient: exchange the OIDC code: %w", err)
-	}
-	return s.storeToken(token)
 }
 
 // Token implements TokenSource. It returns the access token while it has more than 60 seconds
@@ -288,19 +216,4 @@ func httpContext(ctx context.Context, client *http.Client) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, oauth2.HTTPClient, client)
-}
-
-// randomURLToken returns 32 random bytes as URL-safe base64 without padding.
-func randomURLToken() (string, error) {
-	raw := make([]byte, 32)
-	if _, err := rand.Read(raw); err != nil {
-		return "", fmt.Errorf("syncclient: read random bytes: %w", err)
-	}
-	return base64.RawURLEncoding.EncodeToString(raw), nil
-}
-
-// pkceChallenge is BASE64URL(SHA256(verifier)), the S256 code challenge.
-func pkceChallenge(verifier string) string {
-	sum := sha256.Sum256([]byte(verifier))
-	return base64.RawURLEncoding.EncodeToString(sum[:])
 }

@@ -108,11 +108,13 @@ fun SyncScreen(
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     var sheetOpen by remember(model.phase) { mutableStateOf(model.phase == SyncPhase.CHOOSE) }
+    val signInStage = signInStageOf(model.phase == SyncPhase.SIGNING_IN, model.status.signInStage)
 
     Column(Modifier.fillMaxWidth()) {
         when (model.phase) {
             SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignedOutCard(
                 signingIn = model.phase == SyncPhase.SIGNING_IN,
+                stage = signInStage,
                 failure = model.signInFailure,
                 error = model.signInError,
                 onSignIn = onSignIn,
@@ -189,6 +191,7 @@ fun SyncScreen(
 @Composable
 private fun SignedOutCard(
     signingIn: Boolean,
+    stage: SignInStage?,
     failure: SignInFailure?,
     error: String?,
     onSignIn: (String, String) -> Unit,
@@ -267,10 +270,10 @@ private fun SignedOutCard(
                 )
             }
             PrimaryButton(
-                label = if (signingIn) {
-                    stringResource(R.string.sync_signing_in)
-                } else {
-                    stringResource(R.string.sync_sign_in)
+                label = when (stage) {
+                    SignInStage.DOWNLOADING -> stringResource(R.string.sync_signing_in_downloading)
+                    SignInStage.CHECKING -> stringResource(R.string.sync_signing_in_checking)
+                    null -> stringResource(R.string.sync_sign_in)
                 },
                 enabled = ready,
                 onClick = { onSignIn(login.trim(), password) },

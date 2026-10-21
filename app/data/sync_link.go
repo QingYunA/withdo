@@ -29,6 +29,7 @@ func (r *Real) SyncSignIn(loginName, password string) {
 	}
 	r.loadSyncLocked()
 	r.sync.signingIn = true
+	r.sync.signInStage = SignInStageChecking
 	r.sync.conflict = nil
 	r.sync.status.LastError = ""
 	r.sync.failedSince = time.Time{}
@@ -58,6 +59,7 @@ func (r *Real) signIn(server, loginName, password string) {
 		r.failSignIn(err)
 		return
 	}
+	r.setSignInStage(SignInStageDownloading)
 	account, hasAccount := tokens.Account()
 	cfg := syncclient.Config{
 		Server: server, Issuer: public.Issuer, ClientID: public.ClientID, Scopes: public.Scopes,
@@ -87,6 +89,7 @@ func (r *Real) signIn(server, loginName, password string) {
 		// The database kept its device when the user signed out: signing in again resumes it.
 		r.mu.Lock()
 		r.sync.signingIn = false
+		r.sync.signInStage = SignInStageNone
 		r.sync.signInFailure = SignInFailureNone
 		r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 		r.sync.failedSince = time.Time{}
@@ -114,6 +117,7 @@ func (r *Real) signIn(server, loginName, password string) {
 	r.mu.Lock()
 	r.sync.linked = true
 	r.sync.signingIn = false
+	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
 	r.sync.signInFailure = SignInFailureNone
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
@@ -171,6 +175,7 @@ func (r *Real) conflictAfterLink(ctx context.Context, client *syncclient.Client)
 	}
 	r.mu.Lock()
 	r.sync.signingIn = false
+	r.sync.signInStage = SignInStageNone
 	r.sync.seeding = false
 	r.sync.conflict = &SyncConflict{
 		LocalTasks: int(counts["tasks"]), LocalProjects: int(counts["projects"]), AccountDevices: seen,
@@ -232,6 +237,7 @@ func (r *Real) finishLink(client *syncclient.Client) {
 	r.mu.Lock()
 	r.sync.linked = true
 	r.sync.signingIn = false
+	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}

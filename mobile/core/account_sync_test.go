@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -184,6 +182,86 @@ func TestSignInSendsTheAccountPasswordAndDeviceName(t *testing.T) {
 	assertThisPhone(t, phone, "phone-under-test")
 }
 
+// TestSignInStatusStages: SyncStatus says checking while /v1/sign-in runs, then downloading while
+// Link registers the phone.
+func TestSignInStatusStages(t *testing.T) {
+	h := newSyncHarness(t)
+	oidc := newFakeOIDC(t)
+	signInHit := make(chan struct{}, 1)
+	releaseSignIn := make(chan struct{})
+	devicesHit := make(chan struct{}, 1)
+	releaseDevices := make(chan struct{})
+	base := oidc.withSignIn(h.server.Handler())
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/sign-in" {
+			signInHit <- struct{}{}
+			<-releaseSignIn
+		}
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/devices" {
+			devicesHit <- struct{}{}
+			<-releaseDevices
+		}
+		base.ServeHTTP(w, r)
+	}))
+	t.Cleanup(server.Close)
+
+	phone, err := open(t.TempDir(), newMapSecrets(), func() time.Time { return demoNow })
+	if err != nil {
+		t.Fatalf("open the phone core: %v", err)
+	}
+	t.Cleanup(func() { _ = phone.Close() })
+	if err := phone.SyncConfigure(server.URL, oidc.URL, "mobile-client", ""); err != nil {
+		t.Fatalf("SyncConfigure: %v", err)
+	}
+	result := make(chan error, 1)
+	go func() {
+		_, err := phone.SignIn("ada@example.com", "secret", "phone")
+		result <- err
+	}()
+
+	waitForStep(t, signInHit, "the sign-in request")
+	if stage := syncStage(phone); stage != "checking" {
+		t.Fatalf("while the server checks: sign_in_stage = %q", stage)
+	}
+	close(releaseSignIn)
+	waitForStep(t, devicesHit, "the device registration")
+	if stage := syncStage(phone); stage != "downloading" {
+		t.Fatalf("while the device links: sign_in_stage = %q", stage)
+	}
+	close(releaseDevices)
+
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatalf("SignIn: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("SignIn never finished")
+	}
+	if stage := syncStage(phone); stage != "" {
+		t.Fatalf("a finished sign-in kept sign_in_stage %q", stage)
+	}
+}
+
+// syncStage reads sign_in_stage from SyncStatus.
+func syncStage(phone *Core) string {
+	var status struct {
+		SignInStage string `json:"sign_in_stage"`
+	}
+	_ = json.Unmarshal([]byte(phone.SyncStatus()), &status)
+	return status.SignInStage
+}
+
+// waitForStep waits for one step of a gated fake server.
+func waitForStep(t *testing.T, ch <-chan struct{}, what string) {
+	t.Helper()
+	select {
+	case <-ch:
+	case <-time.After(10 * time.Second):
+		t.Fatalf("timed out waiting for %s", what)
+	}
+}
+
 // TestSignInWithAWrongPasswordKeepsNothing: a refused password is the sentence the screen shows,
 // and the phone stays signed out and unlinked.
 func TestSignInWithAWrongPasswordKeepsNothing(t *testing.T) {
@@ -285,22 +363,18 @@ func contains(values []string, want string) bool {
 	return false
 }
 
-// fakeOIDC is a minimal OIDC provider for the tests: discovery, an authorization endpoint that
-// starts a pending auth request the way Zitadel's login v2 does, the sync server's /v1/sign-in
-// that completes it for the password "secret", and a token endpoint for the code and refresh
-// grants. The access token is the sync server's static test token, so the real client
-// authenticates with it.
+// fakeOIDC is a minimal OIDC provider for the tests: discovery and a token endpoint for refresh
+// grants. The sync server's /v1/sign-in already answers with tokens; this fake only fills that in.
 type fakeOIDC struct {
 	*httptest.Server
 	mu       sync.Mutex
-	pending  map[string]string // auth request id → the client's state
 	login    string
 	password string
 }
 
 func newFakeOIDC(t *testing.T) *fakeOIDC {
 	t.Helper()
-	f := &fakeOIDC{pending: map[string]string{}}
+	f := &fakeOIDC{}
 	mux := http.NewServeMux()
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Server.Close)
@@ -315,18 +389,6 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 			"subject_types_supported":               []string{"public"},
 			"id_token_signing_alg_values_supported": []string{"RS256"},
 		})
-	})
-	mux.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		if query.Get("redirect_uri") != "http://127.0.0.1/callback" || query.Get("code_challenge") == "" {
-			http.Error(w, "unexpected authorize request", http.StatusBadRequest)
-			return
-		}
-		f.mu.Lock()
-		id := fmt.Sprintf("V2_%d", len(f.pending)+1)
-		f.pending[id] = query.Get("state")
-		f.mu.Unlock()
-		http.Redirect(w, r, f.URL+"/ui/v2/login/login?authRequest="+id, http.StatusFound)
 	})
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
 		writeTestJSON(w, map[string]any{
@@ -343,8 +405,8 @@ func newFakeOIDC(t *testing.T) *fakeOIDC {
 	return f
 }
 
-// withSignIn puts the fake POST /v1/sign-in in front of the sync server's handler. It completes
-// the pending auth request when the password is "secret" and answers 401 otherwise.
+// withSignIn puts the fake POST /v1/sign-in in front of the sync server's handler. It answers 401
+// for any password but "secret".
 func (f *fakeOIDC) withSignIn(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost || r.URL.Path != "/v1/sign-in" {
@@ -358,16 +420,16 @@ func (f *fakeOIDC) withSignIn(next http.Handler) http.Handler {
 		}
 		f.mu.Lock()
 		f.login, f.password = req.LoginName, req.Password
-		state, ok := f.pending[req.AuthRequest]
-		delete(f.pending, req.AuthRequest)
 		f.mu.Unlock()
-		if !ok || req.Password != "secret" {
+		if req.Password != "secret" {
 			w.WriteHeader(http.StatusUnauthorized)
 			writeTestJSON(w, map[string]string{"error": "invalid_credentials"})
 			return
 		}
-		callback := url.Values{"code": {"mobile-code"}, "state": {state}}
-		writeTestJSON(w, syncproto.SignInResponse{CallbackURL: "http://127.0.0.1/callback?" + callback.Encode()})
+		writeTestJSON(w, syncproto.SignInTokenResponse{
+			AccessToken: syncTestToken, RefreshToken: "mobile-refresh",
+			IDToken: fakeIDToken(), TokenType: "Bearer", ExpiresIn: 3600,
+		})
 	})
 }
 

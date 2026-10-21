@@ -68,14 +68,16 @@ The Zitadel admin's password is also kept on the owner's Mac, in the keychain it
 Clients use `server https://todo.sri-ai.xyz`, `issuer https://auth.todo.sri-ai.xyz`, the app's
 client id, and the scopes `openid offline_access profile email
 urn:zitadel:iam:org:project:id:{PROJECT_ID}:aud` (the last one puts the project in the token's
-audience). The apps ask for the first four themselves and read the last from `GET /v1/config`.
+audience). `adhd-sync` asks for the first four plus the extra scopes in `-oidc-scopes`, and the
+apps read the list from `GET /v1/config`.
 
 ## In-app sign-in
 
-`adhd-sync` can complete a Zitadel auth request with an account and password, so clients never open
-a browser. The server holds a machine user's PAT; it checks the password through the Session API
-and returns only the callback URL with the code. The client still exchanges that code with its own
-PKCE verifier, so the server never sees a token.
+`adhd-sync` can complete the whole OIDC flow with an account and password, so clients never open a
+browser. The server holds a machine user's PAT; it checks the password through the Session API and
+returns the tokens. Its Zitadel calls go through the external `zitadel` Docker network that
+`sync.compose.yml` joins (`-zitadel-internal-url=http://proxy`, with the issuer's host as `Host`),
+not the public address, which keeps each call at a few milliseconds.
 
 1. **Machine user.** With the admin PAT, `POST /management/v1/users/machine`:
 

@@ -284,6 +284,7 @@ data class SyncStatus(
     @SerialName("server") val server: String = "",
     @SerialName("linked") val linked: Boolean = false,
     @SerialName("signed_in") val signedIn: Boolean = false,
+    @SerialName("sign_in_stage") val signInStage: String? = null,
 ) {
     val seedDone: Long get() = (seedTotal - pending).coerceAtLeast(0)
 }
