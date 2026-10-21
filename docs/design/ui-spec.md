@@ -7,7 +7,7 @@ default and loud only where something needs attention.
 
 Since v31 (2026-10-21) the audience is wider: anyone who wants an agent to keep their to-dos, with
 coding agents as one thing it can show and hand work to. The way in is one input. See **Input first
-(v30)**; where it disagrees with an older section, it wins until that section is rewritten.
+(v31)**; where it disagrees with an older section, it wins until that section is rewritten.
 
 Built with mygo native UI (`github.com/egoist/mygo/ui`, v0.5.1). No webview.
 
