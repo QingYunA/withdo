@@ -66,6 +66,19 @@ fun isAuthFailure(message: String): Boolean {
         m.contains("refresh token")
 }
 
+/** The stage the sign-in button says: the server checks the account, then the tasks download. */
+enum class SignInStage { CHECKING, DOWNLOADING }
+
+/**
+ * The stage to show, from the raw sign_in_stage. Signing in without a stage yet is checking; not
+ * signing in has no stage.
+ */
+fun signInStageOf(signingIn: Boolean, raw: String?): SignInStage? = when {
+    !signingIn -> null
+    raw == "downloading" -> SignInStage.DOWNLOADING
+    else -> SignInStage.CHECKING
+}
+
 /** Why an in-app sign-in failed, as the Sync card words it. */
 enum class SignInFailure { CREDENTIALS, TOO_MANY, SECOND_FACTOR, LOCKED, UNSUPPORTED, NETWORK }
 

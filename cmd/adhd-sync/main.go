@@ -38,6 +38,7 @@ func run(ctx context.Context, args []string) error {
 	clientID := fs.String("oidc-client-id", "", "OIDC client id GET /v1/config tells clients to sign in with")
 	scopes := fs.String("oidc-scopes", "", "extra OIDC scopes for GET /v1/config, separated by spaces")
 	loginPATFile := fs.String("zitadel-login-pat-file", "", "file holding the Zitadel login machine user's PAT, enabling POST /v1/sign-in")
+	zitadelInternalURL := fs.String("zitadel-internal-url", "", "base URL for adhd-sync's Zitadel requests, such as http://proxy")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -93,7 +94,10 @@ func run(ctx context.Context, args []string) error {
 		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes),
 	})
 	if loginPAT != "" {
-		if err := server.EnablePasswordSignIn(*issuer, *clientID, loginPAT); err != nil {
+		if err := server.EnablePasswordSignIn(syncserver.PasswordSignInOptions{
+			Issuer: *issuer, ClientID: *clientID, PAT: loginPAT,
+			InternalURL: *zitadelInternalURL, Scopes: strings.Fields(*scopes),
+		}); err != nil {
 			return err
 		}
 	}

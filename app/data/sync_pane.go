@@ -50,6 +50,16 @@ const (
 	SyncFailureAuth
 )
 
+// SignInStage is how far the in-app sign-in has got, so the button can say what is happening.
+type SignInStage string
+
+// The stages of a sign-in.
+const (
+	SignInStageNone        SignInStage = ""
+	SignInStageChecking    SignInStage = "checking"
+	SignInStageDownloading SignInStage = "downloading"
+)
+
 // SignInFailure is why the last in-app sign-in failed, so Settings can word it in the user's
 // language without matching the error's text.
 type SignInFailure string
@@ -87,6 +97,7 @@ type SyncSnapshot struct {
 	LastError     string
 	Failure       SyncFailure
 	SignInFailure SignInFailure
+	SignInStage   SignInStage
 	Pending       int
 	SeedDone      int
 	SeedTotal     int
@@ -114,6 +125,7 @@ type syncTask struct {
 	status        syncclient.Status
 	signingIn     bool
 	signInFailure SignInFailure
+	signInStage   SignInStage
 	seeding       bool
 	seedTotal     int
 	pending       int
@@ -144,6 +156,7 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		Linked: r.sync.linked, LastSynced: r.sync.status.LastSynced, RetryAt: r.sync.status.RetryAt,
 		LastError: r.sync.status.LastError, Failure: syncFailureKind(r.sync.status.LastError),
 		SignInFailure: r.sync.signInFailure,
+		SignInStage:   r.sync.signInStage,
 		Pending:       r.sync.pending,
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
@@ -484,11 +497,20 @@ func (r *Real) syncClientFor(cfg syncclient.Config) (*syncclient.Client, error) 
 	return syncclient.New(r.core, syncclient.Options{BaseURL: cfg.Server, TokenSource: tokens})
 }
 
+// setSignInStage moves the sign-in button's text and redraws.
+func (r *Real) setSignInStage(stage SignInStage) {
+	r.mu.Lock()
+	r.sync.signInStage = stage
+	r.mu.Unlock()
+	r.syncChanged()
+}
+
 // failSignIn clears the busy state and says what went wrong. The error text goes to LastError for
 // the logs; the pane words the classification instead.
 func (r *Real) failSignIn(err error) {
 	r.mu.Lock()
 	r.sync.signingIn = false
+	r.sync.signInStage = SignInStageNone
 	r.sync.seeding = false
 	r.sync.status.LastError = err.Error()
 	r.sync.signInFailure = signInFailureKind(err)

@@ -121,18 +121,28 @@ type ConfigResponse struct {
 	PasswordSignIn bool     `json:"password_sign_in,omitempty"`
 }
 
-// SignInRequest is POST /v1/sign-in: a pending authorization request and the account to complete
-// it with. The password is checked with Zitadel's Session API and is never stored.
+// SignInRequest is POST /v1/sign-in: an account and password, which the server checks with
+// Zitadel and turns into tokens itself. AuthRequest is the 0.6.1 shape: when it is present the
+// server answers with only the callback URL, for apps that still exchange the code themselves.
 type SignInRequest struct {
-	AuthRequest string `json:"auth_request"`
+	AuthRequest string `json:"auth_request,omitempty"`
 	LoginName   string `json:"login_name"`
 	Password    string `json:"password"`
 }
 
-// SignInResponse carries the loopback callback URL with the authorization code. The client checks
-// the state and exchanges the code with its own PKCE verifier, so the server never sees a token.
+// SignInResponse is the 0.6.1 answer: the loopback callback URL with the authorization code.
 type SignInResponse struct {
 	CallbackURL string `json:"callback_url"`
+}
+
+// SignInTokenResponse is POST /v1/sign-in's answer since 0.7: the tokens the server got from
+// Zitadel. The server neither logs nor keeps them.
+type SignInTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	IDToken      string `json:"id_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.

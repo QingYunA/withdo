@@ -719,7 +719,18 @@ private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
             Account(),
             emptyList(),
         )
-        "signing_in" -> SyncModel(SyncPhase.SIGNING_IN, base.copy(linked = false, signedIn = true), Account(), emptyList())
+        "signing_in" -> SyncModel(
+            SyncPhase.SIGNING_IN,
+            base.copy(linked = false, signedIn = true, signInStage = "checking"),
+            Account(),
+            emptyList(),
+        )
+        "signing_in_downloading" -> SyncModel(
+            SyncPhase.SIGNING_IN,
+            base.copy(linked = false, signedIn = true, signInStage = "downloading"),
+            Account(),
+            emptyList(),
+        )
         "choose" -> SyncModel(
             SyncPhase.CHOOSE,
             base.copy(linked = false, signedIn = true),

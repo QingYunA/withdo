@@ -5,10 +5,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import xyz.sriai.adhdtodo.ui.SYNC_ATTENTION_MILLIS
+import xyz.sriai.adhdtodo.ui.SignInStage
 import xyz.sriai.adhdtodo.ui.deviceUsesLaptop
 import xyz.sriai.adhdtodo.ui.groupThousands
 import xyz.sriai.adhdtodo.ui.isAuthFailure
 import xyz.sriai.adhdtodo.ui.syncBarFilled
+import xyz.sriai.adhdtodo.ui.signInStageOf
 import xyz.sriai.adhdtodo.ui.syncCloudBlocked
 
 /** Verification 1 of A2b-UI: the device icon, the header cloud's red rule and the upload bar. */
@@ -56,6 +58,15 @@ class SyncRulesTest {
         assertEquals("1,000", groupThousands(1000))
         assertEquals("3,512", groupThousands(3512))
         assertEquals("-12,345", groupThousands(-12345))
+    }
+
+    @Test
+    fun `a sign-in without a stage says checking and then downloading`() {
+        assertEquals(null, signInStageOf(false, "downloading"))
+        assertEquals(SignInStage.CHECKING, signInStageOf(true, null))
+        assertEquals(SignInStage.CHECKING, signInStageOf(true, "checking"))
+        assertEquals(SignInStage.DOWNLOADING, signInStageOf(true, "downloading"))
+        assertEquals(SignInStage.CHECKING, signInStageOf(true, "later"))
     }
 
     @Test

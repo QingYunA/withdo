@@ -116,6 +116,8 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	}
 	c.startLink()
 	defer c.finishLink()
+	c.setSignInStage(signInStageChecking)
+	defer c.setSignInStage(signInStageNone)
 	cfg, found, err := c.loadConfig()
 	if err != nil {
 		return "", err
@@ -143,6 +145,7 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
 		return "", syncError(err)
 	}
+	c.setSignInStage(signInStageDownloading)
 	if account, ok := source.Account(); ok {
 		cfg.Account = &account
 		if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
@@ -289,6 +292,13 @@ func (c *Core) SyncStatus() string {
 	return raw
 }
 
+// The stages of a sign-in, as SyncStatus reports them.
+const (
+	signInStageChecking    = "checking"
+	signInStageDownloading = "downloading"
+	signInStageNone        = ""
+)
+
 // statusJSON is SyncStatus's shape.
 type statusJSON struct {
 	State       string `json:"state"`
@@ -301,6 +311,7 @@ type statusJSON struct {
 	Server      string `json:"server,omitempty"`
 	Linked      bool   `json:"linked"`
 	SignedIn    bool   `json:"signed_in"`
+	SignInStage string `json:"sign_in_stage,omitempty"`
 }
 
 // encodeStatus encodes one Runner status with the settings the Sync screen reads.
@@ -316,11 +327,12 @@ func (c *Core) encodeStatus(status syncclient.Status) (string, error) {
 		out.RetryAt = status.RetryAt.UTC().Format(time.RFC3339)
 	}
 	c.mu.Lock()
-	failedSince := c.failedSince
+	failedSince, signInStage := c.failedSince, c.signInStage
 	c.mu.Unlock()
 	if !failedSince.IsZero() {
 		out.FailedSince = failedSince.UTC().Format(time.RFC3339)
 	}
+	out.SignInStage = signInStage
 	ctx := context.Background()
 	if device, linked, err := c.dom.SyncState(ctx, "device_id"); err == nil && linked && device != "" {
 		out.Linked = true
@@ -497,6 +509,14 @@ func isNetworkError(err error) bool {
 		}
 	}
 	return false
+}
+
+// setSignInStage moves the sign-in button's text and tells the screen to re-read the status.
+func (c *Core) setSignInStage(stage string) {
+	c.mu.Lock()
+	c.signInStage = stage
+	c.mu.Unlock()
+	c.notifyChange()
 }
 
 // startLink marks a SignIn, LinkMerge or LinkReplace in progress. StartSync does nothing while one

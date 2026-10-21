@@ -23,6 +23,10 @@ func syncScreenStates() []struct {
 	errorOut.SignInFailure = data.SignInFailureCredentials
 	signing := signedOut
 	signing.Phase = data.SyncSigningIn
+	signingCheck := signing
+	signingCheck.SignInStage = data.SignInStageChecking
+	signingDownload := signing
+	signingDownload.SignInStage = data.SignInStageDownloading
 	both := signedOut
 	both.Phase, both.Linked, both.Account = data.SyncBothHaveTasks, true, "Cyan 云辰"
 	both.Devices = []data.SyncDevice{
@@ -59,7 +63,10 @@ func syncScreenStates() []struct {
 			// The frame after a refused password: the pane empties it and puts the cursor back.
 			r.s.syncPrevPhase = data.SyncSigningIn
 		}},
-		{"signing-in", signing, func(r *settingsRig) {
+		{"signing-in-checking", signingCheck, func(r *settingsRig) {
+			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
+		}},
+		{"signing-in-downloading", signingDownload, func(r *settingsRig) {
 			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
 		}},
 		{"both", both, nil},

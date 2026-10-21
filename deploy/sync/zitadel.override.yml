@@ -24,6 +24,8 @@ services:
     environment:
       ZITADEL_EXTERNALPORT: 443
       ZITADEL_EXTERNALSECURE: true
+      # bcrypt cost 14 (the default) takes about a second per password check; 12 is a quarter.
+      ZITADEL_SYSTEMDEFAULTS_PASSWORDHASHER_HASHER_COST: 12
       ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI: https://${ZITADEL_DOMAIN}/ui/v2/login/
       ZITADEL_OIDC_DEFAULTLOGINURLV2: https://${ZITADEL_DOMAIN}/ui/v2/login/login?authRequest=
       ZITADEL_OIDC_DEFAULTLOGOUTURLV2: https://${ZITADEL_DOMAIN}/ui/v2/login/logout?post_logout_redirect=

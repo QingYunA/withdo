@@ -65,8 +65,8 @@ type fakeOIDC struct {
 	deletedSessions []string
 	signInStatus    int
 	signInCalls     int
-	callbackState   string
-	callbackHost    string
+	signInMissing   string
+	hits            int
 }
 
 func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
@@ -101,7 +101,9 @@ func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
 		}}})
 	})
 	mux.HandleFunc("GET /authorize", f.authorize)
+	mux.HandleFunc("GET /oauth/v2/authorize", f.authorize)
 	mux.HandleFunc("POST /token", f.token)
+	mux.HandleFunc("POST /oauth/v2/token", f.token)
 	mux.HandleFunc("POST /v1/sign-in", f.signIn)
 	mux.HandleFunc("GET /v2/oidc/auth_requests/{id}", f.zitadelAuthRequest)
 	mux.HandleFunc("POST /v2/sessions", f.zitadelCreateSession)
@@ -109,7 +111,12 @@ func newFakeOIDC(t *testing.T, clientID string) *fakeOIDC {
 	mux.HandleFunc("GET /v2/users/{id}/authentication_methods", f.zitadelAuthMethods)
 	mux.HandleFunc("DELETE /v2/sessions/{id}", f.zitadelDeleteSession)
 	mux.HandleFunc("POST /v2/oidc/auth_requests/{id}", f.zitadelCompleteAuthRequest)
-	f.Server = httptest.NewServer(mux)
+	f.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f.mu.Lock()
+		f.hits++
+		f.mu.Unlock()
+		mux.ServeHTTP(w, r)
+	}))
 	t.Cleanup(f.Close)
 	return f
 }
@@ -129,34 +136,16 @@ func (f *fakeOIDC) authorize(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no PKCE or state", http.StatusBadRequest)
 		return
 	}
-	if q.Get("redirect_uri") == "http://127.0.0.1/callback" {
-		f.mu.Lock()
-		f.requestSeq++
-		id := fmt.Sprintf("V2_%d", f.requestSeq)
-		f.authRequests[id] = &fakeAuthRequest{
-			clientID: f.clientID, redirectURI: q.Get("redirect_uri"),
-			state: q.Get("state"), challenge: q.Get("code_challenge"),
-		}
-		f.mu.Unlock()
-		http.Redirect(w, r, f.Server.URL+"/ui/v2/login/login?authRequest="+url.QueryEscape(id),
-			http.StatusFound)
-		return
-	}
-	code := fmt.Sprintf("code-%d", time.Now().UnixNano())
 	f.mu.Lock()
-	f.codes[code] = q.Get("code_challenge")
-	f.challenge, f.method = q.Get("code_challenge"), q.Get("code_challenge_method")
-	f.mu.Unlock()
-	redirect, err := url.Parse(q.Get("redirect_uri"))
-	if err != nil {
-		http.Error(w, "bad redirect_uri", http.StatusBadRequest)
-		return
+	f.requestSeq++
+	id := fmt.Sprintf("V2_%d", f.requestSeq)
+	f.authRequests[id] = &fakeAuthRequest{
+		clientID: f.clientID, redirectURI: q.Get("redirect_uri"),
+		state: q.Get("state"), challenge: q.Get("code_challenge"),
 	}
-	rq := redirect.Query()
-	rq.Set("code", code)
-	rq.Set("state", q.Get("state"))
-	redirect.RawQuery = rq.Encode()
-	http.Redirect(w, r, redirect.String(), http.StatusFound)
+	f.mu.Unlock()
+	http.Redirect(w, r, f.Server.URL+"/ui/v2/login/login?authRequest="+url.QueryEscape(id),
+		http.StatusFound)
 }
 
 func (f *fakeOIDC) token(w http.ResponseWriter, r *http.Request) {

@@ -62,6 +62,7 @@ type Core struct {
 	tokensKey   string
 	lastStatus  syncclient.Status
 	failedSince time.Time
+	signInStage string
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool

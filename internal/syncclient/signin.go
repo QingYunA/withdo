@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
+	"strings"
+	"time"
+
+	"golang.org/x/oauth2"
 
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
-
-// signInRedirect is the fixed loopback redirect registered in Zitadel for in-app sign-in.
-const signInRedirect = "http://127.0.0.1/callback"
 
 // Errors SignIn returns for the answers the client UI shows as text. Every other failure is an
 // ordinary error with the request that failed.
@@ -31,72 +31,47 @@ var (
 	ErrSignInUnsupported = errors.New("syncclient: the sync server does not support in-app sign-in")
 )
 
-// signInAuthRequest asks the issuer's authorize endpoint for a pending auth request without
-// following its redirect to the login page.
-func (s *OIDCSource) signInAuthRequest(ctx context.Context, authURL string) (string, error) {
-	var client http.Client
-	if s.HTTP != nil {
-		client = *s.HTTP
+// SignIn asks the sync server to sign in with an account and password. The server does the whole
+// OIDC flow and answers with tokens; only the refresh token is stored, as after a browser sign-in.
+// The password is not stored or put into an error.
+func (s *OIDCSource) SignIn(ctx context.Context, server, loginName, password string) error {
+	if s == nil || s.Secrets == nil {
+		return errors.New("syncclient: OIDC sign-in needs a secrets store")
 	}
-	client.CheckRedirect = func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return errors.New("syncclient: sync server URL is required")
 	}
-	var location *url.URL
-	err := retryTransient(ctx, func() error {
-		location = nil
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, authURL, nil)
-		if err != nil {
-			return err
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = resp.Body.Close() }()
-		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
-		if resp.StatusCode/100 != 3 {
-			return fmt.Errorf("syncclient: OIDC authorize answered %d", resp.StatusCode)
-		}
-		raw := resp.Header.Get("Location")
-		if raw == "" {
-			return errors.New("syncclient: OIDC authorize returned no location")
-		}
-		location, err = url.Parse(raw)
-		if err != nil {
-			return fmt.Errorf("syncclient: parse the OIDC authorize location: %w", err)
-		}
-		return nil
-	})
+	answer, err := s.postSignIn(ctx, base, loginName, password)
 	if err != nil {
-		return "", err
+		return err
 	}
-	query := location.Query()
-	if msg := query.Get("error"); msg != "" {
-		return "", fmt.Errorf("syncclient: OIDC sign-in was refused (%s)", msg)
+	if answer.AccessToken == "" || answer.RefreshToken == "" {
+		return errors.New("syncclient: the sign-in answer is missing a token")
 	}
-	authRequest := query.Get("authRequest")
-	if authRequest == "" {
-		return "", errors.New("syncclient: OIDC authorize returned no auth request")
-	}
-	return authRequest, nil
+	token := (&oauth2.Token{
+		AccessToken:  answer.AccessToken,
+		RefreshToken: answer.RefreshToken,
+		TokenType:    answer.TokenType,
+		Expiry:       time.Now().Add(time.Duration(answer.ExpiresIn) * time.Second),
+	}).WithExtra(map[string]any{"id_token": answer.IDToken})
+	return s.storeToken(token)
 }
 
-// postSignIn has the sync server complete the auth request. Only the five statuses the client UI
-// understands become sentinel errors; the answer never contains a token.
-func (s *OIDCSource) postSignIn(ctx context.Context, server, authRequest, loginName, password string) (string, error) {
-	body, err := json.Marshal(syncproto.SignInRequest{
-		AuthRequest: authRequest, LoginName: loginName, Password: password,
-	})
+// postSignIn is one POST /v1/sign-in. Only the statuses the client UI understands become sentinel
+// errors; a 5xx is retried, a refusal is not.
+func (s *OIDCSource) postSignIn(ctx context.Context, server, loginName, password string) (syncproto.SignInTokenResponse, error) {
+	body, err := json.Marshal(syncproto.SignInRequest{LoginName: loginName, Password: password})
 	if err != nil {
-		return "", fmt.Errorf("syncclient: encode the sign-in request: %w", err)
+		return syncproto.SignInTokenResponse{}, fmt.Errorf("syncclient: encode the sign-in request: %w", err)
 	}
 	client := s.HTTP
 	if client == nil {
 		client = http.DefaultClient
 	}
-	var callbackURL string
+	var answer syncproto.SignInTokenResponse
 	err = retryTransient(ctx, func() error {
-		callbackURL = ""
+		answer = syncproto.SignInTokenResponse{}
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost,
 			server+"/v1/sign-in", bytes.NewReader(body))
 		if err != nil {
@@ -114,14 +89,9 @@ func (s *OIDCSource) postSignIn(ctx context.Context, server, authRequest, loginN
 		}
 		switch resp.StatusCode {
 		case http.StatusOK:
-			var out syncproto.SignInResponse
-			if err := json.Unmarshal(raw, &out); err != nil {
+			if err := json.Unmarshal(raw, &answer); err != nil {
 				return fmt.Errorf("syncclient: decode the sign-in answer: %w", err)
 			}
-			if out.CallbackURL == "" {
-				return errors.New("syncclient: the sign-in answer has no callback URL")
-			}
-			callbackURL = out.CallbackURL
 			return nil
 		case http.StatusUnauthorized:
 			return ErrInvalidCredentials
@@ -134,32 +104,11 @@ func (s *OIDCSource) postSignIn(ctx context.Context, server, authRequest, loginN
 		case http.StatusNotFound:
 			return ErrSignInUnsupported
 		default:
+			if resp.StatusCode/100 == 5 {
+				return &retryableStatus{status: resp.StatusCode}
+			}
 			return fmt.Errorf("syncclient: sign-in answered %d", resp.StatusCode)
 		}
 	})
-	return callbackURL, err
-}
-
-// signInCode checks the callback the server returned and pulls out the code. The redirect and its
-// state must be the ones this sign-in started with.
-func signInCode(callbackURL, state string) (string, error) {
-	callback, err := url.Parse(callbackURL)
-	if err != nil {
-		return "", fmt.Errorf("syncclient: parse the sign-in callback: %w", err)
-	}
-	if callback.Scheme != "http" || callback.Host != "127.0.0.1" || callback.Path != callbackPath {
-		return "", errors.New("syncclient: the sign-in callback is not the loopback redirect")
-	}
-	query := callback.Query()
-	if query.Get("state") != state {
-		return "", errors.New("syncclient: the sign-in callback state does not match")
-	}
-	if msg := query.Get("error"); msg != "" {
-		return "", fmt.Errorf("syncclient: OIDC sign-in was refused (%s)", msg)
-	}
-	code := query.Get("code")
-	if code == "" {
-		return "", errors.New("syncclient: OIDC sign-in returned no code")
-	}
-	return code, nil
+	return answer, err
 }

@@ -102,7 +102,7 @@ func (b *lockedBuffer) String() string {
 }
 
 // TestSignInLogsOnlyTheResult checks the one log line names the outcome and never the password,
-// session token, callback URL, PAT or login name.
+// session token, tokens, code, state, PAT or login name.
 func TestSignInLogsOnlyTheResult(t *testing.T) {
 	h, z := newSignInCase(t, nil)
 	var logs lockedBuffer
@@ -127,8 +127,8 @@ func TestSignInLogsOnlyTheResult(t *testing.T) {
 		t.Fatalf("log = %q, want the ok line", logs.String())
 	}
 	for _, secret := range []string{
-		"correct horse", signInBody().AuthRequest, sessionToken, "state-1",
-		"code-for-", z.pat, z.loginName, "callback",
+		"correct horse", sessionToken, "code-for-", "state-",
+		"access-token", "refresh-token", "id-token", z.pat, z.loginName, "callback",
 	} {
 		if strings.Contains(logs.String(), secret) {
 			t.Errorf("log %q contains %q", logs.String(), secret)

@@ -4,26 +4,47 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
+// authRequestIDPattern is the shape of an auth request id Zitadel hands out.
+var authRequestIDPattern = regexp.MustCompile(`^V2_[0-9]+$`)
+
 // zitadelLogin talks to Zitadel's Session API with the PAT of a machine user that only has the
-// IAM_LOGIN_CLIENT role. It is the part of Zitadel the sync server drives so a user can sign in
-// inside the app: create a session for the password, then complete the waiting auth request.
+// IAM_LOGIN_CLIENT role, and to the ordinary OIDC endpoints on the same base. It is the part of
+// Zitadel the sync server drives so a user can sign in inside the app: start the authorization,
+// create a session for the password, then complete the auth request and exchange its code.
 type zitadelLogin struct {
 	base   string
+	host   string
 	pat    string
 	client *http.Client
 }
 
-func newZitadelLogin(issuer, pat string) *zitadelLogin {
+// newZitadelLogin builds the client. internalURL, when set, is where every Zitadel request goes
+// (for example http://proxy on the Zitadel Docker network); the issuer still names the host the
+// request asks for, so Zitadel sees the address its public URLs are built from.
+func newZitadelLogin(issuer, pat, internalURL string) *zitadelLogin {
+	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
+	base, host := issuer, ""
+	if internal := strings.TrimRight(strings.TrimSpace(internalURL), "/"); internal != "" {
+		base = internal
+		if parsed, err := url.Parse(issuer); err == nil {
+			host = parsed.Host
+		}
+	}
 	return &zitadelLogin{
-		base:   strings.TrimRight(strings.TrimSpace(issuer), "/"),
+		base:   base,
+		host:   host,
 		pat:    strings.TrimSpace(pat),
 		client: &http.Client{Timeout: 15 * time.Second},
 	}
@@ -130,6 +151,99 @@ func (z *zitadelLogin) completeAuthRequest(ctx context.Context, authRequestID st
 	return out.CallbackURL, err
 }
 
+// authorize starts an OIDC authorization request and returns the auth request id Zitadel put in
+// the login redirect. The redirect is not followed; only its query is read.
+func (z *zitadelLogin) authorize(ctx context.Context, clientID, redirectURI string, scopes []string, challenge, state string) (string, error) {
+	endpoint, err := url.Parse(z.base + "/oauth/v2/authorize")
+	if err != nil {
+		return "", fmt.Errorf("build the authorize URL: %w", err)
+	}
+	query := endpoint.Query()
+	query.Set("client_id", clientID)
+	query.Set("redirect_uri", redirectURI)
+	query.Set("response_type", "code")
+	query.Set("scope", strings.Join(scopes, " "))
+	query.Set("code_challenge", challenge)
+	query.Set("code_challenge_method", "S256")
+	query.Set("state", state)
+	endpoint.RawQuery = query.Encode()
+
+	client := *z.client
+	client.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	z.setHost(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("GET authorize: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
+	if resp.StatusCode/100 != 3 {
+		return "", fmt.Errorf("authorize answered %d", resp.StatusCode)
+	}
+	location, err := url.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		return "", fmt.Errorf("parse the authorize location: %w", err)
+	}
+	id := location.Query().Get("authRequest")
+	if !authRequestIDPattern.MatchString(id) {
+		return "", errors.New("authorize returned no auth request")
+	}
+	return id, nil
+}
+
+// exchangeCode redeems the authorization code with the PKCE verifier and returns the tokens. It
+// carries no PAT: the code and verifier are the whole proof.
+func (z *zitadelLogin) exchangeCode(ctx context.Context, clientID, code, verifier string) (syncproto.SignInTokenResponse, error) {
+	var out syncproto.SignInTokenResponse
+	form := url.Values{
+		"grant_type":    {"authorization_code"},
+		"code":          {code},
+		"redirect_uri":  {loopbackRedirectURI},
+		"client_id":     {clientID},
+		"code_verifier": {verifier},
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		z.base+"/oauth/v2/token", strings.NewReader(form.Encode()))
+	if err != nil {
+		return out, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	z.setHost(req)
+	resp, err := z.client.Do(req)
+	if err != nil {
+		return out, fmt.Errorf("POST token: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return out, fmt.Errorf("read the token answer: %w", err)
+	}
+	if resp.StatusCode/100 != 2 {
+		return out, fmt.Errorf("token answered %d", resp.StatusCode)
+	}
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return out, fmt.Errorf("decode the token answer: %w", err)
+	}
+	if out.AccessToken == "" {
+		return out, errors.New("the token answer has no access token")
+	}
+	return out, nil
+}
+
+// setHost makes an internal-base request ask for the issuer's host, so Zitadel sees the public name
+// its URLs are built from.
+func (z *zitadelLogin) setHost(req *http.Request) {
+	if z.host != "" {
+		req.Host = z.host
+	}
+}
+
 // do sends one JSON request with the PAT. Every 2xx is success: creating a session answers 201.
 func (z *zitadelLogin) do(ctx context.Context, method, path string, body, out any) error {
 	var reader io.Reader
@@ -146,6 +260,7 @@ func (z *zitadelLogin) do(ctx context.Context, method, path string, body, out an
 	}
 	req.Header.Set("Authorization", "Bearer "+z.pat)
 	req.Header.Set("Content-Type", "application/json")
+	z.setHost(req)
 	resp, err := z.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("%s %s: %w", method, path, err)

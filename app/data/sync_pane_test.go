@@ -118,6 +118,87 @@ func TestTheAppSignsInWithTheServerConfig(t *testing.T) {
 	}
 }
 
+// TestSyncSignInStages: the snapshot says the server is checking the account, then that the tasks
+// are downloading while Link registers the device. The device call is allowed to fail after that.
+func TestSyncSignInStages(t *testing.T) {
+	signInHit := make(chan struct{}, 1)
+	releaseSignIn := make(chan struct{})
+	devicesHit := make(chan struct{}, 1)
+	releaseDevices := make(chan struct{})
+	var server *httptest.Server
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"issuer": server.URL, "client_id": "adhd-todo", "scopes": []string{},
+		})
+	})
+	mux.HandleFunc("POST /v1/sign-in", func(w http.ResponseWriter, _ *http.Request) {
+		signInHit <- struct{}{}
+		<-releaseSignIn
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"access_token": "access", "refresh_token": "refresh",
+			"token_type": "Bearer", "expires_in": 3600,
+		})
+	})
+	mux.HandleFunc("POST /v1/devices", func(w http.ResponseWriter, _ *http.Request) {
+		devicesHit <- struct{}{}
+		<-releaseDevices
+		http.Error(w, "the server failed", http.StatusInternalServerError)
+	})
+	server = httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	path := filepath.Join(t.TempDir(), "app.db")
+	db, err := store.Open(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := NewReal(db, RealOptions{
+		SyncConfigPath: syncclient.ConfigPath(path), Secrets: appSecrets{},
+		Now: func() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC) },
+	})
+	t.Cleanup(func() { _ = r.Close() })
+	if err := r.SyncSetServer(server.URL); err != nil {
+		t.Fatal(err)
+	}
+	r.SyncSignIn("cyan@example.com", "hunter2")
+
+	if snap := r.SyncSnapshot(); snap.Phase != SyncSigningIn || snap.SignInStage != SignInStageChecking {
+		t.Fatalf("before the password check: phase %v, stage %q", snap.Phase, snap.SignInStage)
+	}
+	waitSignal(t, signInHit, "the sign-in request")
+	close(releaseSignIn)
+	waitSignal(t, devicesHit, "the device registration")
+	if snap := r.SyncSnapshot(); snap.Phase != SyncSigningIn || snap.SignInStage != SignInStageDownloading {
+		t.Fatalf("after the password check: phase %v, stage %q", snap.Phase, snap.SignInStage)
+	}
+	close(releaseDevices)
+
+	deadline := time.After(10 * time.Second)
+	for r.SyncSnapshot().Phase == SyncSigningIn {
+		select {
+		case <-deadline:
+			t.Fatal("the failed device registration never ended the sign-in")
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+	if snap := r.SyncSnapshot(); snap.SignInStage != SignInStageNone {
+		t.Fatalf("a finished sign-in kept stage %q", snap.SignInStage)
+	}
+}
+
+// waitSignal waits for one step of a gated fake server.
+func waitSignal(t *testing.T, ch <-chan struct{}, what string) {
+	t.Helper()
+	select {
+	case <-ch:
+	case <-time.After(10 * time.Second):
+		t.Fatalf("timed out waiting for %s", what)
+	}
+}
+
 // TestSignInFailureKinds is the classification the pane words: the five answers of /v1/sign-in
 // and a network failure, without matching the error's text.
 func TestSignInFailureKinds(t *testing.T) {
