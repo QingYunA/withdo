@@ -718,15 +718,15 @@ private fun MenuRow(
     }
 }
 
-/** The three 3 x 3 squares of the task page's ⋯ button, on the 12 x 12 grid. */
+/** The three 2 x 2 squares of the task page's ⋯ button, on the 12 x 12 grid. */
 @Composable
 fun MoreGlyph(size: androidx.compose.ui.unit.Dp = Dims.icon, tint: Color) {
     PixelGrid(size = size) { cell ->
         for (x in listOf(1, 5, 9)) {
             drawRect(
                 color = tint,
-                topLeft = Offset(x * cell, 4 * cell),
-                size = Size(3 * cell, 3 * cell),
+                topLeft = Offset(x * cell, 5 * cell),
+                size = Size(2 * cell, 2 * cell),
             )
         }
     }

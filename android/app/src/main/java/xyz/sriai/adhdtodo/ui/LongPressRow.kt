@@ -11,6 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.withTimeoutOrNull
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 
@@ -20,7 +23,8 @@ private enum class PressResult { Tap, Moved, Cancel }
  * A task row that opens its task on a tap and the task menu on a long press. The row takes
  * bg.selected as soon as the long press begins. The sheet opens when the finger lifts without
  * moving; a long press that moves further than the touch slop is left for the coming drag, so it
- * does not open. A tap consumed by a child (the status glyph, a row button) is left alone.
+ * does not open. A tap consumed by a child (the status glyph, a row button) is left alone. The
+ * gesture is drawn by hand, so the row also says it can be clicked and long clicked, for TalkBack.
  */
 @Composable
 fun LongPressRow(
@@ -93,6 +97,10 @@ fun LongPressRow(
         modifier
             .fillMaxWidth()
             .then(if (pressed) Modifier.background(tokens.bgSelected) else Modifier)
-            .then(gesture),
+            .then(gesture)
+            .semantics(mergeDescendants = false) {
+                onClick { onClick(); true }
+                onLongClick { onLongPress(); true }
+            },
     )
 }

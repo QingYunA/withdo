@@ -174,7 +174,7 @@ class Words(
     /** A set reminder as a row's value: the time today, Tomorrow at 9:00, or Oct 26 at 9:00. */
     fun reminderValue(value: String?): String {
         val at = instant(value)?.atZone(zone) ?: return ""
-        val today = LocalDate.now(zone)
+        val today = timeSource().atZone(zone).toLocalDate()
         val time = remindClock.format(at)
         return when (at.toLocalDate()) {
             today -> time

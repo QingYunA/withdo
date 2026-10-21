@@ -166,7 +166,8 @@ fun App(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.w("adhd-todo", "load failed", e)
                 null
             }
             if (loaded != null) menuData = loaded
@@ -287,7 +288,8 @@ fun App(
                     }
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.w("adhd-todo", "load failed", e)
                     null
                 }
                 if (loaded != null) {

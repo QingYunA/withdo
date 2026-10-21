@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.up
 import org.robolectric.RuntimeEnvironment
 import xyz.sriai.adhdtodo.data.PageJson
+import xyz.sriai.adhdtodo.data.RemindPreset
 import xyz.sriai.adhdtodo.ui.theme.AdhdTheme
 import java.io.File
 import java.time.Instant
@@ -23,6 +24,14 @@ object FixedTime {
     val now: Instant = Instant.parse("2026-10-20T09:00:00Z")
     val zone: ZoneId = ZoneId.of("Asia/Shanghai")
     val clock: () -> Instant = { now }
+
+    /** The task menu's presets at that moment, as mobile/core's RemindPresets gives them (Tuesday 17:00). */
+    val remindPresets: List<RemindPreset> = listOf(
+        RemindPreset("later", Instant.parse("2026-10-20T10:00:00Z").toEpochMilli()),
+        RemindPreset("tomorrow", Instant.parse("2026-10-21T01:00:00Z").toEpochMilli()),
+        RemindPreset("monday", Instant.parse("2026-10-26T01:00:00Z").toEpochMilli()),
+        RemindPreset("weekend", Instant.parse("2026-10-24T02:00:00Z").toEpochMilli()),
+    )
 }
 
 /**

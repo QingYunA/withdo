@@ -54,7 +54,7 @@ func (c *Core) Projects() (string, error) {
 	if err != nil {
 		return "", shortError(err)
 	}
-	return marshal(snap.Projects)
+	return marshal(emptyIfNil(snap.Projects))
 }
 
 // Categories returns the snapshot's categories as JSON: a []data.Category in the user's order.
@@ -65,7 +65,7 @@ func (c *Core) Categories() (string, error) {
 	if err != nil {
 		return "", shortError(err)
 	}
-	return marshal(snap.Categories)
+	return marshal(emptyIfNil(snap.Categories))
 }
 
 // remindPresetJSON is one choice of the Remind me page: its kind and the moment it means in Unix
@@ -192,6 +192,15 @@ func (c *Core) Search(query string) (string, error) {
 		tasks = []data.Task{}
 	}
 	return marshal(tasks)
+}
+
+// emptyIfNil keeps an empty list a JSON array: encoding/json writes a nil slice as null, which the
+// app's list decoders refuse, so a phone with no projects could not open a task.
+func emptyIfNil[T any](list []T) []T {
+	if list == nil {
+		return []T{}
+	}
+	return list
 }
 
 // marshal is the one encoder of page data.
