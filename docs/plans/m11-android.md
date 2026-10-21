@@ -297,3 +297,39 @@ in to a test account) found these. Each needs a test where one is possible.
 1. `go test -race ./internal/syncclient/... ./mobile/... ./app/data/...` and the new tests above.
 2. `scripts/android-core.sh`; `./gradlew --offline assembleDebug testDebugUnitTest`.
 3. `scripts/check.sh full`.
+
+## A4-menu: the task menu
+
+The desktop's task menu on the phone, as a bottom sheet (design `docs/design/mockups/v30.html`,
+spec: **The task menu** under Android in `docs/design/ui-spec.md`).
+
+### Go (`mobile/core`)
+
+- `Categories() (string, error)`: the snapshot's categories as JSON (id, name, icon, color, in
+  order), with a golden file like the other pages.
+- `RemindPresets() (string, error)`: the menu's ready-made reminders for now, `[{"kind":"later",
+  "at":<unix ms>}, …]`, from the same function as the desktop: `remindPresets` moves out of
+  `app/views/remind.go` into a package both use, unchanged, with its tests.
+- The rest already exists: `UpdateTask` (status, priority, category, project_id, remind_at),
+  `DeleteTask` returns the snapshot `RestoreTask` takes, `Projects()`.
+
+### Kotlin
+
+- `TaskMenuSheet` (new file) with its pages; `MineScreen`, `AgentsScreen`, the project page and
+  search rows take a long press; `TaskScreen` gets the `⋯` button and tappable property rows;
+  `App.kt` holds which task's sheet is open and the snackbar.
+- Strings in `values` and `values-zh-rCN`, the desktop's words (`app/locales` keys of the task
+  menu are the source).
+
+### Verification
+
+1. `go test ./mobile/... ./app/views/...` (the moved presets keep their tests); golden files.
+2. Interaction tests on the JVM: a long press opens the sheet; a status or priority tap calls
+   `UpdateTask` with that value and closes it; Move to filters and moves; a preset sets
+   `remind_at`; Delete calls `DeleteTask` and Undo `RestoreTask`; back goes from a page to the main
+   page; a long press that moves does not open the sheet.
+3. Screenshots of the sheet's pages (light, dark, zh) with `scripts/android-screens.sh` once A4-tests
+   is in.
+4. `scripts/android-core.sh`; `./gradlew --offline assembleDebug testDebugUnitTest`;
+   `scripts/check.sh full`.
+
