@@ -12,6 +12,9 @@ type PublicConfig struct {
 	Issuer   string
 	ClientID string
 	Scopes   []string
+	// Auth names the account system clients sign in with, such as "pocketbase"; empty means the
+	// OIDC issuer above.
+	Auth string
 }
 
 // SetPublicConfig sets the values GET /v1/config returns. Call it before serving.
@@ -25,6 +28,6 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{
 		Issuer: s.public.Issuer, ClientID: s.public.ClientID, Scopes: scopes,
-		PasswordSignIn: s.signIn != nil,
+		PasswordSignIn: s.signIn != nil, Auth: s.public.Auth,
 	})
 }

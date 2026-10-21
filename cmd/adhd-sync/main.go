@@ -16,7 +16,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pocketbase/pocketbase/core"
+
 	"github.com/QingYunA/adhd-todo/internal/syncserver"
+	"github.com/QingYunA/adhd-todo/internal/syncserver/pbauth"
 )
 
 func main() {
@@ -39,6 +42,12 @@ func run(ctx context.Context, args []string) error {
 	scopes := fs.String("oidc-scopes", "", "extra OIDC scopes for GET /v1/config, separated by spaces")
 	loginPATFile := fs.String("zitadel-login-pat-file", "", "file holding the Zitadel login machine user's PAT, enabling POST /v1/sign-in")
 	zitadelInternalURL := fs.String("zitadel-internal-url", "", "base URL for adhd-sync's Zitadel requests, such as http://proxy")
+	pbDir := fs.String("pb-dir", "", "PocketBase data directory; enables PocketBase accounts (sign-in by email and password)")
+	if len(args) > 0 {
+		if handled, err := runAccountCommand(args[0], args[1:], os.Stdin, os.Stdout); handled {
+			return err
+		}
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -62,28 +71,40 @@ func run(ctx context.Context, args []string) error {
 			return errors.New("-zitadel-login-pat-file is empty")
 		}
 	}
-	if *tokensPath == "" && *issuer == "" {
-		return errors.New("one of -tokens or -oidc-issuer is required")
+	if *tokensPath == "" && *issuer == "" && *pbDir == "" {
+		return errors.New("one of -tokens, -oidc-issuer or -pb-dir is required")
 	}
-	var auth syncserver.Authenticator
-	if *tokensPath != "" {
-		tokens, err := syncserver.LoadTokens(*tokensPath)
+	// PocketBase is tried first, then the OIDC issuer (Zitadel, until it is removed), then the
+	// development tokens.
+	var chain syncserver.Chain
+	var pb core.App
+	publicAuth := ""
+	if *pbDir != "" {
+		app, err := pbauth.Open(*pbDir)
 		if err != nil {
 			return err
 		}
-		auth = tokens
+		defer func() { _ = pbauth.Close(app) }()
+		pb, publicAuth = app, "pocketbase"
+		chain = append(chain, syncserver.Logged("pocketbase", pbauth.NewAuthenticator(app)))
 	}
 	if *issuer != "" {
 		oidcAuth, err := syncserver.NewOIDCAuthenticator(ctx, *issuer, *audience)
 		if err != nil {
 			return err
 		}
-		if auth == nil {
-			auth = oidcAuth
-		} else {
-			// A static token is tried first; the OIDC verifier handles everything else.
-			auth = syncserver.Chain{auth, oidcAuth}
+		chain = append(chain, syncserver.Logged("oidc", oidcAuth))
+	}
+	if *tokensPath != "" {
+		tokens, err := syncserver.LoadTokens(*tokensPath)
+		if err != nil {
+			return err
 		}
+		chain = append(chain, tokens)
+	}
+	var auth syncserver.Authenticator = chain
+	if len(chain) == 1 {
+		auth = chain[0]
 	}
 	server, err := syncserver.Open(ctx, *databaseURL, auth)
 	if err != nil {
@@ -91,7 +112,7 @@ func run(ctx context.Context, args []string) error {
 	}
 	defer server.Close()
 	server.SetPublicConfig(syncserver.PublicConfig{
-		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes),
+		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes), Auth: publicAuth,
 	})
 	if loginPAT != "" {
 		if err := server.EnablePasswordSignIn(syncserver.PasswordSignInOptions{
@@ -105,6 +126,10 @@ func run(ctx context.Context, args []string) error {
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", *addr, err)
+	}
+	if pb != nil {
+		log.Printf("adhd-sync listening on %s (PocketBase accounts in %s)", ln.Addr(), *pbDir)
+		return pbauth.Serve(ctx, pb, ln, server.Handler())
 	}
 	httpServer := &http.Server{
 		Handler:           server.Handler(),
