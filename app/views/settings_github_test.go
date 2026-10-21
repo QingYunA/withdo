@@ -7,12 +7,14 @@ import (
 	"github.com/QingYunA/adhd-todo/app/data"
 )
 
-// githubPane opens Settings > GitHub in an app whose GitHub status is st.
+// githubPane opens Settings > Agents, scrolled to the GitHub group at its end, in an app whose GitHub status is st.
 func githubPane(t *testing.T, st data.GitHubStatus) (*settingsRig, *data.FakeGitHub) {
 	t.Helper()
 	gh := data.NewFakeGitHub(st)
 	r := newSettingsRig(t, func(a *App) { a.GitHub = gh })
-	r.pane(t, "GitHub")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
+	r.tt.Frame()
 	return r, gh
 }
 
@@ -98,10 +100,12 @@ func TestGitHubPaneInChinese(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := newSettingsRig(t, func(a *App) { a.GitHub = data.NewFakeGitHub(tc.st) })
 			inChinese(r.tt)
-			r.s.Show(PaneGitHub)
+			r.s.Show(PaneAgents)
+			r.tt.Frame()
+			r.tt.Scroll(340, 300, 0, 9000)
 			r.tt.Frame()
 			has(t, r.tt, tc.want...)
-			if r.title != "GitHub" {
+			if r.title != "Agent" {
 				t.Errorf("title %q", r.title)
 			}
 		})

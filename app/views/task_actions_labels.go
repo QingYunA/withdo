@@ -10,13 +10,25 @@ func (m *Main) barLabel(a taskAction) string {
 	case actMove:
 		return m.say.MenuMoveTo()
 	case actPriority:
-		return m.say.PropPriority()
+		return m.priorityLabel(a)
 	case actHandOff:
 		return m.say.BulkHandOff()
 	case actDelete:
 		return m.say.MenuDelete()
 	}
 	return "" // Cancel has no button
+}
+
+// priorityLabel is Priority, or for the user's own tasks the star: Mark important, or Not important
+// when every one has it.
+func (m *Main) priorityLabel(a taskAction) string {
+	switch {
+	case !a.Star:
+		return m.say.PropPriority()
+	case a.Starred:
+		return m.say.MenuNotImportant()
+	}
+	return m.say.MenuMarkImportant()
 }
 
 // menuLabel is the action as a line of the menu of the n selected tasks says it.
@@ -29,7 +41,7 @@ func (m *Main) menuLabel(a taskAction, n int) string {
 	case actMove:
 		return m.say.MenuMoveTo()
 	case actPriority:
-		return m.say.PropPriority()
+		return m.priorityLabel(a)
 	case actHandOff:
 		return m.say.BulkHandOff()
 	default:

@@ -10,7 +10,10 @@ cd "$(git rev-parse --show-toplevel)"
 store="${ADHD_RELEASE_STORE_FILE:-$HOME/.config/adhd-todo/android-release.jks}"
 alias_name="adhd-todo"
 service="adhd-todo-android-release"
-sdk="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+# Gradle finds the SDK through ANDROID_HOME or android/local.properties; a fresh worktree has no
+# local.properties, so export the path the script uses itself.
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+sdk="$ANDROID_HOME"
 export JAVA_HOME="${JAVA_HOME:-$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home}"
 
 if [ "${1:-}" = "--init" ]; then

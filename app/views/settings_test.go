@@ -52,16 +52,17 @@ func (r *settingsRig) pane(t *testing.T, name string) {
 	r.tt.Frame()
 }
 
-func TestSettingsToolbarHasFivePanesAndTheTitleIsTheOpenOne(t *testing.T) {
+func TestSettingsToolbarHasFourPanesAndTheTitleIsTheOpenOne(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "General", "Assistant", "Agents", "GitHub", "Sync")
+	has(t, r.tt, "Account", "General", "Agents", "Advanced")
+	hasNot(t, r.tt, "Assistant", "Sync")
 	if r.title != "General" {
 		t.Errorf("title %q, want the open pane's name", r.title)
 	}
 	for _, want := range []struct {
 		click, title string
 		pane         Pane
-	}{{"Assistant", "Assistant", PaneAssistant}, {"Agents", "Agents", PaneAgents}, {"GitHub", "GitHub", PaneGitHub}, {"Sync", "Sync", PaneSync}, {"General", "General", PaneGeneral}} {
+	}{{"Advanced", "Advanced", PaneAdvanced}, {"Agents", "Agents", PaneAgents}, {"Account", "Account", PaneAccount}, {"General", "General", PaneGeneral}} {
 		r.pane(t, want.click)
 		if r.s.pane != want.pane || r.title != want.title {
 			t.Errorf("after %q: pane %v, title %q", want.click, r.s.pane, r.title)
@@ -71,9 +72,9 @@ func TestSettingsToolbarHasFivePanesAndTheTitleIsTheOpenOne(t *testing.T) {
 
 func TestSettingsShowSelectsAPane(t *testing.T) {
 	r := newSettingsRig(t)
-	r.s.Show(PaneAssistant)
+	r.s.Show(PaneAdvanced)
 	r.tt.Frame()
-	if r.title != "Assistant" {
+	if r.title != "Advanced" {
 		t.Errorf("title %q", r.title)
 	}
 	has(t, r.tt, "Pick a provider") // nothing is set up: the grid shows
@@ -185,7 +186,9 @@ func TestAgentsPaneCopiesTheCommand(t *testing.T) {
 
 func TestGitHubPaneShowsTheStatusAndChecksNow(t *testing.T) {
 	r := newSettingsRig(t)
-	r.pane(t, "GitHub")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
+	r.tt.Frame()
 	has(t, r.tt, "Connected as QingYunA · checked 2m ago", "Check now")
 	hasNot(t, r.tt, "brew install gh", "gh auth login")
 	mustNil(t, r.tt.Click("Check now"))
@@ -196,12 +199,14 @@ func TestGitHubPaneShowsTheStatusAndChecksNow(t *testing.T) {
 
 func TestSettingsWithoutPollerOrModelsStillHasEveryPane(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.GitHub, a.Models = nil, nil })
-	has(t, r.tt, "General", "Assistant", "Agents", "GitHub", "Sync")
-	r.pane(t, "GitHub")
+	has(t, r.tt, "Account", "General", "Agents", "Advanced")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
+	r.tt.Frame()
 	has(t, r.tt, "Following pull requests isn't available here.")
-	r.pane(t, "Assistant")
+	r.pane(t, "Advanced")
 	has(t, r.tt, "The assistant isn't available here.")
-	r.pane(t, "Sync")
+	r.pane(t, "Account")
 	has(t, r.tt, "Sync isn't available here.")
 }
 
@@ -248,8 +253,20 @@ func TestSettingsTitleAndPanesAreOneBandUnderTheTrafficLights(t *testing.T) {
 	if mid := title.X + title.W/2; mid < settingsWidth/2-1 || mid > settingsWidth/2+1 {
 		t.Errorf("the title is centered at %.0f, not in the middle of the window (%.0f)", mid, settingsWidth/2)
 	}
-	pane, _ := r.tt.Find("Assistant")
+	pane, _ := r.tt.Find("Advanced")
 	if pane.Y < SettingsTitleBarHeight {
 		t.Errorf("the pane icons start at %.0f, in the title's row", pane.Y)
 	}
+}
+
+func TestAdvancedPaneHoldsTheModelAndTheSwitchesGeneralLost(t *testing.T) {
+	r := newSettingsRig(t)
+	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Frame()
+	hasNot(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
+	r.pane(t, "Advanced")
+	hasFold(t, r.tt, "Use your own model") // a group label is set in the section style
+	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Frame()
+	has(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
 }

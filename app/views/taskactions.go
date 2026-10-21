@@ -45,7 +45,8 @@ func (m *Main) taskKeys(c *ui.Context, typing bool) {
 	if id == 0 {
 		id = m.openID
 	}
-	if _, ok := m.app.Task(id); !ok {
+	task, ok := m.app.Task(id)
+	if !ok {
 		return
 	}
 	if keyAsk.down(c) {
@@ -58,6 +59,10 @@ func (m *Main) taskKeys(c *ui.Context, typing bool) {
 	pages := map[binding]menuPage{keyStatus: pageStatus, keyPriority: pagePriority, keyMove: pageMove, keyRemind: pageRemind}
 	for key, page := range pages {
 		if key.down(c) {
+			if key == keyPriority && mine(task) { // the star toggles at once
+				m.toggleImportant(task)
+				return
+			}
 			m.openMenuForSelection(id, page)
 			return
 		}

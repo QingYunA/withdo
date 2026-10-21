@@ -25,6 +25,7 @@ func TestScreensAvatars(t *testing.T) {
 			shot(t, "project-empty-avatars"+suffix, withProject, a.dark, toProject(p.ID))
 			app, _, _ := newTestApp(t)
 			shot(t, "inspector-from-you"+suffix, app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(5) })
+			shot(t, "inspector-mine-starred"+suffix, app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(6) })
 		}
 	}
 }

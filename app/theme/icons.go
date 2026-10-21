@@ -83,6 +83,7 @@ var (
 	IconCloud    = pixelIcon("cloud")
 	IconLaptop   = pixelIcon("laptop")
 	IconPhone    = pixelIcon("smartphone")
+	IconUser     = pixelIcon("user")
 )
 
 // ProjectColors tint a project's folder; the color follows the project's name.

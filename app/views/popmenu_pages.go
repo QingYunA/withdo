@@ -93,11 +93,15 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	pm := &m.pop
 	m.stripLabel(c, t, "status", m.say.PropStatus(), statusLabel(m.say, task.Status))
 	m.statusStrip(c, t, task, false)
-	m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
-	m.priorityStrip(c, t, task, false)
+	one := []data.Task{task}
+	if mine(task) { // the user's own task has the star, one line, not the four priorities
+		m.popRow(c, t, m.starPopRow(t, task))
+	} else {
+		m.stripLabel(c, t, "priority", m.say.PropPriority(), m.priorityText(task.Priority))
+		m.priorityStrip(c, t, task, false)
+	}
 	menuRule(c, t)
 	m.popRow(c, t, m.categoryPopRow(task))
-	one := []data.Task{task}
 	m.popRow(c, t, actionSpec(actionOf(one, actMove), "", m.say.MenuMoveTo(), func() { pm.openPage(pageMove) }))
 	m.popRow(c, t, popSpec{key: "remind", icon: theme.IconClock, label: m.say.MenuRemindMe(), hint: keyRemind.hint(), run: func() {
 		pm.page, pm.back, pm.hl = pageRemind, true, -1
@@ -122,6 +126,24 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 		m.closeMenu()
 		m.deleteTask(c, task.ID)
 	}))
+}
+
+// starPopRow is the line of the menu of a task of the user's own that toggles its important star:
+// Mark important, or Not important while it is set (then the star is drawn in its color).
+func (m *Main) starPopRow(t *theme.Tokens, task data.Task) popSpec {
+	spec := popSpec{key: "important", icon: theme.IconImportantOff, label: m.say.MenuMarkImportant(), hint: keyPriority.hint(), run: func() {
+		m.closeMenu()
+		m.toggleImportant(task)
+	}}
+	if starred(task) {
+		spec.icon, spec.label, spec.tint = theme.IconImportant, m.say.MenuNotImportant(), t.Important()
+	}
+	return spec
+}
+
+// toggleImportant stars a task of the user's own, or takes the star off.
+func (m *Main) toggleImportant(task data.Task) {
+	_ = m.app.Update(task.ID, data.Patch{Priority: data.PriorityPtr(importantPriority(!starred(task)))})
 }
 
 // openInPage lists where the agent's work can be opened: its app, a terminal, an editor, Finder.
