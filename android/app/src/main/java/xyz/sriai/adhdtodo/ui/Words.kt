@@ -2,9 +2,11 @@ package xyz.sriai.adhdtodo.ui
 
 import android.content.res.Resources
 import xyz.sriai.adhdtodo.R
+import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.Item
 import xyz.sriai.adhdtodo.data.Task
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -28,6 +30,8 @@ class Words(
     private val weekday = DateTimeFormatter.ofPattern("EEE", locale)
     private val headerFormatter = DateTimeFormatter.ofPattern(if (chinese) "M月d日EEEE" else "EEEE, MMM d", locale)
     private val clock = DateTimeFormatter.ofPattern(if (chinese) "ah:mm" else "h:mm a", locale)
+    // v30 writes "上午 9:00" with a space, which the plain clock pattern does not add.
+    private val remindClock = DateTimeFormatter.ofPattern(if (chinese) "a h:mm" else "h:mm a", locale)
 
     private val chinese: Boolean get() = locale.language == "zh"
 
@@ -123,6 +127,60 @@ class Words(
         "backlog" -> res.getString(R.string.pill_backlog)
         "cancelled" -> res.getString(R.string.pill_cancelled)
         else -> status
+    }
+
+    /**
+     * The status's name in the task menu and the task page, copied from the desktop's statusBacklog
+     * to statusCancelled rather than the row pill's wording (In review, not Handed back).
+     */
+    fun menuStatus(status: String): String = when (status) {
+        "backlog" -> res.getString(R.string.menu_status_backlog)
+        "todo" -> res.getString(R.string.menu_status_todo)
+        "doing" -> res.getString(R.string.menu_status_doing)
+        "blocked" -> res.getString(R.string.menu_status_blocked)
+        "review" -> res.getString(R.string.menu_status_review)
+        "done" -> res.getString(R.string.menu_status_done)
+        "cancelled" -> res.getString(R.string.menu_status_cancelled)
+        else -> status
+    }
+
+    /** P0 Urgent, P1 High, P2 Normal, P3 Low. */
+    fun priorityName(priority: String): String = when (priority) {
+        "P0" -> res.getString(R.string.menu_priority_urgent)
+        "P1" -> res.getString(R.string.menu_priority_high)
+        "P2" -> res.getString(R.string.menu_priority_normal)
+        "P3" -> res.getString(R.string.menu_priority_low)
+        else -> ""
+    }
+
+    /** A category's name; the two built-in ones are stored as Work and Life and worded here. */
+    fun categoryName(category: Category): String = when (category.builtin) {
+        "work" -> res.getString(R.string.category_work)
+        "life" -> res.getString(R.string.category_life)
+        else -> category.name
+    }
+
+    /**
+     * The moment of a ready-made reminder. Later today and Tomorrow already say the day, so they
+     * show the time alone; the others show the date and the time, as v30 does.
+     */
+    fun remindPresetHint(kind: String, atMillis: Long): String {
+        val at = Instant.ofEpochMilli(atMillis).atZone(zone)
+        val time = remindClock.format(at)
+        if (kind == "later" || kind == "tomorrow") return time
+        return if (chinese) "${monthDay.format(at)} $time" else "${monthDay.format(at)}, $time"
+    }
+
+    /** A set reminder as a row's value: the time today, Tomorrow at 9:00, or Oct 26 at 9:00. */
+    fun reminderValue(value: String?): String {
+        val at = instant(value)?.atZone(zone) ?: return ""
+        val today = timeSource().atZone(zone).toLocalDate()
+        val time = remindClock.format(at)
+        return when (at.toLocalDate()) {
+            today -> time
+            today.plusDays(1) -> "${res.getString(R.string.due_tomorrow)} $time"
+            else -> if (chinese) "${monthDay.format(at)} $time" else "${monthDay.format(at)}, $time"
+        }
     }
 
     /** The heading of a project's status group, which is worded for the list, not the row pill. */

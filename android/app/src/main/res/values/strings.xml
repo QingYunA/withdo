@@ -111,8 +111,10 @@
     <string name="section_activity">Activity</string>
     <string name="property_status">Status</string>
     <string name="property_from">From</string>
+    <string name="property_category">Category</string>
     <string name="property_priority">Priority</string>
     <string name="property_project">Project</string>
+    <string name="property_remind">Remind</string>
     <string name="property_branch">Branch</string>
     <string name="property_pr">PR</string>
     <string name="pr_state_merged">Merged</string>
@@ -127,6 +129,41 @@
     <string name="composer_add_note">Add a note</string>
     <string name="reply_sent">Reply sent</string>
     <string name="reply_failed">Couldn’t send the reply</string>
+
+    <!-- Task menu -->
+    <string name="task_menu">Task menu</string>
+    <string name="menu_back">Back</string>
+    <string name="menu_move_to">Move to…</string>
+    <string name="menu_remind_me">Remind me…</string>
+    <string name="menu_remind_title">Remind me</string>
+    <string name="menu_later_today">Later today</string>
+    <string name="menu_tomorrow">Tomorrow</string>
+    <string name="menu_next_monday">Next Monday</string>
+    <string name="menu_this_weekend">This weekend</string>
+    <string name="menu_no_reminder">No reminder</string>
+    <string name="menu_custom">Custom…</string>
+    <string name="menu_delete">Delete</string>
+    <string name="menu_deleted">Deleted “%1$s”</string>
+    <string name="menu_undo">Undo</string>
+    <string name="menu_none">None</string>
+    <string name="menu_open_pr">Open PR #%1$d</string>
+    <string name="menu_find_project">Find a project</string>
+    <string name="menu_find_category">Find a category</string>
+    <string name="menu_no_project_match">No project matches</string>
+    <string name="menu_no_category_match">No category matches</string>
+    <string name="menu_status_backlog">Backlog</string>
+    <string name="menu_status_todo">To do</string>
+    <string name="menu_status_doing">Doing</string>
+    <string name="menu_status_blocked">Blocked</string>
+    <string name="menu_status_review">In review</string>
+    <string name="menu_status_done">Done</string>
+    <string name="menu_status_cancelled">Cancelled</string>
+    <string name="menu_priority_urgent">Urgent</string>
+    <string name="menu_priority_high">High</string>
+    <string name="menu_priority_normal">Normal</string>
+    <string name="menu_priority_low">Low</string>
+    <string name="category_work">Work</string>
+    <string name="category_life">Life</string>
 
     <!-- Sync -->
     <string name="sync_title">Sync</string>

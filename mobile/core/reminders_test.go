@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
@@ -94,4 +95,48 @@ func createPhoneTask(t *testing.T, phone *Core, title string) int64 {
 		t.Fatalf("decode %q: %v", title, err)
 	}
 	return int64(task.ID)
+}
+
+// TestRemindPresetsAreTheDesktopMenuAtAFixedNow pins the ready-made reminders the sheet offers and
+// what they mean. The Sunday and the Saturday after 9:30 cases matter: they decide whether This
+// weekend shows at all.
+func TestRemindPresetsAreTheDesktopMenuAtAFixedNow(t *testing.T) {
+	at := func(day, hour, min int) time.Time {
+		return time.Date(2026, 10, day, hour, min, 0, 0, time.Local)
+	}
+	// Oct 12 2026 is a Monday, so Oct 17 is a Saturday and Oct 18 a Sunday.
+	for _, c := range []struct {
+		name string
+		now  time.Time
+		want []remindPresetJSON
+	}{
+		{"sunday offers tonight and the monday", at(18, 10, 0), []remindPresetJSON{
+			{"later", at(18, 18, 0).UnixMilli()},
+			{"tomorrow", at(19, 9, 0).UnixMilli()},
+		}},
+		{"saturday after 9:30 has no weekend left", at(17, 12, 0), []remindPresetJSON{
+			{"later", at(17, 18, 0).UnixMilli()},
+			{"tomorrow", at(18, 9, 0).UnixMilli()},
+			{"monday", at(19, 9, 0).UnixMilli()},
+		}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			phone, err := open(t.TempDir(), nil, func() time.Time { return c.now })
+			if err != nil {
+				t.Fatalf("open: %v", err)
+			}
+			defer func() { _ = phone.Close() }()
+			raw, err := phone.RemindPresets()
+			if err != nil {
+				t.Fatalf("RemindPresets: %v", err)
+			}
+			var got []remindPresetJSON
+			if err := json.Unmarshal([]byte(raw), &got); err != nil {
+				t.Fatalf("decode presets: %v (%s)", err, raw)
+			}
+			if !reflect.DeepEqual(got, c.want) {
+				t.Errorf("presets = %+v, want %+v", got, c.want)
+			}
+		})
+	}
 }

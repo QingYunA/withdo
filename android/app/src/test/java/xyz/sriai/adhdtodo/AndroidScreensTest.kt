@@ -41,6 +41,10 @@ import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.testing.FixedTime
+import xyz.sriai.adhdtodo.data.Category
+import xyz.sriai.adhdtodo.ui.TaskBackBar
+import xyz.sriai.adhdtodo.ui.TaskMenuPage
+import xyz.sriai.adhdtodo.ui.TaskMenuSheet
 import xyz.sriai.adhdtodo.testing.Golden
 import xyz.sriai.adhdtodo.testing.screenshotFile
 import xyz.sriai.adhdtodo.testing.setThemedContent
@@ -89,8 +93,8 @@ class AndroidScreensTest(private val case: ScreenCase) {
         compose.setThemedContent(night = case.night, zh = case.zh) { Screen(case.screen) }
         compose.waitForIdle()
         val file = screenshotFile(case.name)
-        if (case.screen == Screen.SYNC_CHOOSE) {
-            // The both-have-tasks sheet is a second window, so the screen capture sees it.
+        if (case.screen in sheets) {
+            // A bottom sheet is a second window, so only the screen capture sees it.
             captureScreenRoboImage(file)
         } else {
             compose.onRoot().captureRoboImage(file)
@@ -115,9 +119,14 @@ class AndroidScreensTest(private val case: ScreenCase) {
         SYNC_UPLOADING,
         SYNC_FAILED,
         SYNC_CHOOSE,
+        TASK_MENU,
+        TASK_MENU_MOVE,
+        TASK_MENU_REMIND,
     }
 
     companion object {
+        private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
+
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun cases(): List<ScreenCase> {
@@ -137,8 +146,11 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "sync-uploading" to Screen.SYNC_UPLOADING,
                 "sync-failed" to Screen.SYNC_FAILED,
                 "sync-choose" to Screen.SYNC_CHOOSE,
+                "task-menu" to Screen.TASK_MENU,
+                "task-menu-move" to Screen.TASK_MENU_MOVE,
+                "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
-            val chinese = setOf("mine", "task", "sync-signed-out")
+            val chinese = setOf("mine", "task", "sync-signed-out", "task-menu", "task-menu-remind")
             return screens.flatMap { (name, screen) ->
                 buildList {
                     add(ScreenCase("$name-light", night = false, zh = false, screen = screen))
@@ -162,6 +174,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
     val projects = remember { Golden.load<List<Project>>("projects.golden.json") }
     val project = remember { Golden.load<ProjectPage>("project-1.golden.json") }
     val task = remember { Golden.load<TaskPage>("task-1.golden.json") }
+    val categories = remember { Golden.load<List<Category>>("categories.golden.json") }
 
     when (screen) {
         AndroidScreensTest.Screen.MINE -> TestFrame(
@@ -231,14 +244,8 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
             title = stringResource(R.string.title_mine),
             tab = Tab.MINE,
             count = mine.fromAgents.size,
-            back = stringResource(R.string.title_mine),
-            backRight = {
-                Text(
-                    "#${task.task.id}",
-                    style = LocalAppType.current.mono,
-                    color = LocalTokens.current.textTertiary,
-                    modifier = Modifier.padding(end = 8.dp),
-                )
+            topBar = {
+                TaskBackBar(title = stringResource(R.string.title_mine), number = task.task.id, onBack = {}, onMenu = {})
             },
             showNav = false,
             composer = stringResource(R.string.composer_reply_to, words.agent(task.latestAgent)),
@@ -250,6 +257,28 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onSetPriority = {},
                 onOpenUrl = {},
                 onOpenTask = {},
+                categories = categories,
+            )
+        }
+
+        AndroidScreensTest.Screen.TASK_MENU,
+        AndroidScreensTest.Screen.TASK_MENU_MOVE,
+        AndroidScreensTest.Screen.TASK_MENU_REMIND,
+        -> {
+            Screen(AndroidScreensTest.Screen.MINE)
+            TaskMenuSheet(
+                task = task.task,
+                words = words,
+                agent = task.latestAgent,
+                categories = categories,
+                projects = projects,
+                presets = FixedTime.remindPresets,
+                initialPage = when (screen) {
+                    AndroidScreensTest.Screen.TASK_MENU_MOVE -> TaskMenuPage.Move
+                    AndroidScreensTest.Screen.TASK_MENU_REMIND -> TaskMenuPage.Remind
+                    else -> TaskMenuPage.Main
+                },
+                onDismiss = {},
             )
         }
 
@@ -343,6 +372,7 @@ private fun TestFrame(
     subtitle: String = "",
     back: String? = null,
     backRight: @Composable RowScope.() -> Unit = {},
+    topBar: (@Composable () -> Unit)? = null,
     showNav: Boolean = true,
     composer: String? = null,
     content: @Composable () -> Unit,
@@ -350,7 +380,9 @@ private fun TestFrame(
     val tokens = LocalTokens.current
     Column(Modifier.fillMaxSize().background(tokens.bg)) {
         Column(Modifier.weight(1f).statusBarsPadding().imePadding()) {
-            if (back == null) {
+            if (topBar != null) {
+                topBar()
+            } else if (back == null) {
                 PageHeader(title = title, subtitle = subtitle, syncBlocked = false, onSync = {})
             } else {
                 BackBar(title = back, onBack = {}, right = backRight)
