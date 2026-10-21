@@ -254,25 +254,39 @@ func (m *Main) assistantMark(c *ui.Context, s surface) {
 // pulsePeriod is one breath of the assistant's avatar, in milliseconds.
 const pulsePeriod = 1400
 
-// notice is the line under the input after a plain task was added without a model: "✓ Added to
-// Inbox", 1.5 s, fading at the end. When there is none, the quiet way to set a model up takes its
-// place while the field is focused and empty.
+// notice is the line under the input after tasks were added without a model: "✓ Added to Inbox"
+// for a plain one (1.5 s), else the receipt of what the local rules read, with Undo (6 s), fading
+// at the end. When there is none, the quiet way to set a model up takes its place while the field
+// is focused and empty.
 func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	cs := &m.cmp[surfacePage]
+	length := cs.noticeLen
+	if length == 0 {
+		length = noticeFor
+	}
 	age := m.app.Now().Sub(cs.noticeAt)
-	if cs.noticeAt.IsZero() || age >= noticeFor {
+	if cs.noticeAt.IsZero() || age >= length {
 		m.setUpLine(c, t)
 		return
 	}
-	c.After(noticeFor - age)
+	c.After(length - age)
 	opacity := float32(1)
-	if age > noticeFor-300*time.Millisecond {
-		opacity = float32(noticeFor-age) / float32(300*time.Millisecond)
+	if age > length-300*time.Millisecond {
+		opacity = float32(length-age) / float32(300*time.Millisecond)
 	}
 	ui.Row(c.Key("notice")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).Gap(6).
 		Opacity(opacity).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done)).Shrink(0)
-		theme.Text(c, theme.Compact, t.TextSecondary, cs.noticeText)
+		theme.Text(c, theme.Compact, t.TextSecondary, cs.noticeText).Shrink(1).MinWidth(0).Ellipsis("…")
+		if m.undos.cur == nil || m.undos.seq != cs.undoTicket {
+			return
+		}
+		if link(c, t, m.say.MenuUndo()).Clicked() {
+			e := m.undos.cur
+			m.undos.clear()
+			cs.noticeAt = time.Time{}
+			e.undo()
+		}
 	})
 }
 

@@ -516,8 +516,8 @@ new item: the hop (below) is the signal.
 
 **Composer.** The one input is the **Composer** (see **Composer** below), pinned at the bottom of the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
-assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Mine) and
-shows a quiet "Added to Inbox" line above the box for 1.5 s.
+assistant (see **Assistant**). With none, the **local rules** read the sentence (see **Composer**,
+No model connected) and Enter adds what they find; a plain task is an Inbox task on Mine.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
 a row anywhere (see **Subtasks**).
@@ -750,10 +750,42 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **Keys.** `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the answer,
   else leaves the field. `↓` on a page walks into the rows. `↵` on an empty field opens the highlighted
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
-- **No model connected.** The same field; `↵` adds a plain task in the place of the page (a project,
-  the Inbox; Mine → Inbox) and a quiet `✓ Added to Inbox` line shows 1.5 s under the field. The only
-  extra is the line `Set up the assistant` (a link to Settings > Advanced) under the field while it
-  is focused and empty. The inspector's composer is not drawn without a model.
+- **No model connected.** The same field. `↵` does not send the text to a model; **local rules**
+  (`internal/quickadd`, pure Go, no network) read it, in Chinese and English, and add what they find
+  at once, in the place of the page (a project, the Inbox; Mine → Inbox; a day of the Calendar):
+  - *Several tasks.* Only explicit marks split a sentence: `，还有` / `, 还有`, `；` / `;`, `然后`,
+    `, and also`, `, then`. A bare `and` and a line break do not ("salt and pepper", a pasted
+    paragraph stay one title).
+  - *Days.* `今天` `明天` `后天` `大后天`, `周一`…`周日` / `星期X` / `礼拜X` / `周天`, `这周X` `下周X`
+    `下下周X`, `10月31日` `10.31` `10-31` `2026-10-31` `31号`; `today` `tomorrow` `monday`…
+    `next friday` `this friday` `Oct 31` `31 Oct`. The week runs Monday to Sunday: `下周一` on a Sunday
+    is tomorrow, a bare `周五` is the first one after today, `这周一` on a Wednesday is gone and
+    means the coming one. A date that is over is next year's (`1月5日` in October); one that does
+    not exist (`2月30日`) is not read and stays in the title.
+  - *Times.* `九点` `9点` `9:00` `晚上8点半` `下午3点15分` `中午` `下午` `晚上` `今晚` `明早`; `9am`
+    `3:30pm` `at 9` `noon` `tonight`. A bare hour from 1 to 6 (`3点`, `at 3`) is the afternoon; a
+    period word alone means 09:00 (morning), 12:00 (noon), 14:00 (afternoon), 18:00 (dusk), 19:00
+    (evening), `今晚` 20:00, as the assistant's prompt has it. A time with no day is its next
+    occurrence (today if it is still ahead, else tomorrow); a day with no time is **18:00**
+    (`data.DefaultDueHour`) for a deadline and **9:00** for a reminder; a day and time that are both
+    given are taken as given, even if today's hour is already over.
+  - *Reminder or deadline.* `提醒我…` / `remind me (to)…` sets the **reminder** instead of the due
+    time; `…前` / `之前` / `截止` / `before` / `by` / `due` / `until` set the **due** time, and win over
+    `提醒我` (`前台` is not `前`).
+  - *Category and importance.* `#name` matches a category's name case-insensitively (Work and Life in
+    the app's language or as `Work` / `Life`); an unknown `#name` stays in the title, and so does
+    the `#` in `C#` or `#homepage` for a category Home. A `!`, `！` or `重要` at the end of the
+    task makes it **important** (P1, the default priority otherwise).
+  - *The title* is what is left once the recognized words are cut out, with spaces collapsed and no
+    punctuation or dangling `的` / `to` / `by` at its ends. A sentence that is nothing but
+    recognized words (`明天`) keeps its text as the title and sets no field.
+
+  The "Added to …" line becomes a **receipt** for 6 s, `✓ Added 2: 体检 (Mon 9:00 AM reminder), 交房租
+  (due Fri, Life, important)  Undo`; a plain task keeps `✓ Added to Inbox` for 1.5 s, which also has
+  Undo. **Undo** and `⌘Z` in the empty composer delete everything that sentence added, as one
+  change, for as long as the line shows. With a model connected nothing of this applies. The line
+  `Set up the assistant` (a link to Settings > Advanced) shows under the field while it is focused
+  and empty. The inspector's composer is not drawn without a model.
 - **Scope.** The composer tells the assistant where it is. On Mine and Agents: nothing (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
   the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”

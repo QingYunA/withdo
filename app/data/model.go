@@ -203,6 +203,7 @@ type CreateTaskInput struct {
 	Priority  Priority
 	Category  int // a category id; 0 leaves the task unsorted
 	DueAt     *time.Time
+	RemindAt  *time.Time
 }
 
 // Patch changes a task. A nil field is left alone. To clear a nullable field set the zero value:
