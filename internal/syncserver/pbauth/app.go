@@ -42,6 +42,9 @@ func Close(app core.App) error { return app.ClearBootstrap() }
 func Serve(ctx context.Context, app core.App, ln net.Listener, handler http.Handler) error {
 	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		e.Listener = ln
+		// With no superuser PocketBase would print a link that creates one; make it with
+		// `adhd-sync pb-superuser` instead.
+		e.InstallerFunc = nil
 		// The event stream outlives PocketBase's five minute write timeout.
 		e.Server.WriteTimeout = 0
 		for _, pattern := range []string{"/v1/{path...}", "/healthz"} {
