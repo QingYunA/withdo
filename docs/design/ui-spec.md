@@ -5,6 +5,10 @@ Every screen is judged against that question. The audience is a developer with A
 several coding agents in parallel. Visual noise costs them focus, so the UI is quiet by
 default and loud only where something needs attention.
 
+Since v31 (2026-10-21) the audience is wider: anyone who wants an agent to keep their to-dos, with
+coding agents as one thing it can show and hand work to. The way in is one input. See **Input first
+(v31)**; where it disagrees with an older section, it wins until that section is rewritten.
+
 Built with mygo native UI (`github.com/egoist/mygo/ui`, v0.5.1). No webview.
 
 M4d (2026-10-15) made every screen **one title, one input, one list**: what is not needed to read or
@@ -68,12 +72,16 @@ that section in detail. Until then the older text describes the app as it is.
    project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
    1 to Claude`) with **Undo** and `⌘Z`. A chip opens the matching piece of the **Task menu**. Keeps
    **Undo** and **Assistant**'s receipts.
-4. **Voice is the system's speech to text.** The microphone (or holding `⌥ Space`) listens with the
-   system recognizer (macOS and iOS `SFSpeechRecognizer`, Windows `Windows.Media.SpeechRecognition`,
-   Android `SpeechRecognizer`). Words appear in the input as they are heard, the unsettled ones in
-   `text.tertiary`. Releasing sends, Esc cancels. While it listens the microphone is a filled accent
-   square and a pixel waveform steps on the 100 ms loop beat. No text to speech. mygo has no speech
-   API (checked in 0.5.1 and 0.6.0), so this starts with a spike.
+4. **Voice goes through the official service.** The microphone (or holding `⌥ Space`) records
+   while held or until clicked again (60 s at most). The audio goes to our server, which sends it to a
+   cloud speech recognizer (MiMo `mimo-v2.5-asr`, Chinese and English with auto-detection) and
+   returns the text. The server holds the recognizer's key; the app never does. The text fills the
+   input and is sent as if typed. The recognizer takes a whole recording, so there are no words while
+   speaking: the microphone is a filled accent square and a pixel waveform follows the voice's level
+   on the 100 ms loop beat, then `Transcribing…` until the text arrives. Esc cancels. Voice counts
+   against the account's quota; signed out, the microphone says `Sign in to use voice`. No text to
+   speech. Decided 2026-10-21 over the system recognizers: macOS's `SFSpeechRecognizer` refuses
+   while Dictation is off, and one service gives the same result on every platform.
 5. **Understanding comes from the official service.** Signing in (Google or email) gives the input
    its model, with a Free and a paid tier. Without signing in, or past the quota, the input still
    adds tasks: local rules read dates and times, `#category`, `!` (important), and split a sentence
@@ -249,6 +257,10 @@ and cards, before the due label or the age; P2 is the default and P3 means "when
 show nothing and only deliberate priorities draw the eye. There is no bars glyph any more: the
 inspector and the task menu say all four levels as text (`P1  High`, the strip `P0 P1 P2 P3`).
 
+**A task of mine shows the star instead** (v31): the 12 pt pixel `IconImportant` in `status.review`, on the
+same places as the badge, when it is P1 or P0 (the star reads P0 as set); never a `P0` or `P1` badge. An
+agent's task keeps the badges.
+
 Clicking the status glyph of **my own** task marks it done at once (one click, no menu); marking
 done plays a 220 ms animation in **two steps** (the disc fills, then at the halfway point the check
 appears; Reduce Motion goes straight to done), then the item moves to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
@@ -367,6 +379,8 @@ else changes.
 
 ## Surfaces
 
+Superseded in part by **Input first (v31)** item 6: a menu bar popover and `⌥ Space` are coming.
+
 One window. No flyout panel, no global shortcut (decided 2026-10-14: shortcuts conflict). Closing
 the window hides it, so reminders, the end of the day and pull request news keep coming; Quit quits.
 A second launch starts no second process: it brings the window back (one instance on both systems).
@@ -381,6 +395,8 @@ A second launch starts no second process: it brings the window back (one instanc
 `docs/design/mockups/now.html` (rendered: `now.png`). Match it.
 
 ### Window (1100 x 720, min 860 x 540)
+
+*The sidebar is being replaced by **Input first (v31)** item 7.*
 
 Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only when a task
 is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
@@ -461,6 +477,8 @@ takes a repository from the sheet if the user gives it one.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Mine (home)
+
+*Being replaced by **Input first (v31)** items 1, 3 and 5.*
 
 Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else. Reference:
 `docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
@@ -633,6 +651,8 @@ rows recorded as seen does not hop for them.
 
 ### Composer
 
+*Being replaced by **Input first (v31)** item 2.*
+
 One component, six places: **Mine**, **Agents**, **every project**, the **Inbox**, the **Calendar**, and the
 **inspector**. On the pages it is **pinned at the bottom edge of the content column** (the way ChatGPT, Claude
 and the Codex chat pane do it), not under the header: the page scrolls above it, and the column keeps the
@@ -734,7 +754,7 @@ page's title already says where a task goes, so the input has no label, no chip 
   (due Fri, Life, important)  Undo`; a plain task keeps `✓ Added to Inbox` for 1.5 s, which also has
   Undo. **Undo** and `⌘Z` in the empty composer delete everything that sentence added, as one
   change, for as long as the line shows. With a model connected nothing of this applies. The line
-  `Set up the assistant` (a link to Settings > Assistant) shows under the field while it is focused
+  `Set up the assistant` (a link to Settings > Advanced) shows under the field while it is focused
   and empty. The inspector's composer is not drawn without a model.
 - **Scope.** The composer tells the assistant where it is. On Mine and Agents: nothing (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
@@ -801,7 +821,7 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
   notes / 4000 characters, 200 per note. A write needs no confirmation: its receipt is a line like
   any other, `✓ Remembered Fitness is Life, not Work   Undo` (`✓ Forgot …`), with no task to open;
   Undo takes back that edit alone: a remembered note goes, forgotten notes come back; later notes
-  and hand edits stay. Settings > Assistant ends with an **Assistant memory** row and
+  and hand edits stay. Settings > Advanced ends with an **Assistant memory** row and
   an `Open file` link (the data folder when nothing is written yet).
 - **No model connected.** See **Composer**.
 - Times in receipts follow the Mine screen's words: `Today`, `Tomorrow`, a weekday, then a date,
@@ -982,19 +1002,57 @@ Decisions made while building it (2026-10-14):
 
 ### Inbox
 
+*Being replaced by **Input first (v31)** item 7.*
+
 One column of groups (Blocked, In review, Doing, To do, Done, Backlog), as a project's list was before
 M7b: an agent's row has the agent's name, branch, pull request and what it said in a quiet second line.
 No view control and no subtitle under the title; tasks with no project.
 
 ### Inspector (360 pt, slides in 160 ms)
 
+*Being replaced by **Input first (v31)** items 8 and 9.*
+
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
-#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
-Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
-editable in place (a Branch longer than the pane is ellipsized like every long value, and a click turns it into the editable text); the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
+#7` for an Inbox task). A long name is ellipsized before the number. Under it the pane differs by
+who the task is from (v31, decisions 8 and 9; reference `docs/design/mockups/v31.html`, section 4):
+`mine` is a task whose source is the user (not one an agent reported, created or took over), and
+the pane for it is much shorter, because a person's task is "what, when, where".
 
-- The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
+**A task of mine**, top to bottom:
+
+- The large editable title and, at its right, the **important star**: the 12 x 12 pixel star
+  (`IconImportant` filled in `status.review` when set, `IconImportantOff`, the outline, in
+  `text.tertiary` when not) drawn at 18 pt in a 32 pt button (`Important` / `重要`). A click
+  toggles it. Set is P1 and unset is P2 in the database; a P0 task of mine reads as set, and
+  clicking it unsets it to P2. Agents and the MCP keep P0 to P3, so the star never hides a value
+  another surface wrote.
+- **Status**, a segmented control (the List | Board switch's look): `To do`, `Doing`, `Done`
+  (`待办`, `进行中`, `完成`). One click sets it; Done plays the completion as the row's glyph
+  does. Backlog and Cancelled are reached from the right-click Task menu only; a task in one of
+  those (or Blocked, In review) selects no segment and its status is named quietly after the control.
+- **When**: the due day and the reminder as two chips (28 pt, 7 pt radius, `bg.subtle`, a 12 pt
+  line icon, `Due` / `Remind` in `text.tertiary` while nothing is set). The due chip opens the calendar
+  popover, the reminder chip the reminder presets, as the values did.
+- **Where**: the category chip (its 12 pt icon in its color and its name; `Category` in
+  `text.tertiary` with a list icon while it has none) and the `project · milestone` chip (`Inbox` in
+  `text.tertiary`). They open the Category page and the `Move to…` list of the Task menu. Moving a
+  task to another project clears its milestone (milestones belong to one project). A subtask has
+  its parent line after Status.
+- The task's **images** (see **Task images**), then the Notes.
+- `Hand to an agent…` (the robot, a hairline button across the pane; not drawn on a finished task):
+  the drop on the Agents tray, by button, with its toast and Undo. The task is the agent's then and
+  the pane turns into the agent's.
+- No Priority, From, Branch, Pull request or Activity rows.
+- **Screens.** `inspector-from-you`, `inspector-mine-starred`; an agent's pane is `inspector`.
+
+**A task of an agent's** keeps the property list: Status, **From**, Priority, **Category**,
+**Project**, Milestone, Due, Remind, Branch and Pull request, with left labels, each with its line
+icon, in `meta` secondary and values editable in place (a Branch longer than the pane is
+ellipsized like every long value, and a click turns it into the editable text); then its **images**, Notes and
+`ACTIVITY`, newest first. Save on blur or Enter. Esc closes.
+
+- In an agent's property list the **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
   Category page (a filter field and the categories; the row shows only the category that was set,
   after its 18 pt icon in the category's color, and `None` with no icon in `text.tertiary`, for a
@@ -1006,7 +1064,8 @@ editable in place (a Branch longer than the pane is ellipsized like every long v
   never overlap it. The answer is the one line of **Assistant**, its left edge on the properties' (24 pt),
   leaving out the title the pane already shows; the composer is the same quiet box (see **Composer**,
   without `⌘K`, placeholder `Change anything about this task`). `Ask about this task…` (⌘J) focuses it.
-  Values the assistant set in the last 10 s carry a small accent mark after the value: the pixel `sparkle` (`IconSparkle`, 12 pt) on a `bg.selected` pill. Priority reads as
+  Values the assistant set in the last 10 s carry a small accent mark after the value (after a chip, or
+  before the star): the pixel `sparkle` (`IconSparkle`, 12 pt) on a `bg.selected` pill. An agent's priority reads as
   text (`P1  High`), with no bars glyph.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
@@ -1084,7 +1143,7 @@ Completed rows, board cards), opened by:
 
 - a **right-click** on a row or card (at the pointer);
 - a click on the **status glyph** of an agent's task, or of a finished task (at the glyph);
-- **S**, **P**, **M**, **R** on the selected row (below the row), and `⌘J`, `⌘⌫` (see Keyboard).
+- **S**, **P**, **M**, **R** on the selected row (below the row; **P** toggles the star of a task of mine at once), and `⌘J`, `⌘⌫` (see Keyboard).
 
 It is 268 pt wide, 12 pt radius, opaque `bg` (the mockup's blur is not available in mygo; at 96 % the
 rows behind showed through), a 1 pt `border` and a soft shadow; it moves into the window, or above
@@ -1103,7 +1162,10 @@ Main page, top to bottom (10 pt padding):
    keyboard-highlighted one, else the current one; the name in `text.tertiary`).
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
-   reads `Priority · P1 High` the same way.
+   reads `Priority · P1 High` the same way. **For a task of mine** (v31) there is no strip: one line,
+   `Mark important` / `标为重要` (`Not important` / `取消重要` while it is set, its star in
+   `status.review`), key hint `P`, toggles the star and closes the menu. The status strip keeps all
+   seven statuses, which is how Backlog and Cancelled are reached for a task of mine.
 3. One row, `Category` with the 18 pt icon of the task's category in its color (`IconList` when it
    has none), its name as the hint at the right and a `›`: it opens the **Category page**, which is
    the `Move to…` page for categories (v24 frame 2): a filter field `Find a category`, a row per
@@ -1132,7 +1194,7 @@ Main page, top to bottom (10 pt padding):
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
-Priority the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
+Priority (an agent's) the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
 
 A project's menu is in the Sidebar and stays a system menu.
 
@@ -1164,7 +1226,8 @@ search results. Calendar and Summary do not select.
 - **The bulk bar.** With 2 selected (1 in select mode), a pixel panel floats at the bottom centre of
   the list (the day card's shape: two-step corners, a 2 pt solid edge, a hard 4 pt shadow, no blur):
   `3 selected` / `3 件`, **Done** (`⌘↵`), **Move to…** (a project or the Inbox), **Priority** (P0 to
-  P3), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
+  P3; when every selected task is mine, **Mark important** / `标为重要`, or `Not important` / `取消重要` when every one
+  is starred, which runs at once and says `Marked 3 tasks important`; a mixed selection keeps Priority), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
   tasks?` / `删除 3 件任务？`), and `×` that clears the selection. When the window is narrow the
   buttons drop their words, keeping their icons, the count and `×`. It is a toolbar: Tab reaches it.
 - **Each action is one change with one Undo** (`⌘Z`, or the toast's **Undo**). Done and cancelled
@@ -1251,6 +1314,8 @@ the last change. Done and cancelled rows keep their glyph (a button, so a finish
 - At most 100 results are shown; a quiet last line says when there are more.
 
 ### Completed
+
+*Being replaced by **Input first (v31)** item 7.*
 
 The `Completed` sidebar item (`已完成`, was Logbook), under Inbox: the done and cancelled tasks of every
 active project and the Inbox, newest first by completion, grouped by day. Page title `Completed`,
@@ -1823,17 +1888,21 @@ update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off
 
 ### Settings
 
+*Being replaced by **Input first (v31)** item 10.*
+
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
 sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane
 asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
 under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
 the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7, and `v5.html` frames 5 and 6 (logos, Agents); screens
-`settings-general-*` (`settings-general-denied-*`: macOS refused the notifications), `settings-assistant-*` (at rest), `settings-assistant-new-*` (nothing set up),
-`settings-change-*`, `settings-change-error-*`, `settings-custom-*`, `settings-agents-*`,
-`settings-github-*`.
+`settings-account-*` (the old `settings-sync-*`), `settings-general-*` (`settings-general-denied-*`: macOS refused the notifications),
+`settings-agents-*` (`settings-agents-github-*`: scrolled to the GitHub group at its end),
+`settings-advanced-*` (at rest; `settings-advanced-more-*`: scrolled to the switches under the model; `settings-advanced-new-*`: nothing set up),
+`settings-change-*`, `settings-change-error-*`, `settings-custom-*`. Four panes since **Input first (v31)** decision 10, in
+this order: Account, General, Agents, Advanced.
 
-- **Toolbar panes**, as in System Settings: General (`IconGeneral`), Assistant (`IconStar`), Agents
-  (`IconTerminal`), GitHub (`IconOctocat`), Sync (`IconCloud`, M11), each an icon above a
+- **Toolbar panes**, as in System Settings: Account (`账号`, `IconUser`, the pixelarticons person),
+  General (`通用`, `IconGeneral`), Agents (`Agent`, `IconTerminal`), Advanced (`高级`, `IconStar`), each an icon above a
   label (`meta`), 78 pt wide; the open one gets a 6 % black (white in dark) 8 pt well and an `accent` icon.
   The window title is the open pane's name. The top of the window is **one band** (the toolbar
   fill, a hairline under it): the title bar is hidden, the traffic lights sit in the band's first
@@ -1842,8 +1911,9 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   rounded 10 pt blocks with a 0.5 pt hairline; rows are at least 44 pt, the label (`body`) and an
   optional `meta` line left, the control right; hairlines between rows; an optional group label
   above the block in `section` style (13 / 18, 600, `text.secondary`).
-- **General**: Language (a pop-up: System / English / 简体中文); **Notifications** (v12): a group of one
-  row, **System notifications** (`系统通知`) with the `meta` line `Agents done or stuck, failing or merged
+- **General** (language, notifications, data folder, archived projects, software updates, about; the
+  menu bar icon switch of v31 comes with the menu bar icon): Language (a pop-up: System / English / 简体中文); **Notifications** (v12): a group of one
+  row (the end-of-day reminder is in Advanced), **System notifications** (`系统通知`) with the `meta` line `Agents done or stuck, failing or merged
   PRs, and reminders` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
   and a switch at the right, on by default. When the last notification was refused by macOS
   (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
@@ -1852,12 +1922,14 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
-  link). **Software updates** (M10; only in a build that can update): a group of one row between Sound effects and Pages, `Software
+  link). **Software updates** (M10; only in a build that can update): a group of one row after Notifications, `Software
   updates` (`软件更新`), `meta` `Checked once a day; you choose when to install` (`每天检查一次，装不装由你决定`),
   and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
   plugin keeps it in its own `updater.json`, not in the prefs, and the row reads it back whenever the
   plugin reports a change (a check, an answer in the update window).
-- **Assistant**, at rest (M5): the label **In use** and one card (a group): the provider's **logo**
+- **Advanced** holds **Use your own model** (`使用自己的模型`), the old Assistant pane unchanged, and under it the
+  switches that left General.
+- **Use your own model**, at rest (M5): the label **In use** and one card (a group): the provider's **logo**
   (38 pt, `theme.ProviderLogo`, see **Provider logos** below), its
   name (`body` 500), then `model · ● Connected · 312 ms` in `meta` (the model in `text.secondary`, the
   dot and words in the done green), and **Change** at the right. Before any test the line reads
@@ -1867,7 +1939,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   note), **Use** at the right; it makes that provider the one in use and tests it. A provider counts
   as set up when it is in use, has a stored key, or (Ollama, Magpie, Custom without a key) was saved
   once. With nothing set up the pane opens on the grid at once, without **Done**.
-- **Assistant > Change**: the label **Pick a provider** with **Done** at the right (back to rest), and
+- **Use your own model > Change**: the label **Pick a provider** with **Done** at the right (back to rest), and
   a grid of 12 tiles, 6 × 2, 76 pt tall, 8 pt apart: Anthropic, OpenAI, DeepSeek, Kimi, 智谱 GLM,
   通义千问, Gemini, OpenRouter, 硅基流动, Ollama, Magpie, Custom. A tile is a 32 pt logo and the name
   (`meta`); a 7 pt green dot at the top right when the provider is set up; a 2 pt `accent` ring when
@@ -1885,6 +1957,9 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   key or model field is the same as the button. **Custom** adds **Base URL** and **Protocol**
   (OpenAI-compatible | Anthropic API) above the key, and its model is always typed. Magpie and Ollama
   have no key row. A missing key, base URL or model is said under the fields without a request.
+- **Advanced, under the model**: three groups, with no label: **Recent changes** (`最近变化`; the switch of the
+  page, off by default), the **End-of-day reminder** switch with its **Reminder time** row, and **Sound effects**
+  (`音效`). Their wording is as it was in General; the **Pages** label is gone.
 - **Provider logos** (M6, pixel since v11, `docs/design/mockups/v11.html`): the official marks of
   lobe-icons (MIT, `@lobehub/icons-static-svg` 1.95.1) stay vendored as SVG under `app/theme/logos/`
   with their LICENSE, as the source of the pixel marks; the app draws the 18 x 18 sprites of
@@ -1895,7 +1970,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   Claude Code crab; Magpie is the pixel robot in teal; Custom is the pixel plus in `text.secondary`.
   Sizes, whole pixels only: `LogoCard` 36, `LogoTile` 36, `LogoRow` 18, `LogoChip` 18 (the composer's
   model chip and its menu). The provider logo is never a colored tile with letters any more.
-- **Agents** (M6, v14, `docs/design/mockups/v14.html`): the label **Coding agents** (`编程 Agent`),
+- **Agents** (M6, v14; it ends with the **GitHub** group below, `docs/design/mockups/v14.html`): the label **Coding agents** (`编程 Agent`),
   one plain `meta` line under it (the M6 wording: what Install MCP does and does not do), then two
   sections, both on the first screen of the 680 x 520 window, before the pane scrolls:
   - **On this computer** with its count (`On this computer 6`, `本机已有 6`; the number is quiet, in
@@ -1978,7 +2053,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   drawing: their avatar is their 18 x 18 harness mark (`theme.harnessSprite`, light and dark), the
   whale, Amp's red mark and Kiro's purple ghost, matched by the same names as `agentName`
   (`deepseek*`, `dsh`, `dsh-*`; `amp`, `amp-*`, `amp *`; `*kiro*`).
-- **GitHub** (M4a): the pull request poller's state, from the `gh` CLI the user is already signed in
+- **GitHub** (M4a; the last group of the Agents pane, under the label `GitHub`, since agent pull requests are what it watches): the pull request poller's state, from the `gh` CLI the user is already signed in
   to (the app owns no token). One line and a **Check now** link:
   - *Connected*: `Connected as QingYunA · checked 2 min ago`; while a check runs the link reads
     `Checking…` and is inert; before the first check ends the line says `Checking GitHub…`.
@@ -1989,13 +2064,13 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
-- **Sync** (M11, reference `docs/design/mockups/v27.html`; signing in `v29.html`): the account and
+- **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v29.html`): the account and
   this Mac, in one group, and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz ·
   Change`; Change edits it in place, for people who host their own). Signing in happens in the pane:
   the account and password go to the sync server's `/v1/sign-in`, never through a browser. There is no
   sign-up and no password reset: the server's admin makes the accounts.
-  - *Signed out*: one centered card: the 36 pt pixel cloud in `accent`, `Sync with your phone and other
-    computers` (`在手机和其他电脑上同步`, 17 pt 600), one `meta` line on what syncs (tasks, projects and
+  - *Signed out*: one centered card: the 36 pt pixel person in `accent`, `Sign in to your account`
+    (`登录你的账号`, 17 pt 600), one `meta` line on what the account syncs (tasks, projects and
     agents' reports), then two `fieldWell`s 280 pt wide, 8 pt apart: `Email or username`
     (`邮箱或用户名`, focused when the pane opens) and `Password` (`密码`, masked). Enter in the first
     moves to the second; Enter in the second signs in. Under them the accent button **Sign in and
@@ -2030,7 +2105,7 @@ the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to
     (`Offline · changes sync when you are back online (3 waiting)`) with no button and no red.
   - **The main window stays quiet.** It shows nothing about sync while it works. When a sync has failed
     for more than 15 minutes, or the account signed out, a 12 pt pixel cloud in `status.blocked` sits at
-    the right of the sidebar's Settings row; clicking the row opens Settings on Sync.
+    the right of the sidebar's Settings row; clicking the row opens Settings on Account.
 - A report from an agent in an archived project's repository restores the project too.
 - A test says `Connected · 640 ms` or the error in the words of **Assistant**; nothing is tested
   unless the user asks (Test, Use, Save and test).

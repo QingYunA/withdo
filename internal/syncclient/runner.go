@@ -297,11 +297,15 @@ func (r *Runner) runLoop(ctx context.Context) {
 // syncOnce runs one Sync and updates the status. ok is false when it failed; stop is true when the
 // runner must not try again, which a 401 means.
 func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
-	current := r.Status()
-	r.setStatus(Status{
-		State: StateSyncing, LastSynced: current.LastSynced,
-		LastError: current.LastError, Pending: current.Pending,
+	current, started := r.setStatusIfLive(ctx, func(current Status) Status {
+		return Status{
+			State: StateSyncing, LastSynced: current.LastSynced,
+			LastError: current.LastError, Pending: current.Pending,
+		}
 	})
+	if !started {
+		return false, true
+	}
 	err := r.client.Sync(ctx)
 	if ctx.Err() != nil {
 		return false, true
@@ -333,11 +337,11 @@ func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
 		next.LastError = err.Error()
 		r.client.RecordResult(ctx, err)
 	}
-	r.setStatus(next)
 	if next.State == StateSignedOut {
-		r.cancel()
+		r.signOut(next)
 		return false, true
 	}
+	r.setStatus(next)
 	return err == nil, false
 }
 
@@ -386,13 +390,40 @@ func (r *Runner) setStatus(next Status) {
 	}
 }
 
-// cancel stops the current run, used when the token is refused.
-func (r *Runner) cancel() {
+// setStatusIfLive stores build(current) and returns current. It stores nothing and returns false
+// once ctx is done, checked under the lock signOut holds, so a stopping run never overwrites the
+// signed out that signOut stored.
+func (r *Runner) setStatusIfLive(ctx context.Context, build func(current Status) Status) (Status, bool) {
 	r.mu.Lock()
-	life := r.life
+	current := r.status
+	if ctx.Err() != nil {
+		r.mu.Unlock()
+		return current, false
+	}
+	next := build(current)
+	changed := next != current
+	r.status = next
+	callback := r.onStatus
 	r.mu.Unlock()
-	if life != nil {
-		life.cancel()
+	if changed && callback != nil {
+		callback(next)
+	}
+	return current, true
+}
+
+// signOut stores next and stops the current run under one lock, used when the token is refused.
+// Doing both at once is what lets setStatusIfLive see the stop before it writes.
+func (r *Runner) signOut(next Status) {
+	r.mu.Lock()
+	changed := next != r.status
+	r.status = next
+	callback := r.onStatus
+	if r.life != nil {
+		r.life.cancel()
+	}
+	r.mu.Unlock()
+	if changed && callback != nil {
+		callback(next)
 	}
 }
 
@@ -406,12 +437,11 @@ func (r *Runner) watchEvents(ctx context.Context) {
 		}
 		deviceID, err := r.client.DeviceID(ctx)
 		if err != nil {
-			if ctx.Err() != nil {
-				return
-			}
-			r.setStatus(Status{
-				State: StateError, LastSynced: r.Status().LastSynced,
-				LastError: err.Error(), Pending: r.Status().Pending,
+			r.setStatusIfLive(ctx, func(current Status) Status {
+				return Status{
+					State: StateError, LastSynced: current.LastSynced,
+					LastError: err.Error(), Pending: current.Pending,
+				}
 			})
 			return
 		}
@@ -426,11 +456,10 @@ func (r *Runner) watchEvents(ctx context.Context) {
 		}
 		if IsUnauthorized(err) || IsSignedOut(err) {
 			current := r.Status()
-			r.setStatus(Status{
+			r.signOut(Status{
 				State: StateSignedOut, LastSynced: current.LastSynced,
 				LastError: err.Error(), Pending: current.Pending,
 			})
-			r.cancel()
 			return
 		}
 		if err == nil || errors.Is(err, io.EOF) {

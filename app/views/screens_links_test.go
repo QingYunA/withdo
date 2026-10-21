@@ -65,7 +65,7 @@ func TestScreensLinks(t *testing.T) {
 				}
 				tt.Move(r.X+r.W/2, r.Y+r.H/2)
 				tt.Frame()
-				time.Sleep(700 * time.Millisecond)
+				tt.Advance(700 * time.Millisecond)
 			})
 			shotOf("inspector-links-missing", func(tt *ui.Tester, m *Main) {
 				tt.SetSize(1100, 1000)
