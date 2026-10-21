@@ -586,6 +586,72 @@
       }
     }
   },
+  "quickAddReceipt": "Added {count}: {items}",
+  "@quickAddReceipt": {
+    "description": "The line under the composer after the local rules added tasks from one sentence, with no model connected: how many, then each with what was read from its words. Its Undo removes them all.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "items": {
+        "type": "String",
+        "example": "Checkup (Mon 9:00 AM reminder), Pay rent (due Fri)"
+      }
+    }
+  },
+  "quickAddItem": "{title} ({details})",
+  "@quickAddItem": {
+    "description": "One task in that line: its title and, in brackets, what the local rules read from the words.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Pay rent"
+      },
+      "details": {
+        "type": "String",
+        "example": "due Fri, important"
+      }
+    }
+  },
+  "quickAddJoin": "{first}, {second}",
+  "@quickAddJoin": {
+    "description": "Two entries of a list in that line, the tasks or the details of one task, side by side.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Checkup"
+      },
+      "second": {
+        "type": "String",
+        "example": "Pay rent"
+      }
+    }
+  },
+  "quickAddDue": "due {when}",
+  "@quickAddDue": {
+    "description": "Detail of a task in that line: the deadline the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Fri"
+      }
+    }
+  },
+  "quickAddReminder": "{when} reminder",
+  "@quickAddReminder": {
+    "description": "Detail of a task in that line: the moment of the reminder the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Mon 9:00 AM"
+      }
+    }
+  },
+  "quickAddImportant": "important",
+  "@quickAddImportant": {
+    "description": "Detail of a task in that line: it was marked with a ! and is now important."
+  },
   "detailDone": "Marked done",
   "@detailDone": {
     "description": "Detail of a change that completed a task."

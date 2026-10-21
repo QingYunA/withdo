@@ -23,6 +23,7 @@ func (m *Main) tell(c *ui.Context, title string) {
 // undoKey is ⌘Z: it takes back the assistant's last change, else the one the toast offers, and
 // leaves the key to a text field that has its own undo. It reports whether it took the key.
 func (m *Main) undoKey(c *ui.Context) bool {
+	m.undos.expire(m.app.Now())
 	var assistant *undoEntry
 	if m.convo.canUndo() {
 		assistant = &undoEntry{undo: func() { m.undoLast() }}

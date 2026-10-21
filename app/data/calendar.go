@@ -3,6 +3,8 @@ package data
 import (
 	"sort"
 	"time"
+
+	"github.com/QingYunA/adhd-todo/internal/quickadd"
 )
 
 // CalKind says why an item is on a day of the calendar. Within a day milestones come first, then
@@ -50,7 +52,7 @@ type CalendarInput struct {
 }
 
 // DefaultDueHour is when a bare day is a deadline: end of the working day.
-const DefaultDueHour = 18
+const DefaultDueHour = quickadd.DueHour
 
 // MonthGrid returns the first day of the grid that shows month (the week start on or before the
 // 1st) and how many weeks it needs.
