@@ -36,13 +36,21 @@ tmp_yml="/tmp/sync.compose.yml.$stamp"
 copy "$work/adhd-sync" "$tmp_bin"
 copy deploy/sync/sync.compose.yml "$tmp_yml"
 
-up="docker compose --env-file sync.env -f sync.compose.yml up -d --wait sync"
-remote "set -e; cd $dir; cp bin/adhd-sync bin/adhd-sync.bak-$stamp; cp sync.compose.yml sync.compose.yml.bak-$stamp; install -m 755 $tmp_bin bin/adhd-sync; cp $tmp_yml sync.compose.yml; rm $tmp_bin $tmp_yml; $up"
-
+# The binary is bind-mounted, so an unchanged compose file would keep the old one running: recreate.
+up="docker compose --env-file sync.env -f sync.compose.yml up -d --force-recreate --wait sync"
 rollback="ssh $host 'set -e; cd $dir; cp bin/adhd-sync.bak-$stamp bin/adhd-sync; cp sync.compose.yml.bak-$stamp sync.compose.yml; $up'"
+fail() {
+  echo "!!! $1. Not rolled back." >&2
+  echo "!!! Roll back with:" >&2
+  echo "$rollback" >&2
+  exit 1
+}
+
+remote "set -e; cd $dir; cp bin/adhd-sync bin/adhd-sync.bak-$stamp; cp sync.compose.yml sync.compose.yml.bak-$stamp; install -m 755 $tmp_bin bin/adhd-sync; cp $tmp_yml sync.compose.yml; rm $tmp_bin $tmp_yml; $up" ||
+  fail "DEPLOY FAILED while installing or restarting"
 
 if [ "$dry" = 0 ]; then sleep 2; fi
-remote "docker logs --since 1m adhd-sync-sync-1 2>&1 | tail -5"
+remote "docker logs --since 1m adhd-sync-sync-1 2>&1 | tail -5" || true
 if [ "$dry" = 1 ]; then
   echo "[dry-run] health check: expect HTTP 200 from http://127.0.0.1:18080/v1/config"
   code=200
@@ -50,11 +58,6 @@ else
   code="$(ssh "$host" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/v1/config" || true)"
 fi
 
-if [ "$code" != 200 ]; then
-  echo "!!! HEALTH CHECK FAILED: /v1/config returned '${code:-none}' (expected 200). Not rolled back." >&2
-  echo "!!! Roll back with:" >&2
-  echo "$rollback" >&2
-  exit 1
-fi
+[ "$code" = 200 ] || fail "HEALTH CHECK FAILED: /v1/config returned '${code:-none}' (expected 200)"
 [ "$dry" = 1 ] && echo "dry run, nothing was deployed. Rollback would be:" || echo "healthy (200). Roll back with:"
 echo "$rollback"

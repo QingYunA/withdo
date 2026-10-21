@@ -130,7 +130,7 @@ name, both in memory.
 ## Updating the server
 
 `deploy/sync/deploy.sh` builds `adhd-sync` from the current checkout, copies it and
-`sync.compose.yml` to the host, restarts the `sync` service and checks `GET /v1/config` on
+`sync.compose.yml` to the host, recreates the `sync` container (the binary is bind-mounted) and checks `GET /v1/config` on
 `127.0.0.1:18080` for 200. The owner confirms each production deploy; do not run it unasked.
 
 ```sh
