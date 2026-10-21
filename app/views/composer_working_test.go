@@ -17,6 +17,9 @@ const deepseekChip = "DeepSeek · deepseek-chat"
 // of the box and of the line above it.
 func belowBox(t *testing.T, r *assistRig) float32 {
 	t.Helper()
+	// dockHeight is read from the frame before, and an event may draw one frame or twenty (more while
+	// a color transition runs, by the wall clock): draw one more, so it is the height of the last.
+	r.tt.Frame()
 	if r.m.dockHeight == 0 {
 		t.Fatal("the page has no composer dock")
 	}

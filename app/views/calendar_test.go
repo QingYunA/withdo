@@ -249,6 +249,7 @@ func TestTheAssistantIsToldTheSelectedDay(t *testing.T) {
 	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("buy milk")
 	tt.Key(0, ui.KeyEnter)
+	app.Act.(*recorder).drain(t) // the text is sent off the UI thread
 	if got := fa.Places(); len(got) != 1 || got[0] != (data.Place{Kind: data.PlaceCalendar, Day: "2026-10-16"}) {
 		t.Errorf("places %+v", got)
 	}

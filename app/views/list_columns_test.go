@@ -176,6 +176,7 @@ func TestTheColumnsStackBelow640PointsOfContent(t *testing.T) {
 	}
 	m.openRow(5) // the inspector takes 361 pt: 522 pt of content
 	tt.Frame()
+	tt.Frame() // the columns' geometry is read from the frame before
 	mx, my = head("Write the release notes")
 	ax, ay = head("Native UI with mygo")
 	if absInt(int(m.cols.geo.tray.X-m.cols.geo.mine.X)) > 2 || ay <= my {
