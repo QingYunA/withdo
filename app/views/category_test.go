@@ -14,7 +14,7 @@ import (
 
 func TestInspectorCategoryRowSitsUnderPriorityAndOpensTheCategoryPage(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
-	m.OpenTask(18) // Look into Liquid Glass: nobody classified it
+	m.OpenTask(3) // Fix tray race: an agent's task, nobody classified it
 	tt.Frame()
 	if !above(t, tt, "Priority", "Category") || !above(t, tt, "Category", "Project") {
 		t.Errorf("Category goes between Priority and Project: %q", tt.Texts())
@@ -29,7 +29,7 @@ func TestInspectorCategoryRowSitsUnderPriorityAndOpensTheCategoryPage(t *testing
 		t.Error("the Category value opened more than its own page")
 	}
 	click(t, tt, "Set category to Life")
-	if got, _ := app.Task(18); got.CategoryID != lifeID {
+	if got, _ := app.Task(3); got.CategoryID != lifeID {
 		t.Errorf("category %d", got.CategoryID)
 	}
 	if !tt.HasText("Category: Life") {
@@ -37,7 +37,7 @@ func TestInspectorCategoryRowSitsUnderPriorityAndOpensTheCategoryPage(t *testing
 	}
 	click(t, tt, "Category: Life")
 	click(t, tt, "Set category to None")
-	if got, _ := app.Task(18); got.CategoryID != 0 {
+	if got, _ := app.Task(3); got.CategoryID != 0 {
 		t.Errorf("category %d after None", got.CategoryID)
 	}
 }
@@ -236,10 +236,10 @@ func inkHeight(img *image.RGBA, width float32, r ui.Rect) float32 {
 
 func TestTheInspectorCategoryValueHasTheIconOfItsCategory(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
-	m.OpenTask(18) // Look into Liquid Glass: nobody classified it
+	m.OpenTask(3) // Fix tray race: an agent's task, nobody classified it
 	tt.Frame()
 	none := inkWidth(t, tt, "Category: None")
-	_ = app.Update(18, data.Patch{Category: data.IntPtr(lifeID)})
+	_ = app.Update(3, data.Patch{Category: data.IntPtr(lifeID)})
 	tt.Frame()
 	// Life is a shorter word than None; with the house before it, it draws wider.
 	if life := inkWidth(t, tt, "Category: Life"); life < none+12 {

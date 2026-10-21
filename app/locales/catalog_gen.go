@@ -10433,3 +10433,147 @@ func SettingsSyncSignInFailed() string { return In(i18n.Locale()).SettingsSyncSi
 func (msgs Messages) SettingsSyncSignInFailed() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInFailed", nil)
 }
+
+// PropWhen says "When"
+// in the language the app shows.
+//
+// Label of the inspector row of a task of the user's own that holds its due
+// date and reminder chips.
+func PropWhen() string { return In(i18n.Locale()).PropWhen() }
+
+// PropWhen says "When"
+// in the language of msgs.
+//
+// Label of the inspector row of a task of the user's own that holds its due
+// date and reminder chips.
+func (msgs Messages) PropWhen() string {
+	return Catalog.Format(msgs.locale, "propWhen", nil)
+}
+
+// PropWhere says "Where"
+// in the language the app shows.
+//
+// Label of the inspector row of a task of the user's own that holds its
+// category and its project chips.
+func PropWhere() string { return In(i18n.Locale()).PropWhere() }
+
+// PropWhere says "Where"
+// in the language of msgs.
+//
+// Label of the inspector row of a task of the user's own that holds its
+// category and its project chips.
+func (msgs Messages) PropWhere() string {
+	return Catalog.Format(msgs.locale, "propWhere", nil)
+}
+
+// SegmentDone says "Done"
+// in the language the app shows.
+//
+// Third segment of the inspector's status control for the user's own tasks:
+// finished.
+func SegmentDone() string { return In(i18n.Locale()).SegmentDone() }
+
+// SegmentDone says "Done"
+// in the language of msgs.
+//
+// Third segment of the inspector's status control for the user's own tasks:
+// finished.
+func (msgs Messages) SegmentDone() string {
+	return Catalog.Format(msgs.locale, "segmentDone", nil)
+}
+
+// InspectorHandOff says "Hand to an agent…"
+// in the language the app shows.
+//
+// Button at the foot of the inspector of a task of the user's own that
+// hands it to any agent. Nothing is started.
+func InspectorHandOff() string { return In(i18n.Locale()).InspectorHandOff() }
+
+// InspectorHandOff says "Hand to an agent…"
+// in the language of msgs.
+//
+// Button at the foot of the inspector of a task of the user's own that
+// hands it to any agent. Nothing is started.
+func (msgs Messages) InspectorHandOff() string {
+	return Catalog.Format(msgs.locale, "inspectorHandOff", nil)
+}
+
+// A11yImportant says "Important"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the star beside the title in the
+// inspector, which toggles whether the user's own task is important.
+func A11yImportant() string { return In(i18n.Locale()).A11yImportant() }
+
+// A11yImportant says "Important"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the star beside the title in the
+// inspector, which toggles whether the user's own task is important.
+func (msgs Messages) A11yImportant() string {
+	return Catalog.Format(msgs.locale, "a11yImportant", nil)
+}
+
+// MenuMarkImportant says "Mark important"
+// in the language the app shows.
+//
+// Line of the task menu, and button of the bulk bar, that marks the user's
+// own tasks as important (the star).
+func MenuMarkImportant() string { return In(i18n.Locale()).MenuMarkImportant() }
+
+// MenuMarkImportant says "Mark important"
+// in the language of msgs.
+//
+// Line of the task menu, and button of the bulk bar, that marks the user's
+// own tasks as important (the star).
+func (msgs Messages) MenuMarkImportant() string {
+	return Catalog.Format(msgs.locale, "menuMarkImportant", nil)
+}
+
+// MenuNotImportant says "Not important"
+// in the language the app shows.
+//
+// Line of the task menu, and button of the bulk bar, that takes the
+// important star off the user's own tasks.
+func MenuNotImportant() string { return In(i18n.Locale()).MenuNotImportant() }
+
+// MenuNotImportant says "Not important"
+// in the language of msgs.
+//
+// Line of the task menu, and button of the bulk bar, that takes the
+// important star off the user's own tasks.
+func (msgs Messages) MenuNotImportant() string {
+	return Catalog.Format(msgs.locale, "menuNotImportant", nil)
+}
+
+// BulkImportantToast says "Marked {count, plural, one {# task} other {# tasks}} important"
+// in the language the app shows.
+//
+// Toast after the rows selected together were marked important; its Undo
+// puts the old priorities back.
+func BulkImportantToast(count int) string { return In(i18n.Locale()).BulkImportantToast(count) }
+
+// BulkImportantToast says "Marked {count, plural, one {# task} other {# tasks}} important"
+// in the language of msgs.
+//
+// Toast after the rows selected together were marked important; its Undo
+// puts the old priorities back.
+func (msgs Messages) BulkImportantToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkImportantToast", map[string]any{"count": count})
+}
+
+// BulkNotImportantToast says "Took the star off {count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Toast after the important star was taken off the rows selected together;
+// its Undo puts the old priorities back.
+func BulkNotImportantToast(count int) string { return In(i18n.Locale()).BulkNotImportantToast(count) }
+
+// BulkNotImportantToast says "Took the star off {count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Toast after the important star was taken off the rows selected together;
+// its Undo puts the old priorities back.
+func (msgs Messages) BulkNotImportantToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkNotImportantToast", map[string]any{"count": count})
+}

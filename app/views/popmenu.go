@@ -227,6 +227,11 @@ func (m *Main) menuLetters(c *ui.Context, panel ui.Element) {
 	case keyStatus.inMenu(panel):
 		pm.page, pm.back, pm.hl = pageStatus, true, -1
 	case keyPriority.inMenu(panel):
+		if task, ok := m.app.Task(pm.task); ok && mine(task) {
+			m.toggleImportant(task)
+			m.closeMenu()
+			return
+		}
 		pm.page, pm.back, pm.hl = pagePriority, true, -1
 	case keyMove.inMenu(panel):
 		pm.page, pm.back, pm.hl, pm.filter = pageMove, true, 0, ""

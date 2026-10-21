@@ -136,7 +136,7 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 			right = func(*ui.Context, *theme.Tokens) { buttons() }
 		}
 	}
-	badge := theme.ShowsPriority(task.Priority) && !task.Status.Terminal()
+	badge := showsPriorityMark(task) && !task.Status.Terminal()
 	blocked := task.Status == data.Blocked
 	if badge || blocked {
 		branch = ""
@@ -147,7 +147,7 @@ func (m *Main) cardMeta(c *ui.Context, t *theme.Tokens, task data.Task, acting b
 			theme.StatusGlyphSized(c, t, data.Blocked, theme.IconSmall, 0)
 		}
 		if badge {
-			theme.PriorityBadge(c, t, task.Priority)
+			priorityMark(c, t, task)
 		}
 		if branch != "" {
 			theme.Text(c, theme.Mono, t.TextSecondary, branch).Shrink(4).MinWidth(0).Ellipsis("…")

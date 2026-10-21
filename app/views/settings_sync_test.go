@@ -360,7 +360,7 @@ func TestSidebarSyncCloud(t *testing.T) {
 
 func TestAReplyReportShowsYou(t *testing.T) {
 	app, _ := newEmptyApp(t)
-	mustNil(t, app.AddTask(data.CreateTaskInput{Title: "Answer the design question", Source: data.SourceUser}))
+	mustNil(t, app.AddTask(data.CreateTaskInput{Title: "Answer the design question", Source: data.SourceAgent}))
 	task := app.snap.tasks[0]
 	app.Store.(*data.Real).SeedReport(data.Report{
 		TaskID: task.ID, Agent: data.You, Kind: data.ReportReply, Summary: "Thanks, that is done.",

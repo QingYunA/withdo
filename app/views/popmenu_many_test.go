@@ -15,7 +15,7 @@ func TestRightClickOnASelectedRowOpensTheMenuOfAllSelectedRows(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	for _, want := range []string{"2 tasks", "Mark done", "Cancel", "Move to…", "Priority", "Hand to an agent", "Delete 2…"} {
+	for _, want := range []string{"2 tasks", "Mark done", "Cancel", "Move to…", "Mark important", "Hand to an agent", "Delete 2…"} {
 		if !tt.HasText(want) {
 			t.Errorf("the menu lacks %q in %q", want, tt.Texts())
 		}
@@ -57,10 +57,10 @@ func TestRightClickOnAnUnselectedRowActsOnThatRowAndKeepsTheSelection(t *testing
 
 func TestPAndMOpenTheSelectionsPagesAndCmdBackspaceAsksBeforeDeleting(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	cmdClick(t, tt, "Reply to design feedback", "Book dentist")
+	cmdClick(t, tt, "Fix tray race on launch", "Native UI with mygo") // agents' tasks keep the four priorities
 	tt.Key(0, ui.KeyP)
 	tt.Frame()
-	if !tt.HasText("2 tasks") {
+	if !tt.HasText("2 tasks") || !tt.HasText("Set priority to Urgent") {
 		t.Errorf("P did not open the selection's priority page: %q", tt.Texts())
 	}
 	tt.Key(0, ui.KeyEscape)

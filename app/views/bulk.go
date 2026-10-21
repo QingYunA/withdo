@@ -63,6 +63,10 @@ func (m *Main) runAction(c *ui.Context, kind actionKind, ids []int) {
 		m.bulkUpdate(c, m.tasksOf(a.Ids), data.BulkPatch{Status: data.StatusPtr(data.Done)}, m.say.BulkDoneToast(len(a.Ids)))
 	case actCancel:
 		m.bulkUpdate(c, m.tasksOf(a.Ids), data.BulkPatch{Status: data.StatusPtr(data.Cancelled)}, m.say.BulkCancelToast(len(a.Ids)))
+	case actPriority: // only the star runs at once; the four priorities are a page of the menu
+		if a.Star {
+			m.bulkImportant(c, ids, !a.Starred)
+		}
 	case actHandOff:
 		m.handOffMany(c, ids)
 	case actDelete:
@@ -84,6 +88,17 @@ func (m *Main) bulkMove(c *ui.Context, ids []int, project int) {
 func (m *Main) bulkPriority(c *ui.Context, ids []int, p data.Priority) {
 	tasks := repriced(m.tasksOf(ids), p)
 	m.bulkUpdate(c, tasks, data.BulkPatch{Priority: data.PriorityPtr(p)}, m.say.BulkPriorityToast(len(tasks), string(p)))
+}
+
+// bulkImportant stars the selected tasks of the user's own that are not starred yet, or takes the
+// star off every one of them.
+func (m *Main) bulkImportant(c *ui.Context, ids []int, on bool) {
+	tasks := only(m.tasksOf(ids), func(t data.Task) bool { return mine(t) && starred(t) != on })
+	title := m.say.BulkImportantToast(len(tasks))
+	if !on {
+		title = m.say.BulkNotImportantToast(len(tasks))
+	}
+	m.bulkUpdate(c, tasks, data.BulkPatch{Priority: data.PriorityPtr(importantPriority(on))}, title)
 }
 
 // handOffMany hands tasks to an agent as one change, whatever of them is the user's own and unfinished. Each waits in its own project's Waiting for an
