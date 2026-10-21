@@ -1,6 +1,9 @@
 package xyz.sriai.adhdtodo.data
 
-import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import xyz.sriai.adhdtodo.core.Core_
 
 /**
@@ -15,6 +18,11 @@ class CoreApi(private val core: Core_) {
     fun agents(): AgentsPage = PageJson.decodeFromString(core.agents())
 
     fun projects(): List<Project> = PageJson.decodeFromString(core.projects())
+
+    fun categories(): List<Category> = PageJson.decodeFromString(core.categories())
+
+    /** The task menu's ready-made reminders for now, in the order the menu shows them. */
+    fun remindPresets(): List<RemindPreset> = PageJson.decodeFromString(core.remindPresets())
 
     fun project(id: Long): ProjectPage = PageJson.decodeFromString(core.project(id))
 
@@ -51,8 +59,16 @@ class CoreApi(private val core: Core_) {
     }
 
     fun updateTask(id: Long, patch: TaskPatch) {
-        core.updateTask(id, PageJson.encodeToString(patch))
+        val fields = PageJson.encodeToJsonElement(patch).jsonObject
+        val body = if (patch.clearRemindAt) JsonObject(fields + ("remind_at" to JsonNull)) else fields
+        core.updateTask(id, body.toString())
     }
+
+    /** Deletes a task and returns the snapshot RestoreTask takes, unchanged. */
+    fun deleteTask(id: Long): String = core.deleteTask(id)
+
+    /** Puts back what DeleteTask removed. */
+    fun restoreTask(snapshot: String) = core.restoreTask(snapshot)
 
     fun accept(id: Long) = core.accept(id)
 

@@ -115,6 +115,7 @@ fun ProjectScreen(
     page: ProjectPage?,
     words: Words,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -178,7 +179,9 @@ fun ProjectScreen(
             item(key = "group-$status") {
                 StatusGroupHeader(status, tasks.size, words)
                 Column {
-                    for (task in tasks) ProjectTaskRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask)
+                    for (task in tasks) {
+                        ProjectTaskRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask, onLongPress)
+                    }
                 }
             }
         }
@@ -209,7 +212,7 @@ fun ProjectScreen(
                 item(key = "completed-rows") {
                     Column {
                         for (task in done) {
-                            DoneProjectRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask)
+                            DoneProjectRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask, onLongPress)
                         }
                     }
                 }
@@ -307,18 +310,24 @@ private fun StatusGroupHeader(status: String, count: Int, words: Words) {
 }
 
 @Composable
-private fun ProjectTaskRow(task: Task, agent: String, words: Words, onOpenTask: (Long) -> Unit) {
+private fun ProjectTaskRow(
+    task: Task,
+    agent: String,
+    words: Words,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dims.rowHeight)
-            .clickable { onOpenTask(task.id) }
-            .padding(start = 26.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(task.id) },
+        onLongPress = { onLongPress(task.id) },
+    ) { row ->
+        Row(
+            modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
         Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
@@ -334,22 +343,29 @@ private fun ProjectTaskRow(task: Task, agent: String, words: Words, onOpenTask: 
             Text(due, style = type.meta, color = tokens.textTertiary, maxLines = 1)
         }
         Spacer(Modifier.width(2.dp))
+        }
     }
 }
 
 @Composable
-private fun DoneProjectRow(task: Task, agent: String, words: Words, onOpenTask: (Long) -> Unit) {
+private fun DoneProjectRow(
+    task: Task,
+    agent: String,
+    words: Words,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dims.rowHeight)
-            .clickable { onOpenTask(task.id) }
-            .padding(start = 26.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(task.id) },
+        onLongPress = { onLongPress(task.id) },
+    ) { row ->
+        Row(
+            modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
         Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
@@ -365,6 +381,7 @@ private fun DoneProjectRow(task: Task, agent: String, words: Words, onOpenTask: 
             color = tokens.textTertiary,
             maxLines = 1,
         )
+        }
     }
 }
 

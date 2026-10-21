@@ -7,6 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentsPage
+import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.PageJson
@@ -29,7 +30,7 @@ class GoldenDecodeTest {
     fun `every golden file decodes`() {
         val dir = repoFile("mobile/core/testdata")
         val files = dir.listFiles { file -> file.name.endsWith(".golden.json") }.orEmpty().sortedBy { it.name }
-        assertEquals("golden files", 11, files.size)
+        assertEquals("golden files", 12, files.size)
         for (file in files) {
             val text = file.readText()
             when (file.name) {
@@ -58,6 +59,15 @@ class GoldenDecodeTest {
                     assertEquals("adhd-todo", page.project.name)
                     assertTrue(page.tasks.isNotEmpty())
                     assertEquals("claude-code", page.agents["1"])
+                }
+                "categories.golden.json" -> {
+                    val categories = PageJson.decodeFromString<List<Category>>(text)
+                    assertEquals(2, categories.size)
+                    assertEquals("work", categories[0].builtin)
+                    assertEquals("Work", categories[0].name)
+                    assertEquals("blue", categories[0].color)
+                    assertEquals(12, categories[0].icon.size)
+                    assertEquals(12, categories[0].icon[0].size)
                 }
                 "projects.golden.json" -> {
                     val projects = PageJson.decodeFromString<List<Project>>(text)

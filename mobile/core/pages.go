@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/internal/remind"
 )
 
 // Mine returns the Mine screen as JSON: app/data.Mine, built from the same snapshot and builders
@@ -54,6 +55,41 @@ func (c *Core) Projects() (string, error) {
 		return "", shortError(err)
 	}
 	return marshal(snap.Projects)
+}
+
+// Categories returns the snapshot's categories as JSON: a []data.Category in the user's order.
+// A Category has ID, Builtin ("work", "life" or ""), Name, Icon (a 12 x 12 pixmap.Picture),
+// Color (one of CategoryColors) and Position.
+func (c *Core) Categories() (string, error) {
+	snap, err := c.real.Snapshot()
+	if err != nil {
+		return "", shortError(err)
+	}
+	return marshal(snap.Categories)
+}
+
+// remindPresetJSON is one choice of the Remind me page: its kind and the moment it means in Unix
+// milliseconds.
+type remindPresetJSON struct {
+	Kind string `json:"kind"`
+	At   int64  `json:"at"`
+}
+
+// RemindPresets returns the task menu's ready-made reminders for now as JSON:
+//
+//	[{"kind":"later","at":1792480800000}, …]
+//
+// The kinds are later, tomorrow, monday and weekend. The moments follow the desktop's menu: Later
+// today is 18:00 while it is over half an hour away, Tomorrow is 9:00, Next Monday is 9:00 and
+// This weekend is Saturday 10:00. A choice that would repeat another (Monday on a Sunday, the
+// weekend on a Sunday, the evening under half an hour away) is left out.
+func (c *Core) RemindPresets() (string, error) {
+	presets := remind.Presets(c.nowTime())
+	out := make([]remindPresetJSON, 0, len(presets))
+	for _, p := range presets {
+		out = append(out, remindPresetJSON{Kind: p.Kind.String(), At: p.At.UnixMilli()})
+	}
+	return marshal(out)
 }
 
 // projectPage is the JSON of Project(id).

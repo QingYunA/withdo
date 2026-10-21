@@ -40,21 +40,27 @@ import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentInfo
 import xyz.sriai.adhdtodo.data.AgentsPage
+import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.Item
 import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.PageJson
+import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectEntry
 import xyz.sriai.adhdtodo.data.ProjectPage
+import xyz.sriai.adhdtodo.data.RemindPreset
 import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
+import xyz.sriai.adhdtodo.data.Task
 import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 /**
@@ -90,7 +96,8 @@ fun App(
     var projectEntries by remember { mutableStateOf<List<ProjectEntry>?>(null) }
     var projectPage by remember { mutableStateOf<ProjectPage?>(null) }
     var taskPage by remember { mutableStateOf<TaskPage?>(null) }
-    var projects by remember { mutableStateOf<List<xyz.sriai.adhdtodo.data.Project>>(emptyList()) }
+    var projects by remember { mutableStateOf<List<Project>>(emptyList()) }
+    var categories by remember { mutableStateOf<List<Category>>(emptyList()) }
     var account by remember { mutableStateOf<Account?>(null) }
     var devices by remember { mutableStateOf<List<Device>>(emptyList()) }
     var liveStatus by remember { mutableStateOf<SyncStatus?>(null) }
@@ -102,6 +109,9 @@ fun App(
     var replyTo by remember { mutableStateOf<Item?>(null) }
     var connect by remember { mutableStateOf(false) }
     var comingSoon by remember { mutableStateOf(false) }
+    var menuData by remember { mutableStateOf<TaskMenuData?>(null) }
+    var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
+    var deleted by remember { mutableStateOf<DeletedTask?>(null) }
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
@@ -140,6 +150,48 @@ fun App(
         noticeId++
     }
 
+    fun openTaskMenu(id: Long, page: TaskMenuPage = TaskMenuPage.Main) {
+        menuPage = page
+        scope.launch {
+            val loaded = try {
+                withContext(Dispatchers.IO) {
+                    val task = api.task(id)
+                    TaskMenuData(
+                        task = task.task,
+                        agent = task.latestAgent,
+                        categories = api.categories(),
+                        projects = api.projects(),
+                        presets = api.remindPresets(),
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (loaded != null) menuData = loaded
+        }
+    }
+
+    fun deleteTask(task: Task) {
+        val onTaskPage = route.startsWith("task:") &&
+            route.substringAfter(':').substringBefore(':').toLongOrNull() == task.id
+        scope.launch {
+            val snapshot = try {
+                withContext(Dispatchers.IO) { api.deleteTask(task.id) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (snapshot != null) {
+                deleted = DeletedTask(task.title, snapshot)
+                if (onTaskPage) pop()
+                tick++
+            }
+        }
+    }
+
     BackHandler(enabled = stack.size > 1) { pop() }
 
     LaunchedEffect(noticeId) {
@@ -147,6 +199,12 @@ fun App(
             delay(1500)
             notice = null
         }
+    }
+
+    LaunchedEffect(deleted) {
+        if (deleted == null) return@LaunchedEffect
+        delay(6000)
+        deleted = null
     }
 
     LaunchedEffect(initialRoute) {
@@ -224,7 +282,9 @@ fun App(
             route.startsWith("task:") -> {
                 val id = route.substringAfter(':').substringBefore(':').toLongOrNull() ?: return@LaunchedEffect
                 val loaded = try {
-                    withContext(Dispatchers.IO) { api.task(id) to api.projects() }
+                    withContext(Dispatchers.IO) {
+                        Triple(api.task(id), api.projects(), api.categories())
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
@@ -233,6 +293,7 @@ fun App(
                 if (loaded != null) {
                     taskPage = loaded.first
                     projects = loaded.second
+                    categories = loaded.third
                 }
             }
             route == "sync" -> {
@@ -278,6 +339,11 @@ fun App(
         scope.launch {
             runCatching { withContext(Dispatchers.IO) { api.startSync() } }
         }
+    }
+
+    fun undoDelete(item: DeletedTask) {
+        deleted = null
+        perform { api.restoreTask(item.snapshot) }
     }
 
     val submit: () -> Unit = {
@@ -416,18 +482,12 @@ fun App(
                     right = { SyncCloud(blocked = blocked, onSync = { openSync() }) },
                 )
             } else {
-                BackBar(
+                val taskId = route.substringAfter(':').substringBefore(':').toLongOrNull() ?: 0
+                TaskBackBar(
                     title = title,
+                    number = taskId,
                     onBack = { pop() },
-                    right = {
-                        val taskId = route.substringAfter(':').substringBefore(':').toLongOrNull() ?: 0
-                        androidx.compose.material3.Text(
-                            "#$taskId",
-                            style = xyz.sriai.adhdtodo.ui.theme.LocalAppType.current.mono,
-                            color = tokens.textTertiary,
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                    },
+                    onMenu = { openTaskMenu(taskId, TaskMenuPage.Main) },
                 )
             }
 
@@ -577,6 +637,7 @@ fun App(
                         page = projectPage,
                         words = words,
                         onOpenTask = { id -> push(taskRoute(id, route.substringAfter(':').toLongOrNull() ?: 0)) },
+                        onLongPress = { id -> openTaskMenu(id) },
                     )
                     route.startsWith("task:") -> TaskScreen(
                         page = taskPage,
@@ -588,6 +649,11 @@ fun App(
                         },
                         onOpenUrl = openUrl,
                         onOpenTask = { id -> push(taskRoute(id, route.substringAfter(':').substringBefore(':').toLongOrNull() ?: 0)) },
+                        categories = categories,
+                        onOpenMenu = { page ->
+                            val id = route.substringAfter(':').substringBefore(':').toLongOrNull()
+                            if (id != null) openTaskMenu(id, page)
+                        },
                     )
                     else -> when (tab) {
                         Tab.MINE -> MineScreen(
@@ -601,6 +667,7 @@ fun App(
                             onOpenTask = { id -> push(taskRoute(id, 0)) },
                             onHowToConnect = { connect = true },
                             onComingSoon = { comingSoon = true },
+                            onLongPress = { id -> openTaskMenu(id) },
                         )
                         Tab.AGENTS -> AgentsScreen(
                             page = agents,
@@ -608,6 +675,7 @@ fun App(
                             words = words,
                             onOpenTask = { id -> push(taskRoute(id, 0)) },
                             onHowToConnect = { connect = true },
+                            onLongPress = { id -> openTaskMenu(id) },
                         )
                         Tab.CALENDAR -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             PlaceholderScreen(
@@ -624,6 +692,8 @@ fun App(
                     }
                 }
             }
+
+            DeletedSnackbar(deleted = deleted, onUndo = { undoDelete(it) })
 
             if (composerVisible) {
                 val placeholder = composerPlaceholder
@@ -649,6 +719,40 @@ fun App(
         }
     }
 
+    menuData?.let { data ->
+        TaskMenuSheet(
+            task = data.task,
+            words = words,
+            agent = data.agent,
+            categories = data.categories,
+            projects = data.projects,
+            presets = data.presets,
+            initialPage = menuPage,
+            onDismiss = { menuData = null },
+            onStatus = { status -> perform { api.updateTask(data.task.id, TaskPatch(status = status)) } },
+            onPriority = { priority -> perform { api.updateTask(data.task.id, TaskPatch(priority = priority)) } },
+            onCategory = { id -> perform { api.updateTask(data.task.id, TaskPatch(category = id.toLong())) } },
+            onMove = { projectId ->
+                perform { api.updateTask(data.task.id, TaskPatch(projectId = projectId ?: 0L)) }
+            },
+            onRemind = { at ->
+                val patch = if (at == null) {
+                    TaskPatch(clearRemindAt = true)
+                } else {
+                    TaskPatch(
+                        remindAt = OffsetDateTime.ofInstant(
+                            Instant.ofEpochMilli(at),
+                            ZoneId.systemDefault(),
+                        ).toString(),
+                    )
+                }
+                perform { api.updateTask(data.task.id, patch) }
+            },
+            onOpenUrl = openUrl,
+            onDelete = { deleteTask(data.task) },
+        )
+    }
+
     replyTo?.let { item ->
         ReplySheet(
             agent = words.agent(mineAgents[item.id]?.agent.orEmpty()),
@@ -663,6 +767,15 @@ fun App(
     if (comingSoon) TaskSoonDialog(onDismiss = { comingSoon = false })
 
 }
+
+/** What the task menu draws: the fresh task and the three lists its pages need. */
+private data class TaskMenuData(
+    val task: Task,
+    val agent: String,
+    val categories: List<Category>,
+    val projects: List<Project>,
+    val presets: List<RemindPreset>,
+)
 
 /** The stack entry of a task: its id and the project it came from (0 for Mine and Agents). */
 private fun taskRoute(id: Long, projectId: Long): String =

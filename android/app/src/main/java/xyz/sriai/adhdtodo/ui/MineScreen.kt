@@ -51,6 +51,7 @@ fun MineScreen(
     onOpenTask: (Long) -> Unit,
     onHowToConnect: () -> Unit,
     onComingSoon: () -> Unit,
+    onLongPress: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -80,6 +81,7 @@ fun MineScreen(
                     onAnswer = onAnswer,
                     onOpenUrl = onOpenUrl,
                     onOpenTask = onOpenTask,
+                    onLongPress = onLongPress,
                 )
             }
         }
@@ -91,6 +93,7 @@ fun MineScreen(
                     words = words,
                     onComplete = onComplete,
                     onOpenTask = onOpenTask,
+                    onLongPress = onLongPress,
                 )
             }
         }
@@ -102,6 +105,7 @@ fun MineScreen(
                     words = words,
                     onComplete = onComplete,
                     onOpenTask = onOpenTask,
+                    onLongPress = onLongPress,
                 )
                 if (page.moreLater > 0) {
                     Text(
@@ -120,6 +124,7 @@ fun MineScreen(
                     items = page.done,
                     words = words,
                     onOpenTask = onOpenTask,
+                    onLongPress = onLongPress,
                 )
                 if (page.moreDone > 0) {
                     Text(
@@ -144,6 +149,7 @@ private fun FromAgentsBox(
     onAnswer: (Item) -> Unit,
     onOpenUrl: (String) -> Unit,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
 ) {
     val tokens = LocalTokens.current
     val shape = RoundedCornerShape(12.dp)
@@ -166,6 +172,7 @@ private fun FromAgentsBox(
                 onAnswer = onAnswer,
                 onOpenUrl = onOpenUrl,
                 onOpenTask = onOpenTask,
+                onLongPress = onLongPress,
             )
         }
     }
@@ -181,19 +188,21 @@ private fun HandedRow(
     onAnswer: (Item) -> Unit,
     onOpenUrl: (String) -> Unit,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val agent = info?.agent.orEmpty()
     val links = info?.links.orEmpty()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onOpenTask(item.id) }
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(item.id) },
+        onLongPress = { onLongPress(item.id) },
+    ) { row ->
+        Row(
+            modifier = row.padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
         Avatar(words.avatar(agent), size = Dims.avatar)
         Column(Modifier.weight(1f)) {
             Text(
@@ -246,6 +255,7 @@ private fun HandedRow(
                 )
             }
         }
+        }
     }
 }
 
@@ -271,27 +281,35 @@ private fun MineSection(
     words: Words,
     onComplete: (Long) -> Unit,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
 ) {
     SectionHeader(title, items.size)
     Column {
         for (item in items) {
-            TaskRow(item, words, onComplete, onOpenTask)
+            TaskRow(item, words, onComplete, onOpenTask, onLongPress)
         }
     }
 }
 
 @Composable
-private fun TaskRow(item: Item, words: Words, onComplete: (Long) -> Unit, onOpenTask: (Long) -> Unit) {
+private fun TaskRow(
+    item: Item,
+    words: Words,
+    onComplete: (Long) -> Unit,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dims.rowHeight)
-            .clickable { onOpenTask(item.id) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(item.id) },
+        onLongPress = { onLongPress(item.id) },
+    ) { row ->
+        Row(
+            modifier = row.height(Dims.rowHeight),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         StatusGlyph(
             status = item.status,
             onClick = {
@@ -332,6 +350,7 @@ private fun TaskRow(item: Item, words: Words, onComplete: (Long) -> Unit, onOpen
                 if (due.isNotEmpty()) Text(due, style = type.meta, color = tokens.textTertiary, maxLines = 1)
             }
         }
+        }
     }
 }
 
@@ -341,20 +360,22 @@ private fun DoneTodaySection(
     items: List<Item>,
     words: Words,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
 ) {
     SectionHeader(title, items.size)
     Column {
         for (item in items) {
             val tokens = LocalTokens.current
             val type = LocalAppType.current
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Dims.rowHeight)
-                    .clickable { onOpenTask(item.id) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            LongPressRow(
+                onClick = { onOpenTask(item.id) },
+                onLongPress = { onLongPress(item.id) },
+            ) { row ->
+                Row(
+                    modifier = row.height(Dims.rowHeight),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                 StatusGlyph(status = "done")
                 Text(
                     item.title,
@@ -370,6 +391,7 @@ private fun DoneTodaySection(
                     color = tokens.textTertiary,
                     maxLines = 1,
                 )
+                }
             }
         }
     }

@@ -50,6 +50,13 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // Robolectric caches the Android runtime under user.home and locks it there. Move that
+        // cache to the system temp folder so the tests also run with a read-only home folder.
+        val robolectricHome = File(System.getProperty("java.io.tmpdir"), "adhd-robolectric-home")
+        robolectricHome.mkdirs()
+        unitTests.all {
+            it.systemProperty("user.home", robolectricHome.absolutePath)
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

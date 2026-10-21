@@ -80,6 +80,21 @@ func TestPagesMatchTheDesktop(t *testing.T) {
 		checkGolden(t, "projects.golden.json", raw)
 	})
 
+	t.Run("Categories", func(t *testing.T) {
+		raw, err := phone.Categories()
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got []data.Category
+		if err := json.Unmarshal([]byte(raw), &got); err != nil {
+			t.Fatalf("decode Categories: %v", err)
+		}
+		if !reflect.DeepEqual(got, snap.Categories) {
+			t.Errorf("Categories differs from the snapshot\nphone: %+v\nwant: %+v", got, snap.Categories)
+		}
+		checkGolden(t, "categories.golden.json", raw)
+	})
+
 	t.Run("Project", func(t *testing.T) {
 		raw, err := phone.Project(1)
 		if err != nil {

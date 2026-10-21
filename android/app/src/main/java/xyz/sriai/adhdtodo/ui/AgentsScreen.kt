@@ -1,7 +1,6 @@
 package xyz.sriai.adhdtodo.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +46,7 @@ fun AgentsScreen(
     words: Words,
     onOpenTask: (Long) -> Unit,
     onHowToConnect: () -> Unit,
+    onLongPress: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -69,7 +69,7 @@ fun AgentsScreen(
                 SectionHeader(stringResource(R.string.section_working), page.working.size)
                 Column {
                     for (row in page.working) {
-                        WorkingRow(row, agents[row.id], words, onOpenTask)
+                        WorkingRow(row, agents[row.id], words, onOpenTask, onLongPress)
                     }
                 }
             }
@@ -79,7 +79,7 @@ fun AgentsScreen(
                 SectionHeader(stringResource(R.string.section_done_today), page.done.size)
                 Column {
                     for (row in page.done) {
-                        DoneRow(row, agents[row.id], words, onOpenTask)
+                        DoneRow(row, agents[row.id], words, onOpenTask, onLongPress)
                     }
                 }
             }
@@ -93,6 +93,7 @@ private fun WorkingRow(
     info: AgentInfo?,
     words: Words,
     onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -113,9 +114,11 @@ private fun WorkingRow(
             append(row.nextStep)
         }
     }
-    Column(
-        modifier = Modifier.fillMaxWidth().clickable { onOpenTask(row.id) },
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(row.id) },
+        onLongPress = { onLongPress(row.id) },
+    ) { outer ->
+        Column(modifier = outer) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -161,13 +164,19 @@ private fun WorkingRow(
             }
         }
         if (row.subs.isNotEmpty()) {
-            SubtaskRail(row.subs, words, onOpenTask)
+            SubtaskRail(row.subs, words, onOpenTask, onLongPress)
+        }
         }
     }
 }
 
 @Composable
-private fun SubtaskRail(subs: List<Item>, words: Words, onOpenTask: (Long) -> Unit) {
+private fun SubtaskRail(
+    subs: List<Item>,
+    words: Words,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     Column(
         modifier = Modifier
@@ -183,23 +192,29 @@ private fun SubtaskRail(subs: List<Item>, words: Words, onOpenTask: (Long) -> Un
             .padding(start = 18.dp),
     ) {
         for (sub in subs) {
-            SubtaskRow(sub, words, onOpenTask)
+            SubtaskRow(sub, words, onOpenTask, onLongPress)
         }
     }
 }
 
 @Composable
-private fun SubtaskRow(sub: Item, words: Words, onOpenTask: (Long) -> Unit) {
+private fun SubtaskRow(
+    sub: Item,
+    words: Words,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clickable { onOpenTask(sub.id) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(sub.id) },
+        onLongPress = { onLongPress(sub.id) },
+    ) { row ->
+        Row(
+            modifier = row.height(40.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
         Avatar("bot", size = Dims.avatarSmall)
         Text(
             sub.title,
@@ -211,22 +226,30 @@ private fun SubtaskRow(sub: Item, words: Words, onOpenTask: (Long) -> Unit) {
         )
         StatusPill(sub.status, words.statusLabel(sub.status))
         Text(words.ago(sub.since), style = type.meta, color = tokens.textTertiary, maxLines = 1)
+        }
     }
 }
 
 @Composable
-private fun DoneRow(row: AgentRow, info: AgentInfo?, words: Words, onOpenTask: (Long) -> Unit) {
+private fun DoneRow(
+    row: AgentRow,
+    info: AgentInfo?,
+    words: Words,
+    onOpenTask: (Long) -> Unit,
+    onLongPress: (Long) -> Unit,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val agent = row.by.ifEmpty { info?.agent.orEmpty() }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(Dims.rowHeight)
-            .clickable { onOpenTask(row.id) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
+    LongPressRow(
+        onClick = { onOpenTask(row.id) },
+        onLongPress = { onLongPress(row.id) },
+    ) { outer ->
+        Row(
+            modifier = outer.height(Dims.rowHeight),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
         Avatar(if (agent.isEmpty()) "bot" else words.avatar(agent), size = Dims.avatar)
         Text(
             row.title,
@@ -243,5 +266,6 @@ private fun DoneRow(row: AgentRow, info: AgentInfo?, words: Words, onOpenTask: (
             color = tokens.textTertiary,
             maxLines = 1,
         )
+        }
     }
 }
