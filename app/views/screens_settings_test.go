@@ -86,16 +86,20 @@ func TestScreensSettings(t *testing.T) {
 			settingsShot(t, "settings-general-denied"+sfx+".png", refused, a.dark, zh, PaneGeneral, nil)
 
 			// At rest: the provider in use with the last test, the others under it.
-			settingsShot(t, "settings-assistant"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAssistant, func(r *settingsRig) {
+			settingsShot(t, "settings-advanced"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
 				r.s.runTest(currentProviderOf(r.app))
 				r.rec.drain(t)
 			})
+			// Under the model: the Recent changes page, the end-of-day reminder, the sound effects.
+			settingsShot(t, "settings-advanced-more"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+				r.tt.Scroll(340, 300, 0, 3000)
+			})
 			// Change: a tile picked, its key empty.
-			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAssistant, func(r *settingsRig) {
+			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "kimi"
 			})
 			// A failed test stays under the form, in plain words.
-			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAssistant, func(r *settingsRig) {
+			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "openai"
 				r.s.assist.err = "The provider didn't accept the API key."
 				if zh {
@@ -103,13 +107,13 @@ func TestScreensSettings(t *testing.T) {
 				}
 			})
 			// Custom adds the address and the protocol, so it scrolls.
-			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAssistant, func(r *settingsRig) {
+			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "custom"
 			})
 			// Nothing set up: the grid shows at once.
 			fresh := settingsApp(t, ready)
 			fresh.Models = newFakeModels(t)
-			settingsShot(t, "settings-assistant-new"+sfx+".png", fresh, a.dark, zh, PaneAssistant, nil)
+			settingsShot(t, "settings-advanced-new"+sfx+".png", fresh, a.dark, zh, PaneAdvanced, nil)
 
 			settingsShot(t, "settings-agents"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAgents, nil)
 			// Under the agents: where Review and Answer on a handed-over row go.
@@ -118,7 +122,7 @@ func TestScreensSettings(t *testing.T) {
 			})
 			for _, s := range githubStates() {
 				gh := settingsApp(t, s.st)
-				settingsShot(t, "settings-github"+s.name+sfx+".png", gh, a.dark, zh, PaneGitHub, nil)
+				settingsShot(t, "settings-agents-github"+s.name+sfx+".png", gh, a.dark, zh, PaneAgents, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 9000) })
 			}
 		}
 	}

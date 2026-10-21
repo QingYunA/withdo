@@ -80,7 +80,7 @@ func TestScreensRecentSettings(t *testing.T) {
 			app := settingsApp(t, signedOut)
 			mustNil(t, app.ArchiveProject(3))
 			app.SetRecentChangesOn(true)
-			settingsShot(t, "recent-settings"+sfx+".png", app, a.dark, zh, PaneGeneral, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 3000) })
+			settingsShot(t, "recent-settings"+sfx+".png", app, a.dark, zh, PaneAdvanced, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 3000) })
 		}
 	}
 }

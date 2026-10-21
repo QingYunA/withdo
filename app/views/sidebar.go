@@ -279,7 +279,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 	})
 	if row.Clicked() {
 		if alert {
-			m.openSettings(PaneSync)
+			m.openSettings(PaneAccount)
 		} else {
 			m.openSettings(PaneGeneral)
 		}

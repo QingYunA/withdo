@@ -8,6 +8,9 @@ import (
 
 func TestGeneralPaneHasTheSoundEffectsSwitchOnByDefault(t *testing.T) {
 	r := newSettingsRig(t)
+	r.pane(t, "Advanced")
+	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Frame()
 	has(t, r.tt, "Sound effects", "Quiet sounds while the day is shipped in Summary")
 	if !r.app.SoundEffects() {
 		t.Error("the sounds are off until the user says so")
@@ -18,6 +21,9 @@ func TestTheSoundEffectsSwitchKeepsTheChoiceAndTheOtherPrefs(t *testing.T) {
 	prefs := &data.MemoryPrefs{}
 	r := newSettingsRig(t, func(a *App) { a.Prefs = prefs })
 	r.app.SetEndOfDay(false)
+	r.pane(t, "Advanced")
+	r.tt.Scroll(340, 300, 0, 3000)
+	r.tt.Frame()
 	if err := r.tt.Click("Play sound effects"); err != nil {
 		t.Fatal(err)
 	}

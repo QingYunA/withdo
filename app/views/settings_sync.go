@@ -112,7 +112,7 @@ func (s *Settings) syncSignInCard(c *ui.Context, t *theme.Tokens, svc SyncServic
 	signing := snap.Phase == data.SyncSigningIn
 	group(c, t, "sync-hero", func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
-			ui.Icon(c, theme.IconCloud).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
+			ui.Icon(c, theme.IconUser).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
 			hero := theme.Input
 			hero.Weight = 600
 			theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncSignedOutTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
@@ -365,7 +365,7 @@ func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, s
 
 // syncSheet asks what wins when this Mac and the account both have tasks.
 func (s *Settings) syncSheet(c *ui.Context, t *theme.Tokens, snap data.SyncSnapshot) {
-	if s.pane != PaneSync || s.app.Sync == nil || snap.Conflict == nil {
+	if s.pane != PaneAccount || s.app.Sync == nil || snap.Conflict == nil {
 		return
 	}
 	cancelled := false
