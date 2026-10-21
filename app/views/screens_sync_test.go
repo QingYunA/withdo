@@ -90,11 +90,11 @@ func TestScreensSettingsSync(t *testing.T) {
 			app := settingsApp(t, ready)
 			for _, st := range syncScreenStates() {
 				app.Sync = &fakeSync{snap: st.snap}
-				settingsShot(t, "settings-sync-"+st.name+sfx+".png", app, a.dark, zh, PaneSync, st.setup)
+				settingsShot(t, "settings-account-"+st.name+sfx+".png", app, a.dark, zh, PaneAccount, st.setup)
 			}
 			// The server address while it is being edited.
 			app.Sync = &fakeSync{snap: signedOutSync()}
-			settingsShot(t, "settings-sync-change"+sfx+".png", app, a.dark, zh, PaneSync, func(r *settingsRig) {
+			settingsShot(t, "settings-account-change"+sfx+".png", app, a.dark, zh, PaneAccount, func(r *settingsRig) {
 				change := "Change"
 				if zh {
 					change = "更改"
@@ -107,9 +107,9 @@ func TestScreensSettingsSync(t *testing.T) {
 			// user: after a long failure, or after signing out.
 			app.Sync = &fakeSync{snap: syncedSync()}
 			if zh {
-				zhShot(t, "settings-sync-sidebar"+sfx+".png", app, a.dark, nil)
+				zhShot(t, "settings-account-sidebar"+sfx+".png", app, a.dark, nil)
 			} else {
-				mainShot(t, "settings-sync-sidebar"+sfx+".png", app, a.dark, nil)
+				mainShot(t, "settings-account-sidebar"+sfx+".png", app, a.dark, nil)
 			}
 
 			failure := syncedSync()
@@ -117,9 +117,9 @@ func TestScreensSettingsSync(t *testing.T) {
 			failure.FailedSince = fixedNow().Add(-16 * time.Minute)
 			app.Sync = &fakeSync{snap: failure}
 			if zh {
-				zhShot(t, "settings-sync-sidebar-alert"+sfx+".png", app, a.dark, nil)
+				zhShot(t, "settings-account-sidebar-alert"+sfx+".png", app, a.dark, nil)
 			} else {
-				mainShot(t, "settings-sync-sidebar-alert"+sfx+".png", app, a.dark, nil)
+				mainShot(t, "settings-account-sidebar-alert"+sfx+".png", app, a.dark, nil)
 			}
 		}
 	}

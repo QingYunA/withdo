@@ -45,7 +45,7 @@ func (r *settingsRig) waitModels(t *testing.T, id string) {
 
 func (r *settingsRig) assistant(t *testing.T) {
 	t.Helper()
-	r.pane(t, "Assistant")
+	r.pane(t, "Advanced")
 }
 
 func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
@@ -57,7 +57,7 @@ func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
 	}
 	bandBottom := func() float32 { // the labels of the panes: the lowest of the texts of these names
 		var low float32
-		for _, name := range []string{"General", "Assistant", "Agents", "GitHub"} {
+		for _, name := range []string{"Account", "General", "Agents", "Advanced"} {
 			if rect, ok := r.tt.Find(name); ok {
 				low = max(low, rect.Y+rect.H)
 			}
@@ -65,7 +65,7 @@ func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
 		return low
 	}
 	toolbar := bandBottom()
-	for _, name := range []string{"Assistant", "Agents", "GitHub", "General", "Assistant"} {
+	for _, name := range []string{"Advanced", "Agents", "Account", "General", "Advanced"} {
 		r.pane(t, name)
 		if gw, gh := r.s.ContentSize(); gw != w || gh != h {
 			t.Errorf("after %q the content size is %v x %v", name, gw, gh)
@@ -437,7 +437,7 @@ func TestInChineseTheAssistantPaneSaysItInChinese(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.setUp(t, "anthropic", "deepseek")
-	r.s.Show(PaneAssistant)
+	r.s.Show(PaneAdvanced)
 	r.tt.Frame()
 	has(t, r.tt, "更换", "用这个")
 	hasFold(t, r.tt, "当前在用")
