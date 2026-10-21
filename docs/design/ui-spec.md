@@ -5,6 +5,10 @@ Every screen is judged against that question. The audience is a developer with A
 several coding agents in parallel. Visual noise costs them focus, so the UI is quiet by
 default and loud only where something needs attention.
 
+Since v31 (2026-10-21) the audience is wider: anyone who wants an agent to keep their to-dos, with
+coding agents as one thing it can show and hand work to. The way in is one input. See **Input first
+(v31)**; where it disagrees with an older section, it wins until that section is rewritten.
+
 Built with mygo native UI (`github.com/egoist/mygo/ui`, v0.5.1). No webview.
 
 M4d (2026-10-15) made every screen **one title, one input, one list**: what is not needed to read or
@@ -68,12 +72,16 @@ that section in detail. Until then the older text describes the app as it is.
    project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
    1 to Claude`) with **Undo** and `⌘Z`. A chip opens the matching piece of the **Task menu**. Keeps
    **Undo** and **Assistant**'s receipts.
-4. **Voice is the system's speech to text.** The microphone (or holding `⌥ Space`) listens with the
-   system recognizer (macOS and iOS `SFSpeechRecognizer`, Windows `Windows.Media.SpeechRecognition`,
-   Android `SpeechRecognizer`). Words appear in the input as they are heard, the unsettled ones in
-   `text.tertiary`. Releasing sends, Esc cancels. While it listens the microphone is a filled accent
-   square and a pixel waveform steps on the 100 ms loop beat. No text to speech. mygo has no speech
-   API (checked in 0.5.1 and 0.6.0), so this starts with a spike.
+4. **Voice goes through the official service.** The microphone (or holding `⌥ Space`) records
+   while held or until clicked again (60 s at most). The audio goes to our server, which sends it to a
+   cloud speech recognizer (MiMo `mimo-v2.5-asr`, Chinese and English with auto-detection) and
+   returns the text. The server holds the recognizer's key; the app never does. The text fills the
+   input and is sent as if typed. The recognizer takes a whole recording, so there are no words while
+   speaking: the microphone is a filled accent square and a pixel waveform follows the voice's level
+   on the 100 ms loop beat, then `Transcribing…` until the text arrives. Esc cancels. Voice counts
+   against the account's quota; signed out, the microphone says `Sign in to use voice`. No text to
+   speech. Decided 2026-10-21 over the system recognizers: macOS's `SFSpeechRecognizer` refuses
+   while Dictation is off, and one service gives the same result on every platform.
 5. **Understanding comes from the official service.** Signing in (Google or email) gives the input
    its model, with a Free and a paid tier. Without signing in, or past the quota, the input still
    adds tasks: local rules read dates and times, `#category`, `!` (important), and split a sentence
@@ -367,6 +375,8 @@ else changes.
 
 ## Surfaces
 
+Superseded in part by **Input first (v31)** item 6: a menu bar popover and `⌥ Space` are coming.
+
 One window. No flyout panel, no global shortcut (decided 2026-10-14: shortcuts conflict). Closing
 the window hides it, so reminders, the end of the day and pull request news keep coming; Quit quits.
 A second launch starts no second process: it brings the window back (one instance on both systems).
@@ -381,6 +391,8 @@ A second launch starts no second process: it brings the window back (one instanc
 `docs/design/mockups/now.html` (rendered: `now.png`). Match it.
 
 ### Window (1100 x 720, min 860 x 540)
+
+*The sidebar is being replaced by **Input first (v31)** item 7.*
 
 Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only when a task
 is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
@@ -461,6 +473,8 @@ takes a repository from the sheet if the user gives it one.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Mine (home)
+
+*Being replaced by **Input first (v31)** items 1, 3 and 5.*
 
 Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else. Reference:
 `docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
@@ -632,6 +646,8 @@ longer exist are dropped. A row handed over again (a newer report) is new again.
 rows recorded as seen does not hop for them.
 
 ### Composer
+
+*Being replaced by **Input first (v31)** item 2.*
 
 One component, six places: **Mine**, **Agents**, **every project**, the **Inbox**, the **Calendar**, and the
 **inspector**. On the pages it is **pinned at the bottom edge of the content column** (the way ChatGPT, Claude
@@ -950,11 +966,15 @@ Decisions made while building it (2026-10-14):
 
 ### Inbox
 
+*Being replaced by **Input first (v31)** item 7.*
+
 One column of groups (Blocked, In review, Doing, To do, Done, Backlog), as a project's list was before
 M7b: an agent's row has the agent's name, branch, pull request and what it said in a quiet second line.
 No view control and no subtitle under the title; tasks with no project.
 
 ### Inspector (360 pt, slides in 160 ms)
+
+*Being replaced by **Input first (v31)** items 8 and 9.*
 
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
@@ -1219,6 +1239,8 @@ the last change. Done and cancelled rows keep their glyph (a button, so a finish
 - At most 100 results are shown; a quiet last line says when there are more.
 
 ### Completed
+
+*Being replaced by **Input first (v31)** item 7.*
 
 The `Completed` sidebar item (`已完成`, was Logbook), under Inbox: the done and cancelled tasks of every
 active project and the Inbox, newest first by completion, grouped by day. Page title `Completed`,
@@ -1790,6 +1812,8 @@ update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off
 - `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
 
 ### Settings
+
+*Being replaced by **Input first (v31)** item 10.*
 
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
 sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane

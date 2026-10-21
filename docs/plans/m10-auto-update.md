@@ -74,8 +74,9 @@ version built so is the last one to install by hand.
    `adhd-core.exe`), the signed update archives and manifests when updates are on, and
    `SHA256SUMS.txt`.
 3. `scripts/android-release.sh`: builds `dist/adhd-todo-<v>.apk`, signed with the release keystore
-   (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK). Copy
-   the APK into `app/build/release/` after step 2 (which empties that folder) and append its line:
+   (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK, found
+   at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
+   step 2 (which empties that folder) and append its line:
    `(cd app/build/release && shasum -a 256 adhd-todo-<v>.apk >> SHA256SUMS.txt)`.
 4. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
    the latest, which is what installed apps ask.
