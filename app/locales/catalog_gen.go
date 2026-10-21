@@ -1174,6 +1174,106 @@ func (msgs Messages) DetailAdded(project string) string {
 	return Catalog.Format(msgs.locale, "detailAdded", map[string]any{"project": project})
 }
 
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language the app shows.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func QuickAddReceipt(count int, items string) string {
+	return In(i18n.Locale()).QuickAddReceipt(count, items)
+}
+
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language of msgs.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func (msgs Messages) QuickAddReceipt(count int, items string) string {
+	return Catalog.Format(msgs.locale, "quickAddReceipt", map[string]any{"count": count, "items": items})
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language the app shows.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func QuickAddItem(title string, details string) string {
+	return In(i18n.Locale()).QuickAddItem(title, details)
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language of msgs.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func (msgs Messages) QuickAddItem(title string, details string) string {
+	return Catalog.Format(msgs.locale, "quickAddItem", map[string]any{"title": title, "details": details})
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language the app shows.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func QuickAddJoin(first string, second string) string {
+	return In(i18n.Locale()).QuickAddJoin(first, second)
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language of msgs.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func (msgs Messages) QuickAddJoin(first string, second string) string {
+	return Catalog.Format(msgs.locale, "quickAddJoin", map[string]any{"first": first, "second": second})
+}
+
+// QuickAddDue says "due {when}"
+// in the language the app shows.
+//
+// Detail of a task in that line: the deadline the words gave.
+func QuickAddDue(when string) string { return In(i18n.Locale()).QuickAddDue(when) }
+
+// QuickAddDue says "due {when}"
+// in the language of msgs.
+//
+// Detail of a task in that line: the deadline the words gave.
+func (msgs Messages) QuickAddDue(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddDue", map[string]any{"when": when})
+}
+
+// QuickAddReminder says "{when} reminder"
+// in the language the app shows.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func QuickAddReminder(when string) string { return In(i18n.Locale()).QuickAddReminder(when) }
+
+// QuickAddReminder says "{when} reminder"
+// in the language of msgs.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func (msgs Messages) QuickAddReminder(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddReminder", map[string]any{"when": when})
+}
+
+// QuickAddImportant says "important"
+// in the language the app shows.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func QuickAddImportant() string { return In(i18n.Locale()).QuickAddImportant() }
+
+// QuickAddImportant says "important"
+// in the language of msgs.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func (msgs Messages) QuickAddImportant() string {
+	return Catalog.Format(msgs.locale, "quickAddImportant", nil)
+}
+
 // DetailDone says "Marked done"
 // in the language the app shows.
 //

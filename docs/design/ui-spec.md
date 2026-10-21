@@ -42,6 +42,74 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
     reason the existing ones cannot carry.
 
+## Input first (v31)
+
+Decided 2026-10-21. Reference: `docs/design/mockups/v31.html` (rendered: `v31.png`). The feature set
+stays; the way in changes. People should not fill forms: they say or type one sentence, the
+assistant turns it into tasks, and they fix what it got wrong by clicking a chip. Like FocusPomo,
+one thing on the home screen is the main character, and finishing something feels good. Unlike it,
+there is no timer.
+
+Each decision lists the section it replaces. Each is built by its own pull request, which rewrites
+that section in detail. Until then the older text describes the app as it is.
+
+1. **One big input at the top of home.** Home (`Today` / `今天`, today's Mine) opens with the date
+   and a greeting, then a large input (58 pt, 14 pt radius, `bg` with a hairline and a soft shadow,
+   accent ring when focused) with a pixel microphone at its right, and a hint line under it. The
+   lists follow: Today, Later, Done today. The Agents panel sits in a narrow right column (300 pt,
+   `bg.tray`) titled `What your agents are doing`, with the drop target `Drag a to-do here to hand
+   it to an agent` at its foot; dragging a row onto it hands the task over, as today. Replaces the
+   bottom-pinned composer of **Mine (home)** and **Composer** on Mine.
+2. **Project pages keep a small input; other pages lose theirs.** A project keeps the bottom
+   composer, and a sentence typed there goes to that project. Agents, Inbox and Calendar have no
+   composer any more; the inspector keeps its own. Replaces the list of six places in **Composer**.
+3. **Applied at once, with Undo.** A sentence is applied as soon as it is sent, never shown as a
+   preview to confirm. New rows land with the chips the assistant read (date, reminder, category,
+   project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
+   1 to Claude`) with **Undo** and `⌘Z`. A chip opens the matching piece of the **Task menu**. Keeps
+   **Undo** and **Assistant**'s receipts.
+4. **Voice is the system's speech to text.** The microphone (or holding `⌥ Space`) listens with the
+   system recognizer (macOS and iOS `SFSpeechRecognizer`, Windows `Windows.Media.SpeechRecognition`,
+   Android `SpeechRecognizer`). Words appear in the input as they are heard, the unsettled ones in
+   `text.tertiary`. Releasing sends, Esc cancels. While it listens the microphone is a filled accent
+   square and a pixel waveform steps on the 100 ms loop beat. No text to speech. mygo has no speech
+   API (checked in 0.5.1 and 0.6.0), so this starts with a spike.
+5. **Understanding comes from the official service.** Signing in (Google or email) gives the input
+   its model, with a Free and a paid tier. Without signing in, or past the quota, the input still
+   adds tasks: local rules read dates and times, `#category`, `!` (important), and split a sentence
+   at `，还有` / `, and`; one quiet line under the receipt offers to sign in, never a dialog. Bringing
+   one's own API key moves to Settings > Advanced. Replaces "With none, Enter creates a plain task"
+   in **Mine (home)** and the setup flow of **Settings** > Assistant.
+6. **Menu bar icon and `⌥ Space`.** On macOS a pixel icon in the menu bar opens a popover (mygo
+   `NewTray` + `NewFlyout` with `Popover`): the same input, up to five of today's rows (a click opens
+   the task in the main window), and one footer line, `2 agents working · 1 stuck` (the stuck number
+   in `status.blocked`, the only strong color there) and `Open ADHD Todo`. `⌥ Space` anywhere opens
+   it with the input focused; holding it listens. On Windows the tray icon's left click opens the
+   same panel. Replaces "No flyout panel, no global shortcut" and "macOS: no tray icon" in
+   **Surfaces**.
+7. **Three sidebar entries.** `Today`, `Agents`, `Calendar`, then Projects and the gear.
+   - Inbox goes into Today: a task with no project lands in Today or Later by its date.
+   - Completed goes into each list's `Done` fold, which opens the full history; search finds it too.
+   - Summary opens from `See today ›` beside Done today, and from the end-of-day notification.
+   - The category sub-rows go: a category is a colored chip on the row; clicking it filters the
+     list (a dismissible filter bar above it).
+   - The agent sub-rows go: the Agents page groups by agent.
+   - Recent changes moves to Settings > Advanced (it is off by default already).
+   Replaces the sidebar of **Window**, **Inbox**, **Completed** and the sub-rows and folding.
+8. **My tasks have three states and a star.** For the user's own tasks, Status is a segmented
+   control: To do, Doing, Done. Backlog and Cancelled stay in the right-click menu. Priority becomes
+   one **important** star (12 pt pixel star, `status.review` color when set; set = P1, unset = P2 in
+   the database, so agents and the MCP keep P0 to P3). Agent tasks keep all seven statuses and
+   their priority badges, since those are the agent telling you what happened.
+9. **The inspector by source.** A task of mine shows: title with the star, Status, `When` (due and
+   reminder chips), `Where` (category and project · milestone chips), notes and images, and `Hand
+   to an agent…`. Branch, Pull request, From and Activity show only on an agent's task. Replaces
+   the property list of **Inspector**.
+10. **Settings: four panes.** Account (sign-in, quota, devices: the old Sync pane), General
+    (language, notifications, menu bar icon, data folder, archived projects, updates, about), Agents
+    (with the old GitHub pane), Advanced (own API key with the twelve providers folded, Recent
+    changes, end-of-day reminder, sound effects). Replaces the panes of **Settings**.
+
 ## Tokens
 
 ### Color
@@ -400,8 +468,8 @@ new item: the hop (below) is the signal.
 
 **Composer.** The one input is the **Composer** (see **Composer** below), pinned at the bottom of the page.
 `⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
-assistant (see **Assistant**). With none, Enter creates a plain task (an Inbox task on Mine) and
-shows a quiet "Added to Inbox" line above the box for 1.5 s.
+assistant (see **Assistant**). With none, the **local rules** read the sentence (see **Composer**,
+No model connected) and Enter adds what they find; a plain task is an Inbox task on Mine.
 
 Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
 a row anywhere (see **Subtasks**).
@@ -632,10 +700,42 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **Keys.** `↵` sends, `⇧↵` breaks the line, `Esc` cancels a running request, else closes the answer,
   else leaves the field. `↓` on a page walks into the rows. `↵` on an empty field opens the highlighted
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
-- **No model connected.** The same field; `↵` adds a plain task in the place of the page (a project,
-  the Inbox; Mine → Inbox) and a quiet `✓ Added to Inbox` line shows 1.5 s under the field. The only
-  extra is the line `Set up the assistant` (a link to Settings > Assistant) under the field while it
-  is focused and empty. The inspector's composer is not drawn without a model.
+- **No model connected.** The same field. `↵` does not send the text to a model; **local rules**
+  (`internal/quickadd`, pure Go, no network) read it, in Chinese and English, and add what they find
+  at once, in the place of the page (a project, the Inbox; Mine → Inbox; a day of the Calendar):
+  - *Several tasks.* Only explicit marks split a sentence: `，还有` / `, 还有`, `；` / `;`, `然后`,
+    `, and also`, `, then`. A bare `and` and a line break do not ("salt and pepper", a pasted
+    paragraph stay one title).
+  - *Days.* `今天` `明天` `后天` `大后天`, `周一`…`周日` / `星期X` / `礼拜X` / `周天`, `这周X` `下周X`
+    `下下周X`, `10月31日` `10.31` `10-31` `2026-10-31` `31号`; `today` `tomorrow` `monday`…
+    `next friday` `this friday` `Oct 31` `31 Oct`. The week runs Monday to Sunday: `下周一` on a Sunday
+    is tomorrow, a bare `周五` is the first one after today, `这周一` on a Wednesday is gone and
+    means the coming one. A date that is over is next year's (`1月5日` in October); one that does
+    not exist (`2月30日`) is not read and stays in the title.
+  - *Times.* `九点` `9点` `9:00` `晚上8点半` `下午3点15分` `中午` `下午` `晚上` `今晚` `明早`; `9am`
+    `3:30pm` `at 9` `noon` `tonight`. A bare hour from 1 to 6 (`3点`, `at 3`) is the afternoon; a
+    period word alone means 09:00 (morning), 12:00 (noon), 14:00 (afternoon), 18:00 (dusk), 19:00
+    (evening), `今晚` 20:00, as the assistant's prompt has it. A time with no day is its next
+    occurrence (today if it is still ahead, else tomorrow); a day with no time is **18:00**
+    (`data.DefaultDueHour`) for a deadline and **9:00** for a reminder; a day and time that are both
+    given are taken as given, even if today's hour is already over.
+  - *Reminder or deadline.* `提醒我…` / `remind me (to)…` sets the **reminder** instead of the due
+    time; `…前` / `之前` / `截止` / `before` / `by` / `due` / `until` set the **due** time, and win over
+    `提醒我` (`前台` is not `前`).
+  - *Category and importance.* `#name` matches a category's name case-insensitively (Work and Life in
+    the app's language or as `Work` / `Life`); an unknown `#name` stays in the title, and so does
+    the `#` in `C#` or `#homepage` for a category Home. A `!`, `！` or `重要` at the end of the
+    task makes it **important** (P1, the default priority otherwise).
+  - *The title* is what is left once the recognized words are cut out, with spaces collapsed and no
+    punctuation or dangling `的` / `to` / `by` at its ends. A sentence that is nothing but
+    recognized words (`明天`) keeps its text as the title and sets no field.
+
+  The "Added to …" line becomes a **receipt** for 6 s, `✓ Added 2: 体检 (Mon 9:00 AM reminder), 交房租
+  (due Fri, Life, important)  Undo`; a plain task keeps `✓ Added to Inbox` for 1.5 s, which also has
+  Undo. **Undo** and `⌘Z` in the empty composer delete everything that sentence added, as one
+  change, for as long as the line shows. With a model connected nothing of this applies. The line
+  `Set up the assistant` (a link to Settings > Assistant) shows under the field while it is focused
+  and empty. The inspector's composer is not drawn without a model.
 - **Scope.** The composer tells the assistant where it is. On Mine and Agents: nothing (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
   the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”
