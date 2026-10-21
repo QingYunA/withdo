@@ -10433,3 +10433,159 @@ func SettingsSyncSignInFailed() string { return In(i18n.Locale()).SettingsSyncSi
 func (msgs Messages) SettingsSyncSignInFailed() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInFailed", nil)
 }
+
+// ComposerVoice says "Voice input"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the microphone button at the right of
+// the composer.
+func ComposerVoice() string { return In(i18n.Locale()).ComposerVoice() }
+
+// ComposerVoice says "Voice input"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the microphone button at the right of
+// the composer.
+func (msgs Messages) ComposerVoice() string {
+	return Catalog.Format(msgs.locale, "composerVoice", nil)
+}
+
+// ComposerVoiceStop says "Stop listening"
+// in the language the app shows.
+//
+// Accessibility label of the microphone button while it records; a click
+// ends the recording.
+func ComposerVoiceStop() string { return In(i18n.Locale()).ComposerVoiceStop() }
+
+// ComposerVoiceStop says "Stop listening"
+// in the language of msgs.
+//
+// Accessibility label of the microphone button while it records; a click
+// ends the recording.
+func (msgs Messages) ComposerVoiceStop() string {
+	return Catalog.Format(msgs.locale, "composerVoiceStop", nil)
+}
+
+// VoiceListening says "Listening… click to stop, Esc to cancel"
+// in the language the app shows.
+//
+// Line above the composer while the microphone records, next to the pixel
+// waveform.
+func VoiceListening() string { return In(i18n.Locale()).VoiceListening() }
+
+// VoiceListening says "Listening… click to stop, Esc to cancel"
+// in the language of msgs.
+//
+// Line above the composer while the microphone records, next to the pixel
+// waveform.
+func (msgs Messages) VoiceListening() string {
+	return Catalog.Format(msgs.locale, "voiceListening", nil)
+}
+
+// VoiceTranscribing says "Transcribing…"
+// in the language the app shows.
+//
+// Line above the composer while the recording is being turned into text,
+// next to the busy indicator.
+func VoiceTranscribing() string { return In(i18n.Locale()).VoiceTranscribing() }
+
+// VoiceTranscribing says "Transcribing…"
+// in the language of msgs.
+//
+// Line above the composer while the recording is being turned into text,
+// next to the busy indicator.
+func (msgs Messages) VoiceTranscribing() string {
+	return Catalog.Format(msgs.locale, "voiceTranscribing", nil)
+}
+
+// VoiceSignIn says "Sign in to use voice"
+// in the language the app shows.
+//
+// Line above the composer when the microphone is pressed while signed out;
+// a link that opens Settings on the Sync pane.
+func VoiceSignIn() string { return In(i18n.Locale()).VoiceSignIn() }
+
+// VoiceSignIn says "Sign in to use voice"
+// in the language of msgs.
+//
+// Line above the composer when the microphone is pressed while signed out;
+// a link that opens Settings on the Sync pane.
+func (msgs Messages) VoiceSignIn() string {
+	return Catalog.Format(msgs.locale, "voiceSignIn", nil)
+}
+
+// VoiceMicDenied says "Microphone access is off"
+// in the language the app shows.
+//
+// Line above the composer when macOS has the microphone denied for the app.
+func VoiceMicDenied() string { return In(i18n.Locale()).VoiceMicDenied() }
+
+// VoiceMicDenied says "Microphone access is off"
+// in the language of msgs.
+//
+// Line above the composer when macOS has the microphone denied for the app.
+func (msgs Messages) VoiceMicDenied() string {
+	return Catalog.Format(msgs.locale, "voiceMicDenied", nil)
+}
+
+// VoiceOpenSystemSettings says "Open System Settings"
+// in the language the app shows.
+//
+// Link after the microphone-denied line; opens System Settings on Privacy &
+// Security > Microphone.
+func VoiceOpenSystemSettings() string { return In(i18n.Locale()).VoiceOpenSystemSettings() }
+
+// VoiceOpenSystemSettings says "Open System Settings"
+// in the language of msgs.
+//
+// Link after the microphone-denied line; opens System Settings on Privacy &
+// Security > Microphone.
+func (msgs Messages) VoiceOpenSystemSettings() string {
+	return Catalog.Format(msgs.locale, "voiceOpenSystemSettings", nil)
+}
+
+// VoiceQuota says "Voice limit reached for today"
+// in the language the app shows.
+//
+// Line above the composer when the account used up today's recordings.
+func VoiceQuota() string { return In(i18n.Locale()).VoiceQuota() }
+
+// VoiceQuota says "Voice limit reached for today"
+// in the language of msgs.
+//
+// Line above the composer when the account used up today's recordings.
+func (msgs Messages) VoiceQuota() string {
+	return Catalog.Format(msgs.locale, "voiceQuota", nil)
+}
+
+// VoiceOff says "Voice isn't set up on this server"
+// in the language the app shows.
+//
+// Line above the composer when the sync server has no speech recognizer
+// configured.
+func VoiceOff() string { return In(i18n.Locale()).VoiceOff() }
+
+// VoiceOff says "Voice isn't set up on this server"
+// in the language of msgs.
+//
+// Line above the composer when the sync server has no speech recognizer
+// configured.
+func (msgs Messages) VoiceOff() string {
+	return Catalog.Format(msgs.locale, "voiceOff", nil)
+}
+
+// VoiceFailed says "Couldn't transcribe. Try again"
+// in the language the app shows.
+//
+// Line above the composer for any other voice failure: no network, nothing
+// heard, the recognizer failed.
+func VoiceFailed() string { return In(i18n.Locale()).VoiceFailed() }
+
+// VoiceFailed says "Couldn't transcribe. Try again"
+// in the language of msgs.
+//
+// Line above the composer for any other voice failure: no network, nothing
+// heard, the recognizer failed.
+func (msgs Messages) VoiceFailed() string {
+	return Catalog.Format(msgs.locale, "voiceFailed", nil)
+}

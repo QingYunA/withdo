@@ -698,5 +698,15 @@
   "settingsSyncSecondFactor": "这个账号开了两步验证，应用内登录暂时不支持",
   "settingsSyncAccountLocked": "账号已停用，请联系管理员",
   "settingsSyncSignInUnsupported": "这个服务器不支持从应用内登录",
-  "settingsSyncSignInFailed": "没能登录，请再试一次。"
+  "settingsSyncSignInFailed": "没能登录，请再试一次。",
+  "composerVoice": "语音输入",
+  "composerVoiceStop": "结束录音",
+  "voiceListening": "正在听… 再点一下结束，Esc 取消",
+  "voiceTranscribing": "正在识别…",
+  "voiceSignIn": "登录后才能用语音",
+  "voiceMicDenied": "麦克风权限没开",
+  "voiceOpenSystemSettings": "打开系统设置",
+  "voiceQuota": "今天的语音次数用完了",
+  "voiceOff": "这个服务器没开语音",
+  "voiceFailed": "没能识别出来，再试一次"
 }

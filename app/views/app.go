@@ -11,6 +11,7 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
+	"github.com/QingYunA/adhd-todo/internal/speech"
 )
 
 // Actions is what the views ask the shell to do.
@@ -78,6 +79,11 @@ type App struct {
 	GitHub data.GitHub
 	// Sync is the sync service behind Settings > Sync and the sidebar cloud; nil leaves the pane empty.
 	Sync SyncService
+	// Recorder is the microphone behind the composer's voice button, and Transcriber turns what it
+	// recorded into text through the sync server. Without a Recorder (or one that is not available
+	// on this platform) the composer has no microphone.
+	Recorder    speech.Recorder
+	Transcriber data.Transcriber
 	// Seen keeps which handed-over items the user has seen; nil keeps that for this run only.
 	Seen data.SeenStore
 	// Dismissed keeps which handed-over rows the user put aside with Not now; nil keeps that for

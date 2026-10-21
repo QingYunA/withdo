@@ -15,6 +15,7 @@ import (
 	"github.com/QingYunA/adhd-todo/app/views"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/QingYunA/adhd-todo/internal/cli"
+	"github.com/QingYunA/adhd-todo/internal/speech"
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/plugins/updater/native"
@@ -67,7 +68,9 @@ func main() {
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), github: be.github}
 	app.Act = s
 	app.Sync = be.sync
+	app.Recorder = speech.New()
 	if be.sync != nil {
+		app.Transcriber = be.sync
 		be.sync.SetSyncNotify(func() { s.Post(func() {}) })
 	}
 	app.Sound, app.SystemSounds, app.WindowKey = theme.LoadVoices(), uiSoundsOn, s.windowKey
