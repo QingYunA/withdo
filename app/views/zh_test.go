@@ -117,7 +117,7 @@ func TestChineseSettingsAndLanguageChoice(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.tt.Frame()
-	has(t, r.tt, "通用", "助手", "Agent", "GitHub", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
+	has(t, r.tt, "账号", "通用", "Agent", "高级", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
 		"数据文件夹", "在访达中显示", "adhd-todo 0.2.0", "开源，MIT 许可证")
 	if r.title != "通用" {
 		t.Errorf("title %q", r.title)
@@ -137,7 +137,7 @@ func TestChineseAssistantPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.setUp(t, "anthropic", "deepseek")
-	r.pane(t, "助手")
+	r.pane(t, "高级")
 	has(t, r.tt, "更换", "用这个", "测试", "还没有测试", "claude-haiku-5-5")
 	hasFold(t, r.tt, "当前在用")
 	hasFold(t, r.tt, "也配好了")

@@ -65,14 +65,14 @@ func syncPane(t *testing.T, snap data.SyncSnapshot) (*settingsRig, *fakeSync) {
 	t.Helper()
 	fs := &fakeSync{snap: snap}
 	r := newSettingsRig(t, func(a *App) { a.Sync = fs })
-	r.s.Show(PaneSync)
+	r.s.Show(PaneAccount)
 	r.tt.Frame()
 	return r, fs
 }
 
 func TestSyncPaneSignedOut(t *testing.T) {
 	r, fs := syncPane(t, signedOutSync())
-	has(t, r.tt, "Sync with your phone and other computers", "Email or username", "Password",
+	has(t, r.tt, "Sign in to your account", "Email or username", "Password",
 		"Sign in and sync", "Server", "todo.sri-ai.xyz", "Change")
 	has(t, r.tt, "Accounts are made by the server's admin. Keys and model settings stay on this Mac.")
 	hasNot(t, r.tt, "The sign-in page opens in the browser.", "Finish signing in in your browser.")
@@ -235,7 +235,7 @@ func TestSyncPaneUploadingShowsTheCountAndTheBar(t *testing.T) {
 	}
 }
 
-func TestSyncPaneSyncedListsDevicesWithThisMacFirst(t *testing.T) {
+func TestSyncPaneAccountedListsDevicesWithThisMacFirst(t *testing.T) {
 	r, fs := syncPane(t, syncedSync())
 	has(t, r.tt, "Cyan 云辰", "Signed in · 3 devices", "Sign out", "This Mac")
 	has(t, r.tt, "Synced", "just now", "Sync now", "Devices", "Cyan 的 MacBook Pro", "Pixel 8", "公司的 Mac mini")
@@ -330,7 +330,7 @@ func TestSidebarSyncCloud(t *testing.T) {
 		t.Fatalf("no cloud after 16 minutes of failure: %q", tt.Texts())
 	}
 	mustNil(t, tt.Click("Settings"))
-	if len(rec.panes) != 1 || rec.panes[0] != PaneSync {
+	if len(rec.panes) != 1 || rec.panes[0] != PaneAccount {
 		t.Errorf("Settings opened on %v", rec.panes)
 	}
 

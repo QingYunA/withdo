@@ -1810,10 +1810,6 @@
   "@settingsPaneAgents": {
     "description": "Toolbar pane of the Settings window (and the window's title) about coding agents reporting here."
   },
-  "settingsPaneAssistant": "Assistant",
-  "@settingsPaneAssistant": {
-    "description": "Toolbar pane of the Settings window (and the window's title) for the built-in assistant's model."
-  },
   "settingsProvider": "Provider",
   "@settingsProvider": {
     "description": "Label of the row that picks the assistant's model provider."
@@ -3508,10 +3504,6 @@
   "@navRecent": {
     "description": "Sidebar item and title of the page that shows what each project merged lately."
   },
-  "settingsPages": "Pages",
-  "@settingsPages": {
-    "description": "Header of the group in Settings > General with the switches of the pages that are off until asked for."
-  },
   "settingsRecentChanges": "Recent changes",
   "@settingsRecentChanges": {
     "description": "Title of the switch row that turns the Recent changes page on."
@@ -3870,21 +3862,29 @@
   "@recentLinkTip": {
     "description": "Tooltip of the Recent changes link on a project page."
   },
-  "settingsSync": "Sync",
-  "@settingsSync": {
-    "description": "The Sync tab of Settings and its window title."
+  "settingsPaneAccount": "Account",
+  "@settingsPaneAccount": {
+    "description": "Toolbar pane of the Settings window (and the window's title) for the account: signing in, devices and sync."
+  },
+  "settingsPaneAdvanced": "Advanced",
+  "@settingsPaneAdvanced": {
+    "description": "Toolbar pane of the Settings window (and the window's title) with the user's own model, the Recent changes page, the end-of-day reminder and sound effects."
+  },
+  "settingsOwnModel": "Use your own model",
+  "@settingsOwnModel": {
+    "description": "Header of the group in Settings > Advanced where the user brings their own AI provider and key."
   },
   "settingsSyncUnavailable": "Sync isn't available here.",
   "@settingsSyncUnavailable": {
     "description": "Shown in Settings > Sync when the app has no sync service."
   },
-  "settingsSyncSignedOutTitle": "Sync with your phone and other computers",
+  "settingsSyncSignedOutTitle": "Sign in to your account",
   "@settingsSyncSignedOutTitle": {
-    "description": "Title of the signed-out Sync pane."
+    "description": "Title of the signed-out Account pane."
   },
-  "settingsSyncSignedOutBody": "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone.",
+  "settingsSyncSignedOutBody": "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents are doing from your phone.",
   "@settingsSyncSignedOutBody": {
-    "description": "The signed-out Sync pane's explanation of what syncs."
+    "description": "The signed-out Account pane's explanation of what syncs."
   },
   "settingsSyncSignIn": "Sign in and sync",
   "@settingsSyncSignIn": {

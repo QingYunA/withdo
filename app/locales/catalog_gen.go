@@ -4376,22 +4376,6 @@ func (msgs Messages) SettingsPaneAgents() string {
 	return Catalog.Format(msgs.locale, "settingsPaneAgents", nil)
 }
 
-// SettingsPaneAssistant says "Assistant"
-// in the language the app shows.
-//
-// Toolbar pane of the Settings window (and the window's title) for the
-// built-in assistant's model.
-func SettingsPaneAssistant() string { return In(i18n.Locale()).SettingsPaneAssistant() }
-
-// SettingsPaneAssistant says "Assistant"
-// in the language of msgs.
-//
-// Toolbar pane of the Settings window (and the window's title) for the
-// built-in assistant's model.
-func (msgs Messages) SettingsPaneAssistant() string {
-	return Catalog.Format(msgs.locale, "settingsPaneAssistant", nil)
-}
-
 // SettingsProvider says "Provider"
 // in the language the app shows.
 //
@@ -8742,22 +8726,6 @@ func (msgs Messages) NavRecent() string {
 	return Catalog.Format(msgs.locale, "navRecent", nil)
 }
 
-// SettingsPages says "Pages"
-// in the language the app shows.
-//
-// Header of the group in Settings > General with the switches of the pages
-// that are off until asked for.
-func SettingsPages() string { return In(i18n.Locale()).SettingsPages() }
-
-// SettingsPages says "Pages"
-// in the language of msgs.
-//
-// Header of the group in Settings > General with the switches of the pages
-// that are off until asked for.
-func (msgs Messages) SettingsPages() string {
-	return Catalog.Format(msgs.locale, "settingsPages", nil)
-}
-
 // SettingsRecentChanges says "Recent changes"
 // in the language the app shows.
 //
@@ -9660,18 +9628,54 @@ func (msgs Messages) RecentLinkTip() string {
 	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
 }
 
-// SettingsSync says "Sync"
+// SettingsPaneAccount says "Account"
 // in the language the app shows.
 //
-// The Sync tab of Settings and its window title.
-func SettingsSync() string { return In(i18n.Locale()).SettingsSync() }
+// Toolbar pane of the Settings window (and the window's title) for the
+// account: signing in, devices and sync.
+func SettingsPaneAccount() string { return In(i18n.Locale()).SettingsPaneAccount() }
 
-// SettingsSync says "Sync"
+// SettingsPaneAccount says "Account"
 // in the language of msgs.
 //
-// The Sync tab of Settings and its window title.
-func (msgs Messages) SettingsSync() string {
-	return Catalog.Format(msgs.locale, "settingsSync", nil)
+// Toolbar pane of the Settings window (and the window's title) for the
+// account: signing in, devices and sync.
+func (msgs Messages) SettingsPaneAccount() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAccount", nil)
+}
+
+// SettingsPaneAdvanced says "Advanced"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) with the
+// user's own model, the Recent changes page, the end-of-day reminder and
+// sound effects.
+func SettingsPaneAdvanced() string { return In(i18n.Locale()).SettingsPaneAdvanced() }
+
+// SettingsPaneAdvanced says "Advanced"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) with the
+// user's own model, the Recent changes page, the end-of-day reminder and
+// sound effects.
+func (msgs Messages) SettingsPaneAdvanced() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAdvanced", nil)
+}
+
+// SettingsOwnModel says "Use your own model"
+// in the language the app shows.
+//
+// Header of the group in Settings > Advanced where the user brings their
+// own AI provider and key.
+func SettingsOwnModel() string { return In(i18n.Locale()).SettingsOwnModel() }
+
+// SettingsOwnModel says "Use your own model"
+// in the language of msgs.
+//
+// Header of the group in Settings > Advanced where the user brings their
+// own AI provider and key.
+func (msgs Messages) SettingsOwnModel() string {
+	return Catalog.Format(msgs.locale, "settingsOwnModel", nil)
 }
 
 // SettingsSyncUnavailable says "Sync isn't available here."
@@ -9688,30 +9692,30 @@ func (msgs Messages) SettingsSyncUnavailable() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUnavailable", nil)
 }
 
-// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// SettingsSyncSignedOutTitle says "Sign in to your account"
 // in the language the app shows.
 //
-// Title of the signed-out Sync pane.
+// Title of the signed-out Account pane.
 func SettingsSyncSignedOutTitle() string { return In(i18n.Locale()).SettingsSyncSignedOutTitle() }
 
-// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// SettingsSyncSignedOutTitle says "Sign in to your account"
 // in the language of msgs.
 //
-// Title of the signed-out Sync pane.
+// Title of the signed-out Account pane.
 func (msgs Messages) SettingsSyncSignedOutTitle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignedOutTitle", nil)
 }
 
-// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
 // in the language the app shows.
 //
-// The signed-out Sync pane's explanation of what syncs.
+// The signed-out Account pane's explanation of what syncs.
 func SettingsSyncSignedOutBody() string { return In(i18n.Locale()).SettingsSyncSignedOutBody() }
 
-// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
 // in the language of msgs.
 //
-// The signed-out Sync pane's explanation of what syncs.
+// The signed-out Account pane's explanation of what syncs.
 func (msgs Messages) SettingsSyncSignedOutBody() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignedOutBody", nil)
 }

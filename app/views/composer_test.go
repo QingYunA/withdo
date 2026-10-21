@@ -257,7 +257,7 @@ func TestWithoutAModelOnlyTheQuietSetUpLineIsExtraAndOnlyWhileFocusedAndEmpty(t 
 	if err := off.tt.Click("Set up the assistant"); err != nil {
 		t.Fatal(err)
 	}
-	if len(off.rec.panes) != 1 || off.rec.panes[0] != PaneAssistant {
+	if len(off.rec.panes) != 1 || off.rec.panes[0] != PaneAdvanced {
 		t.Errorf("asked to show %v, want the Assistant pane", off.rec.panes)
 	}
 }

@@ -18,7 +18,7 @@ const archivedRows = 5
 // settingsURLNotifications opens the Notifications pane of System Settings.
 const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
 
-// generalPane is the language, the notifications, the updates, the pages, the archived projects, and where the data lives.
+// generalPane is the language, the notifications, the updates, the archived projects, and where the data lives.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
@@ -26,14 +26,10 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	groupLabel(c, t, s.say.SettingsNotifications())
 	group(c, t, "notifications", func() {
 		s.notificationsRow(c, t)
-		s.endOfDayRows(c, t)
 	})
-	group(c, t, "sound", func() { s.soundRow(c, t) })
 	if s.app.Act.CanUpdate() {
 		group(c, t, "updates", func() { s.updatesRow(c, t) })
 	}
-	groupLabel(c, t, s.say.SettingsPages())
-	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {
@@ -48,6 +44,16 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 			}
 		})
 	})
+}
+
+// advancedPane is the model the user brings (the Assistant pane that was), then the Recent changes
+// page switch, the end-of-day reminder and the sound effects.
+func (s *Settings) advancedPane(c *ui.Context, t *theme.Tokens) {
+	groupLabel(c, t, s.say.SettingsOwnModel())
+	s.assistantPane(c, t)
+	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
+	group(c, t, "end-of-day", func() { s.endOfDayRows(c, t) })
+	group(c, t, "sound", func() { s.soundRow(c, t) })
 }
 
 // notificationsRow is the switch for every system notification. When macOS refused the last one the
@@ -79,7 +85,7 @@ func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
 // the notifications, the time is dimmed and out of reach.
 func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
 	on := s.app.EndOfDayOn()
-	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), false, func() {
+	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), true, func() {
 		ui.Switch(c.Key("end-of-day-switch"), &on).Label(s.say.SettingsEndOfDaySwitch())
 	})
 	if on != s.app.EndOfDayOn() {
