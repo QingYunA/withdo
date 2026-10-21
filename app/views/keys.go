@@ -80,7 +80,7 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.move(c, ids, 1)
 	case c.Shortcut(0, ui.KeyUp):
 		m.move(c, ids, -1)
-	case c.Shortcut(0, ui.KeyEnter) && m.voice.phase == voiceListening:
+	case m.voice.phase == voiceListening && c.Shortcut(0, ui.KeyEnter):
 		m.voiceStop()
 	case c.Shortcut(0, ui.KeyEnter):
 		m.openSelected()
