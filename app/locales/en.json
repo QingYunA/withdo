@@ -1750,7 +1750,27 @@
   },
   "trayOpen": "Open ADHD Todo",
   "@trayOpen": {
-    "description": "Item of the menu of the tray icon (Windows) that brings the main window back."
+    "description": "Item of the menu of the tray icon (Windows) that brings the main window back; also the link at the right of the footer of the menu bar panel."
+  },
+  "popoverWorking": "{count, plural, one {# agent working} other {# agents working}}",
+  "@popoverWorking": {
+    "description": "Left of the footer of the menu bar panel: how many agents are working on tasks now.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "popoverStuck": "{count} stuck",
+  "@popoverStuck": {
+    "description": "Footer of the menu bar panel, after the number of agents working and a dot: how many agents are stuck, shown in the blocked color. Not shown when none is.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "modelsBaseURLHelp": "Change only for a gateway such as Magpie",
   "@modelsBaseURLHelp": {

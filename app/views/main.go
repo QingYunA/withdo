@@ -92,6 +92,10 @@ type Main struct {
 	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle     // the input that renames a project in the sidebar
 
+	// closePanel is set on the Main of the menu bar panel (popover.go): Esc in its composer, once the
+	// request and the reply are dealt with, closes the panel. Nil in the window.
+	closePanel func()
+
 	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
 	convo   convo                        // the answer under the composer that sent the last request
 	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
