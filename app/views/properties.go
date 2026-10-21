@@ -13,6 +13,10 @@ const labelWidth float32 = 96
 // properties is the compact list of what can be set on a task. Labels sit on the left in
 // secondary, values on the right and edit in place.
 func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
+	if mine(task) {
+		m.mineProperties(c, t, task)
+		return
+	}
 	ui.Column(c).Gap(2).Children(func() {
 		m.statusRow(c, t, task)
 		m.fromRow(c, t, task)
@@ -36,13 +40,23 @@ func (m *Main) properties(c *ui.Context, t *theme.Tokens, task data.Task) {
 var propIcons = map[string]*ui.SVG{
 	"status": theme.IconStatus, "from": theme.IconAgent, "priority": theme.IconFlag, "category": theme.IconList, "project": theme.IconFolder,
 	"milestone": theme.IconDiamond, "due": theme.IconCalendar, "remind": theme.IconBell, "branch": theme.IconBranch,
-	"pr": theme.IconPR, "parent": theme.IconBranch,
+	"pr": theme.IconPR, "parent": theme.IconBranch, "when": theme.IconClock, "where": theme.IconFolder,
 }
 
 // propRow lays out a label (a line icon and its words) and a value on one 32 pt line.
 func (m *Main) propRow(c *ui.Context, t *theme.Tokens, key, label string, value func()) {
-	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(ui.Center).Children(func() {
-		ui.Row(c).Width(labelWidth).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
+	m.propRowAt(c, t, key, label, ui.Center, value)
+}
+
+// propRowAt is propRow with the label level with the value's first line (ui.Start) for a value of
+// chips that may wrap, or centered (ui.Center).
+func (m *Main) propRowAt(c *ui.Context, t *theme.Tokens, key, label string, align ui.Align, value func()) {
+	labelH := float32(0)
+	if align == ui.Start {
+		labelH = 28 // the height of a chip
+	}
+	ui.Row(c.Key("prop-" + key)).MinHeight(theme.RowOneLine).AlignItems(align).Children(func() {
+		ui.Row(c).Width(labelWidth).MinHeight(labelH).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
 			if icon := propIcons[key]; icon != nil {
 				ui.Icon(c, icon).Size(theme.IconProp, theme.IconProp).TextColor(t.TextTertiary).Shrink(0)
 			}
@@ -172,29 +186,37 @@ func (m *Main) prRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 // dateRow is a due or reminder time. It opens a calendar (and a time of day for reminders) in a
 // popover and saves as soon as a day or time is picked.
 func (m *Main) dateRow(c *ui.Context, t *theme.Tokens, key, label string, current *time.Time, open *bool, patch func(time.Time) data.Patch, withTime bool) {
-	task, _ := m.app.Task(m.inspector.lastOpen)
 	m.propRow(c, t, key, label, func() {
-		text, color := m.say.ValueNone(), t.TextTertiary
-		if current != nil {
-			text, color = m.clock.Moment(*current, m.app.Now(), withTime), t.Text
-		}
-		btn := valueButton(c, t, "date-"+key).Label(m.say.A11yDate(label, text))
-		btn.Children(func() {
+		btn := valueButton(c, t, "date-"+key)
+		m.dateValue(c, t, btn, key, label, current, open, patch, withTime, func(text string, color ui.Color, _ bool) {
 			theme.Text(c, theme.Compact, color, text)
 		})
-		switch {
-		case key == "remind": // the reminders are the task menu's presets
-			if btn.Clicked() {
-				m.openMenuBelow(btn, task.ID, pageRemind)
-			}
-			return
-		case btn.Clicked():
-			*open = !*open
-			m.inspector.when = startingMoment(current, m.app.Now(), withTime)
+	})
+}
+
+// dateValue is a due or reminder time as a button (a value of the property list or a chip, which
+// draws its own look) and what it opens: a calendar popover, or the reminder presets of the task menu.
+func (m *Main) dateValue(c *ui.Context, t *theme.Tokens, btn ui.Element, key, label string, current *time.Time, open *bool,
+	patch func(time.Time) data.Patch, withTime bool, look func(text string, color ui.Color, set bool)) {
+	task, _ := m.app.Task(m.inspector.lastOpen)
+	text, color := m.say.ValueNone(), t.TextTertiary
+	if current != nil {
+		text, color = m.clock.Moment(*current, m.app.Now(), withTime), t.Text
+	}
+	btn.Label(m.say.A11yDate(label, text))
+	btn.Children(func() { look(text, color, current != nil) })
+	switch {
+	case key == "remind": // the reminders are the task menu's presets
+		if btn.Clicked() {
+			m.openMenuBelow(btn, task.ID, pageRemind)
 		}
-		ui.Popover(c, btn, open, func() {
-			m.datePicker(c, t, task, patch, withTime, open)
-		})
+		return
+	case btn.Clicked():
+		*open = !*open
+		m.inspector.when = startingMoment(current, m.app.Now(), withTime)
+	}
+	ui.Popover(c, btn, open, func() {
+		m.datePicker(c, t, task, patch, withTime, open)
 	})
 }
 

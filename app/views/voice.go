@@ -325,7 +325,7 @@ func (m *Main) voiceProblemLine(c *ui.Context, t *theme.Tokens, now time.Time, r
 	case voiceNeedSignIn:
 		row(func() {
 			if l := link(c, t, m.say.VoiceSignIn()); l.Clicked() {
-				m.openSettings(PaneSync)
+				m.openSettings(PaneAccount)
 			}
 		})
 	case voiceMicOff:

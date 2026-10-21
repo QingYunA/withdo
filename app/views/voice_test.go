@@ -280,7 +280,7 @@ func TestSignedOutSaysSoAndLinksToTheSyncPane(t *testing.T) {
 		t.Error("recorded while signed out")
 	}
 	v.click(t, "Sign in to use voice")
-	if len(v.rec.panes) != 1 || v.rec.panes[0] != PaneSync {
+	if len(v.rec.panes) != 1 || v.rec.panes[0] != PaneAccount {
 		t.Errorf("settings opened %v", v.rec.panes)
 	}
 	v.now = v.now.Add(voiceProblemFor)

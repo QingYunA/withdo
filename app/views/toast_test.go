@@ -54,11 +54,7 @@ func TestOtherToastsHaveNoCopyButton(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	cmdClick(t, tt, "Reply to design feedback", "Book dentist")
 	tt.Frame()
-	if err := tt.Click("Priority"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Frame()
-	if err := tt.Click("Set priority to Urgent"); err != nil {
+	if err := tt.Click("Mark important"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()

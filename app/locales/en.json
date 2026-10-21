@@ -586,6 +586,72 @@
       }
     }
   },
+  "quickAddReceipt": "Added {count}: {items}",
+  "@quickAddReceipt": {
+    "description": "The line under the composer after the local rules added tasks from one sentence, with no model connected: how many, then each with what was read from its words. Its Undo removes them all.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "items": {
+        "type": "String",
+        "example": "Checkup (Mon 9:00 AM reminder), Pay rent (due Fri)"
+      }
+    }
+  },
+  "quickAddItem": "{title} ({details})",
+  "@quickAddItem": {
+    "description": "One task in that line: its title and, in brackets, what the local rules read from the words.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Pay rent"
+      },
+      "details": {
+        "type": "String",
+        "example": "due Fri, important"
+      }
+    }
+  },
+  "quickAddJoin": "{first}, {second}",
+  "@quickAddJoin": {
+    "description": "Two entries of a list in that line, the tasks or the details of one task, side by side.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Checkup"
+      },
+      "second": {
+        "type": "String",
+        "example": "Pay rent"
+      }
+    }
+  },
+  "quickAddDue": "due {when}",
+  "@quickAddDue": {
+    "description": "Detail of a task in that line: the deadline the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Fri"
+      }
+    }
+  },
+  "quickAddReminder": "{when} reminder",
+  "@quickAddReminder": {
+    "description": "Detail of a task in that line: the moment of the reminder the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Mon 9:00 AM"
+      }
+    }
+  },
+  "quickAddImportant": "important",
+  "@quickAddImportant": {
+    "description": "Detail of a task in that line: it was marked with a ! and is now important."
+  },
   "detailDone": "Marked done",
   "@detailDone": {
     "description": "Detail of a change that completed a task."
@@ -1809,10 +1875,6 @@
   "settingsPaneAgents": "Agents",
   "@settingsPaneAgents": {
     "description": "Toolbar pane of the Settings window (and the window's title) about coding agents reporting here."
-  },
-  "settingsPaneAssistant": "Assistant",
-  "@settingsPaneAssistant": {
-    "description": "Toolbar pane of the Settings window (and the window's title) for the built-in assistant's model."
   },
   "settingsProvider": "Provider",
   "@settingsProvider": {
@@ -3508,10 +3570,6 @@
   "@navRecent": {
     "description": "Sidebar item and title of the page that shows what each project merged lately."
   },
-  "settingsPages": "Pages",
-  "@settingsPages": {
-    "description": "Header of the group in Settings > General with the switches of the pages that are off until asked for."
-  },
   "settingsRecentChanges": "Recent changes",
   "@settingsRecentChanges": {
     "description": "Title of the switch row that turns the Recent changes page on."
@@ -3870,21 +3928,29 @@
   "@recentLinkTip": {
     "description": "Tooltip of the Recent changes link on a project page."
   },
-  "settingsSync": "Sync",
-  "@settingsSync": {
-    "description": "The Sync tab of Settings and its window title."
+  "settingsPaneAccount": "Account",
+  "@settingsPaneAccount": {
+    "description": "Toolbar pane of the Settings window (and the window's title) for the account: signing in, devices and sync."
+  },
+  "settingsPaneAdvanced": "Advanced",
+  "@settingsPaneAdvanced": {
+    "description": "Toolbar pane of the Settings window (and the window's title) with the user's own model, the Recent changes page, the end-of-day reminder and sound effects."
+  },
+  "settingsOwnModel": "Use your own model",
+  "@settingsOwnModel": {
+    "description": "Header of the group in Settings > Advanced where the user brings their own AI provider and key."
   },
   "settingsSyncUnavailable": "Sync isn't available here.",
   "@settingsSyncUnavailable": {
     "description": "Shown in Settings > Sync when the app has no sync service."
   },
-  "settingsSyncSignedOutTitle": "Sync with your phone and other computers",
+  "settingsSyncSignedOutTitle": "Sign in to your account",
   "@settingsSyncSignedOutTitle": {
-    "description": "Title of the signed-out Sync pane."
+    "description": "Title of the signed-out Account pane."
   },
-  "settingsSyncSignedOutBody": "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone.",
+  "settingsSyncSignedOutBody": "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents are doing from your phone.",
   "@settingsSyncSignedOutBody": {
-    "description": "The signed-out Sync pane's explanation of what syncs."
+    "description": "The signed-out Account pane's explanation of what syncs."
   },
   "settingsSyncSignIn": "Sign in and sync",
   "@settingsSyncSignIn": {
@@ -4164,7 +4230,7 @@
   },
   "voiceSignIn": "Sign in to use voice",
   "@voiceSignIn": {
-    "description": "Line above the composer when the microphone is pressed while signed out; a link that opens Settings on the Sync pane."
+    "description": "Line above the composer when the microphone is pressed while signed out; a link that opens Settings on the Account pane."
   },
   "voiceMicDenied": "Microphone access is off",
   "@voiceMicDenied": {
@@ -4185,5 +4251,53 @@
   "voiceFailed": "Couldn't transcribe. Try again",
   "@voiceFailed": {
     "description": "Line above the composer for any other voice failure: no network, nothing heard, the recognizer failed."
+  },
+  "propWhen": "When",
+  "@propWhen": {
+    "description": "Label of the inspector row of a task of the user's own that holds its due date and reminder chips."
+  },
+  "propWhere": "Where",
+  "@propWhere": {
+    "description": "Label of the inspector row of a task of the user's own that holds its category and its project chips."
+  },
+  "segmentDone": "Done",
+  "@segmentDone": {
+    "description": "Third segment of the inspector's status control for the user's own tasks: finished."
+  },
+  "inspectorHandOff": "Hand to an agent…",
+  "@inspectorHandOff": {
+    "description": "Button at the foot of the inspector of a task of the user's own that hands it to any agent. Nothing is started."
+  },
+  "a11yImportant": "Important",
+  "@a11yImportant": {
+    "description": "Accessibility label and tooltip of the star beside the title in the inspector, which toggles whether the user's own task is important."
+  },
+  "menuMarkImportant": "Mark important",
+  "@menuMarkImportant": {
+    "description": "Line of the task menu, and button of the bulk bar, that marks the user's own tasks as important (the star)."
+  },
+  "menuNotImportant": "Not important",
+  "@menuNotImportant": {
+    "description": "Line of the task menu, and button of the bulk bar, that takes the important star off the user's own tasks."
+  },
+  "bulkImportantToast": "Marked {count, plural, one {# task} other {# tasks}} important",
+  "@bulkImportantToast": {
+    "description": "Toast after the rows selected together were marked important; its Undo puts the old priorities back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkNotImportantToast": "Took the star off {count, plural, one {# task} other {# tasks}}",
+  "@bulkNotImportantToast": {
+    "description": "Toast after the important star was taken off the rows selected together; its Undo puts the old priorities back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   }
 }

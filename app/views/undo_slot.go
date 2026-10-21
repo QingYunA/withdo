@@ -12,9 +12,10 @@ const undoWithin = 6 * time.Second
 
 // undoEntry is one change the user can take back.
 type undoEntry struct {
-	title string // what the toast says happened
-	extra any    // data for the toast's look, such as the Copy for the agent button of a hand-off
-	undo  func() // reverses the change
+	title string    // what the toast says happened
+	extra any       // data for the toast's look, such as the Copy for the agent button of a hand-off
+	undo  func()    // reverses the change
+	until time.Time // when the offer ends, for an entry without a toast to close it; zero for none
 }
 
 // undoSlot holds the entry that is on offer: the newest, for as long as its toast shows.
@@ -41,6 +42,13 @@ func (s *undoSlot) closed(ticket int) {
 // clear drops the entry, whichever it is.
 func (s *undoSlot) clear() { s.cur = nil }
 
+// expire drops the entry once its time is over.
+func (s *undoSlot) expire(now time.Time) {
+	if s.cur != nil && !s.cur.until.IsZero() && !now.Before(s.cur.until) {
+		s.cur = nil
+	}
+}
+
 // pickUndo is the entry ⌘Z takes: the first of entries that is not nil, none when a text field
 // would take the key for its own undo. The assistant's last change comes before the toast's.
 func pickUndo(textFree bool, entries ...*undoEntry) *undoEntry {
@@ -53,4 +61,16 @@ func pickUndo(textFree bool, entries ...*undoEntry) *undoEntry {
 		}
 	}
 	return nil
+}
+
+// takeTimed takes the entry out of the slot when it is one with a time of its own (no toast shows
+// it) that is not over yet; the entries of toasts are left to the toast and the window's Cmd+Z.
+func (s *undoSlot) takeTimed(now time.Time) *undoEntry {
+	s.expire(now)
+	e := s.cur
+	if e == nil || e.until.IsZero() {
+		return nil
+	}
+	s.cur = nil
+	return e
 }

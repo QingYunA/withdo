@@ -220,6 +220,23 @@ func (a *App) AddTask(in data.CreateTaskInput) error {
 	return nil
 }
 
+// AddTasks creates the tasks in order and refreshes once. It returns the ids it made, which are all
+// of them unless the error says one failed; the ones made stay.
+func (a *App) AddTasks(ins []data.CreateTaskInput) ([]int, error) {
+	var ids []int
+	var err error
+	for _, in := range ins {
+		var t data.Task
+		if t, err = a.Store.CreateTask(in); err != nil {
+			a.snap.err = err
+			break
+		}
+		ids = append(ids, t.ID)
+	}
+	a.Refresh()
+	return ids, err
+}
+
 // Task finds a task in the snapshot.
 func (a *App) Task(id int) (data.Task, bool) {
 	for _, t := range a.snap.tasks {

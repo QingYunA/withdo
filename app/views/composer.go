@@ -31,6 +31,10 @@ type composer struct {
 	// noticeAt and noticeText are the "Added to …" line of a plain task, for 1.5 s.
 	noticeAt   time.Time
 	noticeText string
+	// noticeLen is how long the line stays; undoTicket is the undo slot's ticket of the change it
+	// tells about, which its Undo link takes back while the slot still holds it.
+	noticeLen  time.Duration
+	undoTicket int
 	// setUpHover keeps the "Set up the assistant" line while the pointer is on it.
 	setUpHover bool
 	// pics are the images attached to the next request, pending how many are still being read.
@@ -104,8 +108,15 @@ func (m *Main) takeFocus(c *ui.Context, s surface) {
 // lets go of the keys, and Down walks from the page's composer into the rows.
 func (m *Main) composerKey(s surface) func(ui.TextKey) bool {
 	return func(k ui.TextKey) bool {
-		if k.Mods == ui.Cmd && k.Key == ui.KeyZ && k.Text() == "" && m.convo.canUndo() {
-			return m.undoLast() // nothing typed to undo: Cmd+Z is the assistant's
+		if k.Mods == ui.Cmd && k.Key == ui.KeyZ && k.Text() == "" {
+			// Nothing typed to undo: Cmd+Z is the assistant's, else the last sentence the local rules added.
+			if m.convo.canUndo() {
+				return m.undoLast()
+			}
+			if e := m.undos.takeTimed(m.app.Now()); e != nil {
+				e.undo()
+				return true
+			}
 		}
 		if k.Mods != 0 {
 			return false
@@ -186,23 +197,4 @@ func (m *Main) submit(s surface) {
 	if s == surfacePage {
 		m.addPlain(text)
 	}
-}
-
-// addPlain makes the text a plain task in the place of the page: its project, else the Inbox.
-func (m *Main) addPlain(text string) {
-	cs, place := &m.cmp[surfacePage], m.placeOf(surfacePage)
-	in := data.CreateTaskInput{Title: strings.Join(strings.Fields(text), " "), Source: data.SourceUser}
-	in.Category = place.Category
-	project := ""
-	if place.Kind == data.PlaceProject {
-		in.ProjectID, project = data.IntPtr(place.ProjectID), m.app.projectName(&place.ProjectID)
-	}
-	if place.Kind == data.PlaceCalendar { // a plain task added to a day is due that day, at the end of it
-		due := data.EndOfDay(m.calendarDay())
-		in.DueAt = &due
-	}
-	if err := m.app.AddTask(in); err != nil {
-		return
-	}
-	cs.buf, cs.noticeAt, cs.noticeText = "", m.app.Now(), m.say.DetailAdded(m.inboxOr(project))
 }

@@ -141,8 +141,8 @@ func listMeta(task data.Task, ot data.OverviewTask) string {
 
 func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data.OverviewTask) {
 	now := m.app.Now()
-	if theme.ShowsPriority(task.Priority) && !task.Status.Terminal() {
-		theme.PriorityBadge(c, t, task.Priority)
+	if !task.Status.Terminal() {
+		priorityMark(c, t, task)
 	}
 	m.rowThumb(c, t, task.ID)
 	switch {

@@ -15,10 +15,9 @@ type Pane int
 
 const (
 	PaneGeneral Pane = iota
-	PaneAssistant
+	PaneAccount
 	PaneAgents
-	PaneGitHub
-	PaneSync
+	PaneAdvanced
 )
 
 // settingsWidth is the window's width.
@@ -45,7 +44,7 @@ type Settings struct {
 
 	agents agentsCache
 
-	// Settings > Sync: whether this opening asked for the devices, and the inline Change field.
+	// Settings > Account: whether this opening asked for the devices, and the inline Change field.
 	syncAsked         bool
 	syncLastSynced    time.Time
 	syncHadConflict   bool
@@ -53,7 +52,7 @@ type Settings struct {
 	syncEditingServer bool
 	syncServerDraft   string
 	syncServerErr     bool
-	// Settings > Sync's sign-in fields. The password leaves with the pane.
+	// Settings > Account's sign-in fields. The password leaves with the pane.
 	syncFields        fields
 	syncLogin         string
 	syncPassword      string
@@ -71,9 +70,9 @@ func (s *Settings) ContentSize() (width, height float32) {
 // NewSettings opens on General.
 func NewSettings(a *App) *Settings { return &Settings{app: a, syncFields: fields{}} }
 
-// Show opens a pane. Opening Sync again asks the server for its devices again.
+// Show opens a pane. Opening Account again asks the server for its devices again.
 func (s *Settings) Show(p Pane) {
-	if p == PaneSync {
+	if p == PaneAccount {
 		s.syncAsked = false
 		s.syncEditingServer, s.syncServerErr = false, false
 		s.syncFocusAccount, s.syncFocusPassword = true, false
@@ -90,11 +89,11 @@ func (s *Settings) ClearSyncPassword() {
 
 // openPane switches panes from the toolbar.
 func (s *Settings) openPane(p Pane) {
-	if p == PaneSync && s.pane != PaneSync {
+	if p == PaneAccount && s.pane != PaneAccount {
 		s.syncAsked = false
 		s.syncFocusAccount, s.syncFocusPassword = true, false
 	}
-	if s.pane == PaneSync && p != PaneSync {
+	if s.pane == PaneAccount && p != PaneAccount {
 		s.syncPassword = ""
 	}
 	s.syncEditingServer, s.syncServerErr = false, false
@@ -112,7 +111,7 @@ func (s *Settings) View(c *ui.Context) {
 			ui.Column(c).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
 		})
 	})
-	if s.pane == PaneSync && s.app.Sync != nil {
+	if s.pane == PaneAccount && s.app.Sync != nil {
 		s.syncSheet(c, t, s.app.Sync.SyncSnapshot())
 	}
 	if title := s.paneName(s.pane); s.OnTitle != nil && title != s.lastTitle {
@@ -123,21 +122,18 @@ func (s *Settings) View(c *ui.Context) {
 
 func (s *Settings) paneName(p Pane) string {
 	switch p {
-	case PaneAssistant:
-		return s.say.SettingsPaneAssistant()
+	case PaneAccount:
+		return s.say.SettingsPaneAccount()
 	case PaneAgents:
 		return s.say.SettingsPaneAgents()
-	case PaneGitHub:
-		return s.say.SettingsGitHub()
-	case PaneSync:
-		return s.say.SettingsSync()
+	case PaneAdvanced:
+		return s.say.SettingsPaneAdvanced()
 	}
 	return s.say.SettingsGeneral()
 }
 
 var paneIcons = map[Pane]*ui.SVG{
-	PaneGeneral: theme.IconGeneral, PaneAssistant: theme.IconStar, PaneAgents: theme.IconTerminal, PaneGitHub: theme.IconOctocat,
-	PaneSync: theme.IconCloud,
+	PaneAccount: theme.IconUser, PaneGeneral: theme.IconGeneral, PaneAgents: theme.IconTerminal, PaneAdvanced: theme.IconStar,
 }
 
 // SettingsTitleBarHeight is the height of the band's title row: tall enough for the traffic
@@ -153,7 +149,7 @@ func (s *Settings) toolbar(c *ui.Context, t *theme.Tokens) ui.Element {
 			theme.Text(c, theme.Section, t.Text, s.paneName(s.pane))
 		})
 		ui.Row(c).Justify(ui.Center).Gap(4).Padding(0, 0, 12).Children(func() {
-			for _, p := range []Pane{PaneGeneral, PaneAssistant, PaneAgents, PaneGitHub, PaneSync} {
+			for _, p := range []Pane{PaneAccount, PaneGeneral, PaneAgents, PaneAdvanced} {
 				s.tab(c, t, p)
 			}
 		})
@@ -187,14 +183,14 @@ func (s *Settings) tab(c *ui.Context, t *theme.Tokens, p Pane) {
 
 func (s *Settings) paneBody(c *ui.Context, t *theme.Tokens) {
 	switch s.pane {
-	case PaneAssistant:
-		s.assistantPane(c, t)
+	case PaneAccount:
+		s.syncPane(c, t)
 	case PaneAgents:
 		s.agentsPane(c, t)
-	case PaneGitHub:
+		groupLabel(c, t, s.say.SettingsGitHub())
 		s.githubPane(c, t)
-	case PaneSync:
-		s.syncPane(c, t)
+	case PaneAdvanced:
+		s.advancedPane(c, t)
 	default:
 		s.generalPane(c, t)
 	}

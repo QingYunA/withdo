@@ -226,9 +226,7 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 				m.glyphSlot(c, t, it.Task, ph.fill)
 				body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
 				right(c, func() {
-					if theme.ShowsPriority(it.Priority) {
-						theme.PriorityBadge(c, t, it.Priority)
-					}
+					priorityMark(c, t, it.Task)
 					m.rowThumb(c, t, it.ID)
 					if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
 						theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)

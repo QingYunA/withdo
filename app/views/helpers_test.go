@@ -250,7 +250,7 @@ func shadow(dst *image.RGBA, r image.Rectangle, spread int, dark bool) {
 // settle waits out the 160 ms color transitions that a change of appearance starts, then draws
 // the frame that follows.
 func settle(tt *ui.Tester) {
-	time.Sleep(300 * time.Millisecond)
+	tt.Advance(300 * time.Millisecond) // the Tester's clock moves only when told to
 	tt.Frame()
 }
 

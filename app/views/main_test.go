@@ -152,7 +152,7 @@ func TestOpenTaskFromANotificationShowsItOverMine(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 2})
 	m.OpenTask(7)
 	tt.Frame()
-	if m.nav.screen != screenMine || m.openID != 7 || !tt.HasText("Activity") {
+	if m.nav.screen != screenMine || m.openID != 7 || !tt.HasText("Where") {
 		t.Errorf("nav %+v open %d", m.nav, m.openID)
 	}
 	m.OpenTask(99999) // a task that no longer exists changes nothing

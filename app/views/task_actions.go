@@ -61,6 +61,9 @@ type taskAction struct {
 	Group  int      // actions of one group sit together; the menu rules off one group from the next
 	Danger bool
 	Ids    []int // the tasks it applies to, in order; none means it would do nothing
+	// Star marks the Priority action of a selection of the user's own tasks only (v31): it is the
+	// important star, which runs at once. Starred says every one of them has it, so it takes it off.
+	Star, Starred bool
 }
 
 // Enabled says whether the action applies to any of the tasks.
@@ -76,11 +79,21 @@ func actionsFor(tasks []data.Task) []taskAction {
 	if len(tasks) == 0 {
 		return nil
 	}
+	priority := taskAction{Kind: actPriority, Name: "priority", Icon: theme.IconFlag, Key: keyPriority, Page: pagePriority, Group: 1, Ids: idsOf(tasks)}
+	if allMine(tasks) { // the user's own tasks have a star, not four priorities
+		on := allStarred(tasks)
+		priority.Star, priority.Starred, priority.Page, priority.Icon = true, on, pageMain, theme.IconImportantOff
+		if on {
+			priority.Icon = theme.IconImportant
+		} else {
+			priority.Ids = idsOf(only(tasks, func(t data.Task) bool { return !starred(t) }))
+		}
+	}
 	return []taskAction{
 		{Kind: actDone, Name: "done", Icon: theme.IconCheck, Key: keyDone, Ids: idsOf(statusTargets(tasks, data.Done))},
 		{Kind: actCancel, Name: "cancel", Icon: theme.IconClose, Ids: idsOf(statusTargets(tasks, data.Cancelled))},
 		{Kind: actMove, Name: "move", Icon: theme.IconMove, Key: keyMove, Page: pageMove, Group: 1, Ids: idsOf(only(tasks, func(t data.Task) bool { return !t.IsSubtask() }))},
-		{Kind: actPriority, Name: "priority", Icon: theme.IconFlag, Key: keyPriority, Page: pagePriority, Group: 1, Ids: idsOf(tasks)},
+		priority,
 		{Kind: actHandOff, Name: "hand", Icon: theme.IconAgent, Key: keyHandOff, Group: 1, Ids: idsOf(only(tasks, canHandOff))},
 		{Kind: actDelete, Name: "delete", Icon: theme.IconTrash, Key: keyDelete, Group: 2, Danger: true, Ids: idsOf(tasks)},
 	}
@@ -117,6 +130,32 @@ func containsKind(kinds []actionKind, k actionKind) bool {
 		}
 	}
 	return false
+}
+
+// mine says whether the task is the user's own, as opposed to one an agent reported or took over.
+// Only a task of mine has the three states and the star (v31); an agent's keeps seven statuses and
+// P0 to P3.
+func mine(t data.Task) bool { return t.Source == data.SourceUser }
+
+// starred says whether a task of mine is important: P1, or P0, which the star also reads as set.
+func starred(t data.Task) bool { return t.Priority == data.P0 || t.Priority == data.P1 }
+
+// importantPriority is what the star writes: P1 when set, P2 when not.
+func importantPriority(on bool) data.Priority {
+	if on {
+		return data.P1
+	}
+	return data.P2
+}
+
+// allMine says whether there are tasks and every one is the user's own.
+func allMine(tasks []data.Task) bool {
+	return len(tasks) > 0 && len(only(tasks, func(t data.Task) bool { return !mine(t) })) == 0
+}
+
+// allStarred says whether there are tasks and every one is starred.
+func allStarred(tasks []data.Task) bool {
+	return len(tasks) > 0 && len(only(tasks, func(t data.Task) bool { return !starred(t) })) == 0
 }
 
 // ownOpen says whether the task is the user's own and unfinished: the one kind of task that can be

@@ -1174,6 +1174,106 @@ func (msgs Messages) DetailAdded(project string) string {
 	return Catalog.Format(msgs.locale, "detailAdded", map[string]any{"project": project})
 }
 
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language the app shows.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func QuickAddReceipt(count int, items string) string {
+	return In(i18n.Locale()).QuickAddReceipt(count, items)
+}
+
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language of msgs.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func (msgs Messages) QuickAddReceipt(count int, items string) string {
+	return Catalog.Format(msgs.locale, "quickAddReceipt", map[string]any{"count": count, "items": items})
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language the app shows.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func QuickAddItem(title string, details string) string {
+	return In(i18n.Locale()).QuickAddItem(title, details)
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language of msgs.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func (msgs Messages) QuickAddItem(title string, details string) string {
+	return Catalog.Format(msgs.locale, "quickAddItem", map[string]any{"title": title, "details": details})
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language the app shows.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func QuickAddJoin(first string, second string) string {
+	return In(i18n.Locale()).QuickAddJoin(first, second)
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language of msgs.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func (msgs Messages) QuickAddJoin(first string, second string) string {
+	return Catalog.Format(msgs.locale, "quickAddJoin", map[string]any{"first": first, "second": second})
+}
+
+// QuickAddDue says "due {when}"
+// in the language the app shows.
+//
+// Detail of a task in that line: the deadline the words gave.
+func QuickAddDue(when string) string { return In(i18n.Locale()).QuickAddDue(when) }
+
+// QuickAddDue says "due {when}"
+// in the language of msgs.
+//
+// Detail of a task in that line: the deadline the words gave.
+func (msgs Messages) QuickAddDue(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddDue", map[string]any{"when": when})
+}
+
+// QuickAddReminder says "{when} reminder"
+// in the language the app shows.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func QuickAddReminder(when string) string { return In(i18n.Locale()).QuickAddReminder(when) }
+
+// QuickAddReminder says "{when} reminder"
+// in the language of msgs.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func (msgs Messages) QuickAddReminder(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddReminder", map[string]any{"when": when})
+}
+
+// QuickAddImportant says "important"
+// in the language the app shows.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func QuickAddImportant() string { return In(i18n.Locale()).QuickAddImportant() }
+
+// QuickAddImportant says "important"
+// in the language of msgs.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func (msgs Messages) QuickAddImportant() string {
+	return Catalog.Format(msgs.locale, "quickAddImportant", nil)
+}
+
 // DetailDone says "Marked done"
 // in the language the app shows.
 //
@@ -4374,22 +4474,6 @@ func SettingsPaneAgents() string { return In(i18n.Locale()).SettingsPaneAgents()
 // agents reporting here.
 func (msgs Messages) SettingsPaneAgents() string {
 	return Catalog.Format(msgs.locale, "settingsPaneAgents", nil)
-}
-
-// SettingsPaneAssistant says "Assistant"
-// in the language the app shows.
-//
-// Toolbar pane of the Settings window (and the window's title) for the
-// built-in assistant's model.
-func SettingsPaneAssistant() string { return In(i18n.Locale()).SettingsPaneAssistant() }
-
-// SettingsPaneAssistant says "Assistant"
-// in the language of msgs.
-//
-// Toolbar pane of the Settings window (and the window's title) for the
-// built-in assistant's model.
-func (msgs Messages) SettingsPaneAssistant() string {
-	return Catalog.Format(msgs.locale, "settingsPaneAssistant", nil)
 }
 
 // SettingsProvider says "Provider"
@@ -8742,22 +8826,6 @@ func (msgs Messages) NavRecent() string {
 	return Catalog.Format(msgs.locale, "navRecent", nil)
 }
 
-// SettingsPages says "Pages"
-// in the language the app shows.
-//
-// Header of the group in Settings > General with the switches of the pages
-// that are off until asked for.
-func SettingsPages() string { return In(i18n.Locale()).SettingsPages() }
-
-// SettingsPages says "Pages"
-// in the language of msgs.
-//
-// Header of the group in Settings > General with the switches of the pages
-// that are off until asked for.
-func (msgs Messages) SettingsPages() string {
-	return Catalog.Format(msgs.locale, "settingsPages", nil)
-}
-
 // SettingsRecentChanges says "Recent changes"
 // in the language the app shows.
 //
@@ -9660,18 +9728,54 @@ func (msgs Messages) RecentLinkTip() string {
 	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
 }
 
-// SettingsSync says "Sync"
+// SettingsPaneAccount says "Account"
 // in the language the app shows.
 //
-// The Sync tab of Settings and its window title.
-func SettingsSync() string { return In(i18n.Locale()).SettingsSync() }
+// Toolbar pane of the Settings window (and the window's title) for the
+// account: signing in, devices and sync.
+func SettingsPaneAccount() string { return In(i18n.Locale()).SettingsPaneAccount() }
 
-// SettingsSync says "Sync"
+// SettingsPaneAccount says "Account"
 // in the language of msgs.
 //
-// The Sync tab of Settings and its window title.
-func (msgs Messages) SettingsSync() string {
-	return Catalog.Format(msgs.locale, "settingsSync", nil)
+// Toolbar pane of the Settings window (and the window's title) for the
+// account: signing in, devices and sync.
+func (msgs Messages) SettingsPaneAccount() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAccount", nil)
+}
+
+// SettingsPaneAdvanced says "Advanced"
+// in the language the app shows.
+//
+// Toolbar pane of the Settings window (and the window's title) with the
+// user's own model, the Recent changes page, the end-of-day reminder and
+// sound effects.
+func SettingsPaneAdvanced() string { return In(i18n.Locale()).SettingsPaneAdvanced() }
+
+// SettingsPaneAdvanced says "Advanced"
+// in the language of msgs.
+//
+// Toolbar pane of the Settings window (and the window's title) with the
+// user's own model, the Recent changes page, the end-of-day reminder and
+// sound effects.
+func (msgs Messages) SettingsPaneAdvanced() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAdvanced", nil)
+}
+
+// SettingsOwnModel says "Use your own model"
+// in the language the app shows.
+//
+// Header of the group in Settings > Advanced where the user brings their
+// own AI provider and key.
+func SettingsOwnModel() string { return In(i18n.Locale()).SettingsOwnModel() }
+
+// SettingsOwnModel says "Use your own model"
+// in the language of msgs.
+//
+// Header of the group in Settings > Advanced where the user brings their
+// own AI provider and key.
+func (msgs Messages) SettingsOwnModel() string {
+	return Catalog.Format(msgs.locale, "settingsOwnModel", nil)
 }
 
 // SettingsSyncUnavailable says "Sync isn't available here."
@@ -9688,30 +9792,30 @@ func (msgs Messages) SettingsSyncUnavailable() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUnavailable", nil)
 }
 
-// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// SettingsSyncSignedOutTitle says "Sign in to your account"
 // in the language the app shows.
 //
-// Title of the signed-out Sync pane.
+// Title of the signed-out Account pane.
 func SettingsSyncSignedOutTitle() string { return In(i18n.Locale()).SettingsSyncSignedOutTitle() }
 
-// SettingsSyncSignedOutTitle says "Sync with your phone and other computers"
+// SettingsSyncSignedOutTitle says "Sign in to your account"
 // in the language of msgs.
 //
-// Title of the signed-out Sync pane.
+// Title of the signed-out Account pane.
 func (msgs Messages) SettingsSyncSignedOutTitle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignedOutTitle", nil)
 }
 
-// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
 // in the language the app shows.
 //
-// The signed-out Sync pane's explanation of what syncs.
+// The signed-out Account pane's explanation of what syncs.
 func SettingsSyncSignedOutBody() string { return In(i18n.Locale()).SettingsSyncSignedOutBody() }
 
-// SettingsSyncSignedOutBody says "Your tasks, projects and agents' reports sync to your server, so you can see what your agents are doing from your phone."
+// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
 // in the language of msgs.
 //
-// The signed-out Sync pane's explanation of what syncs.
+// The signed-out Account pane's explanation of what syncs.
 func (msgs Messages) SettingsSyncSignedOutBody() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignedOutBody", nil)
 }
@@ -10502,14 +10606,14 @@ func (msgs Messages) VoiceTranscribing() string {
 // in the language the app shows.
 //
 // Line above the composer when the microphone is pressed while signed out;
-// a link that opens Settings on the Sync pane.
+// a link that opens Settings on the Account pane.
 func VoiceSignIn() string { return In(i18n.Locale()).VoiceSignIn() }
 
 // VoiceSignIn says "Sign in to use voice"
 // in the language of msgs.
 //
 // Line above the composer when the microphone is pressed while signed out;
-// a link that opens Settings on the Sync pane.
+// a link that opens Settings on the Account pane.
 func (msgs Messages) VoiceSignIn() string {
 	return Catalog.Format(msgs.locale, "voiceSignIn", nil)
 }
@@ -10588,4 +10692,148 @@ func VoiceFailed() string { return In(i18n.Locale()).VoiceFailed() }
 // heard, the recognizer failed.
 func (msgs Messages) VoiceFailed() string {
 	return Catalog.Format(msgs.locale, "voiceFailed", nil)
+}
+
+// PropWhen says "When"
+// in the language the app shows.
+//
+// Label of the inspector row of a task of the user's own that holds its due
+// date and reminder chips.
+func PropWhen() string { return In(i18n.Locale()).PropWhen() }
+
+// PropWhen says "When"
+// in the language of msgs.
+//
+// Label of the inspector row of a task of the user's own that holds its due
+// date and reminder chips.
+func (msgs Messages) PropWhen() string {
+	return Catalog.Format(msgs.locale, "propWhen", nil)
+}
+
+// PropWhere says "Where"
+// in the language the app shows.
+//
+// Label of the inspector row of a task of the user's own that holds its
+// category and its project chips.
+func PropWhere() string { return In(i18n.Locale()).PropWhere() }
+
+// PropWhere says "Where"
+// in the language of msgs.
+//
+// Label of the inspector row of a task of the user's own that holds its
+// category and its project chips.
+func (msgs Messages) PropWhere() string {
+	return Catalog.Format(msgs.locale, "propWhere", nil)
+}
+
+// SegmentDone says "Done"
+// in the language the app shows.
+//
+// Third segment of the inspector's status control for the user's own tasks:
+// finished.
+func SegmentDone() string { return In(i18n.Locale()).SegmentDone() }
+
+// SegmentDone says "Done"
+// in the language of msgs.
+//
+// Third segment of the inspector's status control for the user's own tasks:
+// finished.
+func (msgs Messages) SegmentDone() string {
+	return Catalog.Format(msgs.locale, "segmentDone", nil)
+}
+
+// InspectorHandOff says "Hand to an agent…"
+// in the language the app shows.
+//
+// Button at the foot of the inspector of a task of the user's own that
+// hands it to any agent. Nothing is started.
+func InspectorHandOff() string { return In(i18n.Locale()).InspectorHandOff() }
+
+// InspectorHandOff says "Hand to an agent…"
+// in the language of msgs.
+//
+// Button at the foot of the inspector of a task of the user's own that
+// hands it to any agent. Nothing is started.
+func (msgs Messages) InspectorHandOff() string {
+	return Catalog.Format(msgs.locale, "inspectorHandOff", nil)
+}
+
+// A11yImportant says "Important"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the star beside the title in the
+// inspector, which toggles whether the user's own task is important.
+func A11yImportant() string { return In(i18n.Locale()).A11yImportant() }
+
+// A11yImportant says "Important"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the star beside the title in the
+// inspector, which toggles whether the user's own task is important.
+func (msgs Messages) A11yImportant() string {
+	return Catalog.Format(msgs.locale, "a11yImportant", nil)
+}
+
+// MenuMarkImportant says "Mark important"
+// in the language the app shows.
+//
+// Line of the task menu, and button of the bulk bar, that marks the user's
+// own tasks as important (the star).
+func MenuMarkImportant() string { return In(i18n.Locale()).MenuMarkImportant() }
+
+// MenuMarkImportant says "Mark important"
+// in the language of msgs.
+//
+// Line of the task menu, and button of the bulk bar, that marks the user's
+// own tasks as important (the star).
+func (msgs Messages) MenuMarkImportant() string {
+	return Catalog.Format(msgs.locale, "menuMarkImportant", nil)
+}
+
+// MenuNotImportant says "Not important"
+// in the language the app shows.
+//
+// Line of the task menu, and button of the bulk bar, that takes the
+// important star off the user's own tasks.
+func MenuNotImportant() string { return In(i18n.Locale()).MenuNotImportant() }
+
+// MenuNotImportant says "Not important"
+// in the language of msgs.
+//
+// Line of the task menu, and button of the bulk bar, that takes the
+// important star off the user's own tasks.
+func (msgs Messages) MenuNotImportant() string {
+	return Catalog.Format(msgs.locale, "menuNotImportant", nil)
+}
+
+// BulkImportantToast says "Marked {count, plural, one {# task} other {# tasks}} important"
+// in the language the app shows.
+//
+// Toast after the rows selected together were marked important; its Undo
+// puts the old priorities back.
+func BulkImportantToast(count int) string { return In(i18n.Locale()).BulkImportantToast(count) }
+
+// BulkImportantToast says "Marked {count, plural, one {# task} other {# tasks}} important"
+// in the language of msgs.
+//
+// Toast after the rows selected together were marked important; its Undo
+// puts the old priorities back.
+func (msgs Messages) BulkImportantToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkImportantToast", map[string]any{"count": count})
+}
+
+// BulkNotImportantToast says "Took the star off {count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Toast after the important star was taken off the rows selected together;
+// its Undo puts the old priorities back.
+func BulkNotImportantToast(count int) string { return In(i18n.Locale()).BulkNotImportantToast(count) }
+
+// BulkNotImportantToast says "Took the star off {count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Toast after the important star was taken off the rows selected together;
+// its Undo puts the old priorities back.
+func (msgs Messages) BulkNotImportantToast(count int) string {
+	return Catalog.Format(msgs.locale, "bulkNotImportantToast", map[string]any{"count": count})
 }
