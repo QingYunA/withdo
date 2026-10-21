@@ -3,6 +3,17 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.6.2
+
+No database change: upgrading from 0.6.1 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Signing in is faster**: about 2 seconds instead of 5. The app sends one request and the sync
+  server does the rest.
+- While signing in, the button says what is happening: checking your account, then downloading
+  your tasks.
+- The Android app's version is 0.6.2.
+
 ## 0.6.1
 
 No database change: upgrading from 0.6.0 is installing the app. On Windows, quit ADHD Todo and your
