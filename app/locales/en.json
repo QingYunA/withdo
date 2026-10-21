@@ -4145,5 +4145,53 @@
   "settingsSyncSignInFailed": "Couldn't sign in. Try again.",
   "@settingsSyncSignInFailed": {
     "description": "The sign-in error line for a failure with no sentence of its own."
+  },
+  "propWhen": "When",
+  "@propWhen": {
+    "description": "Label of the inspector row of a task of the user's own that holds its due date and reminder chips."
+  },
+  "propWhere": "Where",
+  "@propWhere": {
+    "description": "Label of the inspector row of a task of the user's own that holds its category and its project chips."
+  },
+  "segmentDone": "Done",
+  "@segmentDone": {
+    "description": "Third segment of the inspector's status control for the user's own tasks: finished."
+  },
+  "inspectorHandOff": "Hand to an agent…",
+  "@inspectorHandOff": {
+    "description": "Button at the foot of the inspector of a task of the user's own that hands it to any agent. Nothing is started."
+  },
+  "a11yImportant": "Important",
+  "@a11yImportant": {
+    "description": "Accessibility label and tooltip of the star beside the title in the inspector, which toggles whether the user's own task is important."
+  },
+  "menuMarkImportant": "Mark important",
+  "@menuMarkImportant": {
+    "description": "Line of the task menu, and button of the bulk bar, that marks the user's own tasks as important (the star)."
+  },
+  "menuNotImportant": "Not important",
+  "@menuNotImportant": {
+    "description": "Line of the task menu, and button of the bulk bar, that takes the important star off the user's own tasks."
+  },
+  "bulkImportantToast": "Marked {count, plural, one {# task} other {# tasks}} important",
+  "@bulkImportantToast": {
+    "description": "Toast after the rows selected together were marked important; its Undo puts the old priorities back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "bulkNotImportantToast": "Took the star off {count, plural, one {# task} other {# tasks}}",
+  "@bulkNotImportantToast": {
+    "description": "Toast after the important star was taken off the rows selected together; its Undo puts the old priorities back.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   }
 }

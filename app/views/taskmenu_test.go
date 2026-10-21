@@ -298,18 +298,19 @@ func TestSelectedRowKeysOpenTheMenuOnOnePiece(t *testing.T) {
 		key  ui.Key
 		page menuPage
 		text string
+		task int
 	}{
-		{ui.KeyS, pageStatus, "Set status to Doing"},
-		{ui.KeyP, pagePriority, "Set priority to High"},
-		{ui.KeyM, pageMove, "Find a project"},
-		{ui.KeyR, pageRemind, "No reminder"},
+		{ui.KeyS, pageStatus, "Set status to Doing", 5},
+		{ui.KeyP, pagePriority, "Set priority to High", 3}, // an agent's task: the user's own has a star, see below
+		{ui.KeyM, pageMove, "Find a project", 5},
+		{ui.KeyR, pageRemind, "No reminder", 5},
 	} {
 		tt, m, _ := projectTester(t, 1)
-		m.sel = 5
+		m.sel = c.task
 		tt.Frame()
 		tt.Key(0, c.key)
 		tt.Frame()
-		if !m.pop.open || m.pop.page != c.page || m.pop.task != 5 || !tt.HasText(c.text) {
+		if !m.pop.open || m.pop.page != c.page || m.pop.task != c.task || !tt.HasText(c.text) {
 			t.Errorf("key %v: open %v page %v task %d, texts %q", c.key, m.pop.open, m.pop.page, m.pop.task, tt.Texts())
 		}
 		if c.page != pageMove && tt.HasText("Delete") {
@@ -359,24 +360,30 @@ func TestCmdJAsksAboutTheSelectedTaskAndCmdBackspaceDeletesIt(t *testing.T) {
 
 func TestInspectorValuesOpenOnlyTheirPieceOfTheMenu(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
-	m.OpenTask(8) // Book dentist, in the Inbox
+	m.OpenTask(3) // Fix tray race on launch: an agent's task keeps its strips
 	tt.Frame()
-	click(t, tt, "Status: To do")
+	click(t, tt, "Status: Blocked")
 	if !tt.HasText("Set status to Done") || tt.HasText("Move to…") {
 		t.Errorf("the Status value should show the strip alone: %q", tt.Texts())
 	}
 	click(t, tt, "Set status to Doing")
-	if got, _ := app.Task(8); got.Status != data.Doing {
+	if got, _ := app.Task(3); got.Status != data.Doing {
 		t.Errorf("status %v", got.Status)
 	}
-	click(t, tt, "Priority: P2  Normal")
+	click(t, tt, "Priority: P0  Urgent")
 	if !tt.HasText("Set priority to High") || tt.HasText("Set status to Done") {
 		t.Errorf("the Priority value should show the priority strip alone: %q", tt.Texts())
 	}
 	click(t, tt, "Set priority to High")
-	if got, _ := app.Task(8); got.Priority != data.P1 {
+	if got, _ := app.Task(3); got.Priority != data.P1 {
 		t.Errorf("priority %v", got.Priority)
 	}
+}
+
+func TestInspectorChipsOfATaskOfMineOpenTheirPiecesOfTheMenu(t *testing.T) {
+	tt, m, app := newMainTester(t, 1100)
+	m.OpenTask(8) // Book dentist, in the Inbox
+	tt.Frame()
 	click(t, tt, "Project: Inbox")
 	click(t, tt, "Move to picpocket")
 	if got := taskProject(app, 8); got != "picpocket" {
@@ -393,10 +400,10 @@ func TestInspectorMovingATaskDropsItsMilestone(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenTask(5)
 	tt.Frame()
-	if !tt.HasText("Milestone: v0.2 native") {
-		t.Fatalf("task 5 has no milestone row: %q", tt.Texts())
+	if !tt.HasText("Project: adhd-todo · v0.2 native") {
+		t.Fatalf("task 5 has no project and milestone chip: %q", tt.Texts())
 	}
-	click(t, tt, "Project: adhd-todo")
+	click(t, tt, "Project: adhd-todo · v0.2 native")
 	click(t, tt, "Move to picpocket")
 	if got, _ := app.Task(5); got.MilestoneID != nil {
 		t.Errorf("the milestone came along: %v", *got.MilestoneID)
@@ -425,19 +432,19 @@ func TestInspectorDeleteTaskIsImmediateWithUndo(t *testing.T) {
 
 func TestTaskMenuLabelsNameTheHoveredChoiceInline(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	rightClick(t, tt, "Write the release notes")
-	has(t, tt, "· To do", "· P2 Normal")
+	rightClick(t, tt, "Fix tray race on launch") // an agent's task: P0 and blocked
+	has(t, tt, "· Blocked", "· P0 Urgent")
 	g, _ := tt.Find("Set status to Doing")
 	tt.Move(center(g))
 	tt.Frame()
 	tt.Frame()
-	has(t, tt, "· Doing", "· P2 Normal")
-	hasNot(t, tt, "· To do")
-	p, _ := tt.Find("Set priority to Urgent")
+	has(t, tt, "· Doing", "· P0 Urgent")
+	hasNot(t, tt, "· Blocked")
+	p, _ := tt.Find("Set priority to Low")
 	tt.Move(center(p))
 	tt.Frame()
 	tt.Frame()
-	has(t, tt, "· To do", "· P0 Urgent")
+	has(t, tt, "· Blocked", "· P3 Low")
 }
 
 func TestMoveToStaysInTheWindowAndDoesNotJumpWhileFiltering(t *testing.T) {

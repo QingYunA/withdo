@@ -16,7 +16,7 @@ func TestTheBulkBarAppearsWithTwoRowsSelectedAndLeavesWithOne(t *testing.T) {
 	}
 	cmdClick(t, tt, "Reply to design feedback")
 	tt.Frame()
-	for _, want := range []string{"2 selected", "Move to…", "Priority", "Hand to an agent", "Delete"} {
+	for _, want := range []string{"2 selected", "Move to…", "Mark important", "Hand to an agent", "Delete"} {
 		if !tt.HasText(want) {
 			t.Errorf("the bar lacks %q in %q", want, tt.Texts())
 		}
@@ -65,26 +65,26 @@ func TestTheBarsDoneButtonFinishesTheSelection(t *testing.T) {
 
 func TestTheBarsPriorityChoosesForEverySelectedRowAndUndoPutsThemBack(t *testing.T) {
 	tt, _, app := newMainTester(t, 1100)
-	cmdClick(t, tt, "Reply to design feedback", "Book dentist")
+	cmdClick(t, tt, "Fix tray race on launch", "Native UI with mygo")
 	tt.Frame()
 	before := map[string]data.Priority{}
-	for _, title := range []string{"Reply to design feedback", "Book dentist"} {
+	for _, title := range []string{"Fix tray race on launch", "Native UI with mygo"} {
 		before[title] = taskTitled(t, app, title).Priority
 	}
 	if err := tt.Click("Priority"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if err := tt.Click("Set priority to Urgent"); err != nil {
+	if err := tt.Click("Set priority to Low"); err != nil {
 		t.Fatalf("%v in %q", err, tt.Texts())
 	}
 	tt.Frame()
 	for title := range before {
-		if got := taskTitled(t, app, title).Priority; got != data.P0 {
-			t.Errorf("%q is %s, want P0", title, got)
+		if got := taskTitled(t, app, title).Priority; got != data.P3 {
+			t.Errorf("%q is %s, want P3", title, got)
 		}
 	}
-	if !tt.HasText("Set 2 tasks to P0") {
+	if !tt.HasText("Set 2 tasks to P3") {
 		t.Errorf("no toast in %q", tt.Texts())
 	}
 	tt.Key(ui.Cmd, ui.KeyZ)

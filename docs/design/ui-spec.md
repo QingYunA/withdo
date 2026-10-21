@@ -257,6 +257,10 @@ and cards, before the due label or the age; P2 is the default and P3 means "when
 show nothing and only deliberate priorities draw the eye. There is no bars glyph any more: the
 inspector and the task menu say all four levels as text (`P1  High`, the strip `P0 P1 P2 P3`).
 
+**A task of mine shows the star instead** (v31): the 12 pt pixel `IconImportant` in `status.review`, on the
+same places as the badge, when it is P1 or P0 (the star reads P0 as set); never a `P0` or `P1` badge. An
+agent's task keeps the badges.
+
 Clicking the status glyph of **my own** task marks it done at once (one click, no menu); marking
 done plays a 220 ms animation in **two steps** (the disc fills, then at the halfway point the check
 appears; Reduce Motion goes straight to done), then the item moves to Done. Clicking the glyph of an **agent's** task, or of any finished task, opens the **Task menu**
@@ -978,11 +982,45 @@ No view control and no subtitle under the title; tasks with no project.
 
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
 QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
-#7` for an Inbox task). A long name is ellipsized before the number. Under it: large editable title; property list (Status, **From**, Priority, **Category**, **Project**,
-Milestone, Due, Remind, Branch, Pull request) with left labels, each with its line icon, in `meta` secondary and values
-editable in place (a Branch longer than the pane is ellipsized like every long value, and a click turns it into the editable text); the task's **images** (see **Task images**); Notes; `ACTIVITY` timeline newest first. Save on blur or Enter. Esc closes.
+#7` for an Inbox task). A long name is ellipsized before the number. Under it the pane differs by
+who the task is from (v31, decisions 8 and 9; reference `docs/design/mockups/v31.html`, section 4):
+`mine` is a task whose source is the user (not one an agent reported, created or took over), and
+the pane for it is much shorter, because a person's task is "what, when, where".
 
-- The **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
+**A task of mine**, top to bottom:
+
+- The large editable title and, at its right, the **important star**: the 12 x 12 pixel star
+  (`IconImportant` filled in `status.review` when set, `IconImportantOff`, the outline, in
+  `text.tertiary` when not) drawn at 18 pt in a 32 pt button (`Important` / `重要`). A click
+  toggles it. Set is P1 and unset is P2 in the database; a P0 task of mine reads as set, and
+  clicking it unsets it to P2. Agents and the MCP keep P0 to P3, so the star never hides a value
+  another surface wrote.
+- **Status**, a segmented control (the List | Board switch's look): `To do`, `Doing`, `Done`
+  (`待办`, `进行中`, `完成`). One click sets it; Done plays the completion as the row's glyph
+  does. Backlog and Cancelled are reached from the right-click Task menu only; a task in one of
+  those (or Blocked, In review) selects no segment and its status is named quietly after the control.
+- **When**: the due day and the reminder as two chips (28 pt, 7 pt radius, `bg.subtle`, a 12 pt
+  line icon, `Due` / `Remind` in `text.tertiary` while nothing is set). The due chip opens the calendar
+  popover, the reminder chip the reminder presets, as the values did.
+- **Where**: the category chip (its 12 pt icon in its color and its name; `Category` in
+  `text.tertiary` with a list icon while it has none) and the `project · milestone` chip (`Inbox` in
+  `text.tertiary`). They open the Category page and the `Move to…` list of the Task menu. Moving a
+  task to another project clears its milestone (milestones belong to one project). A subtask has
+  its parent line after Status.
+- The task's **images** (see **Task images**), then the Notes.
+- `Hand to an agent…` (the robot, a hairline button across the pane; not drawn on a finished task):
+  the drop on the Agents tray, by button, with its toast and Undo. The task is the agent's then and
+  the pane turns into the agent's.
+- No Priority, From, Branch, Pull request or Activity rows.
+- **Screens.** `inspector-from-you`, `inspector-mine-starred`; an agent's pane is `inspector`.
+
+**A task of an agent's** keeps the property list: Status, **From**, Priority, **Category**,
+**Project**, Milestone, Due, Remind, Branch and Pull request, with left labels, each with its line
+icon, in `meta` secondary and values editable in place (a Branch longer than the pane is
+ellipsized like every long value, and a click turns it into the editable text); then its **images**, Notes and
+`ACTIVITY`, newest first. Save on blur or Enter. Esc closes.
+
+- In an agent's property list the **Status**, **Priority**, **Category**, **Project** and **Remind** values open the pieces of the
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
   Category page (a filter field and the categories; the row shows only the category that was set,
   after its 18 pt icon in the category's color, and `None` with no icon in `text.tertiary`, for a
@@ -994,7 +1032,8 @@ editable in place (a Branch longer than the pane is ellipsized like every long v
   never overlap it. The answer is the one line of **Assistant**, its left edge on the properties' (24 pt),
   leaving out the title the pane already shows; the composer is the same quiet box (see **Composer**,
   without `⌘K`, placeholder `Change anything about this task`). `Ask about this task…` (⌘J) focuses it.
-  Values the assistant set in the last 10 s carry a small accent mark after the value: the pixel `sparkle` (`IconSparkle`, 12 pt) on a `bg.selected` pill. Priority reads as
+  Values the assistant set in the last 10 s carry a small accent mark after the value (after a chip, or
+  before the star): the pixel `sparkle` (`IconSparkle`, 12 pt) on a `bg.selected` pill. An agent's priority reads as
   text (`P1  High`), with no bars glyph.
 - Below ACTIVITY, a quiet `Delete task…` in `text.secondary` (no red, no box). It deletes
   at once like the menu's Delete (with the Undo toast) and closes the pane.
@@ -1072,7 +1111,7 @@ Completed rows, board cards), opened by:
 
 - a **right-click** on a row or card (at the pointer);
 - a click on the **status glyph** of an agent's task, or of a finished task (at the glyph);
-- **S**, **P**, **M**, **R** on the selected row (below the row), and `⌘J`, `⌘⌫` (see Keyboard).
+- **S**, **P**, **M**, **R** on the selected row (below the row; **P** toggles the star of a task of mine at once), and `⌘J`, `⌘⌫` (see Keyboard).
 
 It is 268 pt wide, 12 pt radius, opaque `bg` (the mockup's blur is not available in mygo; at 96 % the
 rows behind showed through), a 1 pt `border` and a soft shadow; it moves into the window, or above
@@ -1091,7 +1130,10 @@ Main page, top to bottom (10 pt padding):
    keyboard-highlighted one, else the current one; the name in `text.tertiary`).
    (The mockup draws six, without cancelled; the seventh keeps cancelling a task one click away.)
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
-   reads `Priority · P1 High` the same way.
+   reads `Priority · P1 High` the same way. **For a task of mine** (v31) there is no strip: one line,
+   `Mark important` / `标为重要` (`Not important` / `取消重要` while it is set, its star in
+   `status.review`), key hint `P`, toggles the star and closes the menu. The status strip keeps all
+   seven statuses, which is how Backlog and Cancelled are reached for a task of mine.
 3. One row, `Category` with the 18 pt icon of the task's category in its color (`IconList` when it
    has none), its name as the hint at the right and a `›`: it opens the **Category page**, which is
    the `Move to…` page for categories (v24 frame 2): a filter field `Find a category`, a row per
@@ -1120,7 +1162,7 @@ Main page, top to bottom (10 pt padding):
 **Delete does not ask.** The task goes and a toast says `Deleted “title”` with **Undo** for six
 seconds; Undo puts the task back with its id, fields and reports. (A project keeps its confirmation: it
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
-Priority the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
+Priority (an agent's) the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
 
 A project's menu is in the Sidebar and stays a system menu.
 
@@ -1152,7 +1194,8 @@ search results. Calendar and Summary do not select.
 - **The bulk bar.** With 2 selected (1 in select mode), a pixel panel floats at the bottom centre of
   the list (the day card's shape: two-step corners, a 2 pt solid edge, a hard 4 pt shadow, no blur):
   `3 selected` / `3 件`, **Done** (`⌘↵`), **Move to…** (a project or the Inbox), **Priority** (P0 to
-  P3), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
+  P3; when every selected task is mine, **Mark important** / `标为重要`, or `Not important` / `取消重要` when every one
+  is starred, which runs at once and says `Marked 3 tasks important`; a mixed selection keeps Priority), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
   tasks?` / `删除 3 件任务？`), and `×` that clears the selection. When the window is narrow the
   buttons drop their words, keeping their icons, the count and `×`. It is a toolbar: Tab reaches it.
 - **Each action is one change with one Undo** (`⌘Z`, or the toast's **Undo**). Done and cancelled

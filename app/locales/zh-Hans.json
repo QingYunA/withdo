@@ -698,5 +698,14 @@
   "settingsSyncSecondFactor": "这个账号开了两步验证，应用内登录暂时不支持",
   "settingsSyncAccountLocked": "账号已停用，请联系管理员",
   "settingsSyncSignInUnsupported": "这个服务器不支持从应用内登录",
-  "settingsSyncSignInFailed": "没能登录，请再试一次。"
+  "settingsSyncSignInFailed": "没能登录，请再试一次。",
+  "propWhen": "时间",
+  "propWhere": "归属",
+  "segmentDone": "完成",
+  "inspectorHandOff": "交给 Agent…",
+  "a11yImportant": "重要",
+  "menuMarkImportant": "标为重要",
+  "menuNotImportant": "取消重要",
+  "bulkImportantToast": "已把 {count} 件任务标为重要",
+  "bulkNotImportantToast": "已取消 {count} 件任务的重要标记"
 }
