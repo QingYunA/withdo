@@ -116,12 +116,12 @@ func TestOneTokenSourceForTheSameSettings(t *testing.T) {
 	}
 	defer func() { _ = phone.Close() }()
 	cfg := syncclient.Config{Issuer: "https://issuer.example", ClientID: "client", Scopes: []string{"aud"}}
-	if phone.oidcSource(cfg) != phone.oidcSource(cfg) {
+	if phone.accountSource(cfg) != phone.accountSource(cfg) {
 		t.Error("the same settings got two token sources")
 	}
 	other := cfg
 	other.Issuer = "https://other.example"
-	if phone.oidcSource(cfg) == phone.oidcSource(other) {
+	if phone.accountSource(cfg) == phone.accountSource(other) {
 		t.Error("another issuer reused the old token source")
 	}
 }

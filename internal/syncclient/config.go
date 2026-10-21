@@ -12,12 +12,13 @@ import (
 // ConfigFile is the name of the sync configuration next to the database.
 const ConfigFile = "sync.json"
 
-// Config is sync.json: the server to talk to, and either the development bearer token or the OIDC
-// issuer and client id of the account, with any scopes the issuer needs beyond "openid
+// Config is sync.json: the server to talk to, and either the development bearer token, "auth":
+// "pocketbase" for the server's own accounts, or the OIDC issuer and client id of the account, with any scopes the issuer needs beyond "openid
 // offline_access" (Zitadel's project audience). Account is the signed-in name and email, so the
 // Settings pane can show who this Mac belongs to offline. The refresh token is never written here.
 type Config struct {
 	Server   string   `json:"server"`
+	Auth     string   `json:"auth,omitempty"`
 	Token    string   `json:"token,omitempty"`
 	Issuer   string   `json:"issuer,omitempty"`
 	ClientID string   `json:"client_id,omitempty"`

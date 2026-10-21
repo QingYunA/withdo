@@ -50,20 +50,18 @@ func (r *Real) signIn(server, loginName, password string) {
 		r.failSignIn(err)
 		return
 	}
-	if public.Issuer == "" || public.ClientID == "" {
-		r.failSignIn(fmt.Errorf("the server does not offer sign-in: %w", syncclient.ErrSignInUnsupported))
+	cfg := syncclient.Config{Server: server}
+	if err := cfg.ApplyPublic(public); err != nil {
+		r.failSignIn(err)
 		return
 	}
-	tokens := r.oidcSource(public.Issuer, public.ClientID, public.Scopes)
+	tokens := r.accountSource(cfg)
 	if err := tokens.SignIn(ctx, server, loginName, password); err != nil {
 		r.failSignIn(err)
 		return
 	}
 	r.setSignInStage(SignInStageDownloading)
 	account, hasAccount := tokens.Account()
-	cfg := syncclient.Config{
-		Server: server, Issuer: public.Issuer, ClientID: public.ClientID, Scopes: public.Scopes,
-	}
 	if hasAccount {
 		cfg.Account = &account
 	}
@@ -267,7 +265,7 @@ func (r *Real) SyncCancel() {
 	if conflict == nil {
 		return
 	}
-	if source, ok := tokens.(*syncclient.OIDCSource); ok {
+	if source, ok := tokens.(syncclient.AccountSource); ok {
 		_ = source.Logout()
 	}
 	if r.syncPath != "" && cfg.Server != "" {

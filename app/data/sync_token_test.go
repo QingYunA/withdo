@@ -107,11 +107,17 @@ func TestOneTokenSourceForTheSameSettings(t *testing.T) {
 	}
 	real := NewReal(db, RealOptions{Secrets: newMemorySecrets()})
 	t.Cleanup(func() { _ = real.Close() })
-	scopes := []string{"aud"}
-	if real.oidcSource("https://issuer.example", "client", scopes) != real.oidcSource("https://issuer.example", "client", scopes) {
+	cfg := syncclient.Config{Server: "https://todo.example", Issuer: "https://issuer.example", ClientID: "client", Scopes: []string{"aud"}}
+	if real.accountSource(cfg) != real.accountSource(cfg) {
 		t.Error("the same settings got two token sources")
 	}
-	if real.oidcSource("https://issuer.example", "client", scopes) == real.oidcSource("https://other.example", "client", scopes) {
+	other := cfg
+	other.Issuer = "https://other.example"
+	if real.accountSource(cfg) == real.accountSource(other) {
 		t.Error("another issuer reused the old token source")
+	}
+	pocketBase := syncclient.Config{Server: "https://todo.example", Auth: syncclient.AuthPocketBase}
+	if _, ok := real.accountSource(pocketBase).(*syncclient.PocketBaseSource); !ok {
+		t.Error("auth pocketbase did not get a PocketBase source")
 	}
 }

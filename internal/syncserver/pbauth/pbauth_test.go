@@ -209,3 +209,25 @@ func TestChainOrder(t *testing.T) {
 		t.Errorf("unknown token error = %v", err)
 	}
 }
+
+func TestPasswordSignInIsRateLimited(t *testing.T) {
+	app := openApp(t)
+	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err != nil {
+		t.Fatal(err)
+	}
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	var limited bool
+	for i := 0; i < 20 && !limited; i++ {
+		status, _ := signIn(t, base, "users", "ada@example.com", "wrong password")
+		limited = status == http.StatusTooManyRequests
+	}
+	if !limited {
+		t.Fatal("twenty wrong passwords in a row were never refused with 429")
+	}
+	// Sync routes are not limited.
+	for i := 0; i < 30; i++ {
+		if status, _ := get(t, base+"/healthz", ""); status != http.StatusOK {
+			t.Fatalf("healthz = %d after %d requests", status, i)
+		}
+	}
+}

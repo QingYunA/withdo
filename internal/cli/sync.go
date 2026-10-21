@@ -30,8 +30,9 @@ const syncUsage = `Usage: adhd-core sync <command>
 Commands:
   link --server URL --token-file FILE --name NAME [--merge|--replace]
              Link this device to a sync server with a static token (development)
-  login --server URL --issuer URL --client-id ID --user LOGIN --password-stdin --name NAME [--scope SCOPE]... [--merge|--replace]
-             Sign in with an account and password, then link this device
+  login --server URL --user LOGIN --password-stdin --name NAME [--issuer URL --client-id ID [--scope SCOPE]...] [--merge|--replace]
+             Sign in with an account and password, then link this device. The server says how to sign
+             in; --issuer and --client-id force an OIDC sign-in instead
   logout     Forget the sign-in on this device
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
@@ -142,11 +143,8 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if strings.TrimSpace(*server) == "" {
 		return errors.New("sync login: --server is required")
 	}
-	if strings.TrimSpace(*issuer) == "" {
-		return errors.New("sync login: --issuer is required")
-	}
-	if strings.TrimSpace(*clientID) == "" {
-		return errors.New("sync login: --client-id is required")
+	if (strings.TrimSpace(*issuer) == "") != (strings.TrimSpace(*clientID) == "") {
+		return errors.New("sync login: --issuer and --client-id go together; leave both out to use what the server says")
 	}
 	if strings.TrimSpace(*user) == "" {
 		return errors.New("sync login: --user is required")
@@ -164,8 +162,21 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if err != nil {
 		return err
 	}
-	source := syncclient.NewOIDCSource(*issuer, *clientID, scopes, d.secrets)
-	source.DBPath = dbPath
+	// An issuer given on the command line is an OIDC sign-in; without one the server's
+	// GET /v1/config says whether to use its PocketBase or an issuer.
+	cfg := syncclient.Config{Server: *server}
+	if strings.TrimSpace(*issuer) != "" {
+		cfg.Issuer, cfg.ClientID, cfg.Scopes = strings.TrimRight(strings.TrimSpace(*issuer), "/"), strings.TrimSpace(*clientID), scopes
+	} else {
+		public, err := syncclient.FetchConfig(ctx, *server, nil)
+		if err != nil {
+			return fmt.Errorf("sync login: %w", err)
+		}
+		if err := cfg.ApplyPublic(public); err != nil {
+			return syncFriendlyError(err)
+		}
+	}
+	source := syncclient.NewAccountSource(cfg, d.secrets, dbPath)
 	if err := source.SignIn(ctx, *server, *user, password); err != nil {
 		return syncFriendlyError(err)
 	}
@@ -181,7 +192,6 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if err != nil {
 		return err
 	}
-	cfg := syncclient.Config{Server: *server, Issuer: *issuer, ClientID: *clientID, Scopes: scopes}
 	if account, ok := source.Account(); ok {
 		cfg.Account = &account
 	}
@@ -202,7 +212,7 @@ func readPassword(stdin io.Reader) (string, error) {
 	return strings.TrimRight(line, "\r\n"), nil
 }
 
-// syncLogout forgets the refresh token. The sync.json stays, so signing in again needs no link.
+// syncLogout forgets the refresh token and the PocketBase token. The sync.json stays, so signing in again needs no link.
 func syncLogout(args []string, dbPath string, d deps) error {
 	if len(args) > 0 {
 		return errors.New("usage: adhd-core sync logout")
@@ -211,6 +221,9 @@ func syncLogout(args []string, dbPath string, d deps) error {
 		return errors.New("sync logout: no keychain available; use the desktop app")
 	}
 	if err := syncclient.DeleteRefreshTokenAt(d.secrets, dbPath); err != nil {
+		return err
+	}
+	if err := syncclient.DeletePocketBaseToken(d.secrets, dbPath); err != nil {
 		return err
 	}
 	_, _ = io.WriteString(d.stdout, "signed out\n")
@@ -392,17 +405,15 @@ func syncNow(ctx context.Context, dbPath string, core *domain.Core, d deps) erro
 	}
 	var tokens syncclient.TokenSource
 	switch {
-	case cfg.Issuer != "":
+	case cfg.SignsInWithAccount():
 		if d.secrets == nil {
-			return errors.New("sync now: OIDC sign-in needs the desktop app's keychain")
+			return errors.New("sync now: account sign-in needs the desktop app's keychain")
 		}
-		source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, d.secrets)
-		source.DBPath = dbPath
-		tokens = source
+		tokens = syncclient.NewAccountSource(cfg, d.secrets, dbPath)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
-		return errors.New("sync now: sync.json has no token or OIDC issuer")
+		return errors.New("sync now: sync.json has no token or account sign-in")
 	}
 	client, err := syncclient.New(core, syncclient.Options{BaseURL: cfg.Server, TokenSource: tokens})
 	if err != nil {

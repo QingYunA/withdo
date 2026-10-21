@@ -83,7 +83,7 @@ func (c *Core) SyncSetServer(server string) error {
 	if err != nil {
 		return fmt.Errorf("could not reach the sync server: %w", err)
 	}
-	if public.Issuer == "" || public.ClientID == "" {
+	if public.Auth != syncclient.AuthPocketBase && (public.Issuer == "" || public.ClientID == "") {
 		return fmt.Errorf("the server does not offer sign-in: %w", syncclient.ErrSignInUnsupported)
 	}
 	_ = c.StopSync()
@@ -95,9 +95,9 @@ func (c *Core) SyncSetServer(server string) error {
 		cfg = syncclient.Config{Server: base}
 	}
 	cfg.Server = base
-	cfg.Issuer = strings.TrimRight(strings.TrimSpace(public.Issuer), "/")
-	cfg.ClientID = strings.TrimSpace(public.ClientID)
-	cfg.Scopes = public.Scopes
+	if err := cfg.ApplyPublic(public); err != nil {
+		return err
+	}
 	if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
 		return errors.New("could not save the sync settings")
 	}
@@ -125,7 +125,7 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	// A phone that never changed its server has no issuer yet: ask the default server what its
 	// sign-in is before sending the password. SyncSetServer writes both, so the next sign-in is
 	// one call.
-	if !found || cfg.Issuer == "" || cfg.ClientID == "" {
+	if !found || !cfg.SignsInWithAccount() {
 		server := data.DefaultSyncServer
 		if found && cfg.Server != "" {
 			server = cfg.Server
@@ -137,11 +137,11 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if !found || cfg.Issuer == "" || cfg.ClientID == "" {
-			return "", errors.New("sign-in is not set up; set the issuer first")
+		if !found || !cfg.SignsInWithAccount() {
+			return "", errors.New("sign-in is not set up; set the server first")
 		}
 	}
-	source := c.oidcSource(cfg)
+	source := c.accountSource(cfg)
 	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
 		return "", syncError(err)
 	}
@@ -172,7 +172,7 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	return signInLinkedJSON, nil
 }
 
-// SignOut forgets the refresh token, so the next sync is signed out until SignIn runs again. The
+// SignOut forgets the refresh token or PocketBase token, so the next sync is signed out until SignIn runs again. The
 // database stays linked to its device.
 func (c *Core) SignOut() error {
 	_ = c.StopSync()
@@ -184,6 +184,9 @@ func (c *Core) SignOut() error {
 		return nil
 	}
 	if err := syncclient.DeleteRefreshTokenAt(secretAdapter{c.secrets}, c.dbPath); err != nil {
+		return errors.New("could not sign out")
+	}
+	if err := syncclient.DeletePocketBaseToken(secretAdapter{c.secrets}, c.dbPath); err != nil {
 		return errors.New("could not sign out")
 	}
 	return nil
@@ -359,8 +362,11 @@ func (c *Core) hasCredentials(cfg syncclient.Config) bool {
 	if cfg.Token != "" {
 		return true
 	}
-	if cfg.Issuer == "" || c.secrets == nil {
+	if !cfg.SignsInWithAccount() || c.secrets == nil {
 		return false
+	}
+	if cfg.Auth == syncclient.AuthPocketBase {
+		return syncclient.HasPocketBaseToken(secretAdapter{c.secrets}, c.dbPath)
 	}
 	_, err := syncclient.LoadRefreshToken(secretAdapter{c.secrets}, c.dbPath)
 	return err == nil
@@ -423,11 +429,11 @@ func (c *Core) newClient(requireLinked bool) (*syncclient.Client, error) {
 	}
 	var tokens syncclient.TokenSource
 	switch {
-	case cfg.Issuer != "":
+	case cfg.SignsInWithAccount():
 		if c.secrets == nil {
 			return nil, errors.New("this phone has no secure store for the sign-in")
 		}
-		tokens = c.oidcSource(cfg)
+		tokens = c.accountSource(cfg)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
@@ -536,18 +542,17 @@ func (c *Core) finishLink() {
 	c.mu.Unlock()
 }
 
-// oidcSource is the OIDC token source for cfg, keyed to this database so another profile cannot
-// replace this phone's refresh token.
+// accountSource is the token source for cfg (PocketBase or OIDC), keyed to this database so another
+// profile cannot replace this phone's sign-in.
 // The same settings get the same source, so the runner and a Sync now share one refresh.
-func (c *Core) oidcSource(cfg syncclient.Config) *syncclient.OIDCSource {
-	key := cfg.Issuer + "\n" + cfg.ClientID + "\n" + strings.Join(cfg.Scopes, " ")
+func (c *Core) accountSource(cfg syncclient.Config) syncclient.AccountSource {
+	key := cfg.SourceKey()
 	c.tokensMu.Lock()
 	defer c.tokensMu.Unlock()
 	if c.tokens != nil && c.tokensKey == key {
 		return c.tokens
 	}
-	source := syncclient.NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secretAdapter{c.secrets})
-	source.DBPath = c.dbPath
+	source := syncclient.NewAccountSource(cfg, secretAdapter{c.secrets}, c.dbPath)
 	c.tokens, c.tokensKey = source, key
 	return source
 }

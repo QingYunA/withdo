@@ -10,6 +10,9 @@ const UsersCollection = "users"
 // appName is what PocketBase's emails and admin UI call the product.
 const appName = "ADHD Todo"
 
+// signInsPerMinute is how many password sign-ins one address may try in a minute.
+const signInsPerMinute = 10
+
 func init() {
 	core.AppMigrations.Register(setupUsers, nil, "1790000000_adhd_users_setup.go")
 }
@@ -21,6 +24,13 @@ func init() {
 func setupUsers(txApp core.App) error {
 	settings := txApp.Settings()
 	settings.Meta.AppName = appName
+	// Behind nginx every request comes from the proxy; it sets X-Real-IP to the client's address.
+	settings.TrustedProxy.Headers = []string{"X-Real-IP"}
+	// Password guessing: ten tries a minute per address. Sync routes are not /api and not limited.
+	settings.RateLimits.Enabled = true
+	settings.RateLimits.Rules = []core.RateLimitRule{
+		{Label: UsersCollection + ":authWithPassword", Duration: 60, MaxRequests: signInsPerMinute},
+	}
 	if err := txApp.Save(settings); err != nil {
 		return err
 	}
