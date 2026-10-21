@@ -16,11 +16,15 @@ import java.util.Locale
 
 /**
  * The words of the screens: relative ages, due labels, dates and agent names, in the language the
- * resources are showing. Times are RFC 3339 strings from the Go core.
+ * resources are showing. Times are RFC 3339 strings from the Go core. The time source and the zone are the
+ * device's; the screenshot tests pass fixed ones so the pictures do not change from day to day.
  */
-class Words(private val res: Resources) {
+class Words(
+    private val res: Resources,
+    private val timeSource: () -> Instant = Instant::now,
+    private val zone: ZoneId = ZoneId.systemDefault(),
+) {
     private val locale: Locale = runCatching { res.configuration.locales[0] }.getOrDefault(Locale.getDefault())
-    private val zone: ZoneId = ZoneId.systemDefault()
 
     private val monthDay = DateTimeFormatter.ofPattern(if (chinese) "M月d日" else "MMM d", locale)
     private val weekday = DateTimeFormatter.ofPattern("EEE", locale)
@@ -31,7 +35,7 @@ class Words(private val res: Resources) {
 
     private val chinese: Boolean get() = locale.language == "zh"
 
-    fun headerDate(now: ZonedDateTime = ZonedDateTime.now(zone)): String = headerFormatter.format(now)
+    fun headerDate(now: ZonedDateTime = timeSource().atZone(zone)): String = headerFormatter.format(now)
 
     fun instant(value: String?): Instant? {
         if (value.isNullOrBlank()) return null
@@ -39,7 +43,7 @@ class Words(private val res: Resources) {
             .getOrElse { runCatching { Instant.parse(value) }.getOrNull() }
     }
 
-    fun ago(value: String?, now: Instant = Instant.now()): String {
+    fun ago(value: String?, now: Instant = timeSource()): String {
         val then = instant(value) ?: return ""
         val minutes = ChronoUnit.MINUTES.between(then, now).coerceAtLeast(0)
         return when {
@@ -52,10 +56,10 @@ class Words(private val res: Resources) {
     }
 
     /** A task's due label: Today, Tomorrow, Fri, Oct 20, or the time of day for a reminder today. */
-    fun due(item: Item, now: ZonedDateTime = ZonedDateTime.now(zone)): String =
+    fun due(item: Item, now: ZonedDateTime = timeSource().atZone(zone)): String =
         dueLabel(item.remindAt, item.dueAt, now)
 
-    fun due(task: Task, now: ZonedDateTime = ZonedDateTime.now(zone)): String =
+    fun due(task: Task, now: ZonedDateTime = timeSource().atZone(zone)): String =
         dueLabel(task.remindAt, task.dueAt, now)
 
     private fun dueLabel(remindAt: String?, dueAt: String?, now: ZonedDateTime): String {
@@ -192,7 +196,7 @@ class Words(private val res: Resources) {
     /** A sync age says "just now" where a task age says "now". */
     fun syncAge(value: String?): String {
         val then = instant(value) ?: return ""
-        val minutes = ChronoUnit.MINUTES.between(then, Instant.now()).coerceAtLeast(0)
+        val minutes = ChronoUnit.MINUTES.between(then, timeSource()).coerceAtLeast(0)
         return if (minutes < 1) res.getString(R.string.time_just_now) else ago(value)
     }
 
@@ -201,7 +205,7 @@ class Words(private val res: Resources) {
         if (value.isNullOrBlank()) res.getString(R.string.sync_never) else syncAge(value)
 
     /** The time of a failed retry as a line: Retrying soon / in 3 min / in 2 h. */
-    fun retryLine(value: String?, now: Instant = Instant.now()): String {
+    fun retryLine(value: String?, now: Instant = timeSource()): String {
         val at = instant(value) ?: return res.getString(R.string.sync_retrying_soon)
         val minutes = ChronoUnit.MINUTES.between(now, at)
         return when {
