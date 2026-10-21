@@ -17,6 +17,11 @@ services:
       - -oidc-scopes=${OIDC_SCOPES}
       - -zitadel-login-pat-file=/run/secrets/login-client.pat
       - -zitadel-internal-url=http://proxy
+    environment:
+      # Voice input (POST /v1/transcribe). Set in sync.env; an empty MIMO_API_KEY turns voice off.
+      MIMO_API_KEY: ${MIMO_API_KEY:-}
+      MIMO_BASE_URL: ${MIMO_BASE_URL:-}
+      VOICE_DAILY_LIMIT: ${VOICE_DAILY_LIMIT:-}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       - ./login-client.pat:/run/secrets/login-client.pat:ro

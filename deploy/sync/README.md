@@ -119,10 +119,29 @@ before answering `403 second_factor`. Zitadel's lockout is not configured here, 
 limits sign-in itself: 10 requests per 10 minutes per source IP and 10 failed passwords per login
 name, both in memory.
 
+## Voice input
+
+`POST /v1/transcribe` turns a recording from the app into text. The app uploads a WAV (16 kHz mono
+PCM16, 60 s at most), the server sends it to the MiMo speech recognizer (`mimo-v2.5-asr`) with its
+own key and returns `{"text": "..."}`. The app never holds the key. It is configured by environment
+variables, which `sync.compose.yml` passes through from `sync.env`:
+
+| Variable | Meaning |
+|---|---|
+| `MIMO_API_KEY` | The recognizer's key. Empty or unset turns voice off: the route answers `503 voice_disabled`. |
+| `MIMO_BASE_URL` | The recognizer's API root; default `https://api.xiaomimimo.com/v1`. |
+| `VOICE_DAILY_LIMIT` | Recordings per account per UTC day; default 200. Past it: `429 voice_quota` with `Retry-After`. The count is in memory, so a restart resets it. |
+
+Answers: 401 `unauthenticated`, 413 `audio_too_large` / `audio_too_long`, 415 `unsupported_media`,
+400 `bad_audio`, 502 `transcribe_failed` (the recognizer failed; that request is not counted). Errors
+never include the key or the recognizer's body. Put the key only in `sync.env` on the host (mode 600),
+never in the repository.
+
 ## Checks
 
 - `curl https://auth.todo.sri-ai.xyz/.well-known/openid-configuration` names the issuer and S256.
 - `curl https://todo.sri-ai.xyz/healthz` is `ok`; `POST /v1/devices` without a token is 401.
+- `POST /v1/transcribe` without a token is 401; with a token and no key configured it is 503.
 - A client-credentials JWT of a throwaway machine user (access token type JWT, scope with the
   project audience) registers a device; the same token with one character changed is 401.
   Delete the machine user afterwards.
