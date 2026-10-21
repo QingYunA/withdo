@@ -3,6 +3,7 @@
 #   scripts/check.sh [static|fast|full|race]
 # static: gofmt, vet, i18n. fast (default): static + short tests. full: fast + race on the core.
 # race: only the race tests of full, which CI runs as a job of its own beside fast.
+# The sync tests need Postgres: ADHD_SYNC_TEST_DATABASE_URL, else the local adhd-sync-pg container.
 # The design screens (TestScreens*, skipped under -short) are rendered by scripts/screens.sh and
 # reviewed in the PR.
 set -euo pipefail
@@ -10,6 +11,19 @@ cd "$(git rev-parse --show-toplevel)"
 
 mode="${1:-fast}"
 case "$mode" in static | fast | full | race) ;; *) echo "usage: $0 [static|fast|full|race]" >&2; exit 2 ;; esac
+
+# The sync tests skip without a database. CI sets the URL; locally it is the adhd-sync-pg container.
+sync_pg_cmd="docker run -d --name adhd-sync-pg -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=adhd_sync_test -p 127.0.0.1:55432:5432 postgres:17-alpine"
+if [ "$mode" != static ] && [ -z "${ADHD_SYNC_TEST_DATABASE_URL:-}" ]; then
+  if (exec 3<>/dev/tcp/127.0.0.1/55432) 2>/dev/null; then
+    export ADHD_SYNC_TEST_DATABASE_URL="postgres://postgres:dev@127.0.0.1:55432/adhd_sync_test?sslmode=disable"
+  elif [ "$mode" = fast ]; then
+    echo "sync Postgres tests skipped: no database on 127.0.0.1:55432; start one with: $sync_pg_cmd" >&2
+  else
+    echo "the sync tests need Postgres on 127.0.0.1:55432; start it with: $sync_pg_cmd" >&2
+    exit 1
+  fi
+fi
 
 race_tests() { go test -race ./internal/... ./app/data/...; }
 if [ "$mode" = race ]; then
