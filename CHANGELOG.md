@@ -3,6 +3,17 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.6.3
+
+No database change: upgrading from 0.6.2 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Android: the task menu.** Long-press a task, or tap ⋯ on a task's page, to change its status,
+  priority, category or project, set a reminder, open its pull request, or delete it (Undo brings
+  it back for six seconds). A task's page opens the same pages from its rows.
+- **Android: fixed** a task's page staying blank on a phone with no projects.
+- The desktop's reminder presets now come from the same code as the phone's; they are unchanged.
+
 ## 0.6.2
 
 No database change: upgrading from 0.6.1 is installing the app. On Windows, quit ADHD Todo and your
