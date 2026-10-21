@@ -127,8 +127,23 @@ name, both in memory.
   project audience) registers a device; the same token with one character changed is 401.
   Delete the machine user afterwards.
 
+## Updating the server
+
+`deploy/sync/deploy.sh` builds `adhd-sync` from the current checkout, copies it and
+`sync.compose.yml` to the host, recreates the `sync` container (the binary is bind-mounted) and checks `GET /v1/config` on
+`127.0.0.1:18080` for 200. The owner confirms each production deploy; do not run it unasked.
+
+```sh
+deploy/sync/deploy.sh --dry-run   # builds, prints every remote command, runs none
+deploy/sync/deploy.sh             # ADHD_SYNC_HOST overrides the ssh host (default adhd-srv)
+```
+
+It first copies `bin/adhd-sync` and `sync.compose.yml` to `*.bak-YYYYMMDD-HHMM`, and never touches
+`sync.env` or the Zitadel files. At the end it prints the one-line rollback command (restore both
+backups, `up -d --wait sync`). If the health check fails it prints that command prominently and
+exits 1; it does not roll back by itself.
+
 ## Upgrades
 
-- adhd-sync: build, copy over `bin/adhd-sync`, `docker compose … up -d --force-recreate sync`.
-  Its Postgres migrations run at start.
+- adhd-sync: use `deploy/sync/deploy.sh` (above). Its Postgres migrations run at start.
 - Zitadel: bump `ZITADEL_VERSION` in `.env`, then `pull` and `up -d --wait` with the same files.
