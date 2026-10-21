@@ -297,7 +297,12 @@ func (r *Runner) runLoop(ctx context.Context) {
 // syncOnce runs one Sync and updates the status. ok is false when it failed; stop is true when the
 // runner must not try again, which a 401 means.
 func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
-	current, started := r.startSyncing(ctx)
+	current, started := r.setStatusIfLive(ctx, func(current Status) Status {
+		return Status{
+			State: StateSyncing, LastSynced: current.LastSynced,
+			LastError: current.LastError, Pending: current.Pending,
+		}
+	})
 	if !started {
 		return false, true
 	}
@@ -385,20 +390,18 @@ func (r *Runner) setStatus(next Status) {
 	}
 }
 
-// startSyncing moves the status to syncing and returns the status it replaced. It does nothing and
-// returns false once ctx is done, so a sync never overwrites the signed out that signOut stored.
-func (r *Runner) startSyncing(ctx context.Context) (Status, bool) {
+// setStatusIfLive stores build(current) and returns current. It stores nothing and returns false
+// once ctx is done, checked under the lock signOut holds, so a stopping run never overwrites the
+// signed out that signOut stored.
+func (r *Runner) setStatusIfLive(ctx context.Context, build func(current Status) Status) (Status, bool) {
 	r.mu.Lock()
 	current := r.status
 	if ctx.Err() != nil {
 		r.mu.Unlock()
 		return current, false
 	}
-	next := Status{
-		State: StateSyncing, LastSynced: current.LastSynced,
-		LastError: current.LastError, Pending: current.Pending,
-	}
-	changed := next != r.status
+	next := build(current)
+	changed := next != current
 	r.status = next
 	callback := r.onStatus
 	r.mu.Unlock()
@@ -409,7 +412,7 @@ func (r *Runner) startSyncing(ctx context.Context) (Status, bool) {
 }
 
 // signOut stores next and stops the current run under one lock, used when the token is refused.
-// Doing both at once is what lets startSyncing see the stop before it writes syncing.
+// Doing both at once is what lets setStatusIfLive see the stop before it writes.
 func (r *Runner) signOut(next Status) {
 	r.mu.Lock()
 	changed := next != r.status
@@ -434,12 +437,11 @@ func (r *Runner) watchEvents(ctx context.Context) {
 		}
 		deviceID, err := r.client.DeviceID(ctx)
 		if err != nil {
-			if ctx.Err() != nil {
-				return
-			}
-			r.setStatus(Status{
-				State: StateError, LastSynced: r.Status().LastSynced,
-				LastError: err.Error(), Pending: r.Status().Pending,
+			r.setStatusIfLive(ctx, func(current Status) Status {
+				return Status{
+					State: StateError, LastSynced: current.LastSynced,
+					LastError: err.Error(), Pending: current.Pending,
+				}
 			})
 			return
 		}
