@@ -1,7 +1,7 @@
 {
   "name": "ADHD Todo",
   "identifier": "dev.adhdtodo.desktop",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "out": "build",
   "i18n": {
     "dir": "locales",
