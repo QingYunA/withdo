@@ -149,6 +149,8 @@ func (m *Main) composerEscape(s surface) {
 		m.cancelAsk()
 	case m.convo.open && m.convo.owner == s:
 		m.closeSheet()
+	case m.closePanel != nil:
+		m.closePanel()
 	default:
 		m.queue.leave = true
 		if s == surfacePage {

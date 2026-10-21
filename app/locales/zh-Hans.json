@@ -288,6 +288,8 @@
   "a11yPane": "{name}设置",
   "menuSettings": "设置…",
   "trayOpen": "打开 ADHD Todo",
+  "popoverWorking": "{count} 个 Agent 在干活",
+  "popoverStuck": "{count} 个卡住",
   "modelsBaseURLHelp": "只有使用网关（例如 Magpie）时才需要改",
   "modelsKeyHelp": "保存在钥匙串中",
   "modelsOther": "其他…",

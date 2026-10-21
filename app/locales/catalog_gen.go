@@ -4276,16 +4276,50 @@ func (msgs Messages) MenuSettings() string {
 // in the language the app shows.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
-// back.
+// back; also the link at the right of the footer of the menu bar panel.
 func TrayOpen() string { return In(i18n.Locale()).TrayOpen() }
 
 // TrayOpen says "Open ADHD Todo"
 // in the language of msgs.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
-// back.
+// back; also the link at the right of the footer of the menu bar panel.
 func (msgs Messages) TrayOpen() string {
 	return Catalog.Format(msgs.locale, "trayOpen", nil)
+}
+
+// PopoverWorking says "{count, plural, one {# agent working} other {# agents working}}"
+// in the language the app shows.
+//
+// Left of the footer of the menu bar panel: how many agents are working on
+// tasks now.
+func PopoverWorking(count int) string { return In(i18n.Locale()).PopoverWorking(count) }
+
+// PopoverWorking says "{count, plural, one {# agent working} other {# agents working}}"
+// in the language of msgs.
+//
+// Left of the footer of the menu bar panel: how many agents are working on
+// tasks now.
+func (msgs Messages) PopoverWorking(count int) string {
+	return Catalog.Format(msgs.locale, "popoverWorking", map[string]any{"count": count})
+}
+
+// PopoverStuck says "{count} stuck"
+// in the language the app shows.
+//
+// Footer of the menu bar panel, after the number of agents working and a
+// dot: how many agents are stuck, shown in the blocked color. Not shown
+// when none is.
+func PopoverStuck(count int) string { return In(i18n.Locale()).PopoverStuck(count) }
+
+// PopoverStuck says "{count} stuck"
+// in the language of msgs.
+//
+// Footer of the menu bar panel, after the number of agents working and a
+// dot: how many agents are stuck, shown in the blocked color. Not shown
+// when none is.
+func (msgs Messages) PopoverStuck(count int) string {
+	return Catalog.Format(msgs.locale, "popoverStuck", map[string]any{"count": count})
 }
 
 // ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
