@@ -2,9 +2,11 @@
 
 package speech
 
+// Windows recording is a later change; until then every other platform has no recorder and the UI
+// hides the microphone.
 type unavailable struct{}
 
-func newRecognizer() Recognizer { return unavailable{} }
+func newRecorder() Recorder { return unavailable{} }
 
 func (unavailable) Available() (bool, string) { return false, "not implemented on this platform" }
 
@@ -16,10 +18,8 @@ func (unavailable) RequestAuthorization(done func(Authorization)) {
 	}
 }
 
-func (unavailable) Start(_, _ func(string)) error { return ErrUnavailable }
+func (unavailable) Start(func(float32)) error { return ErrUnavailable }
 
-func (unavailable) Stop() {}
+func (unavailable) Stop() ([]byte, error) { return nil, ErrUnavailable }
 
 func (unavailable) Cancel() {}
-
-func (unavailable) LastError() error { return nil }

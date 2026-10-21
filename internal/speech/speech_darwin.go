@@ -3,7 +3,6 @@
 package speech
 
 import (
-	"errors"
 	"sync"
 	"unsafe"
 
@@ -11,9 +10,9 @@ import (
 	"github.com/ebitengine/purego/objc"
 )
 
-// The darwin recognizer is pure Go: purego calls the Objective-C runtime without cgo, which is how
-// mygo itself talks to AppKit and why the release build is CGO_ENABLED=0. SFSpeechRecognizer wants
-// blocks (the result handler, the audio tap); objc.NewBlock makes them.
+// The darwin recorder is pure Go: purego calls the Objective-C runtime without cgo, which is how
+// mygo itself talks to AppKit and why the release build is CGO_ENABLED=0. AVAudioEngine wants a
+// block for the input tap; objc.NewBlock makes it.
 
 var (
 	loadOnce sync.Once
@@ -22,14 +21,9 @@ var (
 
 func load() error {
 	loadOnce.Do(func() {
-		for _, p := range []string{
-			"/System/Library/Frameworks/Speech.framework/Speech",
-			"/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
-		} {
-			if _, err := purego.Dlopen(p, purego.RTLD_LAZY|purego.RTLD_GLOBAL); err != nil {
-				loadErr = err
-				return
-			}
+		if _, err := purego.Dlopen("/System/Library/Frameworks/AVFoundation.framework/AVFoundation",
+			purego.RTLD_LAZY|purego.RTLD_GLOBAL); err != nil {
+			loadErr = err
 		}
 	})
 	return loadErr
@@ -43,70 +37,43 @@ func nsString(s string) objc.ID {
 	return class("NSString").Send(sel("stringWithUTF8String:"), s)
 }
 
-func goString(s objc.ID) string {
-	if s == 0 {
-		return ""
-	}
-	n := objc.Send[uint](s, sel("lengthOfBytesUsingEncoding:"), uint(4)) // NSUTF8StringEncoding
-	p := objc.Send[unsafe.Pointer](s, sel("UTF8String"))
-	if p == nil || n == 0 {
-		return ""
-	}
-	return string(unsafe.Slice((*byte)(p), n))
-}
-
-// The two frameworks number their statuses differently.
+// AVAuthorizationStatus.
 const (
-	sfNotDetermined, sfDenied, sfRestricted, sfAuthorized = 0, 1, 2, 3 // SFSpeechRecognizerAuthorizationStatus
-	avNotDetermined, avRestricted, avDenied, avAuthorized = 0, 1, 2, 3 // AVAuthorizationStatus
+	avNotDetermined, avRestricted, avDenied, avAuthorized = 0, 1, 2, 3
 )
 
-var avMediaTypeAudio = "soun" // AVMediaTypeAudio
+const avMediaTypeAudio = "soun" // AVMediaTypeAudio
 
-type darwinRecognizer struct {
-	mu      sync.Mutex
-	engine  objc.ID
-	request objc.ID
-	task    objc.ID
-	rec     objc.ID
-	blocks  []objc.Block
-	active  bool
-	lastErr error
+type darwinRecorder struct {
+	mu     sync.Mutex
+	engine objc.ID
+	tap    objc.Block
+	pcm    *pcm
 }
 
-func newRecognizer() Recognizer { return &darwinRecognizer{} }
+func newRecorder() Recorder { return &darwinRecorder{} }
 
-func (r *darwinRecognizer) Available() (bool, string) {
+func (r *darwinRecorder) Available() (bool, string) {
 	if err := load(); err != nil {
-		return false, "frameworks: " + err.Error()
-	}
-	rec := class("SFSpeechRecognizer").Send(sel("new"))
-	if rec == 0 {
-		return false, "no recognizer for the system language"
-	}
-	defer rec.Send(sel("release"))
-	if !objc.Send[bool](rec, sel("isAvailable")) {
-		return false, "recognizer not available now (offline without an on-device model?)"
+		return false, "AVFoundation: " + err.Error()
 	}
 	return true, ""
 }
 
-func (r *darwinRecognizer) Authorization() Authorization {
+func (r *darwinRecorder) Authorization() Authorization {
 	if load() != nil {
 		return AuthUnknown
 	}
-	sf := objc.Send[int](class("SFSpeechRecognizer"), sel("authorizationStatus"))
-	av := objc.Send[int](class("AVCaptureDevice"), sel("authorizationStatusForMediaType:"), nsString(avMediaTypeAudio))
-	switch {
-	case sf == sfDenied || sf == sfRestricted || av == avDenied || av == avRestricted:
-		return AuthDenied
-	case sf == sfAuthorized && av == avAuthorized:
+	switch objc.Send[int](class("AVCaptureDevice"), sel("authorizationStatusForMediaType:"), nsString(avMediaTypeAudio)) {
+	case avAuthorized:
 		return AuthAuthorized
+	case avDenied, avRestricted:
+		return AuthDenied
 	}
 	return AuthNotDetermined
 }
 
-func (r *darwinRecognizer) RequestAuthorization(done func(Authorization)) {
+func (r *darwinRecorder) RequestAuthorization(done func(Authorization)) {
 	finish := func() {
 		if done != nil {
 			done(r.Authorization())
@@ -116,25 +83,17 @@ func (r *darwinRecognizer) RequestAuthorization(done func(Authorization)) {
 		finish()
 		return
 	}
-	// Ask for speech first, then for the microphone; both prompts need the usage descriptions in
-	// the app's Info.plist (macos.infoPlist in mygo.json), or macOS ends the process.
-	var sfBlock, avBlock objc.Block
-	avBlock = objc.NewBlock(func(_ objc.Block, _ bool) {
-		avBlock.Release()
+	// The prompt needs NSMicrophoneUsageDescription in the app's Info.plist (macos.infoPlist in
+	// mygo.json), or macOS ends the process.
+	var block objc.Block
+	block = objc.NewBlock(func(_ objc.Block, _ bool) {
+		block.Release()
 		finish()
 	})
-	sfBlock = objc.NewBlock(func(_ objc.Block, status int) {
-		sfBlock.Release()
-		if status != sfAuthorized {
-			finish()
-			return
-		}
-		class("AVCaptureDevice").Send(sel("requestAccessForMediaType:completionHandler:"), nsString(avMediaTypeAudio), avBlock)
-	})
-	class("SFSpeechRecognizer").Send(sel("requestAuthorization:"), sfBlock)
+	class("AVCaptureDevice").Send(sel("requestAccessForMediaType:completionHandler:"), nsString(avMediaTypeAudio), block)
 }
 
-func (r *darwinRecognizer) Start(onPartial, onFinal func(string)) error {
+func (r *darwinRecorder) Start(onLevel func(float32)) error {
 	if ok, _ := r.Available(); !ok {
 		return ErrUnavailable
 	}
@@ -143,120 +102,87 @@ func (r *darwinRecognizer) Start(onPartial, onFinal func(string)) error {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.active {
-		return nil
-	}
-	r.lastErr = nil
-
-	rec := class("SFSpeechRecognizer").Send(sel("new"))
-	// The default queue is the main queue, which nothing drains in a command line tool and which
-	// the UI thread should not carry anyway.
-	rec.Send(sel("setQueue:"), class("NSOperationQueue").Send(sel("new")))
-
-	req := class("SFSpeechAudioBufferRecognitionRequest").Send(sel("new"))
-	req.Send(sel("setShouldReportPartialResults:"), true)
-	if objc.Send[bool](rec, sel("supportsOnDeviceRecognition")) {
-		req.Send(sel("setRequiresOnDeviceRecognition:"), true)
+	if r.engine != 0 {
+		return ErrBusy
 	}
 
 	engine := class("AVAudioEngine").Send(sel("new"))
 	input := engine.Send(sel("inputNode"))
+	var session *pcm
+	var mono []float32
 	tap := objc.NewBlock(func(_ objc.Block, buffer, _ objc.ID) {
-		req.Send(sel("appendAudioPCMBuffer:"), buffer)
+		frames := int(objc.Send[uint32](buffer, sel("frameLength")))
+		format := buffer.Send(sel("format"))
+		rate := objc.Send[float64](format, sel("sampleRate"))
+		channels := int(objc.Send[uint32](format, sel("channelCount")))
+		data := objc.Send[unsafe.Pointer](buffer, sel("floatChannelData"))
+		if frames == 0 || rate <= 0 || channels == 0 || data == nil {
+			return
+		}
+		if session == nil { // the first buffer tells the hardware's rate
+			session = newPCM(rate)
+			r.mu.Lock()
+			if r.engine == engine {
+				r.pcm = session
+			}
+			r.mu.Unlock()
+		}
+		// floatChannelData is float * const *: one pointer per channel (non-interleaved).
+		ptrs := unsafe.Slice((**float32)(data), channels)
+		chans := make([][]float32, channels)
+		for i, p := range ptrs {
+			chans[i] = unsafe.Slice(p, frames)
+		}
+		mono = mixToMono(mono, chans)
+		level := session.write(mono)
+		if onLevel != nil {
+			onLevel(level)
+		}
 	})
-	// format nil: the tap takes the format of the hardware, which the recognizer converts.
+	// format nil: the tap takes the format of the hardware, whatever its rate; pcm converts.
 	input.Send(sel("installTapOnBus:bufferSize:format:block:"), uintptr(0), uint32(1024), uintptr(0), tap)
 	engine.Send(sel("prepare"))
 	var nsErr objc.ID
 	if !objc.Send[bool](engine, sel("startAndReturnError:"), unsafe.Pointer(&nsErr)) {
 		input.Send(sel("removeTapOnBus:"), uintptr(0))
 		tap.Release()
+		engine.Send(sel("release"))
 		return ErrUnavailable
 	}
-
-	var settled bool
-	handler := objc.NewBlock(func(_ objc.Block, result, err objc.ID) {
-		r.mu.Lock()
-		if r.request != req { // cancelled or replaced
-			r.mu.Unlock()
-			return
-		}
-		r.mu.Unlock()
-		if err != 0 {
-			r.mu.Lock()
-			r.lastErr = errors.New(goString(err.Send(sel("localizedDescription"))))
-			r.mu.Unlock()
-		}
-		var text string
-		var final bool
-		if result != 0 {
-			text = goString(result.Send(sel("bestTranscription")).Send(sel("formattedString")))
-			final = objc.Send[bool](result, sel("isFinal"))
-		}
-		if final || (err != 0 && !settled) {
-			settled = true
-			r.teardown(req)
-			if onFinal != nil {
-				onFinal(text)
-			}
-			return
-		}
-		if text != "" && onPartial != nil {
-			onPartial(text)
-		}
-	})
-	task := rec.Send(sel("recognitionTaskWithRequest:resultHandler:"), req, handler)
-
-	r.rec, r.request, r.engine, r.task = rec, req, engine, task
-	r.blocks = []objc.Block{tap, handler}
-	r.active = true
+	r.engine, r.tap = engine, tap
 	return nil
 }
 
-// teardown stops the audio and releases what Start made, when req is still the current request.
-func (r *darwinRecognizer) teardown(req objc.ID) {
+// stopEngine takes the running recording out of r and ends its audio. The caller holds no lock.
+func (r *darwinRecorder) stopEngine() (*pcm, bool) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.request != req {
-		return
-	}
-	r.engine.Send(sel("stop"))
-	r.engine.Send(sel("inputNode")).Send(sel("removeTapOnBus:"), uintptr(0))
-	for _, id := range []objc.ID{r.engine, r.request, r.rec} {
-		id.Send(sel("release"))
-	}
-	// The blocks may still be running on their threads; the runtime keeps a block alive until its
-	// last call returns, so releasing ours is safe.
-	for _, b := range r.blocks {
-		b.Release()
-	}
-	r.engine, r.request, r.task, r.rec, r.blocks, r.active = 0, 0, 0, 0, nil, false
-}
-
-func (r *darwinRecognizer) Stop() {
-	r.mu.Lock()
-	req, engine := r.request, r.engine
+	engine, tap, session := r.engine, r.tap, r.pcm
+	r.engine, r.tap, r.pcm = 0, 0, nil
 	r.mu.Unlock()
-	if req == 0 {
-		return
+	if engine == 0 {
+		return nil, false
 	}
 	engine.Send(sel("stop"))
-	req.Send(sel("endAudio")) // the final result follows through the handler
+	engine.Send(sel("inputNode")).Send(sel("removeTapOnBus:"), uintptr(0))
+	// The runtime keeps a block alive until its last call returns, so releasing ours is safe.
+	tap.Release()
+	engine.Send(sel("release"))
+	return session, true
 }
 
-func (r *darwinRecognizer) Cancel() {
-	r.mu.Lock()
-	req, task := r.request, r.task
-	r.mu.Unlock()
-	if req == 0 {
-		return
+func (r *darwinRecorder) Stop() ([]byte, error) {
+	session, ok := r.stopEngine()
+	if !ok {
+		return nil, ErrNoAudio
 	}
-	task.Send(sel("cancel"))
-	r.teardown(req)
+	if session == nil { // stopped before the first buffer
+		return nil, ErrNoAudio
+	}
+	return session.finish()
 }
 
-func (r *darwinRecognizer) LastError() error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.lastErr
+func (r *darwinRecorder) Cancel() {
+	if session, _ := r.stopEngine(); session != nil {
+		session.cancel()
+	}
 }

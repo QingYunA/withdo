@@ -1,26 +1,25 @@
 #!/usr/bin/env bash
-# Builds cmd/listen into a throwaway Listen.app (a bare binary has no Info.plist, so macOS ends it
+# Builds cmd/record into a throwaway Record.app (a bare binary has no Info.plist, so macOS ends it
 # the moment it asks for the microphone) and runs it through LaunchServices, so the permission
-# prompts name "Listen". Output is relayed from a log file.
-#   internal/speech/cmd/listen/run.sh [-for 8s]
+# prompt names "Record". Output is relayed from a log file.
+#   internal/speech/cmd/record/run.sh [-for 5s] [-o /tmp/record.wav]
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-app="${TMPDIR:-/tmp}/Listen.app"
-log="${TMPDIR:-/tmp}/listen.log"
+app="${TMPDIR:-/tmp}/Record.app"
+log="${TMPDIR:-/tmp}/record.log"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS"
-CGO_ENABLED=0 go build -o "$app/Contents/MacOS/listen" ./internal/speech/cmd/listen
+CGO_ENABLED=0 go build -o "$app/Contents/MacOS/record" ./internal/speech/cmd/record
 cat >"$app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleIdentifier</key><string>dev.adhdtodo.listen</string>
-  <key>CFBundleName</key><string>Listen</string>
-  <key>CFBundleExecutable</key><string>listen</string>
+  <key>CFBundleIdentifier</key><string>dev.adhdtodo.record</string>
+  <key>CFBundleName</key><string>Record</string>
+  <key>CFBundleExecutable</key><string>record</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>LSUIElement</key><true/>
-  <key>NSMicrophoneUsageDescription</key><string>Spike: listen for a task.</string>
-  <key>NSSpeechRecognitionUsageDescription</key><string>Spike: turn speech into a task.</string>
+  <key>NSMicrophoneUsageDescription</key><string>Check that voice input hears you.</string>
 </dict></plist>
 PLIST
 codesign --force --sign - "$app"
