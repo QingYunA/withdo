@@ -37,6 +37,7 @@ func newHandRig(t *testing.T, reduceMotion bool) *handRig {
 
 func (r *handRig) after(d time.Duration) {
 	r.now = r.now.Add(d)
+	r.tt.Advance(d) // the element transitions run on the Tester's clock
 	r.tt.Frame()
 }
 
