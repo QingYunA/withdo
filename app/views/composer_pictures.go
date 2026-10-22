@@ -184,8 +184,8 @@ func (m *Main) choosePictures(s surface) {
 	}()
 }
 
-// attachButton is the + at the left of the composer, in its bottom row or, while the box is empty
-// and focused, in the line itself.
+// attachButton is the + at the left of the composer, in the line of a one-line box, else in
+// its bottom row.
 func (m *Main) attachButton(c *ui.Context, t *theme.Tokens, s surface) ui.Element {
 	full := len(m.cmp[s].pics)+m.cmp[s].pending >= data.MaxPictures
 	label := m.say.ComposerAttach()

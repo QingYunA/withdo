@@ -49,10 +49,9 @@ func modelText(p data.Provider) string {
 	return p.Name + " · " + p.Model
 }
 
-// modelChip is the chip and, while it is open, its popover. onWell says it sits on the one-line box
-// at rest, whose own well is bg.subtle: the chip's is a step darker there. compact draws only the
-// logo and the chevron, the words in a tooltip.
-func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell, compact bool) {
+// modelChip is the chip and, while it is open, its popover: a bg.subtle well on the box's page
+// color, focused or not. compact draws only the logo and the chevron, the words in a tooltip.
+func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, compact bool) {
 	cs := &m.cmp[s]
 	all, active, ok := m.modelsReady()
 	if !ok {
@@ -66,10 +65,6 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, onWell, comp
 		chip.Shrink(0).Padding(0, 6).Gap(4).Tooltip(text)
 	}
 	switch lit := cs.modelOpen || chip.Hovered(); {
-	case onWell && lit:
-		chip.Background(t.Text.Alpha(0.09))
-	case onWell:
-		chip.Background(t.BgHover)
 	case lit:
 		chip.Background(t.BgSubtle.Mix(t.Text, 0.05))
 	default:

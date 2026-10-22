@@ -695,35 +695,38 @@ old ask field and the inline "+ Add a task" inputs; the Completed page and the s
 none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
 page's title already says where a task goes, so the input has no label, no chip and no hint text.
 
-- **At rest.** One line, 50 pt tall, 12 pt radius, `bg.subtle`, **no border, no shadow**; a 16 pt
-  assistant avatar (18 pt) at the left (it pulses while the assistant works); the placeholder in `input` (17 / 25)
-  `text.tertiary`; with a model connected the **model chip** at the right; `⌘K` in `meta`
-`text.tertiary` after it (not in the inspector's). The
+- **At rest.** One line, 50 pt tall, 12 pt radius, `bg` with a 1 pt `border` hairline, no shadow;
+  hovered, the border is a step stronger (`border` mixed 25 % toward `text`). **Focus changes only the
+  border and the ring, nothing else** (focus used to swap the surface and the controls, which read as
+  two controls; now only the border changes, as ChatGPT and Claude do): focused, holding text or
+  working, the border is `accent` at 50 % with a 3 pt ring at 10 %. The background and the controls
+  never move with focus. The left slot depends on state: no model, the assistant avatar (18 pt); a
+  model and no second row, the `+` (attach); a second row showing, nothing (the `+` is in the row),
+  except while the assistant works on a request from this box with an empty line, then the pulsing
+  avatar. The placeholder is in `input` (17 / 25) `text.tertiary`; with a model connected the **model
+  chip** at the right; `⌘K` in `meta` `text.tertiary` after it on the pages whenever the field is
+  empty, focused or not (not in the inspector's). The
   placeholder is short: Mine `Tell me anything — I'll turn it into tasks`, Agents `Ask what your agents are doing`; a project and the Inbox
   `Add a task, or ask me anything`; the inspector `Change anything about this task`.
-- **Focused or with text.** The background becomes `bg`, with a 1 pt `accent` border at 50 % and a 3 pt
-  ring at 10 %. The text area grows with its text, 1 to 6 lines, then it scrolls; the avatar and `⌘K` give
-  way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text, absent while
-  the field is empty; a neutral **stop** button while the assistant works on a request from this box,
-  see **Assistant**). Without a
+- **With text.** The text area grows with its text, 1 to 6 lines, then it scrolls. Without a model
+  `⌘K` gives way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text,
+  absent while the field is empty); with one, the send (or a neutral **stop**, while the assistant
+  works on a request from this box, see **Assistant**) is in the second row. Without a
   model the box keeps its 50 pt from rest to one line of text; with one, the second row below adds
-  its height once there is text. Focusing it moves nothing either way. Empty and focused it
-  shows only the cursor, the placeholder, the `+` (below) and the model chip at the right. No `↵ to send` or `⇧↵ new line` text: the button is the
+  its height once there is text. Focusing it moves nothing either way. No `↵ to send` or `⇧↵ new line` text: the button is the
   hint.
 - **Second row (M6, with a model connected).** While the box holds text or an image, while the
   assistant works on a request sent from it, and while that request's answer shows, a 28 pt row shows
   under the text: `+` (18 pt plus icon, `text.secondary`, round hover well) at the left, then the
   **model chip**, then the send (or stop) button, which moves down into this row. Otherwise the box
   is one line and the chip sits at the right of it (v9 B, so the model in use is always in sight).
-  Focusing an *empty* box still moves nothing: it shows the cursor and the placeholder, with the `+`
-  in the avatar's place so images can be added at once. (A box that grows when it is focused would
-  shift the page under a press that blurs it, and the click would be lost.) Without a model there is
-  no second row, no `+` and no chip.
-- **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle`: the provider's pixel mark (18), `Provider · model`
+  Focusing an *empty* box moves nothing (a box that grows when it is focused would shift the page
+  under a press that blurs it, and the click would be lost): the one-line box already has the `+` at
+  its left. Without a model there is no second row, no `+` and no chip.
+- **Model chip.** 24 pt tall, 7 pt radius, `bg.subtle` on the box's `bg`, focused or not: the provider's pixel mark (18), `Provider · model`
   in `meta` `text.secondary`, a 12 pt chevron. On a one-line box with no room for its words (the
   inspector's, and a page's under 720 pt of content) it is the logo and the chevron alone, its words in
   a tooltip, so the placeholder reads whole; the second row always has the words, ellipsized.
-  On the one-line box its well is a step darker than the box's `bg.subtle` (`bg.hover` over it).
   Hidden when no model is connected. A click opens a drawn **popover** (a native menu cannot show
   logos), 270 pt wide, hanging from the chip's right edge (above it where there is no room below):
   the heading `Switch model` in `meta` `text.tertiary`, then one 32 pt row per provider that is set up
@@ -806,7 +809,8 @@ lands) do not draw it.
   the loudest level of each 100 ms beat, oldest at the left) and `Listening… click to stop, Esc to
   cancel`.
 - **Click again or Enter** ends it: the line shows the pixel busy indicator and `Transcribing…`. The
-  text is put after what is typed and sent through the normal send path. **Esc** cancels the
+  text is put in the box after what is typed, **not sent**: the field takes the focus with the caret at
+  the end, so the person can edit it and send it with `↵` or the send button. **Esc** cancels the
   recording or the upload; leaving the page cancels it too.
 - **Failures** are one quiet `text.secondary` line above the box for 6 s: `Sign in to use voice` (a
   link that opens Settings on the Account pane; nothing is recorded), `Microphone access is off` with

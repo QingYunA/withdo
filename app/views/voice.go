@@ -190,8 +190,9 @@ func (m *Main) voiceStop() {
 	}()
 }
 
-// transcribed runs on the UI thread when the server answered: the text goes into the box and is
-// sent the way Enter sends it.
+// transcribed runs on the UI thread when the server answered: the text goes into the box after what
+// is typed, nothing is sent, and the field is focused with its caret at the end, so the person can
+// edit it and send it with Enter or the send button.
 func (m *Main) transcribed(gen int, s surface, text string, err error) {
 	v := &m.voice
 	if gen != v.gen || v.phase != voiceTranscribing {
@@ -215,7 +216,7 @@ func (m *Main) transcribed(gen int, s surface, text string, err error) {
 	}
 	cs := &m.cmp[s]
 	cs.buf = strings.TrimSpace(cs.buf + " " + text)
-	m.submit(s)
+	cs.caretEnd = true
 	m.refocus(s)
 }
 
