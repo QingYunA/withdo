@@ -9,6 +9,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -420,6 +423,25 @@ fun App(
         }
     }
 
+    // Google sign-in opens in a Custom Tab (toolbar in the surface colour), and
+    // falls back to the default browser where no browser supports Custom Tabs.
+    val openCustomTab: (String) -> Unit = { url ->
+        if (url.isNotBlank()) {
+            try {
+                CustomTabsIntent.Builder()
+                    .setDefaultColorSchemeParams(
+                        CustomTabColorSchemeParams.Builder()
+                            .setToolbarColor(tokens.bg.toArgb())
+                            .build(),
+                    )
+                    .build()
+                    .launchUrl(context, Uri.parse(url))
+            } catch (_: Exception) {
+                openUrl(url)
+            }
+        }
+    }
+
     // Continue with Google shows only where the server lists a Google provider.
     LaunchedEffect(route == "sync") {
         if (route == "sync") {
@@ -650,12 +672,11 @@ fun App(
                                     onStep = { step ->
                                         flow = flow.copy(step = step, failure = null, failureText = null, attempt = flow.attempt + 1)
                                     },
-                                    // The page opens in the default browser (ACTION_VIEW: androidx.browser
-                                    // is not a dependency); the core keeps the wait until it answers.
+                                    // The page opens in a Custom Tab; the core keeps the wait until it answers.
                                     onGoogle = {
                                         runSignIn {
                                             val url = api.googleStart()
-                                            Handler(Looper.getMainLooper()).post { openUrl(url) }
+                                            Handler(Looper.getMainLooper()).post { openCustomTab(url) }
                                             api.googleFinish(Build.MODEL)
                                         }
                                     },

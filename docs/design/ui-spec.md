@@ -2125,16 +2125,14 @@ this order: Account, General, Agents, Advanced.
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
-- **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v32.html`, which
-  replaces `v29.html`): the account and
+- **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v32.html`): the account and
   this Mac, in one group, and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz ·
   Change`; Change edits it in place, for people who host their own). Signing in happens in the pane,
   never through a browser. **Signing up and signing in are one path** (M13 P2, as Linear, Notion and
   Slack do it): an email, then a 6-digit code mailed to it; an email with no account gets one at
   that step, with no name asked (the name is the part of the email before `@`). A password is
   optional: `Use a password instead` keeps it for accounts that have one. The phone's Sync screen
-  has the same steps (below). A server that does not answer `"auth": "pocketbase"` in `/v1/config`
-  keeps the old account-and-password card of `v29.html`.
+  has the same steps (below).
   - *Signed out*: one centered card: the 36 pt pixel person in `accent`, `Sign in or sign up`
     (`登录或注册`, 17 pt 600), one `meta` line, `Your tasks, projects and agents' reports sync to your
     phone and other computers. A new email gets an account here.` (`任务、项目和 Agent 的汇报会同步到手机和其他电脑。第一次用这个邮箱，会顺手建好账号。`),
@@ -2184,7 +2182,8 @@ this order: Account, General, Agents, Advanced.
     in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
     nobody can sign in without the code.`
   - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same steps on its card (Google
-    in a Custom Tab, the card waiting as on the desktop),
+    opens in an in-app Custom Tab, falling back to the default browser where none supports Custom
+    Tabs; the toolbar takes the `bg` colour; the card waits as on the desktop),
     the cells 44 x 54 dp, the numeric keyboard with `autofillHints` one-time code, and the buttons full
     width as the card's other buttons.
   - *Synced*: row 1 the account's display name with `Signed in · 3 devices` and **Sign out** at the
