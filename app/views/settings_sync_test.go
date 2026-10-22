@@ -17,6 +17,8 @@ type fakeSync struct {
 	login, password                                                        string
 	server                                                                 string
 	setErr                                                                 error
+	checks, resends                                                        int
+	requestedCodes, codes, resets                                          []string
 }
 
 func (f *fakeSync) SyncSnapshot() data.SyncSnapshot { return f.snap }
@@ -24,8 +26,20 @@ func (f *fakeSync) SyncSignIn(login, password string) {
 	f.signIns++
 	f.login, f.password = login, password
 }
-func (f *fakeSync) SyncMerge()      { f.merges++ }
-func (f *fakeSync) SyncUseAccount() { f.uses++ }
+func (f *fakeSync) SyncCheckServer() { f.checks++ }
+func (f *fakeSync) SyncRequestCode(email string) {
+	f.requestedCodes = append(f.requestedCodes, email)
+}
+func (f *fakeSync) SyncResendCode() { f.resends++ }
+func (f *fakeSync) SyncSignInWithCode(code string) {
+	f.codes = append(f.codes, code)
+}
+func (f *fakeSync) SyncRequestPasswordReset(email string) {
+	f.resets = append(f.resets, email)
+}
+func (f *fakeSync) SyncSetSignInStep(step data.SignInStep) { f.snap.SignInStep = step }
+func (f *fakeSync) SyncMerge()                             { f.merges++ }
+func (f *fakeSync) SyncUseAccount()                        { f.uses++ }
 func (f *fakeSync) SyncCancel() {
 	f.cancels++
 	f.snap.Conflict = nil
@@ -43,7 +57,13 @@ func (f *fakeSync) SyncSetServer(server string) error {
 	return nil
 }
 
+// signedOutSync is the signed-out card of a server that signs in with an account and password.
 func signedOutSync() data.SyncSnapshot {
+	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz", PasswordOnly: true}
+}
+
+// signedOutCodeSync is the signed-out card of a PocketBase server: the email step.
+func signedOutCodeSync() data.SyncSnapshot {
 	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz"}
 }
 

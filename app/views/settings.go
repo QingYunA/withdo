@@ -59,6 +59,13 @@ type Settings struct {
 	syncFocusAccount  bool
 	syncFocusPassword bool
 	syncPrevPhase     data.SyncPhase
+	// The code flow's card: the digits typed, the code already sent, the step last drawn, and
+	// which server's kind was asked.
+	syncCode      string
+	syncCodeTried string
+	syncFocusCode bool
+	syncPrevStep  data.SignInStep
+	syncProbed    string
 }
 
 // ContentSize is the size of the window's content: one size for every pane, so that changing the
@@ -77,6 +84,7 @@ func (s *Settings) Show(p Pane) {
 		s.syncEditingServer, s.syncServerErr = false, false
 		s.syncFocusAccount, s.syncFocusPassword = true, false
 		s.syncPassword = ""
+		s.syncCode, s.syncCodeTried, s.syncProbed = "", "", ""
 	}
 	s.pane = p
 }
@@ -84,6 +92,7 @@ func (s *Settings) Show(p Pane) {
 // ClearSyncPassword forgets the password when the Settings window closes or leaves the pane.
 func (s *Settings) ClearSyncPassword() {
 	s.syncPassword = ""
+	s.syncCode, s.syncCodeTried = "", ""
 	s.syncFocusPassword = false
 }
 

@@ -25,6 +25,13 @@ type SyncService interface {
 	SyncRetry()
 	SyncSetServer(server string) error
 	SyncRefreshDevices()
+	// The emailed code flow of a PocketBase server (M13 P2).
+	SyncCheckServer()
+	SyncRequestCode(email string)
+	SyncResendCode()
+	SyncSignInWithCode(code string)
+	SyncRequestPasswordReset(email string)
+	SyncSetSignInStep(step data.SignInStep)
 }
 
 // The sheet of the first sign-in that found tasks on both sides.
@@ -67,7 +74,19 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		s.syncPassword = ""
 		s.syncFocusPassword = true
 	}
+	// A wrong or old code empties the cells and puts the cursor back in the first.
+	if s.syncPrevPhase == data.SyncSigningIn && snap.Phase == data.SyncSignedOut &&
+		(snap.SignInFailure == data.SignInFailureWrongCode || snap.SignInFailure == data.SignInFailureCodeExpired) {
+		s.syncCode, s.syncCodeTried, s.syncFocusCode = "", "", true
+	}
 	s.syncPrevPhase = snap.Phase
+	if snap.Phase == data.SyncSignedOut || snap.Phase == data.SyncSigningIn {
+		s.syncNoteStepChange(snap)
+		if s.syncProbed != snap.Server {
+			s.syncProbed = snap.Server
+			svc.SyncCheckServer()
+		}
+	}
 	if !s.syncAsked {
 		s.syncAsked = true
 		s.syncLastSynced = snap.LastSynced
@@ -106,9 +125,14 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// syncSignInCard is the centered card of a Mac that is not signed in: the account and password go
-// straight to the sync server, and the same card stays while it signs in.
+// syncSignInCard is the centered card of a Mac that is not signed in. A server with PocketBase
+// signs in with an emailed code (syncCodeSignInCard); any other keeps this card, where the account
+// and password go straight to the sync server and the same card stays while it signs in.
 func (s *Settings) syncSignInCard(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+	if !snap.PasswordOnly {
+		s.syncCodeSignInCard(c, t, svc, snap)
+		return
+	}
 	signing := snap.Phase == data.SyncSigningIn
 	group(c, t, "sync-hero", func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
