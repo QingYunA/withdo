@@ -84,6 +84,8 @@ require (
 	golang.org/x/arch v0.11.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
+	golang.org/x/mobile v0.0.0-20261011034528-197770444867 // indirect
+	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
@@ -96,4 +98,7 @@ require (
 	modernc.org/memory v1.12.1 // indirect
 )
 
-tool github.com/egoist/mygo/cmd/mygo
+tool (
+	github.com/egoist/mygo/cmd/mygo
+	golang.org/x/mobile/cmd/gobind
+)
