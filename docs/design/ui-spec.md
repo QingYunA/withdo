@@ -2141,8 +2141,19 @@ this order: Account, General, Agents, Advanced.
     then one `fieldWell` 280 pt wide, `you@example.com`, focused when the pane opens, and under it the
     accent button **Continue with email** (`用邮箱继续`, 280 pt), enabled once the field holds an
     email; Enter presses it. In `text.tertiary` under it: keys and model settings stay on this Mac.
-    (A `Continue with Google` button above the field, with an `or` rule, comes with P3; it is not
-    drawn before.)
+    Above the field (M13 P3, `v32.html` ①): a 280 pt outlined button **Continue with Google**
+    (`用 Google 继续`, Google's four-color `G` mark at 14 pt, the one logo here that is not pixel art,
+    as Google's branding rules require), then an `or` (`或`) rule, 12 pt `text.tertiary` between two
+    hairlines.
+  - *Google*: the button opens the system browser on Google's consent page and the card shows the
+    Google mark, `Finish in your browser` (`在浏览器里完成登录`), `Choose your Google account there;
+    this window picks it up by itself.` (`在那里选好 Google 账号，这里会自动继续。`), and a **Cancel**
+    (`取消`) button that drops the wait and returns to *Signed out*. Once the browser is done the
+    pane goes on as any sign-in (*Signing in*, then *Synced* or the both-have-tasks sheet). The
+    browser tab ends on the server's own "you can close this window" page. A Google account whose
+    email already has an account signs in to that account. Failures: `Google sign-in was cancelled`
+    (`Google 登录已取消`), `Google sign-in didn't finish; try again` (`Google 登录没有完成，再试一次`)
+    after 5 minutes or a refusal, and the network sentence.
   - *Code*: the 36 pt pixel envelope in `accent`, `Check your email` (`查收邮件`), `We sent a 6-digit
     code to <email> · Use a different email` (`6 位验证码已发到 <邮箱> · 换一个邮箱`, the address in
     `text`, the link back to *Signed out* with the email kept). Six 38 x 46 pt cells, 8 pt apart, a
@@ -2172,7 +2183,8 @@ this order: Account, General, Agents, Advanced.
     China): from `ADHD Todo <noreply@sri-ai.xyz>`, subject `<code> is your ADHD Todo code`, the code
     in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
     nobody can sign in without the code.`
-  - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same three steps on its card,
+  - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same steps on its card (Google
+    in a Custom Tab, the card waiting as on the desktop),
     the cells 44 x 54 dp, the numeric keyboard with `autofillHints` one-time code, and the buttons full
     width as the card's other buttons.
   - *Synced*: row 1 the account's display name with `Signed in · 3 devices` and **Sign out** at the

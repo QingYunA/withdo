@@ -112,10 +112,21 @@ Decided 2026-10-22 on `docs/design/mockups/v32.html` (ui-spec Settings > Account
 
 ## P3: Google
 
-Needs a Google Cloud OAuth client of our own (consent screen "ADHD Todo"). PocketBase's OAuth2 is the
-code flow, so on desktop it opens the browser once and returns to a loopback address; Android uses a
-Custom Tab. This reverses the "no browser for sign-in" rule of 2026-10-20 for Google only; email
-sign-in stays in the app. Confirm with the owner before building.
+Started 2026-10-22 (owner: go). Google Cloud project `adhd-todo-512407`, consent screen "ADHD Todo"
+(external, in testing: only listed test users until it is published, which needs a homepage and a
+privacy policy page), a Web client whose only redirect URI is
+`https://todo.sri-ai.xyz/api/oauth2-redirect`; its secret is in the owner's keychain as
+`adhd-todo-google-oauth` and goes into PocketBase's `users` OAuth2 settings, not into this repo.
+
+PocketBase's own realtime flow, as its JS SDK does it, so no loopback server and no URL scheme: the
+client opens `/api/realtime`, subscribes to `@oauth2`, takes Google's auth URL from `auth-methods`
+with `state` set to its realtime client id and `redirect_uri` the server's `/api/oauth2-redirect`,
+opens the system browser (a Custom Tab on Android), waits for the `@oauth2` message with the code,
+then calls `auth-with-oauth2` with the code and the code verifier. PocketBase checks that the browser
+and the app come from the same address. New users: `users` create rule
+`@request.context = "oauth2"`, so OAuth2 can create accounts and the plain create endpoint still
+cannot; an email that has an account signs in to it. This reverses the "no browser for sign-in"
+rule of 2026-10-20 for Google only; email sign-in stays in the app.
 
 ## P4: remove Zitadel
 
