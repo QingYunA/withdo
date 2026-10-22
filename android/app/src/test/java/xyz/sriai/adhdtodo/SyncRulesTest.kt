@@ -4,7 +4,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import xyz.sriai.adhdtodo.data.CodeState
+import xyz.sriai.adhdtodo.ui.CodeFailure
 import xyz.sriai.adhdtodo.ui.SYNC_ATTENTION_MILLIS
+import xyz.sriai.adhdtodo.ui.SignInFlow
+import xyz.sriai.adhdtodo.ui.SignInStep
+import xyz.sriai.adhdtodo.ui.afterRequest
+import xyz.sriai.adhdtodo.ui.codeDigits
+import xyz.sriai.adhdtodo.ui.codeFailureOf
+import xyz.sriai.adhdtodo.ui.failed
+import xyz.sriai.adhdtodo.ui.looksLikeEmail
+import xyz.sriai.adhdtodo.ui.resendClock
 import xyz.sriai.adhdtodo.ui.SignInStage
 import xyz.sriai.adhdtodo.ui.deviceUsesLaptop
 import xyz.sriai.adhdtodo.ui.groupThousands
@@ -74,5 +84,58 @@ class SyncRulesTest {
         assertTrue(isAuthFailure("401 Unauthorized"))
         assertTrue(isAuthFailure("the refresh token was rejected"))
         assertFalse(isAuthFailure("the server did not answer"))
+    }
+
+    @Test
+    fun `a pasted code keeps its six digits only`() {
+        assertEquals("482913", codeDigits("482 913"))
+        assertEquals("482913", codeDigits("48-29-13-77"))
+        assertEquals("", codeDigits("abc"))
+        assertEquals("0:24", resendClock(24))
+        assertEquals("0:05", resendClock(5))
+    }
+
+    @Test
+    fun `an email needs an at sign and a dot after it`() {
+        assertTrue(looksLikeEmail(" cyan@example.com "))
+        assertFalse(looksLikeEmail("cyan"))
+        assertFalse(looksLikeEmail("cyan@example"))
+        assertFalse(looksLikeEmail("@example.com"))
+        assertFalse(looksLikeEmail("cyan @example.com"))
+    }
+
+    @Test
+    fun `failure kinds map and unknown ones are other`() {
+        assertEquals(null, codeFailureOf(""))
+        assertEquals(CodeFailure.WRONG_CODE, codeFailureOf("wrong_code"))
+        assertEquals(CodeFailure.EXPIRED, codeFailureOf("expired"))
+        assertEquals(CodeFailure.OTHER, codeFailureOf("surprise"))
+    }
+
+    @Test
+    fun `a mailed code moves to the code step and an unsupported server to the old card`() {
+        val sent = SignInFlow(email = "a@b.co").afterRequest(null, CodeState("code", "a@b.co", 30, ""))
+        assertEquals(SignInStep.CODE, sent.step)
+        assertEquals(30, sent.resendIn)
+        assertEquals(null, sent.failure)
+
+        val old = SignInFlow(email = "a@b.co").afterRequest("nope", CodeState("", "", 0, "unsupported"))
+        assertEquals(SignInStep.LEGACY, old.step)
+
+        val network = SignInFlow(email = "a@b.co").afterRequest("down", CodeState("", "", 0, "network"))
+        assertEquals(SignInStep.EMAIL, network.step)
+        assertEquals(CodeFailure.NETWORK, network.failure)
+    }
+
+    @Test
+    fun `a wrong code empties the cells and an expired one restarts the countdown`() {
+        val code = SignInFlow(step = SignInStep.CODE, email = "a@b.co", attempt = 2)
+        val wrong = code.failed(CodeState("code", "a@b.co", 10, "wrong_code"), "that code isn't right")
+        assertEquals(CodeFailure.WRONG_CODE, wrong.failure)
+        assertEquals(3, wrong.attempt)
+        assertEquals(SignInStep.CODE, wrong.step)
+        val expired = code.failed(CodeState("code", "a@b.co", 30, "expired"), "x")
+        assertEquals(CodeFailure.EXPIRED, expired.failure)
+        assertEquals(30, expired.resendIn)
     }
 }

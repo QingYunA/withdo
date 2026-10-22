@@ -85,6 +85,19 @@ class CoreApi(private val core: Core_) {
     fun signIn(login: String, password: String, deviceName: String): SignInState =
         PageJson.decodeFromString(core.signIn(login, password, deviceName))
 
+    /** Mails a 6-digit sign-in code to the address; an address with no account gets one. */
+    fun requestCode(email: String) = core.requestCode(email)
+
+    /** Checks the code and links this phone as signIn does. */
+    fun signInWithCode(code: String, deviceName: String): SignInState =
+        PageJson.decodeFromString(core.signInWithCode(code, deviceName))
+
+    fun resendCode() = core.resendCode()
+
+    fun requestPasswordReset(email: String) = core.requestPasswordReset(email)
+
+    fun codeState(): CodeState = PageJson.decodeFromString(core.codeState())
+
     fun linkMerge(deviceName: String) = core.linkMerge(deviceName)
 
     fun linkReplace(deviceName: String): String = core.linkReplace(deviceName)

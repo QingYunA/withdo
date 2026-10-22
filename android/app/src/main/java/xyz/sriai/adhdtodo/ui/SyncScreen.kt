@@ -75,6 +75,10 @@ data class SyncModel(
     val signInError: String? = null,
     /** The kind of that failure, for the password clearing the card does. */
     val signInFailure: SignInFailure? = null,
+    /** The emailed-code sign-in's step; LEGACY keeps the account-and-password card. */
+    val flow: SignInFlow = SignInFlow(),
+    /** The six digits already typed, for the screenshots. */
+    val typedCode: String = "",
 )
 
 /** The account's display name, else its email, else the quiet "Account". */
@@ -94,6 +98,7 @@ fun SyncScreen(
     serverError: Boolean,
     serverSaving: Boolean,
     onSignIn: (String, String) -> Unit,
+    signInActions: SignInActions = SignInActions(),
     onSignOut: () -> Unit,
     onSyncNow: () -> Unit,
     onRetry: () -> Unit,
@@ -112,13 +117,22 @@ fun SyncScreen(
 
     Column(Modifier.fillMaxWidth()) {
         when (model.phase) {
-            SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignedOutCard(
-                signingIn = model.phase == SyncPhase.SIGNING_IN,
-                stage = signInStage,
-                failure = model.signInFailure,
-                error = model.signInError,
-                onSignIn = onSignIn,
-            )
+            SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> if (model.flow.step == SignInStep.LEGACY) {
+                SignedOutCard(
+                    signingIn = model.phase == SyncPhase.SIGNING_IN,
+                    stage = signInStage,
+                    failure = model.signInFailure,
+                    error = model.signInError,
+                    onSignIn = onSignIn,
+                )
+            } else {
+                SignInFlowCard(
+                    flow = model.flow,
+                    stage = if (model.flow.sending) SignInStage.SENDING else signInStage,
+                    actions = signInActions.copy(onSignInWithPassword = onSignIn),
+                    initialCode = model.typedCode,
+                )
+            }
             SyncPhase.CHOOSE -> {
                 GroupCard {
                     SyncAccountRow(model, words, onSignOut)
@@ -272,7 +286,7 @@ private fun SignedOutCard(
             PrimaryButton(
                 label = when (stage) {
                     SignInStage.DOWNLOADING -> stringResource(R.string.sync_signing_in_downloading)
-                    SignInStage.CHECKING -> stringResource(R.string.sync_signing_in_checking)
+                    SignInStage.CHECKING, SignInStage.SENDING -> stringResource(R.string.sync_signing_in_checking)
                     null -> stringResource(R.string.sync_sign_in)
                 },
                 enabled = ready,
@@ -301,7 +315,7 @@ private fun SignedOutCard(
 
 /** One 48 dp field of the sign-in card, drawn as the Server footer's editor. */
 @Composable
-private fun SignInField(
+internal fun SignInField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,

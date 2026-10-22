@@ -123,6 +123,7 @@ fun App(
     var signInError by remember { mutableStateOf<String?>(null) }
     var signInFailure by remember { mutableStateOf<SignInFailure?>(null) }
     var choose by remember { mutableStateOf(SignInState()) }
+    var flow by remember { mutableStateOf(SignInFlow()) }
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
@@ -504,6 +505,7 @@ fun App(
                             choose = choose,
                             signInError = signInError,
                             signInFailure = signInFailure,
+                            flow = flow,
                         )
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dims.pagePadding)) {
                             syncMessage?.let {
@@ -514,6 +516,61 @@ fun App(
                                     modifier = Modifier.padding(top = 8.dp),
                                 )
                             }
+                            val runSignIn: (() -> SignInState) -> Unit = { call ->
+                                if (!signingIn) {
+                                    signingIn = true
+                                    choosing = false
+                                    signInError = null
+                                    signInFailure = null
+                                    syncMessage = null
+                                    flow = flow.copy(failure = null, failureText = null)
+                                    scope.launch {
+                                        var failure: Exception? = null
+                                        val result = try {
+                                            withContext(Dispatchers.IO) { call() }
+                                        } catch (e: CancellationException) {
+                                            throw e
+                                        } catch (e: Exception) {
+                                            failure = e
+                                            null
+                                        }
+                                        if (failure != null) {
+                                            val state = withContext(Dispatchers.IO) {
+                                                runCatching { api.codeState() }.getOrNull()
+                                            }
+                                            flow = flow.failed(state, failure.message)
+                                        }
+                                        signingIn = false
+                                        if (failure != null) {
+                                            Log.w("adhd-todo", "sign-in failed", failure)
+                                            val kind = signInFailureOf(failure.message)
+                                            signInFailure = kind
+                                            signInError = if (kind != null) {
+                                                resources.getString(signInFailureText(kind))
+                                            } else {
+                                                signInFailureSentence(failure)
+                                                    ?: resources.getString(R.string.sync_sign_in_failed)
+                                            }
+                                        }
+                                        when (result?.state) {
+                                            "choose" -> {
+                                                choose = checkNotNull(result)
+                                                choosing = true
+                                                flow = SignInFlow()
+                                            }
+                                            "linked" -> {
+                                                flow = SignInFlow()
+                                                startSync()
+                                            }
+                                            null -> if (failure == null) {
+                                                syncMessage = resources.getString(R.string.sync_sign_in_failed)
+                                            }
+                                            else -> Unit
+                                        }
+                                        tick++
+                                    }
+                                }
+                            }
                             SyncScreen(
                                 model = model,
                                 words = words,
@@ -522,52 +579,69 @@ fun App(
                                 serverError = serverError,
                                 serverSaving = serverSaving,
                                 onSignIn = { login, password ->
-                                    if (!signingIn) {
-                                        signingIn = true
-                                        choosing = false
-                                        signInError = null
-                                        signInFailure = null
-                                        syncMessage = null
-                                        scope.launch {
-                                            var failure: Exception? = null
-                                            val result = try {
-                                                withContext(Dispatchers.IO) {
-                                                    api.signIn(login, password, Build.MODEL)
-                                                }
-                                            } catch (e: CancellationException) {
-                                                throw e
-                                            } catch (e: Exception) {
-                                                failure = e
-                                                null
-                                            }
-                                            signingIn = false
-                                            if (failure != null) {
-                                                Log.w("adhd-todo", "sign-in failed", failure)
-                                                val kind = signInFailureOf(failure.message)
-                                                signInFailure = kind
-                                                signInError = if (kind != null) {
-                                                    resources.getString(signInFailureText(kind))
-                                                } else {
-                                                    signInFailureSentence(failure)
-                                                        ?: resources.getString(R.string.sync_sign_in_failed)
-                                                }
-                                            }
-                                            when (result?.state) {
-                                                "choose" -> {
-                                                    choose = checkNotNull(result)
-                                                    choosing = true
-                                                }
-                                                "linked" -> startSync()
-                                                null -> if (failure == null) {
-                                                    syncMessage = resources.getString(R.string.sync_sign_in_failed)
-                                                }
-                                                else -> Unit
-                                            }
-                                            tick++
-                                        }
-                                    }
+                                    runSignIn { api.signIn(login, password, Build.MODEL) }
                                 },
+                                signInActions = SignInActions(
+                                    onRequestCode = { email ->
+                                        if (!signingIn && !flow.sending) {
+                                            flow = flow.copy(email = email, failure = null, failureText = null, sending = true)
+                                            scope.launch {
+                                                val error = withContext(Dispatchers.IO) {
+                                                    runCatching { api.requestCode(email) }.exceptionOrNull()
+                                                }
+                                                if (error is CancellationException) throw error
+                                                val state = withContext(Dispatchers.IO) {
+                                                    runCatching { api.codeState() }.getOrNull()
+                                                }
+                                                if (error != null) Log.w("adhd-todo", "request code failed", error)
+                                                flow = flow.afterRequest(error?.let { it.message ?: "" }, state)
+                                            }
+                                        }
+                                    },
+                                    onSubmitCode = { code -> runSignIn { api.signInWithCode(code, Build.MODEL) } },
+                                    onResend = {
+                                        scope.launch {
+                                            val error = withContext(Dispatchers.IO) {
+                                                runCatching { api.resendCode() }.exceptionOrNull()
+                                            }
+                                            if (error is CancellationException) throw error
+                                            val state = withContext(Dispatchers.IO) {
+                                                runCatching { api.codeState() }.getOrNull()
+                                            }
+                                            flow = if (error == null) {
+                                                flow.copy(
+                                                    resendIn = state?.resendIn ?: 30,
+                                                    failure = null,
+                                                    failureText = null,
+                                                    attempt = flow.attempt + 1,
+                                                )
+                                            } else {
+                                                flow.failed(state, error.message)
+                                            }
+                                        }
+                                    },
+                                    onForgotPassword = { email ->
+                                        scope.launch {
+                                            val error = withContext(Dispatchers.IO) {
+                                                runCatching { api.requestPasswordReset(email) }.exceptionOrNull()
+                                            }
+                                            if (error is CancellationException) throw error
+                                            val state = withContext(Dispatchers.IO) {
+                                                runCatching { api.codeState() }.getOrNull()
+                                            }
+                                            flow = if (error == null) {
+                                                flow.copy(step = SignInStep.RESET_SENT, failure = null, failureText = null)
+                                            } else {
+                                                flow.failed(state, error.message)
+                                            }
+                                        }
+                                    },
+                                    onStep = { step ->
+                                        flow = flow.copy(step = step, failure = null, failureText = null, attempt = flow.attempt + 1)
+                                    },
+                                ),
                                 onSignOut = {
+                                    flow = SignInFlow()
                                     choosing = false
                                     signingIn = false
                                     signInError = null
