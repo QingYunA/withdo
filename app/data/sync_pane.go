@@ -58,6 +58,20 @@ const (
 	SignInStageNone        SignInStage = ""
 	SignInStageChecking    SignInStage = "checking"
 	SignInStageDownloading SignInStage = "downloading"
+	// SignInStageSending is the email being sent its code.
+	SignInStageSending SignInStage = "sending"
+)
+
+// SignInStep is which screen of the signed-out card the Account pane shows (M13 P2).
+type SignInStep string
+
+// The steps. SignInStepEmail is the default; the code step follows SyncRequestCode, the password
+// step is the user's choice, and the reset step follows SyncRequestPasswordReset.
+const (
+	SignInStepEmail     SignInStep = ""
+	SignInStepCode      SignInStep = "code"
+	SignInStepPassword  SignInStep = "password"
+	SignInStepResetSent SignInStep = "resetSent"
 )
 
 // SignInFailure is why the last in-app sign-in failed, so Settings can word it in the user's
@@ -74,6 +88,10 @@ const (
 	SignInFailureUnsupported  SignInFailure = "unsupported"
 	SignInFailureNetwork      SignInFailure = "network"
 	SignInFailureOther        SignInFailure = "other"
+	// SignInFailureWrongCode is a code that was not right.
+	SignInFailureWrongCode SignInFailure = "wrongCode"
+	// SignInFailureCodeExpired is a code older than ten minutes: a new one was mailed at once.
+	SignInFailureCodeExpired SignInFailure = "codeExpired"
 )
 
 // SyncConflict is what the pane asks before it changes this Mac's task ids: how much data each
@@ -104,6 +122,11 @@ type SyncSnapshot struct {
 	Devices       []SyncDevice
 	ThisDeviceID  string
 	Conflict      *SyncConflict
+	// SignInStep, SignInEmail and ResendAt are the signed-out card's code flow: the screen, the
+	// address being signed in, and when Resend code is allowed again (zero outside the code step).
+	SignInStep  SignInStep
+	SignInEmail string
+	ResendAt    time.Time
 }
 
 // The JSON files keyed by task id that a merge must rename, next to the database.
@@ -136,6 +159,7 @@ type syncTask struct {
 	devicesBusy   bool
 	tokens        syncclient.TokenSource
 	client        *syncclient.Client
+	code          codeState
 }
 
 // SetSyncNotify tells the service where to ask for a redraw after a status change. The shell
@@ -159,6 +183,7 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		SignInStage:   r.sync.signInStage,
 		Pending:       r.sync.pending,
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
+		SignInStep: r.sync.code.step, SignInEmail: r.sync.code.email, ResendAt: r.sync.code.resendAt,
 		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
 	if s.Pending < 0 {
@@ -234,6 +259,8 @@ func signInFailureKind(err error) SignInFailure {
 		return SignInFailureNone
 	case errors.Is(err, syncclient.ErrInvalidCredentials):
 		return SignInFailureCredentials
+	case errors.Is(err, syncclient.ErrInvalidCode):
+		return SignInFailureWrongCode
 	case errors.Is(err, syncclient.ErrTooManyAttempts):
 		return SignInFailureTooMany
 	case errors.Is(err, syncclient.ErrSecondFactor):
@@ -339,6 +366,7 @@ func (r *Real) SyncSignOut() {
 	r.sync.cfg = cfg
 	r.sync.account, r.sync.hasAccount = syncclient.Account{}, false
 	r.sync.signingIn, r.sync.conflict = false, nil
+	r.sync.code = codeState{}
 	r.sync.signInFailure = SignInFailureNone
 	r.sync.status = syncclient.Status{}
 	r.sync.failedSince = time.Time{}

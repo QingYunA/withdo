@@ -60,6 +60,13 @@ func (r *Real) signIn(server, loginName, password string) {
 		r.failSignIn(err)
 		return
 	}
+	r.finishSignIn(ctx, server, cfg, tokens)
+}
+
+// finishSignIn is everything after a token is stored, shared by the password and the code
+// sign-in: save the account, link the database (or resume it), and stop at the conflict when both
+// sides have tasks.
+func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.Config, tokens syncclient.AccountSource) {
 	r.setSignInStage(SignInStageDownloading)
 	account, hasAccount := tokens.Account()
 	if hasAccount {
@@ -89,6 +96,7 @@ func (r *Real) signIn(server, loginName, password string) {
 		r.sync.signingIn = false
 		r.sync.signInStage = SignInStageNone
 		r.sync.signInFailure = SignInFailureNone
+		r.sync.code = codeState{}
 		r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 		r.sync.failedSince = time.Time{}
 		r.mu.Unlock()
@@ -118,6 +126,7 @@ func (r *Real) signIn(server, loginName, password string) {
 	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
 	r.sync.signInFailure = SignInFailureNone
+	r.sync.code = codeState{}
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}
 	r.mu.Unlock()
@@ -237,6 +246,7 @@ func (r *Real) finishLink(client *syncclient.Client) {
 	r.sync.signingIn = false
 	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
+	r.sync.code = codeState{}
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}
 	r.sync.client = client
@@ -251,6 +261,7 @@ func (r *Real) SyncCancel() {
 	r.mu.Lock()
 	conflict := r.sync.conflict
 	r.sync.conflict = nil
+	r.sync.code = codeState{}
 	r.sync.signingIn = false
 	r.sync.signInFailure = SignInFailureNone
 	r.sync.status.LastError = ""
