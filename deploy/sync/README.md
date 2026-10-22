@@ -134,10 +134,10 @@ first time each subject is accepted by `pocketbase` or `oidc`, which shows when 
   `mkdir -p /opt/adhd-todo/sync/pb_data && chown 65532:65532 /opt/adhd-todo/sync/pb_data` (the
   container runs as distroless `nonroot`). `deploy.sh` copies it to `pb_data.bak-STAMP` before each
   deploy; back it up with the Postgres dump too, as it holds every password hash.
-- **nginx** exposes only `auth-with-password` and `auth-refresh` of the `users` collection. `/_/` (the
-  admin UI), the superuser sign-in and the rest of `/api/` answer 404. The owner reaches the admin UI with
-  `ssh -L 18080:127.0.0.1:18080 adhd-srv` and `http://127.0.0.1:18080/_/`.
-- **Password guessing** is limited to 10 sign-ins a minute per client address (PocketBase's rate limit,
+- **nginx** proxies all of PocketBase: the users' sign-in, and the admin UI at
+  `https://todo.sri-ai.xyz/_/` with the API it calls (public since 2026-10-22). It sets `X-Real-IP`
+  from the connection on every location, so a client cannot choose the address the rate limits count.
+- **Password guessing** is limited to 10 user sign-ins and 5 superuser sign-ins a minute per client address (PocketBase's rate limit,
   counting by the `X-Real-IP` nginx sets).
 - **Superuser** (for the admin UI), once, from the server with the password on stdin:
   `docker compose --env-file sync.env -f sync.compose.yml exec -T sync /adhd-sync pb-superuser -pb-dir=/pb_data -email=EMAIL < password-file`.
