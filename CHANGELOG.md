@@ -3,6 +3,18 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.7.1
+
+No database change: upgrading from 0.7.0 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Sign up from the app.** Settings > Account (the Sync screen on Android) asks only for your email
+  and mails you a 6-digit code; a new email gets an account right there. A password is optional:
+  `Use a password instead` keeps it, and `Forgot password` mails a reset link.
+- **Voice fills the input instead of sending it,** so you can fix a word before you press Return.
+- **The input looks the same before and after you click it:** only its border changes, and nothing
+  in it moves.
+
 ## 0.7.0
 
 No database change: upgrading from 0.6.4 is installing the app. On Windows, quit ADHD Todo and your
