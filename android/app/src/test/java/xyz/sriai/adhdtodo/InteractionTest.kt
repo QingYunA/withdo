@@ -322,6 +322,7 @@ class InteractionTest {
             SyncModel(
                 SyncPhase.SIGNING_IN,
                 SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "checking"),
+                flow = xyz.sriai.adhdtodo.ui.SignInFlow(step = xyz.sriai.adhdtodo.ui.SignInStep.LEGACY),
             ),
         )
         compose.setThemedContent { Sync(model) }
@@ -428,7 +429,11 @@ class InteractionTest {
     }
 
     private fun signedOut(): SyncModel =
-        SyncModel(SyncPhase.SIGNED_OUT, SyncStatus(server = DEFAULT_SYNC_SERVER))
+        SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = xyz.sriai.adhdtodo.ui.SignInFlow(step = xyz.sriai.adhdtodo.ui.SignInStep.LEGACY),
+        )
 
     private fun ComposeContentTestRule.fields() = onAllNodes(hasSetTextAction())
 

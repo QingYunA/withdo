@@ -4319,5 +4319,125 @@
         "example": "3"
       }
     }
+  },
+  "settingsSyncEmailTitle": "Sign in or sign up",
+  "@settingsSyncEmailTitle": {
+    "description": "Title of the signed-out card's email step."
+  },
+  "settingsSyncEmailBody": "Your tasks, projects and agents' reports sync to your phone and other computers. A new email gets an account here.",
+  "@settingsSyncEmailBody": {
+    "description": "The email step's explanation."
+  },
+  "settingsSyncEmailPlaceholder": "you@example.com",
+  "@settingsSyncEmailPlaceholder": {
+    "description": "Placeholder of the email field."
+  },
+  "settingsSyncContinueEmail": "Continue with email",
+  "@settingsSyncContinueEmail": {
+    "description": "The accent button of the email step."
+  },
+  "settingsSyncLocalNote": "Keys and model settings stay on this Mac.",
+  "@settingsSyncLocalNote": {
+    "description": "Note under the email step's button."
+  },
+  "settingsSyncCodeTitle": "Check your email",
+  "@settingsSyncCodeTitle": {
+    "description": "Title of the code step."
+  },
+  "settingsSyncCodeSentTo": "We sent a 6-digit code to",
+  "@settingsSyncCodeSentTo": {
+    "description": "Before the email address on the code step; the address and the change-email link follow."
+  },
+  "settingsSyncChangeEmail": "Use a different email",
+  "@settingsSyncChangeEmail": {
+    "description": "Link back to the email step with the address kept."
+  },
+  "settingsSyncCodeLabel": "6-digit code",
+  "@settingsSyncCodeLabel": {
+    "description": "Accessible name of the six code cells."
+  },
+  "settingsSyncResendIn": "Didn't get it? Resend in {time}",
+  "@settingsSyncResendIn": {
+    "description": "The countdown under the code cells.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "0:24"
+      }
+    }
+  },
+  "settingsSyncResendCode": "Resend code",
+  "@settingsSyncResendCode": {
+    "description": "Link that mails a new code."
+  },
+  "settingsSyncUsePassword": "Use a password instead",
+  "@settingsSyncUsePassword": {
+    "description": "Link from the code step to the password step."
+  },
+  "settingsSyncPasswordTitle": "Sign in with a password",
+  "@settingsSyncPasswordTitle": {
+    "description": "Title of the password step."
+  },
+  "settingsSyncForgotPassword": "Forgot password",
+  "@settingsSyncForgotPassword": {
+    "description": "Link that mails a password reset link."
+  },
+  "settingsSyncUseCode": "Use a code instead",
+  "@settingsSyncUseCode": {
+    "description": "Link from the password step back to the code."
+  },
+  "settingsSyncResetTitle": "Reset your password from your email",
+  "@settingsSyncResetTitle": {
+    "description": "Title after a reset link was mailed."
+  },
+  "settingsSyncResetBody": "We sent a link to {email}. Set a new password in the browser, then come back",
+  "@settingsSyncResetBody": {
+    "description": "Body after a reset link was mailed.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "cyan@example.com"
+      }
+    }
+  },
+  "settingsSyncBackToSignIn": "Back to sign in",
+  "@settingsSyncBackToSignIn": {
+    "description": "Button after a reset link was mailed."
+  },
+  "settingsSyncResetOrPrefix": "Or ",
+  "@settingsSyncResetOrPrefix": {
+    "description": "Before the use-a-code link under the reset button."
+  },
+  "settingsSyncResetOrSuffix": "; no password needed.",
+  "@settingsSyncResetOrSuffix": {
+    "description": "After the use-a-code link under the reset button."
+  },
+  "settingsSyncCheckingCode": "Checking the code…",
+  "@settingsSyncCheckingCode": {
+    "description": "Busy line while the code is checked."
+  },
+  "settingsSyncSendingCode": "Sending the code…",
+  "@settingsSyncSendingCode": {
+    "description": "Busy line while a code or reset link is mailed."
+  },
+  "settingsSyncWrongCode": "That code isn't right",
+  "@settingsSyncWrongCode": {
+    "description": "Failure line for a wrong code."
+  },
+  "settingsSyncCodeExpired": "That code expired; we sent a new one",
+  "@settingsSyncCodeExpired": {
+    "description": "Failure line for an old code."
+  },
+  "settingsSyncTooManyTriesMinute": "Too many tries; wait a minute",
+  "@settingsSyncTooManyTriesMinute": {
+    "description": "Failure line for rate limiting on the code flow."
+  },
+  "settingsSyncWrongEmailPassword": "Wrong email or password",
+  "@settingsSyncWrongEmailPassword": {
+    "description": "Failure line for a wrong password on the password step."
+  },
+  "settingsSyncSignInShort": "Sign in",
+  "@settingsSyncSignInShort": {
+    "description": "The password step's sign-in button."
   }
 }

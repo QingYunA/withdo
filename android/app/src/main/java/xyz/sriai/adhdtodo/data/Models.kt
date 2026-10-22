@@ -297,6 +297,20 @@ data class SignInState(
 )
 
 /**
+ * CodeState()'s JSON: where the emailed-code sign-in is. step is "code" once a code was mailed;
+ * resend_in is the seconds before another may be asked for; failure is the kind of the last
+ * failed attempt (wrong_code, expired, too_many, wrong_password, deactivated, network,
+ * unsupported, other) or "".
+ */
+@Serializable
+data class CodeState(
+    @SerialName("step") val step: String = "",
+    @SerialName("email") val email: String = "",
+    @SerialName("resend_in") val resendIn: Int = 0,
+    @SerialName("failure") val failure: String = "",
+)
+
+/**
  * SyncStatus()'s JSON: the runner's state plus the settings the Sync screen reads. A missing
  * retry_at, failed_since or seed_total means the runner is not in that state.
  */

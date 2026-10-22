@@ -127,6 +127,9 @@ type SyncSnapshot struct {
 	SignInStep  SignInStep
 	SignInEmail string
 	ResendAt    time.Time
+	// PasswordOnly is true once the server answered /v1/config without "auth": "pocketbase": its
+	// signed-out card is the old account-and-password one, with no codes.
+	PasswordOnly bool
 }
 
 // The JSON files keyed by task id that a merge must rename, next to the database.
@@ -184,6 +187,7 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		Pending:       r.sync.pending,
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		SignInStep: r.sync.code.step, SignInEmail: r.sync.code.email, ResendAt: r.sync.code.resendAt,
+		PasswordOnly: r.sync.code.passwordOnly && r.sync.code.probed == r.sync.server,
 		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
 	if s.Pending < 0 {
