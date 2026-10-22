@@ -219,7 +219,7 @@ func (s *Settings) syncCodeCells(c *ui.Context, t *theme.Tokens, busy bool) {
 				ui.Box(c.Key("sync-code-dash")).Size(syncCodeDashWidth, syncCodeDashHeight).Shrink(0).Background(t.TextTertiary)
 			}
 			cell := ui.Box(c.Key("sync-code-cell-"+itoa(i))).Size(syncCodeCellW, syncCodeCellH).Shrink(0).Center().
-				Radius(theme.RadiusControl).Background(t.Bg).Border(1, t.ComposerBorder())
+				Radius(theme.RadiusControl).Background(t.BgSubtle).Border(1, t.Border) // cells read on the white card
 			if busy {
 				cell.Opacity(0.5)
 			} else if i == len(digits) {
