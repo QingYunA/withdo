@@ -44,10 +44,9 @@ type composer struct {
 	// problem is the quiet line about an image that was not taken, shown for a few seconds.
 	problem   string
 	problemAt time.Time
-	// modelOpen is the model popover; plusHover keeps the + of an empty focused box while the pointer
-	// is on it (a press on a button takes the focus from the field, and the box must not change under
-	// the pointer); dragOver is a file dragged over.
-	modelOpen, plusHover, dragOver bool
+	// modelOpen is the model popover; dragOver is a file dragged over; caretEnd asks the field to put
+	// its caret after the last character in its next frame (a transcription was added).
+	modelOpen, dragOver, caretEnd bool
 }
 
 // placeOf is where a composer's requests come from.

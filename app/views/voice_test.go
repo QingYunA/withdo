@@ -14,7 +14,7 @@ import (
 )
 
 // The voice button of the composer: a click records, a second click (or Enter) sends the recording
-// to be transcribed, and the text is sent as if typed. The recorder and the transcriber are fakes.
+// to be transcribed, and the text is put in the box for the person to edit and send. The recorder and the transcriber are fakes.
 
 type fakeRecorder struct {
 	mu        sync.Mutex
@@ -149,7 +149,7 @@ func TestTheMicrophoneIsHiddenWhereNothingCanRecord(t *testing.T) {
 	}
 }
 
-func TestRecordStopTranscribeAndSend(t *testing.T) {
+func TestRecordStopTranscribeAndFill(t *testing.T) {
 	v := newVoiceRig(t)
 	v.click(t, "Voice input")
 	if v.rc.started != 1 || v.m.voice.phase != voiceListening {
@@ -184,15 +184,24 @@ func TestRecordStopTranscribeAndSend(t *testing.T) {
 	}
 	close(v.tr.gate)
 	v.rec.drain(t)
-	v.rec.drain(t) // the assistant's answer
-	if got := v.fa.Asked(); len(got) != 1 || got[0] != "buy milk" {
-		t.Fatalf("the assistant was asked %v", got)
+	v.tt.Frame()
+	v.tt.Frame()
+	v.tt.Frame()
+	if got := v.fa.Asked(); len(got) != 0 {
+		t.Fatalf("the transcription was sent: %v", got)
 	}
 	if string(v.tr.got[0]) != "RIFF-wav" {
 		t.Errorf("uploaded %q", v.tr.got[0])
 	}
-	if v.pageBuf() != "" || v.m.voice.phase != voiceIdle {
+	if v.pageBuf() != "buy milk" || v.m.voice.phase != voiceIdle {
 		t.Errorf("buf %q, phase %v", v.pageBuf(), v.m.voice.phase)
+	}
+	if !v.tt.Focused("Ask the assistant") {
+		t.Error("the field is not focused")
+	}
+	v.tt.Type("!") // the caret is at the end of the text
+	if got := v.pageBuf(); got != "buy milk!" {
+		t.Errorf("buf %q after typing, want the caret at the end", got)
 	}
 }
 
@@ -209,9 +218,12 @@ func TestVoiceTextIsAddedAfterWhatWasTyped(t *testing.T) {
 		t.Fatalf("Enter did not end the recording")
 	}
 	v.rec.drain(t)
-	v.rec.drain(t)
-	if got := v.fa.Asked(); len(got) != 1 || got[0] != "remind me to buy milk" {
+	v.tt.Frame()
+	if got := v.fa.Asked(); len(got) != 0 {
 		t.Fatalf("asked %v", got)
+	}
+	if got := v.pageBuf(); got != "remind me to buy milk" {
+		t.Fatalf("buf %q", got)
 	}
 }
 

@@ -430,7 +430,7 @@ func TestTheShortcutAndTheSendButtonGiveWayToEachOther(t *testing.T) {
 			t.Error("a send button at rest")
 		}
 		r.tt.Key(ui.Cmd, ui.KeyK)
-		hasNot(t, r.tt, "⌘K") // focused and empty: only the cursor
+		has(t, r.tt, "⌘K") // focus moves nothing: the hint stays while the line is empty
 		if sends() {
 			t.Error("a send button with nothing to send")
 		}

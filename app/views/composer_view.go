@@ -4,6 +4,7 @@ import (
 	"math"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/page"
@@ -60,29 +61,27 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// composerBox is the one input: at rest a quiet line on a well (no border, no shadow) with the
-// assistant's avatar at its left and the model chip and ⌘K at its right; focused or holding text it
-// turns to the page's own color with an accent ring and grows with its text up to six lines. With a
-// model connected a second row shows under the text once there is something to send, and while the
-// assistant works on a request from the box and its answer shows: + for images at the left, the
-// model chip and the round send (or stop) button at the right; images attached sit above the text as
-// thumbnails. Without a model the avatar and ⌘K give way to the send button in the line itself. The
-// place is named by the page's title, not by the input.
+// composerBox is the one input: a page-colored box with a hairline border, the same at rest and
+// focused. Focus (or text, or the assistant at work) changes only the border and the ring; the
+// controls do not move. Left of the text: the assistant's avatar without a model, + for images with
+// one, nothing once a second row shows (the + is in it) unless the assistant works on a request from
+// the box and the line is empty, then the pulsing avatar. At the right: the model chip, the mic,
+// and ⌘K on a page while the line is empty, or the send button once there is text and no model. It
+// grows with its text up to six lines. With a model connected a second row shows under the text once
+// there is something to send, and while the assistant works on a request from the box and its answer
+// shows: + for images at the left, the model chip and the round send (or stop) button at the right;
+// images attached sit above the text as thumbnails. The place is named by the page's title, not by
+// the input.
 func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
 	cs := &m.cmp[s]
 	ready := m.assistReady()
 	focused, typed := cs.ref.Focused(c), cs.buf != ""
 	holds := typed || (ready && len(cs.pics) > 0) // something to send
 	// The second row shows once there is something to send and while the assistant works on a request
-	// from this box, answer included, so focusing an empty box moves nothing; an empty focused box has
-	// the + in the avatar's place instead, and the model chip is in the line.
+	// from this box, answer included, so focusing an empty box moves nothing.
 	working := ready && m.convo.owner == s && (m.convo.thinking || m.replyIn(s, cs.task))
 	bar := ready && (holds || working)
-	inline := ready && !bar && (focused || cs.plusHover)
 	active := focused || holds || working
-	if !inline {
-		cs.plusHover = false
-	}
 	key := "composer"
 	if s == surfaceInspector {
 		key = "inspector-card"
@@ -96,9 +95,9 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 	case active:
 		box.Background(t.Bg).Border(1, t.Accent.Alpha(0.5)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
 	case box.Hovered():
-		box.Background(t.BgSubtle.Mix(t.Text, 0.03)).Border(1, ui.Transparent)
+		box.Background(t.Bg).Border(1, t.Border.Mix(t.Text, 0.25))
 	default:
-		box.Background(t.BgSubtle).Border(1, ui.Transparent)
+		box.Background(t.Bg).Border(1, t.Border)
 	}
 	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	if ready {
@@ -113,21 +112,25 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 		}
 		ui.Row(c.Key(key + "-line")).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
 			switch {
-			case inline:
-				cs.plusHover = m.attachButton(c, t, s).Hovered()
-			case !typed && !focused && (!bar || working):
+			case !ready:
+				if !typed {
+					m.assistantMark(c, s)
+				}
+			case !bar:
+				m.attachButton(c, t, s)
+			case working && !typed:
 				m.assistantMark(c, s)
 			}
 			m.composerField(c, t, s, style)
 			if !bar {
-				m.modelChip(c, t, s, !active, m.compactChip(s)) // nothing without a model
+				m.modelChip(c, t, s, m.compactChip(s)) // nothing without a model
 			}
 			m.voiceButton(c, t, s) // nothing in the inspector, or where nothing can record
 			switch {
 			case bar:
 			case typed:
 				m.sendButton(c, t, s)
-			case !focused && s == surfacePage:
+			case s == surfacePage:
 				theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle(keyHint("⌘K"))).Shrink(0)
 			}
 		})
@@ -147,7 +150,7 @@ func (m *Main) composerBar(c *ui.Context, t *theme.Tokens, s surface) {
 	ui.Row(c.Key("composer-bar-" + itoa(int(s)))).Shrink(0).Gap(8).AlignItems(ui.Center).Height(theme.SendSize).Children(func() {
 		m.attachButton(c, t, s)
 		ui.Box(c).Grow(1).MinWidth(0)
-		m.modelChip(c, t, s, false, false)
+		m.modelChip(c, t, s, false)
 		switch {
 		case m.convo.thinking && m.convo.owner == s:
 			m.stopButton(c, t)
@@ -168,6 +171,11 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 	box.Children(func() {
 		field := style.Apply(ui.TextAreaBase(c.Key(key), &cs.buf).Lines(theme.ComposerMinRows, theme.ComposerMaxRows)).
 			TextColor(t.Text).Label(label).Bind(&cs.ref).OnTextKey(m.composerKey(s)).OnPaste(m.pasteHook(c, s))
+		if cs.caretEnd {
+			cs.caretEnd = false
+			n := utf8.RuneCountInString(cs.buf)
+			field.SetTextSelection(n, n)
+		}
 		m.takeFocus(c, s)
 		// An input method's composition is drawn before it reaches buf: the placeholder gives way to it.
 		if cs.buf == "" && !field.Composing() {
