@@ -114,37 +114,54 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	if c.secrets == nil {
 		return "", errors.New("this phone has no secure store for the sign-in")
 	}
+	c.noteCodeFailure(nil)
 	c.startLink()
 	defer c.finishLink()
 	c.setSignInStage(signInStageChecking)
 	defer c.setSignInStage(signInStageNone)
-	cfg, found, err := c.loadConfig()
+	cfg, err := c.signInConfig()
 	if err != nil {
 		return "", err
 	}
-	// A phone that never changed its server has no issuer yet: ask the default server what its
-	// sign-in is before sending the password. SyncSetServer writes both, so the next sign-in is
-	// one call.
+	source := c.accountSource(cfg)
+	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
+		c.noteCodeFailure(err)
+		return "", syncError(err)
+	}
+	return c.finishSignIn(cfg, source, deviceName)
+}
+
+// signInConfig is the saved sync settings, with the server's sign-in read first when the phone
+// never changed its server and so has none yet. SyncSetServer writes both, so the next sign-in is
+// one call.
+func (c *Core) signInConfig() (syncclient.Config, error) {
+	cfg, found, err := c.loadConfig()
+	if err != nil {
+		return cfg, err
+	}
 	if !found || !cfg.SignsInWithAccount() {
 		server := data.DefaultSyncServer
 		if found && cfg.Server != "" {
 			server = cfg.Server
 		}
 		if err := c.SyncSetServer(server); err != nil {
-			return "", syncError(err)
+			return cfg, syncError(err)
 		}
 		cfg, found, err = c.loadConfig()
 		if err != nil {
-			return "", err
+			return cfg, err
 		}
 		if !found || !cfg.SignsInWithAccount() {
-			return "", errors.New("sign-in is not set up; set the server first")
+			return cfg, errors.New("sign-in is not set up; set the server first")
 		}
 	}
-	source := c.accountSource(cfg)
-	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
-		return "", syncError(err)
-	}
+	return cfg, nil
+}
+
+// finishSignIn is everything after a token is stored, shared by the password and the code
+// sign-in: save the account, then link the phone (or find it linked), answering "linked" or
+// "choose".
+func (c *Core) finishSignIn(cfg syncclient.Config, source syncclient.AccountSource, deviceName string) (string, error) {
 	c.setSignInStage(signInStageDownloading)
 	if account, ok := source.Account(); ok {
 		cfg.Account = &account
@@ -152,6 +169,7 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 			return "", errors.New("could not save the account")
 		}
 	}
+	c.clearCodeState()
 	device, linked, err := c.dom.SyncState(context.Background(), "device_id")
 	if err != nil {
 		return "", errors.New("could not read the link")
@@ -297,6 +315,7 @@ func (c *Core) SyncStatus() string {
 
 // The stages of a sign-in, as SyncStatus reports them.
 const (
+	signInStageSending     = "sending"
 	signInStageChecking    = "checking"
 	signInStageDownloading = "downloading"
 	signInStageNone        = ""
