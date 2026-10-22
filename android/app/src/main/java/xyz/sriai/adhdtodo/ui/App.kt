@@ -125,8 +125,6 @@ fun App(
     var serverError by remember { mutableStateOf(false) }
     var serverSaving by remember { mutableStateOf(false) }
     var syncMessage by remember { mutableStateOf<String?>(null) }
-    var signInError by remember { mutableStateOf<String?>(null) }
-    var signInFailure by remember { mutableStateOf<SignInFailure?>(null) }
     var choose by remember { mutableStateOf(SignInState()) }
     var flow by remember { mutableStateOf(SignInFlow()) }
     var googleAvailable by remember { mutableStateOf(false) }
@@ -535,8 +533,6 @@ fun App(
                             account = account ?: Account(),
                             devices = devices,
                             choose = choose,
-                            signInError = signInError,
-                            signInFailure = signInFailure,
                             flow = flow,
                             googleAvailable = googleAvailable,
                         )
@@ -553,8 +549,6 @@ fun App(
                                 if (!signingIn) {
                                     signingIn = true
                                     choosing = false
-                                    signInError = null
-                                    signInFailure = null
                                     syncMessage = null
                                     flow = flow.copy(failure = null, failureText = null)
                                     scope.launch {
@@ -574,17 +568,7 @@ fun App(
                                             flow = flow.failed(state, failure.message)
                                         }
                                         signingIn = false
-                                        if (failure != null) {
-                                            Log.w("adhd-todo", "sign-in failed", failure)
-                                            val kind = signInFailureOf(failure.message)
-                                            signInFailure = kind
-                                            signInError = if (kind != null) {
-                                                resources.getString(signInFailureText(kind))
-                                            } else {
-                                                signInFailureSentence(failure)
-                                                    ?: resources.getString(R.string.sync_sign_in_failed)
-                                            }
-                                        }
+                                        if (failure != null) Log.w("adhd-todo", "sign-in failed", failure)
                                         when (result?.state) {
                                             "choose" -> {
                                                 choose = checkNotNull(result)
@@ -686,8 +670,6 @@ fun App(
                                     flow = SignInFlow()
                                     choosing = false
                                     signingIn = false
-                                    signInError = null
-                                    signInFailure = null
                                     perform { api.signOut() }
                                 },
                                 onSyncNow = {
@@ -910,10 +892,6 @@ internal fun normalizeRoute(raw: String): String = when {
     else -> ""
 }
 
-/** The Go error's sentence for a failure the app has no localized sentence for. */
-internal fun signInFailureSentence(error: Throwable?): String? =
-    error?.message?.trim()?.takeIf { it.isNotEmpty() }
-
 /** The debug build's fixture for one Sync state, for the reviewer's screenshots. */
 private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
     val now = Instant.now()
@@ -935,14 +913,6 @@ private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
             base.copy(linked = false, signedIn = false, lastSynced = null),
             Account(),
             emptyList(),
-        )
-        "signed_out_error" -> SyncModel(
-            SyncPhase.SIGNED_OUT,
-            base.copy(linked = false, signedIn = false, lastSynced = null),
-            Account(),
-            emptyList(),
-            signInError = resources.getString(R.string.sync_sign_in_invalid),
-            signInFailure = SignInFailure.CREDENTIALS,
         )
         "signed_out_after_linked" -> SyncModel(
             SyncPhase.SIGNED_OUT,
@@ -995,13 +965,6 @@ private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
             base.copy(state = "offline", pending = 3),
             account,
             devices,
-        )
-        "sign_in_failed" -> SyncModel(
-            SyncPhase.SIGNED_OUT,
-            base.copy(linked = false, signedIn = false, lastSynced = null),
-            Account(),
-            emptyList(),
-            signInError = "could not reach the sign-in server",
         )
         else -> SyncModel(SyncPhase.SIGNED_OUT, base.copy(linked = false, signedIn = false), Account(), emptyList())
     }

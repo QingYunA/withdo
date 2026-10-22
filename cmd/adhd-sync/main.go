@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -37,12 +36,6 @@ func run(ctx context.Context, args []string) error {
 	addr := fs.String("addr", ":8080", "address to listen on")
 	databaseURL := fs.String("database-url", "", "Postgres connection URL")
 	tokensPath := fs.String("tokens", "", "JSON file mapping bearer tokens to user subjects (development)")
-	issuer := fs.String("oidc-issuer", "", "OIDC issuer URL whose access tokens are accepted")
-	audience := fs.String("oidc-audience", "", "audience the OIDC access tokens must carry")
-	clientID := fs.String("oidc-client-id", "", "OIDC client id GET /v1/config tells clients to sign in with")
-	scopes := fs.String("oidc-scopes", "", "extra OIDC scopes for GET /v1/config, separated by spaces")
-	loginPATFile := fs.String("zitadel-login-pat-file", "", "file holding the Zitadel login machine user's PAT, enabling POST /v1/sign-in")
-	zitadelInternalURL := fs.String("zitadel-internal-url", "", "base URL for adhd-sync's Zitadel requests, such as http://proxy")
 	pbDir := fs.String("pb-dir", "", "PocketBase data directory; enables PocketBase accounts (sign-in by email and password)")
 	if len(args) > 0 {
 		if handled, err := runAccountCommand(args[0], args[1:], os.Stdin, os.Stdout); handled {
@@ -55,28 +48,10 @@ func run(ctx context.Context, args []string) error {
 	if *databaseURL == "" {
 		return errors.New("-database-url is required")
 	}
-	if (*issuer == "") != (*audience == "") {
-		return errors.New("-oidc-issuer and -oidc-audience must be given together")
+	if *tokensPath == "" && *pbDir == "" {
+		return errors.New("one of -tokens or -pb-dir is required")
 	}
-	var loginPAT string
-	if *loginPATFile != "" {
-		if *issuer == "" || *clientID == "" {
-			return errors.New("-zitadel-login-pat-file requires -oidc-issuer and -oidc-client-id")
-		}
-		raw, err := os.ReadFile(*loginPATFile)
-		if err != nil {
-			return fmt.Errorf("read -zitadel-login-pat-file: %w", err)
-		}
-		loginPAT = strings.TrimSpace(string(raw))
-		if loginPAT == "" {
-			return errors.New("-zitadel-login-pat-file is empty")
-		}
-	}
-	if *tokensPath == "" && *issuer == "" && *pbDir == "" {
-		return errors.New("one of -tokens, -oidc-issuer or -pb-dir is required")
-	}
-	// PocketBase is tried first, then the OIDC issuer (Zitadel, until it is removed), then the
-	// development tokens.
+	// PocketBase is tried first, then the development tokens.
 	var chain syncserver.Chain
 	var pb core.App
 	publicAuth := ""
@@ -87,14 +62,7 @@ func run(ctx context.Context, args []string) error {
 		}
 		defer func() { _ = pbauth.Close(app) }()
 		pb, publicAuth = app, "pocketbase"
-		chain = append(chain, syncserver.Logged("pocketbase", pbauth.NewAuthenticator(app)))
-	}
-	if *issuer != "" {
-		oidcAuth, err := syncserver.NewOIDCAuthenticator(ctx, *issuer, *audience)
-		if err != nil {
-			return err
-		}
-		chain = append(chain, syncserver.Logged("oidc", oidcAuth))
+		chain = append(chain, pbauth.NewAuthenticator(app))
 	}
 	if *tokensPath != "" {
 		tokens, err := syncserver.LoadTokens(*tokensPath)
@@ -112,17 +80,7 @@ func run(ctx context.Context, args []string) error {
 		return err
 	}
 	defer server.Close()
-	server.SetPublicConfig(syncserver.PublicConfig{
-		Issuer: *issuer, ClientID: *clientID, Scopes: strings.Fields(*scopes), Auth: publicAuth,
-	})
-	if loginPAT != "" {
-		if err := server.EnablePasswordSignIn(syncserver.PasswordSignInOptions{
-			Issuer: *issuer, ClientID: *clientID, PAT: loginPAT,
-			InternalURL: *zitadelInternalURL, Scopes: strings.Fields(*scopes),
-		}); err != nil {
-			return err
-		}
-	}
+	server.SetPublicConfig(syncserver.PublicConfig{Auth: publicAuth})
 
 	// Voice input: the recognizer's key comes from the environment, never from a flag or a file in
 	// the repository. Without it POST /v1/transcribe answers 503 voice_disabled.

@@ -106,7 +106,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	}
 	switch snap.Phase {
 	case data.SyncSignedOut, data.SyncSigningIn:
-		s.syncSignInCard(c, t, svc, snap)
+		s.syncCodeSignInCard(c, t, svc, snap)
 	case data.SyncBothHaveTasks:
 		group(c, t, "sync-account", func() { s.syncAccountRow(c, t, svc, snap, true) })
 	case data.SyncUploading, data.SyncSynced:
@@ -128,93 +128,6 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// syncSignInCard is the centered card of a Mac that is not signed in. A server with PocketBase
-// signs in with an emailed code (syncCodeSignInCard); any other keeps this card, where the account
-// and password go straight to the sync server and the same card stays while it signs in.
-func (s *Settings) syncSignInCard(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
-	if !snap.PasswordOnly {
-		s.syncCodeSignInCard(c, t, svc, snap)
-		return
-	}
-	signing := snap.Phase == data.SyncSigningIn
-	group(c, t, "sync-hero", func() {
-		ui.Column(c).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
-			ui.Icon(c, theme.IconUser).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
-			hero := theme.Input
-			hero.Weight = 600
-			theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncSignedOutTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncSignedOutBody(), 0).
-				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-			ui.Column(c.Key("sync-form")).Width(280).Shrink(0).Gap(8).Margin(16, 0, 0).Children(func() {
-				account := fieldWell(c, t, "sync-account", 280, func() {
-					entered, _ := draftField(c, t, s.syncFields, draftSpec{
-						name: "sync-account", label: s.say.SettingsSyncEmail(),
-						placeholder: s.say.SettingsSyncEmail(), focus: s.syncFocusAccount,
-						disabled: signing,
-					}, &s.syncLogin)
-					if entered {
-						s.syncFocusPassword = true
-					}
-				})
-				if signing {
-					account.Opacity(0.5)
-				} else if account.FocusWithin() {
-					account.Border(1, t.Accent)
-				}
-				password := fieldWell(c, t, "sync-password", 280, func() {
-					entered, _ := draftField(c, t, s.syncFields, draftSpec{
-						name: "sync-password", label: s.say.SettingsSyncPassword(),
-						placeholder: s.say.SettingsSyncPassword(), secret: true,
-						focusNow: s.syncFocusPassword, disabled: signing,
-					}, &s.syncPassword)
-					if entered {
-						s.submitSyncSignIn(svc, signing)
-					}
-				})
-				if signing {
-					password.Opacity(0.5)
-				} else if password.FocusWithin() {
-					password.Border(1, t.Accent)
-				}
-			})
-			s.syncFocusAccount, s.syncFocusPassword = false, false
-			label := s.say.SettingsSyncSignIn()
-			if signing {
-				label = s.say.SettingsSyncCheckingAccount()
-				if snap.SignInStage == data.SignInStageDownloading {
-					label = s.say.SettingsSyncDownloadingTasks()
-				}
-			}
-			button := settingsButton(c, t, "sync-signin", label, true).Margin(16, 0, 0)
-			if signing || !s.syncSignInReady() {
-				button.Disabled(true).Opacity(0.45)
-			}
-			if button.Clicked() {
-				s.submitSyncSignIn(svc, signing)
-			}
-			if !signing && snap.SignInFailure != data.SignInFailureNone {
-				theme.Paragraph(c, theme.Meta, t.Blocked(), s.syncSignInFailureText(snap.SignInFailure), 0).
-					TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
-			}
-			theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncSignInNote(), 0).
-				TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
-		})
-	})
-}
-
-// syncSignInReady says whether both fields have text, the button's rule.
-func (s *Settings) syncSignInReady() bool {
-	return strings.TrimSpace(s.syncLogin) != "" && s.syncPassword != ""
-}
-
-// submitSyncSignIn sends the fields once; the account is trimmed, a password's spaces are kept.
-func (s *Settings) submitSyncSignIn(svc SyncService, signing bool) {
-	if signing || !s.syncSignInReady() {
-		return
-	}
-	svc.SyncSignIn(strings.TrimSpace(s.syncLogin), s.syncPassword)
-}
-
 // syncSignInFailureText words the sign-in failure in the window's language.
 func (s *Settings) syncSignInFailureText(failure data.SignInFailure) string {
 	switch failure {
@@ -222,8 +135,6 @@ func (s *Settings) syncSignInFailureText(failure data.SignInFailure) string {
 		return s.say.SettingsSyncWrongCredentials()
 	case data.SignInFailureTooMany:
 		return s.say.SettingsSyncTooManyTries()
-	case data.SignInFailureSecondFactor:
-		return s.say.SettingsSyncSecondFactor()
 	case data.SignInFailureLocked:
 		return s.say.SettingsSyncAccountLocked()
 	case data.SignInFailureUnsupported:

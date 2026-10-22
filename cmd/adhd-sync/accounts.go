@@ -102,7 +102,7 @@ func pbImportUser(args []string, stdin io.Reader, stdout io.Writer) error {
 
 func moveSubject(args []string, stdout io.Writer) error {
 	return dbCommand("move-subject", args, func(fs *flag.FlagSet) func(context.Context, *syncserver.Server) error {
-		from := fs.String("from", "", "the current subject (a Zitadel user id)")
+		from := fs.String("from", "", "the current subject (an older account id)")
 		to := fs.String("to", "", "the new subject (pb:<record id>)")
 		keepAlias := fs.Bool("keep-alias", true, "keep the old subject as an alias, so devices still signed in with it reach the same workspace")
 		return func(ctx context.Context, server *syncserver.Server) error {

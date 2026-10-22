@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -46,10 +45,9 @@ func (s *memorySecrets) Delete(key string) error {
 	return nil
 }
 
-// TestTheAppKeysTheRefreshTokenToItsDatabase is A3-fix 8 in the app: the Real store asks for its
-// own database's token, and an existing sign-in under the old fixed key is moved, not lost. The
-// app's database is the default one (under HOME), the only one that owned the old key.
-func TestTheAppKeysTheRefreshTokenToItsDatabase(t *testing.T) {
+// TestTheAppKeysTheTokenToItsDatabase: each Real store names its own database, so the sign-in it
+// stores cannot be replaced by a second profile.
+func TestTheAppKeysTheTokenToItsDatabase(t *testing.T) {
 	ctx := context.Background()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -81,25 +79,10 @@ func TestTheAppKeysTheRefreshTokenToItsDatabase(t *testing.T) {
 	if real.databasePath() == other.databasePath() {
 		t.Fatalf("two databases share the path %q", real.databasePath())
 	}
-
-	secrets := real.opts.Secrets
-	if err := secrets.Set(syncclient.RefreshTokenKey, "old-token"); err != nil {
-		t.Fatal(err)
-	}
-	token, err := syncclient.LoadRefreshToken(secrets, real.databasePath())
-	if err != nil || token != "old-token" {
-		t.Fatalf("LoadRefreshToken = %q, %v; want the old sign-in", token, err)
-	}
-	if _, err := secrets.Get(syncclient.RefreshTokenKeyFor(real.databasePath())); err != nil {
-		t.Errorf("the app's database key has no token: %v", err)
-	}
-	if _, err := syncclient.LoadRefreshToken(secrets, other.databasePath()); !errors.Is(err, syncclient.ErrSecretNotFound) {
-		t.Errorf("the second database inherited the sign-in: %v", err)
-	}
 }
 
-// TestOneTokenSourceForTheSameSettings: the runner and the Settings pane share one OIDC source,
-// because the issuer rotates refresh tokens and two sources refreshing at once sign each other out.
+// TestOneTokenSourceForTheSameSettings: the runner and the Settings pane share one token source,
+// so the two never renew the token at once.
 func TestOneTokenSourceForTheSameSettings(t *testing.T) {
 	db, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "adhd-todo.db"))
 	if err != nil {
@@ -107,17 +90,13 @@ func TestOneTokenSourceForTheSameSettings(t *testing.T) {
 	}
 	real := NewReal(db, RealOptions{Secrets: newMemorySecrets()})
 	t.Cleanup(func() { _ = real.Close() })
-	cfg := syncclient.Config{Server: "https://todo.example", Issuer: "https://issuer.example", ClientID: "client", Scopes: []string{"aud"}}
+	cfg := syncclient.Config{Server: "https://todo.example", Auth: syncclient.AuthPocketBase}
 	if real.accountSource(cfg) != real.accountSource(cfg) {
 		t.Error("the same settings got two token sources")
 	}
 	other := cfg
-	other.Issuer = "https://other.example"
+	other.Server = "https://other.example"
 	if real.accountSource(cfg) == real.accountSource(other) {
-		t.Error("another issuer reused the old token source")
-	}
-	pocketBase := syncclient.Config{Server: "https://todo.example", Auth: syncclient.AuthPocketBase}
-	if _, ok := real.accountSource(pocketBase).(*syncclient.PocketBaseSource); !ok {
-		t.Error("auth pocketbase did not get a PocketBase source")
+		t.Error("another server reused the old token source")
 	}
 }

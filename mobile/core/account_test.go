@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -56,11 +57,14 @@ func (m *mapSecrets) has(key string) bool {
 func TestAccountGolden(t *testing.T) {
 	dir := t.TempDir()
 	secrets := newMapSecrets()
-	if err := syncclient.SaveRefreshToken(secrets, filepath.Join(dir, "adhd-todo.db"), "refresh-token"); err != nil {
+	// The PocketBase token's key is the same suffix as the database's (see pocketBaseKeyFor).
+	tokenKey := "sync/pocketbase-token" + strings.TrimPrefix(
+		syncclient.RefreshTokenKeyFor(filepath.Join(dir, "adhd-todo.db")), syncclient.RefreshTokenKey)
+	if err := secrets.Set(tokenKey, "pocketbase-token"); err != nil {
 		t.Fatal(err)
 	}
 	if err := syncclient.SaveConfigAt(filepath.Join(dir, "sync.json"), syncclient.Config{
-		Server: "https://sync.example.com", Issuer: "https://issuer.example", ClientID: "client",
+		Server: "https://sync.example.com", Auth: syncclient.AuthPocketBase,
 		Account: &syncclient.Account{Name: "Ada Lovelace", Email: "ada@example.com"},
 	}); err != nil {
 		t.Fatalf("write sync.json: %v", err)
@@ -77,7 +81,7 @@ func TestAccountGolden(t *testing.T) {
 	}
 	checkGolden(t, "account.golden.json", raw)
 
-	// SignOut forgets the refresh token; the account in sync.json is no longer shown.
+	// SignOut forgets the token; the account in sync.json is no longer shown.
 	if err := phone.SignOut(); err != nil {
 		t.Fatalf("SignOut: %v", err)
 	}
@@ -107,21 +111,21 @@ func TestSignInStateGoldens(t *testing.T) {
 	checkGolden(t, "signin-choose.golden.json", choose)
 }
 
-// TestOneTokenSourceForTheSameSettings: the runner and a Sync now share one OIDC source, because
-// the issuer rotates refresh tokens and two sources refreshing at once sign each other out.
+// TestOneTokenSourceForTheSameSettings: the runner and a Sync now share one token source, so the
+// two never renew the token at once.
 func TestOneTokenSourceForTheSameSettings(t *testing.T) {
 	phone, err := open(t.TempDir(), newMapSecrets(), func() time.Time { return demoNow })
 	if err != nil {
 		t.Fatalf("open: %v", err)
 	}
 	defer func() { _ = phone.Close() }()
-	cfg := syncclient.Config{Issuer: "https://issuer.example", ClientID: "client", Scopes: []string{"aud"}}
+	cfg := syncclient.Config{Server: "https://sync.example.com", Auth: syncclient.AuthPocketBase}
 	if phone.accountSource(cfg) != phone.accountSource(cfg) {
 		t.Error("the same settings got two token sources")
 	}
 	other := cfg
-	other.Issuer = "https://other.example"
+	other.Server = "https://other.example"
 	if phone.accountSource(cfg) == phone.accountSource(other) {
-		t.Error("another issuer reused the old token source")
+		t.Error("another server reused the old token source")
 	}
 }

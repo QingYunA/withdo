@@ -117,8 +117,6 @@ class AndroidScreensTest(private val case: ScreenCase) {
         TASK,
         MINE_EMPTY,
         CALENDAR,
-        SYNC_SIGNED_OUT,
-        SYNC_SIGNED_OUT_ERROR,
         SYNC_SIGNING_IN_CHECKING,
         SYNC_SIGNING_IN_DOWNLOADING,
         SYNC_SIGNIN_EMAIL,
@@ -153,8 +151,6 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task" to Screen.TASK,
                 "mine-empty" to Screen.MINE_EMPTY,
                 "calendar" to Screen.CALENDAR,
-                "sync-signed-out" to Screen.SYNC_SIGNED_OUT,
-                "sync-signed-out-error" to Screen.SYNC_SIGNED_OUT_ERROR,
                 "sync-signing-in-checking" to Screen.SYNC_SIGNING_IN_CHECKING,
                 "sync-signing-in-downloading" to Screen.SYNC_SIGNING_IN_DOWNLOADING,
                 "sync-signin-email" to Screen.SYNC_SIGNIN_EMAIL,
@@ -340,13 +336,11 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
             }
         }
 
-        AndroidScreensTest.Screen.SYNC_SIGNED_OUT,
         AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL,
         AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING,
         AndroidScreensTest.Screen.SYNC_SIGNIN_CODE,
         AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE,
         AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD,
-        AndroidScreensTest.Screen.SYNC_SIGNED_OUT_ERROR,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_DOWNLOADING,
         AndroidScreensTest.Screen.SYNC_SIGNED_IN,
@@ -460,11 +454,6 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
         signedIn = true,
     )
     return when (screen) {
-        AndroidScreensTest.Screen.SYNC_SIGNED_OUT -> SyncModel(
-            SyncPhase.SIGNED_OUT,
-            SyncStatus(server = DEFAULT_SYNC_SERVER),
-            flow = SignInFlow(step = SignInStep.LEGACY),
-        )
         AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
@@ -497,13 +486,6 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
             flow = SignInFlow(step = SignInStep.PASSWORD, email = "cyan@example.com"),
-        )
-        AndroidScreensTest.Screen.SYNC_SIGNED_OUT_ERROR -> SyncModel(
-            SyncPhase.SIGNED_OUT,
-            SyncStatus(server = DEFAULT_SYNC_SERVER),
-            flow = SignInFlow(step = SignInStep.LEGACY),
-            signInError = "Wrong account or password",
-            signInFailure = xyz.sriai.adhdtodo.ui.SignInFailure.CREDENTIALS,
         )
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING -> SyncModel(
             SyncPhase.SIGNING_IN,

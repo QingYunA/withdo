@@ -6,14 +6,10 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
-// PublicConfig is what GET /v1/config tells a client so that it can sign in: the OIDC issuer, the
-// client id, and any scopes beyond openid and offline_access. All of it is public.
+// PublicConfig is what GET /v1/config tells a client so that it can sign in. All of it is public.
 type PublicConfig struct {
-	Issuer   string
-	ClientID string
-	Scopes   []string
-	// Auth names the account system clients sign in with, such as "pocketbase"; empty means the
-	// OIDC issuer above.
+	// Auth names the account system clients sign in with: "pocketbase", or empty when the server
+	// only knows development tokens.
 	Auth string
 }
 
@@ -22,12 +18,5 @@ func (s *Server) SetPublicConfig(cfg PublicConfig) { s.public = cfg }
 
 // config is GET /v1/config. It needs no bearer token: a client asks for it before it has one.
 func (s *Server) config(w http.ResponseWriter, _ *http.Request) {
-	scopes := s.public.Scopes
-	if scopes == nil {
-		scopes = []string{}
-	}
-	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{
-		Issuer: s.public.Issuer, ClientID: s.public.ClientID, Scopes: scopes,
-		PasswordSignIn: s.signIn != nil, Auth: s.public.Auth,
-	})
+	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{Auth: s.public.Auth})
 }

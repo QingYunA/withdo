@@ -3964,18 +3964,6 @@
   "@settingsSyncUnavailable": {
     "description": "Shown in Settings > Sync when the app has no sync service."
   },
-  "settingsSyncSignedOutTitle": "Sign in to your account",
-  "@settingsSyncSignedOutTitle": {
-    "description": "Title of the signed-out Account pane."
-  },
-  "settingsSyncSignedOutBody": "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents are doing from your phone.",
-  "@settingsSyncSignedOutBody": {
-    "description": "The signed-out Account pane's explanation of what syncs."
-  },
-  "settingsSyncSignIn": "Sign in and sync",
-  "@settingsSyncSignIn": {
-    "description": "The accent button that signs in with an account and password."
-  },
   "settingsSyncEmail": "Email or username",
   "@settingsSyncEmail": {
     "description": "The account field of the signed-out Sync pane."
@@ -3983,10 +3971,6 @@
   "settingsSyncPassword": "Password",
   "@settingsSyncPassword": {
     "description": "The password field of the signed-out Sync pane."
-  },
-  "settingsSyncSignInNote": "Accounts are made by the server's admin. Keys and model settings stay on this Mac.",
-  "@settingsSyncSignInNote": {
-    "description": "The quiet line under the sign-in button."
   },
   "settingsSyncCheckingAccount": "Checking your account…",
   "@settingsSyncCheckingAccount": {
@@ -4215,10 +4199,6 @@
   "settingsSyncTooManyTries": "Too many tries; wait a few minutes",
   "@settingsSyncTooManyTries": {
     "description": "The sign-in error line when the server is rate limiting attempts."
-  },
-  "settingsSyncSecondFactor": "This account uses two-step verification, which in-app sign-in does not support yet",
-  "@settingsSyncSecondFactor": {
-    "description": "The sign-in error line when the account has a second factor."
   },
   "settingsSyncAccountLocked": "This account is deactivated; ask the admin",
   "@settingsSyncAccountLocked": {

@@ -44,7 +44,7 @@ func newHarness(t *testing.T) *harness {
 	return newHarnessWithAuth(t, testTokens)
 }
 
-// newHarnessWithAuth is newHarness with the authenticator the test needs, such as OIDC.
+// newHarnessWithAuth is newHarness with the authenticator the test needs.
 func newHarnessWithAuth(t *testing.T, auth syncserver.Authenticator) *harness {
 	t.Helper()
 	databaseURL := os.Getenv("ADHD_SYNC_TEST_DATABASE_URL")

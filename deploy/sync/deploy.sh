@@ -3,7 +3,7 @@
 # checkout, backs up the live binary and compose file, installs the new ones, restarts, health-checks.
 #   deploy/sync/deploy.sh [--dry-run]
 # --dry-run builds locally, then prints every remote command instead of running it.
-# ADHD_SYNC_HOST is the ssh host (default adhd-srv). sync.env and the Zitadel files are not touched.
+# ADHD_SYNC_HOST is the ssh host (default adhd-srv). sync.env is not touched.
 # pb_data (PocketBase's users) is copied to pb_data.bak-STAMP first; the Postgres data is not touched.
 # On a failed health check it prints the rollback command and exits 1; it never rolls back itself.
 set -euo pipefail

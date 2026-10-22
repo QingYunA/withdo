@@ -66,7 +66,6 @@ import xyz.sriai.adhdtodo.ui.Composer
 import xyz.sriai.adhdtodo.ui.DEFAULT_SYNC_SERVER
 import xyz.sriai.adhdtodo.ui.MineScreen
 import xyz.sriai.adhdtodo.ui.ProjectScreen
-import xyz.sriai.adhdtodo.ui.SignInFailure
 import xyz.sriai.adhdtodo.ui.SyncModel
 import xyz.sriai.adhdtodo.ui.SyncPhase
 import xyz.sriai.adhdtodo.ui.SyncScreen
@@ -253,88 +252,6 @@ class InteractionTest {
     }
 
     @Test
-    fun `sync sign-in enables only with both fields`() {
-        val model = mutableStateOf(signedOut())
-        compose.setThemedContent {
-            Sync(model)
-        }
-        val button = compose.clickableText("Sign in and sync")
-        button.assertIsNotEnabled()
-        compose.fields().onLast().performTextInput("secret")
-        button.assertIsNotEnabled()
-        compose.fields().onFirst().performTextInput("ada")
-        button.assertIsEnabled()
-    }
-
-    @Test
-    fun `sync account IME next moves to the password`() {
-        val model = mutableStateOf(signedOut())
-        compose.setThemedContent {
-            Sync(model)
-        }
-        compose.fields().onFirst().performTextInput("ada")
-        compose.fields().onFirst().performImeAction()
-        compose.fields().onLast().assertIsFocused()
-    }
-
-    @Test
-    fun `sync password IME done submits both fields`() {
-        val model = mutableStateOf(signedOut())
-        var pair: Pair<String, String>? = null
-        compose.setThemedContent {
-            Sync(model, onSignIn = { login, password -> pair = login to password })
-        }
-        compose.fields().onFirst().performTextInput(" adam ")
-        compose.fields().onFirst().performImeAction()
-        compose.fields().onLast().performTextInput("secret")
-        compose.fields().onLast().performImeAction()
-        compose.runOnIdle { assertEquals("adam" to "secret", pair) }
-    }
-
-    @Test
-    fun `sync credentials error clears the password and keeps the account`() {
-        val model = mutableStateOf(signedOut())
-        compose.setThemedContent {
-            Sync(
-                model,
-                onSignIn = { _, _ ->
-                    model.value = model.value.copy(
-                        signInError = "Wrong account or password",
-                        signInFailure = SignInFailure.CREDENTIALS,
-                    )
-                },
-            )
-        }
-        compose.fields().onFirst().performTextInput("ada")
-        compose.fields().onFirst().performImeAction()
-        compose.fields().onLast().performTextInput("secret")
-        compose.fields().onLast().performImeAction()
-        compose.waitForIdle()
-        compose.fields().onFirst().assertEditableText("ada")
-        compose.fields().onLast().assertEditableText("")
-        compose.fields().onLast().assertIsFocused()
-        compose.onNodeWithText("Wrong account or password").assertExists()
-    }
-
-    @Test
-    fun `sync signing in disables the fields and names the stage`() {
-        val model = mutableStateOf(
-            SyncModel(
-                SyncPhase.SIGNING_IN,
-                SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "checking"),
-                flow = xyz.sriai.adhdtodo.ui.SignInFlow(step = xyz.sriai.adhdtodo.ui.SignInStep.LEGACY),
-            ),
-        )
-        compose.setThemedContent { Sync(model) }
-        compose.onNodeWithText("Email or username").assertIsNotEnabled()
-        compose.onNodeWithText("Password").assertIsNotEnabled()
-        compose.clickableText("Checking your account…").assertIsNotEnabled()
-        model.value = model.value.copy(status = model.value.status.copy(signInStage = "downloading"))
-        compose.waitForIdle()
-        compose.clickableText("Downloading your tasks…").assertIsNotEnabled()
-    }
-
-    @Test
     fun `continue with google starts the browser flow and cancel stops the wait`() {
         var started = 0
         var cancelled = 0
@@ -473,13 +390,6 @@ class InteractionTest {
         val resources = LocalContext.current.resources
         return remember(resources.configuration) { Words(resources, FixedTime.clock, FixedTime.zone) }
     }
-
-    private fun signedOut(): SyncModel =
-        SyncModel(
-            SyncPhase.SIGNED_OUT,
-            SyncStatus(server = DEFAULT_SYNC_SERVER),
-            flow = xyz.sriai.adhdtodo.ui.SignInFlow(step = xyz.sriai.adhdtodo.ui.SignInStep.LEGACY),
-        )
 
     private fun ComposeContentTestRule.fields() = onAllNodes(hasSetTextAction())
 

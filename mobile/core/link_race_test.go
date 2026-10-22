@@ -29,8 +29,8 @@ func TestStartSyncWhileLinkRunsStartsNoRunner(t *testing.T) {
 	}))
 	defer slow.Close()
 	defer releaseOnce.Do(func() { close(release) })
-	if err := phone.SyncConfigure(slow.URL, f.oidc.URL, "mobile-client", ""); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
+	if err := phone.SyncSetServer(slow.URL); err != nil {
+		t.Fatalf("SyncSetServer: %v", err)
 	}
 
 	done := make(chan error, 1)

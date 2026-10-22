@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -71,8 +70,6 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 			"-addr", addr,
 			"-database-url", u.String(),
 			"-tokens", tokensPath,
-			"-oidc-client-id", "adhd-todo",
-			"-oidc-scopes", "openid offline_access urn:example:audience",
 		})
 	}()
 
@@ -101,16 +98,6 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 			if resp.StatusCode != http.StatusOK {
 				t.Fatalf("GET /v1/config = %d %q", resp.StatusCode, body)
 			}
-			var cfg struct {
-				ClientID string   `json:"client_id"`
-				Scopes   []string `json:"scopes"`
-			}
-			if err := json.Unmarshal(body, &cfg); err != nil {
-				t.Fatalf("decode /v1/config: %v", err)
-			}
-			if cfg.ClientID != "adhd-todo" || len(cfg.Scopes) != 3 || cfg.Scopes[2] != "urn:example:audience" {
-				t.Fatalf("GET /v1/config = %s", body)
-			}
 			break
 		}
 		select {
@@ -135,39 +122,17 @@ func TestS2a9CommandStartsAndHealthz(t *testing.T) {
 	}
 }
 
-// TestS4aCommandOIDCFlags checks the flag combinations: a static token and OIDC are each enough,
-// both are allowed, the OIDC pair must be given together, and the login PAT needs an issuer and a
-// client id.
-func TestS4aCommandOIDCFlags(t *testing.T) {
+// TestCommandFlags checks that an authenticator is required and that the removed flags are
+// refused.
+func TestCommandFlags(t *testing.T) {
 	ctx := context.Background()
-	tokensPath := filepath.Join(t.TempDir(), "tokens.json")
-	if err := os.WriteFile(tokensPath, []byte(`{"test-token":"test-subject"}`), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	emptyPAT := filepath.Join(t.TempDir(), "empty.pat")
-	if err := os.WriteFile(emptyPAT, []byte(" \n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	missingPAT := filepath.Join(t.TempDir(), "missing.pat")
 	tests := []struct {
 		name string
 		args []string
 		want string
 	}{
-		{"no authenticator", []string{"-database-url", "postgres://ignored"}, "one of -tokens"},
-		{"issuer without audience", []string{"-database-url", "postgres://ignored", "-oidc-issuer", "https://issuer.example"}, "must be given together"},
-		{"audience without issuer", []string{"-database-url", "postgres://ignored", "-oidc-audience", "client"}, "must be given together"},
-		{"login PAT without OIDC", []string{"-database-url", "postgres://ignored", "-tokens", tokensPath,
-			"-zitadel-login-pat-file", missingPAT}, "requires -oidc-issuer and -oidc-client-id"},
-		{"login PAT without client id", []string{"-database-url", "postgres://ignored",
-			"-oidc-issuer", "https://issuer.example", "-oidc-audience", "client",
-			"-zitadel-login-pat-file", missingPAT}, "requires -oidc-issuer and -oidc-client-id"},
-		{"empty login PAT", []string{"-database-url", "postgres://ignored",
-			"-oidc-issuer", "https://issuer.example", "-oidc-audience", "client", "-oidc-client-id", "adhd-todo",
-			"-zitadel-login-pat-file", emptyPAT}, "is empty"},
-		{"missing login PAT", []string{"-database-url", "postgres://ignored",
-			"-oidc-issuer", "https://issuer.example", "-oidc-audience", "client", "-oidc-client-id", "adhd-todo",
-			"-zitadel-login-pat-file", missingPAT}, "read -zitadel-login-pat-file"},
+		{"no authenticator", []string{"-database-url", "postgres://ignored"}, "one of -tokens or -pb-dir"},
+		{"removed flag", []string{"-database-url", "postgres://ignored", "-oidc-issuer", "https://issuer.example"}, "flag provided but not defined"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

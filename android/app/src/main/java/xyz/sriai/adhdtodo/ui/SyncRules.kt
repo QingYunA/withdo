@@ -83,36 +83,8 @@ fun signInStageOf(signingIn: Boolean, raw: String?): SignInStage? = when {
     else -> SignInStage.CHECKING
 }
 
-/** Why an in-app sign-in failed, as the Sync card words it. */
-enum class SignInFailure { CREDENTIALS, TOO_MANY, SECOND_FACTOR, LOCKED, UNSUPPORTED, NETWORK }
-
-/**
- * The kind of a failed sign-in from mobile/core's sentence. Go keeps these six sentences stable so
- * the app can map them to resources; an unknown failure keeps the raw sentence.
- */
-fun signInFailureOf(message: String?): SignInFailure? = when (message?.trim()) {
-    "wrong account or password" -> SignInFailure.CREDENTIALS
-    "too many tries; wait a few minutes" -> SignInFailure.TOO_MANY
-    "this account uses two-step verification, which in-app sign-in does not support yet" ->
-        SignInFailure.SECOND_FACTOR
-    "this account is deactivated; ask the admin" -> SignInFailure.LOCKED
-    "this server does not support signing in from the app" -> SignInFailure.UNSUPPORTED
-    "could not reach the server; check the connection" -> SignInFailure.NETWORK
-    else -> null
-}
-
-/** The localized sentence of a failed sign-in. */
-fun signInFailureText(failure: SignInFailure): Int = when (failure) {
-    SignInFailure.CREDENTIALS -> R.string.sync_sign_in_invalid
-    SignInFailure.TOO_MANY -> R.string.sync_sign_in_too_many
-    SignInFailure.SECOND_FACTOR -> R.string.sync_sign_in_second_factor
-    SignInFailure.LOCKED -> R.string.sync_sign_in_locked
-    SignInFailure.UNSUPPORTED -> R.string.sync_sign_in_unsupported
-    SignInFailure.NETWORK -> R.string.sync_sign_in_network
-}
-
-/** The steps of the emailed-code sign-in; LEGACY is the account-and-password card of a server that has no codes. */
-enum class SignInStep { EMAIL, CODE, PASSWORD, RESET_SENT, LEGACY }
+/** The steps of the emailed-code sign-in. */
+enum class SignInStep { EMAIL, CODE, PASSWORD, RESET_SENT }
 
 /** Why a code or password sign-in failed, from CodeState's failure kinds. */
 enum class CodeFailure {
@@ -192,8 +164,8 @@ fun SignInFlow.failed(state: CodeState?, message: String?): SignInFlow = copy(
 )
 
 /**
- * The flow once RequestCode answered. A mailed code moves on to the code step; a server with no
- * codes ("unsupported") sends the email step back to the old account-and-password card.
+ * The flow once RequestCode answered. A mailed code moves on to the code step; a failure stays on
+ * the email step with its sentence.
  */
 fun SignInFlow.afterRequest(errorMessage: String?, state: CodeState?): SignInFlow {
     if (errorMessage == null && state?.step == "code") {
@@ -207,10 +179,5 @@ fun SignInFlow.afterRequest(errorMessage: String?, state: CodeState?): SignInFlo
             sending = false,
         )
     }
-    val next = failed(state, errorMessage)
-    return if (next.failure == CodeFailure.UNSUPPORTED && step == SignInStep.EMAIL) {
-        next.copy(step = SignInStep.LEGACY, failure = null, failureText = null)
-    } else {
-        next
-    }
+    return failed(state, errorMessage)
 }

@@ -17,13 +17,11 @@ import (
 
 	"github.com/QingYunA/adhd-todo/internal/store"
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
-	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
 
-// configIssuer is a sync server and the public half of its OIDC issuer: /v1/config, discovery, an
-// authorize endpoint that starts a pending auth request, and a /v1/sign-in that refuses every
-// password and records what it got.
-type configIssuer struct {
+// configServer is a sync server with PocketBase's front: /v1/config naming PocketBase, and a
+// password route that refuses every password and records what it got.
+type configServer struct {
 	*httptest.Server
 	mu       sync.Mutex
 	config   int
@@ -31,43 +29,26 @@ type configIssuer struct {
 	password string
 }
 
-func newConfigIssuer(t *testing.T) *configIssuer {
+func newConfigServer(t *testing.T) *configServer {
 	t.Helper()
-	f := &configIssuer{}
+	f := &configServer{}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
 		f.mu.Lock()
 		f.config++
 		f.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"issuer": f.Server.URL, "client_id": "adhd-todo", "scopes": []string{"openid", "offline_access"},
-		})
+		_, _ = w.Write([]byte(`{"auth":"pocketbase"}`))
 	})
-	mux.HandleFunc("GET /authorize", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, f.Server.URL+"/ui/v2/login/login?authRequest=V2_1", http.StatusFound)
-	})
-	mux.HandleFunc("POST /v1/sign-in", func(w http.ResponseWriter, r *http.Request) {
-		var req syncproto.SignInRequest
+	mux.HandleFunc("POST /api/collections/users/auth-with-password", func(w http.ResponseWriter, r *http.Request) {
+		var req struct{ Identity, Password string }
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		f.mu.Lock()
-		f.login, f.password = req.LoginName, req.Password
+		f.login, f.password = req.Identity, req.Password
 		f.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid_credentials"})
-	})
-	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"issuer":                                f.Server.URL,
-			"jwks_uri":                              f.Server.URL + "/jwks",
-			"authorization_endpoint":                f.Server.URL + "/authorize",
-			"token_endpoint":                        f.Server.URL + "/token",
-			"response_types_supported":              []string{"code"},
-			"subject_types_supported":               []string{"public"},
-			"id_token_signing_alg_values_supported": []string{"RS256"},
-		})
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"message":"Failed to authenticate."}`))
 	})
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
@@ -75,10 +56,10 @@ func newConfigIssuer(t *testing.T) *configIssuer {
 }
 
 // TestTheAppSignsInWithTheServerConfig is the client half: Sign in and sync first reads
-// /v1/config, then uses the issuer and client it names.
+// /v1/config, then signs in through the PocketBase it names.
 func TestTheAppSignsInWithTheServerConfig(t *testing.T) {
 	ctx := context.Background()
-	issuer := newConfigIssuer(t)
+	server := newConfigServer(t)
 	path := filepath.Join(t.TempDir(), "app.db")
 	db, err := store.Open(ctx, path)
 	if err != nil {
@@ -89,7 +70,7 @@ func TestTheAppSignsInWithTheServerConfig(t *testing.T) {
 		Now: func() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC) },
 	})
 	t.Cleanup(func() { _ = r.Close() })
-	if err := r.SyncSetServer(issuer.URL); err != nil {
+	if err := r.SyncSetServer(server.URL); err != nil {
 		t.Fatal(err)
 	}
 	changed := make(chan struct{}, 16)
@@ -110,9 +91,9 @@ func TestTheAppSignsInWithTheServerConfig(t *testing.T) {
 			t.Fatal("the sign-in never failed")
 		}
 	}
-	issuer.mu.Lock()
-	hits := issuer.config
-	issuer.mu.Unlock()
+	server.mu.Lock()
+	hits := server.config
+	server.mu.Unlock()
 	if hits != 1 {
 		t.Errorf("GET /v1/config called %d times, want 1", hits)
 	}
@@ -125,29 +106,23 @@ func TestSyncSignInStages(t *testing.T) {
 	releaseSignIn := make(chan struct{})
 	devicesHit := make(chan struct{}, 1)
 	releaseDevices := make(chan struct{})
-	var server *httptest.Server
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"issuer": server.URL, "client_id": "adhd-todo", "scopes": []string{},
-		})
+		_, _ = w.Write([]byte(`{"auth":"pocketbase"}`))
 	})
-	mux.HandleFunc("POST /v1/sign-in", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("POST /api/collections/users/auth-with-password", func(w http.ResponseWriter, _ *http.Request) {
 		signInHit <- struct{}{}
 		<-releaseSignIn
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"access_token": "access", "refresh_token": "refresh",
-			"token_type": "Bearer", "expires_in": 3600,
-		})
+		_, _ = w.Write([]byte(`{"token":"e30.eyJleHAiOjQxMDI0NDQ4MDB9.sig","record":{"email":"cyan@example.com","name":"Cyan"}}`))
 	})
 	mux.HandleFunc("POST /v1/devices", func(w http.ResponseWriter, _ *http.Request) {
 		devicesHit <- struct{}{}
 		<-releaseDevices
 		http.Error(w, "the server failed", http.StatusInternalServerError)
 	})
-	server = httptest.NewServer(mux)
+	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
 	path := filepath.Join(t.TempDir(), "app.db")
@@ -199,7 +174,7 @@ func waitSignal(t *testing.T, ch <-chan struct{}, what string) {
 	}
 }
 
-// TestSignInFailureKinds is the classification the pane words: the five answers of /v1/sign-in
+// TestSignInFailureKinds is the classification the pane words: the answers of a sign-in
 // and a network failure, without matching the error's text.
 func TestSignInFailureKinds(t *testing.T) {
 	cases := []struct {
@@ -209,7 +184,6 @@ func TestSignInFailureKinds(t *testing.T) {
 	}{
 		{"credentials", syncclient.ErrInvalidCredentials, SignInFailureCredentials},
 		{"too many", syncclient.ErrTooManyAttempts, SignInFailureTooMany},
-		{"second factor", syncclient.ErrSecondFactor, SignInFailureSecondFactor},
 		{"locked", syncclient.ErrAccountLocked, SignInFailureLocked},
 		{"unsupported", syncclient.ErrSignInUnsupported, SignInFailureUnsupported},
 		{"network", &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ECONNREFUSED}, SignInFailureNetwork},
@@ -226,7 +200,7 @@ func TestSignInFailureKinds(t *testing.T) {
 // TestSyncSignInSendsTheAccountAndPassword checks what the pane hands the sign-in source and that
 // the password reaches neither the snapshot nor sync.json.
 func TestSyncSignInSendsTheAccountAndPassword(t *testing.T) {
-	issuer := newConfigIssuer(t)
+	server := newConfigServer(t)
 	path := filepath.Join(t.TempDir(), "app.db")
 	db, err := store.Open(context.Background(), path)
 	if err != nil {
@@ -237,7 +211,7 @@ func TestSyncSignInSendsTheAccountAndPassword(t *testing.T) {
 		Now: func() time.Time { return time.Date(2026, 10, 14, 14, 30, 0, 0, time.UTC) },
 	})
 	t.Cleanup(func() { _ = r.Close() })
-	if err := r.SyncSetServer(issuer.URL); err != nil {
+	if err := r.SyncSetServer(server.URL); err != nil {
 		t.Fatal(err)
 	}
 	changed := make(chan struct{}, 16)
@@ -263,11 +237,11 @@ func TestSyncSignInSendsTheAccountAndPassword(t *testing.T) {
 			t.Fatal("the sign-in never failed")
 		}
 	}
-	issuer.mu.Lock()
-	login, password := issuer.login, issuer.password
-	issuer.mu.Unlock()
+	server.mu.Lock()
+	login, password := server.login, server.password
+	server.mu.Unlock()
 	if login != "cyan@example.com" || password != "hunter2" {
-		t.Errorf("/v1/sign-in got account %q, password %q", login, password)
+		t.Errorf("sign-in got account %q, password %q", login, password)
 	}
 	raw, err := os.ReadFile(syncclient.ConfigPath(path))
 	if err != nil {

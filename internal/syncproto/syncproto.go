@@ -112,40 +112,11 @@ type DevicesResponse struct {
 	Devices []Device `json:"devices"`
 }
 
-// ConfigResponse is GET /v1/config: the public values a client needs to sign in through OIDC.
-// PasswordSignIn says the server accepts an account and password at POST /v1/sign-in.
+// ConfigResponse is GET /v1/config: the public values a client needs to sign in. Auth is the
+// account system to sign in with, "pocketbase"; it is empty on a server that only knows
+// development tokens.
 type ConfigResponse struct {
-	Issuer         string   `json:"issuer"`
-	ClientID       string   `json:"client_id"`
-	Scopes         []string `json:"scopes"`
-	PasswordSignIn bool     `json:"password_sign_in,omitempty"`
-	// Auth is the account system to sign in with: "pocketbase", or empty for the OIDC issuer.
-	// Clients that predate it ignore the field and keep signing in through the issuer.
 	Auth string `json:"auth,omitempty"`
-}
-
-// SignInRequest is POST /v1/sign-in: an account and password, which the server checks with
-// Zitadel and turns into tokens itself. AuthRequest is the 0.6.1 shape: when it is present the
-// server answers with only the callback URL, for apps that still exchange the code themselves.
-type SignInRequest struct {
-	AuthRequest string `json:"auth_request,omitempty"`
-	LoginName   string `json:"login_name"`
-	Password    string `json:"password"`
-}
-
-// SignInResponse is the 0.6.1 answer: the loopback callback URL with the authorization code.
-type SignInResponse struct {
-	CallbackURL string `json:"callback_url"`
-}
-
-// SignInTokenResponse is POST /v1/sign-in's answer since 0.7: the tokens the server got from
-// Zitadel. The server neither logs nor keeps them.
-type SignInTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	IDToken      string `json:"id_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.

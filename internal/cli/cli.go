@@ -79,7 +79,7 @@ type deps struct {
 	serve func(context.Context, *mcp.Server) error
 	// location is the zone the overview prints times in; the machine's when nil.
 	location *time.Location
-	// secrets is the keychain OIDC sync tokens live in; nil when this binary has no keychain.
+	// secrets is the keychain the sync sign-in lives in; nil when this binary has no keychain.
 	secrets syncclient.Secrets
 }
 

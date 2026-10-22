@@ -23,7 +23,7 @@ const pocketBaseTokenKey = "sync/pocketbase-token"
 
 // PocketBaseSource signs in to the sync server's PocketBase with an email and password
 // (POST /api/collections/users/auth-with-password) and supplies its auth token to the sync client.
-// The token lives in Secrets, per database as the OIDC refresh token does, and is renewed with
+// The token lives in Secrets, per database, and is renewed with
 // auth-refresh when less than a day is left. PocketBase keeps old tokens valid after a refresh, so
 // the app and adhd-core can share a database's token without racing.
 type PocketBaseSource struct {

@@ -226,9 +226,3 @@ func TestSyncSendingAndDownloadingLines(t *testing.T) {
 	r.tt.Frame()
 	has(t, r.tt, "Downloading your tasks…")
 }
-
-func TestSyncOldServerKeepsThePasswordCard(t *testing.T) {
-	r, _ := syncPane(t, signedOutSync())
-	has(t, r.tt, "Sign in to your account", "Email or username", "Password", "Sign in and sync")
-	hasNot(t, r.tt, "Continue with email", "Sign in or sign up")
-}

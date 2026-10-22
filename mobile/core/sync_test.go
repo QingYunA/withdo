@@ -21,7 +21,7 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
 
-const syncTestToken = "mobile-core-token"
+const syncTestToken = "e30.eyJleHAiOjQxMDI0NDQ4MDB9.sig" // a JWT-shaped token that expires in 2100
 
 var syncSchemaCounter atomic.Uint64
 

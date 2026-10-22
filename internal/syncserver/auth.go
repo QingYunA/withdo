@@ -13,7 +13,7 @@ import (
 var ErrUnauthenticated = errors.New("unauthenticated")
 
 // Authenticator turns a request into the subject of its user, or ErrUnauthenticated. StaticTokens
-// and OIDCAuthenticator implement it; Chain combines them.
+// and the PocketBase authenticator implement it; Chain combines them.
 type Authenticator interface {
 	Subject(r *http.Request) (string, error)
 }
@@ -67,4 +67,24 @@ func LoadTokens(path string) (StaticTokens, error) {
 		return nil, fmt.Errorf("tokens %s is empty", path)
 	}
 	return StaticTokens(tokens), nil
+}
+
+// Chain tries its authenticators in order and returns the first subject one accepts.
+type Chain []Authenticator
+
+// Subject implements Authenticator.
+func (c Chain) Subject(r *http.Request) (string, error) {
+	for _, auth := range c {
+		if auth == nil {
+			continue
+		}
+		subject, err := auth.Subject(r)
+		if err == nil {
+			return subject, nil
+		}
+		if !errors.Is(err, ErrUnauthenticated) {
+			return "", err
+		}
+	}
+	return "", ErrUnauthenticated
 }

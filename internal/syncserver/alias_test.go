@@ -11,10 +11,10 @@ import (
 )
 
 func TestMoveSubjectKeepsTheOldSubjectAsAlias(t *testing.T) {
-	h := newHarnessWithAuth(t, syncserver.StaticTokens{"old": "zitadel-user", "new": "pb:new"})
+	h := newHarnessWithAuth(t, syncserver.StaticTokens{"old": "old-user", "new": "pb:new"})
 	ctx := context.Background()
 	dev := h.device(t, "old", "laptop")
-	if err := h.server.MoveSubject(ctx, "zitadel-user", "pb:new", true); err != nil {
+	if err := h.server.MoveSubject(ctx, "old-user", "pb:new", true); err != nil {
 		t.Fatalf("move: %v", err)
 	}
 	// Both identities reach the one workspace, and the device id made under the old one works under both.
@@ -34,12 +34,12 @@ func TestMoveSubjectKeepsTheOldSubjectAsAlias(t *testing.T) {
 	for _, i := range infos {
 		got = append(got, fmt.Sprintf("%s alias=%t devices=%d", i.Subject, i.Alias, i.Devices))
 	}
-	want := "pb:new alias=false devices=1;zitadel-user alias=true devices=1"
+	want := "pb:new alias=false devices=1;old-user alias=true devices=1"
 	if strings.Join(got, ";") != want {
 		t.Fatalf("subjects = %v, want %s", got, want)
 	}
 	// Dropping the alias gives the old subject a new empty user again.
-	if err := h.server.DropAlias(ctx, "zitadel-user"); err != nil {
+	if err := h.server.DropAlias(ctx, "old-user"); err != nil {
 		t.Fatalf("drop alias: %v", err)
 	}
 	if got := devices(t, h, "old"); len(got) != 0 {
@@ -84,23 +84,23 @@ func TestNewSubjectStillGetsANewUser(t *testing.T) {
 }
 
 func TestAddAliasBackfillsAMovedAccount(t *testing.T) {
-	h := newHarnessWithAuth(t, syncserver.StaticTokens{"old": "zitadel-user", "new": "pb:new"})
+	h := newHarnessWithAuth(t, syncserver.StaticTokens{"old": "old-user", "new": "pb:new"})
 	ctx := context.Background()
 	h.device(t, "old", "laptop")
-	if err := h.server.MoveSubject(ctx, "zitadel-user", "pb:new", false); err != nil {
+	if err := h.server.MoveSubject(ctx, "old-user", "pb:new", false); err != nil {
 		t.Fatalf("move: %v", err)
 	}
 	// The old device's next request made an empty user for the old subject.
 	if got := devices(t, h, "old"); len(got) != 0 {
 		t.Fatalf("the old subject sees %d devices", len(got))
 	}
-	if err := h.server.AddAlias(ctx, "zitadel-user", "pb:new"); err != nil {
+	if err := h.server.AddAlias(ctx, "old-user", "pb:new"); err != nil {
 		t.Fatalf("add alias: %v", err)
 	}
 	if got := devices(t, h, "old"); len(got) != 1 {
 		t.Fatalf("after add-alias the old subject sees %d devices", len(got))
 	}
-	if err := h.server.AddAlias(ctx, "zitadel-user", "nobody"); err == nil {
+	if err := h.server.AddAlias(ctx, "old-user", "nobody"); err == nil {
 		t.Fatal("aliasing an unknown target should fail")
 	}
 }

@@ -30,7 +30,7 @@ func newCodeFake(t *testing.T) *codeFake {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"issuer":"","client_id":"","scopes":[],"auth":"pocketbase"}`))
+		_, _ = w.Write([]byte(`{"auth":"pocketbase"}`))
 	})
 	mux.HandleFunc("POST /api/collections/users/request-otp", func(w http.ResponseWriter, _ *http.Request) {
 		f.mu.Lock()

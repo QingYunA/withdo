@@ -55,8 +55,8 @@ type Core struct {
 
 	listener Listener
 	runner   *syncclient.Runner
-	// tokens is the phone's one account source: an OIDC issuer rotates refresh tokens, so two
-	// sources refreshing at once (the runner and a Sync now) would sign each other out.
+	// tokens is the phone's one account source, shared by the runner and a Sync now so the two
+	// never renew the token at once.
 	tokensMu    sync.Mutex
 	tokens      syncclient.AccountSource
 	tokensKey   string

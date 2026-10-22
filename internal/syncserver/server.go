@@ -26,8 +26,6 @@ type Server struct {
 	mux  *http.ServeMux
 	// public is what GET /v1/config tells clients; set before serving.
 	public PublicConfig
-	// signIn is set by EnablePasswordSignIn; nil keeps POST /v1/sign-in unregistered.
-	signIn *passwordSignIn
 	// voice is POST /v1/transcribe; off until EnableVoice gives it a key.
 	voice *voice
 }

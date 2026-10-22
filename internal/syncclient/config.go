@@ -12,18 +12,16 @@ import (
 // ConfigFile is the name of the sync configuration next to the database.
 const ConfigFile = "sync.json"
 
-// Config is sync.json: the server to talk to, and either the development bearer token, "auth":
-// "pocketbase" for the server's own accounts, or the OIDC issuer and client id of the account, with any scopes the issuer needs beyond "openid
-// offline_access" (Zitadel's project audience). Account is the signed-in name and email, so the
-// Settings pane can show who this Mac belongs to offline. The refresh token is never written here.
+// Config is sync.json: the server to talk to, and either the development bearer token or "auth":
+// "pocketbase" for the server's own accounts. Account is the signed-in name and email, so the
+// Settings pane can show who this Mac belongs to offline. Keys of older files that this struct no
+// longer has (the old "issuer", "client_id" and "scopes") are ignored when reading; see
+// LoadConfigAt.
 type Config struct {
-	Server   string   `json:"server"`
-	Auth     string   `json:"auth,omitempty"`
-	Token    string   `json:"token,omitempty"`
-	Issuer   string   `json:"issuer,omitempty"`
-	ClientID string   `json:"client_id,omitempty"`
-	Scopes   []string `json:"scopes,omitempty"`
-	Account  *Account `json:"account,omitempty"`
+	Server  string   `json:"server"`
+	Auth    string   `json:"auth,omitempty"`
+	Token   string   `json:"token,omitempty"`
+	Account *Account `json:"account,omitempty"`
 }
 
 // ConfigPath returns the sync.json path next to the database at dbPath.
@@ -54,8 +52,15 @@ func LoadConfigAt(path string) (cfg Config, found bool, err error) {
 		return Config{}, false, fmt.Errorf("read %s: server is empty", path)
 	}
 	cfg.Token = strings.TrimSpace(cfg.Token)
-	cfg.Issuer = strings.TrimRight(strings.TrimSpace(cfg.Issuer), "/")
-	cfg.ClientID = strings.TrimSpace(cfg.ClientID)
+	// A file written by an earlier version names an "issuer" and has neither a token nor
+	// "auth". The server's accounts are PocketBase's now, so it becomes a PocketBase config that
+	// is signed out: the old sign-in cannot be used, and its Account is not shown.
+	var older struct {
+		Issuer string `json:"issuer"`
+	}
+	if json.Unmarshal(raw, &older) == nil && older.Issuer != "" && cfg.Auth == "" && cfg.Token == "" {
+		cfg.Auth, cfg.Account = AuthPocketBase, nil
+	}
 	return cfg, true, nil
 }
 
@@ -72,8 +77,6 @@ func SaveConfigAt(path string, cfg Config) error {
 		return errors.New("syncclient: server is required")
 	}
 	cfg.Token = strings.TrimSpace(cfg.Token)
-	cfg.Issuer = strings.TrimRight(strings.TrimSpace(cfg.Issuer), "/")
-	cfg.ClientID = strings.TrimSpace(cfg.ClientID)
 	raw, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return fmt.Errorf("encode %s: %w", path, err)

@@ -18,7 +18,6 @@ func syncScreenStates() []struct {
 	setup func(r *settingsRig)
 } {
 	now := fixedNow()
-	signedOut := signedOutSync()
 	// The signed-out card of a PocketBase server: the email, the code, the password, the reset.
 	email := signedOutCodeSync()
 	email.GoogleAvailable = true
@@ -43,22 +42,14 @@ func syncScreenStates() []struct {
 	password.SignInStep = data.SignInStepPassword
 	resetSent := code
 	resetSent.SignInStep = data.SignInStepResetSent
-	errorOut := signedOut
-	errorOut.SignInFailure = data.SignInFailureCredentials
-	signing := signedOut
-	signing.Phase = data.SyncSigningIn
-	signingCheck := signing
-	signingCheck.SignInStage = data.SignInStageChecking
-	signingDownload := signing
-	signingDownload.SignInStage = data.SignInStageDownloading
-	both := signedOut
+	both := email
 	both.Phase, both.Linked, both.Account = data.SyncBothHaveTasks, true, "Cyan 云辰"
 	both.Devices = []data.SyncDevice{
 		{ID: "phone", Name: "Pixel 8", LastSeen: now.Add(-3 * time.Minute)},
 		{ID: "mac", Name: "Cyan 的 MacBook Pro", LastSeen: now.Add(-time.Minute), This: true},
 	}
 	both.Conflict = &data.SyncConflict{LocalTasks: 128, LocalProjects: 6, AccountDevices: 2}
-	uploading := signedOut
+	uploading := email
 	uploading.Phase, uploading.Linked, uploading.Account = data.SyncUploading, true, "Cyan 云辰"
 	uploading.SeedDone, uploading.SeedTotal, uploading.Pending = 1240, 3512, 2272
 	synced := syncedSync()
@@ -81,18 +72,6 @@ func syncScreenStates() []struct {
 		snap  data.SyncSnapshot
 		setup func(r *settingsRig)
 	}{
-		{"signed-out", signedOut, nil},
-		{"signed-out-error", errorOut, func(r *settingsRig) {
-			r.s.syncLogin = "cyan@example.com"
-			// The frame after a refused password: the pane empties it and puts the cursor back.
-			r.s.syncPrevPhase = data.SyncSigningIn
-		}},
-		{"signing-in-checking", signingCheck, func(r *settingsRig) {
-			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
-		}},
-		{"signing-in-downloading", signingDownload, func(r *settingsRig) {
-			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
-		}},
 		{"email", email, nil},
 		{"email-filled", email, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
 		{"google-waiting", googleWaiting, nil},
@@ -128,7 +107,7 @@ func TestScreensSettingsSync(t *testing.T) {
 				settingsShot(t, "settings-account-"+st.name+sfx+".png", app, a.dark, zh, PaneAccount, st.setup)
 			}
 			// The server address while it is being edited.
-			app.Sync = &fakeSync{snap: signedOutSync()}
+			app.Sync = &fakeSync{snap: signedOutCodeSync()}
 			settingsShot(t, "settings-account-change"+sfx+".png", app, a.dark, zh, PaneAccount, func(r *settingsRig) {
 				change := "Change"
 				if zh {

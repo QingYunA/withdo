@@ -48,28 +48,8 @@ func (a secretAdapter) Delete(key string) error {
 	return nil
 }
 
-// SyncConfigure writes dataDir/sync.json: the server, and either the OIDC issuer and client id or
-// (in development) a token already in the file. scopes is space separated and may be empty. It
-// stops a running background sync so the next StartSync uses the new settings.
-func (c *Core) SyncConfigure(server, issuer, clientID, scopes string) error {
-	server = strings.TrimRight(strings.TrimSpace(server), "/")
-	if server == "" {
-		return errors.New("a sync server is required")
-	}
-	_ = c.StopSync()
-	cfg := syncclient.Config{
-		Server: server, Issuer: strings.TrimRight(strings.TrimSpace(issuer), "/"),
-		ClientID: strings.TrimSpace(clientID), Scopes: strings.Fields(scopes),
-	}
-	if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
-		return errors.New("could not save the sync settings")
-	}
-	return nil
-}
-
 // SyncSetServer saves a self-hosted server in dataDir/sync.json. It asks the server's public
-// GET /v1/config first, so the file gets the sign-in it names (issuer, client id and scopes)
-// rather than a guessed one; an address that is not https, a server that does not answer and a
+// GET /v1/config first, so the file gets the sign-in it names rather than a guessed one; an address that is not https, a server that does not answer and a
 // server without sign-in are all left unwritten. The address is the one the Sync screen's
 // "Server … · Change" edits.
 func (c *Core) SyncSetServer(server string) error {
@@ -83,7 +63,7 @@ func (c *Core) SyncSetServer(server string) error {
 	if err != nil {
 		return fmt.Errorf("could not reach the sync server: %w", err)
 	}
-	if public.Auth != syncclient.AuthPocketBase && (public.Issuer == "" || public.ClientID == "") {
+	if public.Auth != syncclient.AuthPocketBase {
 		return fmt.Errorf("the server does not offer sign-in: %w", syncclient.ErrSignInUnsupported)
 	}
 	_ = c.StopSync()
@@ -104,12 +84,12 @@ func (c *Core) SyncSetServer(server string) error {
 	return nil
 }
 
-// SignIn signs in with an account and password through the sync server's /v1/sign-in, then links
+// SignIn signs in with an email and password through the server's PocketBase, then links
 // this database as a device named deviceName when it is not linked yet. It returns
 // {"state":"linked"} once the phone is linked, or {"state":"choose"} when both the phone and the
 // account have tasks; the tokens stay stored, so LinkMerge or LinkReplace finishes without a
-// second sign-in. Signing in an already linked phone returns {"state":"linked"}. With no issuer in
-// sync.json it first reads the server's /v1/config through SyncSetServer.
+// second sign-in. Signing in an already linked phone returns {"state":"linked"}. With no PocketBase
+// sign-in in sync.json it first reads the server's /v1/config through SyncSetServer.
 func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	if c.secrets == nil {
 		return "", errors.New("this phone has no secure store for the sign-in")
@@ -190,7 +170,7 @@ func (c *Core) finishSignIn(cfg syncclient.Config, source syncclient.AccountSour
 	return signInLinkedJSON, nil
 }
 
-// SignOut forgets the refresh token or PocketBase token, so the next sync is signed out until SignIn runs again. The
+// SignOut forgets the PocketBase token (and any refresh token an older version left), so the next sync is signed out until SignIn runs again. The
 // database stays linked to its device.
 func (c *Core) SignOut() error {
 	_ = c.StopSync()
@@ -377,7 +357,7 @@ func (c *Core) encodeStatus(status syncclient.Status) (string, error) {
 }
 
 // hasCredentials says whether a config can still authenticate: a development token in the file,
-// or a refresh token in the phone's secure store.
+// or a PocketBase token in the phone's secure store.
 func (c *Core) hasCredentials(cfg syncclient.Config) bool {
 	if cfg.Token != "" {
 		return true
@@ -385,11 +365,7 @@ func (c *Core) hasCredentials(cfg syncclient.Config) bool {
 	if !cfg.SignsInWithAccount() || c.secrets == nil {
 		return false
 	}
-	if cfg.Auth == syncclient.AuthPocketBase {
-		return syncclient.HasPocketBaseToken(secretAdapter{c.secrets}, c.dbPath)
-	}
-	_, err := syncclient.LoadRefreshToken(secretAdapter{c.secrets}, c.dbPath)
-	return err == nil
+	return syncclient.HasPocketBaseToken(secretAdapter{c.secrets}, c.dbPath)
 }
 
 // runnerStatus stores the Runner's newest status, remembers when a failure started, and tells the
@@ -479,8 +455,6 @@ func syncError(err error) error {
 		return errors.New("wrong account or password")
 	case errors.Is(err, syncclient.ErrTooManyAttempts):
 		return errors.New("too many tries; wait a few minutes")
-	case errors.Is(err, syncclient.ErrSecondFactor):
-		return errors.New("this account uses two-step verification, which in-app sign-in does not support yet")
 	case errors.Is(err, syncclient.ErrAccountLocked):
 		return errors.New("this account is deactivated; ask the admin")
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
@@ -502,15 +476,6 @@ func syncError(err error) error {
 	}
 	if isNetworkError(err) {
 		return errors.New("could not reach the server; check the connection")
-	}
-	message := err.Error()
-	switch {
-	case strings.Contains(message, "sign-in timed out"):
-		return errors.New("sign-in timed out")
-	case strings.Contains(message, "sign-in was refused"):
-		return errors.New("sign-in was refused")
-	case strings.Contains(message, "discover OIDC issuer"), strings.Contains(message, "sign-in listener"):
-		return errors.New("could not reach the sign-in server")
 	}
 	return errors.New("could not sync; check the connection and try again")
 }
@@ -566,9 +531,9 @@ func (c *Core) finishLink() {
 	c.mu.Unlock()
 }
 
-// accountSource is the token source for cfg (PocketBase or OIDC), keyed to this database so another
+// accountSource is the token source for cfg, keyed to this database so another
 // profile cannot replace this phone's sign-in.
-// The same settings get the same source, so the runner and a Sync now share one refresh.
+// The same settings get the same source, so the runner and a Sync now share one token.
 func (c *Core) accountSource(cfg syncclient.Config) syncclient.AccountSource {
 	key := cfg.SourceKey()
 	c.tokensMu.Lock()

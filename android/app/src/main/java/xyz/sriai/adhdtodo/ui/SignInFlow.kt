@@ -110,7 +110,6 @@ fun SignInFlowCard(
                 SignInStep.CODE -> CodeStep(flow, stage, actions, initialCode)
                 SignInStep.PASSWORD -> PasswordStep(flow, stage, actions)
                 SignInStep.RESET_SENT -> ResetSentStep(flow, busy, actions)
-                SignInStep.LEGACY -> Unit
             }
         }
     }

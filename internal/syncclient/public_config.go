@@ -16,8 +16,8 @@ import (
 )
 
 // FetchConfig reads GET /v1/config, the public values a client needs before it has a token. It
-// needs no Client and no linked database: Settings asks for it, then signs in through the issuer
-// it names.
+// needs no Client and no linked database: Settings asks for it to learn how the server
+// signs in.
 func FetchConfig(ctx context.Context, baseURL string, httpClient *http.Client) (syncproto.ConfigResponse, error) {
 	var out syncproto.ConfigResponse
 	base, err := ServerURL(baseURL)
@@ -43,18 +43,12 @@ func FetchConfig(ctx context.Context, baseURL string, httpClient *http.Client) (
 	if err := json.Unmarshal(raw, &out); err != nil {
 		return out, fmt.Errorf("decode /v1/config: %w", err)
 	}
-	if _, err := ServerURL(out.Issuer); out.Issuer != "" && err != nil {
-		return out, fmt.Errorf("the server names an issuer that is not https: %w", err)
-	}
-	if out.Scopes == nil {
-		out.Scopes = []string{}
-	}
 	return out, nil
 }
 
 // ServerURL checks an address the client is about to trust and returns it without a trailing
-// slash. It must be https: over plain http anyone on the network could answer /v1/config with an
-// issuer of their own and collect the sign-in. Only a loopback host (a server on this machine, as
+// slash. It must be https: over plain http anyone on the network could answer /v1/config and
+// collect the sign-in. Only a loopback host (a server on this machine, as
 // in tests) may use http.
 func ServerURL(raw string) (string, error) {
 	base := strings.TrimRight(strings.TrimSpace(raw), "/")

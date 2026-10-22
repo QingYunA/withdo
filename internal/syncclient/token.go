@@ -14,7 +14,7 @@ import (
 )
 
 // TokenSource returns the bearer token for one request. The Runner and Client ask it for every
-// request, so an OIDC source can refresh an expired access token in between.
+// request, so a source can renew an expired token in between.
 type TokenSource interface {
 	Token(ctx context.Context) (string, error)
 }
@@ -36,7 +36,7 @@ func IsSignedOut(err error) bool { return errors.Is(err, ErrSignedOut) }
 // ErrSecretNotFound says the Secrets store has no value under a key.
 var ErrSecretNotFound = errors.New("sync: secret not found")
 
-// Secrets is the keychain an OIDC source keeps its refresh token in. app/ implements it over
+// Secrets is the keychain a source keeps its token in. app/ implements it over
 // mygo.Secrets; tests use a map. Get returns ErrSecretNotFound when the key is absent.
 type Secrets interface {
 	Get(key string) (string, error)
@@ -44,10 +44,9 @@ type Secrets interface {
 	Delete(key string) error
 }
 
-// RefreshTokenKey is the old, fixed Secrets key of the OIDC refresh token. New sign-ins key the
-// token per database with RefreshTokenKeyFor, so a test profile or the CLI cannot replace the app's
-// token. LoadRefreshToken moves a token stored here to its database's key, for the one database
-// that owned it.
+// RefreshTokenKey is the prefix of the Secrets keys that held the refresh token of the sign-in
+// earlier versions used, which is gone. Signing out still deletes what an older version left there (see
+// DeleteRefreshTokenAt), and the PocketBase token is keyed per database with the same suffix.
 const RefreshTokenKey = "sync/refresh-token"
 
 // legacyDBPath is the database the old fixed key belonged to: the platform's default database,
@@ -83,8 +82,8 @@ func cleanAbs(p string) string {
 	return filepath.Clean(p)
 }
 
-// RefreshTokenKeyFor is the Secrets key of dbPath's OIDC refresh token: the fixed prefix and the
-// first 16 hex digits of the SHA-256 of the database's absolute path. One database, one token.
+// RefreshTokenKeyFor is the Secrets key suffix of dbPath's token: the fixed prefix and the first 16
+// hex digits of the SHA-256 of the database's absolute path. One database, one token.
 func RefreshTokenKeyFor(dbPath string) string {
 	path := strings.TrimSpace(dbPath)
 	if path == "" {
@@ -97,56 +96,8 @@ func RefreshTokenKeyFor(dbPath string) string {
 	return RefreshTokenKey + "/" + hex.EncodeToString(sum[:8])
 }
 
-// LoadRefreshToken reads dbPath's refresh token. When the per-database key is absent and the old
-// fixed key still holds a token, it moves that token to the new key and returns it, so a sign-in
-// made before the key became per-database keeps working. A missing token is ErrSecretNotFound.
-func LoadRefreshToken(secrets Secrets, dbPath string) (string, error) {
-	if secrets == nil {
-		return "", ErrSecretNotFound
-	}
-	if strings.TrimSpace(dbPath) == "" {
-		return getSecret(secrets, RefreshTokenKey)
-	}
-	key := RefreshTokenKeyFor(dbPath)
-	value, err := secrets.Get(key)
-	if err == nil {
-		return value, nil
-	}
-	if !errors.Is(err, ErrSecretNotFound) {
-		return "", err
-	}
-	if !ownsLegacyToken(dbPath) {
-		return "", ErrSecretNotFound
-	}
-	legacy, err := secrets.Get(RefreshTokenKey)
-	if errors.Is(err, ErrSecretNotFound) {
-		return "", ErrSecretNotFound
-	}
-	if err != nil {
-		return "", err
-	}
-	if legacy == "" {
-		return "", ErrSecretNotFound
-	}
-	// Write the new key before removing the old one: a failure here leaves the old sign-in usable.
-	if err := secrets.Set(key, legacy); err != nil {
-		return "", err
-	}
-	_ = secrets.Delete(RefreshTokenKey)
-	return legacy, nil
-}
-
-// SaveRefreshToken stores dbPath's refresh token under its per-database key.
-func SaveRefreshToken(secrets Secrets, dbPath, token string) error {
-	if secrets == nil {
-		return ErrSecretNotFound
-	}
-	return secrets.Set(RefreshTokenKeyFor(dbPath), token)
-}
-
-// DeleteRefreshTokenAt removes dbPath's refresh token. For the database that owned the old fixed
-// key it removes that key too, so a sign-out does not leave a token a later LoadRefreshToken would
-// move back; any other database leaves it alone.
+// DeleteRefreshTokenAt removes the refresh token an older version stored for dbPath. For the
+// database that owned the old fixed key it removes that key too; any other database leaves it alone.
 func DeleteRefreshTokenAt(secrets Secrets, dbPath string) error {
 	if secrets == nil {
 		return nil
@@ -160,15 +111,6 @@ func DeleteRefreshTokenAt(secrets Secrets, dbPath string) error {
 		}
 	}
 	return nil
-}
-
-// DeleteRefreshToken removes the old fixed refresh token. It stays for callers and tests that use
-// the pre-database key; new code deletes one database's token with DeleteRefreshTokenAt.
-func DeleteRefreshToken(secrets Secrets) error {
-	if secrets == nil {
-		return nil
-	}
-	return deleteSecret(secrets, RefreshTokenKey)
 }
 
 // getSecret reads one key; a missing key is ErrSecretNotFound.
