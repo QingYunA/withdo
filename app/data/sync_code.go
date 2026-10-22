@@ -27,6 +27,10 @@ type codeState struct {
 	sentAt   time.Time
 	resendAt time.Time
 	cfg      syncclient.Config
+	// probed is the server whose /v1/config was read for passwordOnly; probing is a read in flight.
+	probed       string
+	probing      bool
+	passwordOnly bool
 }
 
 // SyncSetSignInStep moves the signed-out card between its screens (to the password screen and back,
@@ -212,4 +216,34 @@ func (r *Real) signInWithCode(code string) {
 		return
 	}
 	r.finishSignIn(ctx, cfg.Server, cfg, r.accountSource(cfg))
+}
+
+// SyncCheckServer reads the server's /v1/config once, to learn whether it signs in with emailed
+// codes. A server that is not PocketBase keeps the old account-and-password card
+// (SyncSnapshot.PasswordOnly); one that does not answer leaves the card as it is.
+func (r *Real) SyncCheckServer() {
+	r.mu.Lock()
+	r.loadSyncLocked()
+	server := r.sync.server
+	if r.sync.code.probing || r.sync.code.probed == server {
+		r.mu.Unlock()
+		return
+	}
+	r.sync.code.probing = true
+	r.mu.Unlock()
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		public, err := syncclient.FetchConfig(ctx, server, nil)
+		r.mu.Lock()
+		r.sync.code.probing = false
+		if err == nil {
+			r.sync.code.probed = server
+			r.sync.code.passwordOnly = public.Auth != syncclient.AuthPocketBase
+		}
+		r.mu.Unlock()
+		if err == nil {
+			r.syncChanged()
+		}
+	}()
 }

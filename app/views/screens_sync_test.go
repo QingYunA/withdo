@@ -18,7 +18,26 @@ func syncScreenStates() []struct {
 	setup func(r *settingsRig)
 } {
 	now := fixedNow()
-	signedOut := data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz"}
+	signedOut := signedOutSync()
+	// The signed-out card of a PocketBase server: the email, the code, the password, the reset.
+	email := signedOutCodeSync()
+	code := email
+	code.SignInStep, code.SignInEmail = data.SignInStepCode, "cyan@example.com"
+	code.ResendAt = now.Add(24 * time.Second)
+	codeChecking := code
+	codeChecking.Phase, codeChecking.SignInStage = data.SyncSigningIn, data.SignInStageChecking
+	codeWrong := code
+	codeWrong.ResendAt = now.Add(-time.Second)
+	codeWrong.SignInFailure = data.SignInFailureWrongCode
+	codeExpired := code
+	codeExpired.SignInFailure = data.SignInFailureCodeExpired
+	tooMany := code
+	tooMany.SignInFailure = data.SignInFailureTooMany
+	tooMany.ResendAt = now.Add(-time.Second)
+	password := code
+	password.SignInStep = data.SignInStepPassword
+	resetSent := code
+	resetSent.SignInStep = data.SignInStepResetSent
 	errorOut := signedOut
 	errorOut.SignInFailure = data.SignInFailureCredentials
 	signing := signedOut
@@ -69,6 +88,15 @@ func syncScreenStates() []struct {
 		{"signing-in-downloading", signingDownload, func(r *settingsRig) {
 			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2"
 		}},
+		{"email", email, nil},
+		{"email-filled", email, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
+		{"code", code, func(r *settingsRig) { r.s.syncCode = "48" }},
+		{"code-checking", codeChecking, func(r *settingsRig) { r.s.syncCode, r.s.syncCodeTried = "482913", "482913" }},
+		{"code-wrong", codeWrong, nil},
+		{"code-expired", codeExpired, nil},
+		{"code-too-many", tooMany, nil},
+		{"password", password, nil},
+		{"reset-sent", resetSent, nil},
 		{"both", both, nil},
 		{"uploading", uploading, nil},
 		{"synced", synced, nil},
