@@ -2125,27 +2125,56 @@ this order: Account, General, Agents, Advanced.
   - *Offline*: `Can't reach GitHub. Trying again soon.` Never red.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
-- **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v29.html`): the account and
+- **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v32.html`, which
+  replaces `v29.html`): the account and
   this Mac, in one group, and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz ·
-  Change`; Change edits it in place, for people who host their own). Signing in happens in the pane:
-  the account and password go to the sync server's `/v1/sign-in`, never through a browser. There is no
-  sign-up and no password reset: the server's admin makes the accounts.
-  - *Signed out*: one centered card: the 36 pt pixel person in `accent`, `Sign in to your account`
-    (`登录你的账号`, 17 pt 600), one `meta` line on what the account syncs (tasks, projects and
-    agents' reports), then two `fieldWell`s 280 pt wide, 8 pt apart: `Email or username`
-    (`邮箱或用户名`, focused when the pane opens) and `Password` (`密码`, masked). Enter in the first
-    moves to the second; Enter in the second signs in. Under them the accent button **Sign in and
-    sync** (`登录并开始同步`), enabled once both fields have text, and in `text.tertiary` that the
-    server's admin makes accounts and that keys and model settings stay on this Mac.
-  - *Signing in*: the fields and the button disabled, the button saying what is happening: `Checking
-    your account…` (`正在验证账号…`) while the server checks the password, then `Downloading your
-    tasks…` (`正在下载任务…`) while the device links and pulls.
-  - *Sign-in failed*: one `meta` line in `status.blocked` under the button: `Wrong account or password`
-    (`账号或密码不对`; the password field is emptied and focused, the account kept), `Too many tries;
-    wait a few minutes` (`试的次数太多了，过几分钟再试`), `This account uses two-step verification,
-    which in-app sign-in does not support yet` (`这个账号开了两步验证，应用内登录暂时不支持`), `This
-    account is deactivated; ask the admin` (`账号已停用，请联系管理员`), or the sentence a network
-    failure already has.
+  Change`; Change edits it in place, for people who host their own). Signing in happens in the pane,
+  never through a browser. **Signing up and signing in are one path** (M13 P2, as Linear, Notion and
+  Slack do it): an email, then a 6-digit code mailed to it; an email with no account gets one at
+  that step, with no name asked (the name is the part of the email before `@`). A password is
+  optional: `Use a password instead` keeps it for accounts that have one. The phone's Sync screen
+  has the same steps (below). A server that does not answer `"auth": "pocketbase"` in `/v1/config`
+  keeps the old account-and-password card of `v29.html`.
+  - *Signed out*: one centered card: the 36 pt pixel person in `accent`, `Sign in or sign up`
+    (`登录或注册`, 17 pt 600), one `meta` line, `Your tasks, projects and agents' reports sync to your
+    phone and other computers. A new email gets an account here.` (`任务、项目和 Agent 的汇报会同步到手机和其他电脑。第一次用这个邮箱，会顺手建好账号。`),
+    then one `fieldWell` 280 pt wide, `you@example.com`, focused when the pane opens, and under it the
+    accent button **Continue with email** (`用邮箱继续`, 280 pt), enabled once the field holds an
+    email; Enter presses it. In `text.tertiary` under it: keys and model settings stay on this Mac.
+    (A `Continue with Google` button above the field, with an `or` rule, comes with P3; it is not
+    drawn before.)
+  - *Code*: the 36 pt pixel envelope in `accent`, `Check your email` (`查收邮件`), `We sent a 6-digit
+    code to <email> · Use a different email` (`6 位验证码已发到 <邮箱> · 换一个邮箱`, the address in
+    `text`, the link back to *Signed out* with the email kept). Six 38 x 46 pt cells, 8 pt apart, a
+    short `text.tertiary` dash after the third, digits in 22 pt mono 600; the first empty cell has
+    the focus ring of the `fieldWell`. Typing a digit moves on, Backspace goes back, `⌘V` of a code
+    fills all six, and the sixth digit sends it (no button). Under them `Didn't get it? Resend in
+    0:24` (`没收到？0:24 后可以重发`), counting down from 30 s, then the link `Resend code`
+    (`重新发送`); then the link `Use a password instead` (`改用密码登录`).
+  - *Password*: the person, `Sign in with a password` (`用密码登录`), the email with `Use a different
+    email`, one masked `fieldWell` `Password` (`密码`), the accent button **Sign in** (`登录`), and
+    the links `Forgot password` (`忘记密码`) · `Use a code instead` (`改用验证码`). Forgot password
+    mails a reset link and shows the envelope, `Reset your password from your email`
+    (`去邮箱重设密码`), `We sent a link to <email>. Set a new password in the browser, then come back`
+    and a **Back to sign in** button; the link opens PocketBase's own page on the server.
+  - *Signing in*: the cells (or the fields) and the buttons disabled, and under them the pixel busy
+    indicator with `Checking the code…` (`正在验证…`) or `Checking your account…` (`正在验证账号…`), then
+    `Downloading your tasks…` (`正在下载任务…`) while the device links and pulls.
+  - *Sign-in failed*: one `meta` line in `status.blocked` under the cells or the button. A wrong code:
+    `That code isn't right` (`验证码不对，再看一眼邮件`), the cells emptied and the first focused, the
+    link `Resend code` under it. A code older than 10 minutes: a new one is mailed at once and the line
+    says `That code expired; we sent a new one` (`验证码过期了，已经发了一个新的`), the countdown starting
+    again. Too many tries (codes or passwords): `Too many tries; wait a minute` (`试得太频繁了，等一分钟`).
+    A wrong password: `Wrong email or password` (`邮箱或密码不对`; the password emptied and focused).
+    `This account is deactivated; ask the admin` and a network failure's sentence as before. The
+    email is never said to have, or not have, an account.
+  - *The code email* (PocketBase's OTP template, English only, the product being for people outside
+    China): from `ADHD Todo <noreply@sri-ai.xyz>`, subject `<code> is your ADHD Todo code`, the code
+    in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
+    nobody can sign in without the code.`
+  - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same three steps on its card,
+    the cells 44 x 54 dp, the numeric keyboard with `autofillHints` one-time code, and the buttons full
+    width as the card's other buttons.
   - *Synced*: row 1 the account's display name with `Signed in · 3 devices` and **Sign out** at the
     right; row 2 `This Mac` with `Synced · just now` (`已同步`, the done green) and **Sync now**. Under it
     the group **Devices**: an 18 pt pixel laptop or phone in `text.tertiary`, the device's name, a

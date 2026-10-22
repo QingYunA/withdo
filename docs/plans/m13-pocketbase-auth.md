@@ -99,12 +99,16 @@ Needs an SMTP sender. Done 2026-10-22: Resend, sending from `noreply@sri-ai.xyz`
 DNS records added with the owner's `cf` CLI), set in PocketBase's mail settings, not in our code; a
 test email was delivered. Superuser MFA is on. What is left is below.
 
-- Turn on sign-up and OTP for `users`; edit the email templates (code, verification, reset) in
-  PocketBase, in English and Chinese.
-- The Account pane and Android's screen get a two-step flow: email → 6-digit code (plus "use a
-  password instead"). A mockup comes first (`docs/design/mockups/`, drawn by Claude), then
-  `ui-spec` Settings > Account.
-- Rate limits: PocketBase's built-in rate limiter on the auth routes.
+Decided 2026-10-22 on `docs/design/mockups/v32.html` (ui-spec Settings > Account):
+- One path for sign-up and sign-in: email → 6-digit code. PocketBase sends no code to an email with
+  no account, so an `OnRecordRequestOTPRequest` hook creates the user first (random password, not
+  verified, name = the part before `@`); signing in with the code marks it verified.
+- `users` OTP on, length 6, 600 s; the OTP email template in English only. A Go migration sets
+  these, like the superuser rate limit, so a fresh `pb_data` gets them.
+- Rate limits: `users:requestOTP` 3 a minute, `users:authWithOTP` 10 a minute per address.
+- A password stays optional (`Use a password instead`), with PocketBase's reset email and its own
+  reset page on the server.
+- Not now: deleting accounts that never used their code.
 
 ## P3: Google
 

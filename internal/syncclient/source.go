@@ -69,3 +69,19 @@ func NewAccountSource(cfg Config, secrets Secrets, dbPath string) AccountSource 
 	source.DBPath = dbPath
 	return source
 }
+
+// CodeSignIn is the emailed-code sign-in of a PocketBase server (M13 P2): sign-up and sign-in are
+// one path, an email and then the 6-digit code mailed to it. PocketBaseSource implements it; a
+// caller holding an AccountSource type-asserts for it.
+type CodeSignIn interface {
+	// RequestCode mails a code to email (creating the account if there is none) and returns the
+	// id SignInWithCode needs.
+	RequestCode(ctx context.Context, server, email string) (otpID string, err error)
+	// SignInWithCode checks the code and stores the token. ErrInvalidCode when it is wrong or
+	// expired.
+	SignInWithCode(ctx context.Context, server, otpID, code string) error
+	// RequestPasswordReset mails a password reset link.
+	RequestPasswordReset(ctx context.Context, server, email string) error
+}
+
+var _ CodeSignIn = (*PocketBaseSource)(nil)

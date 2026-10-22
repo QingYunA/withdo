@@ -27,6 +27,8 @@ var (
 	ErrSecondFactor = errors.New("syncclient: the account needs a second factor")
 	// ErrTooManyAttempts says the server rate-limited the sign-in.
 	ErrTooManyAttempts = errors.New("syncclient: too many sign-in attempts")
+	// ErrInvalidCode says the emailed sign-in code was wrong, used, expired, or the email malformed.
+	ErrInvalidCode = errors.New("syncclient: invalid or expired sign-in code")
 	// ErrSignInUnsupported says the sync server has no POST /v1/sign-in.
 	ErrSignInUnsupported = errors.New("syncclient: the sync server does not support in-app sign-in")
 )

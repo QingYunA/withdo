@@ -21,6 +21,7 @@ import (
 // JWTs with an exp claim, which is all the client reads.
 type fakePocketBase struct {
 	*httptest.Server
+	mux         *http.ServeMux
 	mu          sync.Mutex
 	email       string
 	password    string
@@ -39,6 +40,7 @@ func newFakePocketBase(t *testing.T) *fakePocketBase {
 		valid: map[string]bool{},
 	}
 	mux := http.NewServeMux()
+	f.mux = mux
 	mux.HandleFunc("POST /api/collections/users/auth-with-password", f.authWithPassword)
 	mux.HandleFunc("POST /api/collections/users/auth-refresh", f.authRefresh)
 	f.Server = httptest.NewServer(mux)
@@ -311,5 +313,110 @@ func TestConfigPicksTheSourceFromTheServer(t *testing.T) {
 	}
 	if err := cfg.ApplyPublic(syncproto.ConfigResponse{}); !errors.Is(err, syncclient.ErrSignInUnsupported) {
 		t.Fatalf("a server with no sign-in: err = %v", err)
+	}
+}
+
+// fakeCodeServer answers the three code routes: request-otp hands out an id, auth-with-otp accepts
+// only the code 123456 for that id, request-password-reset answers 204. A non-zero status makes
+// every one of them answer it.
+func fakeCodeServer(t *testing.T, f *fakePocketBase, status int) {
+	t.Helper()
+	f.mux.HandleFunc("POST /api/collections/users/request-otp", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Email string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if status != 0 {
+			w.WriteHeader(status)
+			return
+		}
+		if !strings.Contains(body.Email, "@") {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		_, _ = fmt.Fprint(w, `{"otpId":"otp1"}`)
+	})
+	f.mux.HandleFunc("POST /api/collections/users/auth-with-otp", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			OTPID    string `json:"otpId"`
+			Password string `json:"password"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if status != 0 {
+			w.WriteHeader(status)
+			return
+		}
+		if body.OTPID != "otp1" || body.Password != "123456" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.answer(w, f.mint())
+	})
+	f.mux.HandleFunc("POST /api/collections/users/request-password-reset", func(w http.ResponseWriter, r *http.Request) {
+		if status != 0 {
+			w.WriteHeader(status)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func TestPocketBaseCodeSignIn(t *testing.T) {
+	ctx := context.Background()
+	pb := newFakePocketBase(t)
+	fakeCodeServer(t, pb, 0)
+	secrets := newFakeSecrets()
+	source := syncclient.NewPocketBaseSource(pb.URL, secrets)
+	var _ syncclient.CodeSignIn = source
+
+	otpID, err := source.RequestCode(ctx, pb.URL, " ada@example.com ")
+	if err != nil || otpID != "otp1" {
+		t.Fatalf("RequestCode = %q, %v", otpID, err)
+	}
+	if err := source.SignInWithCode(ctx, pb.URL, otpID, "000000"); !errors.Is(err, syncclient.ErrInvalidCode) {
+		t.Fatalf("wrong code = %v, want ErrInvalidCode", err)
+	}
+	if len(secrets.values) != 0 {
+		t.Fatalf("a wrong code stored %v", secrets.values)
+	}
+	if err := source.SignInWithCode(ctx, pb.URL, otpID, " 123456 "); err != nil {
+		t.Fatalf("SignInWithCode: %v", err)
+	}
+	if token, err := source.Token(ctx); err != nil || token == "" {
+		t.Fatalf("Token = %q, %v", token, err)
+	}
+	if account, ok := source.Account(); !ok || account.Email != "ada@example.com" {
+		t.Fatalf("Account = %+v, %v", account, ok)
+	}
+	if err := source.RequestPasswordReset(ctx, pb.URL, "ada@example.com"); err != nil {
+		t.Fatalf("RequestPasswordReset: %v", err)
+	}
+	if _, err := source.RequestCode(ctx, pb.URL, "nope"); !errors.Is(err, syncclient.ErrInvalidCode) {
+		t.Fatalf("bad email = %v, want ErrInvalidCode", err)
+	}
+}
+
+func TestPocketBaseCodeSignInFailures(t *testing.T) {
+	ctx := context.Background()
+	for _, tt := range []struct {
+		status int
+		want   error
+	}{
+		{http.StatusTooManyRequests, syncclient.ErrTooManyAttempts},
+		{http.StatusNotFound, syncclient.ErrSignInUnsupported},
+		{http.StatusForbidden, syncclient.ErrAccountLocked},
+	} {
+		pb := newFakePocketBase(t)
+		fakeCodeServer(t, pb, tt.status)
+		source := syncclient.NewPocketBaseSource(pb.URL, newFakeSecrets())
+		if _, err := source.RequestCode(ctx, pb.URL, "ada@example.com"); !errors.Is(err, tt.want) {
+			t.Errorf("RequestCode %d = %v, want %v", tt.status, err, tt.want)
+		}
+		if err := source.SignInWithCode(ctx, pb.URL, "otp1", "123456"); !errors.Is(err, tt.want) {
+			t.Errorf("SignInWithCode %d = %v, want %v", tt.status, err, tt.want)
+		}
+		if err := source.RequestPasswordReset(ctx, pb.URL, "ada@example.com"); !errors.Is(err, tt.want) {
+			t.Errorf("RequestPasswordReset %d = %v, want %v", tt.status, err, tt.want)
+		}
 	}
 }

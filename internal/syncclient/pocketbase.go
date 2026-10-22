@@ -82,6 +82,79 @@ func (s *PocketBaseSource) SignIn(ctx context.Context, server, loginName, passwo
 	return s.storeLocked(answer)
 }
 
+// RequestCode asks the server to mail a 6-digit sign-in code to email; an email with no account
+// gets one. It returns the id of the code, which SignInWithCode needs. A malformed email is
+// ErrInvalidCode too, as PocketBase answers 400 for it.
+func (s *PocketBaseSource) RequestCode(ctx context.Context, server, email string) (string, error) {
+	if s == nil {
+		return "", errors.New("syncclient: PocketBase sign-in needs a source")
+	}
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return "", errors.New("syncclient: sync server URL is required")
+	}
+	body, err := json.Marshal(map[string]string{"email": strings.TrimSpace(email)})
+	if err != nil {
+		return "", fmt.Errorf("syncclient: encode the code request: %w", err)
+	}
+	raw, err := s.send(ctx, base+"/api/collections/users/request-otp", "", body, ErrInvalidCode)
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		OTPID string `json:"otpId"`
+	}
+	if err := json.Unmarshal(raw, &out); err != nil || out.OTPID == "" {
+		return "", errors.New("syncclient: the code request answer is missing an id")
+	}
+	return out.OTPID, nil
+}
+
+// SignInWithCode signs in with the code mailed after RequestCode and stores the token as SignIn
+// does. A wrong, used or expired code is ErrInvalidCode.
+func (s *PocketBaseSource) SignInWithCode(ctx context.Context, server, otpID, code string) error {
+	if s == nil || s.Secrets == nil {
+		return errors.New("syncclient: PocketBase sign-in needs a secrets store")
+	}
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return errors.New("syncclient: sync server URL is required")
+	}
+	body, err := json.Marshal(map[string]string{"otpId": otpID, "password": strings.TrimSpace(code)})
+	if err != nil {
+		return fmt.Errorf("syncclient: encode the sign-in request: %w", err)
+	}
+	answer, err := s.postAuth(ctx, base+"/api/collections/users/auth-with-otp", "", body, ErrInvalidCode)
+	if err != nil {
+		return err
+	}
+	if answer.Token == "" {
+		return errors.New("syncclient: the sign-in answer is missing a token")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.Server = base
+	return s.storeLocked(answer)
+}
+
+// RequestPasswordReset asks the server to mail a reset link to email. PocketBase answers the same
+// whether or not the email has an account.
+func (s *PocketBaseSource) RequestPasswordReset(ctx context.Context, server, email string) error {
+	if s == nil {
+		return errors.New("syncclient: PocketBase sign-in needs a source")
+	}
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return errors.New("syncclient: sync server URL is required")
+	}
+	body, err := json.Marshal(map[string]string{"email": strings.TrimSpace(email)})
+	if err != nil {
+		return fmt.Errorf("syncclient: encode the reset request: %w", err)
+	}
+	_, err = s.send(ctx, base+"/api/collections/users/request-password-reset", "", body, ErrInvalidCode)
+	return err
+}
+
 // Token implements TokenSource: the stored token, renewed when it is close to expiring. A refused
 // renewal deletes the token and returns ErrSignedOut; a renewal that fails for another reason
 // keeps using the token while it is still valid.
@@ -192,16 +265,34 @@ func (s *PocketBaseSource) key() string {
 	return pocketBaseKeyFor(s.DBPath)
 }
 
-// post is one PocketBase auth request. A 400 is a refused sign-in or token, whatever the reason:
-// PocketBase answers a wrong password and an unknown email alike. A 5xx is retried.
+// post is one PocketBase auth request that answers a token. A 400 is a refused sign-in or token,
+// whatever the reason: PocketBase answers a wrong password and an unknown email alike.
 func (s *PocketBaseSource) post(ctx context.Context, url, token string, body []byte) (pocketBaseAnswer, error) {
+	return s.postAuth(ctx, url, token, body, ErrInvalidCredentials)
+}
+
+// postAuth is post with the error a 400 maps to.
+func (s *PocketBaseSource) postAuth(ctx context.Context, url, token string, body []byte, bad error) (pocketBaseAnswer, error) {
+	raw, err := s.send(ctx, url, token, body, bad)
+	if err != nil {
+		return pocketBaseAnswer{}, err
+	}
+	var answer pocketBaseAnswer
+	if err := json.Unmarshal(raw, &answer); err != nil {
+		return pocketBaseAnswer{}, fmt.Errorf("syncclient: decode the sign-in answer: %w", err)
+	}
+	return answer, nil
+}
+
+// send is one POST to PocketBase; it returns the body of a 200 or 204. A 5xx is retried.
+func (s *PocketBaseSource) send(ctx context.Context, url, token string, body []byte, bad error) ([]byte, error) {
 	client := s.HTTP
 	if client == nil {
 		client = http.DefaultClient
 	}
-	var answer pocketBaseAnswer
+	var out []byte
 	err := retryTransient(ctx, func() error {
-		answer = pocketBaseAnswer{}
+		out = nil
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 		if err != nil {
 			return err
@@ -220,12 +311,12 @@ func (s *PocketBaseSource) post(ctx context.Context, url, token string, body []b
 			return fmt.Errorf("syncclient: read the sign-in answer: %w", err)
 		}
 		switch resp.StatusCode {
-		case http.StatusOK:
-			if err := json.Unmarshal(raw, &answer); err != nil {
-				return fmt.Errorf("syncclient: decode the sign-in answer: %w", err)
-			}
+		case http.StatusOK, http.StatusNoContent:
+			out = raw
 			return nil
-		case http.StatusBadRequest, http.StatusUnauthorized:
+		case http.StatusBadRequest:
+			return bad
+		case http.StatusUnauthorized:
 			return ErrInvalidCredentials
 		case http.StatusForbidden:
 			return ErrAccountLocked
@@ -240,7 +331,7 @@ func (s *PocketBaseSource) post(ctx context.Context, url, token string, body []b
 			return fmt.Errorf("syncclient: PocketBase answered %d", resp.StatusCode)
 		}
 	})
-	return answer, err
+	return out, err
 }
 
 // tokenExpiry reads the exp claim of a JWT without verifying it; the server checks every token.

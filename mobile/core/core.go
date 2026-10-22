@@ -63,6 +63,8 @@ type Core struct {
 	lastStatus  syncclient.Status
 	failedSince time.Time
 	signInStage string
+	// code is the emailed-code sign-in in progress (code_signin.go), under mu.
+	code codeSignIn
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool
