@@ -23,6 +23,7 @@ func Open(dir string) (*pocketbase.PocketBase, error) {
 		DefaultDataDir:  dir,
 		HideStartBanner: true,
 	})
+	app.OnRecordRequestOTPRequest(UsersCollection).BindFunc(createUserOnCodeRequest)
 	if err := app.Bootstrap(); err != nil {
 		return nil, fmt.Errorf("bootstrap PocketBase in %s: %w", dir, err)
 	}

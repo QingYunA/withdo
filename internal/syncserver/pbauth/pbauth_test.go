@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -174,8 +175,16 @@ func TestMigrationSetsUpUsersCollection(t *testing.T) {
 	if users.CreateRule != nil || users.ListRule != nil || users.UpdateRule != nil {
 		t.Error("the users API rules should be closed")
 	}
-	if !users.PasswordAuth.Enabled || users.OTP.Enabled || users.OAuth2.Enabled {
-		t.Error("only password sign-in should be on")
+	if !users.PasswordAuth.Enabled || !users.OTP.Enabled || users.OAuth2.Enabled || users.MFA.Enabled {
+		t.Error("only password and one-time code sign-in should be on, with MFA off")
+	}
+	if users.OTP.Length != 6 || users.OTP.Duration != 600 {
+		t.Errorf("code = %d digits for %d s, want 6 for 600", users.OTP.Length, users.OTP.Duration)
+	}
+	tpl := users.OTP.EmailTemplate
+	if tpl.Subject != "{OTP} is your ADHD Todo code" || !strings.Contains(tpl.Body, "{OTP}") ||
+		!strings.Contains(tpl.Body, "It works for 10 minutes") {
+		t.Errorf("OTP template = %q / %q", tpl.Subject, tpl.Body)
 	}
 	if got := app.Settings().Meta.AppName; got != "ADHD Todo" {
 		t.Errorf("app name = %q", got)
@@ -247,5 +256,177 @@ func TestPasswordSignInIsRateLimited(t *testing.T) {
 		if status, _ := get(t, base+"/healthz", ""); status != http.StatusOK {
 			t.Fatalf("healthz = %d after %d requests", status, i)
 		}
+	}
+}
+
+type sentMail struct{ to, subject, body string }
+
+// captureMail replaces the OTP mailer, so no mail leaves the test, and returns the channel the
+// mails arrive on (they are sent in the background).
+func captureMail(app core.App) <-chan sentMail {
+	out := make(chan sentMail, 8)
+	app.OnMailerRecordOTPSend().BindFunc(func(e *core.MailerRecordEvent) error {
+		// What PocketBase does after a real send; it is what lets the code verify the account.
+		if otp, err := e.App.FindOTPById(e.Meta["otpId"].(string)); err == nil {
+			otp.SetSentTo(e.Message.To[0].Address)
+			_ = e.App.Save(otp)
+		}
+		out <- sentMail{to: e.Message.To[0].Address, subject: e.Message.Subject, body: e.Message.HTML}
+		return nil
+	})
+	return out
+}
+
+func waitMail(t *testing.T, mails <-chan sentMail) sentMail {
+	t.Helper()
+	select {
+	case m := <-mails:
+		return m
+	case <-time.After(5 * time.Second):
+		t.Fatal("no mail was sent")
+		return sentMail{}
+	}
+}
+
+func requestOTP(t *testing.T, base, email string) (int, string) {
+	t.Helper()
+	status, raw := post(t, base+"/api/collections/users/request-otp", map[string]string{"email": email})
+	var out struct {
+		OTPID string `json:"otpId"`
+	}
+	_ = json.Unmarshal(raw, &out)
+	return status, out.OTPID
+}
+
+func authWithOTP(t *testing.T, base, otpID, code string) (int, string) {
+	t.Helper()
+	status, raw := post(t, base+"/api/collections/users/auth-with-otp", map[string]string{"otpId": otpID, "password": code})
+	var out struct {
+		Token string `json:"token"`
+	}
+	_ = json.Unmarshal(raw, &out)
+	return status, out.Token
+}
+
+var sixDigits = regexp.MustCompile(`^(\d{6}) is your ADHD Todo code$`)
+
+func TestNewEmailGetsAnAccountAndACode(t *testing.T) {
+	app := openApp(t)
+	mails := captureMail(app)
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+
+	status, otpID := requestOTP(t, base, "Grace@Example.com")
+	if status != http.StatusOK || otpID == "" {
+		t.Fatalf("request-otp = %d %q", status, otpID)
+	}
+	m := waitMail(t, mails)
+	match := sixDigits.FindStringSubmatch(m.subject)
+	if match == nil || !strings.EqualFold(m.to, "grace@example.com") || !strings.Contains(m.body, match[1]) {
+		t.Fatalf("mail = %+v", m)
+	}
+	code := match[1]
+
+	users, _ := app.FindCollectionByNameOrId("users")
+	record, err := app.FindAuthRecordByEmail(users, "grace@example.com")
+	if err != nil {
+		t.Fatalf("the user was not created: %v", err)
+	}
+	if record.Verified() || record.GetString("name") != "Grace" {
+		t.Errorf("new user verified=%v name=%q", record.Verified(), record.GetString("name"))
+	}
+
+	// A wrong code fails, the right one signs in and marks the account verified.
+	if status, _ := authWithOTP(t, base, otpID, "000000"); status != http.StatusBadRequest {
+		t.Fatalf("wrong code = %d, want 400", status)
+	}
+	status, token := authWithOTP(t, base, otpID, code)
+	if status != http.StatusOK || token == "" {
+		t.Fatalf("auth-with-otp = %d", status)
+	}
+	subject, err := pbauth.NewAuthenticator(app).Subject(bearer(token))
+	if err != nil || subject != "pb:"+record.Id {
+		t.Fatalf("subject = %q, %v; want pb:%s", subject, err, record.Id)
+	}
+	record, _ = app.FindRecordById(users, record.Id)
+	if !record.Verified() {
+		t.Error("the code sign-in should verify the account")
+	}
+}
+
+func bearer(token string) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, "/v1/x", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	return req
+}
+
+func TestExistingAccountGetsACodeWithoutANewUser(t *testing.T) {
+	app := openApp(t)
+	mails := captureMail(app)
+	subject, err := pbauth.ImportUser(app, "ada@example.com", "Ada Lovelace", testPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	if status, _ := requestOTP(t, base, "ada@example.com"); status != http.StatusOK {
+		t.Fatalf("request-otp = %d", status)
+	}
+	waitMail(t, mails)
+	total, _ := app.CountRecords("users")
+	if total != 1 {
+		t.Fatalf("users = %d, want 1", total)
+	}
+	users, _ := app.FindCollectionByNameOrId("users")
+	if r, _ := app.FindAuthRecordByEmail(users, "ada@example.com"); "pb:"+r.Id != subject || r.GetString("name") != "Ada Lovelace" {
+		t.Error("the existing account was changed")
+	}
+}
+
+func TestRequestOTPRejectsABadEmail(t *testing.T) {
+	app := openApp(t)
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	if status, _ := requestOTP(t, base, "not an email"); status != http.StatusBadRequest {
+		t.Fatalf("bad email = %d, want 400", status)
+	}
+	if total, _ := app.CountRecords("users"); total != 0 {
+		t.Fatalf("users = %d, want 0", total)
+	}
+}
+
+func TestMigrationAddsRateLimits(t *testing.T) {
+	app := openApp(t)
+	want := map[string]struct {
+		duration int64
+		max      int
+	}{
+		"users:requestOTP":           {60, 3},
+		"users:authWithOTP":          {60, 10},
+		"users:requestPasswordReset": {60, 3},
+	}
+	for _, rule := range app.Settings().RateLimits.Rules {
+		if w, ok := want[rule.Label]; ok {
+			if rule.Duration != w.duration || rule.MaxRequests != w.max {
+				t.Errorf("%s = %d per %d s", rule.Label, rule.MaxRequests, rule.Duration)
+			}
+			delete(want, rule.Label)
+		}
+	}
+	for label := range want {
+		t.Errorf("no rate limit rule %s", label)
+	}
+}
+
+func TestRequestOTPIsRateLimited(t *testing.T) {
+	app := openApp(t)
+	captureMail(app)
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	var limited int
+	for i := 0; i < 6; i++ {
+		if status, _ := requestOTP(t, base, "ada@example.com"); status == http.StatusTooManyRequests {
+			limited = i
+			break
+		}
+	}
+	if limited != 3 {
+		t.Fatalf("the 429 came on request %d, want the 4th (index 3)", limited)
 	}
 }
