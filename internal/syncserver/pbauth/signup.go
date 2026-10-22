@@ -21,6 +21,11 @@ func createUserOnCodeRequest(e *core.RecordCreateOTPRequestEvent) error {
 		}
 		typed := strings.TrimSpace(form.Email)
 		email := strings.ToLower(typed)
+		// PocketBase looked the email up as typed; accounts are stored in lower case.
+		if existing, err := e.App.FindAuthRecordByEmail(e.Collection, email); err == nil {
+			e.Record = existing
+			return e.Next()
+		}
 		record := core.NewRecord(e.Collection)
 		record.SetEmail(email)
 		record.SetVerified(false)

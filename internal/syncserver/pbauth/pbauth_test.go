@@ -381,6 +381,22 @@ func TestExistingAccountGetsACodeWithoutANewUser(t *testing.T) {
 	}
 }
 
+func TestExistingAccountTypedInOtherCaseGetsACode(t *testing.T) {
+	app := openApp(t)
+	mails := captureMail(app)
+	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada Lovelace", testPassword); err != nil {
+		t.Fatal(err)
+	}
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	if status, _ := requestOTP(t, base, "Ada@Example.com"); status != http.StatusOK {
+		t.Fatalf("request-otp = %d", status)
+	}
+	waitMail(t, mails)
+	if total, _ := app.CountRecords("users"); total != 1 {
+		t.Fatalf("users = %d, want 1", total)
+	}
+}
+
 func TestRequestOTPRejectsABadEmail(t *testing.T) {
 	app := openApp(t)
 	base := serve(t, app, pbauth.NewAuthenticator(app))
