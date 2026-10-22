@@ -54,8 +54,10 @@ Sync, its protocol and its Postgres stay as they are.
 - The server's authenticator becomes `Chain{PocketBase, OIDC(Zitadel), StaticTokens}` until P4.
 - `/v1/config` gains `"auth": "pocketbase"` (old clients ignore it and keep using Zitadel until they
   update). The in-app `/v1/sign-in` keeps answering for old clients until P4.
-- The admin UI (`/_/`) is not exposed: nginx returns 404 for `/_/` and `/api/_superusers`; the owner
-  reaches it through `ssh -L`. Superuser created once from the server with `adhd-sync pb-superuser`.
+- The admin UI (`/_/`) was first reachable only through `ssh -L`; since 2026-10-22 it is public at
+  `https://todo.sri-ai.xyz/_/`, guarded by the superuser's random 32-character password and 5
+  sign-ins a minute per address. MFA for superusers comes with the mail sender (P2). Superuser created
+  once from the server with `adhd-sync pb-superuser`.
 - Backups: `pb_data/data.db` joins what `deploy/sync/deploy.sh` backs up.
 
 **Client (`internal/syncclient`, shared by desktop and Android through `mobile/core`).**

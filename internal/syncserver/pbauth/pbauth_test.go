@@ -210,6 +210,24 @@ func TestChainOrder(t *testing.T) {
 	}
 }
 
+// The admin UI is public, so guessing a superuser's password is limited harder than a user's.
+func TestSuperuserSignInIsRateLimited(t *testing.T) {
+	app := openApp(t)
+	if err := pbauth.UpsertSuperuser(app, "root@example.com", testPassword); err != nil {
+		t.Fatal(err)
+	}
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	tries := 0
+	for ; tries < 20; tries++ {
+		if status, _ := signIn(t, base, "_superusers", "root@example.com", "wrong password"); status == http.StatusTooManyRequests {
+			break
+		}
+	}
+	if tries > 5 {
+		t.Fatalf("a superuser's wrong password was refused with 429 only after %d tries, want at most 5", tries)
+	}
+}
+
 func TestPasswordSignInIsRateLimited(t *testing.T) {
 	app := openApp(t)
 	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err != nil {
