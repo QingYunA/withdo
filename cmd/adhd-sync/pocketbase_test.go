@@ -175,6 +175,20 @@ func TestPocketBaseAccountsEndToEnd(t *testing.T) {
 	if got := listDevices(); !strings.Contains(got, "laptop") {
 		t.Fatalf("after the move the new identity sees %s", got)
 	}
+	// The old identity is kept as an alias: list-subjects shows it, and the old token still works.
+	var listed bytes.Buffer
+	if handled, err := runAccountCommand("list-subjects", []string{"-database-url", databaseURL}, nil, &listed); !handled || err != nil {
+		t.Fatalf("list-subjects: handled=%v err=%v", handled, err)
+	}
+	if !strings.Contains(listed.String(), "zitadel-user-1 alias 1 ") || !strings.Contains(listed.String(), subject+" primary 1 ") {
+		t.Fatalf("list-subjects printed:\n%s", listed.String())
+	}
+	if status, raw := call(t, http.MethodGet, base+"/v1/devices", "old-token", nil); status != http.StatusOK || !strings.Contains(string(raw), "laptop") {
+		t.Fatalf("old token after the move = %d %s", status, raw)
+	}
+	if handled, err := runAccountCommand("drop-alias", []string{"-database-url", databaseURL, "-subject", "zitadel-user-1"}, nil, io.Discard); !handled || err != nil {
+		t.Fatalf("drop-alias: handled=%v err=%v", handled, err)
+	}
 
 	cancel()
 	select {
@@ -195,6 +209,9 @@ func TestAccountCommandsValidateTheirFlags(t *testing.T) {
 		"pb-import-user": {"-pb-dir", t.TempDir()},
 		"pb-superuser":   {"-email", "a@example.com"},
 		"move-subject":   {"-from", "a"},
+		"add-alias":      {"-subject", "a"},
+		"drop-alias":     {"-subject", "a"},
+		"list-subjects":  {},
 	} {
 		if _, err := runAccountCommand(name, args, strings.NewReader("pw\n"), io.Discard); err == nil {
 			t.Errorf("%s with missing flags succeeded", name)

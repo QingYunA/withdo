@@ -77,7 +77,12 @@ Sync, its protocol and its Postgres stay as they are.
    on stdin (the owner's current one, from the keychain item `adhd-todo-account`, so nothing changes
    for them). It prints the new subject.
 2. `adhd-sync move-subject -from <zitadel user id> -to pb:<id>` rewrites `users.subject` in one
-   transaction and refuses when the target already has a workspace.
+   transaction and refuses when the target already has a workspace. It also records the Zitadel id in
+   `subject_aliases` (`-keep-alias=true`, the default), because installed older apps only know Zitadel:
+   without the alias their next request would create a new empty user and the device id would no
+   longer match. `ensureWorkspace` looks a subject up in `users`, then in `subject_aliases`.
+   `adhd-sync add-alias` backfills an account moved before this existed; `list-subjects` shows
+   `user_id subject kind devices rows`.
 3. Sign in on desktop and phone; their data is there.
 
 Tests: the authenticator with a test PocketBase app (`tests.NewTestApp`), the chain order, `move-subject`
@@ -111,6 +116,8 @@ sign-in stays in the app. Confirm with the owner before building.
   `deploy/sync/zitadel*`.
 - Only after every device of both accounts has signed in through PocketBase (the server logs which
   authenticator accepted each request; Zitadel's count reaching zero for a week is the signal).
+- Then `adhd-sync drop-alias -subject <zitadel id>` for each alias (`list-subjects` lists them), or
+  drop the `subject_aliases` table with the Zitadel code.
 - On the server: stop and remove the Zitadel compose stack and its nginx site
   `auth.todo.sri-ai.xyz`, after a final backup. The owner approves this step.
 

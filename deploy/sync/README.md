@@ -149,8 +149,16 @@ first time each subject is accepted by `pocketbase` or `oidc`, which shows when 
   2. `adhd-sync move-subject -database-url=… -from=<Zitadel user id> -to=pb:<id>` rewrites
      `users.subject` in one transaction. It refuses when the target already has devices or rows; a
      target workspace that only the first request made, empty, is replaced.
+     By default the old Zitadel id is kept as an alias (`-keep-alias=false` to skip it), so a device
+     still signed in with Zitadel reaches the same workspace instead of getting a new empty one.
+     `move-subject` refuses when the target is an alias.
   3. Sign in on each device; the data is there. The Zitadel user id is the `sub` of its tokens, and
      the `users.subject` column of the Postgres `users` table before the move.
+  4. `adhd-sync list-subjects -database-url=…` prints `user_id subject kind devices rows` (kind is
+     `primary` or `alias`). `adhd-sync add-alias -database-url=… -subject=<old> -target=<current>`
+     backfills an alias for an account moved without one (an empty user the old device already
+     created is replaced). `adhd-sync drop-alias -database-url=… -subject=<old>` removes one once
+     no device uses it (the server log's `oidc accepted subject` lines stop).
 
 ## Voice input
 
