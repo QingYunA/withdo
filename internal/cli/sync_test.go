@@ -23,8 +23,6 @@ import (
 type cliSyncServer struct {
 	*httptest.Server
 	seeding bool
-	// signIn is POST /v1/sign-in; tests that exercise in-app sign-in set it.
-	signIn http.HandlerFunc
 
 	mu        sync.Mutex
 	next      int64
@@ -82,13 +80,6 @@ func newCLISyncServer(t *testing.T, seeding bool) *cliSyncServer {
 	mux.HandleFunc("GET /v1/pull", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"cookie":0,"last_mutation_id":0,"changes":[],"more":false}`))
-	})
-	mux.HandleFunc("POST /v1/sign-in", func(w http.ResponseWriter, r *http.Request) {
-		if s.signIn == nil {
-			http.NotFound(w, r)
-			return
-		}
-		s.signIn(w, r)
 	})
 	s.Server = httptest.NewServer(mux)
 	t.Cleanup(s.Close)

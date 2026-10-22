@@ -16,8 +16,8 @@ import (
 )
 
 // TestTheAppSignsInThroughPocketBase: when /v1/config says "auth":"pocketbase" the pane posts the
-// email and password to PocketBase's route, with no issuer, and a refused password shows as a
-// credentials failure in the same place the Zitadel sign-in used.
+// email and password to PocketBase's route, and a refused password shows as a
+// credentials failure.
 func TestTheAppSignsInThroughPocketBase(t *testing.T) {
 	ctx := context.Background()
 	var mu sync.Mutex
@@ -25,7 +25,7 @@ func TestTheAppSignsInThroughPocketBase(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"issuer":"","client_id":"","scopes":[],"auth":"pocketbase"}`))
+		_, _ = w.Write([]byte(`{"auth":"pocketbase"}`))
 	})
 	mux.HandleFunc("POST /api/collections/users/auth-with-password", func(w http.ResponseWriter, r *http.Request) {
 		var body struct{ Identity string }

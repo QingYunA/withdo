@@ -3,7 +3,6 @@ package syncclient
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
 )
@@ -12,8 +11,8 @@ import (
 const AuthPocketBase = "pocketbase"
 
 // AccountSource is a TokenSource that signs in with an account and a password and remembers the
-// sign-in in Secrets. OIDCSource (Zitadel) and PocketBaseSource implement it, so the app, the
-// phone core and adhd-core pick one by the server's config and treat both alike.
+// sign-in in Secrets. PocketBaseSource implements it, so the app, the phone core and adhd-core
+// treat it through one interface.
 type AccountSource interface {
 	TokenSource
 	// SignIn signs in against the sync server and stores what Token needs later.
@@ -24,48 +23,30 @@ type AccountSource interface {
 	Account() (Account, bool)
 }
 
-var (
-	_ AccountSource = (*OIDCSource)(nil)
-	_ AccountSource = (*PocketBaseSource)(nil)
-)
+var _ AccountSource = (*PocketBaseSource)(nil)
 
-// SignsInWithAccount reports whether the config names an account sign-in (PocketBase, or an OIDC
-// issuer) rather than a development token.
-func (c Config) SignsInWithAccount() bool { return c.Auth == AuthPocketBase || c.Issuer != "" }
+// SignsInWithAccount reports whether the config names an account sign-in (PocketBase) rather than
+// a development token.
+func (c Config) SignsInWithAccount() bool { return c.Auth == AuthPocketBase }
 
 // SourceKey identifies the account settings a source was built from, so a caller keeps one source
 // for them and replaces it when they change.
-func (c Config) SourceKey() string {
-	return c.Auth + "\n" + c.Server + "\n" + c.Issuer + "\n" + c.ClientID + "\n" + strings.Join(c.Scopes, " ")
-}
+func (c Config) SourceKey() string { return c.Auth + "\n" + c.Server }
 
 // ApplyPublic copies the sign-in a server's GET /v1/config names into the config: PocketBase when
-// the server says so, else its OIDC issuer. A server that offers neither is
-// ErrSignInUnsupported. The fields of the other system are cleared.
+// the server says so. A server that does not is ErrSignInUnsupported.
 func (c *Config) ApplyPublic(public syncproto.ConfigResponse) error {
-	switch {
-	case public.Auth == AuthPocketBase:
-		c.Auth, c.Issuer, c.ClientID, c.Scopes = AuthPocketBase, "", "", nil
-	case public.Issuer != "" && public.ClientID != "":
-		c.Auth = ""
-		c.Issuer = strings.TrimRight(strings.TrimSpace(public.Issuer), "/")
-		c.ClientID = strings.TrimSpace(public.ClientID)
-		c.Scopes = public.Scopes
-	default:
+	if public.Auth != AuthPocketBase {
 		return fmt.Errorf("the server does not offer sign-in: %w", ErrSignInUnsupported)
 	}
+	c.Auth = AuthPocketBase
 	return nil
 }
 
-// NewAccountSource returns the source for cfg: PocketBase when cfg.Auth says so, else OIDC. The
-// token is keyed to dbPath so another profile cannot replace this database's sign-in.
+// NewAccountSource returns the PocketBase source for cfg. The token is keyed to dbPath so another
+// profile cannot replace this database's sign-in.
 func NewAccountSource(cfg Config, secrets Secrets, dbPath string) AccountSource {
-	if cfg.Auth == AuthPocketBase {
-		source := NewPocketBaseSource(cfg.Server, secrets)
-		source.DBPath = dbPath
-		return source
-	}
-	source := NewOIDCSource(cfg.Issuer, cfg.ClientID, cfg.Scopes, secrets)
+	source := NewPocketBaseSource(cfg.Server, secrets)
 	source.DBPath = dbPath
 	return source
 }

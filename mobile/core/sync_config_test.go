@@ -2,39 +2,21 @@ package core
 
 import (
 	"encoding/json"
+	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
-// TestSyncConfigureWritesTheSettings pins SyncConfigure's file and the initial status shape.
-func TestSyncConfigureWritesTheSettings(t *testing.T) {
-	dir := t.TempDir()
-	c, err := open(dir, nil, func() time.Time { return demoNow })
+// TestInitialStatus pins the initial status shape of a phone that has not synced.
+func TestInitialStatus(t *testing.T) {
+	c, err := open(t.TempDir(), nil, func() time.Time { return demoNow })
 	if err != nil {
 		t.Fatalf("open: %v", err)
 	}
 	defer func() { _ = c.Close() }()
-
-	if err := c.SyncConfigure("https://sync.example.com/", "https://issuer.example/", "client-id", " openid  profile "); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
-	}
-	cfg, found, err := syncclient.LoadConfigAt(filepath.Join(dir, "sync.json"))
-	if err != nil || !found {
-		t.Fatalf("read sync.json: found %v, err %v", found, err)
-	}
-	if cfg.Server != "https://sync.example.com" || cfg.Issuer != "https://issuer.example" || cfg.ClientID != "client-id" {
-		t.Errorf("sync.json = %+v", cfg)
-	}
-	if !reflect.DeepEqual(cfg.Scopes, []string{"openid", "profile"}) {
-		t.Errorf("scopes = %v", cfg.Scopes)
-	}
-	if err := c.SyncConfigure("", "", "", ""); err == nil {
-		t.Error("SyncConfigure accepted an empty server")
-	}
 
 	var status statusJSON
 	if err := json.Unmarshal([]byte(c.SyncStatus()), &status); err != nil {
@@ -42,5 +24,48 @@ func TestSyncConfigureWritesTheSettings(t *testing.T) {
 	}
 	if status.State != string(syncclient.StateIdle) || status.Pending != 0 || status.LastSynced != "" {
 		t.Errorf("initial status = %+v", status)
+	}
+}
+
+// TestAnOlderSyncJSONSignsInAgain: a phone that signed in with an earlier version has a
+// sync.json with an issuer and an account and a refresh token in its secure store. It loads
+// without error, shows no account, and the next sign-in reads the server's config and goes on
+// through PocketBase.
+func TestAnOlderSyncJSONSignsInAgain(t *testing.T) {
+	f := newCodeFake(t)
+	dir := t.TempDir()
+	older := `{"server":"` + f.URL + `","issuer":"https://auth.example","client_id":"phone",` +
+		`"account":{"name":"Ada Lovelace","email":"ada@example.com"}}`
+	if err := os.WriteFile(filepath.Join(dir, "sync.json"), []byte(older), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	secrets := newMapSecrets()
+	if err := secrets.Set(syncclient.RefreshTokenKeyFor(filepath.Join(dir, "adhd-todo.db")), "old-refresh"); err != nil {
+		t.Fatal(err)
+	}
+	phone, err := open(dir, secrets, func() time.Time { return demoNow })
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer func() { _ = phone.Close() }()
+
+	if raw, err := phone.Account(); err != nil || raw != "{}" {
+		t.Fatalf("Account = %q, %v; want {} (signed out)", raw, err)
+	}
+	var status statusJSON
+	if err := json.Unmarshal([]byte(phone.SyncStatus()), &status); err != nil {
+		t.Fatalf("decode SyncStatus: %v", err)
+	}
+	if status.SignedIn {
+		t.Errorf("status = %+v; the old sign-in cannot be used", status)
+	}
+	if err := phone.SignOut(); err != nil {
+		t.Fatalf("SignOut: %v", err)
+	}
+	if secrets.has(syncclient.RefreshTokenKeyFor(phone.dbPath)) {
+		t.Error("SignOut left the old refresh token in the secure store")
+	}
+	if err := phone.RequestCode("ada@example.com"); err != nil {
+		t.Fatalf("RequestCode on an older config: %v", err)
 	}
 }

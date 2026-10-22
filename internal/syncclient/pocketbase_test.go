@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -291,28 +293,51 @@ func TestPocketBaseLogoutAndPerDatabaseKeys(t *testing.T) {
 func TestConfigPicksTheSourceFromTheServer(t *testing.T) {
 	var cfg syncclient.Config
 	cfg.Server = "https://todo.example"
-	cfg.Issuer, cfg.ClientID = "https://old.example", "client"
 	if err := cfg.ApplyPublic(syncproto.ConfigResponse{Auth: "pocketbase"}); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Auth != syncclient.AuthPocketBase || cfg.Issuer != "" || cfg.ClientID != "" {
-		t.Fatalf("cfg = %+v; PocketBase should replace the issuer", cfg)
+	if cfg.Auth != syncclient.AuthPocketBase {
+		t.Fatalf("cfg = %+v; the server names PocketBase", cfg)
 	}
 	if _, ok := syncclient.NewAccountSource(cfg, newFakeSecrets(), "").(*syncclient.PocketBaseSource); !ok {
 		t.Fatal("auth pocketbase did not give a PocketBase source")
 	}
-	// A server that names an issuer and no auth is the old Zitadel setup.
-	if err := cfg.ApplyPublic(syncproto.ConfigResponse{Issuer: "https://issuer.example/", ClientID: "client"}); err != nil {
-		t.Fatal(err)
-	}
-	if cfg.Auth != "" || cfg.Issuer != "https://issuer.example" {
-		t.Fatalf("cfg = %+v; the issuer should replace PocketBase", cfg)
-	}
-	if _, ok := syncclient.NewAccountSource(cfg, newFakeSecrets(), "").(*syncclient.OIDCSource); !ok {
-		t.Fatal("an issuer did not give an OIDC source")
-	}
 	if err := cfg.ApplyPublic(syncproto.ConfigResponse{}); !errors.Is(err, syncclient.ErrSignInUnsupported) {
 		t.Fatalf("a server with no sign-in: err = %v", err)
+	}
+}
+
+// TestAnOlderSyncJSONWithAnIssuerLoadsSignedOut: a sync.json written by an earlier version
+// (an issuer, a client id, a signed-in account, no token) loads without error as a
+// PocketBase config with no account, so the pane shows the sign-in card.
+func TestAnOlderSyncJSONWithAnIssuerLoadsSignedOut(t *testing.T) {
+	path := filepath.Join(t.TempDir(), syncclient.ConfigFile)
+	older := `{"server":"https://todo.example/","issuer":"https://auth.example","client_id":"adhd","scopes":["aud"],` +
+		`"account":{"name":"Ada","email":"ada@example.com"}}`
+	if err := os.WriteFile(path, []byte(older), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, found, err := syncclient.LoadConfigAt(path)
+	if err != nil || !found {
+		t.Fatalf("LoadConfigAt = %+v, %v, %v", cfg, found, err)
+	}
+	if cfg.Server != "https://todo.example" || cfg.Auth != syncclient.AuthPocketBase || cfg.Account != nil || cfg.Token != "" {
+		t.Fatalf("cfg = %+v; want a signed-out PocketBase config", cfg)
+	}
+	source := syncclient.NewAccountSource(cfg, newFakeSecrets(), filepath.Join(t.TempDir(), "adhd-todo.db"))
+	if _, err := source.Token(context.Background()); !errors.Is(err, syncclient.ErrSignedOut) {
+		t.Fatalf("Token = %v, want ErrSignedOut", err)
+	}
+	if _, ok := source.Account(); ok {
+		t.Fatal("a signed-out source has an account")
+	}
+	// Saving it back drops the old keys.
+	if err := syncclient.SaveConfigAt(path, cfg); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := os.ReadFile(path)
+	if strings.Contains(string(raw), "issuer") {
+		t.Fatalf("the saved file keeps the issuer: %s", raw)
 	}
 }
 

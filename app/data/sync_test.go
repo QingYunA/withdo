@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"sync/atomic"
 	"testing"
@@ -153,11 +154,11 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 		}
 	})
 
-	t.Run("sync.json with an issuer starts an OIDC runner when secrets are injected", func(t *testing.T) {
+	t.Run("sync.json with an account starts a runner when secrets are injected", func(t *testing.T) {
 		server := newAppSyncServer(t)
 		path := linkedAppDB(t, server, true, false)
 		if err := syncclient.SaveConfig(path, syncclient.Config{
-			Server: server.URL, Issuer: "https://issuer.example", ClientID: "client",
+			Server: server.URL, Auth: syncclient.AuthPocketBase,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -170,18 +171,18 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 		real.Start()
 		if real.syncRunner() == nil {
 			_ = real.Close()
-			t.Fatal("the app did not start an OIDC sync runner")
+			t.Fatal("the app did not start a sync runner")
 		}
 		if err := real.Close(); err != nil {
 			t.Fatal(err)
 		}
 	})
 
-	t.Run("sync.json with an issuer and no secrets means no runner", func(t *testing.T) {
+	t.Run("sync.json with an account and no secrets means no runner", func(t *testing.T) {
 		server := newAppSyncServer(t)
 		path := linkedAppDB(t, server, true, false)
 		if err := syncclient.SaveConfig(path, syncclient.Config{
-			Server: server.URL, Issuer: "https://issuer.example", ClientID: "client",
+			Server: server.URL, Auth: syncclient.AuthPocketBase,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -192,7 +193,7 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 		real.Start()
 		defer func() { _ = real.Close() }()
 		if real.syncRunner() != nil {
-			t.Fatal("the app started an OIDC runner without secrets")
+			t.Fatal("the app started a runner without secrets")
 		}
 	})
 
@@ -211,9 +212,34 @@ func TestS3Core3AppStartsAndStopsRunner(t *testing.T) {
 	})
 }
 
-// appSecrets is a syncclient.Secrets with no token, for the OIDC wiring test.
+// appSecrets is a syncclient.Secrets with no token, for the account wiring test.
 type appSecrets struct{}
 
 func (appSecrets) Get(string) (string, error) { return "", syncclient.ErrSecretNotFound }
 func (appSecrets) Set(string, string) error   { return nil }
 func (appSecrets) Delete(string) error        { return nil }
+
+// TestAnOlderSyncJSONWithAnIssuerShowsTheSignInCard: a Mac linked by an earlier version
+// has a sync.json with an issuer, a client id and an account. It opens without error and the pane
+// is signed out, with no account, ready for the email card.
+func TestAnOlderSyncJSONWithAnIssuerShowsTheSignInCard(t *testing.T) {
+	server := newAppSyncServer(t)
+	path := linkedAppDB(t, server, true, false)
+	older := `{"server":"` + server.URL + `","issuer":"https://auth.example","client_id":"adhd-desktop",` +
+		`"account":{"name":"Cyan","email":"cyan@example.com"}}`
+	if err := os.WriteFile(syncclient.ConfigPath(path), []byte(older), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	real, err := OpenReal(context.Background(), path, RealOptions{
+		DataFolder: filepath.Dir(path), Interval: time.Hour, Secrets: appSecrets{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	real.Start()
+	defer func() { _ = real.Close() }()
+	snap := real.SyncSnapshot()
+	if snap.Phase != SyncSignedOut || snap.Account != "" || snap.AccountEmail != "" {
+		t.Fatalf("snapshot = phase %v, account %q <%q>; want signed out with no account", snap.Phase, snap.Account, snap.AccountEmail)
+	}
+}

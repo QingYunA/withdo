@@ -71,11 +71,7 @@ data class SyncModel(
     val devices: List<Device> = emptyList(),
     /** The counts of SignIn's choose answer, for the both-have-tasks sheet. */
     val choose: SignInState = SignInState(),
-    /** The Go error's sentence after a failed sign-in, shown under the button. */
-    val signInError: String? = null,
-    /** The kind of that failure, for the password clearing the card does. */
-    val signInFailure: SignInFailure? = null,
-    /** The emailed-code sign-in's step; LEGACY keeps the account-and-password card. */
+    /** The emailed-code sign-in's step. */
     val flow: SignInFlow = SignInFlow(),
     /** The six digits already typed, for the screenshots. */
     val typedCode: String = "",
@@ -119,23 +115,13 @@ fun SyncScreen(
 
     Column(Modifier.fillMaxWidth()) {
         when (model.phase) {
-            SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> if (model.flow.step == SignInStep.LEGACY) {
-                SignedOutCard(
-                    signingIn = model.phase == SyncPhase.SIGNING_IN,
-                    stage = signInStage,
-                    failure = model.signInFailure,
-                    error = model.signInError,
-                    onSignIn = onSignIn,
-                )
-            } else {
-                SignInFlowCard(
-                    flow = model.flow,
-                    stage = if (model.flow.sending) SignInStage.SENDING else signInStage,
-                    actions = signInActions.copy(onSignInWithPassword = onSignIn),
-                    initialCode = model.typedCode,
-                    googleAvailable = model.googleAvailable,
-                )
-            }
+            SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignInFlowCard(
+                flow = model.flow,
+                stage = if (model.flow.sending) SignInStage.SENDING else signInStage,
+                actions = signInActions.copy(onSignInWithPassword = onSignIn),
+                initialCode = model.typedCode,
+                googleAvailable = model.googleAvailable,
+            )
             SyncPhase.CHOOSE -> {
                 GroupCard {
                     SyncAccountRow(model, words, onSignOut)
@@ -200,117 +186,6 @@ fun SyncScreen(
                     sheetOpen = false
                     if (merge) onMerge() else onReplace()
                 },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SignedOutCard(
-    signingIn: Boolean,
-    stage: SignInStage?,
-    failure: SignInFailure?,
-    error: String?,
-    onSignIn: (String, String) -> Unit,
-) {
-    val tokens = LocalTokens.current
-    val type = LocalAppType.current
-    var login by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var loginFocused by remember { mutableStateOf(false) }
-    var passwordFocused by remember { mutableStateOf(false) }
-    val loginFocus = remember { FocusRequester() }
-    val passwordFocus = remember { FocusRequester() }
-    val ready = login.isNotBlank() && password.isNotEmpty() && !signingIn
-
-    LaunchedEffect(Unit) { loginFocus.requestFocus() }
-    LaunchedEffect(signingIn, failure) {
-        if (!signingIn && failure == SignInFailure.CREDENTIALS) {
-            password = ""
-            passwordFocus.requestFocus()
-        }
-    }
-
-    GroupCard {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            PixelIcon("cloud", size = 36.dp, tint = tokens.accent)
-            Text(
-                stringResource(R.string.sync_signed_out_title),
-                style = type.input.copy(fontWeight = FontWeight.SemiBold),
-                color = tokens.text,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Text(
-                stringResource(R.string.sync_signed_out_body),
-                style = type.meta,
-                color = tokens.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 340.dp),
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                SignInField(
-                    value = login,
-                    onValueChange = { login = it },
-                    placeholder = stringResource(R.string.sync_email),
-                    enabled = !signingIn,
-                    focused = loginFocused,
-                    onFocused = { loginFocused = it },
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                    contentType = ContentType.Username,
-                    focus = loginFocus,
-                    onNext = { passwordFocus.requestFocus() },
-                    modifier = Modifier.alpha(if (signingIn) 0.5f else 1f),
-                )
-                SignInField(
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = stringResource(R.string.sync_password),
-                    enabled = !signingIn,
-                    focused = passwordFocused,
-                    onFocused = { passwordFocused = it },
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                    contentType = ContentType.Password,
-                    focus = passwordFocus,
-                    secret = true,
-                    onDone = { if (ready) onSignIn(login.trim(), password) },
-                    modifier = Modifier.alpha(if (signingIn) 0.5f else 1f),
-                )
-            }
-            PrimaryButton(
-                label = when (stage) {
-                    SignInStage.DOWNLOADING -> stringResource(R.string.sync_signing_in_downloading)
-                    SignInStage.CHECKING, SignInStage.SENDING, SignInStage.GOOGLE -> stringResource(R.string.sync_signing_in_checking)
-                    null -> stringResource(R.string.sync_sign_in)
-                },
-                enabled = ready,
-                onClick = { onSignIn(login.trim(), password) },
-                modifier = Modifier.padding(top = 6.dp).fillMaxWidth(),
-            )
-            if (!signingIn && error != null) {
-                Text(
-                    error,
-                    style = type.meta,
-                    color = tokens.statusBlocked,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 2.dp).widthIn(max = 340.dp),
-                )
-            }
-            Text(
-                stringResource(R.string.sync_sign_in_note),
-                style = type.meta,
-                color = tokens.textTertiary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 6.dp).widthIn(max = 340.dp),
             )
         }
     }

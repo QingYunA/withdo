@@ -27,18 +27,17 @@ type codeState struct {
 	sentAt   time.Time
 	resendAt time.Time
 	cfg      syncclient.Config
-	// probed is the server whose /v1/config was read for passwordOnly; probing is a read in flight.
-	probed       string
-	probing      bool
-	passwordOnly bool
+	// probed is the server whose sign-in methods were read for google; probing is a read in flight.
+	probed  string
+	probing bool
 	// google is true when the server's auth methods list a Google provider.
 	google bool
 }
 
 // cleared is the code flow forgotten, with what the probe of the server learned kept: the card
-// still needs to know the server's kind and whether it offers Google.
+// still needs to know whether the server offers Google.
 func (c codeState) cleared() codeState {
-	return codeState{probed: c.probed, probing: c.probing, passwordOnly: c.passwordOnly, google: c.google}
+	return codeState{probed: c.probed, probing: c.probing, google: c.google}
 }
 
 // SyncSetSignInStep moves the signed-out card between its screens (to the password screen and back,
@@ -226,9 +225,8 @@ func (r *Real) signInWithCode(code string) {
 	r.finishSignIn(ctx, cfg.Server, cfg, r.accountSource(cfg))
 }
 
-// SyncCheckServer reads the server's /v1/config once, to learn whether it signs in with emailed
-// codes. A server that is not PocketBase keeps the old account-and-password card
-// (SyncSnapshot.PasswordOnly); one that does not answer leaves the card as it is.
+// SyncCheckServer reads the server's sign-in methods once, to learn whether the card offers
+// Google (SyncSnapshot.GoogleAvailable). A server that does not answer leaves the card as it is.
 func (r *Real) SyncCheckServer() {
 	r.mu.Lock()
 	r.loadSyncLocked()
@@ -252,7 +250,6 @@ func (r *Real) SyncCheckServer() {
 		r.sync.code.probing = false
 		if err == nil {
 			r.sync.code.probed = server
-			r.sync.code.passwordOnly = public.Auth != syncclient.AuthPocketBase
 			r.sync.code.google = google
 		}
 		r.mu.Unlock()

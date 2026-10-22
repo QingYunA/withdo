@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,16 +13,15 @@ import (
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/domain"
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
-	"github.com/QingYunA/adhd-todo/internal/syncproto"
 	"github.com/QingYunA/adhd-todo/internal/testutil"
 )
 
 // accountFixture is the sync acceptance setup: a desktop that seeded the account with one task, and
-// a fake OIDC issuer the phone signs in through.
+// a fake PocketBase the phone signs in through.
 type accountFixture struct {
-	h    *syncHarness
-	oidc *fakeOIDC
-	// sync is the phone's sync server: the harness's server with the fake /v1/sign-in in front.
+	h  *syncHarness
+	pb *fakePocketBase
+	// sync is the phone's sync server: the harness's server with the fake PocketBase in front.
 	sync          *httptest.Server
 	desktop       *domain.Core
 	desktopClient *syncclient.Client
@@ -44,13 +42,13 @@ func newAccountFixture(t *testing.T) *accountFixture {
 	if err := client.Link(context.Background(), "desktop"); err != nil {
 		t.Fatalf("link the desktop: %v", err)
 	}
-	oidc := newFakeOIDC(t)
-	server := httptest.NewServer(oidc.withSignIn(h.server.Handler()))
+	pb := newFakePocketBase()
+	server := httptest.NewServer(pb.wrap(h.server.Handler()))
 	t.Cleanup(server.Close)
-	return &accountFixture{h: h, oidc: oidc, sync: server, desktop: desktop, desktopClient: client}
+	return &accountFixture{h: h, pb: pb, sync: server, desktop: desktop, desktopClient: client}
 }
 
-// phone opens an unlinked phone core configured for the fixture's server and issuer.
+// phone opens an unlinked phone core configured for the fixture's server.
 func (f *accountFixture) phone(t *testing.T) (*Core, *mapSecrets) {
 	t.Helper()
 	secrets := newMapSecrets()
@@ -59,8 +57,8 @@ func (f *accountFixture) phone(t *testing.T) (*Core, *mapSecrets) {
 		t.Fatalf("open the phone core: %v", err)
 	}
 	t.Cleanup(func() { _ = phone.Close() })
-	if err := phone.SyncConfigure(f.sync.URL, f.oidc.URL, "mobile-client", ""); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
+	if err := phone.SyncSetServer(f.sync.URL); err != nil {
+		t.Fatalf("SyncSetServer: %v", err)
 	}
 	return phone, secrets
 }
@@ -77,8 +75,8 @@ func TestSignInChooseThenLinkMerge(t *testing.T) {
 		t.Fatalf("SignIn: %v", err)
 	}
 	assertChoose(t, state, 1, 0, 1)
-	if !secrets.has(syncclient.RefreshTokenKeyFor(phone.dbPath)) {
-		t.Error("SignIn did not keep the refresh token; the user would sign in again")
+	if !syncclient.HasPocketBaseToken(secretAdapter{secrets}, phone.dbPath) {
+		t.Error("SignIn did not keep the token; the user would sign in again")
 	}
 	var account struct {
 		Name  string `json:"name"`
@@ -164,8 +162,8 @@ func TestSignInChooseThenLinkReplace(t *testing.T) {
 	assertThisPhone(t, phone, "phone")
 }
 
-// TestSignInSendsTheAccountPasswordAndDeviceName: the account and password reach the sync
-// server's /v1/sign-in, and the device name reaches the server's device list.
+// TestSignInSendsTheAccountPasswordAndDeviceName: the account and password reach
+// PocketBase, and the device name reaches the server's device list.
 func TestSignInSendsTheAccountPasswordAndDeviceName(t *testing.T) {
 	f := newAccountFixture(t)
 	phone, _ := f.phone(t)
@@ -176,24 +174,24 @@ func TestSignInSendsTheAccountPasswordAndDeviceName(t *testing.T) {
 	if state != signInLinkedJSON {
 		t.Errorf("SignIn = %s, want %s", state, signInLinkedJSON)
 	}
-	if login, password := f.oidc.lastSignIn(); login != "cyan@example.com" || password != "secret" {
-		t.Errorf("/v1/sign-in got account %q, password %q", login, password)
+	if login, password := f.pb.lastSignIn(); login != "cyan@example.com" || password != "secret" {
+		t.Errorf("sign-in got account %q, password %q", login, password)
 	}
 	assertThisPhone(t, phone, "phone-under-test")
 }
 
-// TestSignInStatusStages: SyncStatus says checking while /v1/sign-in runs, then downloading while
+// TestSignInStatusStages: SyncStatus says checking while the password is checked, then downloading while
 // Link registers the phone.
 func TestSignInStatusStages(t *testing.T) {
 	h := newSyncHarness(t)
-	oidc := newFakeOIDC(t)
+	pb := newFakePocketBase()
 	signInHit := make(chan struct{}, 1)
 	releaseSignIn := make(chan struct{})
 	devicesHit := make(chan struct{}, 1)
 	releaseDevices := make(chan struct{})
-	base := oidc.withSignIn(h.server.Handler())
+	base := pb.wrap(h.server.Handler())
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && r.URL.Path == "/v1/sign-in" {
+		if r.Method == http.MethodPost && r.URL.Path == "/api/collections/users/auth-with-password" {
 			signInHit <- struct{}{}
 			<-releaseSignIn
 		}
@@ -210,8 +208,8 @@ func TestSignInStatusStages(t *testing.T) {
 		t.Fatalf("open the phone core: %v", err)
 	}
 	t.Cleanup(func() { _ = phone.Close() })
-	if err := phone.SyncConfigure(server.URL, oidc.URL, "mobile-client", ""); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
+	if err := phone.SyncSetServer(server.URL); err != nil {
+		t.Fatalf("SyncSetServer: %v", err)
 	}
 	result := make(chan error, 1)
 	go func() {
@@ -271,8 +269,8 @@ func TestSignInWithAWrongPasswordKeepsNothing(t *testing.T) {
 	if err == nil || err.Error() != "wrong account or password" {
 		t.Fatalf("SignIn with a wrong password = %v, want the wrong-password sentence", err)
 	}
-	if secrets.has(syncclient.RefreshTokenKeyFor(phone.dbPath)) {
-		t.Error("a refused sign-in stored a refresh token")
+	if syncclient.HasPocketBaseToken(secretAdapter{secrets}, phone.dbPath) {
+		t.Error("a refused sign-in stored a token")
 	}
 	if _, linked, err := phone.dom.SyncState(context.Background(), "device_id"); err != nil || linked {
 		t.Errorf("a refused sign-in linked the phone (%v)", err)
@@ -363,78 +361,51 @@ func contains(values []string, want string) bool {
 	return false
 }
 
-// fakeOIDC is a minimal OIDC provider for the tests: discovery and a token endpoint for refresh
-// grants. The sync server's /v1/sign-in already answers with tokens; this fake only fills that in.
-type fakeOIDC struct {
-	*httptest.Server
+// fakePocketBase is the sync server's front for the tests: GET /v1/config names PocketBase and
+// PocketBase's password route answers with a token the sync server accepts. It answers 400 for any
+// password but "secret".
+type fakePocketBase struct {
 	mu       sync.Mutex
 	login    string
 	password string
 }
 
-func newFakeOIDC(t *testing.T) *fakeOIDC {
-	t.Helper()
-	f := &fakeOIDC{}
-	mux := http.NewServeMux()
-	f.Server = httptest.NewServer(mux)
-	t.Cleanup(f.Server.Close)
+func newFakePocketBase() *fakePocketBase { return &fakePocketBase{} }
 
-	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
-		writeTestJSON(w, map[string]any{
-			"issuer":                                f.URL,
-			"authorization_endpoint":                f.URL + "/authorize",
-			"token_endpoint":                        f.URL + "/token",
-			"jwks_uri":                              f.URL + "/jwks",
-			"response_types_supported":              []string{"code"},
-			"subject_types_supported":               []string{"public"},
-			"id_token_signing_alg_values_supported": []string{"RS256"},
-		})
-	})
-	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		writeTestJSON(w, map[string]any{
-			"access_token":  syncTestToken,
-			"token_type":    "Bearer",
-			"expires_in":    3600,
-			"refresh_token": "mobile-refresh",
-			"id_token":      fakeIDToken(),
-		})
-	})
-	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
-		writeTestJSON(w, map[string]any{"keys": []any{}})
-	})
-	return f
-}
-
-// withSignIn puts the fake POST /v1/sign-in in front of the sync server's handler. It answers 401
-// for any password but "secret".
-func (f *fakeOIDC) withSignIn(next http.Handler) http.Handler {
+func (f *fakePocketBase) wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || r.URL.Path != "/v1/sign-in" {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/config":
+			writeTestJSON(w, map[string]string{"auth": "pocketbase"})
+		case r.Method == http.MethodPost && r.URL.Path == "/api/collections/users/auth-with-password":
+			var req struct {
+				Identity string `json:"identity"`
+				Password string `json:"password"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "bad request", http.StatusBadRequest)
+				return
+			}
+			f.mu.Lock()
+			f.login, f.password = req.Identity, req.Password
+			f.mu.Unlock()
+			if req.Password != "secret" {
+				w.WriteHeader(http.StatusBadRequest)
+				writeTestJSON(w, map[string]string{"message": "Failed to authenticate."})
+				return
+			}
+			writeTestJSON(w, map[string]any{
+				"token":  syncTestToken,
+				"record": map[string]string{"email": "ada@example.com", "name": "Ada Lovelace"},
+			})
+		default:
 			next.ServeHTTP(w, r)
-			return
 		}
-		var req syncproto.SignInRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-		f.mu.Lock()
-		f.login, f.password = req.LoginName, req.Password
-		f.mu.Unlock()
-		if req.Password != "secret" {
-			w.WriteHeader(http.StatusUnauthorized)
-			writeTestJSON(w, map[string]string{"error": "invalid_credentials"})
-			return
-		}
-		writeTestJSON(w, syncproto.SignInTokenResponse{
-			AccessToken: syncTestToken, RefreshToken: "mobile-refresh",
-			IDToken: fakeIDToken(), TokenType: "Bearer", ExpiresIn: 3600,
-		})
 	})
 }
 
-// lastSignIn is the account and password the last /v1/sign-in carried.
-func (f *fakeOIDC) lastSignIn() (string, string) {
+// lastSignIn is the account and password the last password sign-in carried.
+func (f *fakePocketBase) lastSignIn() (string, string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.login, f.password
@@ -443,12 +414,4 @@ func (f *fakeOIDC) lastSignIn() (string, string) {
 func writeTestJSON(w http.ResponseWriter, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(value)
-}
-
-// fakeIDToken has an unsigned payload, which is all the account display reads.
-func fakeIDToken() string {
-	payload, _ := json.Marshal(map[string]string{
-		"name": "Ada Lovelace", "email": "ada@example.com", "sub": "mobile-core-subject",
-	})
-	return "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".signature"
 }

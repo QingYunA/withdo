@@ -10,7 +10,7 @@ import (
 )
 
 // MoveSubject renames the user whose subject is from to to, so the same workspace is found when
-// the account signs in with a new identity (a Zitadel user id becoming a PocketBase `pb:` id).
+// the account signs in with a new identity (an older identity becoming a PocketBase `pb:` id).
 // With keepAlias it also records from as an alias of that user, so a device still signed in with
 // the old identity reaches the same workspace. It runs in one transaction. It refuses when from has
 // no user, when to is an alias, and when to already has a workspace holding devices or rows; a

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"reflect"
 	"testing"
 	"time"
 
@@ -14,18 +13,14 @@ import (
 )
 
 // TestSyncSetServerReadsThePublicConfig: the Change field's save asks /v1/config and writes the
-// issuer, client id and scopes the server names, into a file the status then reads.
+// sign-in the server names, into a file the status then reads.
 func TestSyncSetServerReadsThePublicConfig(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/config" {
 			http.NotFound(w, r)
 			return
 		}
-		writeTestJSON(w, map[string]any{
-			"issuer":    "https://issuer.example/",
-			"client_id": "phone-client",
-			"scopes":    []string{"openid", "offline_access"},
-		})
+		writeTestJSON(w, map[string]any{"auth": "pocketbase"})
 	}))
 	defer server.Close()
 
@@ -43,11 +38,8 @@ func TestSyncSetServerReadsThePublicConfig(t *testing.T) {
 	if err != nil || !found {
 		t.Fatalf("read sync.json: found %v, err %v", found, err)
 	}
-	if cfg.Server != server.URL || cfg.Issuer != "https://issuer.example" || cfg.ClientID != "phone-client" {
+	if cfg.Server != server.URL || cfg.Auth != syncclient.AuthPocketBase {
 		t.Errorf("sync.json = %+v", cfg)
-	}
-	if !reflect.DeepEqual(cfg.Scopes, []string{"openid", "offline_access"}) {
-		t.Errorf("scopes = %v", cfg.Scopes)
 	}
 
 	var status statusJSON
@@ -73,8 +65,9 @@ func TestSyncSetServerWritesNothingOnAFailedFetch(t *testing.T) {
 		t.Fatalf("open: %v", err)
 	}
 	defer func() { _ = phone.Close() }()
-	if err := phone.SyncConfigure("https://old.example.com", "https://old-issuer.example", "old-client", ""); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
+	if err := syncclient.SaveConfigAt(filepath.Join(dir, "sync.json"),
+		syncclient.Config{Server: "https://old.example.com", Auth: syncclient.AuthPocketBase}); err != nil {
+		t.Fatalf("write sync.json: %v", err)
 	}
 
 	for _, server := range []string{"http://example.com", "not a url", noSignIn.URL} {
@@ -86,7 +79,7 @@ func TestSyncSetServerWritesNothingOnAFailedFetch(t *testing.T) {
 	if err != nil || !found {
 		t.Fatalf("read sync.json: found %v, err %v", found, err)
 	}
-	if cfg.Server != "https://old.example.com" || cfg.Issuer != "https://old-issuer.example" {
+	if cfg.Server != "https://old.example.com" || cfg.Auth != syncclient.AuthPocketBase {
 		t.Errorf("a failed SyncSetServer changed sync.json: %+v", cfg)
 	}
 }
@@ -108,16 +101,8 @@ func TestStatusCarriesTheSettingsTheSyncScreenDraws(t *testing.T) {
 		t.Errorf("fresh status = %+v", fresh)
 	}
 
-	if err := phone.SyncConfigure("https://sync.example.com", "", "", ""); err != nil {
-		t.Fatalf("SyncConfigure: %v", err)
-	}
-	// A development token is the only credential SyncConfigure can leave; write the file directly
-	// the way the desktop's dev setup does.
-	cfg, _, err := syncclient.LoadConfigAt(filepath.Join(phone.dataDir, "sync.json"))
-	if err != nil {
-		t.Fatalf("read sync.json: %v", err)
-	}
-	cfg.Token = "dev-token"
+	// A development token: write the file directly the way the desktop's dev setup does.
+	cfg := syncclient.Config{Server: "https://sync.example.com", Token: "dev-token"}
 	if err := syncclient.SaveConfigAt(filepath.Join(phone.dataDir, "sync.json"), cfg); err != nil {
 		t.Fatalf("write sync.json: %v", err)
 	}

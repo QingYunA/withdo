@@ -30,9 +30,8 @@ const syncUsage = `Usage: adhd-core sync <command>
 Commands:
   link --server URL --token-file FILE --name NAME [--merge|--replace]
              Link this device to a sync server with a static token (development)
-  login --server URL --user LOGIN --password-stdin --name NAME [--issuer URL --client-id ID [--scope SCOPE]...] [--merge|--replace]
-             Sign in with an account and password, then link this device. The server says how to sign
-             in; --issuer and --client-id force an OIDC sign-in instead
+  login --server URL --user LOGIN --password-stdin --name NAME [--merge|--replace]
+             Sign in with an account and password, then link this device
   logout     Forget the sign-in on this device
   status     Show the device, workspace, cookie, pending changes and id blocks
   now        Sync once and print the counts pushed and pulled
@@ -119,21 +118,16 @@ func syncLink(ctx context.Context, args []string, dbPath string, core *domain.Co
 }
 
 // syncLogin signs in with an account and password read from stdin, writes sync.json without a
-// token and links this Mac like sync link does. The refresh token goes to the keychain, never to
-// the file.
+// token and links this Mac like sync link does. The token goes to the keychain, never to the file.
 func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.Core, d deps) error {
 	fs := flag.NewFlagSet("sync login", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	server := fs.String("server", "", "sync server URL")
-	issuer := fs.String("issuer", "", "OIDC issuer URL")
-	clientID := fs.String("client-id", "", "OIDC client id")
 	user := fs.String("user", "", "account login name")
 	passwordStdin := fs.Bool("password-stdin", false, "read the password from the first line of stdin")
 	name := fs.String("name", "", "device name")
 	merge := fs.Bool("merge", false, "join this device's tasks to the account's when both have data")
 	replace := fs.Bool("replace", false, "back this device up and use the account's data when both have data")
-	var scopes scopeList
-	fs.Var(&scopes, "scope", "an extra OIDC scope, repeatable")
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("sync login: %w", err)
 	}
@@ -142,9 +136,6 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	}
 	if strings.TrimSpace(*server) == "" {
 		return errors.New("sync login: --server is required")
-	}
-	if (strings.TrimSpace(*issuer) == "") != (strings.TrimSpace(*clientID) == "") {
-		return errors.New("sync login: --issuer and --client-id go together; leave both out to use what the server says")
 	}
 	if strings.TrimSpace(*user) == "" {
 		return errors.New("sync login: --user is required")
@@ -162,19 +153,14 @@ func syncLogin(ctx context.Context, args []string, dbPath string, core *domain.C
 	if err != nil {
 		return err
 	}
-	// An issuer given on the command line is an OIDC sign-in; without one the server's
-	// GET /v1/config says whether to use its PocketBase or an issuer.
+	// The server's GET /v1/config says how to sign in.
 	cfg := syncclient.Config{Server: *server}
-	if strings.TrimSpace(*issuer) != "" {
-		cfg.Issuer, cfg.ClientID, cfg.Scopes = strings.TrimRight(strings.TrimSpace(*issuer), "/"), strings.TrimSpace(*clientID), scopes
-	} else {
-		public, err := syncclient.FetchConfig(ctx, *server, nil)
-		if err != nil {
-			return fmt.Errorf("sync login: %w", err)
-		}
-		if err := cfg.ApplyPublic(public); err != nil {
-			return syncFriendlyError(err)
-		}
+	public, err := syncclient.FetchConfig(ctx, *server, nil)
+	if err != nil {
+		return fmt.Errorf("sync login: %w", err)
+	}
+	if err := cfg.ApplyPublic(public); err != nil {
+		return syncFriendlyError(err)
 	}
 	source := syncclient.NewAccountSource(cfg, d.secrets, dbPath)
 	if err := source.SignIn(ctx, *server, *user, password); err != nil {
@@ -212,7 +198,7 @@ func readPassword(stdin io.Reader) (string, error) {
 	return strings.TrimRight(line, "\r\n"), nil
 }
 
-// syncLogout forgets the refresh token and the PocketBase token. The sync.json stays, so signing in again needs no link.
+// syncLogout forgets the PocketBase token and any refresh token an older version left. The sync.json stays, so signing in again needs no link.
 func syncLogout(args []string, dbPath string, d deps) error {
 	if len(args) > 0 {
 		return errors.New("usage: adhd-core sync logout")
@@ -442,8 +428,6 @@ func syncFriendlyError(err error) error {
 		return errors.New("the login name or password is wrong")
 	case errors.Is(err, syncclient.ErrAccountLocked):
 		return errors.New("this account is locked or disabled")
-	case errors.Is(err, syncclient.ErrSecondFactor):
-		return errors.New("this account uses a second factor; in-app sign-in supports passwords only")
 	case errors.Is(err, syncclient.ErrTooManyAttempts):
 		return errors.New("too many sign-in attempts; wait a few minutes and try again")
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
@@ -455,14 +439,4 @@ func syncFriendlyError(err error) error {
 	default:
 		return err
 	}
-}
-
-// scopeList collects a repeated --scope flag.
-type scopeList []string
-
-func (l *scopeList) String() string { return strings.Join(*l, " ") }
-
-func (l *scopeList) Set(v string) error {
-	*l = append(*l, v)
-	return nil
 }

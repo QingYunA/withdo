@@ -9,7 +9,7 @@ import (
 )
 
 // SubjectPrefix starts every subject this package returns, so a PocketBase user can never share a
-// subject with a Zitadel one.
+// subject with an older identity's.
 const SubjectPrefix = "pb:"
 
 // Authenticator accepts the auth token PocketBase issued to a record of the users collection and

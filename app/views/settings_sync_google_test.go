@@ -32,11 +32,6 @@ func TestSyncEmailStepHasNoGoogleButtonWithoutAProvider(t *testing.T) {
 	r, _ := syncPane(t, signedOutCodeSync())
 	hasNot(t, r.tt, "Continue with Google")
 	has(t, r.tt, "Continue with email")
-
-	old := signedOutSync()
-	old.GoogleAvailable = true // never offered on a password-only server
-	r2, _ := syncPane(t, old)
-	hasNot(t, r2.tt, "Continue with Google")
 }
 
 func TestSyncGoogleWaitingCardCancels(t *testing.T) {

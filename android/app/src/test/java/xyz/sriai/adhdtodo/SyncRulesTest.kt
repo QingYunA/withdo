@@ -131,14 +131,15 @@ class SyncRulesTest {
     }
 
     @Test
-    fun `a mailed code moves to the code step and an unsupported server to the old card`() {
+    fun `a mailed code moves to the code step and a failure stays on the email step`() {
         val sent = SignInFlow(email = "a@b.co").afterRequest(null, CodeState("code", "a@b.co", 30, ""))
         assertEquals(SignInStep.CODE, sent.step)
         assertEquals(30, sent.resendIn)
         assertEquals(null, sent.failure)
 
-        val old = SignInFlow(email = "a@b.co").afterRequest("nope", CodeState("", "", 0, "unsupported"))
-        assertEquals(SignInStep.LEGACY, old.step)
+        val unsupported = SignInFlow(email = "a@b.co").afterRequest("nope", CodeState("", "", 0, "unsupported"))
+        assertEquals(SignInStep.EMAIL, unsupported.step)
+        assertEquals(CodeFailure.UNSUPPORTED, unsupported.failure)
 
         val network = SignInFlow(email = "a@b.co").afterRequest("down", CodeState("", "", 0, "network"))
         assertEquals(SignInStep.EMAIL, network.step)

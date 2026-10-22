@@ -9826,48 +9826,6 @@ func (msgs Messages) SettingsSyncUnavailable() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUnavailable", nil)
 }
 
-// SettingsSyncSignedOutTitle says "Sign in to your account"
-// in the language the app shows.
-//
-// Title of the signed-out Account pane.
-func SettingsSyncSignedOutTitle() string { return In(i18n.Locale()).SettingsSyncSignedOutTitle() }
-
-// SettingsSyncSignedOutTitle says "Sign in to your account"
-// in the language of msgs.
-//
-// Title of the signed-out Account pane.
-func (msgs Messages) SettingsSyncSignedOutTitle() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSignedOutTitle", nil)
-}
-
-// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
-// in the language the app shows.
-//
-// The signed-out Account pane's explanation of what syncs.
-func SettingsSyncSignedOutBody() string { return In(i18n.Locale()).SettingsSyncSignedOutBody() }
-
-// SettingsSyncSignedOutBody says "Your account keeps your tasks, projects and agents' reports in sync with your server, so you can see what your agents…"
-// in the language of msgs.
-//
-// The signed-out Account pane's explanation of what syncs.
-func (msgs Messages) SettingsSyncSignedOutBody() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSignedOutBody", nil)
-}
-
-// SettingsSyncSignIn says "Sign in and sync"
-// in the language the app shows.
-//
-// The accent button that signs in with an account and password.
-func SettingsSyncSignIn() string { return In(i18n.Locale()).SettingsSyncSignIn() }
-
-// SettingsSyncSignIn says "Sign in and sync"
-// in the language of msgs.
-//
-// The accent button that signs in with an account and password.
-func (msgs Messages) SettingsSyncSignIn() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSignIn", nil)
-}
-
 // SettingsSyncEmail says "Email or username"
 // in the language the app shows.
 //
@@ -9894,20 +9852,6 @@ func SettingsSyncPassword() string { return In(i18n.Locale()).SettingsSyncPasswo
 // The password field of the signed-out Sync pane.
 func (msgs Messages) SettingsSyncPassword() string {
 	return Catalog.Format(msgs.locale, "settingsSyncPassword", nil)
-}
-
-// SettingsSyncSignInNote says "Accounts are made by the server's admin. Keys and model settings stay on this Mac."
-// in the language the app shows.
-//
-// The quiet line under the sign-in button.
-func SettingsSyncSignInNote() string { return In(i18n.Locale()).SettingsSyncSignInNote() }
-
-// SettingsSyncSignInNote says "Accounts are made by the server's admin. Keys and model settings stay on this Mac."
-// in the language of msgs.
-//
-// The quiet line under the sign-in button.
-func (msgs Messages) SettingsSyncSignInNote() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSignInNote", nil)
 }
 
 // SettingsSyncCheckingAccount says "Checking your account…"
@@ -10514,20 +10458,6 @@ func SettingsSyncTooManyTries() string { return In(i18n.Locale()).SettingsSyncTo
 // The sign-in error line when the server is rate limiting attempts.
 func (msgs Messages) SettingsSyncTooManyTries() string {
 	return Catalog.Format(msgs.locale, "settingsSyncTooManyTries", nil)
-}
-
-// SettingsSyncSecondFactor says "This account uses two-step verification, which in-app sign-in does not support yet"
-// in the language the app shows.
-//
-// The sign-in error line when the account has a second factor.
-func SettingsSyncSecondFactor() string { return In(i18n.Locale()).SettingsSyncSecondFactor() }
-
-// SettingsSyncSecondFactor says "This account uses two-step verification, which in-app sign-in does not support yet"
-// in the language of msgs.
-//
-// The sign-in error line when the account has a second factor.
-func (msgs Messages) SettingsSyncSecondFactor() string {
-	return Catalog.Format(msgs.locale, "settingsSyncSecondFactor", nil)
 }
 
 // SettingsSyncAccountLocked says "This account is deactivated; ask the admin"

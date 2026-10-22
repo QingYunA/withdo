@@ -19,14 +19,14 @@ func devices(t *testing.T, h *harness, token string) []syncproto.Device {
 
 func TestMoveSubjectCarriesTheWorkspace(t *testing.T) {
 	h := newHarnessWithAuth(t, syncserver.StaticTokens{
-		"old": "zitadel-user", "new": "pb:new",
+		"old": "old-user", "new": "pb:new",
 	})
 	h.device(t, "old", "laptop")
 	// The new identity signed in before the move: its empty workspace must not block it.
 	if got := devices(t, h, "new"); len(got) != 0 {
 		t.Fatalf("new user has %d devices before the move", len(got))
 	}
-	if err := h.server.MoveSubject(context.Background(), "zitadel-user", "pb:new", false); err != nil {
+	if err := h.server.MoveSubject(context.Background(), "old-user", "pb:new", false); err != nil {
 		t.Fatalf("move: %v", err)
 	}
 	if got := devices(t, h, "new"); len(got) != 1 || got[0].Name != "laptop" {

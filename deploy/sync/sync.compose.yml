@@ -13,12 +13,6 @@ services:
       - -addr=:8080
       - -database-url=postgres://adhd_sync:${SYNC_DB_PASSWORD}@postgres:5432/adhd_sync?sslmode=disable
       - -pb-dir=/pb_data
-      - -oidc-issuer=${OIDC_ISSUER}
-      - -oidc-audience=${OIDC_AUDIENCE}
-      - -oidc-client-id=${OIDC_CLIENT_ID}
-      - -oidc-scopes=${OIDC_SCOPES}
-      - -zitadel-login-pat-file=/run/secrets/login-client.pat
-      - -zitadel-internal-url=http://proxy
     environment:
       # Voice input (POST /v1/transcribe). Set in sync.env; an empty MIMO_API_KEY turns voice off.
       MIMO_API_KEY: ${MIMO_API_KEY:-}
@@ -26,14 +20,12 @@ services:
       VOICE_DAILY_LIMIT: ${VOICE_DAILY_LIMIT:-}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
-      - ./login-client.pat:/run/secrets/login-client.pat:ro
       # PocketBase's data (its users and passwords); a host directory owned by uid 65532.
       - ./pb_data:/pb_data
     ports:
       - 127.0.0.1:18080:8080
     networks:
       - sync
-      - zitadel
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,8 +49,6 @@ services:
 
 networks:
   sync:
-  zitadel:
-    external: true
 
 volumes:
   postgres-data:

@@ -82,14 +82,13 @@ type SignInFailure string
 
 // The answers POST /v1/sign-in gives, and the local failures around it.
 const (
-	SignInFailureNone         SignInFailure = ""
-	SignInFailureCredentials  SignInFailure = "credentials"
-	SignInFailureTooMany      SignInFailure = "tooMany"
-	SignInFailureSecondFactor SignInFailure = "secondFactor"
-	SignInFailureLocked       SignInFailure = "locked"
-	SignInFailureUnsupported  SignInFailure = "unsupported"
-	SignInFailureNetwork      SignInFailure = "network"
-	SignInFailureOther        SignInFailure = "other"
+	SignInFailureNone        SignInFailure = ""
+	SignInFailureCredentials SignInFailure = "credentials"
+	SignInFailureTooMany     SignInFailure = "tooMany"
+	SignInFailureLocked      SignInFailure = "locked"
+	SignInFailureUnsupported SignInFailure = "unsupported"
+	SignInFailureNetwork     SignInFailure = "network"
+	SignInFailureOther       SignInFailure = "other"
 	// SignInFailureWrongCode is a code that was not right.
 	SignInFailureWrongCode SignInFailure = "wrongCode"
 	// SignInFailureCodeExpired is a code older than ten minutes: a new one was mailed at once.
@@ -133,9 +132,6 @@ type SyncSnapshot struct {
 	SignInStep  SignInStep
 	SignInEmail string
 	ResendAt    time.Time
-	// PasswordOnly is true once the server answered /v1/config without "auth": "pocketbase": its
-	// signed-out card is the old account-and-password one, with no codes.
-	PasswordOnly bool
 	// GoogleAvailable is true once the server's auth methods listed a Google provider.
 	GoogleAvailable bool
 }
@@ -198,7 +194,6 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		Pending:       r.sync.pending,
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		SignInStep: r.sync.code.step, SignInEmail: r.sync.code.email, ResendAt: r.sync.code.resendAt,
-		PasswordOnly:    r.sync.code.passwordOnly && r.sync.code.probed == r.sync.server,
 		GoogleAvailable: r.sync.code.google && r.sync.code.probed == r.sync.server,
 		ThisDeviceID:    r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
@@ -283,8 +278,6 @@ func signInFailureKind(err error) SignInFailure {
 		return SignInFailureGoogleFailed
 	case errors.Is(err, syncclient.ErrTooManyAttempts):
 		return SignInFailureTooMany
-	case errors.Is(err, syncclient.ErrSecondFactor):
-		return SignInFailureSecondFactor
 	case errors.Is(err, syncclient.ErrAccountLocked):
 		return SignInFailureLocked
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
@@ -528,7 +521,7 @@ func (r *Real) syncClientForConflict() (*syncclient.Client, bool) {
 	return client, true
 }
 
-// syncClientFor builds a client from a saved config, with a fresh OIDC source when needed.
+// syncClientFor builds a client from a saved config, with a fresh account source when needed.
 func (r *Real) syncClientFor(cfg syncclient.Config) (*syncclient.Client, error) {
 	var tokens syncclient.TokenSource
 	switch {

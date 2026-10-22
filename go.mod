@@ -6,16 +6,13 @@ require (
 	github.com/anthropics/anthropic-sdk-go v1.56.0
 	github.com/cloudwego/eino v0.9.21
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.13
-	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/ebitengine/purego v0.11.1
 	github.com/egoist/mygo v0.6.0
-	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/google/jsonschema-go v0.4.3
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/pocketbase/pocketbase v0.40.5
 	golang.org/x/image v0.47.0
-	golang.org/x/oauth2 v0.37.0
 	golang.org/x/term v0.47.0
 	modernc.org/sqlite v1.60.1
 )
@@ -87,6 +84,7 @@ require (
 	golang.org/x/mobile v0.0.0-20261011034528-197770444867 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect

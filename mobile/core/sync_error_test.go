@@ -80,7 +80,6 @@ func TestSyncErrorMapsSignInFailures(t *testing.T) {
 	}{
 		{syncclient.ErrInvalidCredentials, "wrong account or password"},
 		{syncclient.ErrTooManyAttempts, "too many tries; wait a few minutes"},
-		{syncclient.ErrSecondFactor, "this account uses two-step verification, which in-app sign-in does not support yet"},
 		{syncclient.ErrAccountLocked, "this account is deactivated; ask the admin"},
 		{syncclient.ErrSignInUnsupported, "this server does not support signing in from the app"},
 	}

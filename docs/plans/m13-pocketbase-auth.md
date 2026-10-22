@@ -34,7 +34,7 @@ Sync, its protocol and its Postgres stay as they are.
 | P1 | Embed PocketBase; password sign-in through it; both logins accepted; move the two accounts | tests; the owner signs in on desktop and phone with the same password as today |
 | P2 | Sign-up, email codes and password reset (needs SMTP) | a new account made from the app, a code arrives |
 | P3 | Google sign-in (needs a Google OAuth client; opens a browser on desktop) | sign in with Google on desktop and Android |
-| P4 | Remove Zitadel: code, config, containers | `git grep -i zitadel` is empty; the Zitadel stack is stopped |
+| P4 | Remove Zitadel: code, config, containers (done 2026-10-22; the server steps are the owner's, below) | A grep for zitadel finds only this plan and the old mockups; the Zitadel stack is stopped |
 
 ## P1: embed PocketBase, keep the sign-in screen
 
@@ -128,17 +128,24 @@ and the app come from the same address. New users: `users` create rule
 cannot; an email that has an account signs in to it. This reverses the "no browser for sign-in"
 rule of 2026-10-20 for Google only; email sign-in stays in the app.
 
-## P4: remove Zitadel
+## P4: remove Zitadel (done 2026-10-22)
 
-- Delete `internal/syncserver/{signin,zitadel,oidc}.go`, `internal/syncclient/{oidc,signin}.go` and
-  their tests, the OIDC fields of `/v1/config` and `syncproto`, the Zitadel flags, and
-  `deploy/sync/zitadel*`.
-- Only after every device of both accounts has signed in through PocketBase (the server logs which
-  authenticator accepted each request; Zitadel's count reaching zero for a week is the signal).
-- Then `adhd-sync drop-alias -subject <zitadel id>` for each alias (`list-subjects` lists them), or
-  drop the `subject_aliases` table with the Zitadel code.
-- On the server: stop and remove the Zitadel compose stack and its nginx site
-  `auth.todo.sri-ai.xyz`, after a final backup. The owner approves this step.
+The owner approved it on 2026-10-22, before the last devices had signed in again; a device still
+signed in with Zitadel is signed out and signs in again through PocketBase.
+
+- Deleted `internal/syncserver/{signin,zitadel,oidc}.go`, `internal/syncclient/{oidc,signin}.go` and
+  their tests, the OIDC fields of `/v1/config` and `syncproto` (it answers `{"auth":"pocketbase"}`),
+  the Zitadel and OIDC flags of `adhd-sync` and `adhd-core sync login`, and `deploy/sync/zitadel*`.
+  The server's chain is PocketBase, then the static tokens.
+- Clients: an old `sync.json` with an `issuer` loads as a signed-out PocketBase config (no error, no
+  account shown) and the Account pane shows the email card. The password-only card of the desktop
+  and Android's `LEGACY` step are gone, with their screenshots.
+- Kept: `subject_aliases` and `add-alias`, `drop-alias`, `move-subject`, `list-subjects` (the data
+  model; harmless). Drop the aliases of the two accounts when no old device remains.
+- On the server, by the owner, after a final backup: stop and remove the Zitadel compose stack
+  (`/opt/adhd-todo/zitadel`), remove `sync.env`'s `OIDC_*` lines and `login-client.pat`, install the
+  new `nginx-adhd-todo.conf` (no `auth.todo.sri-ai.xyz` block), delete the `auth.todo` DNS record, and
+  shrink the certificate to `todo.sri-ai.xyz`.
 
 ## Owner's to-dos
 

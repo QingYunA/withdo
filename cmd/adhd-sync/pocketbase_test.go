@@ -81,7 +81,7 @@ func TestPocketBaseAccountsEndToEnd(t *testing.T) {
 	databaseURL := schemaURL(t)
 	pbDir := filepath.Join(t.TempDir(), "pb_data")
 	tokensPath := filepath.Join(t.TempDir(), "tokens.json")
-	if err := os.WriteFile(tokensPath, []byte(`{"old-token":"zitadel-user-1"}`), 0o600); err != nil {
+	if err := os.WriteFile(tokensPath, []byte(`{"old-token":"old-user-1"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -150,7 +150,7 @@ func TestPocketBaseAccountsEndToEnd(t *testing.T) {
 		t.Fatalf("signed in as %+v, imported %s", signedIn.Record, subject)
 	}
 
-	// The old Zitadel identity still works through the chain and owns a device.
+	// The old identity still works through the chain and owns a device.
 	status, _ = call(t, http.MethodPost, base+"/v1/devices", "old-token", map[string]string{"name": "laptop"})
 	if status != http.StatusOK {
 		t.Fatalf("device with the old token = %d", status)
@@ -168,7 +168,7 @@ func TestPocketBaseAccountsEndToEnd(t *testing.T) {
 	}
 	var moved bytes.Buffer
 	handled, err = runAccountCommand("move-subject",
-		[]string{"-database-url", databaseURL, "-from", "zitadel-user-1", "-to", subject}, nil, &moved)
+		[]string{"-database-url", databaseURL, "-from", "old-user-1", "-to", subject}, nil, &moved)
 	if !handled || err != nil {
 		t.Fatalf("move-subject: handled=%v err=%v", handled, err)
 	}
@@ -180,13 +180,13 @@ func TestPocketBaseAccountsEndToEnd(t *testing.T) {
 	if handled, err := runAccountCommand("list-subjects", []string{"-database-url", databaseURL}, nil, &listed); !handled || err != nil {
 		t.Fatalf("list-subjects: handled=%v err=%v", handled, err)
 	}
-	if !strings.Contains(listed.String(), "zitadel-user-1 alias 1 ") || !strings.Contains(listed.String(), subject+" primary 1 ") {
+	if !strings.Contains(listed.String(), "old-user-1 alias 1 ") || !strings.Contains(listed.String(), subject+" primary 1 ") {
 		t.Fatalf("list-subjects printed:\n%s", listed.String())
 	}
 	if status, raw := call(t, http.MethodGet, base+"/v1/devices", "old-token", nil); status != http.StatusOK || !strings.Contains(string(raw), "laptop") {
 		t.Fatalf("old token after the move = %d %s", status, raw)
 	}
-	if handled, err := runAccountCommand("drop-alias", []string{"-database-url", databaseURL, "-subject", "zitadel-user-1"}, nil, io.Discard); !handled || err != nil {
+	if handled, err := runAccountCommand("drop-alias", []string{"-database-url", databaseURL, "-subject", "old-user-1"}, nil, io.Discard); !handled || err != nil {
 		t.Fatalf("drop-alias: handled=%v err=%v", handled, err)
 	}
 

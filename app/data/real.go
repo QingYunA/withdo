@@ -29,7 +29,7 @@ type RealOptions struct {
 	// SyncConfigPath is the sync.json to read; empty means next to the database in OpenReal and
 	// no sync in NewReal.
 	SyncConfigPath string
-	// Secrets is where an OIDC sync keeps its refresh token; nil means the app has no keychain.
+	// Secrets is where the sync sign-in keeps its token; nil means the app has no keychain.
 	Secrets syncclient.Secrets
 }
 
@@ -42,8 +42,8 @@ type Real struct {
 
 	mu       sync.Mutex
 	dbPathMu sync.Mutex
-	// tokens is the one account source of this database: an OIDC issuer rotates refresh tokens, so
-	// two sources refreshing at once (the runner and the Settings pane) would sign each other out.
+	// tokens is the one account source of this database, shared by the runner and the Settings pane
+	// so the two never renew the token at once.
 	tokensMu  sync.Mutex
 	tokens    syncclient.AccountSource
 	tokensKey string
@@ -201,9 +201,9 @@ func (r *Real) startSync(ctx context.Context) {
 	}
 }
 
-// accountSource is this database's token source (PocketBase or OIDC, as cfg says), keyed to it so
-// a second profile or the CLI cannot replace this Mac's sign-in. The same settings get the same
-// source, so the runner and the pane share one refresh.
+// accountSource is this database's token source, keyed to it so a second profile or the CLI
+// cannot replace this Mac's sign-in. The same settings get the same source, so the runner and the
+// pane share one token.
 func (r *Real) accountSource(cfg syncclient.Config) syncclient.AccountSource {
 	key := cfg.SourceKey()
 	r.tokensMu.Lock()

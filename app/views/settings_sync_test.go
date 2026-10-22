@@ -62,11 +62,6 @@ func (f *fakeSync) SyncSetServer(server string) error {
 	return nil
 }
 
-// signedOutSync is the signed-out card of a server that signs in with an account and password.
-func signedOutSync() data.SyncSnapshot {
-	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz", PasswordOnly: true}
-}
-
 // signedOutCodeSync is the signed-out card of a PocketBase server: the email step.
 func signedOutCodeSync() data.SyncSnapshot {
 	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz"}
@@ -95,104 +90,8 @@ func syncPane(t *testing.T, snap data.SyncSnapshot) (*settingsRig, *fakeSync) {
 	return r, fs
 }
 
-func TestSyncPaneSignedOut(t *testing.T) {
-	r, fs := syncPane(t, signedOutSync())
-	has(t, r.tt, "Sign in to your account", "Email or username", "Password",
-		"Sign in and sync", "Server", "todo.sri-ai.xyz", "Change")
-	has(t, r.tt, "Accounts are made by the server's admin. Keys and model settings stay on this Mac.")
-	hasNot(t, r.tt, "The sign-in page opens in the browser.", "Finish signing in in your browser.")
-	if fs.refreshes == 0 {
-		t.Error("opening the pane did not ask for the devices")
-	}
-	// The account field has the keyboard when the pane opens, and Enter moves to the password.
-	r.tt.Type("cyan@example.com")
-	r.tt.Key(0, ui.KeyEnter)
-	r.tt.Frame()
-	r.tt.Type("hunter2")
-	r.tt.Frame()
-	if r.s.syncLogin != "cyan@example.com" || r.s.syncPassword != "hunter2" {
-		t.Fatalf("typed account %q, password %q", r.s.syncLogin, r.s.syncPassword)
-	}
-	if err := r.tt.Click("Sign in and sync"); err != nil {
-		t.Fatal(err)
-	}
-	if fs.signIns != 1 || fs.login != "cyan@example.com" || fs.password != "hunter2" {
-		t.Errorf("Sign in and sync called %d times with account %q, password %q", fs.signIns, fs.login, fs.password)
-	}
-}
-
-func TestSyncPaneSigningInDisablesTheFields(t *testing.T) {
-	snap := signedOutSync()
-	snap.Phase = data.SyncSigningIn
-	snap.SignInStage = data.SignInStageChecking
-	r, fs := syncPane(t, snap)
-	has(t, r.tt, "Checking your account…", "Email or username", "Password")
-	hasNot(t, r.tt, "Sign in and sync")
-	r.tt.Type("cyan@example.com")
-	if r.s.syncLogin != "" {
-		t.Errorf("a disabled field took text: %q", r.s.syncLogin)
-	}
-
-	fs.snap.SignInStage = data.SignInStageDownloading
-	r.tt.Frame()
-	has(t, r.tt, "Downloading your tasks…")
-	hasNot(t, r.tt, "Checking your account…")
-}
-
-func TestSyncPaneSigningInWithoutAStageChecksTheAccount(t *testing.T) {
-	snap := signedOutSync()
-	snap.Phase = data.SyncSigningIn
-	r, _ := syncPane(t, snap)
-	has(t, r.tt, "Checking your account…")
-}
-
-func TestSyncPaneSignInFailures(t *testing.T) {
-	cases := map[data.SignInFailure]string{
-		data.SignInFailureCredentials:  "Wrong account or password",
-		data.SignInFailureTooMany:      "Too many tries; wait a few minutes",
-		data.SignInFailureSecondFactor: "This account uses two-step verification, which in-app sign-in does not support yet",
-		data.SignInFailureLocked:       "This account is deactivated; ask the admin",
-		data.SignInFailureUnsupported:  "This server does not support signing in from the app",
-		data.SignInFailureNetwork:      "the server did not answer",
-		data.SignInFailureOther:        "Couldn't sign in. Try again.",
-	}
-	// One app for every kind: each newSettingsRig seeds a demo database, which costs minutes under
-	// the race detector.
-	r, fs := syncPane(t, signedOutSync())
-	for failure, want := range cases {
-		fs.snap.SignInFailure = failure
-		r.tt.Frame()
-		has(t, r.tt, want)
-	}
-}
-
-func TestSyncPaneCredentialsErrorKeepsTheAccount(t *testing.T) {
-	r, fs := syncPane(t, signedOutSync())
-	r.tt.Type("cyan@example.com")
-	r.tt.Key(0, ui.KeyEnter)
-	r.tt.Frame()
-	r.tt.Type("wrong")
-	r.tt.Frame()
-	fs.snap.Phase = data.SyncSigningIn
-	r.tt.Frame()
-	fs.snap.Phase = data.SyncSignedOut
-	fs.snap.SignInFailure = data.SignInFailureCredentials
-	r.tt.Frame()
-	if r.s.syncLogin != "cyan@example.com" {
-		t.Errorf("the account was lost: %q", r.s.syncLogin)
-	}
-	if r.s.syncPassword != "" {
-		t.Errorf("the password was kept: %q", r.s.syncPassword)
-	}
-	// The focus came back to the password: typing lands there.
-	r.tt.Type("second try")
-	if r.s.syncPassword != "second try" {
-		t.Errorf("typing after the error went to %q", r.s.syncPassword)
-	}
-}
-
 func TestSyncPaneBothHaveTasksMerge(t *testing.T) {
-	snap := signedOutSync()
+	snap := signedOutCodeSync()
 	snap.Phase = data.SyncBothHaveTasks
 	snap.Linked, snap.Account = true, "Cyan 云辰"
 	snap.Devices = []data.SyncDevice{{ID: "other", Name: "Cyan 的 MacBook Pro"}}
@@ -210,7 +109,7 @@ func TestSyncPaneBothHaveTasksMerge(t *testing.T) {
 }
 
 func TestSyncPaneBothHaveTasksUseTheAccount(t *testing.T) {
-	snap := signedOutSync()
+	snap := signedOutCodeSync()
 	snap.Phase = data.SyncBothHaveTasks
 	snap.Linked, snap.Account = true, "Cyan 云辰"
 	snap.Conflict = &data.SyncConflict{LocalTasks: 128, LocalProjects: 6, AccountDevices: 2}
@@ -227,7 +126,7 @@ func TestSyncPaneBothHaveTasksUseTheAccount(t *testing.T) {
 }
 
 func TestSyncPaneBothHaveTasksCancel(t *testing.T) {
-	snap := signedOutSync()
+	snap := signedOutCodeSync()
 	snap.Phase = data.SyncBothHaveTasks
 	snap.Linked, snap.Account = true, "Cyan 云辰"
 	snap.Conflict = &data.SyncConflict{LocalTasks: 128, LocalProjects: 6, AccountDevices: 2}
@@ -241,7 +140,7 @@ func TestSyncPaneBothHaveTasksCancel(t *testing.T) {
 }
 
 func TestSyncPaneUploadingShowsTheCountAndTheBar(t *testing.T) {
-	snap := signedOutSync()
+	snap := signedOutCodeSync()
 	snap.Phase = data.SyncUploading
 	snap.Linked, snap.Account = true, "Cyan 云辰"
 	snap.SeedDone, snap.SeedTotal, snap.Pending = 1240, 3512, 2272
@@ -312,7 +211,7 @@ func TestSyncPaneOfflineHasNoButton(t *testing.T) {
 }
 
 func TestSyncPaneChangeServer(t *testing.T) {
-	r, fs := syncPane(t, signedOutSync())
+	r, fs := syncPane(t, signedOutCodeSync())
 	if err := r.tt.Click("Change"); err != nil {
 		t.Fatal(err)
 	}

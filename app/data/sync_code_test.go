@@ -37,7 +37,7 @@ func newCodeServer(t *testing.T) *codeServer {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"issuer":"","client_id":"","scopes":[],"auth":"pocketbase"}`))
+		_, _ = w.Write([]byte(`{"auth":"pocketbase"}`))
 	})
 	mux.HandleFunc("POST /api/collections/users/request-otp", func(w http.ResponseWriter, r *http.Request) {
 		var body struct{ Email string }
@@ -249,26 +249,4 @@ func TestCodeRequestFailureKinds(t *testing.T) {
 	if snap.SignInFailure != SignInFailureTooMany || snap.SignInStep != SignInStepEmail {
 		t.Fatalf("failure %q step %q", snap.SignInFailure, snap.SignInStep)
 	}
-}
-
-func TestCheckServerFlagsAServerWithoutCodes(t *testing.T) {
-	f := newCodeServer(t)
-	r, _ := codeApp(t, f)
-	r.SyncCheckServer()
-	waitSnap(t, r, "the probe", func(s SyncSnapshot) bool { r.mu.Lock(); defer r.mu.Unlock(); return r.sync.code.probed == s.Server })
-	if r.SyncSnapshot().PasswordOnly {
-		t.Fatal("a PocketBase server was taken for a password-only one")
-	}
-	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"issuer":"https://id.example.com","client_id":"x","scopes":["openid"]}`))
-	}))
-	t.Cleanup(plain.Close)
-	if err := r.SyncSetServer(plain.URL); err != nil {
-		t.Fatal(err)
-	}
-	if r.SyncSnapshot().PasswordOnly {
-		t.Fatal("PasswordOnly held for a server that was not asked yet")
-	}
-	r.SyncCheckServer()
-	waitSnap(t, r, "the second probe", func(s SyncSnapshot) bool { return s.PasswordOnly })
 }
