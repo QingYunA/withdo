@@ -6,5 +6,10 @@
   "i18n": {
     "dir": "locales",
     "source": "en"
+  },
+  "macos": {
+    "infoPlist": {
+      "NSMicrophoneUsageDescription": "Say a task instead of typing it. Your voice is sent to your ADHD Todo account to turn it into text."
+    }
   }
 }

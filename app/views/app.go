@@ -11,11 +11,13 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
+	"github.com/QingYunA/adhd-todo/internal/speech"
 )
 
 // Actions is what the views ask the shell to do.
 type Actions interface {
 	OpenTask(id int)        // show the main window with the task open in the inspector
+	OpenMain()              // bring the main window to the front, on the page it was on
 	OpenSettings(pane Pane) // show the Settings window on a pane
 	OpenURL(url string)
 	ShowInFinder(path string)
@@ -78,6 +80,11 @@ type App struct {
 	GitHub data.GitHub
 	// Sync is the sync service behind Settings > Sync and the sidebar cloud; nil leaves the pane empty.
 	Sync SyncService
+	// Recorder is the microphone behind the composer's voice button, and Transcriber turns what it
+	// recorded into text through the sync server. Without a Recorder (or one that is not available
+	// on this platform) the composer has no microphone.
+	Recorder    speech.Recorder
+	Transcriber data.Transcriber
 	// Seen keeps which handed-over items the user has seen; nil keeps that for this run only.
 	Seen data.SeenStore
 	// Dismissed keeps which handed-over rows the user put aside with Not now; nil keeps that for
@@ -212,6 +219,23 @@ func (a *App) AddTask(in data.CreateTaskInput) error {
 	}
 	a.Refresh()
 	return nil
+}
+
+// AddTasks creates the tasks in order and refreshes once. It returns the ids it made, which are all
+// of them unless the error says one failed; the ones made stay.
+func (a *App) AddTasks(ins []data.CreateTaskInput) ([]int, error) {
+	var ids []int
+	var err error
+	for _, in := range ins {
+		var t data.Task
+		if t, err = a.Store.CreateTask(in); err != nil {
+			a.snap.err = err
+			break
+		}
+		ids = append(ids, t.ID)
+	}
+	a.Refresh()
+	return ids, err
 }
 
 // Task finds a task in the snapshot.

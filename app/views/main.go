@@ -92,8 +92,13 @@ type Main struct {
 	searchRef ui.Handle     // the search field in the sidebar, for Cmd+F
 	renameRef ui.Handle     // the input that renames a project in the sidebar
 
+	// closePanel is set on the Main of the menu bar panel (popover.go): Esc in its composer, once the
+	// request and the reply are dealt with, closes the panel. Nil in the window.
+	closePanel func()
+
 	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
 	convo   convo                        // the answer under the composer that sent the last request
+	voice   voiceState                   // the microphone button: recording, transcribing, or the line about a failure
 	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
 	filed   []data.Receipt               // tasks the assistant sorted by itself, waiting for their toast
 	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
@@ -160,6 +165,7 @@ func (m *Main) openSettings(p Pane) { m.app.Act.OpenSettings(p) }
 func (m *Main) goTo(n nav) {
 	m.clearSearch()
 	if m.nav != n {
+		m.voiceCancel() // what is said belongs to the page it was said on
 		m.cmp[surfacePage].keepDraft(m.nav, n)
 		m.nav, m.openID, m.sel = n, 0, 0
 		m.multi.Clear()

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
+	"github.com/QingYunA/adhd-todo/app/theme"
+	"github.com/QingYunA/adhd-todo/internal/speech"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -99,6 +101,40 @@ func TestScreensComposer(t *testing.T) {
 			})
 			off, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})
 			shotOf("mine-composer-no-model", off, func(tt *ui.Tester, m *Main) { tt.Key(ui.Cmd, ui.KeyK) }) // focused: the one extra line shows
+
+			// The microphone: at rest, listening (the waveform), transcribing, and the quiet line when
+			// the person is signed out.
+			voiced := func(signedIn bool) (*App, *fakeTranscriber) {
+				app, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
+				tr := &fakeTranscriber{gate: make(chan struct{})}
+				t.Cleanup(func() { close(tr.gate) })
+				snap := syncedSync()
+				if !signedIn {
+					snap.Phase = data.SyncSignedOut
+				}
+				app.Recorder = &fakeRecorder{auth: speech.AuthAuthorized, stopWAV: []byte("wav")}
+				app.Transcriber, app.Sync = tr, &fakeSync{snap: snap}
+				return app, tr
+			}
+			atRest, _ := voiced(true)
+			shotOf("mine-composer-voice", atRest, nil)
+			listening, _ := voiced(true)
+			shotOf("mine-composer-listening", listening, func(tt *ui.Tester, m *Main) {
+				m.voiceToggle(surfacePage)
+				m.voice.bars = [theme.WaveBars]float32{0.1, 0.1, 0.3, 0.6, 0.9, 0.5, 0.7, 0.3, 0.8, 0.9, 0.4, 0.2}
+				tt.Frame()
+			})
+			transcribing, _ := voiced(true)
+			shotOf("mine-composer-transcribing", transcribing, func(tt *ui.Tester, m *Main) {
+				m.voiceToggle(surfacePage)
+				m.voiceToggle(surfacePage)
+				tt.Frame()
+			})
+			signedOut, _ := voiced(false)
+			shotOf("mine-composer-voice-signed-out", signedOut, func(tt *ui.Tester, m *Main) {
+				m.voiceToggle(surfacePage)
+				tt.Frame()
+			})
 
 			fa := &data.FakeAssistant{Ready: true}
 			app, store, rec := readyApp(t, fa)

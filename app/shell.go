@@ -30,6 +30,8 @@ type shell struct {
 	// settings is the content of the Settings window, kept between openings so that it comes back
 	// on the pane it was on.
 	settings *views.Settings
+	// popover is the content of the menu bar panel; nil in a shell that has none.
+	popover *views.Popover
 	// github is the pull request poller; nil when there is none.
 	github data.GitHub
 	// notifier shows the system notifications.
@@ -39,6 +41,9 @@ type shell struct {
 	mainWin *mygo.Window
 	// settingsWin is the Settings window while it is open: there is one.
 	settingsWin *mygo.Window
+	// tray is the icon the panel opens from, nil without one; popWin is the panel while it is open.
+	tray   *mygo.Tray
+	popWin *mygo.Window
 	// choice is the language picked in Settings during this run; chosen tells that one was.
 	choice string
 	chosen bool
@@ -54,6 +59,9 @@ func (s *shell) OpenTask(id int) {
 	s.main.OpenTask(id)
 	s.invalidateMain()
 }
+
+// OpenMain implements views.Actions: it brings the main window to the front, on the page it was on.
+func (s *shell) OpenMain() { s.showMain() }
 
 // OpenSettings implements views.Actions: it shows the Settings window on a pane, opening it when
 // it is not, and bringing the one that is to the front.
@@ -269,6 +277,7 @@ func (s *shell) Post(fn func()) {
 		w.Update(func() {
 			fn()
 			s.invalidateSettings()
+			s.invalidatePanel()
 		})
 	}
 }
@@ -387,6 +396,7 @@ func (s *shell) storeChanged() {
 	win.Update(func() {
 		s.app.Refresh()
 		s.invalidateSettings()
+		s.invalidatePanel()
 	})
 }
 

@@ -586,6 +586,72 @@
       }
     }
   },
+  "quickAddReceipt": "Added {count}: {items}",
+  "@quickAddReceipt": {
+    "description": "The line under the composer after the local rules added tasks from one sentence, with no model connected: how many, then each with what was read from its words. Its Undo removes them all.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
+      "items": {
+        "type": "String",
+        "example": "Checkup (Mon 9:00 AM reminder), Pay rent (due Fri)"
+      }
+    }
+  },
+  "quickAddItem": "{title} ({details})",
+  "@quickAddItem": {
+    "description": "One task in that line: its title and, in brackets, what the local rules read from the words.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Pay rent"
+      },
+      "details": {
+        "type": "String",
+        "example": "due Fri, important"
+      }
+    }
+  },
+  "quickAddJoin": "{first}, {second}",
+  "@quickAddJoin": {
+    "description": "Two entries of a list in that line, the tasks or the details of one task, side by side.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Checkup"
+      },
+      "second": {
+        "type": "String",
+        "example": "Pay rent"
+      }
+    }
+  },
+  "quickAddDue": "due {when}",
+  "@quickAddDue": {
+    "description": "Detail of a task in that line: the deadline the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Fri"
+      }
+    }
+  },
+  "quickAddReminder": "{when} reminder",
+  "@quickAddReminder": {
+    "description": "Detail of a task in that line: the moment of the reminder the words gave.",
+    "placeholders": {
+      "when": {
+        "type": "String",
+        "example": "Mon 9:00 AM"
+      }
+    }
+  },
+  "quickAddImportant": "important",
+  "@quickAddImportant": {
+    "description": "Detail of a task in that line: it was marked with a ! and is now important."
+  },
   "detailDone": "Marked done",
   "@detailDone": {
     "description": "Detail of a change that completed a task."
@@ -1750,7 +1816,27 @@
   },
   "trayOpen": "Open ADHD Todo",
   "@trayOpen": {
-    "description": "Item of the menu of the tray icon (Windows) that brings the main window back."
+    "description": "Item of the menu of the tray icon (Windows) that brings the main window back; also the link at the right of the footer of the menu bar panel."
+  },
+  "popoverWorking": "{count, plural, one {# agent working} other {# agents working}}",
+  "@popoverWorking": {
+    "description": "Left of the footer of the menu bar panel: how many agents are working on tasks now.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "popoverStuck": "{count} stuck",
+  "@popoverStuck": {
+    "description": "Footer of the menu bar panel, after the number of agents working and a dot: how many agents are stuck, shown in the blocked color. Not shown when none is.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "modelsBaseURLHelp": "Change only for a gateway such as Magpie",
   "@modelsBaseURLHelp": {
@@ -4145,6 +4231,46 @@
   "settingsSyncSignInFailed": "Couldn't sign in. Try again.",
   "@settingsSyncSignInFailed": {
     "description": "The sign-in error line for a failure with no sentence of its own."
+  },
+  "composerVoice": "Voice input",
+  "@composerVoice": {
+    "description": "Accessibility label and tooltip of the microphone button at the right of the composer."
+  },
+  "composerVoiceStop": "Stop listening",
+  "@composerVoiceStop": {
+    "description": "Accessibility label of the microphone button while it records; a click ends the recording."
+  },
+  "voiceListening": "Listening… click to stop, Esc to cancel",
+  "@voiceListening": {
+    "description": "Line above the composer while the microphone records, next to the pixel waveform."
+  },
+  "voiceTranscribing": "Transcribing…",
+  "@voiceTranscribing": {
+    "description": "Line above the composer while the recording is being turned into text, next to the busy indicator."
+  },
+  "voiceSignIn": "Sign in to use voice",
+  "@voiceSignIn": {
+    "description": "Line above the composer when the microphone is pressed while signed out; a link that opens Settings on the Account pane."
+  },
+  "voiceMicDenied": "Microphone access is off",
+  "@voiceMicDenied": {
+    "description": "Line above the composer when macOS has the microphone denied for the app."
+  },
+  "voiceOpenSystemSettings": "Open System Settings",
+  "@voiceOpenSystemSettings": {
+    "description": "Link after the microphone-denied line; opens System Settings on Privacy & Security > Microphone."
+  },
+  "voiceQuota": "Voice limit reached for today",
+  "@voiceQuota": {
+    "description": "Line above the composer when the account used up today's recordings."
+  },
+  "voiceOff": "Voice isn't set up on this server",
+  "@voiceOff": {
+    "description": "Line above the composer when the sync server has no speech recognizer configured."
+  },
+  "voiceFailed": "Couldn't transcribe. Try again",
+  "@voiceFailed": {
+    "description": "Line above the composer for any other voice failure: no network, nothing heard, the recognizer failed."
   },
   "propWhen": "When",
   "@propWhen": {

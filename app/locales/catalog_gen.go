@@ -1174,6 +1174,106 @@ func (msgs Messages) DetailAdded(project string) string {
 	return Catalog.Format(msgs.locale, "detailAdded", map[string]any{"project": project})
 }
 
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language the app shows.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func QuickAddReceipt(count int, items string) string {
+	return In(i18n.Locale()).QuickAddReceipt(count, items)
+}
+
+// QuickAddReceipt says "Added {count}: {items}"
+// in the language of msgs.
+//
+// The line under the composer after the local rules added tasks from one
+// sentence, with no model connected: how many, then each with what was read
+// from its words. Its Undo removes them all.
+func (msgs Messages) QuickAddReceipt(count int, items string) string {
+	return Catalog.Format(msgs.locale, "quickAddReceipt", map[string]any{"count": count, "items": items})
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language the app shows.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func QuickAddItem(title string, details string) string {
+	return In(i18n.Locale()).QuickAddItem(title, details)
+}
+
+// QuickAddItem says "{title} ({details})"
+// in the language of msgs.
+//
+// One task in that line: its title and, in brackets, what the local rules
+// read from the words.
+func (msgs Messages) QuickAddItem(title string, details string) string {
+	return Catalog.Format(msgs.locale, "quickAddItem", map[string]any{"title": title, "details": details})
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language the app shows.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func QuickAddJoin(first string, second string) string {
+	return In(i18n.Locale()).QuickAddJoin(first, second)
+}
+
+// QuickAddJoin says "{first}, {second}"
+// in the language of msgs.
+//
+// Two entries of a list in that line, the tasks or the details of one task,
+// side by side.
+func (msgs Messages) QuickAddJoin(first string, second string) string {
+	return Catalog.Format(msgs.locale, "quickAddJoin", map[string]any{"first": first, "second": second})
+}
+
+// QuickAddDue says "due {when}"
+// in the language the app shows.
+//
+// Detail of a task in that line: the deadline the words gave.
+func QuickAddDue(when string) string { return In(i18n.Locale()).QuickAddDue(when) }
+
+// QuickAddDue says "due {when}"
+// in the language of msgs.
+//
+// Detail of a task in that line: the deadline the words gave.
+func (msgs Messages) QuickAddDue(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddDue", map[string]any{"when": when})
+}
+
+// QuickAddReminder says "{when} reminder"
+// in the language the app shows.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func QuickAddReminder(when string) string { return In(i18n.Locale()).QuickAddReminder(when) }
+
+// QuickAddReminder says "{when} reminder"
+// in the language of msgs.
+//
+// Detail of a task in that line: the moment of the reminder the words gave.
+func (msgs Messages) QuickAddReminder(when string) string {
+	return Catalog.Format(msgs.locale, "quickAddReminder", map[string]any{"when": when})
+}
+
+// QuickAddImportant says "important"
+// in the language the app shows.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func QuickAddImportant() string { return In(i18n.Locale()).QuickAddImportant() }
+
+// QuickAddImportant says "important"
+// in the language of msgs.
+//
+// Detail of a task in that line: it was marked with a ! and is now
+// important.
+func (msgs Messages) QuickAddImportant() string {
+	return Catalog.Format(msgs.locale, "quickAddImportant", nil)
+}
+
 // DetailDone says "Marked done"
 // in the language the app shows.
 //
@@ -4176,16 +4276,50 @@ func (msgs Messages) MenuSettings() string {
 // in the language the app shows.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
-// back.
+// back; also the link at the right of the footer of the menu bar panel.
 func TrayOpen() string { return In(i18n.Locale()).TrayOpen() }
 
 // TrayOpen says "Open ADHD Todo"
 // in the language of msgs.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
-// back.
+// back; also the link at the right of the footer of the menu bar panel.
 func (msgs Messages) TrayOpen() string {
 	return Catalog.Format(msgs.locale, "trayOpen", nil)
+}
+
+// PopoverWorking says "{count, plural, one {# agent working} other {# agents working}}"
+// in the language the app shows.
+//
+// Left of the footer of the menu bar panel: how many agents are working on
+// tasks now.
+func PopoverWorking(count int) string { return In(i18n.Locale()).PopoverWorking(count) }
+
+// PopoverWorking says "{count, plural, one {# agent working} other {# agents working}}"
+// in the language of msgs.
+//
+// Left of the footer of the menu bar panel: how many agents are working on
+// tasks now.
+func (msgs Messages) PopoverWorking(count int) string {
+	return Catalog.Format(msgs.locale, "popoverWorking", map[string]any{"count": count})
+}
+
+// PopoverStuck says "{count} stuck"
+// in the language the app shows.
+//
+// Footer of the menu bar panel, after the number of agents working and a
+// dot: how many agents are stuck, shown in the blocked color. Not shown
+// when none is.
+func PopoverStuck(count int) string { return In(i18n.Locale()).PopoverStuck(count) }
+
+// PopoverStuck says "{count} stuck"
+// in the language of msgs.
+//
+// Footer of the menu bar panel, after the number of agents working and a
+// dot: how many agents are stuck, shown in the blocked color. Not shown
+// when none is.
+func (msgs Messages) PopoverStuck(count int) string {
+	return Catalog.Format(msgs.locale, "popoverStuck", map[string]any{"count": count})
 }
 
 // ModelsBaseURLHelp says "Change only for a gateway such as Magpie"
@@ -10436,6 +10570,162 @@ func SettingsSyncSignInFailed() string { return In(i18n.Locale()).SettingsSyncSi
 // The sign-in error line for a failure with no sentence of its own.
 func (msgs Messages) SettingsSyncSignInFailed() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInFailed", nil)
+}
+
+// ComposerVoice says "Voice input"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the microphone button at the right of
+// the composer.
+func ComposerVoice() string { return In(i18n.Locale()).ComposerVoice() }
+
+// ComposerVoice says "Voice input"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the microphone button at the right of
+// the composer.
+func (msgs Messages) ComposerVoice() string {
+	return Catalog.Format(msgs.locale, "composerVoice", nil)
+}
+
+// ComposerVoiceStop says "Stop listening"
+// in the language the app shows.
+//
+// Accessibility label of the microphone button while it records; a click
+// ends the recording.
+func ComposerVoiceStop() string { return In(i18n.Locale()).ComposerVoiceStop() }
+
+// ComposerVoiceStop says "Stop listening"
+// in the language of msgs.
+//
+// Accessibility label of the microphone button while it records; a click
+// ends the recording.
+func (msgs Messages) ComposerVoiceStop() string {
+	return Catalog.Format(msgs.locale, "composerVoiceStop", nil)
+}
+
+// VoiceListening says "Listening… click to stop, Esc to cancel"
+// in the language the app shows.
+//
+// Line above the composer while the microphone records, next to the pixel
+// waveform.
+func VoiceListening() string { return In(i18n.Locale()).VoiceListening() }
+
+// VoiceListening says "Listening… click to stop, Esc to cancel"
+// in the language of msgs.
+//
+// Line above the composer while the microphone records, next to the pixel
+// waveform.
+func (msgs Messages) VoiceListening() string {
+	return Catalog.Format(msgs.locale, "voiceListening", nil)
+}
+
+// VoiceTranscribing says "Transcribing…"
+// in the language the app shows.
+//
+// Line above the composer while the recording is being turned into text,
+// next to the busy indicator.
+func VoiceTranscribing() string { return In(i18n.Locale()).VoiceTranscribing() }
+
+// VoiceTranscribing says "Transcribing…"
+// in the language of msgs.
+//
+// Line above the composer while the recording is being turned into text,
+// next to the busy indicator.
+func (msgs Messages) VoiceTranscribing() string {
+	return Catalog.Format(msgs.locale, "voiceTranscribing", nil)
+}
+
+// VoiceSignIn says "Sign in to use voice"
+// in the language the app shows.
+//
+// Line above the composer when the microphone is pressed while signed out;
+// a link that opens Settings on the Account pane.
+func VoiceSignIn() string { return In(i18n.Locale()).VoiceSignIn() }
+
+// VoiceSignIn says "Sign in to use voice"
+// in the language of msgs.
+//
+// Line above the composer when the microphone is pressed while signed out;
+// a link that opens Settings on the Account pane.
+func (msgs Messages) VoiceSignIn() string {
+	return Catalog.Format(msgs.locale, "voiceSignIn", nil)
+}
+
+// VoiceMicDenied says "Microphone access is off"
+// in the language the app shows.
+//
+// Line above the composer when macOS has the microphone denied for the app.
+func VoiceMicDenied() string { return In(i18n.Locale()).VoiceMicDenied() }
+
+// VoiceMicDenied says "Microphone access is off"
+// in the language of msgs.
+//
+// Line above the composer when macOS has the microphone denied for the app.
+func (msgs Messages) VoiceMicDenied() string {
+	return Catalog.Format(msgs.locale, "voiceMicDenied", nil)
+}
+
+// VoiceOpenSystemSettings says "Open System Settings"
+// in the language the app shows.
+//
+// Link after the microphone-denied line; opens System Settings on Privacy &
+// Security > Microphone.
+func VoiceOpenSystemSettings() string { return In(i18n.Locale()).VoiceOpenSystemSettings() }
+
+// VoiceOpenSystemSettings says "Open System Settings"
+// in the language of msgs.
+//
+// Link after the microphone-denied line; opens System Settings on Privacy &
+// Security > Microphone.
+func (msgs Messages) VoiceOpenSystemSettings() string {
+	return Catalog.Format(msgs.locale, "voiceOpenSystemSettings", nil)
+}
+
+// VoiceQuota says "Voice limit reached for today"
+// in the language the app shows.
+//
+// Line above the composer when the account used up today's recordings.
+func VoiceQuota() string { return In(i18n.Locale()).VoiceQuota() }
+
+// VoiceQuota says "Voice limit reached for today"
+// in the language of msgs.
+//
+// Line above the composer when the account used up today's recordings.
+func (msgs Messages) VoiceQuota() string {
+	return Catalog.Format(msgs.locale, "voiceQuota", nil)
+}
+
+// VoiceOff says "Voice isn't set up on this server"
+// in the language the app shows.
+//
+// Line above the composer when the sync server has no speech recognizer
+// configured.
+func VoiceOff() string { return In(i18n.Locale()).VoiceOff() }
+
+// VoiceOff says "Voice isn't set up on this server"
+// in the language of msgs.
+//
+// Line above the composer when the sync server has no speech recognizer
+// configured.
+func (msgs Messages) VoiceOff() string {
+	return Catalog.Format(msgs.locale, "voiceOff", nil)
+}
+
+// VoiceFailed says "Couldn't transcribe. Try again"
+// in the language the app shows.
+//
+// Line above the composer for any other voice failure: no network, nothing
+// heard, the recognizer failed.
+func VoiceFailed() string { return In(i18n.Locale()).VoiceFailed() }
+
+// VoiceFailed says "Couldn't transcribe. Try again"
+// in the language of msgs.
+//
+// Line above the composer for any other voice failure: no network, nothing
+// heard, the recognizer failed.
+func (msgs Messages) VoiceFailed() string {
+	return Catalog.Format(msgs.locale, "voiceFailed", nil)
 }
 
 // PropWhen says "When"
