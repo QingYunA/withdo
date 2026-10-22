@@ -119,6 +119,9 @@ type ConfigResponse struct {
 	ClientID       string   `json:"client_id"`
 	Scopes         []string `json:"scopes"`
 	PasswordSignIn bool     `json:"password_sign_in,omitempty"`
+	// Auth is the account system to sign in with: "pocketbase", or empty for the OIDC issuer.
+	// Clients that predate it ignore the field and keep signing in through the issuer.
+	Auth string `json:"auth,omitempty"`
 }
 
 // SignInRequest is POST /v1/sign-in: an account and password, which the server checks with

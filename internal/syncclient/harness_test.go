@@ -54,6 +54,8 @@ type harness struct {
 	http   *httptest.Server
 	// admin is a Postgres connection with the test's search_path, for reading the server's rows.
 	admin *pgx.Conn
+	// databaseURL is the URL of the test's schema, for a second server over the same data.
+	databaseURL string
 }
 
 func newHarness(t *testing.T) *harness {
@@ -95,7 +97,7 @@ func newHarness(t *testing.T) *harness {
 		_ = admin.Close(ctx)
 		t.Fatalf("open sync server: %v", err)
 	}
-	h := &harness{server: server, http: httptest.NewServer(server.Handler()), admin: admin}
+	h := &harness{server: server, http: httptest.NewServer(server.Handler()), admin: admin, databaseURL: u.String()}
 	t.Cleanup(func() {
 		h.http.Close()
 		server.Close()

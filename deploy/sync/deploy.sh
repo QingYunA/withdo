@@ -4,6 +4,7 @@
 #   deploy/sync/deploy.sh [--dry-run]
 # --dry-run builds locally, then prints every remote command instead of running it.
 # ADHD_SYNC_HOST is the ssh host (default adhd-srv). sync.env and the Zitadel files are not touched.
+# pb_data (PocketBase's users) is copied to pb_data.bak-STAMP first; the Postgres data is not touched.
 # On a failed health check it prints the rollback command and exits 1; it never rolls back itself.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
@@ -46,7 +47,7 @@ fail() {
   exit 1
 }
 
-remote "set -e; cd $dir; cp bin/adhd-sync bin/adhd-sync.bak-$stamp; cp sync.compose.yml sync.compose.yml.bak-$stamp; install -m 755 $tmp_bin bin/adhd-sync; cp $tmp_yml sync.compose.yml; rm $tmp_bin $tmp_yml; $up" ||
+remote "set -e; cd $dir; if [ -d pb_data ]; then cp -a pb_data pb_data.bak-$stamp; fi; cp bin/adhd-sync bin/adhd-sync.bak-$stamp; cp sync.compose.yml sync.compose.yml.bak-$stamp; install -m 755 $tmp_bin bin/adhd-sync; cp $tmp_yml sync.compose.yml; rm $tmp_bin $tmp_yml; $up" ||
   fail "DEPLOY FAILED while installing or restarting"
 
 if [ "$dry" = 0 ]; then sleep 2; fi

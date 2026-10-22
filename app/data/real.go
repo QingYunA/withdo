@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -43,10 +42,10 @@ type Real struct {
 
 	mu       sync.Mutex
 	dbPathMu sync.Mutex
-	// tokens is the one OIDC source of this database: the issuer rotates refresh tokens, so two
-	// sources refreshing at once (the runner and the Settings pane) would sign each other out.
+	// tokens is the one account source of this database: an OIDC issuer rotates refresh tokens, so
+	// two sources refreshing at once (the runner and the Settings pane) would sign each other out.
 	tokensMu  sync.Mutex
-	tokens    *syncclient.OIDCSource
+	tokens    syncclient.AccountSource
 	tokensKey string
 	subs      map[int]func()
 	remSubs   map[int]func(Reminder)
@@ -168,11 +167,11 @@ func (r *Real) startSync(ctx context.Context) {
 	}
 	var tokens syncclient.TokenSource
 	switch {
-	case cfg.Issuer != "":
+	case cfg.SignsInWithAccount():
 		if r.opts.Secrets == nil {
 			return
 		}
-		tokens = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes)
+		tokens = r.accountSource(cfg)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:
@@ -202,18 +201,17 @@ func (r *Real) startSync(ctx context.Context) {
 	}
 }
 
-// oidcSource is this database's token source, keyed to it so a second profile or the CLI cannot
-// replace this Mac's refresh token. The same settings get the same source, so the runner and the
-// pane share one refresh.
-func (r *Real) oidcSource(issuer, clientID string, scopes []string) *syncclient.OIDCSource {
-	key := issuer + "\n" + clientID + "\n" + strings.Join(scopes, " ")
+// accountSource is this database's token source (PocketBase or OIDC, as cfg says), keyed to it so
+// a second profile or the CLI cannot replace this Mac's sign-in. The same settings get the same
+// source, so the runner and the pane share one refresh.
+func (r *Real) accountSource(cfg syncclient.Config) syncclient.AccountSource {
+	key := cfg.SourceKey()
 	r.tokensMu.Lock()
 	defer r.tokensMu.Unlock()
 	if r.tokens != nil && r.tokensKey == key {
 		return r.tokens
 	}
-	source := syncclient.NewOIDCSource(issuer, clientID, scopes, r.opts.Secrets)
-	source.DBPath = r.databasePath()
+	source := syncclient.NewAccountSource(cfg, r.opts.Secrets, r.databasePath())
 	r.tokens, r.tokensKey = source, key
 	return source
 }

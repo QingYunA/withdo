@@ -5,7 +5,7 @@ Everything here is added beside them; nothing else on the host is changed.
 
 | Name | What | Upstream |
 |---|---|---|
-| `todo.sri-ai.xyz` | `adhd-sync` (this repo's `cmd/adhd-sync`) | `127.0.0.1:18080` |
+| `todo.sri-ai.xyz` | `adhd-sync` (this repo's `cmd/adhd-sync`), with PocketBase embedded as the account system (M13) | `127.0.0.1:18080` |
 | `auth.todo.sri-ai.xyz` | Zitadel v4 (OIDC), its Traefik routes the API and the login UI | `127.0.0.1:18081` |
 
 Both DNS records are A records, **DNS only** (not proxied by Cloudflare): certbot answers the
@@ -23,6 +23,7 @@ HTTP challenge itself, and the sync server's SSE stream would be cut by the prox
 │   └── provisioned.env         PROJECT_ID, CLIENT_ID of the adhd-todo app
 └── sync/
     ├── sync.compose.yml        adhd-sync + its own Postgres
+    ├── pb_data/                PocketBase's data (users, password hashes, its settings), owned by uid 65532
     ├── sync.env                SYNC_DB_PASSWORD, OIDC_ISSUER, OIDC_AUDIENCE (= PROJECT_ID), OIDC_CLIENT_ID,
     │                           OIDC_SCOPES (= urn:zitadel:iam:org:project:id:PROJECT_ID:aud), mode 600
     ├── login-client.pat        the login machine user's PAT, mode 400, owned by uid 65532
@@ -118,6 +119,38 @@ password alone, so `adhd-sync` reads the user's authentication methods and delet
 before answering `403 second_factor`. Zitadel's lockout is not configured here, so `adhd-sync`
 limits sign-in itself: 10 requests per 10 minutes per source IP and 10 failed passwords per login
 name, both in memory.
+
+## PocketBase accounts (M13)
+
+`adhd-sync -pb-dir=/pb_data` embeds PocketBase (pinned in `go.mod`) in the same process and listener.
+It owns the users and their passwords; sync still keys data by `users.subject`, which is
+`pb:<record id>` for a PocketBase user. The server accepts, in this order, PocketBase tokens, Zitadel
+tokens and the development tokens, so a device signed in with Zitadel keeps working until it signs
+out. `GET /v1/config` adds `"auth": "pocketbase"`; clients that know it sign in with
+`POST /api/collections/users/auth-with-password` instead of `/v1/sign-in`. The log has one line the
+first time each subject is accepted by `pocketbase` or `oidc`, which shows when Zitadel is no longer used.
+
+- **Volume.** `sync.compose.yml` mounts `./pb_data` at `/pb_data`. Create it once:
+  `mkdir -p /opt/adhd-todo/sync/pb_data && chown 65532:65532 /opt/adhd-todo/sync/pb_data` (the
+  container runs as distroless `nonroot`). `deploy.sh` copies it to `pb_data.bak-STAMP` before each
+  deploy; back it up with the Postgres dump too, as it holds every password hash.
+- **nginx** exposes only `auth-with-password` and `auth-refresh` of the `users` collection. `/_/` (the
+  admin UI), the superuser sign-in and the rest of `/api/` answer 404. The owner reaches the admin UI with
+  `ssh -L 18080:127.0.0.1:18080 adhd-srv` and `http://127.0.0.1:18080/_/`.
+- **Password guessing** is limited to 10 sign-ins a minute per client address (PocketBase's rate limit,
+  counting by the `X-Real-IP` nginx sets).
+- **Superuser** (for the admin UI), once, from the server with the password on stdin:
+  `docker compose --env-file sync.env -f sync.compose.yml exec -T sync /adhd-sync pb-superuser -pb-dir=/pb_data -email=EMAIL < password-file`.
+  The three account commands below run the same way (`exec -T sync /adhd-sync …`); they work while
+  the server runs, and `move-subject` needs `-database-url` (the compose file's value).
+- **Move an account** from Zitadel to PocketBase, without losing its data:
+  1. `adhd-sync pb-import-user -pb-dir=/pb_data -email=EMAIL -name=NAME` reads the password from stdin
+     (no echo on a terminal) and prints the new subject, `pb:<id>`.
+  2. `adhd-sync move-subject -database-url=… -from=<Zitadel user id> -to=pb:<id>` rewrites
+     `users.subject` in one transaction. It refuses when the target already has devices or rows; a
+     target workspace that only the first request made, empty, is replaced.
+  3. Sign in on each device; the data is there. The Zitadel user id is the `sub` of its tokens, and
+     the `users.subject` column of the Postgres `users` table before the move.
 
 ## Voice input
 

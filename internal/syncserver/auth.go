@@ -35,6 +35,9 @@ func (t StaticTokens) Subject(r *http.Request) (string, error) {
 	return subject, nil
 }
 
+// BearerToken is bearerToken for authenticators in other packages, such as the PocketBase one.
+func BearerToken(r *http.Request) (string, error) { return bearerToken(r) }
+
 // bearerToken returns the token of an Authorization: Bearer header, or ErrUnauthenticated when
 // there is none. The error intentionally never includes the header's value.
 func bearerToken(r *http.Request) (string, error) {

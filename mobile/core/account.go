@@ -46,16 +46,8 @@ func (c *Core) Account() (string, error) {
 	if !found || cfg.Account == nil {
 		return "{}", nil
 	}
-	if cfg.Token == "" {
-		if c.secrets == nil {
-			return "{}", nil
-		}
-		if _, err := syncclient.LoadRefreshToken(secretAdapter{c.secrets}, c.dbPath); err != nil {
-			if errors.Is(err, syncclient.ErrSecretNotFound) {
-				return "{}", nil
-			}
-			return "", errors.New("could not read the account")
-		}
+	if cfg.Token == "" && !c.hasCredentials(cfg) {
+		return "{}", nil
 	}
 	return marshal(cfg.Account)
 }

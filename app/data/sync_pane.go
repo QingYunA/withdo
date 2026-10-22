@@ -307,7 +307,7 @@ func (r *Real) loadSyncLocked() {
 	// A linked database with credentials is syncing, not signed out, before the runner's first
 	// status arrives. Without credentials it is signed out and the sidebar says so.
 	if r.sync.linked && r.sync.status.State == "" {
-		if r.sync.cfg.Token != "" || (r.sync.cfg.Issuer != "" && r.sync.cfg.Account != nil) {
+		if r.sync.cfg.Token != "" || (r.sync.cfg.SignsInWithAccount() && r.sync.cfg.Account != nil) {
 			r.sync.status.State = syncclient.StateSyncing
 		}
 	}
@@ -351,8 +351,8 @@ func (r *Real) SyncSignOut() {
 		r.sync.status = syncclient.Status{}
 		r.mu.Unlock()
 	}
-	if cfg.Issuer != "" && r.opts.Secrets != nil {
-		_ = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes).Logout()
+	if cfg.SignsInWithAccount() && r.opts.Secrets != nil {
+		_ = r.accountSource(cfg).Logout()
 	}
 	if r.syncPath != "" && cfg.Server != "" {
 		_ = syncclient.SaveConfigAt(r.syncPath, cfg)
@@ -484,11 +484,11 @@ func (r *Real) syncClientForConflict() (*syncclient.Client, bool) {
 func (r *Real) syncClientFor(cfg syncclient.Config) (*syncclient.Client, error) {
 	var tokens syncclient.TokenSource
 	switch {
-	case cfg.Issuer != "":
+	case cfg.SignsInWithAccount():
 		if r.opts.Secrets == nil {
 			return nil, errors.New("sync has no secrets store")
 		}
-		tokens = r.oidcSource(cfg.Issuer, cfg.ClientID, cfg.Scopes)
+		tokens = r.accountSource(cfg)
 	case cfg.Token != "":
 		tokens = syncclient.StaticToken(cfg.Token)
 	default:

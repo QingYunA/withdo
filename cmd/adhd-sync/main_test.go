@@ -154,7 +154,7 @@ func TestS4aCommandOIDCFlags(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"no authenticator", []string{"-database-url", "postgres://ignored"}, "one of -tokens or -oidc-issuer"},
+		{"no authenticator", []string{"-database-url", "postgres://ignored"}, "one of -tokens"},
 		{"issuer without audience", []string{"-database-url", "postgres://ignored", "-oidc-issuer", "https://issuer.example"}, "must be given together"},
 		{"audience without issuer", []string{"-database-url", "postgres://ignored", "-oidc-audience", "client"}, "must be given together"},
 		{"login PAT without OIDC", []string{"-database-url", "postgres://ignored", "-tokens", tokensPath,

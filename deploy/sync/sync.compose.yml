@@ -1,5 +1,6 @@
 # The adhd-todo sync server and its own Postgres, behind the host's nginx for todo.sri-ai.xyz.
 #   docker compose --env-file sync.env -f sync.compose.yml up -d
+# PocketBase accounts live in ./pb_data next to this file: mkdir pb_data && chown 65532:65532 pb_data.
 # bin/adhd-sync is a static linux/amd64 build: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/adhd-sync
 name: adhd-sync
 
@@ -11,6 +12,7 @@ services:
       - /adhd-sync
       - -addr=:8080
       - -database-url=postgres://adhd_sync:${SYNC_DB_PASSWORD}@postgres:5432/adhd_sync?sslmode=disable
+      - -pb-dir=/pb_data
       - -oidc-issuer=${OIDC_ISSUER}
       - -oidc-audience=${OIDC_AUDIENCE}
       - -oidc-client-id=${OIDC_CLIENT_ID}
@@ -25,6 +27,8 @@ services:
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       - ./login-client.pat:/run/secrets/login-client.pat:ro
+      # PocketBase's data (its users and passwords); a host directory owned by uid 65532.
+      - ./pb_data:/pb_data
     ports:
       - 127.0.0.1:18080:8080
     networks:

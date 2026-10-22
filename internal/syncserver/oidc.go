@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -61,6 +63,30 @@ func (a *OIDCAuthenticator) Subject(r *http.Request) (string, error) {
 		return "", ErrUnauthenticated
 	}
 	return idToken.Subject, nil
+}
+
+// Logged wraps an authenticator to log, once per subject and process, that it accepted a request.
+// The log tells which sign-in systems are still in use, such as Zitadel before it is removed. The
+// subject is an account id, not a secret.
+func Logged(name string, auth Authenticator) Authenticator {
+	return &loggedAuth{name: name, auth: auth}
+}
+
+type loggedAuth struct {
+	name string
+	auth Authenticator
+	seen sync.Map
+}
+
+// Subject implements Authenticator.
+func (l *loggedAuth) Subject(r *http.Request) (string, error) {
+	subject, err := l.auth.Subject(r)
+	if err == nil {
+		if _, seen := l.seen.LoadOrStore(subject, struct{}{}); !seen {
+			log.Printf("sync server: %s accepted subject %s", l.name, subject)
+		}
+	}
+	return subject, err
 }
 
 // Chain tries its authenticators in order and returns the first subject one accepts. A static
