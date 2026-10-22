@@ -238,8 +238,9 @@ func TestAnOlderSyncJSONWithAnIssuerShowsTheSignInCard(t *testing.T) {
 	}
 	real.Start()
 	defer func() { _ = real.Close() }()
-	snap := real.SyncSnapshot()
-	if snap.Phase != SyncSignedOut || snap.Account != "" || snap.AccountEmail != "" {
-		t.Fatalf("snapshot = phase %v, account %q <%q>; want signed out with no account", snap.Phase, snap.Account, snap.AccountEmail)
+	// The first sync finds the sign-in gone in the background; wait for it.
+	snap := waitSnap(t, real, "signed out", func(s SyncSnapshot) bool { return s.Phase == SyncSignedOut })
+	if snap.Account != "" || snap.AccountEmail != "" {
+		t.Fatalf("snapshot = account %q <%q>; want no account", snap.Account, snap.AccountEmail)
 	}
 }

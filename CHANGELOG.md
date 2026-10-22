@@ -3,6 +3,16 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.7.3
+
+No database change: upgrading from 0.7.2 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **The old sign-in service is gone.** A device that was still signed in through it shows the sign-in
+  card once: sign in again with the same email (a code, a password or Google) and everything is
+  there. Versions before 0.7.0 can no longer sign in; update them.
+- On Android, Continue with Google opens inside the app instead of switching to the browser.
+
 ## 0.7.2
 
 No database change: upgrading from 0.7.1 is installing the app. On Windows, quit ADHD Todo and your
