@@ -20,6 +20,7 @@ import (
 // otp<N>; auth-with-otp accepts only 123456 for the latest id.
 type codeServer struct {
 	*httptest.Server
+	mux        *http.ServeMux
 	mu         sync.Mutex
 	requests   int
 	checks     int
@@ -81,6 +82,7 @@ func newCodeServer(t *testing.T) *codeServer {
 		<-f.release
 		http.Error(w, "the server failed", http.StatusInternalServerError)
 	})
+	f.mux = mux
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
 	return f

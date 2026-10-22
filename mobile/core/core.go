@@ -65,6 +65,8 @@ type Core struct {
 	signInStage string
 	// code is the emailed-code sign-in in progress (code_signin.go), under mu.
 	code codeSignIn
+	// google is the Google sign-in between GoogleStart and GoogleFinish, under mu.
+	google *googleSignIn
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool

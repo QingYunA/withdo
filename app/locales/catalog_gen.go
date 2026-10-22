@@ -10928,6 +10928,94 @@ func (msgs Messages) SettingsSyncContinueEmail() string {
 	return Catalog.Format(msgs.locale, "settingsSyncContinueEmail", nil)
 }
 
+// SettingsSyncContinueGoogle says "Continue with Google"
+// in the language the app shows.
+//
+// The outlined button above the email field; it opens the browser on
+// Google's consent page.
+func SettingsSyncContinueGoogle() string { return In(i18n.Locale()).SettingsSyncContinueGoogle() }
+
+// SettingsSyncContinueGoogle says "Continue with Google"
+// in the language of msgs.
+//
+// The outlined button above the email field; it opens the browser on
+// Google's consent page.
+func (msgs Messages) SettingsSyncContinueGoogle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncContinueGoogle", nil)
+}
+
+// SettingsSyncOr says "or"
+// in the language the app shows.
+//
+// The word between the two hairlines under the Google button.
+func SettingsSyncOr() string { return In(i18n.Locale()).SettingsSyncOr() }
+
+// SettingsSyncOr says "or"
+// in the language of msgs.
+//
+// The word between the two hairlines under the Google button.
+func (msgs Messages) SettingsSyncOr() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOr", nil)
+}
+
+// SettingsSyncGoogleTitle says "Finish in your browser"
+// in the language the app shows.
+//
+// Title of the card that waits while the browser shows Google's sign-in.
+func SettingsSyncGoogleTitle() string { return In(i18n.Locale()).SettingsSyncGoogleTitle() }
+
+// SettingsSyncGoogleTitle says "Finish in your browser"
+// in the language of msgs.
+//
+// Title of the card that waits while the browser shows Google's sign-in.
+func (msgs Messages) SettingsSyncGoogleTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleTitle", nil)
+}
+
+// SettingsSyncGoogleBody says "Choose your Google account there; this window picks it up by itself."
+// in the language the app shows.
+//
+// Under the title of the Google waiting card.
+func SettingsSyncGoogleBody() string { return In(i18n.Locale()).SettingsSyncGoogleBody() }
+
+// SettingsSyncGoogleBody says "Choose your Google account there; this window picks it up by itself."
+// in the language of msgs.
+//
+// Under the title of the Google waiting card.
+func (msgs Messages) SettingsSyncGoogleBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleBody", nil)
+}
+
+// SettingsSyncGoogleCancelled says "Google sign-in was cancelled"
+// in the language the app shows.
+//
+// Failure line after Cancel on the Google waiting card.
+func SettingsSyncGoogleCancelled() string { return In(i18n.Locale()).SettingsSyncGoogleCancelled() }
+
+// SettingsSyncGoogleCancelled says "Google sign-in was cancelled"
+// in the language of msgs.
+//
+// Failure line after Cancel on the Google waiting card.
+func (msgs Messages) SettingsSyncGoogleCancelled() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleCancelled", nil)
+}
+
+// SettingsSyncGoogleFailed says "Google sign-in didn't finish; try again"
+// in the language the app shows.
+//
+// Failure line when the Google sign-in timed out after 5 minutes or was
+// refused.
+func SettingsSyncGoogleFailed() string { return In(i18n.Locale()).SettingsSyncGoogleFailed() }
+
+// SettingsSyncGoogleFailed says "Google sign-in didn't finish; try again"
+// in the language of msgs.
+//
+// Failure line when the Google sign-in timed out after 5 minutes or was
+// refused.
+func (msgs Messages) SettingsSyncGoogleFailed() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleFailed", nil)
+}
+
 // SettingsSyncLocalNote says "Keys and model settings stay on this Mac."
 // in the language the app shows.
 //

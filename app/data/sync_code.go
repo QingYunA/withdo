@@ -31,6 +31,14 @@ type codeState struct {
 	probed       string
 	probing      bool
 	passwordOnly bool
+	// google is true when the server's auth methods list a Google provider.
+	google bool
+}
+
+// cleared is the code flow forgotten, with what the probe of the server learned kept: the card
+// still needs to know the server's kind and whether it offers Google.
+func (c codeState) cleared() codeState {
+	return codeState{probed: c.probed, probing: c.probing, passwordOnly: c.passwordOnly, google: c.google}
 }
 
 // SyncSetSignInStep moves the signed-out card between its screens (to the password screen and back,
@@ -235,15 +243,84 @@ func (r *Real) SyncCheckServer() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		public, err := syncclient.FetchConfig(ctx, server, nil)
+		google := false
+		if err == nil && public.Auth == syncclient.AuthPocketBase {
+			// A server whose auth methods do not answer simply has no Google button.
+			google, _ = syncclient.NewPocketBaseSource(server, nil).GoogleAvailable(ctx, server)
+		}
 		r.mu.Lock()
 		r.sync.code.probing = false
 		if err == nil {
 			r.sync.code.probed = server
 			r.sync.code.passwordOnly = public.Auth != syncclient.AuthPocketBase
+			r.sync.code.google = google
 		}
 		r.mu.Unlock()
 		if err == nil {
 			r.syncChanged()
 		}
 	}()
+}
+
+// SyncSignInWithGoogle opens the system browser on Google's consent page, through open, and waits
+// for the answer (M13 P3). SyncCancel drops the wait; five minutes without an answer fails it.
+// On success it continues as the code sign-in does.
+func (r *Real) SyncSignInWithGoogle(open func(url string)) {
+	if !r.beginCodeWork(SignInStageGoogle) {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	r.mu.Lock()
+	r.sync.googleGen++
+	gen := r.sync.googleGen
+	r.sync.google = cancel
+	r.mu.Unlock()
+	go r.signInWithGoogle(ctx, cancel, gen, open)
+}
+
+// signInWithGoogle is SyncSignInWithGoogle off the UI thread. gen tells it whether SyncCancel or a
+// newer sign-in took over while it waited: then it reports nothing.
+func (r *Real) signInWithGoogle(ctx context.Context, cancel context.CancelFunc, gen int, open func(string)) {
+	defer cancel()
+	current := func() bool {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		return r.sync.googleGen == gen
+	}
+	cfg, _, err := r.codeSource(ctx)
+	if err == nil {
+		source, ok := r.accountSource(cfg).(syncclient.GoogleSignIn)
+		if !ok {
+			err = syncclient.ErrSignInUnsupported
+		} else {
+			err = source.SignInWithGoogle(ctx, cfg.Server, func(url string) error {
+				open(url)
+				return nil
+			})
+		}
+	}
+	if !current() {
+		return
+	}
+	if err != nil {
+		r.failSignIn(err)
+		return
+	}
+	r.mu.Lock()
+	r.sync.google = nil
+	r.mu.Unlock()
+	r.finishSignIn(context.Background(), cfg.Server, cfg, r.accountSource(cfg))
+}
+
+// cancelGoogleLocked drops a Google sign-in that is waiting for the browser and says so as the failure
+// the pane shows; it reports whether there was one.
+func (r *Real) cancelGoogleLocked() bool {
+	cancel := r.sync.google
+	if cancel == nil {
+		return false
+	}
+	r.sync.google = nil
+	r.sync.googleGen++
+	cancel()
+	return true
 }

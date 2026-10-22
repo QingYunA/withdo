@@ -216,6 +216,10 @@ func failureKind(err error) string {
 		return failureDeactivated
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
 		return failureUnsupported
+	case errors.Is(err, syncclient.ErrGoogleCancelled):
+		return failureGoogleCancelled
+	case errors.Is(err, syncclient.ErrGoogleFailed):
+		return failureGoogleFailed
 	case isNetworkError(err):
 		return failureNetwork
 	}
