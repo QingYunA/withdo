@@ -26,7 +26,7 @@ func TestMoveSubjectCarriesTheWorkspace(t *testing.T) {
 	if got := devices(t, h, "new"); len(got) != 0 {
 		t.Fatalf("new user has %d devices before the move", len(got))
 	}
-	if err := h.server.MoveSubject(context.Background(), "zitadel-user", "pb:new"); err != nil {
+	if err := h.server.MoveSubject(context.Background(), "zitadel-user", "pb:new", false); err != nil {
 		t.Fatalf("move: %v", err)
 	}
 	if got := devices(t, h, "new"); len(got) != 1 || got[0].Name != "laptop" {
@@ -43,14 +43,14 @@ func TestMoveSubjectRefusesWhatItShould(t *testing.T) {
 	h.device(t, "b", "b-laptop")
 	ctx := context.Background()
 
-	err := h.server.MoveSubject(ctx, "subject-a", "subject-b")
+	err := h.server.MoveSubject(ctx, "subject-a", "subject-b", false)
 	if err == nil || !strings.Contains(err.Error(), "already has a workspace") {
 		t.Fatalf("target with data: err = %v", err)
 	}
-	if err := h.server.MoveSubject(ctx, "nobody", "subject-new"); err == nil {
+	if err := h.server.MoveSubject(ctx, "nobody", "subject-new", false); err == nil {
 		t.Fatal("moving an unknown subject should fail")
 	}
-	if err := h.server.MoveSubject(ctx, "subject-a", "subject-a"); err == nil {
+	if err := h.server.MoveSubject(ctx, "subject-a", "subject-a", false); err == nil {
 		t.Fatal("moving a subject onto itself should fail")
 	}
 	// Nothing moved.

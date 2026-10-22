@@ -121,8 +121,8 @@ func sessionFrom(ctx context.Context) *session {
 	return sess
 }
 
-// ensureWorkspace creates the user and their one workspace on the first request, then returns
-// them. The unique owner_id makes concurrent first requests end at the same workspace.
+// ensureWorkspace resolves the subject (a user's own or an alias of one), creating the user and
+// their one workspace on the first request of an unknown subject. The unique owner_id makes concurrent first requests end at the same workspace.
 func (s *Server) ensureWorkspace(ctx context.Context, subject string) (sess session, err error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -130,10 +130,17 @@ func (s *Server) ensureWorkspace(ctx context.Context, subject string) (sess sess
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	if err := tx.QueryRow(ctx, `INSERT INTO users (subject) VALUES ($1)
-		ON CONFLICT (subject) DO UPDATE SET subject = EXCLUDED.subject
-		RETURNING id`, subject).Scan(&sess.userID); err != nil {
-		return sess, fmt.Errorf("upsert user: %w", err)
+	// A primary subject wins over an alias; only a subject known to neither creates a user.
+	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE subject = $1
+		UNION ALL SELECT user_id FROM subject_aliases WHERE subject = $1
+		LIMIT 1`, subject).Scan(&sess.userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		err = tx.QueryRow(ctx, `INSERT INTO users (subject) VALUES ($1)
+			ON CONFLICT (subject) DO UPDATE SET subject = EXCLUDED.subject
+			RETURNING id`, subject).Scan(&sess.userID)
+	}
+	if err != nil {
+		return sess, fmt.Errorf("resolve user: %w", err)
 	}
 	err = tx.QueryRow(ctx, `INSERT INTO workspaces (owner_id) VALUES ($1)
 		ON CONFLICT (owner_id) DO NOTHING
