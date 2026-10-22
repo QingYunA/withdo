@@ -12,6 +12,7 @@ import xyz.sriai.adhdtodo.ui.SignInStep
 import xyz.sriai.adhdtodo.ui.afterRequest
 import xyz.sriai.adhdtodo.ui.codeDigits
 import xyz.sriai.adhdtodo.ui.codeFailureOf
+import xyz.sriai.adhdtodo.ui.codeFailureText
 import xyz.sriai.adhdtodo.ui.failed
 import xyz.sriai.adhdtodo.ui.looksLikeEmail
 import xyz.sriai.adhdtodo.ui.resendClock
@@ -22,6 +23,23 @@ import xyz.sriai.adhdtodo.ui.isAuthFailure
 import xyz.sriai.adhdtodo.ui.syncBarFilled
 import xyz.sriai.adhdtodo.ui.signInStageOf
 import xyz.sriai.adhdtodo.ui.syncCloudBlocked
+
+/** The Google sign-in's stage and failure kinds (M13 P3). */
+class GoogleRulesTest {
+    @Test
+    fun `the google stage is the browser wait`() {
+        assertEquals(SignInStage.GOOGLE, signInStageOf(true, "google"))
+        assertEquals(null, signInStageOf(false, "google"))
+    }
+
+    @Test
+    fun `google failures have their own kinds and lines`() {
+        assertEquals(CodeFailure.GOOGLE_CANCELLED, codeFailureOf("google_cancelled"))
+        assertEquals(CodeFailure.GOOGLE_FAILED, codeFailureOf("google_failed"))
+        assertEquals(R.string.sync_google_cancelled, codeFailureText(CodeFailure.GOOGLE_CANCELLED))
+        assertEquals(R.string.sync_google_failed, codeFailureText(CodeFailure.GOOGLE_FAILED))
+    }
+}
 
 /** Verification 1 of A2b-UI: the device icon, the header cloud's red rule and the upload bar. */
 class SyncRulesTest {

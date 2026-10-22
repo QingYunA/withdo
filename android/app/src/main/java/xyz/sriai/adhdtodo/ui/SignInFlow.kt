@@ -13,7 +13,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -58,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import kotlinx.coroutines.delay
 import xyz.sriai.adhdtodo.R
+import xyz.sriai.adhdtodo.ui.theme.GoogleMark
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import xyz.sriai.adhdtodo.ui.theme.PixelIcon
@@ -71,6 +76,10 @@ data class SignInActions(
     val onSignInWithPassword: (String, String) -> Unit = { _, _ -> },
     /** Goes to a step with the email kept; the app clears the failure line. */
     val onStep: (SignInStep) -> Unit = {},
+    /** "Continue with Google": the app opens the browser and waits for the answer. */
+    val onGoogle: () -> Unit = {},
+    /** Cancel on the card that waits for the browser. */
+    val onCancelGoogle: () -> Unit = {},
 )
 
 /**
@@ -83,6 +92,7 @@ fun SignInFlowCard(
     stage: SignInStage?,
     actions: SignInActions,
     initialCode: String = "",
+    googleAvailable: Boolean = false,
 ) {
     val busy = stage != null
     GroupCard {
@@ -91,8 +101,12 @@ fun SignInFlowCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            if (stage == SignInStage.GOOGLE) {
+                GoogleStep(actions)
+                return@Column
+            }
             when (flow.step) {
-                SignInStep.EMAIL -> EmailStep(flow, stage, actions)
+                SignInStep.EMAIL -> EmailStep(flow, stage, actions, googleAvailable)
                 SignInStep.CODE -> CodeStep(flow, stage, actions, initialCode)
                 SignInStep.PASSWORD -> PasswordStep(flow, stage, actions)
                 SignInStep.RESET_SENT -> ResetSentStep(flow, busy, actions)
@@ -154,6 +168,7 @@ private fun BusyLine(stage: SignInStage, step: SignInStep) {
     val label = when (stage) {
         SignInStage.SENDING -> stringResource(R.string.sync_sending_code)
         SignInStage.DOWNLOADING -> stringResource(R.string.sync_signing_in_downloading)
+        SignInStage.GOOGLE -> stringResource(R.string.sync_google_title)
         SignInStage.CHECKING -> if (step == SignInStep.CODE) {
             stringResource(R.string.sync_checking_code)
         } else {
@@ -171,7 +186,7 @@ private fun BusyLine(stage: SignInStage, step: SignInStep) {
 }
 
 @Composable
-private fun EmailStep(flow: SignInFlow, stage: SignInStage?, actions: SignInActions) {
+private fun EmailStep(flow: SignInFlow, stage: SignInStage?, actions: SignInActions, googleAvailable: Boolean) {
     val tokens = LocalTokens.current
     val busy = stage != null
     var email by remember { mutableStateOf(flow.email) }
@@ -182,6 +197,16 @@ private fun EmailStep(flow: SignInFlow, stage: SignInStage?, actions: SignInActi
 
     StepTitle("user", stringResource(R.string.sync_signin_title))
     MetaLine(stringResource(R.string.sync_signin_meta))
+    if (googleAvailable) {
+        OutlineButton(
+            label = stringResource(R.string.sync_signin_google),
+            enabled = !busy,
+            onClick = actions.onGoogle,
+            modifier = Modifier.padding(top = 10.dp).fillMaxWidth(),
+            mark = { GoogleMark(16.dp) },
+        )
+        OrRule(Modifier.padding(top = 6.dp))
+    }
     SignInField(
         value = email,
         onValueChange = { email = it },
@@ -194,7 +219,7 @@ private fun EmailStep(flow: SignInFlow, stage: SignInStage?, actions: SignInActi
         contentType = ContentType.EmailAddress,
         focus = focus,
         onDone = { if (ready) actions.onRequestCode(email.trim()) },
-        modifier = Modifier.padding(top = 10.dp).alpha(if (busy) 0.5f else 1f),
+        modifier = Modifier.padding(top = if (googleAvailable) 0.dp else 10.dp).alpha(if (busy) 0.5f else 1f),
     )
     PrimaryButton(
         label = stringResource(R.string.sync_signin_continue),
@@ -210,6 +235,74 @@ private fun EmailStep(flow: SignInFlow, stage: SignInStage?, actions: SignInActi
         color = tokens.textTertiary,
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(top = 6.dp).widthIn(max = 340.dp),
+    )
+}
+
+/** An outlined full-width button, as Continue with Google and Cancel are on the card. */
+@Composable
+private fun OutlineButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    mark: (@Composable () -> Unit)? = null,
+) {
+    val tokens = LocalTokens.current
+    val shape = RoundedCornerShape(10.dp)
+    Row(
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .alpha(if (enabled) 1f else 0.45f)
+            .clip(shape)
+            .background(tokens.bg, shape)
+            .border(1.dp, tokens.border, shape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 11.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        mark?.invoke()
+        Text(label, style = LocalAppType.current.bodyStrong, color = tokens.text)
+    }
+}
+
+/** The 12 sp "or" between two hairlines, under the Google button. */
+@Composable
+private fun OrRule(modifier: Modifier = Modifier) {
+    val tokens = LocalTokens.current
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.weight(1f).height(1.dp).background(tokens.border))
+        Text(
+            stringResource(R.string.sync_signin_or),
+            style = LocalAppType.current.meta.copy(fontSize = 12.sp),
+            color = tokens.textTertiary,
+        )
+        Box(Modifier.weight(1f).height(1.dp).background(tokens.border))
+    }
+}
+
+/** The card while the browser shows Google's consent page: the G, what to do there, and Cancel. */
+@Composable
+private fun GoogleStep(actions: SignInActions) {
+    val tokens = LocalTokens.current
+    GoogleMark(36.dp)
+    Text(
+        stringResource(R.string.sync_google_title),
+        style = LocalAppType.current.input.copy(fontWeight = FontWeight.SemiBold),
+        color = tokens.text,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 4.dp),
+    )
+    MetaLine(stringResource(R.string.sync_google_body))
+    OutlineButton(
+        label = stringResource(R.string.sync_google_cancel),
+        enabled = true,
+        onClick = actions.onCancelGoogle,
+        modifier = Modifier.padding(top = 10.dp).fillMaxWidth(),
     )
 }
 

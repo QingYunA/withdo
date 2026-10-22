@@ -6,6 +6,8 @@ import android.content.res.Resources
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -124,6 +126,7 @@ fun App(
     var signInFailure by remember { mutableStateOf<SignInFailure?>(null) }
     var choose by remember { mutableStateOf(SignInState()) }
     var flow by remember { mutableStateOf(SignInFlow()) }
+    var googleAvailable by remember { mutableStateOf(false) }
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
@@ -417,6 +420,13 @@ fun App(
         }
     }
 
+    // Continue with Google shows only where the server lists a Google provider.
+    LaunchedEffect(route == "sync") {
+        if (route == "sync") {
+            googleAvailable = withContext(Dispatchers.IO) { runCatching { api.googleAvailable() }.getOrDefault(false) }
+        }
+    }
+
     val blocked = syncCloudBlocked(
         linked = shownStatus.linked,
         signedIn = shownStatus.signedIn,
@@ -506,6 +516,7 @@ fun App(
                             signInError = signInError,
                             signInFailure = signInFailure,
                             flow = flow,
+                            googleAvailable = googleAvailable,
                         )
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dims.pagePadding)) {
                             syncMessage?.let {
@@ -639,6 +650,16 @@ fun App(
                                     onStep = { step ->
                                         flow = flow.copy(step = step, failure = null, failureText = null, attempt = flow.attempt + 1)
                                     },
+                                    // The page opens in the default browser (ACTION_VIEW: androidx.browser
+                                    // is not a dependency); the core keeps the wait until it answers.
+                                    onGoogle = {
+                                        runSignIn {
+                                            val url = api.googleStart()
+                                            Handler(Looper.getMainLooper()).post { openUrl(url) }
+                                            api.googleFinish(Build.MODEL)
+                                        }
+                                    },
+                                    onCancelGoogle = { scope.launch(Dispatchers.IO) { api.googleCancel() } },
                                 ),
                                 onSignOut = {
                                     flow = SignInFlow()

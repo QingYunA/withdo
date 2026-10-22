@@ -225,6 +225,13 @@
     <string name="sync_signin_meta">任务和 Agent 的汇报会同步到这台手机。第一次用这个邮箱，会顺手建好账号。</string>
     <string name="sync_signin_email_hint">you@example.com</string>
     <string name="sync_signin_continue">用邮箱继续</string>
+    <string name="sync_signin_google">用 Google 继续</string>
+    <string name="sync_signin_or">或</string>
+    <string name="sync_google_title">在浏览器里完成登录</string>
+    <string name="sync_google_body">在那里选好 Google 账号，这里会自动继续。</string>
+    <string name="sync_google_cancel">取消</string>
+    <string name="sync_google_cancelled">Google 登录已取消</string>
+    <string name="sync_google_failed">Google 登录没有完成，再试一次</string>
     <string name="sync_signin_note">密钥和模型设置只留在这台手机上。</string>
     <string name="sync_code_title">查收邮件</string>
     <string name="sync_code_sent">6 位验证码已发到 %1$s</string>

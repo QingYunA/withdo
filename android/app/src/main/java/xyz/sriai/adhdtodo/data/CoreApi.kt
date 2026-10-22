@@ -94,6 +94,19 @@ class CoreApi(private val core: Core_) {
 
     fun resendCode() = core.resendCode()
 
+    /** Whether the server lists a Google provider. Reads the network. */
+    fun googleAvailable(): Boolean = core.googleAvailable()
+
+    /** Starts "Continue with Google" and returns the page to open in the browser. */
+    fun googleStart(): String = core.googleStart()
+
+    /** Waits for the browser's answer to googleStart (up to 5 minutes), then links as signIn does. */
+    fun googleFinish(deviceName: String): SignInState =
+        PageJson.decodeFromString(core.googleFinish(deviceName))
+
+    /** Ends the wait of googleFinish. */
+    fun googleCancel() = core.googleCancel()
+
     fun requestPasswordReset(email: String) = core.requestPasswordReset(email)
 
     fun codeState(): CodeState = PageJson.decodeFromString(core.codeState())
