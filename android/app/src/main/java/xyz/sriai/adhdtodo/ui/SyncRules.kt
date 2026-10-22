@@ -1,6 +1,7 @@
 package xyz.sriai.adhdtodo.ui
 
 import xyz.sriai.adhdtodo.R
+import xyz.sriai.adhdtodo.data.CodeState
 import java.util.Locale
 
 /** The 40 cells of the first upload's bar, as v27 and the desktop's pane draw them. */
@@ -67,7 +68,7 @@ fun isAuthFailure(message: String): Boolean {
 }
 
 /** The stage the sign-in button says: the server checks the account, then the tasks download. */
-enum class SignInStage { CHECKING, DOWNLOADING }
+enum class SignInStage { SENDING, CHECKING, DOWNLOADING }
 
 /**
  * The stage to show, from the raw sign_in_stage. Signing in without a stage yet is checking; not
@@ -76,6 +77,7 @@ enum class SignInStage { CHECKING, DOWNLOADING }
 fun signInStageOf(signingIn: Boolean, raw: String?): SignInStage? = when {
     !signingIn -> null
     raw == "downloading" -> SignInStage.DOWNLOADING
+    raw == "sending" -> SignInStage.SENDING
     else -> SignInStage.CHECKING
 }
 
@@ -105,4 +107,101 @@ fun signInFailureText(failure: SignInFailure): Int = when (failure) {
     SignInFailure.LOCKED -> R.string.sync_sign_in_locked
     SignInFailure.UNSUPPORTED -> R.string.sync_sign_in_unsupported
     SignInFailure.NETWORK -> R.string.sync_sign_in_network
+}
+
+/** The steps of the emailed-code sign-in; LEGACY is the account-and-password card of a server that has no codes. */
+enum class SignInStep { EMAIL, CODE, PASSWORD, RESET_SENT, LEGACY }
+
+/** Why a code or password sign-in failed, from CodeState's failure kinds. */
+enum class CodeFailure { WRONG_CODE, EXPIRED, TOO_MANY, WRONG_PASSWORD, DEACTIVATED, NETWORK, UNSUPPORTED, OTHER }
+
+/** The failure kind of CodeState's "failure" field; blank is no failure. */
+fun codeFailureOf(kind: String?): CodeFailure? = when (kind?.trim()) {
+    null, "" -> null
+    "wrong_code" -> CodeFailure.WRONG_CODE
+    "expired" -> CodeFailure.EXPIRED
+    "too_many" -> CodeFailure.TOO_MANY
+    "wrong_password" -> CodeFailure.WRONG_PASSWORD
+    "deactivated" -> CodeFailure.DEACTIVATED
+    "network" -> CodeFailure.NETWORK
+    "unsupported" -> CodeFailure.UNSUPPORTED
+    else -> CodeFailure.OTHER
+}
+
+/** The localized line of a failure; OTHER has none (the core's own sentence is shown). */
+fun codeFailureText(failure: CodeFailure): Int? = when (failure) {
+    CodeFailure.WRONG_CODE -> R.string.sync_code_wrong
+    CodeFailure.EXPIRED -> R.string.sync_code_expired
+    CodeFailure.TOO_MANY -> R.string.sync_too_many_tries
+    CodeFailure.WRONG_PASSWORD -> R.string.sync_wrong_password
+    CodeFailure.DEACTIVATED -> R.string.sync_sign_in_locked
+    CodeFailure.NETWORK -> R.string.sync_sign_in_network
+    CodeFailure.UNSUPPORTED -> R.string.sync_sign_in_unsupported
+    CodeFailure.OTHER -> null
+}
+
+/** Everything the sign-in card draws between the email and the linked account. */
+data class SignInFlow(
+    val step: SignInStep = SignInStep.EMAIL,
+    val email: String = "",
+    /** Seconds before another code may be asked for, as of when the step was drawn. */
+    val resendIn: Int = 0,
+    val failure: CodeFailure? = null,
+    /** The core's sentence for a failure with no localized line. */
+    val failureText: String? = null,
+    /** Counts failed attempts, so the cells and the password empty even when the failure repeats. */
+    val attempt: Int = 0,
+    /** True while a code is being mailed. */
+    val sending: Boolean = false,
+)
+
+/** A plausible address: something, an @, a dot after it. The server decides the rest. */
+fun looksLikeEmail(text: String): Boolean {
+    val t = text.trim()
+    val at = t.indexOf('@')
+    return at > 0 && t.indexOf('.', at + 2) > at + 1 && !t.endsWith(".") && !t.contains(' ')
+}
+
+const val CODE_LENGTH = 6
+
+/** The digits of what was typed or pasted, at most six. */
+fun codeDigits(text: String): String = text.filter { it in '0'..'9' }.take(CODE_LENGTH)
+
+/** 24 seconds as 0:24, the way the resend line counts down. */
+fun resendClock(seconds: Int): String = "%d:%02d".format(seconds / 60, seconds % 60)
+
+/**
+ * The flow after a failed code or password sign-in: the kind comes from CodeState, the core's
+ * sentence is kept for a kind with no line of its own, and the attempt counter empties the cells.
+ */
+fun SignInFlow.failed(state: CodeState?, message: String?): SignInFlow = copy(
+    failure = codeFailureOf(state?.failure) ?: CodeFailure.OTHER,
+    failureText = message?.trim()?.takeIf { it.isNotEmpty() },
+    attempt = attempt + 1,
+    resendIn = state?.resendIn ?: resendIn,
+    sending = false,
+)
+
+/**
+ * The flow once RequestCode answered. A mailed code moves on to the code step; a server with no
+ * codes ("unsupported") sends the email step back to the old account-and-password card.
+ */
+fun SignInFlow.afterRequest(errorMessage: String?, state: CodeState?): SignInFlow {
+    if (errorMessage == null && state?.step == "code") {
+        return copy(
+            step = SignInStep.CODE,
+            email = state.email.ifBlank { email },
+            resendIn = state.resendIn,
+            failure = null,
+            failureText = null,
+            attempt = attempt + 1,
+            sending = false,
+        )
+    }
+    val next = failed(state, errorMessage)
+    return if (next.failure == CodeFailure.UNSUPPORTED && step == SignInStep.EMAIL) {
+        next.copy(step = SignInStep.LEGACY, failure = null, failureText = null)
+    } else {
+        next
+    }
 }

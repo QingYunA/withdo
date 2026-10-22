@@ -58,6 +58,9 @@ import xyz.sriai.adhdtodo.ui.PageHeader
 import xyz.sriai.adhdtodo.ui.PlaceholderScreen
 import xyz.sriai.adhdtodo.ui.ProjectScreen
 import xyz.sriai.adhdtodo.ui.ProjectsScreen
+import xyz.sriai.adhdtodo.ui.CodeFailure
+import xyz.sriai.adhdtodo.ui.SignInFlow
+import xyz.sriai.adhdtodo.ui.SignInStep
 import xyz.sriai.adhdtodo.ui.SyncCloud
 import xyz.sriai.adhdtodo.ui.SyncModel
 import xyz.sriai.adhdtodo.ui.SyncPhase
@@ -90,6 +93,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
     @OptIn(ExperimentalRoborazziApi::class)
     @Test
     fun screenshot() {
+        // The resend countdown and the busy indicator would run to their ends under an
+        // auto-advancing clock; the pictures show their first frame.
+        compose.mainClock.autoAdvance = case.screen !in frozen
         compose.setThemedContent(night = case.night, zh = case.zh) { Screen(case.screen) }
         compose.waitForIdle()
         val file = screenshotFile(case.name)
@@ -115,6 +121,10 @@ class AndroidScreensTest(private val case: ScreenCase) {
         SYNC_SIGNED_OUT_ERROR,
         SYNC_SIGNING_IN_CHECKING,
         SYNC_SIGNING_IN_DOWNLOADING,
+        SYNC_SIGNIN_EMAIL,
+        SYNC_SIGNIN_CODE,
+        SYNC_SIGNIN_WRONG_CODE,
+        SYNC_SIGNIN_PASSWORD,
         SYNC_SIGNED_IN,
         SYNC_UPLOADING,
         SYNC_FAILED,
@@ -125,6 +135,10 @@ class AndroidScreensTest(private val case: ScreenCase) {
     }
 
     companion object {
+        private val frozen = setOf(
+            Screen.SYNC_SIGNIN_EMAIL, Screen.SYNC_SIGNIN_CODE, Screen.SYNC_SIGNIN_WRONG_CODE,
+            Screen.SYNC_SIGNIN_PASSWORD, Screen.SYNC_SIGNING_IN_CHECKING, Screen.SYNC_SIGNING_IN_DOWNLOADING,
+        )
         private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
 
         @JvmStatic
@@ -142,6 +156,10 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "sync-signed-out-error" to Screen.SYNC_SIGNED_OUT_ERROR,
                 "sync-signing-in-checking" to Screen.SYNC_SIGNING_IN_CHECKING,
                 "sync-signing-in-downloading" to Screen.SYNC_SIGNING_IN_DOWNLOADING,
+                "sync-signin-email" to Screen.SYNC_SIGNIN_EMAIL,
+                "sync-signin-code" to Screen.SYNC_SIGNIN_CODE,
+                "sync-signin-wrong-code" to Screen.SYNC_SIGNIN_WRONG_CODE,
+                "sync-signin-password" to Screen.SYNC_SIGNIN_PASSWORD,
                 "sync-signed-in" to Screen.SYNC_SIGNED_IN,
                 "sync-uploading" to Screen.SYNC_UPLOADING,
                 "sync-failed" to Screen.SYNC_FAILED,
@@ -150,7 +168,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task-menu-move" to Screen.TASK_MENU_MOVE,
                 "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
-            val chinese = setOf("mine", "task", "sync-signed-out", "task-menu", "task-menu-remind")
+            val chinese = setOf(
+                "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-code",
+                "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind")
             return screens.flatMap { (name, screen) ->
                 buildList {
                     add(ScreenCase("$name-light", night = false, zh = false, screen = screen))
@@ -319,6 +339,10 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
         }
 
         AndroidScreensTest.Screen.SYNC_SIGNED_OUT,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_CODE,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD,
         AndroidScreensTest.Screen.SYNC_SIGNED_OUT_ERROR,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_DOWNLOADING,
@@ -436,20 +460,52 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
         AndroidScreensTest.Screen.SYNC_SIGNED_OUT -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.LEGACY),
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(email = "cyan@example.com"),
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_CODE -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com", resendIn = 24),
+            typedCode = "48",
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(
+                step = SignInStep.CODE,
+                email = "cyan@example.com",
+                failure = CodeFailure.WRONG_CODE,
+                attempt = 1,
+            ),
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.PASSWORD, email = "cyan@example.com"),
         )
         AndroidScreensTest.Screen.SYNC_SIGNED_OUT_ERROR -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.LEGACY),
             signInError = "Wrong account or password",
             signInFailure = xyz.sriai.adhdtodo.ui.SignInFailure.CREDENTIALS,
         )
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING -> SyncModel(
             SyncPhase.SIGNING_IN,
             SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "checking"),
+            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com"),
+            typedCode = "482913",
         )
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_DOWNLOADING -> SyncModel(
             SyncPhase.SIGNING_IN,
             SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "downloading"),
+            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com"),
+            typedCode = "482913",
         )
         AndroidScreensTest.Screen.SYNC_SIGNED_IN -> SyncModel(SyncPhase.SYNCED, base, account, devices)
         AndroidScreensTest.Screen.SYNC_UPLOADING -> SyncModel(
