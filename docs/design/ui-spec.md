@@ -793,6 +793,32 @@ page's title already says where a task goes, so the input has no label, no chip 
 - **Answer.** What comes back shows as one line directly under the box that sent it (above the
   inspector's, which sits at the bottom). Behavior as in **Assistant**.
 
+#### Voice input (m12)
+
+Decision 4 of **Input first (v31)**. The microphone is a 24 pt pixel picture (12 x 12 grid at 2 pt a
+pixel) in a 32 pt button at the right of the page composer's box, after the model chip: on Mine and
+the project pages, not in the inspector. Platforms without a recorder (Windows until its recorder
+lands) do not draw it.
+
+- **Click** asks for the microphone if macOS has not been asked, then records (60 s at most). The
+  button becomes a filled `accent` rounded square (radius 8) with the microphone in `accent.text`,
+  and one line above the box shows a pixel waveform (12 bars of 2 pt cells, 2, 4, 6 or 8 cells tall,
+  the loudest level of each 100 ms beat, oldest at the left) and `Listening… click to stop, Esc to
+  cancel`.
+- **Click again or Enter** ends it: the line shows the pixel busy indicator and `Transcribing…`. The
+  text is put after what is typed and sent through the normal send path. **Esc** cancels the
+  recording or the upload; leaving the page cancels it too.
+- **Failures** are one quiet `text.secondary` line above the box for 6 s: `Sign in to use voice` (a
+  link that opens Settings on the Account pane; nothing is recorded), `Microphone access is off` with
+  `Open System Settings` (Privacy > Microphone), `Voice limit reached for today`, `Voice isn't set
+  up on this server`, otherwise `Couldn't transcribe. Try again`.
+- **Hold `⌥ Space` to talk is not built**: mygo's `GlobalShortcut.Register(acc, fn)` reports key
+  down only, never key up. It waits for a mygo release that reports both.
+- No menu bar popover exists yet on macOS; it gets the same button when decision 6 is built.
+- The button does not take the field's focus on a click, so the box does not change under the
+  pointer between the two clicks.
+- Screens: `mine-composer-voice`, `-listening`, `-transcribing`, `-voice-signed-out`.
+
 ### Assistant (M3, restrained in M4d)
 
 The composer is the entry to a small built-in agent (Eino, `internal/agent`). It acts at once and

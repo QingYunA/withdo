@@ -80,6 +80,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 		m.move(c, ids, 1)
 	case c.Shortcut(0, ui.KeyUp):
 		m.move(c, ids, -1)
+	case m.voice.phase == voiceListening && c.Shortcut(0, ui.KeyEnter):
+		m.voiceStop()
 	case c.Shortcut(0, ui.KeyEnter):
 		m.openSelected()
 	case c.Shortcut(0, ui.KeySpace):
@@ -122,6 +124,7 @@ func (m *Main) runQueued(c *ui.Context, ids []int) {
 // assistant forget the conversation.
 func (m *Main) escape() {
 	switch {
+	case m.voiceCancel():
 	case m.multi.Active():
 		m.multi.Clear()
 	case m.convo.thinking:

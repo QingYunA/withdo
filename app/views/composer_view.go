@@ -42,6 +42,7 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 			if m.replyIn(surfacePage, 0) {
 				m.answerView(c, t, false)
 			}
+			m.voiceLine(c, t)
 			m.notice(c, t)
 			m.pictureNotice(c, t, surfacePage)
 			ui.Box(c).Height(8).Shrink(0)
@@ -121,6 +122,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 			if !bar {
 				m.modelChip(c, t, s, !active, m.compactChip(s)) // nothing without a model
 			}
+			m.voiceButton(c, t, s) // nothing in the inspector, or where nothing can record
 			switch {
 			case bar:
 			case typed:

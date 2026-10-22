@@ -28,6 +28,8 @@ type Server struct {
 	public PublicConfig
 	// signIn is set by EnablePasswordSignIn; nil keeps POST /v1/sign-in unregistered.
 	signIn *passwordSignIn
+	// voice is POST /v1/transcribe; off until EnableVoice gives it a key.
+	voice *voice
 }
 
 // Open builds the connection pool from databaseURL, applies the schema migrations and returns the
@@ -63,7 +65,7 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	if err := migrate(ctx, pool); err != nil {
 		return nil, err
 	}
-	s := &Server{pool: pool, auth: auth, hub: newHub(), mux: http.NewServeMux()}
+	s := &Server{pool: pool, auth: auth, hub: newHub(), mux: http.NewServeMux(), voice: newVoice(auth)}
 	s.mux.HandleFunc("GET /healthz", s.healthz)
 	s.mux.HandleFunc("GET /v1/config", s.config)
 	s.mux.HandleFunc("POST /v1/devices", s.withSession(s.createDevice))
@@ -72,6 +74,7 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	s.mux.HandleFunc("POST /v1/ids", s.withSession(s.leaseIDs))
 	s.mux.HandleFunc("POST /v1/push", s.withSession(s.push))
 	s.mux.HandleFunc("GET /v1/pull", s.withSession(s.pull))
+	s.mux.HandleFunc("POST /v1/transcribe", s.voice.handler)
 	s.mux.HandleFunc("GET /v1/events", s.withSession(s.events))
 	return s, nil
 }

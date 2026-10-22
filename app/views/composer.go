@@ -123,6 +123,8 @@ func (m *Main) composerKey(s surface) func(ui.TextKey) bool {
 		}
 		cs := &m.cmp[s]
 		switch {
+		case k.Key == ui.KeyEnter && s == surfacePage && m.voice.phase == voiceListening:
+			m.voiceStop() // Enter ends the recording; the text is sent when it comes back
 		case k.Key == ui.KeyEnter:
 			cs.buf = k.Text()
 			m.submit(s)
@@ -145,6 +147,7 @@ func (m *Main) composerKey(s surface) func(ui.TextKey) bool {
 // inspector, clears the selection and makes the assistant forget the conversation.
 func (m *Main) composerEscape(s surface) {
 	switch {
+	case s == surfacePage && m.voiceCancel():
 	case m.convo.thinking:
 		m.cancelAsk()
 	case m.convo.open && m.convo.owner == s:
