@@ -3,6 +3,28 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.7.0
+
+No database change: upgrading from 0.6.4 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Say it in one sentence.** Without a model connected, the input still reads what you type: days
+  and times (`明天九点`, `next friday`), `提醒我` / `remind me` for a reminder, `#category`, and `!` for
+  important. `，还有` / `, and also` splits one sentence into several tasks. One Undo takes them all
+  back.
+- **Voice input** on macOS: click the microphone at the right of the input, speak, click again. The
+  words become the input and are sent as if typed. It needs you signed in to sync.
+- **The menu bar icon.** Click it, or press `⌥ Space` anywhere (`Alt+Space` on Windows, where the tray
+  icon opens it too), to add a task and see today's tasks and your agents without opening the window.
+- **Your tasks are simpler.** They have three states, To do, Doing and Done, and a star for the
+  important ones instead of P0 to P3. A task's pane shows when, where, notes and pictures, and a
+  button to hand it to an agent. An agent's tasks keep all their states and details.
+- **Settings has four panes:** Account, General, Agents and Advanced. Your own model key and the
+  less used switches moved to Advanced.
+- **Accounts moved to a new sign-in service.** Your email and password are the same and nothing needs
+  doing: devices signed in before keep syncing, and the next sign-in uses the new service.
+- Drawing is faster: the window redraws only what changed.
+
 ## 0.6.4
 
 No database change: upgrading from 0.6.3 is installing the app. On Windows, quit ADHD Todo and your
