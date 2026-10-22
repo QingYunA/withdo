@@ -129,7 +129,9 @@ func waitSnap(t *testing.T, r *Real, what string, ok func(SyncSnapshot) bool) Sy
 	}
 }
 
-func atCodeStep(s SyncSnapshot) bool { return s.Phase == SyncSignedOut && s.SignInStep == SignInStepCode }
+func atCodeStep(s SyncSnapshot) bool {
+	return s.Phase == SyncSignedOut && s.SignInStep == SignInStepCode
+}
 
 func TestRequestCodeMovesToTheCodeStepAndResendWaits(t *testing.T) {
 	f := newCodeServer(t)
