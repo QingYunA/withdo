@@ -1,6 +1,7 @@
 package pbauth_test
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -158,7 +159,8 @@ func TestSignInFailuresAndClosedSignUp(t *testing.T) {
 	status, _ := post(t, base+"/api/collections/users/records", map[string]string{
 		"email": "eve@example.com", "password": testPassword, "passwordConfirm": testPassword,
 	})
-	if status != http.StatusForbidden && status != http.StatusNotFound {
+	// The create rule fails a plain create with a 400 now that OAuth2 may create users.
+	if status != http.StatusForbidden && status != http.StatusNotFound && status != http.StatusBadRequest {
 		t.Fatalf("sign-up = %d, want it closed", status)
 	}
 	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err == nil {
@@ -172,11 +174,17 @@ func TestMigrationSetsUpUsersCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if users.CreateRule != nil || users.ListRule != nil || users.UpdateRule != nil {
+	if users.ListRule != nil || users.ViewRule != nil || users.UpdateRule != nil || users.DeleteRule != nil {
 		t.Error("the users API rules should be closed")
 	}
-	if !users.PasswordAuth.Enabled || !users.OTP.Enabled || users.OAuth2.Enabled || users.MFA.Enabled {
-		t.Error("only password and one-time code sign-in should be on, with MFA off")
+	if users.CreateRule == nil || *users.CreateRule != `@request.context = "oauth2"` {
+		t.Errorf("create rule = %v, want only OAuth2 to create users", users.CreateRule)
+	}
+	if !users.PasswordAuth.Enabled || !users.OTP.Enabled || !users.OAuth2.Enabled || users.MFA.Enabled {
+		t.Error("password, one-time code and OAuth2 sign-in should be on, with MFA off")
+	}
+	if users.OAuth2.MappedFields.Name != "name" || len(users.OAuth2.Providers) != 0 {
+		t.Errorf("OAuth2 = %+v, want name mapped and no provider in code", users.OAuth2)
 	}
 	if users.OTP.Length != 6 || users.OTP.Duration != 600 {
 		t.Errorf("code = %d digits for %d s, want 6 for 600", users.OTP.Length, users.OTP.Duration)
@@ -453,5 +461,90 @@ func TestRequestOTPIsRateLimited(t *testing.T) {
 		case <-time.After(500 * time.Millisecond):
 			quiet = true
 		}
+	}
+}
+
+// sseEvent reads one event (name and data) from a server-sent event stream.
+func sseEvent(t *testing.T, r *bufio.Reader) (string, string) {
+	t.Helper()
+	var name, data string
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil {
+			t.Fatalf("read the event stream: %v", err)
+		}
+		line = strings.TrimRight(line, "\r\n")
+		switch {
+		case line == "":
+			if name != "" {
+				return name, data
+			}
+		case strings.HasPrefix(line, "event:"):
+			name = strings.TrimSpace(strings.TrimPrefix(line, "event:"))
+		case strings.HasPrefix(line, "data:"):
+			data = strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		}
+	}
+}
+
+func TestOAuth2RedirectReachesTheSubscribedClient(t *testing.T) {
+	app := openApp(t)
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, base+"/api/realtime", nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	stream := bufio.NewReader(resp.Body)
+	name, data := sseEvent(t, stream)
+	var connect struct {
+		ClientID string `json:"clientId"`
+	}
+	if name != "PB_CONNECT" || json.Unmarshal([]byte(data), &connect) != nil || connect.ClientID == "" {
+		t.Fatalf("first event = %q %q, want PB_CONNECT with a client id", name, data)
+	}
+	if status, _ := post(t, base+"/api/realtime", map[string]any{
+		"clientId": connect.ClientID, "subscriptions": []string{"@oauth2"},
+	}); status != http.StatusNoContent {
+		t.Fatalf("subscribe = %d, want 204", status)
+	}
+	noFollow := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	redirect, err := noFollow.Get(base + "/api/oauth2-redirect?state=" + connect.ClientID + "&code=abc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = redirect.Body.Close()
+	name, data = sseEvent(t, stream)
+	var msg struct{ State, Code, Error string }
+	if err := json.Unmarshal([]byte(data), &msg); err != nil {
+		t.Fatal(err)
+	}
+	if name != "@oauth2" || msg.State != connect.ClientID || msg.Code != "abc" || msg.Error != "" {
+		t.Fatalf("event = %q %+v, want @oauth2 with the state and code", name, msg)
+	}
+}
+
+func TestPlainSignUpStaysClosedAndCodeSignUpStillWorks(t *testing.T) {
+	app := openApp(t)
+	mails := captureMail(app)
+	base := serve(t, app, pbauth.NewAuthenticator(app))
+	status, _ := post(t, base+"/api/collections/users/records", map[string]string{
+		"email": "eve@example.com", "password": testPassword, "passwordConfirm": testPassword,
+	})
+	if status < 400 {
+		t.Fatalf("plain sign-up = %d, want it refused", status)
+	}
+	if total, _ := app.CountRecords("users"); total != 0 {
+		t.Fatalf("users = %d, want 0", total)
+	}
+	if status, body := requestOTP(t, base, "new@example.com"); status != http.StatusOK {
+		t.Fatalf("code request = %d %s, want 200", status, body)
+	}
+	waitMail(t, mails)
+	if total, _ := app.CountRecords("users"); total != 1 {
+		t.Fatalf("users = %d, want the code sign-up's 1", total)
 	}
 }

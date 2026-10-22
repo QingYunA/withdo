@@ -68,7 +68,8 @@ fun isAuthFailure(message: String): Boolean {
 }
 
 /** The stage the sign-in button says: the server checks the account, then the tasks download. */
-enum class SignInStage { SENDING, CHECKING, DOWNLOADING }
+/** GOOGLE is the browser open on Google's consent page, the card waiting for it (M13 P3). */
+enum class SignInStage { SENDING, CHECKING, DOWNLOADING, GOOGLE }
 
 /**
  * The stage to show, from the raw sign_in_stage. Signing in without a stage yet is checking; not
@@ -78,6 +79,7 @@ fun signInStageOf(signingIn: Boolean, raw: String?): SignInStage? = when {
     !signingIn -> null
     raw == "downloading" -> SignInStage.DOWNLOADING
     raw == "sending" -> SignInStage.SENDING
+    raw == "google" -> SignInStage.GOOGLE
     else -> SignInStage.CHECKING
 }
 
@@ -113,7 +115,10 @@ fun signInFailureText(failure: SignInFailure): Int = when (failure) {
 enum class SignInStep { EMAIL, CODE, PASSWORD, RESET_SENT, LEGACY }
 
 /** Why a code or password sign-in failed, from CodeState's failure kinds. */
-enum class CodeFailure { WRONG_CODE, EXPIRED, TOO_MANY, WRONG_PASSWORD, DEACTIVATED, NETWORK, UNSUPPORTED, OTHER }
+enum class CodeFailure {
+    WRONG_CODE, EXPIRED, TOO_MANY, WRONG_PASSWORD, DEACTIVATED, NETWORK, UNSUPPORTED,
+    GOOGLE_CANCELLED, GOOGLE_FAILED, OTHER,
+}
 
 /** The failure kind of CodeState's "failure" field; blank is no failure. */
 fun codeFailureOf(kind: String?): CodeFailure? = when (kind?.trim()) {
@@ -125,6 +130,8 @@ fun codeFailureOf(kind: String?): CodeFailure? = when (kind?.trim()) {
     "deactivated" -> CodeFailure.DEACTIVATED
     "network" -> CodeFailure.NETWORK
     "unsupported" -> CodeFailure.UNSUPPORTED
+    "google_cancelled" -> CodeFailure.GOOGLE_CANCELLED
+    "google_failed" -> CodeFailure.GOOGLE_FAILED
     else -> CodeFailure.OTHER
 }
 
@@ -137,6 +144,8 @@ fun codeFailureText(failure: CodeFailure): Int? = when (failure) {
     CodeFailure.DEACTIVATED -> R.string.sync_sign_in_locked
     CodeFailure.NETWORK -> R.string.sync_sign_in_network
     CodeFailure.UNSUPPORTED -> R.string.sync_sign_in_unsupported
+    CodeFailure.GOOGLE_CANCELLED -> R.string.sync_google_cancelled
+    CodeFailure.GOOGLE_FAILED -> R.string.sync_google_failed
     CodeFailure.OTHER -> null
 }
 

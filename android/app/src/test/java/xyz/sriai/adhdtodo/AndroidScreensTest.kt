@@ -122,6 +122,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
         SYNC_SIGNING_IN_CHECKING,
         SYNC_SIGNING_IN_DOWNLOADING,
         SYNC_SIGNIN_EMAIL,
+        SYNC_SIGNIN_GOOGLE_WAITING,
         SYNC_SIGNIN_CODE,
         SYNC_SIGNIN_WRONG_CODE,
         SYNC_SIGNIN_PASSWORD,
@@ -136,7 +137,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
 
     companion object {
         private val frozen = setOf(
-            Screen.SYNC_SIGNIN_EMAIL, Screen.SYNC_SIGNIN_CODE, Screen.SYNC_SIGNIN_WRONG_CODE,
+            Screen.SYNC_SIGNIN_EMAIL, Screen.SYNC_SIGNIN_GOOGLE_WAITING, Screen.SYNC_SIGNIN_CODE, Screen.SYNC_SIGNIN_WRONG_CODE,
             Screen.SYNC_SIGNIN_PASSWORD, Screen.SYNC_SIGNING_IN_CHECKING, Screen.SYNC_SIGNING_IN_DOWNLOADING,
         )
         private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
@@ -157,6 +158,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "sync-signing-in-checking" to Screen.SYNC_SIGNING_IN_CHECKING,
                 "sync-signing-in-downloading" to Screen.SYNC_SIGNING_IN_DOWNLOADING,
                 "sync-signin-email" to Screen.SYNC_SIGNIN_EMAIL,
+                "sync-signin-google-waiting" to Screen.SYNC_SIGNIN_GOOGLE_WAITING,
                 "sync-signin-code" to Screen.SYNC_SIGNIN_CODE,
                 "sync-signin-wrong-code" to Screen.SYNC_SIGNIN_WRONG_CODE,
                 "sync-signin-password" to Screen.SYNC_SIGNIN_PASSWORD,
@@ -169,7 +171,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
             val chinese = setOf(
-                "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-code",
+                "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
                 "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind")
             return screens.flatMap { (name, screen) ->
                 buildList {
@@ -340,6 +342,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
 
         AndroidScreensTest.Screen.SYNC_SIGNED_OUT,
         AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING,
         AndroidScreensTest.Screen.SYNC_SIGNIN_CODE,
         AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE,
         AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD,
@@ -466,6 +469,13 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
             flow = SignInFlow(email = "cyan@example.com"),
+            googleAvailable = true,
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING -> SyncModel(
+            SyncPhase.SIGNING_IN,
+            SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "google"),
+            flow = SignInFlow(email = "cyan@example.com"),
+            googleAvailable = true,
         )
         AndroidScreensTest.Screen.SYNC_SIGNIN_CODE -> SyncModel(
             SyncPhase.SIGNED_OUT,

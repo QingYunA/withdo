@@ -335,6 +335,50 @@ class InteractionTest {
     }
 
     @Test
+    fun `continue with google starts the browser flow and cancel stops the wait`() {
+        var started = 0
+        var cancelled = 0
+        val actions = xyz.sriai.adhdtodo.ui.SignInActions(
+            onGoogle = { started++ },
+            onCancelGoogle = { cancelled++ },
+        )
+        val model = mutableStateOf(
+            SyncModel(
+                SyncPhase.SIGNED_OUT,
+                SyncStatus(server = DEFAULT_SYNC_SERVER),
+                flow = xyz.sriai.adhdtodo.ui.SignInFlow(),
+                googleAvailable = true,
+            ),
+        )
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.clickText("Continue with Google")
+        assertEquals(1, started)
+        model.value = model.value.copy(
+            phase = SyncPhase.SIGNING_IN,
+            status = SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "google"),
+        )
+        compose.waitForIdle()
+        compose.onNodeWithText("Finish in your browser").assertExists()
+        compose.onNodeWithText("Continue with email").assertDoesNotExist()
+        compose.clickText("Cancel")
+        assertEquals(1, cancelled)
+    }
+
+    @Test
+    fun `the google button is hidden when the server has no google provider`() {
+        val model = mutableStateOf(
+            SyncModel(
+                SyncPhase.SIGNED_OUT,
+                SyncStatus(server = DEFAULT_SYNC_SERVER),
+                flow = xyz.sriai.adhdtodo.ui.SignInFlow(),
+            ),
+        )
+        compose.setThemedContent { Sync(model) }
+        compose.onNodeWithText("Continue with email").assertExists()
+        compose.onNodeWithText("Continue with Google").assertDoesNotExist()
+    }
+
+    @Test
     fun `bottom nav selects each tab`() {
         val tab = mutableStateOf(Tab.MINE)
         compose.setThemedContent {
@@ -400,6 +444,7 @@ class InteractionTest {
     private fun Sync(
         model: MutableState<SyncModel>,
         onSignIn: (String, String) -> Unit = { _, _ -> },
+        signInActions: xyz.sriai.adhdtodo.ui.SignInActions = xyz.sriai.adhdtodo.ui.SignInActions(),
     ) {
         SyncScreen(
             model = model.value,
@@ -409,6 +454,7 @@ class InteractionTest {
             serverError = false,
             serverSaving = false,
             onSignIn = onSignIn,
+            signInActions = signInActions,
             onSignOut = {},
             onSyncNow = {},
             onRetry = {},

@@ -96,7 +96,7 @@ func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.C
 		r.sync.signingIn = false
 		r.sync.signInStage = SignInStageNone
 		r.sync.signInFailure = SignInFailureNone
-		r.sync.code = codeState{}
+		r.sync.code = r.sync.code.cleared()
 		r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 		r.sync.failedSince = time.Time{}
 		r.mu.Unlock()
@@ -126,7 +126,7 @@ func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.C
 	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
 	r.sync.signInFailure = SignInFailureNone
-	r.sync.code = codeState{}
+	r.sync.code = r.sync.code.cleared()
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}
 	r.mu.Unlock()
@@ -246,7 +246,7 @@ func (r *Real) finishLink(client *syncclient.Client) {
 	r.sync.signingIn = false
 	r.sync.signInStage = SignInStageNone
 	r.sync.conflict = nil
-	r.sync.code = codeState{}
+	r.sync.code = r.sync.code.cleared()
 	r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 	r.sync.failedSince = time.Time{}
 	r.sync.client = client
@@ -256,14 +256,19 @@ func (r *Real) finishLink(client *syncclient.Client) {
 }
 
 // SyncCancel abandons a sign-in that found tasks on both sides. The data stays as it was and the
-// token is deleted again.
+// token is deleted again. It also drops a Google sign-in that waits for the browser.
 func (r *Real) SyncCancel() {
 	r.mu.Lock()
 	conflict := r.sync.conflict
 	r.sync.conflict = nil
-	r.sync.code = codeState{}
+	r.sync.code = r.sync.code.cleared()
+	googleCancelled := r.cancelGoogleLocked()
 	r.sync.signingIn = false
 	r.sync.signInFailure = SignInFailureNone
+	if googleCancelled {
+		r.sync.signInFailure = SignInFailureGoogleCancelled
+		r.sync.signInStage = SignInStageNone
+	}
 	r.sync.status.LastError = ""
 	r.sync.failedSince = time.Time{}
 	tokens := r.sync.tokens
@@ -274,6 +279,9 @@ func (r *Real) SyncCancel() {
 	r.sync.tokens, r.sync.client = nil, nil
 	r.mu.Unlock()
 	if conflict == nil {
+		if googleCancelled {
+			r.syncChanged()
+		}
 		return
 	}
 	if source, ok := tokens.(syncclient.AccountSource); ok {

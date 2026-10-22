@@ -17,7 +17,8 @@ type fakeSync struct {
 	login, password                                                        string
 	server                                                                 string
 	setErr                                                                 error
-	checks, resends                                                        int
+	checks, resends, googles                                               int
+	open                                                                   func(string)
 	requestedCodes, codes, resets                                          []string
 }
 
@@ -31,6 +32,10 @@ func (f *fakeSync) SyncRequestCode(email string) {
 	f.requestedCodes = append(f.requestedCodes, email)
 }
 func (f *fakeSync) SyncResendCode() { f.resends++ }
+func (f *fakeSync) SyncSignInWithGoogle(open func(url string)) {
+	f.googles++
+	f.open = open
+}
 func (f *fakeSync) SyncSignInWithCode(code string) {
 	f.codes = append(f.codes, code)
 }

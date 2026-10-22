@@ -318,6 +318,7 @@ const (
 	signInStageSending     = "sending"
 	signInStageChecking    = "checking"
 	signInStageDownloading = "downloading"
+	signInStageGoogle      = "google"
 	signInStageNone        = ""
 )
 
@@ -484,6 +485,10 @@ func syncError(err error) error {
 		return errors.New("this account is deactivated; ask the admin")
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
 		return errors.New("this server does not support signing in from the app")
+	case errors.Is(err, syncclient.ErrGoogleCancelled):
+		return errors.New("Google sign-in was cancelled")
+	case errors.Is(err, syncclient.ErrGoogleFailed):
+		return errors.New("Google sign-in didn't finish; try again")
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("another device is still uploading this workspace; try again later")
 	case errors.Is(err, syncclient.ErrLocalData):

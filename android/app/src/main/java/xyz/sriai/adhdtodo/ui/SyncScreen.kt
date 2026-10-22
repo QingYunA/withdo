@@ -79,6 +79,8 @@ data class SyncModel(
     val flow: SignInFlow = SignInFlow(),
     /** The six digits already typed, for the screenshots. */
     val typedCode: String = "",
+    /** The server lists a Google provider: the email step shows Continue with Google. */
+    val googleAvailable: Boolean = false,
 )
 
 /** The account's display name, else its email, else the quiet "Account". */
@@ -131,6 +133,7 @@ fun SyncScreen(
                     stage = if (model.flow.sending) SignInStage.SENDING else signInStage,
                     actions = signInActions.copy(onSignInWithPassword = onSignIn),
                     initialCode = model.typedCode,
+                    googleAvailable = model.googleAvailable,
                 )
             }
             SyncPhase.CHOOSE -> {
@@ -286,7 +289,7 @@ private fun SignedOutCard(
             PrimaryButton(
                 label = when (stage) {
                     SignInStage.DOWNLOADING -> stringResource(R.string.sync_signing_in_downloading)
-                    SignInStage.CHECKING, SignInStage.SENDING -> stringResource(R.string.sync_signing_in_checking)
+                    SignInStage.CHECKING, SignInStage.SENDING, SignInStage.GOOGLE -> stringResource(R.string.sync_signing_in_checking)
                     null -> stringResource(R.string.sync_sign_in)
                 },
                 enabled = ready,

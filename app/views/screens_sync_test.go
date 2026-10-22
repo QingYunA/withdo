@@ -21,6 +21,11 @@ func syncScreenStates() []struct {
 	signedOut := signedOutSync()
 	// The signed-out card of a PocketBase server: the email, the code, the password, the reset.
 	email := signedOutCodeSync()
+	email.GoogleAvailable = true
+	googleWaiting := email
+	googleWaiting.Phase, googleWaiting.SignInStage = data.SyncSigningIn, data.SignInStageGoogle
+	googleFailed := email
+	googleFailed.SignInFailure = data.SignInFailureGoogleFailed
 	code := email
 	code.SignInStep, code.SignInEmail = data.SignInStepCode, "cyan@example.com"
 	code.ResendAt = now.Add(24 * time.Second)
@@ -90,6 +95,8 @@ func syncScreenStates() []struct {
 		}},
 		{"email", email, nil},
 		{"email-filled", email, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
+		{"google-waiting", googleWaiting, nil},
+		{"google-failed", googleFailed, nil},
 		{"code", code, func(r *settingsRig) { r.s.syncCode = "48" }},
 		{"code-checking", codeChecking, func(r *settingsRig) { r.s.syncCode, r.s.syncCodeTried = "482913", "482913" }},
 		{"code-wrong", codeWrong, nil},

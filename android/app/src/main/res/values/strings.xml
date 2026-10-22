@@ -225,6 +225,13 @@
     <string name="sync_signin_meta">Tasks and agents’ reports sync to this phone. A new email gets an account here.</string>
     <string name="sync_signin_email_hint">you@example.com</string>
     <string name="sync_signin_continue">Continue with email</string>
+    <string name="sync_signin_google">Continue with Google</string>
+    <string name="sync_signin_or">or</string>
+    <string name="sync_google_title">Finish in your browser</string>
+    <string name="sync_google_body">Choose your Google account there; this screen picks it up by itself.</string>
+    <string name="sync_google_cancel">Cancel</string>
+    <string name="sync_google_cancelled">Google sign-in was cancelled</string>
+    <string name="sync_google_failed">Google sign-in didn’t finish; try again</string>
     <string name="sync_signin_note">Keys and model settings stay on this phone.</string>
     <string name="sync_code_title">Check your email</string>
     <string name="sync_code_sent">We sent a 6-digit code to %1$s</string>

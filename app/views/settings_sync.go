@@ -32,6 +32,9 @@ type SyncService interface {
 	SyncSignInWithCode(code string)
 	SyncRequestPasswordReset(email string)
 	SyncSetSignInStep(step data.SignInStep)
+	// SyncSignInWithGoogle starts "Continue with Google" (M13 P3): open is handed Google's URL to
+	// show in the system browser. SyncCancel drops the wait.
+	SyncSignInWithGoogle(open func(url string))
 }
 
 // The sheet of the first sign-in that found tasks on both sides.

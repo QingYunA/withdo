@@ -16,6 +16,7 @@ import (
 // right after the code was accepted.
 type codeFake struct {
 	*httptest.Server
+	mux      *http.ServeMux
 	mu       sync.Mutex
 	requests int
 	checks   int
@@ -69,6 +70,7 @@ func newCodeFake(t *testing.T) *codeFake {
 	mux.HandleFunc("POST /v1/devices", func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "the server failed", http.StatusInternalServerError)
 	})
+	f.mux = mux
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
 	return f

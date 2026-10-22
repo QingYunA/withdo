@@ -60,6 +60,8 @@ const (
 	SignInStageDownloading SignInStage = "downloading"
 	// SignInStageSending is the email being sent its code.
 	SignInStageSending SignInStage = "sending"
+	// SignInStageGoogle is the system browser open on Google's consent page, the app waiting.
+	SignInStageGoogle SignInStage = "google"
 )
 
 // SignInStep is which screen of the signed-out card the Account pane shows (M13 P2).
@@ -92,6 +94,10 @@ const (
 	SignInFailureWrongCode SignInFailure = "wrongCode"
 	// SignInFailureCodeExpired is a code older than ten minutes: a new one was mailed at once.
 	SignInFailureCodeExpired SignInFailure = "codeExpired"
+	// SignInFailureGoogleCancelled is a Google sign-in the person cancelled.
+	SignInFailureGoogleCancelled SignInFailure = "googleCancelled"
+	// SignInFailureGoogleFailed is a Google sign-in that timed out or was refused.
+	SignInFailureGoogleFailed SignInFailure = "googleFailed"
 )
 
 // SyncConflict is what the pane asks before it changes this Mac's task ids: how much data each
@@ -130,6 +136,8 @@ type SyncSnapshot struct {
 	// PasswordOnly is true once the server answered /v1/config without "auth": "pocketbase": its
 	// signed-out card is the old account-and-password one, with no codes.
 	PasswordOnly bool
+	// GoogleAvailable is true once the server's auth methods listed a Google provider.
+	GoogleAvailable bool
 }
 
 // The JSON files keyed by task id that a merge must rename, next to the database.
@@ -163,6 +171,9 @@ type syncTask struct {
 	tokens        syncclient.TokenSource
 	client        *syncclient.Client
 	code          codeState
+	// google is the running Google sign-in's cancel func; gen tells a finished one from a newer.
+	google    context.CancelFunc
+	googleGen int
 }
 
 // SetSyncNotify tells the service where to ask for a redraw after a status change. The shell
@@ -187,8 +198,9 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		Pending:       r.sync.pending,
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		SignInStep: r.sync.code.step, SignInEmail: r.sync.code.email, ResendAt: r.sync.code.resendAt,
-		PasswordOnly: r.sync.code.passwordOnly && r.sync.code.probed == r.sync.server,
-		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
+		PasswordOnly:    r.sync.code.passwordOnly && r.sync.code.probed == r.sync.server,
+		GoogleAvailable: r.sync.code.google && r.sync.code.probed == r.sync.server,
+		ThisDeviceID:    r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
 	if s.Pending < 0 {
 		s.Pending = 0
@@ -265,6 +277,10 @@ func signInFailureKind(err error) SignInFailure {
 		return SignInFailureCredentials
 	case errors.Is(err, syncclient.ErrInvalidCode):
 		return SignInFailureWrongCode
+	case errors.Is(err, syncclient.ErrGoogleCancelled):
+		return SignInFailureGoogleCancelled
+	case errors.Is(err, syncclient.ErrGoogleFailed):
+		return SignInFailureGoogleFailed
 	case errors.Is(err, syncclient.ErrTooManyAttempts):
 		return SignInFailureTooMany
 	case errors.Is(err, syncclient.ErrSecondFactor):
@@ -370,7 +386,7 @@ func (r *Real) SyncSignOut() {
 	r.sync.cfg = cfg
 	r.sync.account, r.sync.hasAccount = syncclient.Account{}, false
 	r.sync.signingIn, r.sync.conflict = false, nil
-	r.sync.code = codeState{}
+	r.sync.code = r.sync.code.cleared()
 	r.sync.signInFailure = SignInFailureNone
 	r.sync.status = syncclient.Status{}
 	r.sync.failedSince = time.Time{}

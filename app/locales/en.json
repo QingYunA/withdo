@@ -4336,6 +4336,30 @@
   "@settingsSyncContinueEmail": {
     "description": "The accent button of the email step."
   },
+  "settingsSyncContinueGoogle": "Continue with Google",
+  "@settingsSyncContinueGoogle": {
+    "description": "The outlined button above the email field; it opens the browser on Google's consent page."
+  },
+  "settingsSyncOr": "or",
+  "@settingsSyncOr": {
+    "description": "The word between the two hairlines under the Google button."
+  },
+  "settingsSyncGoogleTitle": "Finish in your browser",
+  "@settingsSyncGoogleTitle": {
+    "description": "Title of the card that waits while the browser shows Google's sign-in."
+  },
+  "settingsSyncGoogleBody": "Choose your Google account there; this window picks it up by itself.",
+  "@settingsSyncGoogleBody": {
+    "description": "Under the title of the Google waiting card."
+  },
+  "settingsSyncGoogleCancelled": "Google sign-in was cancelled",
+  "@settingsSyncGoogleCancelled": {
+    "description": "Failure line after Cancel on the Google waiting card."
+  },
+  "settingsSyncGoogleFailed": "Google sign-in didn't finish; try again",
+  "@settingsSyncGoogleFailed": {
+    "description": "Failure line when the Google sign-in timed out after 5 minutes or was refused."
+  },
   "settingsSyncLocalNote": "Keys and model settings stay on this Mac.",
   "@settingsSyncLocalNote": {
     "description": "Note under the email step's button."

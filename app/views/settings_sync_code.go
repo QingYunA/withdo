@@ -29,6 +29,10 @@ var syncCodeDigit = theme.Style{Size: 22, Line: 28, Weight: 600, Mono: true}
 func (s *Settings) syncCodeSignInCard(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	group(c, t, "sync-hero", func() {
 		ui.Column(c.Key("sync-hero-"+string(snap.SignInStep))).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
+			if snap.Phase == data.SyncSigningIn && snap.SignInStage == data.SignInStageGoogle {
+				s.syncGoogleStep(c, t, svc)
+				return
+			}
 			switch snap.SignInStep {
 			case data.SignInStepCode:
 				s.syncCodeStep(c, t, svc, snap)
@@ -77,6 +81,9 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 	s.syncHeroHead(c, t, theme.IconUser, s.say.SettingsSyncEmailTitle())
 	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncEmailBody(), 0).
 		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
+	if snap.GoogleAvailable {
+		s.syncGoogleButton(c, t, svc, busy)
+	}
 	ui.Column(c.Key("sync-form")).Width(syncFormWidth).Shrink(0).Margin(16, 0, 0).Children(func() {
 		well := fieldWell(c, t, "sync-email", syncFormWidth, func() {
 			entered, _ := draftField(c, t, s.syncFields, draftSpec{
@@ -169,6 +176,10 @@ func (s *Settings) syncCodeFailureText(failure data.SignInFailure) string {
 		return s.say.SettingsSyncTooManyTriesMinute()
 	case data.SignInFailureCredentials:
 		return s.say.SettingsSyncWrongEmailPassword()
+	case data.SignInFailureGoogleCancelled:
+		return s.say.SettingsSyncGoogleCancelled()
+	case data.SignInFailureGoogleFailed:
+		return s.say.SettingsSyncGoogleFailed()
 	}
 	return s.syncSignInFailureText(failure)
 }
@@ -350,5 +361,61 @@ func (s *Settings) syncNoteStepChange(snap data.SyncSnapshot) {
 	s.syncFocusPassword = snap.SignInStep == data.SignInStepPassword
 	if snap.SignInStep == data.SignInStepEmail {
 		s.syncFocusAccount = true
+	}
+}
+
+// syncGoogleLabel is the 13 pt 500 text of the Google button.
+var syncGoogleLabel = theme.Style{Size: 13, Line: 18, Weight: 500}
+
+// syncOrText is the 12 pt "or" between the hairlines.
+var syncOrText = theme.Style{Size: 12, Line: 16, Weight: 400}
+
+// The Google button and the waiting card (ui-spec, Settings > Account > Google).
+const (
+	syncGoogleMark    float32 = 14
+	syncGoogleMarkBig float32 = 36
+	syncGoogleButtonH float32 = 30
+)
+
+// syncGoogleButton is "Continue with Google": a 280 pt outlined button with Google's G, and under
+// it the "or" rule that leads to the email field. The browser is opened through the shell's own
+// OpenURL.
+func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncService, busy bool) {
+	text := s.say.SettingsSyncContinueGoogle()
+	btn := ui.ButtonBase(c.Key("sync-google")).Width(syncFormWidth).Height(syncGoogleButtonH).Shrink(0).Margin(16, 0, 0).
+		Radius(7).Label(text).Cursor(ui.CursorPointer).Center().
+		Background(t.SettingsGroup()).Border(1, t.Border) // the hairline reads on the white card
+	if btn.Hovered() {
+		btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
+	}
+	btn.Children(func() {
+		ui.Row(c.Key("sync-google-row")).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Image(c, theme.IconGoogle).Size(syncGoogleMark, syncGoogleMark).Shrink(0)
+			theme.Text(c, syncGoogleLabel, t.Text, text)
+		})
+	})
+	if busy {
+		btn.Disabled(true).Opacity(0.45)
+	} else if btn.Clicked() {
+		svc.SyncSignInWithGoogle(s.app.Act.OpenURL)
+	}
+	ui.Row(c.Key("sync-or")).Width(syncFormWidth).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(12, 0, 0).Children(func() {
+		ui.Box(c.Key("sync-or-left")).Grow(1).Height(1).Background(t.Border)
+		theme.Text(c, syncOrText, t.TextTertiary, s.say.SettingsSyncOr())
+		ui.Box(c.Key("sync-or-right")).Grow(1).Height(1).Background(t.Border)
+	})
+}
+
+// syncGoogleStep is the card while the browser shows Google's consent page: the G, "Finish in your
+// browser", the line that the window picks the answer up by itself, and Cancel.
+func (s *Settings) syncGoogleStep(c *ui.Context, t *theme.Tokens, svc SyncService) {
+	ui.Image(c, theme.IconGoogle).Size(syncGoogleMarkBig, syncGoogleMarkBig).Shrink(0)
+	hero := theme.Input
+	hero.Weight = 600
+	theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncGoogleTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncGoogleBody(), 0).
+		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
+	if settingsButton(c, t, "sync-google-cancel", s.say.SettingsSyncCancel(), false).Margin(16, 0, 0).Clicked() {
+		svc.SyncCancel()
 	}
 }
