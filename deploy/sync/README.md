@@ -139,6 +139,15 @@ first time each subject is accepted by `pocketbase` or `oidc`, which shows when 
   from the connection on every location, so a client cannot choose the address the rate limits count.
 - **Password guessing** is limited to 10 user sign-ins and 5 superuser sign-ins a minute per client address (PocketBase's rate limit,
   counting by the `X-Real-IP` nginx sets).
+- **Mail** goes out through Resend's SMTP (`smtp.resend.com:465`, TLS, user `resend`, the password a
+  send-only API key for `sri-ai.xyz`), from `ADHD Todo <noreply@sri-ai.xyz>`. It is set in
+  PocketBase's settings (admin UI > Settings > Mail), not in this repo; the key is also in the owner's
+  keychain as `adhd-todo-resend-smtp`. The domain's DKIM, the `send` and `rsend` CNAMEs and DMARC are
+  Cloudflare records Resend gave (2026-10-22); no MX, so Resend does not receive mail for the domain.
+  The app URL in the same settings is `https://todo.sri-ai.xyz`, for the links in the emails.
+- **Superusers need two steps** (MFA, since 2026-10-22): the password, then an 8-digit code mailed to
+  them. If mail stops working, reset a superuser from the server with `pb-superuser` below; MFA is
+  turned off in the `_superusers` collection's options.
 - **Superuser** (for the admin UI), once, from the server with the password on stdin:
   `docker compose --env-file sync.env -f sync.compose.yml exec -T sync /adhd-sync pb-superuser -pb-dir=/pb_data -email=EMAIL < password-file`.
   The three account commands below run the same way (`exec -T sync /adhd-sync …`); they work while

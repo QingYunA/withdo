@@ -56,7 +56,8 @@ Sync, its protocol and its Postgres stay as they are.
   update). The in-app `/v1/sign-in` keeps answering for old clients until P4.
 - The admin UI (`/_/`) was first reachable only through `ssh -L`; since 2026-10-22 it is public at
   `https://todo.sri-ai.xyz/_/`, guarded by the superuser's random 32-character password and 5
-  sign-ins a minute per address. MFA for superusers comes with the mail sender (P2). Superuser created
+  sign-ins a minute per address, and since the mail sender (P2) a code mailed to them as a second
+  step (MFA). Superuser created
   once from the server with `adhd-sync pb-superuser`.
 - Backups: `pb_data/data.db` joins what `deploy/sync/deploy.sh` backs up.
 
@@ -94,8 +95,9 @@ PocketBase.
 
 ## P2: sign-up, email codes, password reset
 
-Needs an SMTP sender. Recommended: Resend, sending from `noreply@sri-ai.xyz` (DNS records added with
-the owner's `cf` CLI). Set in PocketBase's mail settings, not in our code.
+Needs an SMTP sender. Done 2026-10-22: Resend, sending from `noreply@sri-ai.xyz` (domain verified,
+DNS records added with the owner's `cf` CLI), set in PocketBase's mail settings, not in our code; a
+test email was delivered. Superuser MFA is on. What is left is below.
 
 - Turn on sign-up and OTP for `users`; edit the email templates (code, verification, reset) in
   PocketBase, in English and Chinese.
@@ -126,6 +128,6 @@ sign-in stays in the app. Confirm with the owner before building.
 ## Owner's to-dos
 
 - P1: nothing beyond approving the deploy.
-- P2: a Resend account (or another SMTP sender) and its API key.
+- P2: done (Resend, 2026-10-22).
 - P3: a Google Cloud OAuth client, and a yes to the browser on desktop.
 - After P1: `drop schema adhd_todo;` in Supabase picpocket, if wanted.
