@@ -433,7 +433,7 @@ func TestMigrationAddsRateLimits(t *testing.T) {
 
 func TestRequestOTPIsRateLimited(t *testing.T) {
 	app := openApp(t)
-	captureMail(app)
+	mails := captureMail(app)
 	base := serve(t, app, pbauth.NewAuthenticator(app))
 	var limited int
 	for i := 0; i < 6; i++ {
@@ -444,5 +444,14 @@ func TestRequestOTPIsRateLimited(t *testing.T) {
 	}
 	if limited != 3 {
 		t.Fatalf("the 429 came on request %d, want the 4th (index 3)", limited)
+	}
+	// The codes are mailed in the background: let those sends finish before the app closes.
+	waitMail(t, mails)
+	for quiet := false; !quiet; {
+		select {
+		case <-mails:
+		case <-time.After(500 * time.Millisecond):
+			quiet = true
+		}
 	}
 }
