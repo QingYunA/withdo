@@ -256,6 +256,10 @@ func settle(tt *ui.Tester) {
 	tt.Frame()
 }
 
+// inlineWidth is a window narrow enough that Home has no Agents panel beside the lists, and shows
+// what agents handed over as a section at the top of them.
+const inlineWidth = 860
+
 func newMainTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 	t.Helper()
 	app, _, _ := newTestApp(t)

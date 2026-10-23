@@ -213,62 +213,16 @@ func TestAnAuthorHasTheirOwnAvatar(t *testing.T) {
 	}
 }
 
-func TestClickingADaySelectsItAndTheComposerAddsToIt(t *testing.T) {
+func TestClickingADaySelectsIt(t *testing.T) {
 	app, _ := calendarApp(t)
 	app.Assistant = &data.FakeAssistant{Ready: true}
 	tt, m := calendarTester(t, app, 1100)
-	has(t, tt, "Add to Wed, Oct 14, or ask me anything") // today is selected on arrival
 	if err := tt.Click("16"); err != nil {
 		t.Fatal(err)
 	}
-	has(t, tt, "Add to Fri, Oct 16, or ask me anything")
 	if d := m.calendarDay(); d.Day() != 16 {
 		t.Errorf("selected %v", d)
 	}
-}
-
-func TestChineseComposerNamesTheSelectedDay(t *testing.T) {
-	app, _ := calendarApp(t)
-	tt, _ := calendarTester(t, app, 1100)
-	tt.SetLocale("zh-Hans")
-	tt.Frame()
-	if err := tt.Click("16"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, tt, "添加到10 月 16 日周五，或者问我任何事")
-}
-
-func TestTheAssistantIsToldTheSelectedDay(t *testing.T) {
-	app, _ := calendarApp(t)
-	fa := &data.FakeAssistant{Ready: true}
-	app.Assistant = fa
-	tt, _ := calendarTester(t, app, 1100)
-	if err := tt.Click("16"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Key(ui.Cmd, ui.KeyK)
-	tt.Type("buy milk")
-	tt.Key(0, ui.KeyEnter)
-	if got := fa.Places(); len(got) != 1 || got[0] != (data.Place{Kind: data.PlaceCalendar, Day: "2026-10-16"}) {
-		t.Errorf("places %+v", got)
-	}
-}
-
-func TestWithoutAModelAPlainTaskIsDueAtSixOnTheSelectedDay(t *testing.T) {
-	app, _ := calendarApp(t)
-	tt, _ := calendarTester(t, app, 1100)
-	if err := tt.Click("16"); err != nil {
-		t.Fatal(err)
-	}
-	tt.Key(ui.Cmd, ui.KeyK)
-	tt.Type("Water the plants")
-	tt.Key(0, ui.KeyEnter)
-	task := taskByTitle(t, app, "Water the plants")
-	want := time.Date(2026, 10, 16, 18, 0, 0, 0, time.Local)
-	if task.DueAt == nil || !task.DueAt.Equal(want) || task.ProjectID != nil {
-		t.Errorf("task %+v, want due %v in the Inbox", task, want)
-	}
-	has(t, tt, "Water the plants") // it is on the grid now
 }
 
 func TestOtherPagesAddPlainTasksWithNoDueDate(t *testing.T) {
@@ -420,13 +374,5 @@ func TestOverdueOpenTasksAreRed(t *testing.T) {
 	plain := data.CalItem{Task: taskByTitle(t, app, "Review PR 12"), Kind: data.CalDue}
 	if got := m.calInk(tok, plain); got != tok.Text {
 		t.Errorf("plain title is %v", got)
-	}
-}
-
-func TestTheCalendarHasAComposerAndNotTheOtherPages(t *testing.T) {
-	app, _ := calendarApp(t)
-	_, m := calendarTester(t, app, 1100)
-	if !m.pg.Composer {
-		t.Error("the calendar has no composer")
 	}
 }

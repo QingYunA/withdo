@@ -75,7 +75,7 @@ func TestAcceptStampsInSevenFramesHoldsThenFolds(t *testing.T) {
 }
 
 func TestAcceptedRowStaysThroughTheStampThenFoldsAwaySmoothly(t *testing.T) {
-	tt, m, app := newMainTester(t, 1100)
+	tt, m, app := newMainTester(t, inlineWidth)
 	moving(tt)
 	y0, done0 := yOf(t, tt, "Today"), yOf(t, tt, "Port the MCP server")
 	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
@@ -135,7 +135,7 @@ func TestTheDoneRowOpensAtTheTopOfDoneTodayWhileTheOtherFolds(t *testing.T) {
 }
 
 func TestAcceptWithReducedMotionFadesThenIsGoneWithNoFoldOrOpening(t *testing.T) {
-	tt, _, app := newMainTester(t, 1100) // Reduce Motion
+	tt, _, app := newMainTester(t, inlineWidth) // Reduce Motion
 	y0, gap0 := yOf(t, tt, "Today"), yOf(t, tt, "Port the MCP server")-yOf(t, tt, "Done today")
 	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
 		t.Fatal(err)
@@ -162,7 +162,7 @@ func TestTheSectionFoldsWithItsLastRowAndLeavesNoJumpAtTheEnd(t *testing.T) {
 	_, _ = f.CreateTask(data.CreateTaskInput{Title: "Tidy the docs", Source: data.SourceAgent, Status: data.Review})
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
-	tt, _, _ := newTesterFor(app, 1100)
+	tt, _, _ := newTesterFor(app, inlineWidth)
 	moving(tt)
 	has(t, tt, "From your agents", "Tidy the docs")
 	y0 := yOf(t, tt, "Later")

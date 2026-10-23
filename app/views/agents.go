@@ -15,7 +15,7 @@ var subRowStyle = rowStyle{5, 8}
 // subRail is the room between the rail and the text of a subtask.
 const subRail float32 = 6
 
-// agentsScreen is what the agents are doing: the title with how many are at work, the composer, then
+// agentsScreen is what the agents are doing: the title with how many are at work, then
 // their tasks at work with the subtasks under each, and what they finished today.
 func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 	sub := ""

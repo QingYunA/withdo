@@ -245,7 +245,7 @@ func (m *Main) content(c *ui.Context, t *theme.Tokens) {
 		case page.KindSearch:
 			m.page(c, t, func() { m.searchScreen(c, t) })
 		case page.KindMine:
-			m.page(c, t, func() { m.mineScreen(c, t) })
+			m.pageInPad(c, t, m.mineMax(), m.minePad(c), func() { m.mineScreen(c, t) })
 		case page.KindAgents:
 			m.page(c, t, func() { m.agentsScreen(c, t) })
 		case page.KindCompleted:
@@ -334,7 +334,11 @@ func (m *Main) page(c *ui.Context, t *theme.Tokens, body func()) {
 
 // pageIn is page for a column of at most maxWidth.
 func (m *Main) pageIn(c *ui.Context, t *theme.Tokens, maxWidth float32, body func()) {
-	pad := m.sidePad(c)
+	m.pageInPad(c, t, maxWidth, m.sidePad(c), body)
+}
+
+// pageInPad is pageIn with the side padding the page chose.
+func (m *Main) pageInPad(c *ui.Context, t *theme.Tokens, maxWidth, pad float32, body func()) {
 	ui.Scroll(c.Key(m.pageKey())).Grow(1).MinHeight(0).TrackScroll(&m.scroll).Children(func() {
 		ui.Column(c).FillWidth().AlignItems(ui.Center).Children(func() {
 			col := ui.Column(c).FillWidth().MaxWidth(maxWidth).Padding(0, pad, m.pageBottom()).Focusable().FocusRing(false)

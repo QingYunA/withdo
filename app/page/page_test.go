@@ -46,12 +46,12 @@ func TestKindFollowsTheScreenAndTheSearchOverIt(t *testing.T) {
 		comp bool
 	}{
 		{"mine", In{Screen: Mine}, KindMine, true},
-		{"agents", In{Screen: Agents}, KindAgents, true},
+		{"agents", In{Screen: Agents}, KindAgents, false},
 		{"completed", In{Screen: Completed}, KindCompleted, false},
-		{"calendar", In{Screen: Calendar}, KindCalendar, true},
+		{"calendar", In{Screen: Calendar}, KindCalendar, false},
 		{"summary", In{Screen: Summary}, KindSummary, false},
 		{"recent", In{Screen: Recent}, KindRecent, false},
-		{"inbox", In{Screen: Inbox, Tasks: some}, KindList, true},
+		{"inbox", In{Screen: Inbox, Tasks: some}, KindList, false},
 		{"project with tasks", In{Screen: Project, Tasks: some}, KindColumns, true},
 		{"project as board", In{Screen: Project, Tasks: some, Board: true, Cards: some}, KindBoard, true},
 		{"empty project reads as a list", In{Screen: Project, Board: true}, KindList, true},
@@ -64,6 +64,21 @@ func TestKindFollowsTheScreenAndTheSearchOverIt(t *testing.T) {
 		if p.Kind != c.want || p.Composer != c.comp {
 			t.Errorf("%s: kind %v composer %v, want %v %v", c.name, p.Kind, p.Composer, c.want, c.comp)
 		}
+	}
+}
+
+func TestMineHasTheHeroInputAndNoOtherPageDoes(t *testing.T) {
+	some := []data.Task{task(1, data.Todo)}
+	for name, in := range map[string]In{
+		"agents": {Screen: Agents}, "inbox": {Screen: Inbox, Tasks: some}, "calendar": {Screen: Calendar},
+		"project": {Screen: Project, Tasks: some}, "empty project": {Screen: Project},
+	} {
+		if Build(in).Hero {
+			t.Errorf("%s has the hero input", name)
+		}
+	}
+	if p := Build(In{Screen: Mine}); !p.Hero || !p.Composer {
+		t.Errorf("mine: hero %v composer %v", p.Hero, p.Composer)
 	}
 }
 

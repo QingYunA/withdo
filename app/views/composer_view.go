@@ -18,12 +18,11 @@ const (
 	dockBottom float32 = 18
 )
 
-// pageComposer is the composer, pinned at the bottom of Now, a project, the Inbox, the Calendar or
-// Agents, in the column of the page above it. The "Added to …" confirmation and the answer to the
+// pageComposer is the composer, pinned at the bottom of a project, in the column of the page above it. The "Added to …" confirmation and the answer to the
 // request it sent sit directly above the box and push the page up as they appear. The page scrolls
 // above the dock, so its last row is never behind the box.
 func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
-	if !m.pg.Composer {
+	if !m.pg.Composer || m.pg.Hero {
 		m.dockHeight = 0
 		return
 	}
@@ -73,6 +72,13 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 // images attached sit above the text as thumbnails. The place is named by the page's title, not by
 // the input.
 func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
+	m.composerBoxAs(c, t, s, style, false)
+}
+
+// composerBoxAs is composerBox, as Home's big input when hero: 58 pt tall, 14 pt radius, a soft
+// shadow at rest that the focus ring takes the place of, and no ⌘K at its right (the hint line under
+// the box says the keys). Everything else, focus included, is the same box.
+func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style theme.Style, hero bool) {
 	cs := &m.cmp[s]
 	ready := m.assistReady()
 	focused, typed := cs.ref.Focused(c), cs.buf != ""
@@ -86,8 +92,12 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 	if s == surfaceInspector {
 		key = "inspector-card"
 	}
-	box := ui.Column(c.Key(key)).Shrink(0).MinHeight(theme.ComposerHeight).Padding(10, 10, 10, 16).Gap(8).
-		Justify(ui.Center).Radius(theme.ComposerRadius)
+	height, radius := theme.ComposerHeight, theme.ComposerRadius
+	if hero {
+		height, radius = theme.HeroHeight, theme.HeroRadius
+	}
+	box := ui.Column(c.Key(key)).Shrink(0).MinHeight(height).Padding(10, 10, 10, 16).Gap(8).
+		Justify(ui.Center).Radius(radius)
 	cs.dragOver = ready && box.FileDragOver()
 	switch {
 	case cs.dragOver:
@@ -98,6 +108,9 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 		box.Background(t.Bg).Border(1, t.Border.Mix(t.Text, 0.25))
 	default:
 		box.Background(t.Bg).Border(1, t.Border)
+	}
+	if hero && !cs.dragOver && !active {
+		box.Shadow(0, 2, 10, 0, t.Shadow.Alpha(0.08))
 	}
 	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	if ready {
@@ -130,7 +143,7 @@ func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style them
 			case bar:
 			case typed:
 				m.sendButton(c, t, s)
-			case s == surfacePage:
+			case s == surfacePage && !hero:
 				theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle(keyHint("⌘K"))).Shrink(0)
 			}
 		})
@@ -196,13 +209,8 @@ func (m *Main) placeholder(s surface) string {
 	case cv.open && cv.owner == s && len(cv.turns) > 0 && cv.turns[len(cv.turns)-1].question != nil:
 		return m.say.AskAnswerHint()
 	}
-	if s == surfacePage && m.nav.screen == screenAgents {
-		return m.say.ComposerPlaceholderAgents()
-	}
 	switch m.placeOf(s).Kind {
-	case data.PlaceCalendar:
-		return m.say.CalendarPlaceholder(m.clock.CalendarDay(m.calendarDay()))
-	case data.PlaceProject, data.PlaceInbox:
+	case data.PlaceProject:
 		return m.say.ComposerPlaceholderAdd()
 	case data.PlaceTask:
 		return m.say.ComposerPlaceholderTask()

@@ -163,7 +163,7 @@ func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui
 			if s == sideMine {
 				theme.AvatarIcon(c.Key("avatar"), theme.You, theme.ColumnAvatar)
 			} else {
-				m.agentAvatar20(c, t)
+				m.agentBot(c, t, theme.ColumnAvatar)
 			}
 			theme.Text(c, theme.BodyStrong, t.Text, name)
 			if n > 0 {
@@ -189,11 +189,11 @@ func (m *Main) columnIDs(s side) []int {
 	return ids
 }
 
-// agentAvatar20 is the robot of the Agents header. It hops while a row of Mine is over the tray and
+// agentBot is the robot of an Agents header, size pt tall. It hops while a row of Mine is over the tray and
 // squashes as it catches the row dropped on it (see agentFrame).
-func (m *Main) agentAvatar20(c *ui.Context, t *theme.Tokens) {
+func (m *Main) agentBot(c *ui.Context, t *theme.Tokens, size float32) {
 	sprite := theme.AccentBot(t.Accent).Sprite()
-	ui.Box(c.Key("avatar")).Size(theme.ColumnAvatar, theme.ColumnAvatar).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+	ui.Box(c.Key("avatar")).Size(size, size).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
 		theme.DrawSprite(p, m.agentFrame(c.Preferences().ReduceMotion, r), sprite)
 	})
 }

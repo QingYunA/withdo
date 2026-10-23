@@ -31,7 +31,7 @@ func prApp(t *testing.T) (*App, *data.Real, *recorder) {
 
 func TestFromYourAgentsListsPullRequestsInThePlannedOrder(t *testing.T) {
 	app, _, _ := prApp(t)
-	tt, _, _ := newTesterFor(app, 1100)
+	tt, _, _ := newTesterFor(app, inlineWidth)
 	has(t, tt, "PR #14 was closed without merging", "Checks are failing on PR #15", "Changes were requested on PR #16")
 	order := []string{
 		"Fix tray race on launch", // blocked
@@ -132,7 +132,7 @@ func TestOpenPROnFailingChecksAndChangesOpensThePullRequest(t *testing.T) {
 
 func TestPullRequestRowsAgeFromTheGitHubReport(t *testing.T) {
 	app, _, _ := prApp(t)
-	tt, _, _ := newTesterFor(app, 1100)
+	tt, _, _ := newTesterFor(app, inlineWidth)
 	// 3 hours since the pull request closed; the agent's own report is older and not what counts.
 	has(t, tt, "3h", "40m", "1d")
 }

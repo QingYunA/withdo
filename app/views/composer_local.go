@@ -53,10 +53,6 @@ func (m *Main) addPlain(text string) {
 		if place.Kind == data.PlaceProject {
 			in.ProjectID, project = data.IntPtr(place.ProjectID), m.app.projectName(&place.ProjectID)
 		}
-		if place.Kind == data.PlaceCalendar && in.DueAt == nil { // a task added to a day is due that day, at the end of it
-			due := data.EndOfDay(m.calendarDay())
-			in.DueAt = &due
-		}
 		inputs[i] = in
 	}
 	made, err := m.app.AddTasks(inputs)

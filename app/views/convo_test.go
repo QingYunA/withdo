@@ -30,6 +30,13 @@ func newAssistRig(t *testing.T, fa *data.FakeAssistant) *assistRig {
 	return r
 }
 
+// onProject moves the window to project 1, where the composer is the small one pinned at the bottom
+// (on Home it is the big input at the top).
+func (r *assistRig) onProject() {
+	r.m.goTo(nav{screen: screenProject, projectID: 1})
+	r.tt.Frame()
+}
+
 func newFakeModels(t *testing.T) *data.FakeModels {
 	t.Helper()
 	return fakeModelsIn(t.TempDir())
@@ -474,6 +481,7 @@ func TestEscClosesTheSheetThenAnotherEscForgets(t *testing.T) {
 
 func TestTheLineGrowsTheDockUpAndTheSectionsStay(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(reminderReply(), nil)})
+	r.onProject()
 	before, _ := r.tt.Find("From your agents")
 	dock := belowBox(t, r)
 	r.ask("remind me")

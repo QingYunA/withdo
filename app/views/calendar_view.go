@@ -8,8 +8,8 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// calendarScreen is the Calendar page: the month as the title with ‹ Today › at its right, the
-// composer, and the month grid, which fills the room that is left.
+// calendarScreen is the Calendar page: the month as the title with ‹ Today › at its right, and
+// the month grid, which fills the room that is left.
 func (m *Main) calendarScreen(c *ui.Context, t *theme.Tokens) {
 	m.ensureCalendar()
 	days := m.calendarDays()
@@ -68,7 +68,7 @@ func (m *Main) monthGrid(c *ui.Context, t *theme.Tokens, days []data.CalDay) {
 // page scrolls instead.
 func (m *Main) calendarCellHeight(c *ui.Context, weeks int) float32 {
 	_, h := c.Size()
-	above := dragStrip + 36 + 18 + theme.ComposerHeight + 16 + theme.CalendarHeadLine + 2 + 48
+	above := dragStrip + 36 + 18 + theme.CalendarHeadLine + 2 + 48
 	return max(theme.CalendarMinCell, float32(math.Floor(float64((h-above)/float32(weeks)-1))))
 }
 

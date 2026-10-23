@@ -47,6 +47,9 @@ func TestScreensMine(t *testing.T) {
 			m.OpenTask(23)
 		})
 		zhShot(t, "mine-zh-"+a.suffix+".png", app, a.dark, nil)
+		// Narrower than the lists and the Agents panel need: the panel is gone, its section is inline.
+		mainShot(t, "mine-narrow-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { tt.SetSize(860, 720) })
+		zhShot(t, "mine-narrow-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { tt.SetSize(860, 720) })
 		zhShot(t, "agents-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents}) })
 		zhShot(t, "inspector-parent-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			m.goTo(nav{screen: screenAgents})

@@ -338,16 +338,6 @@
       }
     }
   },
-  "calendarPlaceholder": "Add to {day}, or ask me anything",
-  "@calendarPlaceholder": {
-    "description": "Placeholder of the composer on the calendar page; day is the selected day, as in \"Fri, Oct 16\".",
-    "placeholders": {
-      "day": {
-        "type": "String",
-        "example": "Fri, Oct 16"
-      }
-    }
-  },
   "calendarMonthDay": "{month} {day}",
   "@calendarMonthDay": {
     "description": "Label of the first day of a month in the calendar grid; month is calendarMonthShort.",
@@ -734,15 +724,9 @@
   "@foldShowShort": {
     "description": "End of the folded line under a list while closed."
   },
-  "inboxEmptyBody": "Tasks without a project land here. Write one in the box above, or press {key}.",
+  "inboxEmptyBody": "Tasks without a project land here. Add tasks from Home.",
   "@inboxEmptyBody": {
-    "description": "Body of an empty Inbox. key is the shortcut of the ask field, such as ⌘K on a Mac or Ctrl+K elsewhere.",
-    "placeholders": {
-      "key": {
-        "type": "String",
-        "example": "⌘K"
-      }
-    }
+    "description": "Body of an empty Inbox. It sends people to Home, where tasks are added."
   },
   "inboxEmptyTitle": "Your inbox is clear.",
   "@inboxEmptyTitle": {
@@ -1517,6 +1501,32 @@
         "example": "Book dentist"
       }
     }
+  },
+  "mineHeroGreeting": "What do you want to do today?",
+  "@mineHeroGreeting": {
+    "description": "Heading of Home, over the big input."
+  },
+  "mineHeroHint": "Return to add · {key} from any app · One sentence can hold several things",
+  "@mineHeroHint": {
+    "description": "Hint line under the big input on Home. key is the global shortcut that opens the quick input, such as ⌥ Space.",
+    "placeholders": {
+      "key": {
+        "type": "String",
+        "example": "⌥ Space"
+      }
+    }
+  },
+  "agentsPanelTitle": "What your agents are doing",
+  "@agentsPanelTitle": {
+    "description": "Title of the Agents panel at the right of Home."
+  },
+  "agentsPanelEmpty": "No agent is working on anything",
+  "@agentsPanelEmpty": {
+    "description": "Quiet line in the Agents panel of Home when no agent has anything for the user."
+  },
+  "agentsPanelDrop": "Drag a to-do here to hand it to an agent",
+  "@agentsPanelDrop": {
+    "description": "The drop target at the foot of the Agents panel on Home."
   },
   "nowAllClear": "Nothing needs you right now",
   "@nowAllClear": {
@@ -2487,10 +2497,6 @@
         "example": "Mine"
       }
     }
-  },
-  "composerPlaceholderAgents": "Ask what your agents are doing",
-  "@composerPlaceholderAgents": {
-    "description": "Placeholder of the composer on Agents."
   },
   "agentsEmpty": "No agents at work",
   "@agentsEmpty": {
