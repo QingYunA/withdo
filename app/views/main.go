@@ -111,6 +111,7 @@ type Main struct {
 	owned map[string]bool
 
 	scroll     ui.ScrollState
+	inPanel    bool    // the rows of the Agents panel of Home are being built
 	dockHeight float32 // the composer dock's height in the last frame, which the bulk bar and the toasts ride above
 	inspector  inspector
 	thumbs     thumbCache // the pictures of tasks, decoded once

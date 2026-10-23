@@ -547,7 +547,8 @@ and, when there is room, the **Agents panel** at their right.
   with the 18 pt bot avatar, `What your agents are doing` / `Agent 在做什么` in `body strong`, and the number
   of rows at the right in `meta` `text.tertiary`. Under it are the rows of the section **From your agents**
   below, the same row views and buttons (Answer, Open PR, Accept, Not now ...), laid out as in a narrow
-  window: 268 pt, buttons under the summary, no project name and no age. Nothing handed over:
+  window: 268 pt, buttons under the summary, no project name; the age (`25m`, `3d`, in `status.stale` orange when
+  stale, as in the inline section) sits at the right of the title line, which ellipsizes before it. Nothing handed over:
   one quiet line, `No agent is working on anything` / `没有 Agent 在干活`. At its foot, 14 pt under the
   last row, is the **drop target**: a box with a dashed 1 pt `border`, 10 pt radius, 12 pt arrow icon and
   `Drag a to-do here to hand it to an agent` / `把左边的待办拖到这里，交给 Agent` in `meta` `text.tertiary`,

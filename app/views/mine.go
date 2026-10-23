@@ -165,8 +165,8 @@ func (m *Main) agentsPanel(c *ui.Context, t *theme.Tokens) {
 				ui.Column(c).Shrink(0).Margin(8, 0, 0).Children(func() {
 					// The panel is narrow: its rows lay out as in a narrow window, buttons under the summary.
 					wide := m.width
-					m.width = theme.AgentsPanelWidth
-					defer func() { m.width = wide }()
+					m.width, m.inPanel = theme.AgentsPanelWidth, true
+					defer func() { m.width, m.inPanel = wide, false }()
 					m.handedRows(c, t, items)
 				})
 			})
@@ -281,7 +281,14 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 	row.Children(func() {
 		m.leadOf(c, t, it.Task, theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
-			m.titleLine(c, t, it.Task, "", false)
+			if m.inPanel { // the age sits at the right of the title line, which ellipsizes before it
+				ui.Row(c).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+					ui.Column(c).Grow(1).MinWidth(0).Children(func() { m.titleLine(c, t, it.Task, "", false) })
+					m.ageLabel(c, t, it)
+				})
+			} else {
+				m.titleLine(c, t, it.Task, "", false)
+			}
 			summaryLine(c, t, m.handedSummary(it))
 			if m.openFail.id == it.ID && m.openFail.err != nil {
 				theme.Paragraph(c, theme.Meta, t.Blocked(), m.openFailText(m.openFail.err), 2).Margin(2, 0, 0)

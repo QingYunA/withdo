@@ -117,6 +117,7 @@ func TestTheAgentsPanelSitsBesideTheListsInAWideWindow(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	has(t, tt, panelTitle, panelDrop, "Fix tray race on launch", "Answer", "Today", "Later")
 	hasNot(t, tt, "From your agents")
+	has(t, tt, "3d", "25m") // the ages, at the right of the title lines
 	title, _ := tt.Find(panelTitle)
 	today, _ := tt.Find("Today")
 	if title.X < today.X+300 {
