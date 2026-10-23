@@ -27,7 +27,7 @@ func newChineseTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 }
 
 func TestChineseMineScreen(t *testing.T) {
-	tt, _, _ := newChineseTester(t, 1100)
+	tt, _, _ := newChineseTester(t, inlineWidth)
 	has(t, tt,
 		"我的", "10月14日星期三",
 		"Agent 交过来的", "今天", "之后",
@@ -65,7 +65,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 }
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
+	tt, _, _ := newMainTester(t, inlineWidth)
 	has(t, tt, "From your agents")
 	inChinese(tt)
 	has(t, tt, "Agent 交过来的")

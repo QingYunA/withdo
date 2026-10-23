@@ -25,6 +25,7 @@ func belowBox(t *testing.T, r *assistRig) float32 {
 
 func TestTheModelChipSitsInTheOneLineBoxAtRestAndFocusedAndTheBoxDoesNotGrow(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	r.withModels(t)
 	chip, ok := r.tt.Find(deepseekChip)
 	if !ok {
@@ -50,6 +51,7 @@ func TestTheModelChipSitsInTheOneLineBoxAtRestAndFocusedAndTheBoxDoesNotGrow(t *
 
 func TestTheChipOpensItsPopoverFromTheOneLineBoxWithoutMovingThePage(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	r.withModels(t)
 	rest := belowBox(t, r)
 	rect, _ := r.tt.Find(deepseekChip)
@@ -73,13 +75,15 @@ func TestTheChipOpensItsPopoverFromTheOneLineBoxWithoutMovingThePage(t *testing.
 
 func TestNarrowOneLineBoxesShowTheChipAsItsLogoAndKeepThePlaceholderWhole(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	r.withModels(t)
 	has(t, r.tt, deepseekChip) // the page alone has room for the words
-	r.m.OpenTask(5)
+	r.m.openID, r.m.sel = 6, 6 // a task of project 1, opened beside the project (OpenTask goes to Home)
+	r.m.inspector.reset()
 	r.tt.Frame()
 	// The inspector's box, and the page's now that the inspector takes its room, keep the logo and
 	// the chevron: the placeholders read whole.
-	has(t, r.tt, "Change anything about this task", "Tell me anything — I'll turn it into tasks")
+	has(t, r.tt, "Change anything about this task", "Add a task, or ask me anything")
 	if n := countText(r.tt, deepseekChip); n != 0 {
 		t.Errorf("%d chips show their words, want none", n)
 	}
@@ -102,6 +106,7 @@ func thinking(t *testing.T) *assistRig {
 	t.Helper()
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Block: make(chan struct{}), Script: scripted(reminderReply(), nil)})
 	r.withModels(t)
+	r.onProject()
 	return r
 }
 

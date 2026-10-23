@@ -10,8 +10,8 @@ import (
 )
 
 func TestMineShowsItsSectionsInOrder(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Mine", "Wednesday, Oct 14", "From your agents", "Today", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
+	tt, _, _ := newMainTester(t, inlineWidth)
+	for _, want := range []string{"Mine", "Wednesday, October 14", "From your agents", "Today", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -64,7 +64,7 @@ func TestMineAllClearWhenNothingIsHappening(t *testing.T) {
 }
 
 func TestFromYourAgentsOrderIsBlockedThenReview(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
+	tt, _, _ := newMainTester(t, inlineWidth)
 	if !above(t, tt, "Fix tray race on launch", "Native UI with mygo") {
 		t.Errorf("order wrong in %q", tt.Texts())
 	}

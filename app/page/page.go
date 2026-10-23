@@ -133,7 +133,8 @@ type In struct {
 // Page is what a screen shows.
 type Page struct {
 	Kind     Kind
-	Composer bool // the page has a composer
+	Composer bool // the page has a composer: a project's, pinned at the bottom, or Mine's hero input
+	Hero     bool // the composer is Mine's big input at the top, not a dock at the bottom
 	Sections []Section
 	Cols     [2]Col
 	Total    int  // Search: the results
@@ -160,7 +161,8 @@ func Build(in In) Page {
 	case KindList:
 		p.column(0, in.Tasks, in.Folds[0])
 	}
-	p.Composer = hasComposer(p.Kind)
+	p.Composer = hasComposer(p.Kind, in.Screen)
+	p.Hero = p.Kind == KindMine
 	for _, s := range p.Sections {
 		for _, t := range s.Tasks {
 			p.ids = append(p.ids, t.ID)
@@ -198,12 +200,15 @@ func kindOf(in In) Kind {
 	return KindList
 }
 
-// hasComposer: Mine, Agents, a project, the Inbox and the Calendar do; Completed, Summary, Recent
-// changes and the search results do not.
-func hasComposer(k Kind) bool {
+// hasComposer: Mine (as its big input) and the projects do, drawn as a list, as columns or as a
+// board. Agents, the Inbox, the Calendar, Completed, Summary, Recent changes and the search results
+// do not.
+func hasComposer(k Kind, screen Screen) bool {
 	switch k {
-	case KindMine, KindAgents, KindList, KindColumns, KindBoard, KindCalendar:
+	case KindMine, KindColumns, KindBoard:
 		return true
+	case KindList:
+		return screen == Project
 	}
 	return false
 }

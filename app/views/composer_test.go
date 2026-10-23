@@ -33,7 +33,6 @@ func TestEnterSendsToTheAssistantWithThePlaceOfThePage(t *testing.T) {
 		want data.Place
 	}{
 		{"now", nav{}, data.Place{Kind: data.PlaceNow}},
-		{"inbox", nav{screen: screenInbox}, data.Place{Kind: data.PlaceInbox}},
 		{"project", nav{screen: screenProject, projectID: 1}, data.Place{Kind: data.PlaceProject, ProjectID: 1}},
 		{"another project", nav{screen: screenProject, projectID: 2}, data.Place{Kind: data.PlaceProject, ProjectID: 2}},
 	}
@@ -108,6 +107,7 @@ func TestShiftEnterBreaksTheLineAndSendsNothing(t *testing.T) {
 
 func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	// The composer is pinned at the bottom: its dock grows upward with the box.
 	below := func() float32 { return belowBox(t, r) }
 	rest := below()
@@ -223,9 +223,6 @@ func TestThePlaceholderIsShortAndTheTitleNamesThePlace(t *testing.T) {
 	r.tt.Frame()
 	has(t, r.tt, "Add a task, or ask me anything")
 	hasNot(t, r.tt, "# adhd-todo", "What's next in adhd-todo?") // no chip, no project in the placeholder
-	r.m.goTo(nav{screen: screenInbox})
-	r.tt.Frame()
-	has(t, r.tt, "Add a task, or ask me anything")
 	r.m.OpenTask(5)
 	r.tt.Frame()
 	has(t, r.tt, "Change anything about this task")
@@ -420,6 +417,7 @@ func TestTheShortcutAndTheSendButtonGiveWayToEachOther(t *testing.T) {
 		send string
 	}{{false, "Send"}, {true, "发送"}} {
 		r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+		r.onProject()
 		if l.zh {
 			inChinese(r.tt)
 		}

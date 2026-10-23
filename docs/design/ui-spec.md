@@ -63,10 +63,10 @@ that section in detail. Until then the older text describes the app as it is.
    lists follow: Today, Later, Done today. The Agents panel sits in a narrow right column (300 pt,
    `bg.tray`) titled `What your agents are doing`, with the drop target `Drag a to-do here to hand
    it to an agent` at its foot; dragging a row onto it hands the task over, as today. Replaces the
-   bottom-pinned composer of **Mine (home)** and **Composer** on Mine.
+   bottom-pinned composer of **Mine (home)** and **Composer** on Mine. Built: **Mine (home)**.
 2. **Project pages keep a small input; other pages lose theirs.** A project keeps the bottom
    composer, and a sentence typed there goes to that project. Agents, Inbox and Calendar have no
-   composer any more; the inspector keeps its own. Replaces the list of six places in **Composer**.
+   composer any more; the inspector keeps its own. Replaces the list of six places in **Composer**. Built: **Composer**.
 3. **Applied at once, with Undo.** A sentence is applied as soon as it is sent, never shown as a
    preview to confirm. New rows land with the chips the assistant read (date, reminder, category,
    project, importance) and a light `bg.selected` wash; a toast says what happened (`Added 1, handed
@@ -76,7 +76,7 @@ that section in detail. Until then the older text describes the app as it is.
    while held or until clicked again (60 s at most). The audio goes to our server, which sends it to a
    cloud speech recognizer (MiMo `mimo-v2.5-asr`, Chinese and English with auto-detection) and
    returns the text. The server holds the recognizer's key; the app never does. The text fills the
-   input and is sent as if typed. The recognizer takes a whole recording, so there are no words while
+   input and is not sent: the person edits it and sends it. The recognizer takes a whole recording, so there are no words while
    speaking: the microphone is a filled accent square and a pixel waveform follows the voice's level
    on the 100 ms loop beat, then `Transcribing…` until the text arrives. Esc cancels. Voice counts
    against the account's quota; signed out, the microphone says `Sign in to use voice`. No text to
@@ -454,7 +454,7 @@ the parent's count for that slice, in `text.tertiary`: the rows asking for atten
 agents plus Today) for a slice of Mine, the tasks at work for an agent. The red unseen badge stays
 on `Mine` alone. A click opens the parent's screen showing only that slice: the same sections,
 built from the tasks of the slice, so their counts and the "Show all" links are the slice's; the
-page title is the slice's name (`Work`, `Claude Code`); the composer of a Mine slice files new tasks
+page title is the slice's name (`Work`, `Claude Code`); the big input on a Mine slice's page files new tasks
 in its category (see **Category**). `⌘1` and `⌘2` still go to the whole of Mine and Agents. A
 subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or `catUnsorted`) on
 Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
@@ -508,18 +508,66 @@ takes a repository from the sheet if the user gives it one.
 
 ### Mine (home)
 
-*Being replaced by **Input first (v31)** items 1, 3 and 5.*
+*Decision 1 of **Input first (v31)** is built here; items 3 and 5 still replace parts of it.*
 
-Header: `Mine` / `我的` in `title` + the date in `text.tertiary`, nothing else. Reference:
-`docs/design/mockups/v5.html` (frame 1). The person's tab is Mine, not "Yours"; no accent bar marks a
-new item: the hop (below) is the signal.
+Home is the page `Mine` / `我的` in the sidebar (decision 7 renames it later). It opens with one big
+input, not a title. Reference: `docs/design/mockups/v31.html` (the proposal frame), screens `mine-*`.
 
-**Composer.** The one input is the **Composer** (see **Composer** below), pinned at the bottom of the page.
-`⌘K` focuses it from anywhere. With a model connected, Enter sends the text to the built-in
-assistant (see **Assistant**). With none, the **local rules** read the sentence (see **Composer**,
-No model connected) and Enter adds what they find; a plain task is an Inbox task on Mine.
+**The hero.** At the top of the content column, scrolling with the page (it is not pinned):
+1. the day in `meta` `text.secondary`, centered: `Thursday, October 23` / `10月23日星期四` (`words.Clock.HeroDate`,
+   the long month);
+2. the greeting in the page's `title` size, centered: `What do you want to do today?` / `今天想做点什么？`;
+3. the **big input**, 18 pt under the greeting, centered in at most 720 pt (`theme.HeroMax`): the
+   **Composer** itself (see **Composer**, `composerBoxAs` with `hero`), not another control: the same
+   field, local rules or assistant, model chip, `+` images, pixel microphone, send and stop, answer
+   line and receipts. In hero size it is 58 pt tall at rest (`theme.HeroHeight`), 14 pt radius
+   (`theme.HeroRadius`), `bg` with a hairline `border` and a soft shadow (0 2 10, `shadow` at 8 %); focused,
+   holding text or working, the border is `accent` at 50 % with the 3 pt ring at 10 % (the shadow gives
+   way to the ring; nothing else moves, the steady-look rule of **Composer**). The text is in `input`
+   (17 / 25), the theme has no larger style. It has no `⌘K` at its right: the hint says the keys;
+4. the **hint line**, 10 pt under the box, centered, in `meta` `text.tertiary`: `Return to add · ⌥ Space from any
+   app · One sentence can hold several things` / `回车添加 · 在任何 App 里按 ⌥ Space · 一句话里可以有好几件事`
+   (`Alt+Space` on Windows). Holding to talk is not built, so the hint does not say it. What the input
+   says back shows **in the hint's place, under the box**, and the hint returns when it goes: the
+   answer, the receipt with Undo, the voice line, a picture problem, and the `Set up the assistant`
+   line (`inputLineLive` says whether one is showing). The page slides under it as the line comes and
+   goes (`belowComposer`).
 
-Then up to four sections. **A section with nothing in it is not drawn at all.** Subtasks never get
+The `Select` control stays at the top right of the page, on a 36 pt row of its own over the hero. On
+the page of a category (Work, Life, Unsorted) the row also holds the category's name at the left, as
+the title did. `⌘K` focuses the big input from anywhere (and from a page with no composer it goes to
+Home first, see **Composer**); `↓` from the input walks into the rows, and `↑` from the first row
+comes back to it. On Mine the composer is no longer pinned at the bottom: there is no dock
+(`dockHeight` is 0). The menu bar panel keeps its own composer.
+
+**Two columns, or one.** Under the hero the page has the lists (Today, Later, Done today, below)
+and, when there is room, the **Agents panel** at their right.
+- The panel is 300 pt wide (`theme.AgentsPanelWidth`), 24 pt right of the lists (`theme.MineGap`), on
+  `bg.tray`, 14 pt radius like the project tray, 14 pt above and 16 pt around its content. It is titled
+  with the 18 pt bot avatar, `What your agents are doing` / `Agent 在做什么` in `body strong`, and the number
+  of rows at the right in `meta` `text.tertiary`. Under it are the rows of the section **From your agents**
+  below, the same row views and buttons (Answer, Open PR, Accept, Not now ...), laid out as in a narrow
+  window: 268 pt, buttons under the summary, no project name; the age (`25m`, `3d`, in `status.stale` orange when
+  stale, as in the inline section) sits at the right of the title line, which ellipsizes before it. Nothing handed over:
+  one quiet line, `No agent is working on anything` / `没有 Agent 在干活`. At its foot, 14 pt under the
+  last row, is the **drop target**: a box with a dashed 1 pt `border`, 10 pt radius, 12 pt arrow icon and
+  `Drag a to-do here to hand it to an agent` / `把左边的待办拖到这里，交给 Agent` in `meta` `text.tertiary`,
+  shown also when the panel is empty. Dragging one of my rows over the panel tints it with
+  the accent (as the tray of a project) and the box turns accent; dropping it hands the task over exactly
+  as the tray of a project does (see **Handing a task to an agent**: the task becomes the agent's, a toast
+  with Undo, a stack of selected rows goes together). An agent's row, or a finished one, does not hand over.
+  Today and Later rows of Home drag only while the panel is shown (they lift and leave a dashed slot
+  as in a project).
+- **Breakpoint.** The panel is drawn when the content area (the window less the sidebar and the open
+  inspector) is at least **880 pt** wide (`theme.MineSplitBelow` = 2 x 24 pad + 508 for the lists + 24
+  gap + 300 panel). The default 1100 pt window has 883 pt of content, so the panel shows; with the
+  inspector open it does not. The page's side padding is 48 pt when the 1104 pt block (780 lists + gap +
+  panel) fits, and gives down to 24 pt (`theme.MinePad`) before the panel goes. Narrower, the panel is
+  not drawn and **From your agents** shows inline at the top of the lists, as before, and
+  the lists keep the 780 pt column of the other pages.
+
+Then up to four sections (the first one is the Agents panel, in a wide window). **A section with nothing
+in it is not drawn at all** (the panel is: it always shows, empty with its drop target). Subtasks never get
 a row anywhere (see **Subtasks**).
 
 1. **From your agents** / `Agent 交过来的` — inside one bordered container (12 pt radius, rows
@@ -625,7 +673,7 @@ with the next successful open or when the row is opened.
 ### Agents
 
 Header: `Agents` / `Agent` in `title` + `3 working` / `3 个在做` in `text.tertiary` (nothing when
-none). The composer's placeholder is `Ask what your agents are doing` / `问问 Agent 们在做什么`.
+none). The page has no composer (decision 2 of **Input first (v31)**); `⌘K` goes to Home.
 Frame 2 of v5.
 
 1. **Working** / `在做` — agent tasks in doing or blocked, newest report first, across all
@@ -681,19 +729,23 @@ rows recorded as seen does not hop for them.
 
 ### Composer
 
-*Being replaced by **Input first (v31)** item 2.*
+*Decision 2 of **Input first (v31)** is built here.*
 
-One component, six places: **Mine**, **Agents**, **every project**, the **Inbox**, the **Calendar**, and the
-**inspector**. On the pages it is **pinned at the bottom edge of the content column** (the way ChatGPT, Claude
-and the Codex chat pane do it), not under the header: the page scrolls above it, and the column keeps the
-page's width (820 pt, the board's 980 pt, the Calendar's width), centered, with 8 pt above the box and 18 pt
-under it. The **answer line**, the "Added to …" line and an image notice sit **directly above the box** and
-grow the dock upward; the page does not move, it is only shorter by the dock's height (the page's bottom
-padding still applies, and the dock is a sibling under the scroller, not an overlay, so the last row is never behind the box). The bulk bar rides
-above the dock. `⌘K` focuses it wherever it is. It replaces the
-old ask field and the inline "+ Add a task" inputs; the Completed page and the search results have
-none. Screens `composer-*`, `project-composer-*`, `inspector-composer-*`. It is **one line**: the
-page's title already says where a task goes, so the input has no label, no chip and no hint text.
+One component, three places: **Mine** (as the big input at the top of the page, see **Mine (home)**), **every
+project**, and the **inspector**. Agents, the Inbox, the Calendar, Completed, Summary, Recent changes
+and search have none: people add tasks from Home or a project, and the Inbox's empty state says `Add
+tasks from Home` / `在首页添加任务`. `⌘K` focuses the composer of the page; on a page without one it goes to
+Home and focuses the big input there. On a project page it is **pinned at the bottom edge of the
+content column** (the way ChatGPT, Claude and the Codex chat pane do it), not under the header: the page
+scrolls above it, and the column keeps the page's width (the board's 980 pt, or 820 pt), centered, with 8 pt
+above the box and 18 pt under it. The **answer line**, the "Added to …" line and an image notice sit
+**directly above the box** and grow the dock upward; the page does not move, it is only shorter by the dock's
+height (the page's bottom padding still applies, and the dock is a sibling under the scroller, not an
+overlay, so the last row is never behind the box). The bulk bar rides above the dock. The Mine hero puts the
+same lines **under** the box (see **Mine (home)**). It replaces the old ask field and the inline "+ Add a task"
+inputs. Screens `mine-composer-*` (the hero), `project-composer-*`, `inspector-composer-*`. It is **one
+line**: the page's title already says where a task goes, so the input has no label, no chip and no hint text
+(the hero's hint line is under it, not in it).
 
 - **At rest.** One line, 50 pt tall, 12 pt radius, `bg` with a 1 pt `border` hairline, no shadow;
   hovered, the border is a step stronger (`border` mixed 25 % toward `text`). **Focus changes only the
@@ -704,9 +756,9 @@ page's title already says where a task goes, so the input has no label, no chip 
   model and no second row, the `+` (attach); a second row showing, nothing (the `+` is in the row),
   except while the assistant works on a request from this box with an empty line, then the pulsing
   avatar. The placeholder is in `input` (17 / 25) `text.tertiary`; with a model connected the **model
-  chip** at the right; `⌘K` in `meta` `text.tertiary` after it on the pages whenever the field is
-  empty, focused or not (not in the inspector's). The
-  placeholder is short: Mine `Tell me anything — I'll turn it into tasks`, Agents `Ask what your agents are doing`; a project and the Inbox
+  chip** at the right; `⌘K` in `meta` `text.tertiary` after it on a project page whenever the field is
+  empty, focused or not (not in the inspector's, nor in Home's big input, whose hint line says the keys). The
+  placeholder is short: Mine `Tell me anything — I'll turn it into tasks`; a project
   `Add a task, or ask me anything`; the inspector `Change anything about this task`.
 - **With text.** The text area grows with its text, 1 to 6 lines, then it scrolls. Without a model
   `⌘K` gives way to a 28 pt round **send** button at the right, bottom-aligned (`accent` with text,
@@ -755,7 +807,7 @@ page's title already says where a task goes, so the input has no label, no chip 
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
 - **No model connected.** The same field. `↵` does not send the text to a model; **local rules**
   (`internal/quickadd`, pure Go, no network) read it, in Chinese and English, and add what they find
-  at once, in the place of the page (a project, the Inbox; Mine → Inbox; a day of the Calendar):
+  at once, in the place of the page (a project; on Mine, the Inbox):
   - *Several tasks.* Only explicit marks split a sentence: `，还有` / `, 还有`, `；` / `;`, `然后`,
     `, and also`, `, then`. A bare `and` and a line break do not ("salt and pepper", a pasted
     paragraph stay one title).
@@ -789,9 +841,9 @@ page's title already says where a task goes, so the input has no label, no chip 
   change, for as long as the line shows. With a model connected nothing of this applies. The line
   `Set up the assistant` (a link to Settings > Advanced) shows under the field while it is focused
   and empty. The inspector's composer is not drawn without a model.
-- **Scope.** The composer tells the assistant where it is. On Mine and Agents: nothing (new tasks go to the
+- **Scope.** The composer tells the assistant where it is. On Mine (the category's page too): nothing, or that category (new tasks go to the
   Inbox unless the words name a project). In a project: that project, so new tasks go there unless
-  the words name another. In the Inbox: the Inbox. In the inspector: that task, and “this”, “it”
+  the words name another. In the inspector: that task, and “this”, “it”
   mean it.
 - **Answer.** What comes back shows as one line directly under the box that sent it (above the
   inspector's, which sits at the bottom). Behavior as in **Assistant**.
@@ -1067,6 +1119,8 @@ Decisions made while building it (2026-10-14):
 One column of groups (Blocked, In review, Doing, To do, Done, Backlog), as a project's list was before
 M7b: an agent's row has the agent's name, branch, pull request and what it said in a quiet second line.
 No view control and no subtitle under the title; tasks with no project.
+It has no composer (decision 2 of **Input first (v31)**); empty, it says `Your inbox is clear.` and `Tasks without a
+project land here. Add tasks from Home.` / `在首页添加任务`.
 
 ### Inspector (360 pt, slides in 160 ms)
 
@@ -1696,7 +1750,7 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   and at the right a quiet segmented control `‹ Today ›` in the well of the list and board toggle
   (`bg.subtle`, 8 pt radius, 26 pt segments), Today raised. `‹ ›` show the previous and next month and
   move the selected day along (the same day number, the last day of a shorter month); Today returns
-  to this month and selects today. Under it the composer, then the grid.
+  to this month and selects today. Under it the grid (the page has no composer).
 - **Grid**: 7 columns, the weeks the month needs (four to six), weeks starting on the system's first
   weekday (Monday for zh-Hans, Sunday for en when the system names none). Weekday names in `meta`,
   `text.tertiary`, over the grid. Cells are separated by 1 pt hairlines (`border`) inside an
@@ -1745,17 +1799,15 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   Reduce Motion the card is full size and opaque at once. Closing has no animation. Screens
   `calendar-day-card-{light,dark,zh-light}`.
 - **Selecting**: a click on a day selects it (a click on a grey day of another month keeps the
-  month). The composer's placeholder becomes `Add to Fri, Oct 16, or ask me anything` / `添加到 10 月
-  16 日周五，或者问我任何事`. The assistant's scope carries the day (`PlaceCalendar`, `agent.ScopeCalendar`):
-  a task with no time words is due that day at 18:00 local, and a day named in the words wins. With
-  no model connected a plain task is added to the Inbox with that day at 18:00 as its due date.
+  month). The selected day is only a highlight now; it carries no scope (the Calendar's composer is gone, decision 2 of
+  **Input first (v31)**).
 - **Items**: a click opens the task in the inspector (it does not select the day); a right click opens
   the task menu. Drag an item onto another day: a due item moves its due date there and a reminder
   item its reminder, both keeping their time of day; the target day tints with the accent while the
   item is over it. Finished items do not drag.
 - **Keyboard** (no text input focused): `← →` the previous and next day, `↑ ↓` the same day a week
   earlier or later (leaving the grid turns the page), `⌘←` `⌘→` the previous and next month,
-  `⌘4` opens the page, `⌘K` the composer. Items have no keyboard focus of their own: the task menu
+  `⌘4` opens the page, `⌘K` goes to Home's big input. Items have no keyboard focus of their own: the task menu
   and `↵` act on the highlighted task of other pages only.
 - **Data**: the snapshot holds every task including all finished ones, so no range query is needed;
   `data.BuildCalendar` places them (see `app/data/calendar.go`).
@@ -1876,7 +1928,7 @@ composer has none, so there `⌘Z` goes on to the assistant and the toast.
 
 ### Keyboard
 
-`⌥ Space` (`Alt+Space` on Windows) opens or closes the menu bar panel from any app, its composer focused (see **Surfaces**) · `⌘K` the page's composer · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
+`⌥ Space` (`Alt+Space` on Windows) opens or closes the menu bar panel from any app, its composer focused (see **Surfaces**) · `⌘K` the page's composer, or Home's big input where the page has none · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
 (see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).

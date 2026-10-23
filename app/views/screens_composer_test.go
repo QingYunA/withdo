@@ -154,8 +154,6 @@ func TestScreensComposer(t *testing.T) {
 				tt.Key(ui.Cmd, ui.KeyK)
 				tt.Type(project)
 			})
-			inbox, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
-			shotOf("inbox-composer", inbox, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 			board, _, _ := readyApp(t, &data.FakeAssistant{Ready: true})
 			shotOf("project-board-composer", board, func(tt *ui.Tester, m *Main) {
 				m.goTo(nav{screen: screenProject, projectID: 1})

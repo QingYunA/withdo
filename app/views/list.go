@@ -191,11 +191,11 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, n int, open bool, above 
 }
 
 // emptyList is a project or the Inbox with no task at all. It says what will appear and how to
-// make it appear; the composer above is where to write one.
+// make it appear; a project has its composer, the Inbox sends people to Home.
 func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
 	title, body := m.say.ListEmptyTitle(), m.say.ListEmptyBody()
 	if m.nav.screen == screenInbox {
-		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody(keyHint("⌘K"))
+		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody()
 	}
 	emptyState(c, t, title, body, 56, func() {
 		if m.nav.screen == screenProject {

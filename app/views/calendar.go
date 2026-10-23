@@ -175,8 +175,3 @@ func (m *Main) calendarKey(c *ui.Context) bool {
 	}
 	return true
 }
-
-// calendarPlace is where the composer's requests on the Calendar page come from.
-func (m *Main) calendarPlace() data.Place {
-	return data.Place{Kind: data.PlaceCalendar, Day: m.calendarDay().Format("2006-01-02")}
-}

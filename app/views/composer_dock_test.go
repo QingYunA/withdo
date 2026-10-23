@@ -12,11 +12,7 @@ const dockPlaceholder = "⌘K" // the composer's hint, on every page that has on
 // The composer is pinned at the bottom edge of the content column, under the page.
 func TestTheComposerIsPinnedAtTheBottomUnderThePage(t *testing.T) {
 	for name, n := range map[string]nav{
-		"now":      {},
-		"agents":   {screen: screenAgents},
-		"inbox":    {screen: screenInbox},
-		"calendar": {screen: screenCalendar},
-		"project":  {screen: screenProject, projectID: 1},
+		"project": {screen: screenProject, projectID: 1},
 	} {
 		t.Run(name, func(t *testing.T) {
 			r := newAssistRig(t, &data.FakeAssistant{Ready: true})
@@ -39,6 +35,7 @@ func TestTheComposerIsPinnedAtTheBottomUnderThePage(t *testing.T) {
 // The last row of a long page stops above the composer when scrolled to the end.
 func TestTheLastRowIsNotBehindTheComposer(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	r.tt.Frame()
 	r.tt.Scroll(500, 300, 0, 3000)
 	r.tt.Frame()
@@ -46,7 +43,7 @@ func TestTheLastRowIsNotBehindTheComposer(t *testing.T) {
 	if !ok {
 		t.Fatal("no composer")
 	}
-	row, ok := r.tt.Find("Done today")
+	row, ok := r.tt.Find("Done")
 	if !ok {
 		t.Fatalf("no last section in %q", r.tt.Texts())
 	}
@@ -58,6 +55,7 @@ func TestTheLastRowIsNotBehindTheComposer(t *testing.T) {
 // Cmd+K still puts the cursor in the composer, now at the bottom.
 func TestCmdKFocusesTheBottomComposer(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
+	r.onProject()
 	r.tt.Key(ui.Cmd, ui.KeyK)
 	r.tt.Frame()
 	r.tt.Type("hello")

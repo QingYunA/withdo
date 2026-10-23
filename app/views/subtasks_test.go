@@ -35,17 +35,15 @@ func TestAgentsListsWorkingTasksWithTheirSubtasksUnderThem(t *testing.T) {
 	}
 }
 
-func TestAgentsComposerAsksAboutTheAgents(t *testing.T) {
+func TestAgentsHasNoComposerAndHomeHasTheBigInput(t *testing.T) {
 	app, _ := mineApp(t)
 	tt, m, _ := newTesterFor(app, 1100)
 	m.goTo(nav{screen: screenAgents})
 	tt.Frame()
-	has(t, tt, "Ask what your agents are doing")
-	hasNot(t, tt, "Tell me anything — I'll turn it into tasks")
+	hasNot(t, tt, "Ask what your agents are doing", "Tell me anything — I'll turn it into tasks")
 	m.goTo(nav{})
 	tt.Frame()
 	has(t, tt, "Tell me anything — I'll turn it into tasks")
-	hasNot(t, tt, "Ask what your agents are doing")
 }
 
 func TestAgentsWithNothingAtWorkSaysSo(t *testing.T) {
@@ -194,7 +192,7 @@ func TestChineseAgentsScreen(t *testing.T) {
 	inChinese(tt)
 	m.goTo(nav{screen: screenAgents})
 	tt.Frame()
-	has(t, tt, "Agent", "3 个在做", "在做", "完成", "进行中", "交回主代理", "1 个子任务", "今天做完", "问问 Agent 们在做什么")
+	has(t, tt, "Agent", "3 个在做", "在做", "完成", "进行中", "交回主代理", "1 个子任务", "今天做完")
 	hasNot(t, tt, "Working", "Handed back", "Done today")
 	empty, _ := newEmptyApp(t)
 	tt2, m2, _ := newTesterFor(empty, 1100)

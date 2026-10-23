@@ -55,12 +55,8 @@ func (m *Main) placeOf(s surface) data.Place {
 		return data.Place{Kind: data.PlaceTask, TaskID: m.inspector.lastOpen}
 	}
 	switch m.nav.screen {
-	case screenInbox:
-		return data.Place{Kind: data.PlaceInbox}
 	case screenProject:
 		return data.Place{Kind: data.PlaceProject, ProjectID: m.nav.projectID}
-	case screenCalendar:
-		return m.calendarPlace()
 	}
 	return data.Place{Kind: data.PlaceNow, Category: m.pageCategory()}
 }
@@ -74,8 +70,8 @@ func (m *Main) pageCategory() int {
 	return m.nav.cat
 }
 
-// focusPageComposer takes Cmd+K: it puts the cursor in the composer of the page, or goes to Now
-// when the page has none. The composer takes the focus when it is drawn, in this frame or a few
+// focusPageComposer takes Cmd+K: it puts the cursor in the composer of the page, or goes to Home
+// and its big input when the page has none. The composer takes the focus when it is drawn, in this frame or a few
 // later.
 func (m *Main) focusPageComposer(*ui.Context) {
 	if !m.pg.Composer {

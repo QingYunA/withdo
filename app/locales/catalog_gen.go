@@ -658,22 +658,6 @@ func (msgs Messages) CalendarMonthFull(n string) string {
 	return Catalog.Format(msgs.locale, "calendarMonthFull", map[string]any{"n": n})
 }
 
-// CalendarPlaceholder says "Add to {day}, or ask me anything"
-// in the language the app shows.
-//
-// Placeholder of the composer on the calendar page; day is the selected
-// day, as in "Fri, Oct 16".
-func CalendarPlaceholder(day string) string { return In(i18n.Locale()).CalendarPlaceholder(day) }
-
-// CalendarPlaceholder says "Add to {day}, or ask me anything"
-// in the language of msgs.
-//
-// Placeholder of the composer on the calendar page; day is the selected
-// day, as in "Fri, Oct 16".
-func (msgs Messages) CalendarPlaceholder(day string) string {
-	return Catalog.Format(msgs.locale, "calendarPlaceholder", map[string]any{"day": day})
-}
-
 // CalendarMonthDay says "{month} {day}"
 // in the language the app shows.
 //
@@ -1444,20 +1428,18 @@ func (msgs Messages) FoldShowShort() string {
 	return Catalog.Format(msgs.locale, "foldShowShort", nil)
 }
 
-// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press {key}."
+// InboxEmptyBody says "Tasks without a project land here. Add tasks from Home."
 // in the language the app shows.
 //
-// Body of an empty Inbox. key is the shortcut of the ask field, such as
-// ⌘K on a Mac or Ctrl+K elsewhere.
-func InboxEmptyBody(key string) string { return In(i18n.Locale()).InboxEmptyBody(key) }
+// Body of an empty Inbox. It sends people to Home, where tasks are added.
+func InboxEmptyBody() string { return In(i18n.Locale()).InboxEmptyBody() }
 
-// InboxEmptyBody says "Tasks without a project land here. Write one in the box above, or press {key}."
+// InboxEmptyBody says "Tasks without a project land here. Add tasks from Home."
 // in the language of msgs.
 //
-// Body of an empty Inbox. key is the shortcut of the ask field, such as
-// ⌘K on a Mac or Ctrl+K elsewhere.
-func (msgs Messages) InboxEmptyBody(key string) string {
-	return Catalog.Format(msgs.locale, "inboxEmptyBody", map[string]any{"key": key})
+// Body of an empty Inbox. It sends people to Home, where tasks are added.
+func (msgs Messages) InboxEmptyBody() string {
+	return Catalog.Format(msgs.locale, "inboxEmptyBody", nil)
 }
 
 // InboxEmptyTitle says "Your inbox is clear."
@@ -3394,6 +3376,80 @@ func NotifyReminder(title string) string { return In(i18n.Locale()).NotifyRemind
 // Title of the system notification of a due reminder.
 func (msgs Messages) NotifyReminder(title string) string {
 	return Catalog.Format(msgs.locale, "notifyReminder", map[string]any{"title": title})
+}
+
+// MineHeroGreeting says "What do you want to do today?"
+// in the language the app shows.
+//
+// Heading of Home, over the big input.
+func MineHeroGreeting() string { return In(i18n.Locale()).MineHeroGreeting() }
+
+// MineHeroGreeting says "What do you want to do today?"
+// in the language of msgs.
+//
+// Heading of Home, over the big input.
+func (msgs Messages) MineHeroGreeting() string {
+	return Catalog.Format(msgs.locale, "mineHeroGreeting", nil)
+}
+
+// MineHeroHint says "Return to add · {key} from any app · One sentence can hold several things"
+// in the language the app shows.
+//
+// Hint line under the big input on Home. key is the global shortcut that
+// opens the quick input, such as ⌥ Space.
+func MineHeroHint(key string) string { return In(i18n.Locale()).MineHeroHint(key) }
+
+// MineHeroHint says "Return to add · {key} from any app · One sentence can hold several things"
+// in the language of msgs.
+//
+// Hint line under the big input on Home. key is the global shortcut that
+// opens the quick input, such as ⌥ Space.
+func (msgs Messages) MineHeroHint(key string) string {
+	return Catalog.Format(msgs.locale, "mineHeroHint", map[string]any{"key": key})
+}
+
+// AgentsPanelTitle says "What your agents are doing"
+// in the language the app shows.
+//
+// Title of the Agents panel at the right of Home.
+func AgentsPanelTitle() string { return In(i18n.Locale()).AgentsPanelTitle() }
+
+// AgentsPanelTitle says "What your agents are doing"
+// in the language of msgs.
+//
+// Title of the Agents panel at the right of Home.
+func (msgs Messages) AgentsPanelTitle() string {
+	return Catalog.Format(msgs.locale, "agentsPanelTitle", nil)
+}
+
+// AgentsPanelEmpty says "No agent is working on anything"
+// in the language the app shows.
+//
+// Quiet line in the Agents panel of Home when no agent has anything for the
+// user.
+func AgentsPanelEmpty() string { return In(i18n.Locale()).AgentsPanelEmpty() }
+
+// AgentsPanelEmpty says "No agent is working on anything"
+// in the language of msgs.
+//
+// Quiet line in the Agents panel of Home when no agent has anything for the
+// user.
+func (msgs Messages) AgentsPanelEmpty() string {
+	return Catalog.Format(msgs.locale, "agentsPanelEmpty", nil)
+}
+
+// AgentsPanelDrop says "Drag a to-do here to hand it to an agent"
+// in the language the app shows.
+//
+// The drop target at the foot of the Agents panel on Home.
+func AgentsPanelDrop() string { return In(i18n.Locale()).AgentsPanelDrop() }
+
+// AgentsPanelDrop says "Drag a to-do here to hand it to an agent"
+// in the language of msgs.
+//
+// The drop target at the foot of the Agents panel on Home.
+func (msgs Messages) AgentsPanelDrop() string {
+	return Catalog.Format(msgs.locale, "agentsPanelDrop", nil)
 }
 
 // NowAllClear says "Nothing needs you right now"
@@ -6072,20 +6128,6 @@ func NavSectionCollapse(name string) string { return In(i18n.Locale()).NavSectio
 // Agents) that hides its sub-rows.
 func (msgs Messages) NavSectionCollapse(name string) string {
 	return Catalog.Format(msgs.locale, "navSectionCollapse", map[string]any{"name": name})
-}
-
-// ComposerPlaceholderAgents says "Ask what your agents are doing"
-// in the language the app shows.
-//
-// Placeholder of the composer on Agents.
-func ComposerPlaceholderAgents() string { return In(i18n.Locale()).ComposerPlaceholderAgents() }
-
-// ComposerPlaceholderAgents says "Ask what your agents are doing"
-// in the language of msgs.
-//
-// Placeholder of the composer on Agents.
-func (msgs Messages) ComposerPlaceholderAgents() string {
-	return Catalog.Format(msgs.locale, "composerPlaceholderAgents", nil)
 }
 
 // AgentsEmpty says "No agents at work"

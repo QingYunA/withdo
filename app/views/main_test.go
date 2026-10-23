@@ -191,7 +191,7 @@ func TestMainEmptyProjectAndInbox(t *testing.T) {
 	}
 	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	for _, want := range []string{"Your inbox is clear.", "Tasks without a project land here. Write one in the box above, or press ⌘K."} {
+	for _, want := range []string{"Your inbox is clear.", "Tasks without a project land here. Add tasks from Home."} {
 		if !tt.HasText(want) {
 			t.Errorf("empty inbox is missing %q in %q", want, tt.Texts())
 		}
