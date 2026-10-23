@@ -41,7 +41,7 @@ var Instructions = strings.Join([]string{
 // Name and Version identify the server to clients.
 const (
 	Name    = "adhd-todo"
-	Version = "0.7.3"
+	Version = "0.8.0"
 )
 
 // Options customise the server.

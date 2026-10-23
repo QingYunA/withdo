@@ -3,6 +3,24 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.8.0
+
+No database change: upgrading from 0.7.3 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Home opens with one big input.** The date, `What do you want to do today?` and a large input at
+  the top; your lists under it. What your agents are doing sits in a column on the right, with how
+  long ago each one reported; drag a to-do onto it to hand it to an agent. Only project pages keep
+  the small input at the bottom; `⌘K` anywhere else brings you to the big one.
+- **Three places in the sidebar: Today, Agents and Calendar** (`⌘1`–`⌘3`), then your projects.
+  - Tasks without a project show in Today or Later by their date; those due after next week fold at
+    the end of Later.
+  - Completed tasks: `Show all` at the end of any Done section opens their history.
+  - Today's summary: `See today ›` beside Done today.
+  - Categories are colored chips on your tasks; click one to see only that category. Manage them in
+    Settings > General.
+  - The Agents page is grouped by agent, with tasks waiting to start under Queued.
+
 ## 0.7.3
 
 No database change: upgrading from 0.7.2 is installing the app. On Windows, quit ADHD Todo and your
