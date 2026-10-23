@@ -281,10 +281,13 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 	row.Children(func() {
 		m.leadOf(c, t, it.Task, theme.AvatarRow).Margin(2, 0, 0, 0)
 		body(c, func() {
-			if m.inPanel { // the age sits at the right of the title line, which ellipsizes before it
-				ui.Row(c).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			if m.inPanel {
+				// The age sits at the right of the title line, which ellipsizes before it. Its right edge
+				// is the panel's inner edge, like the header's count: the row reserves the Not now slot
+				// (and its gap) there, so the line reaches over it, and the age yields to the x while it shows.
+				ui.Row(c).MinWidth(0).Gap(8).AlignItems(ui.Center).Margin(0, -(notNowSlot + rowRightGap), 0, 0).Children(func() {
 					ui.Column(c).Grow(1).MinWidth(0).Children(func() { m.titleLine(c, t, it.Task, "", false) })
-					m.ageLabel(c, t, it)
+					m.panelAge(c, t, it, showNotNow)
 				})
 			} else {
 				m.titleLine(c, t, it.Task, "", false)
@@ -312,6 +315,22 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 	})
 	if m.rowClicked(row, it.ID) {
 		m.openRow(it.ID)
+	}
+}
+
+// rowRightGap is the gap between the parts of the cluster at the right of a row (see right).
+const rowRightGap float32 = 10
+
+// panelAge is a row's age in the Agents panel; it is drawn invisible while the Not now x shows
+// in its place, so the title does not move.
+func (m *Main) panelAge(c *ui.Context, t *theme.Tokens, it data.Item, hidden bool) {
+	color := t.TextTertiary
+	if it.Stale {
+		color = t.Stale
+	}
+	age := theme.Text(c, theme.Meta, color, m.clock.Age(it.Since, m.app.Now())).Shrink(0)
+	if hidden {
+		age.Opacity(0)
 	}
 }
 
