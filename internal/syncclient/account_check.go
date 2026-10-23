@@ -44,7 +44,7 @@ func (c *Client) CheckDeviceAccount(ctx context.Context) error {
 func (c *Client) Unlink(ctx context.Context) error {
 	err := c.core.ApplyChanges(ctx, func(q store.Querier) error {
 		for _, key := range []string{
-			stateDeviceID, stateWorkspaceID, stateCookie, stateEnabled, stateLastError, stateSeedTotal,
+			stateDeviceID, stateWorkspaceID, stateCookie, stateEnabled, stateLastError, stateSeedTotal, stateAccountEmail,
 		} {
 			if _, err := q.ExecContext(ctx, "DELETE FROM sync_state WHERE key = ?", key); err != nil {
 				return fmt.Errorf("forget sync %s: %w", key, err)

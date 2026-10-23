@@ -128,6 +128,15 @@ func newStatusError(status int, raw []byte) *statusError {
 	return &statusError{status: status, message: errorMessage(raw), code: body.Code}
 }
 
+// HTTPStatus is the status of the server's non-2xx answer inside err, 0 when err is not one.
+func HTTPStatus(err error) int {
+	var se *statusError
+	if errors.As(err, &se) {
+		return se.status
+	}
+	return 0
+}
+
 // isStatus reports whether err is an HTTP answer with the given status.
 func isStatus(err error, status int) bool {
 	var se *statusError

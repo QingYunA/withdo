@@ -22,6 +22,11 @@ type codeFake struct {
 	checks   int
 	resets   int
 	status   int
+	// foreignID makes auth-with-oauth2 answer another record, as PocketBase does for a Google
+	// identity another account owns.
+	foreignID string
+	// linked is what the _externalAuths list answers.
+	linked bool
 }
 
 func newCodeFake(t *testing.T) *codeFake {
@@ -55,7 +60,7 @@ func newCodeFake(t *testing.T) *codeFake {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix()})
+		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
 			"record": map[string]any{"email": "ada@example.com", "name": "ada"},

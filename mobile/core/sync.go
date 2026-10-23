@@ -140,10 +140,18 @@ func (c *Core) signInConfig() (syncclient.Config, error) {
 
 // finishSignIn is everything after a token is stored, shared by the password and the code
 // sign-in: save the account, then link the phone (or find it linked), answering "linked" or
-// "choose".
+// "choose". A phone that is linked to another account than the one that just signed in answers
+// "other_account" and syncs nothing; see signInOtherAccount.
 func (c *Core) finishSignIn(cfg syncclient.Config, source syncclient.AccountSource, deviceName string) (string, error) {
 	c.setSignInStage(signInStageDownloading)
+	// The account sync.json remembered, read before the new one overwrites it.
+	var previous string
+	if cfg.Account != nil {
+		previous = cfg.Account.Email
+	}
+	var current syncclient.Account
 	if account, ok := source.Account(); ok {
+		current = account
 		cfg.Account = &account
 		if err := syncclient.SaveConfigAt(c.syncPath, cfg); err != nil {
 			return "", errors.New("could not save the account")
@@ -155,7 +163,7 @@ func (c *Core) finishSignIn(cfg syncclient.Config, source syncclient.AccountSour
 		return "", errors.New("could not read the link")
 	}
 	if linked && device != "" {
-		return signInLinkedJSON, nil
+		return c.checkLinkedDevice(previous, current)
 	}
 	client, err := c.newClient(false)
 	if err != nil {
@@ -167,13 +175,81 @@ func (c *Core) finishSignIn(cfg syncclient.Config, source syncclient.AccountSour
 		}
 		return "", syncError(err)
 	}
+	_ = client.RememberAccount(context.Background(), current.Email)
 	return signInLinkedJSON, nil
+}
+
+// checkLinkedDevice asks the server whether the account that just signed in owns this phone's
+// device. When it does, the phone resumes. When it does not, nothing syncs and the answer carries
+// both emails for the sheet. A check that could not be made (no network) lets the phone resume:
+// the runner finds the same thing out on its first request and the Sync screen then says so.
+func (c *Core) checkLinkedDevice(previous string, current syncclient.Account) (string, error) {
+	client, err := c.newClient(true)
+	if err != nil {
+		return "", err
+	}
+	ctx := context.Background()
+	switch err := client.CheckDeviceAccount(ctx); {
+	case err == nil:
+		_ = client.RememberAccount(ctx, current.Email)
+	case errors.Is(err, syncclient.ErrDeviceNotInAccount):
+		if remembered := client.RememberedAccount(ctx); remembered != "" {
+			previous = remembered
+		}
+		if strings.EqualFold(previous, current.Email) {
+			previous = ""
+		}
+		return encodeSignInOtherAccount(previous, current.Email)
+	default:
+		log.Printf("adhd-todo sync: check the device's account: %v", err)
+	}
+	return signInLinkedJSON, nil
+}
+
+// MoveToAccount is the "Move this phone to <new account>" answer of the other_account sheet: it
+// forgets the old account's link and links the phone to the account that is signed in, as a new
+// device. It answers {"state":"linked"} or {"state":"choose"} like SignIn, and the phone's tasks
+// are kept: an empty account is seeded with them, and an account with tasks of its own asks the
+// both-have-tasks question (LinkMerge or LinkReplace).
+func (c *Core) MoveToAccount(deviceName string) (string, error) {
+	c.startLink()
+	defer c.finishLink()
+	c.setSignInStage(signInStageDownloading)
+	defer c.setSignInStage(signInStageNone)
+	_ = c.StopSync()
+	client, err := c.newClient(true)
+	if err != nil {
+		return "", err
+	}
+	if err := client.Unlink(context.Background()); err != nil {
+		return "", syncError(err)
+	}
+	cfg, found, err := c.loadConfig()
+	if err != nil {
+		return "", err
+	}
+	if !found || !cfg.SignsInWithAccount() {
+		return "", errors.New("sign in to sync")
+	}
+	return c.finishSignIn(cfg, c.accountSource(cfg), deviceName)
+}
+
+// rememberAccount stores the signed-in account's email as the one this database is linked to.
+func (c *Core) rememberAccount(client *syncclient.Client) {
+	if cfg, found, err := c.loadConfig(); err == nil && found && cfg.Account != nil {
+		_ = client.RememberAccount(context.Background(), cfg.Account.Email)
+	}
 }
 
 // SignOut forgets the PocketBase token (and any refresh token an older version left), so the next sync is signed out until SignIn runs again. The
 // database stays linked to its device.
 func (c *Core) SignOut() error {
 	_ = c.StopSync()
+	// A linked phone that signs out keeps remembering who it was linked with, for the sign-in that
+	// finds another account.
+	if client, err := c.client(); err == nil && client.RememberedAccount(context.Background()) == "" {
+		c.rememberAccount(client)
+	}
 	c.mu.Lock()
 	c.lastStatus = syncclient.Status{State: syncclient.StateSignedOut}
 	c.failedSince = time.Time{}
@@ -463,6 +539,10 @@ func syncError(err error) error {
 		return errors.New("Google sign-in was cancelled")
 	case errors.Is(err, syncclient.ErrGoogleFailed):
 		return errors.New("Google sign-in didn't finish; try again")
+	case errors.Is(err, syncclient.ErrGoogleAlreadyLinked):
+		return errors.New("this Google account is already used by another account")
+	case errors.Is(err, syncclient.ErrDeviceNotInAccount):
+		return errors.New("this phone is linked to another account")
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("another device is still uploading this workspace; try again later")
 	case errors.Is(err, syncclient.ErrLocalData):
@@ -477,7 +557,13 @@ func syncError(err error) error {
 	if isNetworkError(err) {
 		return errors.New("could not reach the server; check the connection")
 	}
-	return errors.New("could not sync; check the connection and try again")
+	// Only a real network failure is "check the connection": an answer from the server is not.
+	if status := syncclient.HTTPStatus(err); status >= 500 {
+		return errors.New("the server had a problem; try again later")
+	} else if status != 0 {
+		return errors.New("the server refused the request")
+	}
+	return errors.New("something went wrong; try again")
 }
 
 // isNetworkError says whether err is the network, rather than the server, refusing the request: a

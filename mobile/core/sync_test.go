@@ -23,6 +23,9 @@ import (
 
 const syncTestToken = "e30.eyJleHAiOjQxMDI0NDQ4MDB9.sig" // a JWT-shaped token that expires in 2100
 
+// syncOtherToken is another account's token, for the tests that sign in as someone else.
+const syncOtherToken = "e30.eyJleHAiOjQxMDI0NDQ4MDAsIngiOjF9.sig"
+
 var syncSchemaCounter atomic.Uint64
 
 // syncHarness is the S2a server on a fresh Postgres schema.
@@ -57,7 +60,9 @@ func newSyncHarness(t *testing.T) *syncHarness {
 	q := u.Query()
 	q.Set("search_path", schema)
 	u.RawQuery = q.Encode()
-	server, err := syncserver.Open(ctx, u.String(), syncserver.StaticTokens{syncTestToken: "mobile-core-subject"})
+	server, err := syncserver.Open(ctx, u.String(), syncserver.StaticTokens{
+		syncTestToken: "mobile-core-subject", syncOtherToken: "mobile-core-other-subject",
+	})
 	if err != nil {
 		_, _ = admin.Exec(ctx, "DROP SCHEMA "+pgx.Identifier{schema}.Sanitize()+" CASCADE")
 		_ = admin.Close(ctx)

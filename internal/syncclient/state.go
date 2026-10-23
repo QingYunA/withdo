@@ -15,6 +15,9 @@ const (
 	stateEnabled     = "enabled"
 	stateLastError   = "last_error"
 	stateSeedTotal   = "seed_total"
+	// stateAccountEmail is the email of the account this database is linked to, kept so a later
+	// sign-in as another account can name the one it was linked with.
+	stateAccountEmail = "account_email"
 )
 
 // entities is the order a seeding snapshot writes the five synced tables: parents first. Within a
@@ -74,6 +77,24 @@ func setState(ctx context.Context, q store.Querier, key, value string) error {
 // storeDevice writes the device id the server just gave this database.
 func (c *Client) storeDevice(ctx context.Context, deviceID string) error {
 	return c.setState(ctx, stateDeviceID, deviceID)
+}
+
+// RememberAccount stores the email of the account this database is linked to. An empty email
+// changes nothing.
+func (c *Client) RememberAccount(ctx context.Context, email string) error {
+	if email == "" {
+		return nil
+	}
+	return c.setState(ctx, stateAccountEmail, email)
+}
+
+// RememberedAccount is the email RememberAccount stored, empty when none was.
+func (c *Client) RememberedAccount(ctx context.Context) string {
+	email, found, err := c.core.SyncState(ctx, stateAccountEmail)
+	if err != nil || !found {
+		return ""
+	}
+	return email
 }
 
 // DeviceID is the server's id for this database. ErrNotLinked says Link has not linked it.

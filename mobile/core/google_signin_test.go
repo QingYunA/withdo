@@ -37,11 +37,22 @@ func addGoogle(f *codeFake) func(code, errText string) {
 	})
 	f.mux.HandleFunc("POST /api/realtime", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) })
 	f.mux.HandleFunc("POST /api/collections/users/auth-with-oauth2", func(w http.ResponseWriter, _ *http.Request) {
-		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix()})
+		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
+		id := "rec1"
+		if f.foreignID != "" {
+			id = f.foreignID
+		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
-			"record": map[string]any{"email": "ada@gmail.com", "name": "Ada"},
+			"record": map[string]any{"id": id, "email": "ada@gmail.com", "name": "Ada"},
 		})
+	})
+	f.mux.HandleFunc("GET /api/collections/_externalAuths/records", func(w http.ResponseWriter, _ *http.Request) {
+		items := []map[string]string{}
+		if f.linked {
+			items = append(items, map[string]string{"provider": "google"})
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"items": items})
 	})
 	return func(code, errText string) {
 		data, _ := json.Marshal(map[string]string{"state": "c1", "code": code, "error": errText})
@@ -150,4 +161,80 @@ func phoneStatus(t *testing.T, phone *Core) statusJSON {
 		t.Fatal(err)
 	}
 	return status
+}
+
+// googleLinkPhone is a signed-in phone (the token is PocketBase's, the link to a device failed
+// against the fake, which does not matter here).
+func googleLinkPhone(t *testing.T, f *codeFake) *Core {
+	t.Helper()
+	phone, _ := codePhone(t, f)
+	if err := phone.RequestCode("ada@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = phone.SignInWithCode("123456", "phone")
+	return phone
+}
+
+func TestGoogleLinkStartFinishLinks(t *testing.T) {
+	f := newCodeFake(t)
+	redirect := addGoogle(f)
+	phone := googleLinkPhone(t, f)
+	if linked, err := phone.GoogleLinked(); err != nil || linked {
+		t.Fatalf("GoogleLinked = %v, %v; want false", linked, err)
+	}
+	authURL, err := phone.GoogleLinkStart()
+	if err != nil || authURL == "" {
+		t.Fatalf("GoogleLinkStart = %q, %v", authURL, err)
+	}
+	redirect("authcode", "")
+	if err := phone.GoogleLinkFinish(); err != nil {
+		t.Fatalf("GoogleLinkFinish: %v", err)
+	}
+	f.linked = true
+	if linked, err := phone.GoogleLinked(); err != nil || !linked {
+		t.Fatalf("GoogleLinked after = %v, %v; want true", linked, err)
+	}
+}
+
+func TestGoogleLinkKinds(t *testing.T) {
+	t.Run("another account's Google", func(t *testing.T) {
+		f := newCodeFake(t)
+		redirect := addGoogle(f)
+		phone := googleLinkPhone(t, f)
+		f.foreignID = "someone-else"
+		if _, err := phone.GoogleLinkStart(); err != nil {
+			t.Fatal(err)
+		}
+		redirect("authcode", "")
+		if err := phone.GoogleLinkFinish(); err == nil || err.Error() != "already_linked" {
+			t.Fatalf("err = %v, want already_linked", err)
+		}
+	})
+	t.Run("cancelled", func(t *testing.T) {
+		f := newCodeFake(t)
+		addGoogle(f)
+		phone := googleLinkPhone(t, f)
+		if _, err := phone.GoogleLinkStart(); err != nil {
+			t.Fatal(err)
+		}
+		done := make(chan error, 1)
+		go func() { done <- phone.GoogleLinkFinish() }()
+		time.AfterFunc(50*time.Millisecond, phone.GoogleLinkCancel)
+		select {
+		case err := <-done:
+			if err == nil || err.Error() != "cancelled" {
+				t.Fatalf("err = %v, want cancelled", err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("GoogleLinkFinish did not return after GoogleLinkCancel")
+		}
+	})
+	t.Run("signed out", func(t *testing.T) {
+		f := newCodeFake(t)
+		addGoogle(f)
+		phone, _ := codePhone(t, f)
+		if _, err := phone.GoogleLinkStart(); err == nil || err.Error() != "signed_out" {
+			t.Fatalf("err = %v, want signed_out", err)
+		}
+	})
 }
