@@ -57,7 +57,7 @@ func (m *Main) sections(c *ui.Context, t *theme.Tokens, s side, secs []page.Sect
 			if sec.Open {
 				m.groupOf(c, t, sec.Status, sec.Tasks, draw)
 			}
-			if m.foldLine(c, t, sec.Total, sec.Open, 16) {
+			if m.foldLine(c, t, statusLabel(m.say, data.Backlog), sec.Total, sec.Open, 16) {
 				expanded[m.nav] = !sec.Open
 			}
 		default:
@@ -171,14 +171,14 @@ func plainText(c *ui.Context, t *theme.Tokens, text string) {
 	theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
 }
 
-// foldLine is the last line of a list, which folds Backlog: "Backlog 2 — show". It reports a click.
-func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, n int, open bool, above float32) bool {
-	count := m.say.FoldCount(statusLabel(m.say, data.Backlog), n)
+// foldLine is the last line of a list, which folds Backlog or another group: "Backlog 2 — show". It reports a click.
+func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, name string, n int, open bool, above float32) bool {
+	count := m.say.FoldCount(name, n)
 	label, verb := m.say.FoldShow(count), m.say.FoldShowShort()
 	if open {
 		label, verb = m.say.FoldHide(count), m.say.FoldHideShort()
 	}
-	line := ui.Row(c.Key("fold")).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
+	line := ui.Row(c.Key("fold:"+name)).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer).Label(label)
 	line.Children(func() {
 		theme.Text(c, theme.BodyStrong, t.TextTertiary, count)

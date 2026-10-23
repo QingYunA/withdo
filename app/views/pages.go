@@ -38,22 +38,25 @@ func (m *Main) buildPages() {
 
 // groupByAgent puts the rows at work of one agent together, the agents in the order their newest
 // row comes, so the Agents page can head each group with the agent. The rows keep their order inside
-// a group, and the finished ones stay as they are.
+// a group, and the finished ones stay as they are. The queued and parked rows are grouped alike.
 func groupByAgent(s data.AgentsScreen, name func(data.Task) string) data.AgentsScreen {
-	var order []string
-	by := map[string][]data.AgentRow{}
-	for _, r := range s.Working {
-		n := name(r.Task)
-		if _, ok := by[n]; !ok {
-			order = append(order, n)
+	group := func(rows []data.AgentRow) []data.AgentRow {
+		var order []string
+		by := map[string][]data.AgentRow{}
+		for _, r := range rows {
+			n := name(r.Task)
+			if _, ok := by[n]; !ok {
+				order = append(order, n)
+			}
+			by[n] = append(by[n], r)
 		}
-		by[n] = append(by[n], r)
+		grouped := make([]data.AgentRow, 0, len(rows))
+		for _, n := range order {
+			grouped = append(grouped, by[n]...)
+		}
+		return grouped
 	}
-	grouped := make([]data.AgentRow, 0, len(s.Working))
-	for _, n := range order {
-		grouped = append(grouped, by[n]...)
-	}
-	s.Working = grouped
+	s.Working, s.Queued, s.Backlog = group(s.Working), group(s.Queued), group(s.Backlog)
 	return s
 }
 
@@ -87,18 +90,14 @@ func categoryGlyph(c *ui.Context, cat data.Category, size float32) ui.Element {
 // row's gap, so its folder starts where the parent's label does.
 const subRowIndent = theme.IconRow + sidebarRowGap
 
-// rowCategory is the category a row of mine shows as a chip: the one the task counts under. On a
-// project's page a task of a repository counts under Work without saying so, since every row there
-// would repeat it: only a category the user (or the assistant) gave shows.
+// rowCategory is the category a row of mine shows as a chip. A task of a repository counts under
+// Work without saying so, since most rows would repeat it, on Today as on a project's page: only a
+// category the user (or the assistant) gave shows.
 func (m *Main) rowCategory(task data.Task) (data.Category, bool) {
-	if task.Source != data.SourceUser || m.width < dropPillsBelow {
+	if task.Source != data.SourceUser || task.CategoryID == 0 || m.width < dropPillsBelow {
 		return data.Category{}, false
 	}
-	id := m.app.categoryOf(task)
-	if id == 0 || (task.CategoryID == 0 && m.nav.screen != screenMine) {
-		return data.Category{}, false
-	}
-	return m.app.Category(id)
+	return m.app.Category(task.CategoryID)
 }
 
 // rowChip is the small colored chip of a row's category: its swatch and name in meta, on

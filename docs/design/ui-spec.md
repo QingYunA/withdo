@@ -597,14 +597,19 @@ a row anywhere (see **Subtasks**).
    or GitHub files a new event, and entries of tasks that are gone are dropped. A hidden row is
    out of the sidebar count, the badge and the hop. A row with two buttons puts them under its summary below 560 pt of
    content, and every row does below 420 pt. Screens `mine-pull-requests-*`.
-2. **Today** / `今天` — the user's tasks (a user task that is blocked or doing, too): due or
-   reminded today and overdue first by time, then what is in progress. Row: the status glyph (it
+2. **Today** / `今天` — the user's tasks (a user task that is blocked, doing or **in review**, too): due or
+   reminded today and overdue first by time, then what is in progress. My own task in review waits
+   for my look, so it is here and in the count, with a small `To review` / `待审查` tag (the grey
+   `bg.subtle` pill of the Agents page) before the priority and the due label. Row: the status glyph (it
    ticks the task off), title, project name, `P0`/`P1` badge, due label at the right ("2:30 PM",
-   "Today").
+   "Today"). A category chip shows only for a category set on the task (by me or the assistant): the
+   Work a repository's project implies is not drawn (see **Categories (M9)**).
 3. **Later** / `之后` — the user's tasks due in the next 7 days by date, then undated by priority
    (at most 7; a `Show all` link after lifts the cap in place). Tasks of mine with no project are
    here and in Today like any other, by their date (see **No project**). Ones due further away are on
-   the Calendar and in their project.
+   the Calendar and in their project; the ones **with no project** end Later in a fold `After next
+   week 2` / `下周以后 2` (the fold line of Backlog, closed by default; opened, its rows are by due
+   date). Agents' tasks and tasks with a project are not in it.
 4. **Done today** / `今天做完` — what was finished since local midnight, by anyone, newest first:
    the `done` glyph, the title in `text.secondary` at weight 400, and at the right who did it, then
    the time of day: `Claude Code · PR #245 merged` or `You`, then `2:05 PM`. At most five. At the
@@ -612,7 +617,8 @@ a row anywhere (see **Subtasks**).
    its end `Show all` / `显示全部` opens the full history of everything finished (see **Completed**).
    It does not count toward the sidebar and never makes Today "not clear".
 5. **Backlog** — a fold line at the very end, `Backlog 1 — show` as a project's list has it, for the
-   tasks parked in the backlog that no project holds (a project's page folds its own). Opened, its
+   tasks of mine parked in the backlog that no project holds (a project's page folds its own; an
+   agent's are on Agents). Opened, its
    rows are Today's rows, and the arrow keys walk them. Who finished a task: the agent that filed a report at the moment it closed (within
    five seconds of the completion, or later), else me.
 
@@ -690,9 +696,15 @@ Frame 2 of v5.
    / `交回主代理` (grey, an agent in review: the main agent reviews it, not the user), other
    statuses by their own name. Cancelled subtasks are left out. A click on a subtask opens it; on
    the parent, the parent.
-2. **Done today** / `今天做完` — agent tasks finished since midnight, newest first, five at most:
+2. **Queued** / `排队中` — agent tasks in `todo` that have **no project** (a project's page lists
+   its own), after Working: a section header with the count, then the same per-agent groups and rows
+   (no live dot: they are not at work). Newest first.
+3. **Done today** / `今天做完` — agent tasks finished since midnight, newest first, five at most:
    the title in `text.secondary`, `3 subtasks` / `3 个子任务` when it had any, and the time. Their
    subtasks are not rows.
+4. **Backlog** — the last line, the fold of Today (`Backlog 2 — show`): agent tasks parked in the
+   backlog with no project. Opened, a `Backlog` header and the per-agent groups appear above the line.
+   Together with Queued this keeps every agent task reachable. These two also make the page not empty.
 
 Nothing at work and nothing finished: the empty state `No agents at work` / `没有 Agent 在做事`
 with `When an agent reports its progress, it shows up here.` and the "How to connect" link.
@@ -1876,6 +1888,10 @@ inspector's value, the Category page and the task menu's row (18 pt), the sheet'
 mode the colors are the project folders' (`theme.ProjectColor`); there is no second set. On an
 accent-filled menu row the icon is white, like a project folder in `Move to…`.
 
+- **Chips.** A row of mine shows a category chip only when the task has a category of its own
+  (`Task.CategoryID`, set by me or the assistant), on Today as on a project's page. A task that counts
+  under Work only because its project is a repository (`CategoryOf`, `projectHasRepo`) shows none;
+  filtering by Work still includes it (`rowCategory`).
 - **Settings > General > Categories** (v31; it was the sidebar's sub-rows and their menus). A group of
   rows in the pane's order, between Updates and Archived projects, under the label `Categories` /
   `类别`: each category is a row with its icon at 18 pt in its color, its name (Work and Life in the

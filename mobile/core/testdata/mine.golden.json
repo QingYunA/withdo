@@ -272,6 +272,8 @@
     }
   ],
   "MoreLater": 0,
+  "After": null,
+  "AfterTotal": 0,
   "Parked": null,
   "ParkedTotal": 1,
   "Done": [

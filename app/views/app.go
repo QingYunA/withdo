@@ -115,9 +115,9 @@ type App struct {
 	snap            snapshot
 	rev             int // counts the snapshots, so a search or Completed knows its answer is old
 	completing      map[int]completion
-	// showAllLater and parkedOpen are Today's "Show all" of Later and its Backlog fold; the window
+	// showAllLater, parkedOpen and afterOpen are Today's "Show all" of Later and its Backlog and After next week folds, backlogOpen the Backlog fold of Agents; the window
 	// sets them, the build of Mine reads them.
-	showAllLater, parkedOpen bool
+	showAllLater, parkedOpen, afterOpen, backlogOpen bool
 }
 
 // snapshot is the data the views read, loaded on every change rather than every frame. The fields
@@ -316,7 +316,7 @@ func (a *App) githubReport(id int) *data.Report { return a.snap.all.GitHubReport
 func (a *App) mineInput() data.MineInput {
 	snap := a.snap.all
 	snap.Tasks = a.withCompleting(a.snap.tasks, func(data.Task) bool { return true })
-	return data.MineInput{Snapshot: snap, Now: a.Now(), AllLater: a.showAllLater, ParkedOpen: a.parkedOpen}
+	return data.MineInput{Snapshot: snap, Now: a.Now(), AllLater: a.showAllLater, ParkedOpen: a.parkedOpen, AfterOpen: a.afterOpen, BacklogOpen: a.backlogOpen}
 }
 
 // buildMine sorts the snapshot into the sections of the Mine screen, without the handed-over rows
