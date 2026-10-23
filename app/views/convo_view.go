@@ -163,14 +163,12 @@ func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTit
 }
 
 // hereName is where the composer's page is, so a receipt names a new task's project only when it
-// landed somewhere else: the project's name, the Inbox, or nothing on Now.
+// landed somewhere else: the project's name, or nothing on Today.
 func (m *Main) hereName() string {
 	if m.convo.owner == surfaceInspector {
 		return ""
 	}
 	switch m.nav.screen {
-	case screenInbox:
-		return m.say.NavInbox()
 	case screenProject:
 		return m.app.projectName(&m.nav.projectID)
 	}

@@ -37,20 +37,6 @@ func TestTheHoverGlyphGoesWhenThePointerLeavesTheRow(t *testing.T) {
 	hasNot(t, tt, "Mark done: Write the release notes")
 }
 
-func TestTheInboxListMarksMyTaskDoneFromTheHoverGlyphToo(t *testing.T) {
-	tt, m, app := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	hasNot(t, tt, "Mark done: Look into Liquid Glass for the sidebar")
-	hover(t, tt, "Look into Liquid Glass for the sidebar")
-	if err := tt.Click("Mark done: Look into Liquid Glass for the sidebar"); err != nil {
-		t.Fatal(err)
-	}
-	if got := taskTitled(t, app, "Look into Liquid Glass for the sidebar").Status; got != data.Done {
-		t.Fatalf("status %v, want done", got)
-	}
-}
-
 func TestTheHoverGlyphOfAnAgentsTaskOpensTheMenuInsteadOfCompleting(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	hasNot(t, tt, "Status: To do")
@@ -141,13 +127,11 @@ func TestAPointerInTheGlyphColumnBesideARowShowsItsGlyphAndCompletesIt(t *testin
 }
 
 func TestAPointerInTheGlyphColumnShowsTheGlyphOfThatRowAlone(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	gutter(t, tt, "Book dentist")
-	has(t, tt, "Mark done: Book dentist")
-	hasNot(t, tt, "Mark done: Reply to design feedback", "Mark done: Look into Liquid Glass for the sidebar")
-	gutter(t, tt, "Reply to design feedback")
-	has(t, tt, "Mark done: Reply to design feedback")
-	hasNot(t, tt, "Mark done: Book dentist")
+	tt, _, _ := projectTester(t, 1)
+	gutter(t, tt, "Write the release notes")
+	has(t, tt, "Mark done: Write the release notes")
+	hasNot(t, tt, "Mark done: Decide on the activation policy")
+	gutter(t, tt, "Decide on the activation policy")
+	has(t, tt, "Mark done: Decide on the activation policy")
+	hasNot(t, tt, "Mark done: Write the release notes")
 }

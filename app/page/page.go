@@ -17,7 +17,6 @@ type Screen int
 const (
 	Mine Screen = iota
 	Agents
-	Inbox
 	Project
 	Completed
 	Calendar
@@ -37,7 +36,7 @@ const (
 	KindSummary
 	KindRecent
 	KindSearch
-	KindList    // the Inbox, or a project as statuses
+	KindList    // an empty project
 	KindColumns // a project with tasks: Mine and Agents side by side
 	KindBoard   // a project as lanes
 )
@@ -55,28 +54,28 @@ const (
 	SecStatus  SectionKind = iota // the tasks of one status; Backlog is folded into one line
 	SecWaiting                    // handed to an agent that has not reported yet
 	SecLane                       // a board lane, drawn even when empty
-	SecProject                    // search results of one project, or of the Inbox
+	SecProject                    // search results of one project, or of the tasks with no project
 	SecDay                        // tasks finished on one day
 )
 
 // Section is a header and its rows.
 type Section struct {
-	Kind   SectionKind
-	Status data.Status // SecStatus and SecLane
-	Col    int         // 0, or 1 for the Agents column
-	Title  string      // SecProject: the project's name
-	Inbox  bool        // SecProject: the Inbox
-	Day    time.Time   // SecDay: the day, in the location of the Now the page was built for
-	Tasks  []data.Task // the rows drawn, which key the arrows; none for a Backlog that is folded
-	Total  int         // the rows there are, before the fold
-	Open   bool        // Backlog: its rows are shown
+	Kind      SectionKind
+	Status    data.Status // SecStatus and SecLane
+	Col       int         // 0, or 1 for the Agents column
+	Title     string      // SecProject: the project's name
+	NoProject bool        // SecProject: the tasks with no project
+	Day       time.Time   // SecDay: the day, in the location of the Now the page was built for
+	Tasks     []data.Task // the rows drawn, which key the arrows; none for a Backlog that is folded
+	Total     int         // the rows there are, before the fold
+	Open      bool        // Backlog: its rows are shown
 }
 
 // Hidden is how many rows the fold keeps back.
 func (s Section) Hidden() int { return s.Total - len(s.Tasks) }
 
-// Fold is what the user opened in a list or column: Backlog, and every Done task.
-type Fold struct{ Backlog, AllDone bool }
+// Fold is what the user opened in a list or column: Backlog.
+type Fold struct{ Backlog bool }
 
 // Col counts one column of a project, or the whole list in Cols[0].
 type Col struct {
@@ -84,9 +83,8 @@ type Col struct {
 	Active int // those neither finished nor in the backlog
 }
 
-// Scope picks the tasks a list shows: the Inbox or one project, narrowed to a milestone.
+// Scope picks the tasks a list shows: one project, narrowed to a milestone.
 type Scope struct {
-	Inbox     bool
 	Project   int
 	Milestone int // 0 for all
 }
@@ -96,8 +94,6 @@ func (s Scope) Has(t data.Task) bool {
 	switch {
 	case t.IsSubtask():
 		return false
-	case s.Inbox:
-		return t.ProjectID == nil
 	case t.ProjectID == nil || *t.ProjectID != s.Project:
 		return false
 	}
@@ -155,7 +151,7 @@ func Build(in In) Page {
 	case KindCompleted:
 		p.days(in.Done, in.Now)
 	case KindBoard:
-		p.board(in.Cards, in.Folds[0].AllDone)
+		p.board(in.Cards)
 	case KindColumns:
 		p.columns(in.Tasks, in.Folds)
 	case KindList:
@@ -201,7 +197,7 @@ func kindOf(in In) Kind {
 }
 
 // hasComposer: Mine (as its big input) and the projects do, drawn as a list, as columns or as a
-// board. Agents, the Inbox, the Calendar, Completed, Summary, Recent changes and the search results
+// board. Agents, the Calendar, Completed, Summary, Recent changes and the search results
 // do not.
 func hasComposer(k Kind, screen Screen) bool {
 	switch k {
@@ -247,9 +243,9 @@ func HandedAt(t data.Task) time.Time {
 	return t.UpdatedAt
 }
 
-// foldDone is the one Done fold: the newest limit rows, or all once "Show all" was clicked.
-func foldDone(done []data.Task, limit int, all bool) []data.Task {
-	if all || len(done) <= limit {
+// foldDone is the one Done fold: the newest limit rows; "Show all" opens the history for the rest.
+func foldDone(done []data.Task, limit int) []data.Task {
+	if len(done) <= limit {
 		return done
 	}
 	return done[:limit]
@@ -258,7 +254,7 @@ func foldDone(done []data.Task, limit int, all bool) []data.Task {
 // listGroups are the statuses every list draws, in order.
 var listGroups = []data.Status{data.Blocked, data.Review, data.Doing, data.Todo}
 
-// column appends the sections of the Inbox, a project or one of its columns: the statuses, Done, and
+// column appends the sections of a project or one of its columns: the statuses, Done, and
 // Backlog folded into a line.
 func (p *Page) column(col int, tasks []data.Task, f Fold) {
 	by := map[data.Status][]data.Task{}
@@ -280,7 +276,7 @@ func (p *Page) column(col int, tasks []data.Task, f Fold) {
 	if len(done) > 0 {
 		sort.SliceStable(done, func(i, j int) bool { return DoneAt(done[i]).After(DoneAt(done[j])) })
 		p.Sections = append(p.Sections, Section{Kind: SecStatus, Status: data.Done, Col: col,
-			Tasks: foldDone(done, ListDoneRows, f.AllDone), Total: len(done)})
+			Tasks: foldDone(done, ListDoneRows), Total: len(done)})
 	}
 	if len(backlog) > 0 {
 		SortForList(backlog)
@@ -331,8 +327,8 @@ func LaneOf(s data.Status) data.Status {
 	return s
 }
 
-// board is the four lanes; Done shows the newest five until "Show all".
-func (p *Page) board(tasks []data.Task, allDone bool) {
+// board is the four lanes; Done shows the newest five, and "Show all" opens the history.
+func (p *Page) board(tasks []data.Task) {
 	by := map[data.Status][]data.Task{}
 	for _, t := range tasks {
 		by[t.Status] = append(by[t.Status], t)
@@ -352,7 +348,7 @@ func (p *Page) board(tasks []data.Task, allDone bool) {
 		}
 		sec := Section{Kind: SecLane, Status: s, Tasks: ts, Total: len(ts)}
 		if s == data.Done {
-			sec.Tasks = foldDone(ts, LaneDoneRows, allDone)
+			sec.Tasks = foldDone(ts, LaneDoneRows)
 		}
 		p.Sections = append(p.Sections, sec)
 	}
@@ -376,10 +372,10 @@ func SortForList(ts []data.Task) {
 	})
 }
 
-// search groups the results by project, in the order the first result of each came, the Inbox last.
+// search groups the results by project, in the order the first result of each came, the tasks with no project last.
 func (p *Page) search(f Found) {
 	p.Total, p.More = len(f.Tasks), f.More
-	index := map[int]int{} // project id (0 for the Inbox) -> section
+	index := map[int]int{} // project id (0 for no project) -> section
 	for _, t := range f.Tasks {
 		id := 0
 		if t.ProjectID != nil {
@@ -389,13 +385,13 @@ func (p *Page) search(f Found) {
 		if !ok {
 			i = len(p.Sections)
 			index[id] = i
-			p.Sections = append(p.Sections, Section{Kind: SecProject, Title: f.Name(t.ProjectID), Inbox: id == 0})
+			p.Sections = append(p.Sections, Section{Kind: SecProject, Title: f.Name(t.ProjectID), NoProject: id == 0})
 		}
 		p.Sections[i].Tasks = append(p.Sections[i].Tasks, t)
 		p.Sections[i].Total++
 	}
-	for i, s := range p.Sections { // the Inbox goes last
-		if s.Inbox {
+	for i, s := range p.Sections { // the tasks with no project go last
+		if s.NoProject {
 			p.Sections = append(append(p.Sections[:i:i], p.Sections[i+1:]...), s)
 			break
 		}

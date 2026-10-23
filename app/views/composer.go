@@ -61,13 +61,13 @@ func (m *Main) placeOf(s surface) data.Place {
 	return data.Place{Kind: data.PlaceNow, Category: m.pageCategory()}
 }
 
-// pageCategory is the id of the category of the page of Mine that is open, which new tasks typed
-// there get; 0 on every other page, Unsorted included.
+// pageCategory is the category a chip narrowed Today to, which new tasks typed there get; 0 on every
+// other page and while Today is not narrowed.
 func (m *Main) pageCategory() int {
-	if m.nav.screen != screenMine || m.nav.cat == catUnsorted {
+	if m.nav.screen != screenMine {
 		return 0
 	}
-	return m.nav.cat
+	return m.catFilter
 }
 
 // focusPageComposer takes Cmd+K: it puts the cursor in the composer of the page, or goes to Home

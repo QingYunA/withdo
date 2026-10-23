@@ -116,7 +116,7 @@ func (m *Main) categoryChip(c *ui.Context, t *theme.Tokens, task data.Task) {
 func (m *Main) projectChip(c *ui.Context, t *theme.Tokens, task data.Task) {
 	name, color := m.app.projectName(task.ProjectID), t.Text
 	if task.ProjectID == nil {
-		name, color = m.say.NavInbox(), t.TextTertiary
+		name, color = m.say.NavNoProject(), t.TextTertiary
 	} else if task.MilestoneID != nil {
 		for _, x := range m.app.snap.milestones[*task.ProjectID] {
 			if x.ID == *task.MilestoneID {

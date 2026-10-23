@@ -85,7 +85,7 @@ func statusLaneCount(m *Main, lane data.Status) int {
 	return -1
 }
 
-func TestDoneLaneShowsTheNewestFiveAndShowAll(t *testing.T) {
+func TestDoneLaneShowsTheNewestFiveAndShowAllOpensTheHistory(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 8; i++ {
@@ -102,14 +102,18 @@ func TestDoneLaneShowsTheNewestFiveAndShowAll(t *testing.T) {
 		}
 		return n
 	}
-	if n := finished(); n != 5 || !tt.HasText("Show all 8") || statusLaneCount(m, data.Done) != 8 {
+	if n := finished(); n != 5 || !tt.HasText("Show all") || statusLaneCount(m, data.Done) != 8 {
 		t.Fatalf("%d cards and no link in %q", n, tt.Texts())
 	}
-	if err := tt.Click("Show all 8"); err != nil {
+	if err := tt.Click("Show all"); err != nil {
 		t.Fatal(err)
 	}
-	if n := finished(); n != 8 || tt.HasText("Show all 8") {
-		t.Errorf("%d cards, or the link is still shown", n)
+	tt.Frame()
+	if want := (nav{screen: screenCompleted, projectID: p.ID}); m.nav != want {
+		t.Errorf("nav %+v, want the project's history %+v", m.nav, want)
+	}
+	if n := finished(); n != 8 {
+		t.Errorf("%d rows in the history, want all 8", n)
 	}
 }
 

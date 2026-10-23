@@ -16,9 +16,9 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The screens of the user's categories (docs/design/mockups/v24.html, frames 1 to 8): the sidebar
-// with three of them and their context menus, the New and Edit category sheets, the icon editor and
-// the import, the task menu's Category page and the toast after a delete. Render with
+// The screens of the user's categories (docs/design/mockups/v24.html, frames 2 to 8): the New and Edit
+// category sheets, the icon editor and the import, and the task menu's Category page (the list in
+// Settings > General is in screens_settings_test.go). Render with
 //
 //	scripts/screens.sh TestScreensCategories
 
@@ -43,6 +43,13 @@ var coffeeCup = strings.Join([]string{
 func categoriesApp(t *testing.T) *App {
 	t.Helper()
 	app, _, _ := newTestApp(t)
+	addDemoCategories(t, app)
+	return app
+}
+
+// addDemoCategories makes Reading, Health and Coffee in app and sorts two tasks into Reading.
+func addDemoCategories(t *testing.T, app *App) {
+	t.Helper()
 	for _, c := range []struct{ name, color, icon string }{{"Reading", "orange", "library"}, {"Health", "red", "heart"}} {
 		icon, ok := theme.CategoryIconNamed(c.icon)
 		if !ok {
@@ -65,7 +72,6 @@ func categoriesApp(t *testing.T) *App {
 	if _, err := app.CreateCategory(data.NewCategory{Name: "Coffee", Icon: cup, Color: "orange"}); err != nil {
 		t.Fatal(err)
 	}
-	return app
 }
 
 // coffeePhoto writes a photo-like picture of a dark mug on beige with a soft shadow and noise, as
@@ -132,14 +138,6 @@ func importCoffee(t *testing.T, tt *ui.Tester, m *Main, name string, outline boo
 	}
 }
 
-// categoryMenuAt right-clicks a sidebar row and returns the menu it opens, for withMenu.
-func categoryMenuAt(tt *ui.Tester, name string) *menuSpec {
-	r, _ := tt.Find(name)
-	x, y := r.X+24, r.Y+r.H/2
-	tt.RightClick(name)
-	return &menuSpec{x: x, y: y, items: tt.Menu()}
-}
-
 func TestScreensCategories(t *testing.T) {
 	screensTest(t)
 	for _, a := range appearances() {
@@ -152,15 +150,6 @@ func TestScreensCategories(t *testing.T) {
 				}
 				return en
 			}
-			manageShot(t, "category-sidebar"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				m.goTo(nav{screen: screenMine, cat: categoryNamedID(app, "Reading")})
-				return nil
-			})
-			manageShot(t, "category-sidebar-menu"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				m.goTo(nav{screen: screenMine, cat: categoryNamedID(app, "Reading")})
-				tt.Frame()
-				return categoryMenuAt(tt, "Reading")
-			})
 			manageShot(t, "category-sheet-new"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.openNewCategory(0)
 				tt.Frame()
@@ -205,12 +194,6 @@ func TestScreensCategories(t *testing.T) {
 				tt.Frame()
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.PropCategory())
-				return nil
-			})
-			manageShot(t, "category-deleted"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
-				tt.Frame()
-				_ = tt.RightClick("Reading")
-				_ = tt.ChooseMenuItem(m.say.CategoryDelete())
 				return nil
 			})
 		}

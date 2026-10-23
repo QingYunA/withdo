@@ -108,21 +108,44 @@ func TestTheComposerCreatesATodoInTheProjectWithoutAModel(t *testing.T) {
 	}
 }
 
-func TestInboxIsTheListWithoutTheBoardToggle(t *testing.T) {
+func TestATaskWithNoProjectIsInTodayOrLaterLikeAnyTaskOfMine(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenInbox})
 	tt.Frame()
-	if !tt.HasText("Inbox") || !tt.HasText("Book dentist") || tt.HasText("Board view") {
-		t.Errorf("inbox: %q", tt.Texts())
+	if !tt.HasText("Book dentist") {
+		t.Errorf("a task of mine with no project is not on Today: %q", tt.Texts())
 	}
 	tt.Key(ui.Cmd, ui.KeyK)
 	tt.Type("Call mum")
 	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	var made data.Task
 	for _, task := range app.snap.tasks {
-		if task.Title == "Call mum" && task.ProjectID != nil {
-			t.Error("an inbox task got a project")
+		if task.Title == "Call mum" {
+			made = task
 		}
 	}
+	if made.ID == 0 || made.ProjectID != nil {
+		t.Fatalf("the sentence made %+v, want a task with no project", made)
+	}
+	in := func(items []data.Item) bool {
+		for _, it := range items {
+			if it.ID == made.ID {
+				return true
+			}
+		}
+		return false
+	}
+	if !in(m.minePage.Later) || in(m.minePage.Today) {
+		t.Errorf("an undated task with no project is in Later: today %v, later %v", titles(m.minePage.Today), titles(m.minePage.Later))
+	}
+}
+
+func titles(items []data.Item) []string {
+	var out []string
+	for _, it := range items {
+		out = append(out, it.Title)
+	}
+	return out
 }
 
 func TestListKeyboardWalksRowsInOrder(t *testing.T) {
@@ -168,7 +191,7 @@ func TestSpaceCompletesAUsersTaskInTheList(t *testing.T) {
 	}
 }
 
-func TestDoneGroupShowsThreeAndShowAll(t *testing.T) {
+func TestDoneGroupShowsThreeAndShowAllOpensTheHistory(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 12; i++ {
@@ -188,13 +211,17 @@ func TestDoneGroupShowsThreeAndShowAll(t *testing.T) {
 		}
 		return n
 	}
-	if n := finished(); n != 3 || !tt.HasText("Show all 12 →") {
+	if n := finished(); n != 3 || !tt.HasText("Show all") {
 		t.Fatalf("%d rows and no link: %q", n, tt.Texts())
 	}
-	if err := tt.Click("Show all 12 →"); err != nil {
+	if err := tt.Click("Show all"); err != nil {
 		t.Fatal(err)
 	}
-	if n := finished(); n != 12 || tt.HasText("Show all 12 →") {
-		t.Errorf("%d rows, or the link is still shown", n)
+	tt.Frame()
+	if want := (nav{screen: screenCompleted, projectID: p.ID}); m.nav != want {
+		t.Fatalf("nav %+v, want the project's history %+v", m.nav, want)
+	}
+	if n := finished(); n != 12 {
+		t.Errorf("%d rows in the history, want 12", n)
 	}
 }

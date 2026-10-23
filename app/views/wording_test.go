@@ -18,7 +18,7 @@ func TestUpdateReceiptsReadLikeCreates(t *testing.T) {
 		{"reminder", []data.Change{{Kind: data.ChangeReminder, At: at}}, "Tomorrow 9:00 AM · reminder"},
 		{"due and priority", []data.Change{{Kind: data.ChangeDue, At: at}, {Kind: data.ChangePriority, Value: "P1"}}, "Tomorrow 9:00 AM · due · P1"},
 		{"project", []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}, "Moved to adhd-todo"},
-		{"inbox", []data.Change{{Kind: data.ChangeProject}}, "Moved to Inbox"},
+		{"inbox", []data.Change{{Kind: data.ChangeProject}}, "Moved to Today"},
 		{"category", []data.Change{{Kind: data.ChangeCategory, Value: "life"}}, "Category: Life"},
 		{"category cleared", []data.Change{{Kind: data.ChangeCategory}}, "Category cleared"},
 		{"done", []data.Change{{Kind: data.ChangeStatus, Value: "done"}}, "Marked done"},

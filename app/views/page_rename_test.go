@@ -62,7 +62,7 @@ func TestEscapeKeepsTheProjectNameWhenRenamingFromTheTitle(t *testing.T) {
 func TestDoubleClickingTheInboxTitleDoesNothing(t *testing.T) {
 	tt, m, _ := projectTester(t, 1)
 	_, y := titleSpot(t, tt) // the Inbox has no switch to measure by; its title is on the same line
-	m.goTo(nav{screen: screenInbox})
+	m.goTo(nav{})
 	tt.Frame()
 	c, _ := tt.Find("Add a task, or ask me anything")
 	doubleClickAt(tt, c.X+10, y)

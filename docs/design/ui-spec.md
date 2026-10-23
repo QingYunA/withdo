@@ -57,7 +57,7 @@ there is no timer.
 Each decision lists the section it replaces. Each is built by its own pull request, which rewrites
 that section in detail. Until then the older text describes the app as it is.
 
-1. **One big input at the top of home.** Home (`Today` / `今天`, today's Mine) opens with the date
+1. **One big input at the top of home.** Home (`Today` / `今天`, the page that was Mine) opens with the date
    and a greeting, then a large input (58 pt, 14 pt radius, `bg` with a hairline and a soft shadow,
    accent ring when focused) with a pixel microphone at its right, and a hint line under it. The
    lists follow: Today, Later, Done today. The Agents panel sits in a narrow right column (300 pt,
@@ -65,7 +65,7 @@ that section in detail. Until then the older text describes the app as it is.
    it to an agent` at its foot; dragging a row onto it hands the task over, as today. Replaces the
    bottom-pinned composer of **Mine (home)** and **Composer** on Mine. Built: **Mine (home)**.
 2. **Project pages keep a small input; other pages lose theirs.** A project keeps the bottom
-   composer, and a sentence typed there goes to that project. Agents, Inbox and Calendar have no
+   composer, and a sentence typed there goes to that project. Agents and Calendar have no
    composer any more; the inspector keeps its own. Replaces the list of six places in **Composer**. Built: **Composer**.
 3. **Applied at once, with Undo.** A sentence is applied as soon as it is sent, never shown as a
    preview to confirm. New rows land with the chips the assistant read (date, reminder, category,
@@ -104,6 +104,7 @@ that section in detail. Until then the older text describes the app as it is.
    - The agent sub-rows go: the Agents page groups by agent.
    - Recent changes moves to Settings > Advanced (it is off by default already).
    Replaces the sidebar of **Window**, **Inbox**, **Completed** and the sub-rows and folding.
+   Built: **Window**, **Mine (home)**, **No project**, **Completed**, **Categories (M9)**.
 8. **My tasks have three states and a star.** For the user's own tasks, Status is a segmented
    control: To do, Doing, Done. Backlog and Cancelled stay in the right-click menu. Priority becomes
    one **important** star (12 pt pixel star, `status.review` color when set; set = P1, unset = P2 in
@@ -329,21 +330,18 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
 - **Assistant**: the composer's mark is the assistant's 18 pt avatar (it pulses while the assistant
   works, as the sparkle did); a one-line answer that changed nothing starts with its 12 pt avatar.
   Receipts keep their green check.
-- **Sidebar**: Mine is the pixel you (`theme.You`) and Agents the robot in the accent color
+- **Sidebar**: Today is the pixel you (`theme.You`) and Agents the robot in the accent color
   (`theme.AccentBot`), both 18 pt, the size of the icons of the other rows, so the labels stay in line;
-  a sub-row under them sits one step in: a 12 pt slot flush with the parent's label, holding the
-  category's 12 x 12 icon in the category's own color, the agent's avatar
-  (`theme.AvatarSmall`), or nothing (Unsorted), then its label, so the sub-rows' labels line up
-  with each other;
-  Inbox `IconInbox`, Calendar `IconCalendar`, Completed `IconDone`, 18 pt in `text.secondary`;
+  Calendar `IconCalendar` (and Recent changes `IconBranch`), 18 pt in `text.secondary`;
   a project is `IconFolder` tinted `theme.ProjectColor(name)` (the color follows the name, the user
-  does not choose it).
+  does not choose it). A category chip's icon is the category's 12 x 12 icon in its own color; an
+  agent's group header on Agents has its 18 pt avatar.
 - **The drawn task menu** (and its Move to and reminder pages) puts an 18 pt pixel icon before each
   item: Move to `IconMove`, Remind me `IconClock`, Open PR `IconArrowOut`, Ask `IconSparkle`, the
   reminder presets `IconClock` / `IconCalendar`, No reminder `IconClose`, Custom `IconPlus`, a
   project `IconFolder` in its color (white on the highlighted row), Delete `IconTrash` in
   `status.blocked` with its text. The native context menus are text only.
-- **Empty states** (Mine, Agents, Inbox, a project, Completed, search with no hits): `theme.DuoIcon` at 60 pt
+- **Empty states** (Today, Agents, a project, the history, search with no hits): `theme.DuoIcon` at 60 pt
   (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
   line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
   forward ("How to connect").
@@ -426,58 +424,56 @@ The high-fidelity reference for this section is
 
 ### Window (1100 x 720, min 860 x 540)
 
-*The sidebar is being replaced by **Input first (v31)** item 7.*
-
 Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only when a task
 is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
 like a document, not a spreadsheet.
 
-**Sidebar.** A search field first (see **Search**), then `Mine` / `我的` (a plain count: the rows
-from your agents plus Today; when the user has not seen what agents handed over, a 18 pt red badge
-with their number instead, `status.blocked` with white `badge` text) and `Agents` / `Agent` (count =
-tasks at work, never their subtasks), each with sub-rows (below), `Inbox` (count), `Calendar`, `Completed` (no count: it
-only grows) and `Summary` (no count), `⌘1` to `⌘6` in that order, then `Projects` (sentence
-case, `section` style) with a quiet `+` at the right of its header: one row per project (a folder icon tinted with the project's color, name only),
-**on one line, ellipsized** (`answer-me-with-ht…`), its sub-projects under it (see **Sub-projects**); a 6 pt red dot at the right when
-it has a blocked task, otherwise the count of active tasks in `text.tertiary`. A project with no active
-task shows no count. Settings is a gear button at the bottom. Rows are 32 pt tall in `body` 14 pt
-(the sidebar is one step smaller than the page); selected row: `bg.selected`, 7 pt radius.
+**Sidebar.** A search field first (see **Search**), then three entries, `⌘1` to `⌘3` in that order:
+`Today` / `今天` (the page that was Mine: a plain count of the rows from your agents plus Today; when the
+user has not seen what agents handed over, a 18 pt red badge with their number instead, `status.blocked`
+with white `badge` text), `Agents` / `Agent` (count = tasks at work, never their subtasks) and
+`Calendar` / `日历` (no count). Then `Projects` (sentence case, `section` style) with a quiet `+` at the
+right of its header: one row per project (a folder icon tinted with the project's color, name only),
+**on one line, ellipsized** (`answer-me-with-ht…`), its sub-projects under it (see **Sub-projects**); a
+6 pt red dot at the right when it has a blocked task, otherwise the count of active tasks in
+`text.tertiary`. A project with no active task shows no count. Settings is a gear button at the bottom.
+Rows are 32 pt tall in `body` 14 pt (the sidebar is one step smaller than the page); selected row:
+`bg.selected`, 7 pt radius. With **Recent changes** switched on (Settings > Advanced) its row follows
+Calendar, `⌘4`.
 
-**Sub-rows.** Under `Mine`: every category by its position, empty ones too (Work / `工作` and Life /
-`生活` first until the user moves them, then the user's own), and `Unsorted` / `未分类` last, only
-while it has rows (or is the open page). Under `Agents`: one row per agent with a task at work
-or finished today, named as the Agents screen names it (`claude-code` and `Claude Code` are one
-`Claude Code` row), in the order of that screen; an agent with no name is `Agent`. A sub-row is a
-normal 32 pt sidebar row (selection, hover) whose content is indented 28 pt (an icon and the gap),
-so it reads as part of its parent. Its count is
-the parent's count for that slice, in `text.tertiary`: the rows asking for attention (From your
-agents plus Today) for a slice of Mine, the tasks at work for an agent. The red unseen badge stays
-on `Mine` alone. A click opens the parent's screen showing only that slice: the same sections,
-built from the tasks of the slice, so their counts and the "Show all" links are the slice's; the
-page title is the slice's name (`Work`, `Claude Code`); the big input on a Mine slice's page files new tasks
-in its category (see **Category**). `⌘1` and `⌘2` still go to the whole of Mine and Agents. A
-subtask goes where its parent goes. The slice is `nav.cat` (a category's id, or `catUnsorted`) on
-Mine and `nav.sub` (an agent's name) on Agents; a page whose category was deleted falls back to Mine.
-Right-click: see **Categories (M9)**.
+There are no other rows, no sub-rows and no folding chevrons (v31). What the old rows were:
 
-**Folding.** The sub-rows of `Mine` and of `Agents` are folded by default, so many agents and
-categories do not crowd the sidebar. Each of the two parents has a disclosure chevron at its right end
-(after the count or badge): a 12 pt pixel chevron (`theme.IconForward` folded, `theme.IconChevron`
-unfolded, the icons of the Recent changes fold) in `text.tertiary`, `text.secondary` and a `bg.hover`
-square on hover, with the tooltip and a11y label `Expand Mine` / `Collapse Agents`. Clicking the
-chevron only folds or unfolds; clicking anywhere else on the row still opens the page and leaves the
-fold as it was. This is how Finder, Mail and Linear fold a sidebar section (a chevron on the parent
-row, the row itself navigates); we keep it at the right so the icons and labels of all rows stay in one
-column. The choice is kept per section in the prefs file (`mineOpen`, `agentsOpen`), so it survives a
-restart. While the open page is a sub-row of a folded section (`Work`, `Claude Code`),
-that one row stays drawn so the highlight never vanishes; the rest fold away.
+- **Inbox** is Today: a task of mine with no project shows in Today or Later by its date (see **No
+  project**).
+- **Completed** is the `Show all` link at the end of every list's Done section (see **Completed**).
+- **Summary** opens from `See today` beside Done today on Today, and from the end-of-day notification
+  (see **Summary**).
+- **Categories** are a colored chip on a row; clicking it filters the list (see **Category**). They
+  are made, edited, moved and deleted in Settings > General > Categories (see **Categories (M9)**).
+- **Agents** are the headers of the Agents page, one group of rows per agent (see **Agents**).
 
 **Category.** A task is in one category or none (`tasks.category_id`, NULL for none; migration 012;
 before M9 only `work` and `life`, migration 007).
 The category it counts under is its own, else Work when its project is a repository, else none
 (Unsorted): a category set by hand or by an agent always wins. The assistant classifies the tasks it
 writes from the words and leaves it out when unsure or when the task goes into a repository's project.
-A task typed in the composer of a category's page gets that category, with or without a model.
+A task typed in the big input of Today while a chip's category narrows it (the filter bar below) gets
+that category, with or without a model.
+
+**The chip and the filter bar.** A row of mine whose category is not none ends its title with a chip
+(v31): the category's 12 x 12 icon in its color and its name, in `meta` `text.secondary`, on
+`bg.subtle`, 6 pt radius, 2 pt above and below the text and 7 pt at the sides, tooltip and a11y label
+`Show only Work` / `只看 工作`. It shows on Today and, for a category the user or the assistant gave, on a
+project's list and columns (the Work a repository's project implies is not repeated on every row of
+its page); not on an agent's row, and not under 460 pt of content, where the pills go too. Clicking
+it narrows the page to that category: the same sections built from the tasks that count under it
+(for Today by the same builder as the page, so counts, `Show all` and the Backlog fold are the
+slice's; for a project by its list filter). Above the lists a **filter bar** appears: a pill on
+`bg.selected` with the icon, `Showing Work` / `只看 工作` in `meta` and a 20 pt `close` button (tooltip
+`Clear filter` / `清除筛选`). The `x` and `Esc` (after the inspector, before the selection) clear it;
+going to another page clears it too; deleting the category does. The filter is `Main.catFilter`; it
+is not kept. Screens `mine-filter-*` (Work, and `mine-filter-life-*`), `agents-codex-*` (two groups), `project-history-*`.
+
 
 **Sub-projects.** A project can hang under another one (`projects.parent_id`, migration 013), as deep
 as the user likes. Its row is indented 28 pt per step, so a sub-project's folder sits where its
@@ -501,17 +497,17 @@ takes a repository from the sheet if the user gives it one.
   separator, `Rename`, `Archive`, a separator, `Delete…`. Rename edits the name in the
   row itself: the label becomes an input with the cursor at the end, Enter saves, Esc and a click away put
   the old name back. Double-clicking the project's title on its page renames it the same way, in place
-  (the title becomes an input; Inbox and the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
+  (the title becomes an input; the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
   General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
-  Archiving or deleting the project on screen goes to Mine.
+  Archiving or deleting the project on screen goes to Today.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Mine (home)
 
 *Decision 1 of **Input first (v31)** is built here; items 3 and 5 still replace parts of it.*
 
-Home is the page `Mine` / `我的` in the sidebar (decision 7 renames it later). It opens with one big
-input, not a title. Reference: `docs/design/mockups/v31.html` (the proposal frame), screens `mine-*`.
+Home is the page `Today` / `今天` in the sidebar (it was `Mine` / `我的`; the code and the screens
+`mine-*` keep the old name). It opens with one big input, not a title. Reference: `docs/design/mockups/v31.html` (the proposal frame), screens `mine-*`.
 
 **The hero.** At the top of the content column, scrolling with the page (it is not pinned):
 1. the day in `meta` `text.secondary`, centered: `Thursday, October 23` / `10月23日星期四` (`words.Clock.HeroDate`,
@@ -533,9 +529,7 @@ input, not a title. Reference: `docs/design/mockups/v31.html` (the proposal fram
    line (`inputLineLive` says whether one is showing). The page slides under it as the line comes and
    goes (`belowComposer`).
 
-The `Select` control stays at the top right of the page, on a 36 pt row of its own over the hero. On
-the page of a category (Work, Life, Unsorted) the row also holds the category's name at the left, as
-the title did. `⌘K` focuses the big input from anywhere (and from a page with no composer it goes to
+The `Select` control stays at the top right of the page, on a 36 pt row of its own over the hero. `⌘K` focuses the big input from anywhere (and from a page with no composer it goes to
 Home first, see **Composer**); `↓` from the input walks into the rows, and `↑` from the first row
 comes back to it. On Mine the composer is no longer pinned at the bottom: there is no dock
 (`dockHeight` is 0). The menu bar panel keeps its own composer.
@@ -608,12 +602,18 @@ a row anywhere (see **Subtasks**).
    ticks the task off), title, project name, `P0`/`P1` badge, due label at the right ("2:30 PM",
    "Today").
 3. **Later** / `之后` — the user's tasks due in the next 7 days by date, then undated by priority
-   (at most 7; a "Show all in Inbox" link after). Later ones stay in their project or the Inbox.
+   (at most 7; a `Show all` link after lifts the cap in place). Tasks of mine with no project are
+   here and in Today like any other, by their date (see **No project**). Ones due further away are on
+   the Calendar and in their project.
 4. **Done today** / `今天做完` — what was finished since local midnight, by anyone, newest first:
    the `done` glyph, the title in `text.secondary` at weight 400, and at the right who did it, then
-   the time of day: `Claude Code · PR #245 merged` or `You`, then `2:05 PM`. At most five; past
-   them a `Show all in Completed` link. It does not count toward the sidebar and never makes Mine
-   "not clear". Who finished a task: the agent that filed a report at the moment it closed (within
+   the time of day: `Claude Code · PR #245 merged` or `You`, then `2:05 PM`. At most five. At the
+   right of its header is `See today` / `看看今天` with a pixel chevron (the **Summary** opens), and at
+   its end `Show all` / `显示全部` opens the full history of everything finished (see **Completed**).
+   It does not count toward the sidebar and never makes Today "not clear".
+5. **Backlog** — a fold line at the very end, `Backlog 1 — show` as a project's list has it, for the
+   tasks parked in the backlog that no project holds (a project's page folds its own). Opened, its
+   rows are Today's rows, and the arrow keys walk them. Who finished a task: the agent that filed a report at the moment it closed (within
    five seconds of the completion, or later), else me.
 
 **Accepting** (v10 B, `docs/design/mockups/v10.html`). The store says done at once; the row stays
@@ -676,8 +676,12 @@ Header: `Agents` / `Agent` in `title` + `3 working` / `3 个在做` in `text.ter
 none). The page has no composer (decision 2 of **Input first (v31)**); `⌘K` goes to Home.
 Frame 2 of v5.
 
-1. **Working** / `在做` — agent tasks in doing or blocked, newest report first, across all
-   projects. A row: the agent's 18 pt avatar, the title, one meta line `Claude Code · main · what it
+1. **Working** / `在做` — agent tasks in doing or blocked, across all projects, **grouped by agent**
+   (v31; the agent sub-rows of the sidebar are gone). Each group has a header in `body.strong`: the
+   agent's 18 pt avatar, its name as the page spells it (`claude-code` and `Claude Code` are one
+   `Claude Code` group; an agent with no name is `Agent`) and the number of its tasks at work in
+   `text.tertiary`. The agents come in the order of their newest report, and a group's rows too.
+   A row: the agent's 18 pt avatar, the title, one meta line `Claude Code · main · what it
    said; next: …` (agent, branch when the row is wide enough, summary), and at the right the live
    dot (last report under 10 minutes old) or, for a blocked task, a `Blocked` pill, then the age.
    Its subtasks hang under it on a 1 pt `border` rail that starts at the middle of the avatar:
@@ -732,9 +736,8 @@ rows recorded as seen does not hop for them.
 *Decision 2 of **Input first (v31)** is built here.*
 
 One component, three places: **Mine** (as the big input at the top of the page, see **Mine (home)**), **every
-project**, and the **inspector**. Agents, the Inbox, the Calendar, Completed, Summary, Recent changes
-and search have none: people add tasks from Home or a project, and the Inbox's empty state says `Add
-tasks from Home` / `在首页添加任务`. `⌘K` focuses the composer of the page; on a page without one it goes to
+project**, and the **inspector**. Agents, the Calendar, the history, Summary, Recent changes
+and search have none: people add tasks from Home or a project. `⌘K` focuses the composer of the page; on a page without one it goes to
 Home and focuses the big input there. On a project page it is **pinned at the bottom edge of the
 content column** (the way ChatGPT, Claude and the Codex chat pane do it), not under the header: the page
 scrolls above it, and the column keeps the page's width (the board's 980 pt, or 820 pt), centered, with 8 pt
@@ -807,7 +810,7 @@ line**: the page's title already says where a task goes, so the input has no lab
   row. `⌘Z` in an empty composer undoes the assistant's last change (see **Assistant**).
 - **No model connected.** The same field. `↵` does not send the text to a model; **local rules**
   (`internal/quickadd`, pure Go, no network) read it, in Chinese and English, and add what they find
-  at once, in the place of the page (a project; on Mine, the Inbox):
+  at once, in the place of the page (a project; on Today, no project):
   - *Several tasks.* Only explicit marks split a sentence: `，还有` / `, 还有`, `；` / `;`, `然后`,
     `, and also`, `, then`. A bare `and` and a line break do not ("salt and pepper", a pasted
     paragraph stay one title).
@@ -836,13 +839,13 @@ line**: the page's title already says where a task goes, so the input has no lab
     recognized words (`明天`) keeps its text as the title and sets no field.
 
   The "Added to …" line becomes a **receipt** for 6 s, `✓ Added 2: 体检 (Mon 9:00 AM reminder), 交房租
-  (due Fri, Life, important)  Undo`; a plain task keeps `✓ Added to Inbox` for 1.5 s, which also has
+  (due Fri, Life, important)  Undo`; a plain task keeps `✓ Added to Today` for 1.5 s, which also has
   Undo. **Undo** and `⌘Z` in the empty composer delete everything that sentence added, as one
   change, for as long as the line shows. With a model connected nothing of this applies. The line
   `Set up the assistant` (a link to Settings > Advanced) shows under the field while it is focused
   and empty. The inspector's composer is not drawn without a model.
-- **Scope.** The composer tells the assistant where it is. On Mine (the category's page too): nothing, or that category (new tasks go to the
-  Inbox unless the words name a project). In a project: that project, so new tasks go there unless
+- **Scope.** The composer tells the assistant where it is. On Today (narrowed to a category by a chip too): nothing, or that category (new tasks have no
+  project, so they land in Today or Later, unless the words name a project). In a project: that project, so new tasks go there unless
   the words name another. In the inspector: that task, and “this”, “it”
   mean it.
 - **Answer.** What comes back shows as one line directly under the box that sent it (above the
@@ -903,8 +906,8 @@ Screens: `now-thinking`, `now-reply-receipt`, `now-reply-receipts`, `now-reply-s
     title is what the words made of it: a deadline as its day (`Fri`; a time only when one was said,
     `Fri 3:00 PM`; `18:00` is the assistant's default end of day and reads as the day alone), a
     reminder as `Tomorrow 9:00 AM · reminder`, `P1` when the priority is not the default, and the
-    project or `Inbox` only when it is not the page the words were typed on (on Mine, a task in the
-    Inbox says nothing). Up to **three** lines; more receipts end in `and 1 more` (`meta`-quiet, no
+    project or `Today` only when it is not the page the words were typed on (on Today, a task with no
+    project says nothing). Up to **three** lines; more receipts end in `and 1 more` (`meta`-quiet, no
     Undo). Clicking a line opens the task. After Undo the title is struck through in `text.tertiary`
     and the line says `Undone`. In the inspector the same lines sit above its box and leave the
     title out when it is the task shown there.
@@ -961,7 +964,7 @@ view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 na
 `New milestone…`, `Rename…` and `Due date…` open the **Milestone sheet**. Closing and reopening act
 at once. A project with no milestone has no filter: `New milestone…` is in its sidebar menu.
 
-**List view: two columns** (the Inbox keeps the single list, **Inbox list view** below; the board is unchanged). A project
+**List view: two columns** (an empty project keeps the single list, **List view** below; the board is unchanged). A project
 with at least one task is drawn as **Mine** on the left (tasks with `Source user`) and **Agents** on the
 right (`Source agent`) under the header, with the composer pinned at the bottom, as in `docs/design/mockups/v7.html` and
 `v7b.html` (screens `project-two-columns-*`, `project-list-*`). With no task at all the project keeps the
@@ -978,12 +981,12 @@ centred empty state.
   (`#F8F8FA` light, `#202023` dark; about half as dark as `bg.subtle`), 14 pt radius, 16 pt inside on the
   left and right, 14 pt under its last row. Mine has no background, and there is no vertical rule.
 - **Groups.** Each column groups its own tasks as the list did: Blocked, In review, Doing, To do (empty
-  groups are not drawn), then its own **Done** (the newest three and `Show all 5 →`) and its own
+  groups are not drawn), then its own **Done** (the newest three and `Show all`, which opens that project's history, see **Completed**) and its own
   `Backlog 2 — show` line. The two columns open and close their Done and Backlog separately. Rows sit
-  26 pt in from their header, as in the Inbox: an Agents row's avatar under the header's name, and the
+  26 pt in from their header, as in the single list: an Agents row's avatar under the header's name, and the
   titles of both columns a step further in (a Mine row keeps the avatar's room empty); `Show all N →`
   lines up with the titles. While the pointer is over an open row of either column, the row shows its own
-  status glyph under the header's glyph, as in the Inbox.
+  status glyph under the header's glyph, as in the single list.
 - **Agents column, first group `Waiting for an agent` / `等 Agent 接手`**: tasks the user handed over
   (`HandedTo` set) that no agent has reported on yet. Its glyph is the pixel parcel (`avatars/parcel.png`, 12 x 12
   with a pixel of room all round, drawn at 24 pt). A row: the same accent robot as the column header (the task is any
@@ -1002,7 +1005,7 @@ centred empty state.
   (without); blocked, **Answer**. Other rows show no buttons (a click opens the inspector, as
   before). While the row's task menu is open the menu has the choices and the row shows its age. Accept leaves as in **Accepting** (Mine): the row folds out of In review (the group's
   header folds with it when it was the last) and opens at the top of the column's Done. The same
-  holds in a project's single list and in the Inbox list.
+  holds in a project's single list.
 - **An empty column** keeps its header and one quiet `text.tertiary` line. Mine: `Nothing for you here
   — write one above` / `这里还没有你要做的事 —— 在上面写一句就行`. Agents: `No agent has reported in this
   project yet` / `还没有 Agent 在这个项目里汇报` and the accent link `Install MCP →` / `安装 MCP →`, which
@@ -1045,7 +1048,7 @@ when told its number, through the MCP.
 - **Reduce Motion.** The sprite still carries the row, but does not walk; the agent neither hops nor
   squashes. The wash fades as above.
 
-**Inbox list view** (one column; a project's list before M7b). Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
+**List view** (one column; a project's list before M7b, and an empty project's). Groups in this order: Blocked, In review, Doing, To do. Group header: glyph +
 name (`body.strong`) + count in `text.tertiary`. Rows sit 26 pt in, their avatar under the
 header's name (the group says the status, so a row has no glyph at rest; while the pointer is over
 it or in the glyph column beside it, a row shows its own status glyph under the header's glyph, a button that takes no room: clicking
@@ -1102,7 +1105,7 @@ Decisions made while building it (2026-10-14):
   Done, Cancelled. The stale label is `3d stale` in the list and on a card, with no `!`.
 - **Review without a PR** still goes to From your agents (`Claude Code finished and is waiting for
   you`, action Review). A review task of my own does not: it waits on someone else.
-- **Later** shows dated tasks due within 7 days; later ones appear in their project or the Inbox only.
+- **Later** shows dated tasks due within 7 days; later ones appear in their project and on the Calendar.
 - **Reminders** stay in Today (an agent task's in From your agents) until marked done; the notification fires once, the row does not
   go away.
 - **Tight rows** (the inspector open on a small window): Mine's rows drop the project name below 600 pt of
@@ -1110,25 +1113,37 @@ Decisions made while building it (2026-10-14):
   them under the summary below 560 pt, and every such row does below 420 pt (the 860 pt window
   with the inspector open leaves 282 pt), so the title keeps its width. A finished row drops who
   finished it below 460 pt and what they said below 600 pt.
-- A notification click opens the task in the inspector over Mine.
+- A notification click opens the task in the inspector over Today.
 
-### Inbox
+### No project
 
-*Being replaced by **Input first (v31)** item 7.*
+There is no Inbox page (v31). A task with no project is a task like any other, and it is found
+where its kind is found:
 
-One column of groups (Blocked, In review, Doing, To do, Done, Backlog), as a project's list was before
-M7b: an agent's row has the agent's name, branch, pull request and what it said in a quiet second line.
-No view control and no subtitle under the title; tasks with no project.
-It has no composer (decision 2 of **Input first (v31)**); empty, it says `Your inbox is clear.` and `Tasks without a
-project land here. Add tasks from Home.` / `在首页添加任务`.
+- **Mine**, to do, doing or blocked: Today or Later by its date (undated ones in Later, after the
+  seven that fit and `Show all`, so none is out of reach). Dated beyond a week: the Calendar.
+- **Mine, parked in the backlog**: the `Backlog` fold at the end of Today (a project has its own).
+- **An agent's**: Agents while it is at work, From your agents when it asks for you, Done today and
+  the history after.
+- **Done or cancelled**: Done today, then the history (`Show all`), and search.
+- Search finds all of them, grouped by project, the tasks with no project last under `No project`
+  / `无项目`.
+
+Two kinds are only in search: a task of mine in `review` (it waits on someone else, see Today) and
+an agent's task in `todo` or `backlog` with no project, neither of which the UI makes.
+
+Where the app used to say `Inbox` it now says what is true: a receipt, a toast and a notification
+say `Today` (`Added to Today` / `已添加到今天`, `Moved to Today`, a notification's project line); a
+place that names where a task lives (the inspector's top line, `Move to…`, the project chip) says
+`No project` / `无项目`.
 
 ### Inspector (360 pt, slides in 160 ms)
 
 *Being replaced by **Input first (v31)** items 8 and 9.*
 
 Top line (the bar with the close button, `meta` `text.secondary`): where the task lives, `adhd-todo ·
-QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `Inbox ·
-#7` for an Inbox task). A long name is ellipsized before the number. Under it the pane differs by
+QingYunA/adhd-todo · #7` (the project, its repository when it has one, the task's number; `No project ·
+#7` for a task with no project). A long name is ellipsized before the number. Under it the pane differs by
 who the task is from (v31, decisions 8 and 9; reference `docs/design/mockups/v31.html`, section 4):
 `mine` is a task whose source is the user (not one an agent reported, created or took over), and
 the pane for it is much shorter, because a person's task is "what, when, where".
@@ -1149,7 +1164,7 @@ the pane for it is much shorter, because a person's task is "what, when, where".
   line icon, `Due` / `Remind` in `text.tertiary` while nothing is set). The due chip opens the calendar
   popover, the reminder chip the reminder presets, as the values did.
 - **Where**: the category chip (its 12 pt icon in its color and its name; `Category` in
-  `text.tertiary` with a list icon while it has none) and the `project · milestone` chip (`Inbox` in
+  `text.tertiary` with a list icon while it has none) and the `project · milestone` chip (`No project` in
   `text.tertiary`). They open the Category page and the `Move to…` list of the Task menu. Moving a
   task to another project clears its milestone (milestones belong to one project). A subtask has
   its parent line after Status.
@@ -1170,7 +1185,7 @@ ellipsized like every long value, and a click turns it into the editable text); 
   **Task menu** (below) under the value, not a system menu: the status strip, the priority strip, the
   Category page (a filter field and the categories; the row shows only the category that was set,
   after its 18 pt icon in the category's color, and `None` with no icon in `text.tertiary`, for a
-  task in a repository's project too), the `Move to…` list (`Inbox` and the projects, the current one checked) and the reminder presets.
+  task in a repository's project too), the `Move to…` list (`No project` and the projects, the current one checked) and the reminder presets.
   Moving a task to another project clears its milestone (milestones belong to one project); the
   Milestone row follows the project.
 - The body (title, properties, notes, activity, delete) is its own scroll area that takes the height
@@ -1199,8 +1214,8 @@ v13 (`docs/design/mockups/v13.html`): an image is part of a task, so the user ca
   `text.tertiary`, as `Add notes…`. Image files dropped on the inspector are attached (the same types
   and limits as the composer's). A hovered tile shows an 18 pt round pixel `x` at its top right that
   detaches the image, with the Undo toast; a click on the tile opens the viewer.
-- **In lists.** A row of a task with images (Mine, a project's columns and list, the Inbox, search,
-  Completed) shows its first image as a 32 x 24 pt thumbnail (4 pt radius, hairline, contain on
+- **In lists.** A row of a task with images (Today, a project's columns and list, search,
+  the history) shows its first image as a 32 x 24 pt thumbnail (4 pt radius, hairline, contain on
   `bg.subtle`) just before the due label or the age; with more than one, a `+2` badge (9 pt, white on
   55 % black) at its bottom right. A row without images is unchanged.
 - **On board cards.** The first image as a band across the top of the card, 96 pt tall, contain on
@@ -1288,7 +1303,7 @@ Main page, top to bottom (10 pt padding):
    no letter key;
 4. a hairline;
 5. `Move to…` (key hint `M`): the menu's body is replaced by a filter field and a list of the
-   projects and `Inbox` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
+   projects and `No project` (the current one checked). Typing filters, `↑ ↓` move, `↵` moves the task,
    `Esc` goes back to the main page;
 6. `Remind me…` (`R`): replaced by presets, each with the moment it means at the right (the time
    alone for today and tomorrow, `Mon 9:00 AM` for the others): `Later today` (6:00 PM, only while
@@ -1315,7 +1330,7 @@ A project's menu is in the Sidebar and stays a system menu.
 ### Selecting several tasks
 
 v20 (`docs/design/mockups/v20.html`, #75). Every task list can hold several tasks at once and act on
-them together: Mine, a project (list, two columns, board cards), the Inbox, Agents, Completed and
+them together: Today, a project (list, two columns, board cards), Agents, the history and
 search results. Calendar and Summary do not select.
 
 - **Select button.** At the right of the page title, `Select` / `多选` (the pixel checkbox icon,
@@ -1328,8 +1343,8 @@ search results. Calendar and Summary do not select.
   its own `Select` / `多选` at its right end. It enters select mode for that column's rows only (a
   click on the other column's rows still opens them, `Select all` and `⌘A` take the column's rows),
   and the other column's button is hidden meanwhile; the count, `Select all` and `Done` appear in the
-  head of the column that is in select mode. Pages with no column heads (Mine, Inbox, a board,
-  Agents, Completed, search) keep the button in the title row.
+  head of the column that is in select mode. Pages with no column heads (Today, a board,
+  Agents, the history, search) keep the button in the title row.
 - **Without the mode**: `⌘`-click adds or removes a row, `⇧`-click selects from the last clicked row
   to this one, `⇧↑ ⇧↓` extend from the keyboard row, `⌘A` selects every row of the page. A plain
   click opens the inspector and makes that row the only one selected, as before. `Esc` clears the
@@ -1339,7 +1354,7 @@ search results. Calendar and Summary do not select.
   "selected".
 - **The bulk bar.** With 2 selected (1 in select mode), a pixel panel floats at the bottom centre of
   the list (the day card's shape: two-step corners, a 2 pt solid edge, a hard 4 pt shadow, no blur):
-  `3 selected` / `3 件`, **Done** (`⌘↵`), **Move to…** (a project or the Inbox), **Priority** (P0 to
+  `3 selected` / `3 件`, **Done** (`⌘↵`), **Move to…** (a project or no project), **Priority** (P0 to
   P3; when every selected task is mine, **Mark important** / `标为重要`, or `Not important` / `取消重要` when every one
   is starred, which runs at once and says `Marked 3 tasks important`; a mixed selection keeps Priority), **Hand to an agent** (`⌘⇧A`), **Delete** (in the blocked red, after a confirmation `Delete 3
   tasks?` / `删除 3 件任务？`), and `×` that clears the selection. When the window is narrow the
@@ -1347,8 +1362,8 @@ search results. Calendar and Summary do not select.
 - **Each action is one change with one Undo** (`⌘Z`, or the toast's **Undo**). Done and cancelled
   rows can be selected (to delete or reopen them); **Hand to an agent** takes only the user's own
   unfinished tasks and says how many it skipped (`Handed 2 to an agent · 1 skipped`). Handed from
-  Mine or the Inbox, each task waits in its own project's `Waiting for an agent` (an Inbox task
-  waits in the Inbox's Agents).
+  Today, each task waits in its own project's `Waiting for an agent` (a task with no project
+  waits among the agents' rows of Today and Agents).
 - **Task menu.** Right-clicking a selected row opens the menu for all of them: a header `3 tasks` /
   `3 件任务` and the bar's actions plus **Cancel**. Right-clicking a row that is not selected acts on
   that row only and keeps the selection.
@@ -1411,10 +1426,10 @@ Decisions made while building it (2026-10-18; screens `select-*`):
 Typing replaces the page with **Search results**; while they show, no sidebar row is highlighted, and
 the screen under them comes back when the search ends. The page
 header reads `Search` with `12 results for “login”` in `text.tertiary`. Results are tasks of every
-project and the Inbox, whatever their status, done and cancelled included (the tasks of archived
+project and of no project, whatever their status, done and cancelled included (the tasks of archived
 projects are left out), matching every word of the query in the title, notes or branch, or a pull
-request number (`#42` and `42`). They are grouped by project, the Inbox last, groups ordered by the
-newest task in them. Group header: `#` mark (a tray for the Inbox), project name in `body.strong`, count in `text.tertiary`.
+request number (`#42` and `42`). They are grouped by project, the tasks with no project last (`No project`), groups ordered by the
+newest task in them. Group header: `#` mark (a tray for no project), project name in `body.strong`, count in `text.tertiary`.
 Row: status glyph (a button, like on Mine), title, branch pill and `#PR`, and at the right the age of
 the last change. Done and cancelled rows keep their glyph (a button, so a finished task can be reopened from here).
 
@@ -1424,24 +1439,34 @@ the last change. Done and cancelled rows keep their glyph (a button, so a finish
   list), `↑` from the first goes back to the field, `↵` opens the highlighted row in the inspector
   (the first result when none is highlighted yet), `Esc` clears the text and leaves the field.
   With a result highlighted and the inspector open, `Esc` closes the inspector first, then clears the
-  highlight, then the search. Clicking a sidebar item or `⌘1` `⌘2` `⌘3` ends the search.
+  highlight, then the search. Clicking a sidebar item or `⌘1` `⌘2` `⌘3` ends the search. Search is also the way to a finished task
+  without opening the history.
 - At most 100 results are shown; a quiet last line says when there are more.
 
 ### Completed
 
-*Being replaced by **Input first (v31)** item 7.*
+The full history of what was finished (v31). It has no sidebar row: it opens from the `Show all` /
+`显示全部` link at the end of a list's Done section, and a back control returns to that list.
 
-The `Completed` sidebar item (`已完成`, was Logbook), under Inbox: the done and cancelled tasks of every
-active project and the Inbox, newest first by completion, grouped by day. Page title `Completed`,
-subtitle `Done and cancelled, newest first`. Mine's `Show all in Completed` and a list's
-`Show all` lead the eye here. Day header in `body.strong` with the count in `text.tertiary`: `Today`, `Yesterday`,
-then a date (`Oct 12`, `Oct 12, 2025` in another year), written by `app/words`. Row: the status glyph
-(done check or cancelled slash, a button: choosing another status reopens the task), title, project
-name, and at the right who finished it (`Claude Code`, `You`) and the time of day.
-
+- **Where the link is**: the end of Today's `Done today` (everything finished), of Agents' `Done today`
+  (what agents wrote), of a project's Done group in its list and in each of its two columns (the project's
+  history; the Agents column's is the project's agents), and of the board's Done lane. A Done section
+  with rows always has it; a project's Done group still shows its newest three and a lane its newest
+  five.
+- **The page**: the done and cancelled tasks of the scope, newest first by completion, grouped by day.
+  Above the title a back control: a 12 pt `chevron-left` and the name of the page it came from
+  (`Today`, `Agents`, a project) in `meta` accent, a11y `Back to Today` / `返回今天`. Page title
+  `Completed` and, beside it, a quiet line: `Done and cancelled, newest first` for everything, `Done
+  and cancelled in adhd-todo, newest first` / `Done and cancelled in Agents, …` for a scope
+  (`nav.projectID`, `nav.agents`; `Store.LogbookOf`). Day header in `body.strong` with the count in
+  `text.tertiary`: `Today`, `Yesterday`, then a date (`Oct 12`, `Oct 12, 2025` in another year),
+  written by `app/words`. Row: the status glyph (done check or cancelled slash, a button: choosing
+  another status reopens the task), title, project name, and at the right who finished it (`Claude
+  Code`, `You`) and the time of day.
 - **Empty**: `Nothing finished yet` and `Tasks you mark done or cancel collect here, newest first.`
 - 100 tasks are listed; `Show older` at the end loads 100 more.
-- The same keys as any list: `↑ ↓ ↵ Space Esc`, `⌘3` opens it.
+- The same keys as any list: `↑ ↓ ↵ Space Esc`; there is no key for the page, `⌘1` to `⌘3` leave it.
+- Search finds finished tasks too, without the history.
 
 ### Summary
 
@@ -1451,7 +1476,8 @@ The end-of-day ledger (#67). References: `docs/design/mockups/v18.html` (the sce
 Stardew-Valley-style shipping: everyone who finished something throws it into a shipping bin, then
 a ledger counts it up.
 
-**Where.** A sidebar row `Summary` (`总结`) under Completed, icon `bulletlist`, `⌘6`. Header: the
+**Where.** No sidebar row (v31). On Today, `See today` / `看看今天` with a pixel chevron, at the right of
+the `Done today` header, opens it, and so does the end-of-day notification (`ShowSummary`). Header: the
 title, a `Today | This week` segment (`今天 | 本周`), `‹ date ›` paging back (a day or a week; `›`
 stops at today), and `Export Markdown` (`导出 Markdown`) on the right. Under it, top to bottom: the
 scene, the assistant's paragraph, the ledger. The page scrolls; the scene scrolls with it.
@@ -1632,14 +1658,14 @@ Reference: `docs/design/mockups/v25.html` (decided); an earlier draft grouped by
 turned down. Reviewing, checks and who does what stay with the agents; this page only helps you understand
 what was shipped and what is being worked on, and the assistant does the reading for you.
 
-**Off by default.** Settings > General gets a group **Pages** (`页面`) with one switch row, **Recent
+**Off by default.** Settings > Advanced gets a group **Pages** (`页面`) with one switch row, **Recent
 changes** (`最近变化`), `meta` `See what each project merged lately, each pull request and issue in a
 sentence. Needs gh signed in.` (`按项目看最近合并的 PR 和 issue，助手用一句话说清每条做了什么。需要已登录的
-gh。`), off; kept in `prefs.json`. While it is off nothing below exists: no sidebar row, no `⌘7`, no
+gh。`), off; kept in `prefs.json`. While it is off nothing below exists: no sidebar row, no `⌘4`, no
 entry on project pages, nothing fetched.
 
-**Where.** A sidebar row `Recent changes` (`最近变化`) under Summary, icon `git-branch`
-(pixelarticons), no count, `⌘7`. Header: the title, a repository pop-up (`All repositories` /
+**Where.** A sidebar row `Recent changes` (`最近变化`) under Calendar, icon `git-branch`
+(pixelarticons), no count, `⌘4`. Header: the title, a repository pop-up (`All repositories` /
 `全部仓库` ▾), a `7 days | 30 days` segment (`7 天 | 30 天`), and `Updated 2 min ago` (`2 分钟前更新`)
 at the right, which refreshes on click. With the switch on, a project page's title bar has a
 `Recent changes` link that opens this page with that repository picked.
@@ -1743,7 +1769,8 @@ Windows `winget install --id GitHub.cli` / `gh auth login`) with Copy.
 
 ### Calendar
 
-The `Calendar` sidebar item (`日历`, `IconCalendar`), between Inbox and Completed; `⌘4` opens it.
+The `Calendar` sidebar item (`日历`, `IconCalendar`), under Agents; `⌘3` opens it. Its `Today` button
+has the a11y label `Go to today` / `回到今天`, since Today is also a page.
 Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the day that matters.
 
 - **Header**: the month as the page title (`October 2026`, `2026 年 10 月`, written by `app/words`),
@@ -1807,7 +1834,7 @@ Reference: `v4.html` frame 1, screens `calendar-*.png`. A month of tasks by the 
   item is over it. Finished items do not drag.
 - **Keyboard** (no text input focused): `← →` the previous and next day, `↑ ↓` the same day a week
   earlier or later (leaving the grid turns the page), `⌘←` `⌘→` the previous and next month,
-  `⌘4` opens the page, `⌘K` goes to Home's big input. Items have no keyboard focus of their own: the task menu
+  `⌘3` opens the page, `⌘K` goes to Home's big input. Items have no keyboard focus of their own: the task menu
   and `↵` act on the highlighted task of other pages only.
 - **Data**: the snapshot holds every task including all finished ones, so no range query is needed;
   `data.BuildCalendar` places them (see `app/data/calendar.go`).
@@ -1849,10 +1876,17 @@ inspector's value, the Category page and the task menu's row (18 pt), the sheet'
 mode the colors are the project folders' (`theme.ProjectColor`); there is no second set. On an
 accent-filled menu row the icon is white, like a project folder in `Move to…`.
 
-- **Sidebar menus** (system menus, like a project's; v24 frame 1): right-click a category: `New
-  category…`, `Edit category…`, `Move up`, `Move down` (each left out at its end of the list),
-  and, for the user's own, a separator and `Delete category`. Right-click `Mine` or `Unsorted`: `New
-  category…` only.
+- **Settings > General > Categories** (v31; it was the sidebar's sub-rows and their menus). A group of
+  rows in the pane's order, between Updates and Archived projects, under the label `Categories` /
+  `类别`: each category is a row with its icon at 18 pt in its color, its name (Work and Life in the
+  user's language) and at the right `up` and `down` arrow buttons (24 pt targets, left out at their
+  end of the list, a11y `Move Reading up`), `Edit` (a link, opens the category sheet below, a11y `Edit
+  Reading`) and, for the user's own, a `trash` button (a11y `Delete Reading`). The last row is `New
+  category…`. The sheet is the same code as the one the task menu opens in the main window (a `Main`
+  the Settings window keeps for it). Delete asks in place: the row becomes `Delete “Reading”? Its
+  tasks become unsorted.` with `Cancel` and `Delete`; deleting adds a row, `Deleted “Reading” · 5
+  tasks unsorted` (no count when 0) with `Undo` for six seconds, which puts the category back with its
+  icon, color, place and tasks (only the ones still unsorted). Screens `settings-categories-*`.
 - **Category sheet** (frames 3 to 5, 8): title `New category` / `Edit category`; `Name` (focused;
   Work and Life show their localized name read-only with the line `Work and Life keep their names.`);
   `Icon`: the chosen icon at 36, 18 and 12 pt in the chosen color, on `bg.subtle`; `Color`: eight 18
@@ -1864,8 +1898,7 @@ accent-filled menu row the icon is white, like a project folder in `Move to…`.
   its icon in the chosen color. A new category starts on the first curated icon and on the color its
   name hashes to, which follows the name until a swatch is clicked. Create / Save is off while a new
   name is blank; Enter in `Name` creates or saves. Problems read under the field in `text.secondary`,
-  never red. After Create the category's page opens, unless the sheet came from the task menu, which
-  gives the category to the task instead.
+  never red. After Create the sheet closes; one that came from the task menu gives the category to the task.
 - **Palette.** An icon's pixels are empty, the category's own color (`#`, follows the category) or
   one of 12 fixed colors, the same in light and dark: `a` indigo `#5B5BD6`, `b` yellow `#E0A800`,
   `c` green `#30A46C`, `d` red `#E5484D`, `e` blue `#3B82F6`, `f` pink `#D9488B`, `g` teal `#0EA5A4`,
@@ -1898,9 +1931,7 @@ accent-filled menu row the icon is white, like a project folder in `Move to…`.
   be right-angle paths (24-unit view box); it is the icon as it is (no threshold). Errors, under the
   icon: `Couldn't read this image.` (`读不了这张图片。`), `This SVG has curves; export it as PNG
   first.` (`这个 SVG 有曲线，请先导出成 PNG。`).
-- **Delete** is immediate (the list is the user's own); a toast `Deleted “Reading” · 5 tasks
-  unsorted` (no count when 0) with **Undo** for six seconds, which puts the category back with its
-  icon, color, place and tasks (only the ones still unsorted).
+- **Delete** (see the group above) unsorts the category's tasks; Undo puts it back whole.
 - **Chinese** (frame 8): `新建类别…`, `编辑类别…`, `上移`, `下移`, `删除类别`, `名称`, `图标`, `颜色`,
   `搜索图标`, `没有匹配的图标`, `查找类别`, `工作和生活不能改名。`.
 
@@ -1931,7 +1962,7 @@ composer has none, so there `⌘Z` goes on to the assistant and the toast.
 `⌥ Space` (`Alt+Space` on Windows) opens or closes the menu bar panel from any app, its composer focused (see **Surfaces**) · `⌘K` the page's composer, or Home's big input where the page has none · `⌘Z` the last change that shows an Undo toast, or the assistant's (see **Undo**) · `⌘,` Settings · `⌘F` search · `↑ ↓` move selection through rows on the current screen · `↵` open the
 selected row in the inspector · `Space` toggles done for your own tasks · `Esc` closes the
 inspector, then clears the selection, then the search · `⌘`-click, `⇧`-click, `⇧↑ ⇧↓` and `⌘A` select several
-(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Mine, `⌘2` Agents, `⌘3` Inbox, `⌘4` Calendar, `⌘5` Completed, `⌘6` Summary, `⌘7` Recent changes (when it is on, see **Recent changes**).
+(see **Selecting several tasks**), `⌘↵` marks them done, `⌘⇧A` hands them to an agent · `⌘1` Today, `⌘2` Agents, `⌘3` Calendar, `⌘4` Recent changes (when it is on, see **Recent changes**). `Esc` also clears the category filter bar, after closing the inspector.
 
 With a row selected: `S` status, `P` priority, `M` move to, `R` remind: each opens the Task menu on
 that piece, where `←` `→` or `↑` `↓` move, `↵` chooses and `Esc` closes; `⌘J` asks the assistant
@@ -1956,9 +1987,9 @@ arrows, `↵`, `Space` and `Esc` stay out of the way:
 ### Notifications
 
 System notifications (v12, `docs/design/mockups/v12.html`). macOS draws them; the app chooses the words,
-the sound, the stack and where a click goes. Every kind opens its task in the inspector over Mine, and
+the sound, the stack and where a click goes. Every kind opens its task in the inspector over Today, and
 the notifications of one project stack together in Notification Center (`Group` = the project; the
-Inbox is one stack).
+tasks with no project are one stack).
 
 | Kind | When | Title / subtitle / body | Sound |
 |---|---|---|---|
@@ -1966,21 +1997,21 @@ Inbox is one stack).
 | Stuck | an agent's report moves the task to Blocked | `Claude Code is stuck: <title>` (`Claude Code 卡住了：<title>`) / project / what it waits for (`next_step`, else `summary`) | yes |
 | Checks failing | the GitHub poller finds a PR's checks newly failing (the moment Mine's row appears) | `Checks are failing on PR #12: <title>` (`PR #12 检查没过：<title>`) / project / `Open the PR to see which one failed` | yes |
 | Merged | the GitHub poller finds the PR merged and completes the task | `PR #14 merged: <title>` (`PR #14 已合并：<title>`) / project / `The task is done` | **silent** |
-| Reminder | unchanged: `remind_at` passes, once; due while the app was closed, at the next launch | `Reminder: <title>` / — / project or Inbox | yes |
+| Reminder | unchanged: `remind_at` passes, once; due while the app was closed, at the next launch | `Reminder: <title>` / — / project or Today | yes |
 
 The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the inspector's From.
 
 - **Once.** Each report or GitHub event notifies once, when the app first sees it.
 - **Not what you did.** A change the user made in the app (a status set by hand) notifies nothing.
-- **Not what you are looking at.** While the app is frontmost and its window shows Mine, a new
+- **Not what you are looking at.** While the app is frontmost and its window shows Today, a new
   handed-back, stuck or pull request event does not notify: its row is already on screen. In the
   background, or on another page, it does. Reminders always notify.
-- **No catch-up** for agent and GitHub events: what happened while the app was closed is on Mine at the
+- **No catch-up** for agent and GitHub events: what happened while the app was closed is on Today at the
   next launch. Only reminders catch up, as before.
 - **A burst becomes one.** When a third event arrives within 10 s of the first one still shown, one
   summary notification takes their place: `3 things need you` (`3 件事等你`), body `2 finished, 1 stuck
-  · open Mine` (`2 个做完了，1 个卡住了 · 点开去「我的」`), counting each kind that occurred; a click opens
-  Mine. Further events in the burst update the summary (same notification ID) until 10 s pass with none.
+  · open Today` (`2 个做完了，1 个卡住了 · 点开去「今天」`), counting each kind that occurred; a click opens
+  Today. Further events in the burst update the summary (same notification ID) until 10 s pass with none.
 - **The switch.** Settings > General > Notifications (below). Off, nothing notifies, reminders included.
 
 ### Updates (M10)
@@ -2008,7 +2039,7 @@ sidebar gear open it; there is one instance, and a second request brings it to t
 asked for. **One fixed size, 680 × 520 pt of content**, not resizable: a pane taller than that scrolls
 under the toolbar, and a tab change never resizes the window (M5; resizing to each pane's height was
 the flicker). Each pane has its own scroll key. Reference: `v4.html` frames 5 to 7, and `v5.html` frames 5 and 6 (logos, Agents); screens
-`settings-account-*` (the old `settings-sync-*`), `settings-general-*` (`settings-general-denied-*`: macOS refused the notifications),
+`settings-account-*` (the old `settings-sync-*`), `settings-general-*` (`settings-general-denied-*`: macOS refused the notifications; `settings-categories-*`: scrolled to the Categories group, `settings-categories-deleted-*`: after a delete, with Undo),
 `settings-agents-*` (`settings-agents-github-*`: scrolled to the GitHub group at its end),
 `settings-advanced-*` (at rest; `settings-advanced-more-*`: scrolled to the switches under the model; `settings-advanced-new-*`: nothing set up),
 `settings-change-*`, `settings-change-error-*`, `settings-custom-*`. Four panes since **Input first (v31)** decision 10, in
@@ -2031,7 +2062,7 @@ this order: Account, General, Agents, Advanced.
   and a switch at the right, on by default. When the last notification was refused by macOS
   (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
   notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings** link
-  (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings (macOS only: Windows shows notification-area balloons and never refuses one, so the line never shows there); **Archived projects** (a row per
+  (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings (macOS only: Windows shows notification-area balloons and never refuses one, so the line never shows there); **Categories** (a row per category with its arrows, Edit and Delete, and `New category…`, see **Categories (M9)**); **Archived projects** (a row per
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub

@@ -52,6 +52,8 @@ type Manager interface {
 	SearchTasks(query string, limit int) ([]Task, error)
 	// Logbook lists the done and cancelled tasks, newest completion first, at most limit.
 	Logbook(limit int) ([]Task, error)
+	// LogbookOf is Logbook for one project (0 for all of them), or with agents for the tasks agents wrote.
+	LogbookOf(project int, agents bool, limit int) ([]Task, error)
 }
 
 // TaskSnapshot is a task with its reports as they were; only the store that made it can restore it.

@@ -22,7 +22,7 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 	if n := m.agentsPage.Count(); n > 0 {
 		sub = m.say.AgentsWorking(n)
 	}
-	m.pageHeader(c, t, m.agentsTitle(), sub, nil)
+	m.pageHeader(c, t, m.say.NavAgents(), sub, nil)
 	ui.Box(c).Height(18).Shrink(0)
 	if !m.app.snap.loaded {
 		return
@@ -36,13 +36,35 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 			})
 			return
 		}
-		if len(m.agentsPage.Working) > 0 {
-			sectionHeader(c, t, m.say.SectionWorking(), len(m.agentsPage.Working))
-			for _, r := range m.agentsPage.Working {
-				m.workingRow(c, t, r)
-			}
-		}
+		m.workingGroups(c, t)
 		m.agentsDoneToday(c, t)
+	})
+}
+
+// workingGroups are the tasks at work, a group for each agent: a header with its avatar, its name and
+// how many of its tasks are at work, then those rows (buildPages put each agent's rows together).
+func (m *Main) workingGroups(c *ui.Context, t *theme.Tokens) {
+	rows := m.agentsPage.Working
+	for i := 0; i < len(rows); {
+		name := agentName(m.app.taskAgent(rows[i].Task))
+		end := i
+		for end < len(rows) && agentName(m.app.taskAgent(rows[end].Task)) == name {
+			end++
+		}
+		m.agentHeader(c, t, name, end-i)
+		for _, r := range rows[i:end] {
+			m.workingRow(c, t, r)
+		}
+		i = end
+	}
+}
+
+// agentHeader heads an agent's group: its avatar, its name and the number of its tasks at work.
+func (m *Main) agentHeader(c *ui.Context, t *theme.Tokens, name string, n int) {
+	ui.Row(c.Key("agent:"+name)).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		theme.AvatarIcon(c.Key("avatar"), theme.AgentAvatar(strings.ToLower(name)), theme.AvatarRow)
+		theme.Text(c, theme.BodyStrong, t.Text, name).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n)).Shrink(0)
 	})
 }
 
@@ -160,7 +182,7 @@ func (m *Main) agentsDoneToday(c *ui.Context, t *theme.Tokens) {
 		}
 		m.finishedRow(c, t, r.Task, o)
 	}
-	if m.agentsPage.MoreDone > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
-		m.goTo(nav{screen: screenCompleted})
+	if link(c, t, m.say.ShowAll()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
+		m.openHistory(0, true)
 	}
 }

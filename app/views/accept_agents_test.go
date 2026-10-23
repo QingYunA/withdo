@@ -105,28 +105,6 @@ func TestAcceptOnAProjectRowStampsFoldsItsGroupAndOpensItAtTheTopOfDone(t *testi
 	}
 }
 
-func TestTheInboxListHasTheSameButtons(t *testing.T) {
-	app, store, _ := newTestApp(t)
-	if _, err := store.CreateTask(data.CreateTaskInput{Title: "Tidy the docs", Source: data.SourceAgent, Status: data.Review}); err != nil {
-		t.Fatal(err)
-	}
-	app.Refresh()
-	tt, m, _ := newTesterFor(app, 1100)
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	hasNot(t, tt, "Accept")
-	hover(t, tt, "Tidy the docs")
-	has(t, tt, "Review", "Accept")
-	if err := tt.Click("Accept: Tidy the docs"); err != nil {
-		t.Fatal(err)
-	}
-	for _, task := range app.snap.tasks {
-		if task.Title == "Tidy the docs" && task.Status != data.Done {
-			t.Errorf("status %v, want done", task.Status)
-		}
-	}
-}
-
 func TestABoardCardShowsTheButtonsInPlaceOfTheAgeAndAcceptMovesItToDone(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m := boardTester(t, app, 1, 1100)

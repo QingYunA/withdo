@@ -92,11 +92,16 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	}
 }
 
-func TestSidebarListsMineAgentsInboxAndProjects(t *testing.T) {
+func TestSidebarListsTodayAgentsCalendarAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Mine", "Agents", "Inbox", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+	for _, want := range []string{"Today", "Agents", "Calendar", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
 		if !tt.HasText(want) {
 			t.Errorf("sidebar is missing %q", want)
+		}
+	}
+	for _, gone := range []string{"Mine", "Inbox", "Completed", "Summary", "Unsorted", "Expand Today", "Collapse Today"} {
+		if tt.HasText(gone) {
+			t.Errorf("the sidebar still has %q", gone)
 		}
 	}
 	if err := tt.Click("answer-me-with-html"); err != nil {
@@ -105,11 +110,11 @@ func TestSidebarListsMineAgentsInboxAndProjects(t *testing.T) {
 	if m.nav.screen != screenProject || !tt.HasText("Issue #218 adaptation") || tt.HasText("Port core to Go") {
 		t.Errorf("after choosing the project: %q", tt.Texts())
 	}
-	if err := tt.Click("Inbox"); err != nil {
+	if err := tt.Click("Calendar"); err != nil {
 		t.Fatal(err)
 	}
-	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") {
-		t.Errorf("inbox shows %q", tt.Texts())
+	if m.nav.screen != screenCalendar {
+		t.Errorf("Calendar did not open: %+v", m.nav)
 	}
 	if err := tt.Click("Agents"); err != nil {
 		t.Fatal(err)
@@ -117,19 +122,19 @@ func TestSidebarListsMineAgentsInboxAndProjects(t *testing.T) {
 	if m.nav.screen != screenAgents || !tt.HasText("3 working") {
 		t.Errorf("Agents did not open: %+v", m.nav)
 	}
-	if err := tt.Click("Mine"); err != nil {
+	if err := tt.Click("Today"); err != nil {
 		t.Fatal(err)
 	}
 	if m.nav.screen != screenMine {
-		t.Error("Mine did not open")
+		t.Error("Today did not open")
 	}
 }
 
 func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	// Mine counts what is handed over and what is due today (and nothing it has not seen: the first
-	// frame is on Mine); Agents the tasks at work, never their subtasks; Inbox the open inbox tasks;
-	// a project with a blocked task shows a dot instead of its count.
+	// Today counts what is handed over and what is due today (and nothing it has not seen: the first
+	// frame is on Today); Agents the tasks at work, never their subtasks; a project with a blocked task
+	// shows a dot instead of its count.
 	got := tt.Texts()
 	idx := func(s string) int {
 		for i, x := range got {
@@ -139,8 +144,8 @@ func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 		}
 		return -1
 	}
-	if got[idx("Mine")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Inbox")+1] != "3" {
-		t.Errorf("counts after Mine, Agents and Inbox: %q", got[:10])
+	if got[idx("Today")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Calendar")+1] != "Projects" {
+		t.Errorf("counts after Today, Agents and Calendar: %q", got[:10])
 	}
 	if got[idx("adhd-todo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
 		t.Errorf("project counts: %q", got[:14])
@@ -188,13 +193,6 @@ func TestMainEmptyProjectAndInbox(t *testing.T) {
 	}
 	if tt.HasText("me/scratch") {
 		t.Error("the repository is in the header")
-	}
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	for _, want := range []string{"Your inbox is clear.", "Tasks without a project land here. Add tasks from Home."} {
-		if !tt.HasText(want) {
-			t.Errorf("empty inbox is missing %q in %q", want, tt.Texts())
-		}
 	}
 }
 

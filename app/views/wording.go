@@ -194,7 +194,7 @@ func (m *Main) changeText(c data.Change) string {
 // inboxOr names the Inbox for a task without a project.
 func (m *Main) inboxOr(project string) string {
 	if project == "" {
-		return m.say.NavInbox()
+		return m.say.NavMine()
 	}
 	return project
 }

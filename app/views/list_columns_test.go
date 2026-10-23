@@ -32,13 +32,8 @@ func TestAProjectIsTwoColumnsMineAndAgentsBySource(t *testing.T) {
 	}
 }
 
-func TestTheInboxAndTheBoardStayAsTheyWere(t *testing.T) {
+func TestTheBoardStaysAsItWas(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	if m.pg.Kind == page.KindColumns {
-		t.Error("the Inbox is two columns")
-	}
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	m.board[1] = true
 	tt.Frame()
@@ -60,12 +55,12 @@ func TestEachColumnHasItsOwnDoneAndBacklog(t *testing.T) {
 	if !m.expanded[m.nav] {
 		t.Error("Mine's Backlog is not open")
 	}
-	if e, _ := m.foldMaps(sideAgents); e[m.nav] {
+	if m.foldMap(sideAgents)[m.nav] {
 		t.Error("opening Mine's Backlog opened the Agents column's")
 	}
 }
 
-func TestTheAgentsDoneGroupShowsThreeAndShowAll(t *testing.T) {
+func TestTheAgentsDoneGroupShowsThreeAndShowAllOpensTheHistory(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	p := f.SeedProject("scratch", "me/scratch")
 	for i := 0; i < 5; i++ {
@@ -77,14 +72,18 @@ func TestTheAgentsDoneGroupShowsThreeAndShowAll(t *testing.T) {
 	tt.SetSize(1100, 1000)
 	m.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt.Frame()
-	has(t, tt, "Show all 5 →")
-	if err := tt.Click("Show all 5 →"); err != nil {
+	has(t, tt, "Show all")
+	if err := tt.Click("Show all"); err != nil {
 		t.Fatal(err)
 	}
-	hasNot(t, tt, "Show all 5 →")
-	if ids := m.pg.IDs(); len(ids) != 5 {
-		t.Errorf("ids %v after Show all", ids)
+	tt.Frame()
+	if want := (nav{screen: screenCompleted, projectID: p.ID, agents: true}); m.nav != want {
+		t.Fatalf("nav %+v, want the history of the project's agents %+v", m.nav, want)
 	}
+	if ids := m.pg.IDs(); len(ids) != 5 {
+		t.Errorf("ids %v in the history", ids)
+	}
+	has(t, tt, "scratch", "Agent made 0")
 }
 
 func TestAWaitingTaskHasItsOwnGroupFirstAndLeavesTodo(t *testing.T) {

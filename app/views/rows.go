@@ -130,6 +130,9 @@ func (m *Main) titleLine(c *ui.Context, t *theme.Tokens, task data.Task, project
 		if task.PRNumber > 0 && pills && m.width >= dropPillsBelow {
 			pill(c, t, "#"+itoa(task.PRNumber)).Shrink(0)
 		}
+		if cat, ok := m.rowCategory(task); ok {
+			m.rowChip(c, t, cat)
+		}
 		if project != "" && m.width >= dropProjectBelow {
 			theme.Text(c, theme.Meta, t.TextTertiary, project).Shrink(8).MinWidth(0).Ellipsis("…")
 		}

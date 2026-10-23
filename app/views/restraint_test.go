@@ -55,8 +55,8 @@ func TestInspectorTopLineHasTheProjectItsRepositoryAndTheNumber(t *testing.T) {
 	has(t, tt, "adhd-todo · QingYunA/adhd-todo", " · #3")
 	m.OpenTask(7) // an Inbox task
 	tt.Frame()
-	has(t, tt, "Inbox", " · #7")
-	hasNot(t, tt, "Inbox · ")
+	has(t, tt, "No project", " · #7")
+	hasNot(t, tt, "No project · ")
 }
 
 func TestInspectorTopLineOfAProjectWithoutARepository(t *testing.T) {

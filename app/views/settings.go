@@ -43,6 +43,7 @@ type Settings struct {
 	lastTitle string
 
 	agents agentsCache
+	cats   categoriesState // Settings > General > Categories
 
 	// Settings > Account: whether this opening asked for the devices, and the inline Change field.
 	syncAsked         bool
@@ -120,6 +121,9 @@ func (s *Settings) View(c *ui.Context) {
 			ui.Column(c).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
 		})
 	})
+	if s.pane == PaneGeneral {
+		s.categorySheetView(c, t)
+	}
 	if s.pane == PaneAccount && s.app.Sync != nil {
 		s.syncSheet(c, t, s.app.Sync.SyncSnapshot())
 	}

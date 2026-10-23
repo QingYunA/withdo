@@ -29,19 +29,19 @@ func newChineseTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 func TestChineseMineScreen(t *testing.T) {
 	tt, _, _ := newChineseTester(t, inlineWidth)
 	has(t, tt,
-		"我的", "10月14日星期三",
+		"10月14日星期三",
 		"Agent 交过来的", "今天", "之后",
 		"Claude Code 卡住了：“Needs a decision on the activation policy”",
 		"下午2:30", "PR #12 等你审查",
 		"打开 PR", "回答", "收下",
 		"3天前", "25分钟前",
 		"明天", "周五",
-		"收件箱", "项目", "设置",
+		"日历", "项目", "设置",
 	)
-	if !above(t, tt, "Agent 交过来的", "今天") || !above(t, tt, "今天", "之后") {
+	if !above(t, tt, "Agent 交过来的", "之后") {
 		t.Error("sections are out of order")
 	}
-	hasNot(t, tt, "From your agents", "Settings", "Inbox")
+	hasNot(t, tt, "From your agents", "Settings", "Inbox", "收件箱", "我的")
 }
 
 func TestChineseSectionHeadersAreNotSpacedOrCapitalized(t *testing.T) {
@@ -87,16 +87,12 @@ func TestChineseProjectList(t *testing.T) {
 	has(t, tt, "— 隐藏", "已完成", "待规划")
 }
 
-func TestChineseBoardAndInbox(t *testing.T) {
+func TestChineseBoardAndEmptyProject(t *testing.T) {
 	tt, m, _ := newChineseTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 2})
 	m.board[2] = true
 	tt.Frame()
 	has(t, tt, "列表", "看板", "待办")
-	m.goTo(nav{screen: screenInbox})
-	tt.Frame()
-	has(t, tt, "收件箱")
-	hasNot(t, tt, "没有归属项目的任务")
 	app, p := emptyProjectApp(t)
 	tt2, m2, _ := newTesterFor(app, 1100)
 	inChinese(tt2)
@@ -200,10 +196,10 @@ func TestChineseNoModelSetUpLineAndInboxNotice(t *testing.T) {
 	r.tt.Type("x")
 	r.tt.Key(0, ui.KeyBackspace)
 	r.ask("浇花")
-	has(t, r.tt, "已添加到收件箱")
+	has(t, r.tt, "已添加到今天")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	hasNot(t, r.tt, "已添加到收件箱")
+	hasNot(t, r.tt, "已添加到今天")
 }
 
 func TestChineseComposerPlaceholders(t *testing.T) {

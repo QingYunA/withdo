@@ -82,7 +82,7 @@ func TestTaskMenuMovesToAProjectOrTheInboxFromAFilter(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Move to…")
-	for _, want := range []string{"Inbox", "adhd-todo", "answer-me-with-html", "picpocket", "Find a project"} {
+	for _, want := range []string{"No project", "adhd-todo", "answer-me-with-html", "picpocket", "Find a project"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -92,7 +92,7 @@ func TestTaskMenuMovesToAProjectOrTheInboxFromAFilter(t *testing.T) {
 	}
 	tt.Type("pic")
 	tt.Frame()
-	if task, _ := app.Task(3); len(m.moveChoices(task)) != 1 || !tt.HasText("Move to picpocket") || tt.HasText("Move to Inbox") {
+	if task, _ := app.Task(3); len(m.moveChoices(task)) != 1 || !tt.HasText("Move to picpocket") || tt.HasText("Move to No project") {
 		t.Errorf("the filter did not narrow the list: %q", tt.Texts())
 	}
 	tt.Key(0, ui.KeyEnter)
@@ -110,7 +110,7 @@ func TestTaskMenuMovesToAProjectOrTheInboxFromAFilter(t *testing.T) {
 	tt.Frame()
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Move to…")
-	click(t, tt, "Move to Inbox")
+	click(t, tt, "Move to No project")
 	if got, _ := app.Task(3); got.ProjectID != nil {
 		t.Errorf("project %v, want the Inbox", got.ProjectID)
 	}
@@ -384,7 +384,7 @@ func TestInspectorChipsOfATaskOfMineOpenTheirPiecesOfTheMenu(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenTask(8) // Book dentist, in the Inbox
 	tt.Frame()
-	click(t, tt, "Project: Inbox")
+	click(t, tt, "Project: No project")
 	click(t, tt, "Move to picpocket")
 	if got := taskProject(app, 8); got != "picpocket" {
 		t.Errorf("project %q", got)

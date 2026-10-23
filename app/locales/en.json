@@ -10,6 +10,20 @@
       }
     }
   },
+  "a11yBackTo": "Back to {name}",
+  "@a11yBackTo": {
+    "description": "Accessibility label of the back control of the history page.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Today"
+      }
+    }
+  },
+  "a11yCalendarToday": "Go to today",
+  "@a11yCalendarToday": {
+    "description": "Accessibility label of the Today button on the Calendar page, which jumps to the current month and day."
+  },
   "a11yCancelTask": "Cancel task: {title}",
   "@a11yCancelTask": {
     "description": "Accessibility label of the Cancel task button on the Needs you row of a closed pull request.",
@@ -17,6 +31,46 @@
       "title": {
         "type": "String",
         "example": "Rework the sync engine"
+      }
+    }
+  },
+  "a11yCategoryDelete": "Delete {name}",
+  "@a11yCategoryDelete": {
+    "description": "Accessibility label of the delete button of a category row in Settings.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      }
+    }
+  },
+  "a11yCategoryDown": "Move {name} down",
+  "@a11yCategoryDown": {
+    "description": "Accessibility label of the move down button of a category row in Settings.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      }
+    }
+  },
+  "a11yCategoryEdit": "Edit {name}",
+  "@a11yCategoryEdit": {
+    "description": "Accessibility label of the edit button of a category row in Settings.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      }
+    }
+  },
+  "a11yCategoryUp": "Move {name} up",
+  "@a11yCategoryUp": {
+    "description": "Accessibility label of the move up button of a category row in Settings.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
       }
     }
   },
@@ -35,6 +89,16 @@
       "value": {
         "type": "String",
         "example": "Tomorrow"
+      }
+    }
+  },
+  "a11yFilterCategory": "Show only {name}",
+  "@a11yFilterCategory": {
+    "description": "Accessibility label and tooltip of a category chip on a row; clicking it narrows the list.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Work"
       }
     }
   },
@@ -298,16 +362,6 @@
   "@askAnswerHint": {
     "description": "Placeholder of the ask field while the assistant waits for an answer."
   },
-  "boardShowAll": "Show all {n}",
-  "@boardShowAll": {
-    "description": "Link under the recent done tasks of a board column.",
-    "placeholders": {
-      "n": {
-        "type": "int",
-        "example": "12"
-      }
-    }
-  },
   "a11yCalendarDay": "{day}",
   "@a11yCalendarDay": {
     "description": "Accessibility label of a day cell of the calendar; day is the day in words.",
@@ -465,6 +519,10 @@
         "example": "Doing"
       }
     }
+  },
+  "columnMine": "Mine",
+  "@columnMine": {
+    "description": "Head of the column of my own tasks on a project's page, beside the Agents column."
   },
   "convoRetry": "Retry",
   "@convoRetry": {
@@ -724,14 +782,6 @@
   "@foldShowShort": {
     "description": "End of the folded line under a list while closed."
   },
-  "inboxEmptyBody": "Tasks without a project land here. Add tasks from Home.",
-  "@inboxEmptyBody": {
-    "description": "Body of an empty Inbox. It sends people to Home, where tasks are added."
-  },
-  "inboxEmptyTitle": "Your inbox is clear.",
-  "@inboxEmptyTitle": {
-    "description": "Title of an empty Inbox."
-  },
   "inspectorClose": "Close",
   "@inspectorClose": {
     "description": "Accessibility label of the close button of the inspector."
@@ -759,16 +809,6 @@
   "listEmptyTitle": "No tasks yet.",
   "@listEmptyTitle": {
     "description": "Title of an empty project list."
-  },
-  "listShowAllDone": "Show all {n} →",
-  "@listShowAllDone": {
-    "description": "Link under the first Done rows of a project or the Inbox; expands the group in place. n is how many tasks are done.",
-    "placeholders": {
-      "n": {
-        "type": "int",
-        "example": "12"
-      }
-    }
   },
   "manageA11yProject": "Project: {name}",
   "@manageA11yProject": {
@@ -1032,10 +1072,6 @@
   "@menuUndo": {
     "description": "Button of the toast after a task was deleted."
   },
-  "nowShowAllInCompleted": "Show all in Completed",
-  "@nowShowAllInCompleted": {
-    "description": "Link under the Done today section of Now when more than five tasks were finished today; opens the Completed page."
-  },
   "sectionDoneToday": "Done today",
   "@sectionDoneToday": {
     "description": "Section of Now with what agents and the user finished since midnight."
@@ -1221,10 +1257,6 @@
   "modelsTesting": "Testing…",
   "@modelsTesting": {
     "description": "Test button while the request runs."
-  },
-  "navInbox": "Inbox",
-  "@navInbox": {
-    "description": "Sidebar row and page title for tasks without a project. Also the name of the inbox in other sentences."
   },
   "navCalendar": "Calendar",
   "@navCalendar": {
@@ -1414,7 +1446,7 @@
       }
     }
   },
-  "notifySummaryBody": "{counts} · open Mine",
+  "notifySummaryBody": "{counts} · open Today",
   "@notifySummaryBody": {
     "description": "Body of the summary notification: what happened, then where a click goes. Mine is the page named My tasks.",
     "placeholders": {
@@ -1535,10 +1567,6 @@
   "nowAllClearBody": "Your agents are at work. Whatever happens shows up here.",
   "@nowAllClearBody": {
     "description": "Second line of the calm Now screen."
-  },
-  "nowShowAllInInbox": "Show all in Inbox",
-  "@nowShowAllInInbox": {
-    "description": "Link under the user's tasks on Now when more tasks exist than fit."
   },
   "pickerClear": "Clear",
   "@pickerClear": {
@@ -2350,7 +2378,7 @@
       }
     }
   },
-  "navMine": "Mine",
+  "navMine": "Today",
   "@navMine": {
     "description": "Sidebar row and page title of the home screen: what is mine to do, and what agents handed over."
   },
@@ -2475,26 +2503,6 @@
       "count": {
         "type": "int",
         "example": "2"
-      }
-    }
-  },
-  "navSectionExpand": "Expand {name}",
-  "@navSectionExpand": {
-    "description": "Tooltip and accessibility label of the chevron on a sidebar row (Mine, Agents) that shows its sub-rows.",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "example": "Mine"
-      }
-    }
-  },
-  "navSectionCollapse": "Collapse {name}",
-  "@navSectionCollapse": {
-    "description": "Tooltip and accessibility label of the chevron on a sidebar row (Mine, Agents) that hides its sub-rows.",
-    "placeholders": {
-      "name": {
-        "type": "String",
-        "example": "Mine"
       }
     }
   },
@@ -3592,6 +3600,34 @@
   "@categoryGroupPeople": {
     "description": "Heading of a group of icons in the category sheet."
   },
+  "filterClear": "Clear filter",
+  "@filterClear": {
+    "description": "Accessibility label and tooltip of the x on the filter bar."
+  },
+  "filterShowing": "Showing {name}",
+  "@filterShowing": {
+    "description": "The filter bar above a list narrowed to one category by clicking its chip.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Work"
+      }
+    }
+  },
+  "historyOf": "Done and cancelled in {scope}, newest first",
+  "@historyOf": {
+    "description": "Quiet line beside the title of the history page opened from a project's or the agents' Done section.",
+    "placeholders": {
+      "scope": {
+        "type": "String",
+        "example": "adhd-todo"
+      }
+    }
+  },
+  "navNoProject": "No project",
+  "@navNoProject": {
+    "description": "Where a task lives when it is in no project: the task menu's Move to, the inspector's top line, search results."
+  },
   "navRecent": "Recent changes",
   "@navRecent": {
     "description": "Sidebar item and title of the page that shows what each project merged lately."
@@ -3954,6 +3990,28 @@
   "@recentLinkTip": {
     "description": "Tooltip of the Recent changes link on a project page."
   },
+  "seeToday": "See today",
+  "@seeToday": {
+    "description": "Link at the right of the Done today header on Today; opens Summary. A pixel chevron follows it."
+  },
+  "settingsCategories": "Categories",
+  "@settingsCategories": {
+    "description": "Label of the group of categories in Settings > General."
+  },
+  "settingsCategoryDeleteAsk": "Delete “{name}”? Its tasks become unsorted.",
+  "@settingsCategoryDeleteAsk": {
+    "description": "Question that replaces a category row in Settings after its delete button was clicked.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Reading"
+      }
+    }
+  },
+  "settingsCategoryEdit": "Edit",
+  "@settingsCategoryEdit": {
+    "description": "Link in a category row in Settings > General that opens the category sheet (name, icon, color)."
+  },
   "settingsPaneAccount": "Account",
   "@settingsPaneAccount": {
     "description": "Toolbar pane of the Settings window (and the window's title) for the account: signing in, devices and sync."
@@ -4225,6 +4283,10 @@
   "composerVoiceStop": "Stop listening",
   "@composerVoiceStop": {
     "description": "Accessibility label of the microphone button while it records; a click ends the recording."
+  },
+  "showAll": "Show all",
+  "@showAll": {
+    "description": "Link at the end of a list's Done section; opens the full history of what was finished there."
   },
   "voiceListening": "Listening… click to stop, Esc to cancel",
   "@voiceListening": {

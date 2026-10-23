@@ -29,11 +29,11 @@ const trayPadBottom float32 = 14
 // stackGap is the room between the two columns once they are stacked.
 const stackGap float32 = 14
 
-// columnsState is what the columns remember: the Agents column's own fold and Done state (Mine
+// columnsState is what the columns remember: the Agents column's own Backlog fold (Mine
 // uses the list's), and where things were drawn the frame before, for the hand-off's motion.
 type columnsState struct {
-	expanded, allDone map[nav]bool // the Agents column's Backlog opened, and every Done task shown
-	geo               columnsGeo
+	expanded map[nav]bool // the Agents column's Backlog opened
+	geo      columnsGeo
 }
 
 // columnsGeo are the rectangles of the frame before, in window points.
@@ -42,15 +42,15 @@ type columnsGeo struct {
 	stacked    bool
 }
 
-// foldMaps are a column's "Backlog opened" and "every Done shown" states.
-func (m *Main) foldMaps(s side) (expanded, allDone map[nav]bool) {
+// foldMap is a column's "Backlog opened" state.
+func (m *Main) foldMap(s side) map[nav]bool {
 	if s == sideMine {
-		return m.expanded, m.allDone
+		return m.expanded
 	}
 	if m.cols.expanded == nil {
-		m.cols.expanded, m.cols.allDone = map[nav]bool{}, map[nav]bool{}
+		m.cols.expanded = map[nav]bool{}
 	}
-	return m.cols.expanded, m.cols.allDone
+	return m.cols.expanded
 }
 
 // columnMetrics are the widths of the block (header, composer and columns) and of a column.
@@ -154,7 +154,7 @@ func (m *Main) agentsColumn(c *ui.Context, t *theme.Tokens, width float32) {
 
 // columnHead is the column's avatar, name and count, and a line under them.
 func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui.Color) {
-	name := m.say.NavMine()
+	name := m.say.ColumnMine()
 	if s == sideAgents {
 		name = m.say.NavAgents()
 	}

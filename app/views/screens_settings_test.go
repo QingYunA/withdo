@@ -79,6 +79,21 @@ func TestScreensSettings(t *testing.T) {
 			mustNil(t, general.ArchiveProject(3))
 			settingsShot(t, "settings-general"+sfx+".png", general, a.dark, zh, PaneGeneral, nil)
 
+			// Categories: the list under Updates (scrolled to), and the line after a delete, with Undo.
+			withCats := settingsApp(t, ready)
+			addDemoCategories(t, withCats)
+			settingsShot(t, "settings-categories"+sfx+".png", withCats, a.dark, zh, PaneGeneral, func(r *settingsRig) {
+				r.tt.Scroll(340, 300, 0, 200)
+			})
+			deleted := settingsApp(t, ready)
+			addDemoCategories(t, deleted)
+			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneGeneral, func(r *settingsRig) {
+				r.tt.Scroll(340, 300, 0, 200)
+				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
+				r.tt.Frame()
+				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
+			})
+
 			// macOS refused the last notification: the line warns, a link goes to System Settings.
 			refused := settingsApp(t, ready)
 			mustNil(t, refused.ArchiveProject(3))

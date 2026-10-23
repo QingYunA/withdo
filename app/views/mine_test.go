@@ -9,14 +9,18 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-func TestMineShowsItsSectionsInOrder(t *testing.T) {
+func TestTodayShowsItsSectionsInOrder(t *testing.T) {
 	tt, _, _ := newMainTester(t, inlineWidth)
-	for _, want := range []string{"Mine", "Wednesday, October 14", "From your agents", "Today", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
+	for _, want := range []string{"Today", "Wednesday, October 14", "From your agents", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "From your agents", "Today") || !above(t, tt, "Today", "Later") || !above(t, tt, "Later", "Done today") {
+	// "Today" is the sidebar row and the section's title (and the due label of a row or two).
+	if n := countText(tt, "Today"); n < 2 {
+		t.Errorf("%d Today in %q: the sidebar row and the section", n, tt.Texts())
+	}
+	if !above(t, tt, "From your agents", "Later") || !above(t, tt, "Later", "Done today") {
 		t.Error("sections are out of order")
 	}
 	for _, gone := range []string{"Port core to Go", "Port the MCP tools", "Needs you", "Now"} {
@@ -35,10 +39,13 @@ func TestMineEmptySectionsAreNotDrawn(t *testing.T) {
 	if !tt.HasText("Later") || !tt.HasText("Only mine") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
-	for _, gone := range []string{"From your agents", "Today", "Nothing needs you right now"} {
+	for _, gone := range []string{"From your agents", "Nothing needs you right now"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q is drawn with nothing in it", gone)
 		}
+	}
+	if n := countText(tt, "Today"); n != 1 {
+		t.Errorf("%d Today: the sidebar row only, the section has nothing in it", n)
 	}
 }
 
@@ -50,10 +57,13 @@ func TestMineAllClearWhenNothingIsHappening(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	for _, gone := range []string{"From your agents", "Today", "Later"} {
+	for _, gone := range []string{"From your agents", "Later"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q in the All clear state", gone)
 		}
+	}
+	if n := countText(tt, "Today"); n != 1 {
+		t.Errorf("%d Today in the All clear state: the sidebar row only", n)
 	}
 	if err := tt.Click("How to connect"); err != nil {
 		t.Fatal(err)
@@ -272,7 +282,7 @@ func TestAskFieldEnterAddsToInboxAndConfirms(t *testing.T) {
 	if added.ProjectID != nil || added.Source != data.SourceUser || added.Status != data.Todo {
 		t.Errorf("added %+v", added)
 	}
-	if !tt.HasText("Added to Inbox") {
+	if !tt.HasText("Added to Today") {
 		t.Errorf("no confirmation in %q", tt.Texts())
 	}
 	// It is mine and undated, so it also shows under Yours, and the field is empty again.
@@ -357,7 +367,7 @@ func TestCmdNumbersSwitchScreens(t *testing.T) {
 		t.Errorf("Cmd+2 gave %+v", m.nav)
 	}
 	tt.Key(ui.Cmd, ui.Key3)
-	if m.nav.screen != screenInbox || !tt.HasText("Book dentist") || tt.HasText("Tasks without a project") {
+	if m.nav.screen != screenCalendar {
 		t.Errorf("Cmd+3 gave %+v", m.nav)
 	}
 	tt.Key(ui.Cmd, ui.Key1)
@@ -366,7 +376,7 @@ func TestCmdNumbersSwitchScreens(t *testing.T) {
 	}
 }
 
-func TestMineLinksToTheInboxWhenUndatedTasksDoNotFit(t *testing.T) {
+func TestTodayShowsEveryUndatedTaskOfMineWithNoProjectAfterShowAll(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 9; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Idea " + itoa(i)})
@@ -374,13 +384,15 @@ func TestMineLinksToTheInboxWhenUndatedTasksDoNotFit(t *testing.T) {
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, m, _ := newTesterFor(app, 1100)
-	if !tt.HasText("Show all in Inbox") {
-		t.Fatalf("no link: %q", tt.Texts())
+	tt.SetSize(1100, 1400)
+	if !tt.HasText("Show all") || tt.HasText("Idea 0") && tt.HasText("Idea 8") {
+		t.Fatalf("seven of nine fit, with a link: %q", tt.Texts())
 	}
-	if err := tt.Click("Show all in Inbox"); err != nil {
+	if err := tt.Click("Show all"); err != nil {
 		t.Fatal(err)
 	}
-	if m.nav.screen != screenInbox {
-		t.Errorf("went to %+v", m.nav)
+	tt.Frame()
+	if m.nav.screen != screenMine || len(m.minePage.Later) != 9 || m.minePage.MoreLater != 0 {
+		t.Errorf("nav %+v with %d rows in Later, %d more: no task of mine may be out of reach", m.nav, len(m.minePage.Later), m.minePage.MoreLater)
 	}
 }

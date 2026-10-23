@@ -76,8 +76,8 @@ func TestTheCategoryRowOfTheTaskMenuNamesTheCurrentCategory(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	_ = app.Update(3, data.Patch{Category: data.IntPtr(lifeID)})
 	rightClick(t, tt, "Fix tray race on launch")
-	if n := countText(tt, "Life"); n != 2 {
-		t.Errorf("%d times Life: the sidebar row and the hint of the Category row, in %q", n, tt.Texts())
+	if n := countText(tt, "Life"); n != 1 {
+		t.Errorf("%d times Life: the hint of the Category row, in %q", n, tt.Texts())
 	}
 }
 
@@ -127,54 +127,25 @@ func TestTheCategoryPageHasNoMatchLine(t *testing.T) {
 	}
 }
 
-func TestCategoryMovesATaskBetweenTheSidebarSlices(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenMine, cat: catUnsorted})
-	tt.Frame()
-	if !tt.HasText("Look into Liquid Glass for the sidebar") {
-		t.Fatalf("Unsorted: %q", tt.Texts())
-	}
+func TestCategoryGivesATaskTheChipOfThatCategory(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
 	rightClick(t, tt, "Look into Liquid Glass for the sidebar")
 	click(t, tt, "Category")
 	click(t, tt, "Set category to Work")
-	if tt.HasText("Look into Liquid Glass for the sidebar") {
-		t.Errorf("a classified task is still under Unsorted: %q", tt.Texts())
-	}
-	m.goTo(nav{screen: screenMine, cat: workID})
 	tt.Frame()
-	if !tt.HasText("Look into Liquid Glass for the sidebar") {
-		t.Errorf("Work does not have it: %q", tt.Texts())
+	if !tt.HasText("Show only Work") {
+		t.Errorf("a classified task has no Work chip: %q", tt.Texts())
 	}
 }
 
-func TestInChineseTheCategoryRowAndSlicesSpeakChinese(t *testing.T) {
+func TestInChineseTheCategoryRowSpeaksChinese(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	inChinese(tt)
 	m.OpenTask(18)
 	tt.Frame()
-	for _, want := range []string{"工作", "生活", "未分类", "分类"} {
+	for _, want := range []string{"工作", "生活", "分类"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
-		}
-	}
-}
-
-// Work and Life carry their icons, a briefcase and a house, in the sidebar, the inspector and the
-// strip; a task with no category shows none.
-
-func TestWorkAndLifeSubRowsShowTheirIconAndUnsortedNone(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
-	for _, row := range []struct {
-		label string
-		icon  bool
-	}{{"Work", true}, {"Life", true}, {"Unsorted", false}} {
-		r, ok := tt.Find(row.label)
-		if !ok {
-			t.Fatalf("no %q in %q", row.label, tt.Texts())
-		}
-		slot := ui.Rect{X: r.X - sidebarRowGap - theme.AvatarSmall, Y: r.Y, W: theme.AvatarSmall, H: r.H}
-		if got := paintedAnything(tt.Image(), 1100, slot); got != row.icon {
-			t.Errorf("%s: an icon in its slot is %v, want %v", row.label, got, row.icon)
 		}
 	}
 }
@@ -300,3 +271,13 @@ func inkWidth(t *testing.T, tt *ui.Tester, label string) float32 {
 
 // The seeded stores put Work and Life at ids 1 and 2, as a new database does.
 const workID, lifeID = 1, 2
+
+// addCategory makes a category with a one-pixel icon.
+func addCategory(t *testing.T, app *App, name, color string) data.Category {
+	t.Helper()
+	c, err := app.CreateCategory(data.NewCategory{Name: name, Icon: pixmap.Bitmap{}.Set(3, 3, true).Picture(), Color: color})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c
+}

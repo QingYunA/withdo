@@ -208,12 +208,6 @@ func TestEmptyScreensShowYouAndTheAssistant(t *testing.T) {
 			tt.Frame()
 			return tt
 		}, "No tasks yet."},
-		{"Inbox", func() *ui.Tester {
-			tt, m, _ := newTesterFor(empty, 1100)
-			m.goTo(nav{screen: screenInbox})
-			tt.Frame()
-			return tt
-		}, "Your inbox is clear."},
 		{"Completed", func() *ui.Tester {
 			tt, m, _ := newTesterFor(empty, 1100)
 			m.goTo(nav{screen: screenCompleted})

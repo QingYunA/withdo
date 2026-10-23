@@ -92,7 +92,7 @@ func TestAPlainSentenceKeepsTheShortReceiptAndCanStillBeUndone(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	before := len(r.app.snap.tasks)
 	r.ask("Water the plants")
-	has(t, r.tt, "Added to Inbox")
+	has(t, r.tt, "Added to Today")
 	r.tt.Key(ui.Cmd, ui.KeyZ)
 	if got := len(r.app.snap.tasks); got != before {
 		t.Errorf("after Cmd+Z %d tasks, want %d", got, before)

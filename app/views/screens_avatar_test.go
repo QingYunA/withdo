@@ -19,8 +19,6 @@ func TestScreensAvatars(t *testing.T) {
 				shot = zhShot
 			}
 			suffix := l.suffix + "-" + a.suffix + ".png"
-			empty, _ := newEmptyApp(t)
-			shot(t, "inbox-empty"+suffix, empty, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 			withProject, p := emptyProjectApp(t)
 			shot(t, "project-empty-avatars"+suffix, withProject, a.dark, toProject(p.ID))
 			app, _, _ := newTestApp(t)

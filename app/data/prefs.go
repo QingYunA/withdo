@@ -34,10 +34,6 @@ type Prefs struct {
 	// all of them. RecentDays is its period, 7 or 30; 0 is the default, 7.
 	RecentRepo string `json:"recentRepo,omitempty"`
 	RecentDays int    `json:"recentDays,omitempty"`
-	// MineOpen and AgentsOpen are set when the user unfolded the sub-rows of Mine or Agents in the
-	// sidebar; they are folded by default.
-	MineOpen   bool `json:"mineOpen,omitempty"`
-	AgentsOpen bool `json:"agentsOpen,omitempty"`
 }
 
 // DefaultEndOfDay is when the end-of-day reminder comes unless the user picks another time.

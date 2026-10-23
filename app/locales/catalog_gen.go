@@ -50,6 +50,36 @@ func (msgs Messages) A11yAcceptTask(title string) string {
 	return Catalog.Format(msgs.locale, "a11yAcceptTask", map[string]any{"title": title})
 }
 
+// A11yBackTo says "Back to {name}"
+// in the language the app shows.
+//
+// Accessibility label of the back control of the history page.
+func A11yBackTo(name string) string { return In(i18n.Locale()).A11yBackTo(name) }
+
+// A11yBackTo says "Back to {name}"
+// in the language of msgs.
+//
+// Accessibility label of the back control of the history page.
+func (msgs Messages) A11yBackTo(name string) string {
+	return Catalog.Format(msgs.locale, "a11yBackTo", map[string]any{"name": name})
+}
+
+// A11yCalendarToday says "Go to today"
+// in the language the app shows.
+//
+// Accessibility label of the Today button on the Calendar page, which jumps
+// to the current month and day.
+func A11yCalendarToday() string { return In(i18n.Locale()).A11yCalendarToday() }
+
+// A11yCalendarToday says "Go to today"
+// in the language of msgs.
+//
+// Accessibility label of the Today button on the Calendar page, which jumps
+// to the current month and day.
+func (msgs Messages) A11yCalendarToday() string {
+	return Catalog.Format(msgs.locale, "a11yCalendarToday", nil)
+}
+
 // A11yCancelTask says "Cancel task: {title}"
 // in the language the app shows.
 //
@@ -64,6 +94,64 @@ func A11yCancelTask(title string) string { return In(i18n.Locale()).A11yCancelTa
 // closed pull request.
 func (msgs Messages) A11yCancelTask(title string) string {
 	return Catalog.Format(msgs.locale, "a11yCancelTask", map[string]any{"title": title})
+}
+
+// A11yCategoryDelete says "Delete {name}"
+// in the language the app shows.
+//
+// Accessibility label of the delete button of a category row in Settings.
+func A11yCategoryDelete(name string) string { return In(i18n.Locale()).A11yCategoryDelete(name) }
+
+// A11yCategoryDelete says "Delete {name}"
+// in the language of msgs.
+//
+// Accessibility label of the delete button of a category row in Settings.
+func (msgs Messages) A11yCategoryDelete(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryDelete", map[string]any{"name": name})
+}
+
+// A11yCategoryDown says "Move {name} down"
+// in the language the app shows.
+//
+// Accessibility label of the move down button of a category row in
+// Settings.
+func A11yCategoryDown(name string) string { return In(i18n.Locale()).A11yCategoryDown(name) }
+
+// A11yCategoryDown says "Move {name} down"
+// in the language of msgs.
+//
+// Accessibility label of the move down button of a category row in
+// Settings.
+func (msgs Messages) A11yCategoryDown(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryDown", map[string]any{"name": name})
+}
+
+// A11yCategoryEdit says "Edit {name}"
+// in the language the app shows.
+//
+// Accessibility label of the edit button of a category row in Settings.
+func A11yCategoryEdit(name string) string { return In(i18n.Locale()).A11yCategoryEdit(name) }
+
+// A11yCategoryEdit says "Edit {name}"
+// in the language of msgs.
+//
+// Accessibility label of the edit button of a category row in Settings.
+func (msgs Messages) A11yCategoryEdit(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryEdit", map[string]any{"name": name})
+}
+
+// A11yCategoryUp says "Move {name} up"
+// in the language the app shows.
+//
+// Accessibility label of the move up button of a category row in Settings.
+func A11yCategoryUp(name string) string { return In(i18n.Locale()).A11yCategoryUp(name) }
+
+// A11yCategoryUp says "Move {name} up"
+// in the language of msgs.
+//
+// Accessibility label of the move up button of a category row in Settings.
+func (msgs Messages) A11yCategoryUp(name string) string {
+	return Catalog.Format(msgs.locale, "a11yCategoryUp", map[string]any{"name": name})
 }
 
 // A11yCopyCommand says "Copy command"
@@ -92,6 +180,22 @@ func A11yDate(label string, value string) string { return In(i18n.Locale()).A11y
 // Accessibility label of a due or reminder value in the inspector.
 func (msgs Messages) A11yDate(label string, value string) string {
 	return Catalog.Format(msgs.locale, "a11yDate", map[string]any{"label": label, "value": value})
+}
+
+// A11yFilterCategory says "Show only {name}"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of a category chip on a row; clicking it
+// narrows the list.
+func A11yFilterCategory(name string) string { return In(i18n.Locale()).A11yFilterCategory(name) }
+
+// A11yFilterCategory says "Show only {name}"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of a category chip on a row; clicking it
+// narrows the list.
+func (msgs Messages) A11yFilterCategory(name string) string {
+	return Catalog.Format(msgs.locale, "a11yFilterCategory", map[string]any{"name": name})
 }
 
 // A11yKeepTask says "Keep task: {title}"
@@ -596,20 +700,6 @@ func (msgs Messages) AskAnswerHint() string {
 	return Catalog.Format(msgs.locale, "askAnswerHint", nil)
 }
 
-// BoardShowAll says "Show all {n}"
-// in the language the app shows.
-//
-// Link under the recent done tasks of a board column.
-func BoardShowAll(n int) string { return In(i18n.Locale()).BoardShowAll(n) }
-
-// BoardShowAll says "Show all {n}"
-// in the language of msgs.
-//
-// Link under the recent done tasks of a board column.
-func (msgs Messages) BoardShowAll(n int) string {
-	return Catalog.Format(msgs.locale, "boardShowAll", map[string]any{"n": n})
-}
-
 // A11yCalendarDay says "{day}"
 // in the language the app shows.
 //
@@ -896,6 +986,22 @@ func ChangeStatus(status string) string { return In(i18n.Locale()).ChangeStatus(
 // A part of an update: the status changed to something other than Done.
 func (msgs Messages) ChangeStatus(status string) string {
 	return Catalog.Format(msgs.locale, "changeStatus", map[string]any{"status": status})
+}
+
+// ColumnMine says "Mine"
+// in the language the app shows.
+//
+// Head of the column of my own tasks on a project's page, beside the Agents
+// column.
+func ColumnMine() string { return In(i18n.Locale()).ColumnMine() }
+
+// ColumnMine says "Mine"
+// in the language of msgs.
+//
+// Head of the column of my own tasks on a project's page, beside the Agents
+// column.
+func (msgs Messages) ColumnMine() string {
+	return Catalog.Format(msgs.locale, "columnMine", nil)
 }
 
 // ConvoRetry says "Retry"
@@ -1428,34 +1534,6 @@ func (msgs Messages) FoldShowShort() string {
 	return Catalog.Format(msgs.locale, "foldShowShort", nil)
 }
 
-// InboxEmptyBody says "Tasks without a project land here. Add tasks from Home."
-// in the language the app shows.
-//
-// Body of an empty Inbox. It sends people to Home, where tasks are added.
-func InboxEmptyBody() string { return In(i18n.Locale()).InboxEmptyBody() }
-
-// InboxEmptyBody says "Tasks without a project land here. Add tasks from Home."
-// in the language of msgs.
-//
-// Body of an empty Inbox. It sends people to Home, where tasks are added.
-func (msgs Messages) InboxEmptyBody() string {
-	return Catalog.Format(msgs.locale, "inboxEmptyBody", nil)
-}
-
-// InboxEmptyTitle says "Your inbox is clear."
-// in the language the app shows.
-//
-// Title of an empty Inbox.
-func InboxEmptyTitle() string { return In(i18n.Locale()).InboxEmptyTitle() }
-
-// InboxEmptyTitle says "Your inbox is clear."
-// in the language of msgs.
-//
-// Title of an empty Inbox.
-func (msgs Messages) InboxEmptyTitle() string {
-	return Catalog.Format(msgs.locale, "inboxEmptyTitle", nil)
-}
-
 // InspectorClose says "Close"
 // in the language the app shows.
 //
@@ -1554,22 +1632,6 @@ func ListEmptyTitle() string { return In(i18n.Locale()).ListEmptyTitle() }
 // Title of an empty project list.
 func (msgs Messages) ListEmptyTitle() string {
 	return Catalog.Format(msgs.locale, "listEmptyTitle", nil)
-}
-
-// ListShowAllDone says "Show all {n} →"
-// in the language the app shows.
-//
-// Link under the first Done rows of a project or the Inbox; expands the
-// group in place. n is how many tasks are done.
-func ListShowAllDone(n int) string { return In(i18n.Locale()).ListShowAllDone(n) }
-
-// ListShowAllDone says "Show all {n} →"
-// in the language of msgs.
-//
-// Link under the first Done rows of a project or the Inbox; expands the
-// group in place. n is how many tasks are done.
-func (msgs Messages) ListShowAllDone(n int) string {
-	return Catalog.Format(msgs.locale, "listShowAllDone", map[string]any{"n": n})
 }
 
 // ManageA11yProject says "Project: {name}"
@@ -2326,22 +2388,6 @@ func (msgs Messages) MenuUndo() string {
 	return Catalog.Format(msgs.locale, "menuUndo", nil)
 }
 
-// NowShowAllInCompleted says "Show all in Completed"
-// in the language the app shows.
-//
-// Link under the Done today section of Now when more than five tasks were
-// finished today; opens the Completed page.
-func NowShowAllInCompleted() string { return In(i18n.Locale()).NowShowAllInCompleted() }
-
-// NowShowAllInCompleted says "Show all in Completed"
-// in the language of msgs.
-//
-// Link under the Done today section of Now when more than five tasks were
-// finished today; opens the Completed page.
-func (msgs Messages) NowShowAllInCompleted() string {
-	return Catalog.Format(msgs.locale, "nowShowAllInCompleted", nil)
-}
-
 // SectionDoneToday says "Done today"
 // in the language the app shows.
 //
@@ -2844,22 +2890,6 @@ func (msgs Messages) ModelsTesting() string {
 	return Catalog.Format(msgs.locale, "modelsTesting", nil)
 }
 
-// NavInbox says "Inbox"
-// in the language the app shows.
-//
-// Sidebar row and page title for tasks without a project. Also the name of
-// the inbox in other sentences.
-func NavInbox() string { return In(i18n.Locale()).NavInbox() }
-
-// NavInbox says "Inbox"
-// in the language of msgs.
-//
-// Sidebar row and page title for tasks without a project. Also the name of
-// the inbox in other sentences.
-func (msgs Messages) NavInbox() string {
-	return Catalog.Format(msgs.locale, "navInbox", nil)
-}
-
 // NavCalendar says "Calendar"
 // in the language the app shows.
 //
@@ -3190,14 +3220,14 @@ func (msgs Messages) NotifySummaryTitle(count int) string {
 	return Catalog.Format(msgs.locale, "notifySummaryTitle", map[string]any{"count": count})
 }
 
-// NotifySummaryBody says "{counts} · open Mine"
+// NotifySummaryBody says "{counts} · open Today"
 // in the language the app shows.
 //
 // Body of the summary notification: what happened, then where a click goes.
 // Mine is the page named My tasks.
 func NotifySummaryBody(counts string) string { return In(i18n.Locale()).NotifySummaryBody(counts) }
 
-// NotifySummaryBody says "{counts} · open Mine"
+// NotifySummaryBody says "{counts} · open Today"
 // in the language of msgs.
 //
 // Body of the summary notification: what happened, then where a click goes.
@@ -3480,20 +3510,6 @@ func NowAllClearBody() string { return In(i18n.Locale()).NowAllClearBody() }
 // Second line of the calm Now screen.
 func (msgs Messages) NowAllClearBody() string {
 	return Catalog.Format(msgs.locale, "nowAllClearBody", nil)
-}
-
-// NowShowAllInInbox says "Show all in Inbox"
-// in the language the app shows.
-//
-// Link under the user's tasks on Now when more tasks exist than fit.
-func NowShowAllInInbox() string { return In(i18n.Locale()).NowShowAllInInbox() }
-
-// NowShowAllInInbox says "Show all in Inbox"
-// in the language of msgs.
-//
-// Link under the user's tasks on Now when more tasks exist than fit.
-func (msgs Messages) NowShowAllInInbox() string {
-	return Catalog.Format(msgs.locale, "nowShowAllInInbox", nil)
 }
 
 // PickerClear says "Clear"
@@ -5768,14 +5784,14 @@ func (msgs Messages) ProblemNoImages(model string) string {
 	return Catalog.Format(msgs.locale, "problemNoImages", map[string]any{"model": model})
 }
 
-// NavMine says "Mine"
+// NavMine says "Today"
 // in the language the app shows.
 //
 // Sidebar row and page title of the home screen: what is mine to do, and
 // what agents handed over.
 func NavMine() string { return In(i18n.Locale()).NavMine() }
 
-// NavMine says "Mine"
+// NavMine says "Today"
 // in the language of msgs.
 //
 // Sidebar row and page title of the home screen: what is mine to do, and
@@ -6096,38 +6112,6 @@ func A11yMineUnseen(count int) string { return In(i18n.Locale()).A11yMineUnseen(
 // Accessibility label of the red badge beside Mine in the sidebar.
 func (msgs Messages) A11yMineUnseen(count int) string {
 	return Catalog.Format(msgs.locale, "a11yMineUnseen", map[string]any{"count": count})
-}
-
-// NavSectionExpand says "Expand {name}"
-// in the language the app shows.
-//
-// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
-// Agents) that shows its sub-rows.
-func NavSectionExpand(name string) string { return In(i18n.Locale()).NavSectionExpand(name) }
-
-// NavSectionExpand says "Expand {name}"
-// in the language of msgs.
-//
-// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
-// Agents) that shows its sub-rows.
-func (msgs Messages) NavSectionExpand(name string) string {
-	return Catalog.Format(msgs.locale, "navSectionExpand", map[string]any{"name": name})
-}
-
-// NavSectionCollapse says "Collapse {name}"
-// in the language the app shows.
-//
-// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
-// Agents) that hides its sub-rows.
-func NavSectionCollapse(name string) string { return In(i18n.Locale()).NavSectionCollapse(name) }
-
-// NavSectionCollapse says "Collapse {name}"
-// in the language of msgs.
-//
-// Tooltip and accessibility label of the chevron on a sidebar row (Mine,
-// Agents) that hides its sub-rows.
-func (msgs Messages) NavSectionCollapse(name string) string {
-	return Catalog.Format(msgs.locale, "navSectionCollapse", map[string]any{"name": name})
 }
 
 // AgentsEmpty says "No agents at work"
@@ -8886,6 +8870,68 @@ func (msgs Messages) CategoryGroupPeople() string {
 	return Catalog.Format(msgs.locale, "categoryGroupPeople", nil)
 }
 
+// FilterClear says "Clear filter"
+// in the language the app shows.
+//
+// Accessibility label and tooltip of the x on the filter bar.
+func FilterClear() string { return In(i18n.Locale()).FilterClear() }
+
+// FilterClear says "Clear filter"
+// in the language of msgs.
+//
+// Accessibility label and tooltip of the x on the filter bar.
+func (msgs Messages) FilterClear() string {
+	return Catalog.Format(msgs.locale, "filterClear", nil)
+}
+
+// FilterShowing says "Showing {name}"
+// in the language the app shows.
+//
+// The filter bar above a list narrowed to one category by clicking its
+// chip.
+func FilterShowing(name string) string { return In(i18n.Locale()).FilterShowing(name) }
+
+// FilterShowing says "Showing {name}"
+// in the language of msgs.
+//
+// The filter bar above a list narrowed to one category by clicking its
+// chip.
+func (msgs Messages) FilterShowing(name string) string {
+	return Catalog.Format(msgs.locale, "filterShowing", map[string]any{"name": name})
+}
+
+// HistoryOf says "Done and cancelled in {scope}, newest first"
+// in the language the app shows.
+//
+// Quiet line beside the title of the history page opened from a project's
+// or the agents' Done section.
+func HistoryOf(scope string) string { return In(i18n.Locale()).HistoryOf(scope) }
+
+// HistoryOf says "Done and cancelled in {scope}, newest first"
+// in the language of msgs.
+//
+// Quiet line beside the title of the history page opened from a project's
+// or the agents' Done section.
+func (msgs Messages) HistoryOf(scope string) string {
+	return Catalog.Format(msgs.locale, "historyOf", map[string]any{"scope": scope})
+}
+
+// NavNoProject says "No project"
+// in the language the app shows.
+//
+// Where a task lives when it is in no project: the task menu's Move to, the
+// inspector's top line, search results.
+func NavNoProject() string { return In(i18n.Locale()).NavNoProject() }
+
+// NavNoProject says "No project"
+// in the language of msgs.
+//
+// Where a task lives when it is in no project: the task menu's Move to, the
+// inspector's top line, search results.
+func (msgs Messages) NavNoProject() string {
+	return Catalog.Format(msgs.locale, "navNoProject", nil)
+}
+
 // NavRecent says "Recent changes"
 // in the language the app shows.
 //
@@ -9804,6 +9850,70 @@ func (msgs Messages) RecentLinkTip() string {
 	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
 }
 
+// SeeToday says "See today"
+// in the language the app shows.
+//
+// Link at the right of the Done today header on Today; opens Summary. A
+// pixel chevron follows it.
+func SeeToday() string { return In(i18n.Locale()).SeeToday() }
+
+// SeeToday says "See today"
+// in the language of msgs.
+//
+// Link at the right of the Done today header on Today; opens Summary. A
+// pixel chevron follows it.
+func (msgs Messages) SeeToday() string {
+	return Catalog.Format(msgs.locale, "seeToday", nil)
+}
+
+// SettingsCategories says "Categories"
+// in the language the app shows.
+//
+// Label of the group of categories in Settings > General.
+func SettingsCategories() string { return In(i18n.Locale()).SettingsCategories() }
+
+// SettingsCategories says "Categories"
+// in the language of msgs.
+//
+// Label of the group of categories in Settings > General.
+func (msgs Messages) SettingsCategories() string {
+	return Catalog.Format(msgs.locale, "settingsCategories", nil)
+}
+
+// SettingsCategoryDeleteAsk says "Delete “{name}”? Its tasks become unsorted."
+// in the language the app shows.
+//
+// Question that replaces a category row in Settings after its delete button
+// was clicked.
+func SettingsCategoryDeleteAsk(name string) string {
+	return In(i18n.Locale()).SettingsCategoryDeleteAsk(name)
+}
+
+// SettingsCategoryDeleteAsk says "Delete “{name}”? Its tasks become unsorted."
+// in the language of msgs.
+//
+// Question that replaces a category row in Settings after its delete button
+// was clicked.
+func (msgs Messages) SettingsCategoryDeleteAsk(name string) string {
+	return Catalog.Format(msgs.locale, "settingsCategoryDeleteAsk", map[string]any{"name": name})
+}
+
+// SettingsCategoryEdit says "Edit"
+// in the language the app shows.
+//
+// Link in a category row in Settings > General that opens the category
+// sheet (name, icon, color).
+func SettingsCategoryEdit() string { return In(i18n.Locale()).SettingsCategoryEdit() }
+
+// SettingsCategoryEdit says "Edit"
+// in the language of msgs.
+//
+// Link in a category row in Settings > General that opens the category
+// sheet (name, icon, color).
+func (msgs Messages) SettingsCategoryEdit() string {
+	return Catalog.Format(msgs.locale, "settingsCategoryEdit", nil)
+}
+
 // SettingsPaneAccount says "Account"
 // in the language the app shows.
 //
@@ -10574,6 +10684,22 @@ func ComposerVoiceStop() string { return In(i18n.Locale()).ComposerVoiceStop() }
 // ends the recording.
 func (msgs Messages) ComposerVoiceStop() string {
 	return Catalog.Format(msgs.locale, "composerVoiceStop", nil)
+}
+
+// ShowAll says "Show all"
+// in the language the app shows.
+//
+// Link at the end of a list's Done section; opens the full history of what
+// was finished there.
+func ShowAll() string { return In(i18n.Locale()).ShowAll() }
+
+// ShowAll says "Show all"
+// in the language of msgs.
+//
+// Link at the end of a list's Done section; opens the full history of what
+// was finished there.
+func (msgs Messages) ShowAll() string {
+	return Catalog.Format(msgs.locale, "showAll", nil)
 }
 
 // VoiceListening says "Listening… click to stop, Esc to cancel"
