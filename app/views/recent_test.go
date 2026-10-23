@@ -23,10 +23,10 @@ func TestTheSwitchIsOffByDefaultAndWhileOffNothingOfThePageExistsOrIsRead(t *tes
 	if tt.HasText("Recent changes") {
 		t.Errorf("a sidebar row while the page is off: %q", tt.Texts())
 	}
-	tt.Key(ui.Cmd, ui.Key7)
+	tt.Key(ui.Cmd, ui.Key4)
 	tt.Frame()
 	if m.nav.screen == screenRecent {
-		t.Error("Cmd+7 opened a page that is off")
+		t.Error("Cmd+4 opened a page that is off")
 	}
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.Frame()
@@ -38,16 +38,16 @@ func TestTheSwitchIsOffByDefaultAndWhileOffNothingOfThePageExistsOrIsRead(t *tes
 	}
 }
 
-func TestSwitchedOnTheRowSitsUnderSummaryAndCmd7OpensThePage(t *testing.T) {
+func TestSwitchedOnTheRowSitsUnderCalendarAndCmd4OpensThePage(t *testing.T) {
 	r := newRecentRig(t, true)
 	r.tt.Frame()
-	if !above(t, r.tt, "Summary", "Recent changes") || !above(t, r.tt, "Recent changes", "Projects") {
+	if !above(t, r.tt, "Calendar", "Recent changes") || !above(t, r.tt, "Recent changes", "Projects") {
 		t.Errorf("sidebar order: %q", r.tt.Texts())
 	}
-	r.tt.Key(ui.Cmd, ui.Key7)
+	r.tt.Key(ui.Cmd, ui.Key4)
 	r.tt.Frame()
 	if r.m.nav.screen != screenRecent {
-		t.Fatalf("Cmd+7 went to %+v", r.m.nav)
+		t.Fatalf("Cmd+4 went to %+v", r.m.nav)
 	}
 	r.settle(t)
 	r.has(t, "All repositories", "7 days", "30 days", "Updated just now")

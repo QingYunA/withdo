@@ -77,7 +77,7 @@ func (m *Main) runAction(c *ui.Context, kind actionKind, ids []int) {
 // bulkMove moves the selected tasks to a project, or to the Inbox for project 0.
 func (m *Main) bulkMove(c *ui.Context, ids []int, project int) {
 	tasks := movable(m.tasksOf(ids), project)
-	where := m.say.NavInbox()
+	where := m.say.NavMine()
 	if p, ok := m.app.Project(project); ok {
 		where = p.Name
 	}

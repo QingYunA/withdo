@@ -47,7 +47,7 @@ func TestTheLastRowOfALongListScrollsAboveTheBarToo(t *testing.T) {
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, m, _ := newTesterFor(app, 1100)
-	m.goTo(nav{screen: screenInbox})
+	m.goTo(nav{})
 	tt.Frame()
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Frame()

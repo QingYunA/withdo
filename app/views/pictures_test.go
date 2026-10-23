@@ -440,7 +440,7 @@ func TestProjectColumnsAndListCarryTheThumbnailToo(t *testing.T) {
 func TestTheInboxRowsCarryTheThumbnail(t *testing.T) {
 	r := newPicRig(t)
 	r.give(t, 8, "tooth.png", red)
-	r.m.goTo(nav{screen: screenInbox})
+	r.m.goTo(nav{})
 	r.settle(t)
 	if _, ok := r.tt.Find("Open tooth.png"); !ok {
 		t.Errorf("no thumbnail in the Inbox: %q", r.tt.Texts())

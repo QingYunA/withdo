@@ -165,10 +165,10 @@ func TestClickingASidebarItemEndsTheSearch(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
 	searchFor(t, tt, "tray")
-	if err := tt.Click("Inbox"); err != nil {
+	if err := tt.Click("Calendar"); err != nil {
 		t.Fatal(err)
 	}
-	if m.searching() || m.nav.screen != screenInbox {
+	if m.searching() || m.nav.screen != screenCalendar {
 		t.Errorf("searching %v nav %+v", m.searching(), m.nav)
 	}
 	if tt.HasText("results for") {

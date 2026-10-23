@@ -29,7 +29,7 @@ func ParseTaskID(id string) (int, bool) {
 }
 
 // stack is the Group of a project's notifications: they pile up together in Notification Center.
-// The Inbox is one stack, whatever the language.
+// Tasks with no project are one stack, whatever the language.
 func stack(project string) string {
 	if project == "" {
 		return "inbox"
@@ -39,7 +39,7 @@ func stack(project string) string {
 
 func projectLabel(say locales.Messages, project string) string {
 	if project == "" {
-		return say.NavInbox()
+		return say.NavMine()
 	}
 	return project
 }
@@ -68,7 +68,7 @@ func Event(say locales.Messages, e data.Event) mygo.NotificationOptions {
 	return o
 }
 
-// Reminder words the notification of a due reminder: its project, or the Inbox, in the body.
+// Reminder words the notification of a due reminder: its project, or Today, in the body.
 func Reminder(say locales.Messages, r data.Reminder) mygo.NotificationOptions {
 	return mygo.NotificationOptions{ID: TaskID(r.TaskID), Title: say.NotifyReminder(r.Title), Body: projectLabel(say, r.ProjectName)}
 }

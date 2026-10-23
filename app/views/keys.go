@@ -28,7 +28,7 @@ func (m *Main) textUndoFree(c *ui.Context) bool {
 	return !m.typing(c) || empty(surfacePage) || empty(surfaceInspector)
 }
 
-// keys handles the keyboard for one frame: Cmd+K, and Cmd+1 to Cmd+7 for the sidebar's rows, anywhere; and, unless a text
+// keys handles the keyboard for one frame: Cmd+K, and Cmd+1 to Cmd+3 (Cmd+4 with Recent changes) for the sidebar's rows, anywhere; and, unless a text
 // input has the keys, Esc to close, then clear, and arrows, Enter and Space on the rows.
 func (m *Main) keys(c *ui.Context, ids []int) {
 	if m.sheetOpen() {
@@ -46,14 +46,8 @@ func (m *Main) keys(c *ui.Context, ids []int) {
 	case c.Shortcut(ui.Cmd, ui.Key2):
 		m.goTo(nav{screen: screenAgents})
 	case c.Shortcut(ui.Cmd, ui.Key3):
-		m.goTo(nav{screen: screenInbox})
-	case c.Shortcut(ui.Cmd, ui.Key4):
 		m.goTo(nav{screen: screenCalendar})
-	case c.Shortcut(ui.Cmd, ui.Key5):
-		m.goTo(nav{screen: screenCompleted})
-	case c.Shortcut(ui.Cmd, ui.Key6):
-		m.goTo(nav{screen: screenSummary})
-	case c.Shortcut(ui.Cmd, ui.Key7) && m.app.RecentChangesOn():
+	case c.Shortcut(ui.Cmd, ui.Key4) && m.app.RecentChangesOn():
 		m.goTo(nav{screen: screenRecent})
 	case barHit:
 		m.runAction(c, bar, m.multi.IDs())
@@ -133,6 +127,8 @@ func (m *Main) escape() {
 		m.closeSheet()
 	case m.openID != 0:
 		m.openID = 0
+	case m.catFilter != 0:
+		m.catFilter = 0
 	case m.sel != 0:
 		m.sel = 0
 	case m.searching():

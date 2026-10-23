@@ -15,7 +15,8 @@ const listIndent = theme.GlyphSize + 8
 
 // selection is selectionTasks with its own way to show the tasks that are completing.
 func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []data.Task) []data.Task {
-	in := page.Scope{Inbox: m.nav.screen == screenInbox, Project: m.nav.projectID, Milestone: m.milestone[m.nav.projectID]}.Has
+	scope := page.Scope{Project: m.nav.projectID, Milestone: m.milestone[m.nav.projectID]}.Has
+	in := func(t data.Task) bool { return scope(t) && (m.catFilter == 0 || m.app.categoryOf(t) == m.catFilter) }
 	var out []data.Task
 	for _, t := range m.app.snap.tasks {
 		if in(t) {
@@ -25,7 +26,7 @@ func (m *Main) selection(completing func([]data.Task, func(data.Task) bool) []da
 	return completing(out, in)
 }
 
-// listScreen is the Inbox, or an empty project, as a list grouped by status. A project with tasks is
+// listScreen is an empty project (or one narrowed to nothing) as a list grouped by status. A project with tasks is
 // two columns (columnsScreen) or a board instead.
 func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 	m.listHeader(c, t)
@@ -46,7 +47,7 @@ func (m *Main) listScreen(c *ui.Context, t *theme.Tokens) {
 // group with "Show all" under it while the fold hides rows, and Backlog folded into its last line. row
 // draws a task of a section.
 func (m *Main) sections(c *ui.Context, t *theme.Tokens, s side, secs []page.Section, row func(page.Section, data.Task)) {
-	expanded, allDone := m.foldMaps(s)
+	expanded := m.foldMap(s)
 	for _, sec := range secs {
 		draw := func(task data.Task) { row(sec, task) }
 		switch {
@@ -61,8 +62,8 @@ func (m *Main) sections(c *ui.Context, t *theme.Tokens, s side, secs []page.Sect
 			}
 		default:
 			m.groupOf(c, t, sec.Status, sec.Tasks, draw)
-			if sec.Hidden() > 0 && link(c, t, m.say.ListShowAllDone(sec.Total)).Margin(6, 0, 0, 2*listIndent).Clicked() {
-				allDone[m.nav] = true
+			if sec.Status == data.Done && link(c, t, m.say.ShowAll()).Margin(6, 0, 0, 2*listIndent).Clicked() {
+				m.openHistory(m.nav.projectID, s == sideAgents)
 			}
 		}
 	}
@@ -190,24 +191,17 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, n int, open bool, above 
 	return line.Clicked()
 }
 
-// emptyList is a project or the Inbox with no task at all. It says what will appear and how to
-// make it appear; a project has its composer, the Inbox sends people to Home.
+// emptyList is a project with no task at all. It says what will appear and how to make it appear.
 func (m *Main) emptyList(c *ui.Context, t *theme.Tokens) {
-	title, body := m.say.ListEmptyTitle(), m.say.ListEmptyBody()
-	if m.nav.screen == screenInbox {
-		title, body = m.say.InboxEmptyTitle(), m.say.InboxEmptyBody()
-	}
-	emptyState(c, t, title, body, 56, func() {
-		if m.nav.screen == screenProject {
-			if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
-				m.openSettings(PaneAgents)
-			}
+	emptyState(c, t, m.say.ListEmptyTitle(), m.say.ListEmptyBody(), 56, func() {
+		if link(c, t, m.say.LinkHowToConnect()).Margin(4, 0, 0).Clicked() {
+			m.openSettings(PaneAgents)
 		}
 	})
 }
 
 // listTitle is the page's title. A project's name is an input once a double click starts renaming
-// it, with the same keys as in the sidebar; Inbox stays as it is.
+// it, with the same keys as in the sidebar.
 func (m *Main) listTitle(c *ui.Context, t *theme.Tokens, title string) {
 	if m.nav.screen != screenProject {
 		theme.Text(c, theme.Title, t.Text, title).Shrink(0)
@@ -225,19 +219,14 @@ func (m *Main) listTitle(c *ui.Context, t *theme.Tokens, title string) {
 	}
 }
 
-// listHeader is the project's name, or Inbox, with the milestone filter (once the project has a
-// milestone) and the List | Board switch at the right.
+// listHeader is the project's name, with the milestone filter (once the project has a milestone) and
+// the List | Board switch at the right, and under it the bar of the category a chip narrowed it to.
 func (m *Main) listHeader(c *ui.Context, t *theme.Tokens) {
-	title := m.say.NavInbox()
-	if m.nav.screen == screenProject {
-		p, _ := m.app.Project(m.nav.projectID)
-		title = p.Name
-	}
-	m.pageHeaderOf(c, t, func() { m.listTitle(c, t, title) }, "", func() {
+	p, _ := m.app.Project(m.nav.projectID)
+	m.pageHeaderOf(c, t, func() { m.listTitle(c, t, p.Name) }, "", func() {
 		m.recentLink(c, t)
 		m.milestoneMenu(c, t)
-		if m.nav.screen == screenProject {
-			m.viewToggle(c, t)
-		}
+		m.viewToggle(c, t)
 	})
+	m.filterBar(c, t)
 }

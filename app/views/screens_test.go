@@ -63,7 +63,6 @@ func TestScreensSeed(t *testing.T) {
 			toProject(1)(tt, m)
 			m.board[1] = true
 		})
-		mainShot(t, "inbox-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenInbox}) })
 		mainShot(t, "inspector-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
 		longBranch, _, _ := newTestApp(t) // a branch that does not fit ends in an ellipsis
 		branch := "worktree-agent-ac6ff63e8ba29afb9-fix-the-remaining-findings"

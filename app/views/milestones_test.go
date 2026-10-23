@@ -46,7 +46,7 @@ func TestMilestoneMenuAppearsWithTheFirstMilestoneAndKeepsNewMilestone(t *testin
 	}
 
 	inbox, m, _ := newMainTester(t, 1100)
-	m.goTo(nav{screen: screenInbox})
+	m.goTo(nav{})
 	inbox.Frame()
 	if inbox.HasText("All milestones") {
 		t.Error("the Inbox has a milestone menu")

@@ -72,10 +72,10 @@ func TestScreensMenu(t *testing.T) {
 				tt.SetSize(1100, 1000)
 				return nil
 			})
-			manageShot(t, "project-done-all"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "project-history"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				tt.SetSize(1100, 1000)
 				inProject(tt, m)
-				_ = tt.Click(m.say.ListShowAllDone(5))
+				_ = tt.Click(m.say.ShowAll())
 				return nil
 			})
 		}

@@ -38,8 +38,8 @@ const (
 )
 
 // openNewCategory opens the sheet for a new category, on the first curated icon and the color its
-// name hashes to. A category made from the task menu is given to task; from the sidebar (task 0)
-// its page opens.
+// name hashes to. A category made from the task menu is given to task; one made in Settings (task 0)
+// is only added to the list.
 func (m *Main) openNewCategory(task int) {
 	m.manage.category = categorySheet{open: true, task: task, icon: theme.CategoryIconGroups[0].Icons[0].Bitmap.Picture()}
 }
@@ -229,11 +229,10 @@ func (m *Main) categoryPatch(name string) data.CategoryPatch {
 	return patch
 }
 
-// afterNewCategory gives the new category to the task it was made for, or else opens its page.
+// afterNewCategory gives the new category to the task it was made for; one made in Settings has
+// no page to open, it is in the list there.
 func (m *Main) afterNewCategory(cat data.Category, task int) {
 	if task != 0 {
 		_ = m.app.Update(task, data.Patch{Category: data.IntPtr(cat.ID)})
-		return
 	}
-	m.goTo(nav{screen: screenMine, cat: cat.ID})
 }

@@ -51,7 +51,6 @@ func TestKindFollowsTheScreenAndTheSearchOverIt(t *testing.T) {
 		{"calendar", In{Screen: Calendar}, KindCalendar, false},
 		{"summary", In{Screen: Summary}, KindSummary, false},
 		{"recent", In{Screen: Recent}, KindRecent, false},
-		{"inbox", In{Screen: Inbox, Tasks: some}, KindList, false},
 		{"project with tasks", In{Screen: Project, Tasks: some}, KindColumns, true},
 		{"project as board", In{Screen: Project, Tasks: some, Board: true, Cards: some}, KindBoard, true},
 		{"empty project reads as a list", In{Screen: Project, Board: true}, KindList, true},
@@ -70,7 +69,7 @@ func TestKindFollowsTheScreenAndTheSearchOverIt(t *testing.T) {
 func TestMineHasTheHeroInputAndNoOtherPageDoes(t *testing.T) {
 	some := []data.Task{task(1, data.Todo)}
 	for name, in := range map[string]In{
-		"agents": {Screen: Agents}, "inbox": {Screen: Inbox, Tasks: some}, "calendar": {Screen: Calendar},
+		"agents": {Screen: Agents}, "calendar": {Screen: Calendar},
 		"project": {Screen: Project, Tasks: some}, "empty project": {Screen: Project},
 	} {
 		if Build(in).Hero {
@@ -88,7 +87,7 @@ func TestOnlyPagesWithRowsAreSelectable(t *testing.T) {
 			t.Errorf("screen %v with no rows is selectable", s)
 		}
 	}
-	if !Build(In{Screen: Inbox, Tasks: []data.Task{task(1, data.Todo)}}).Selectable() {
+	if !Build(In{Screen: Project, Tasks: []data.Task{task(1, data.Todo)}}).Selectable() {
 		t.Error("a list with a row is not selectable")
 	}
 	found := Found{Tasks: []data.Task{task(1, data.Todo)}, Name: func(*int) string { return "" }}
@@ -103,7 +102,7 @@ func TestAListGroupsByStatusInPaintOrderAndFoldsDoneAndBacklog(t *testing.T) {
 		task(5, data.Done, finished(1)), task(6, data.Done, finished(2)), task(7, data.Done, finished(3)), task(8, data.Done, finished(4)),
 		task(9, data.Backlog), task(10, data.Cancelled),
 	}
-	p := Build(In{Screen: Inbox, Tasks: tasks})
+	p := Build(In{Screen: Project, Tasks: tasks})
 	var order []data.Status
 	for _, s := range p.Sections {
 		order = append(order, s.Status)
@@ -125,17 +124,17 @@ func TestAListGroupsByStatusInPaintOrderAndFoldsDoneAndBacklog(t *testing.T) {
 		t.Errorf("counts %+v, want 10 tasks of which 4 active", c)
 	}
 
-	p = Build(In{Screen: Inbox, Tasks: tasks, Folds: [2]Fold{{Backlog: true, AllDone: true}}})
-	if want := []int{3, 4, 2, 1, 5, 6, 7, 8, 9}; !slices.Equal(p.IDs(), want) {
+	p = Build(In{Screen: Project, Tasks: tasks, Folds: [2]Fold{{Backlog: true}}})
+	if want := []int{3, 4, 2, 1, 5, 6, 7, 9}; !slices.Equal(p.IDs(), want) {
 		t.Errorf("opened: ids %v, want %v", p.IDs(), want)
 	}
-	if p.Sections[4].Hidden() != 0 || !p.Sections[5].Open {
-		t.Error("Show all and the Backlog fold did not open")
+	if p.Sections[4].Hidden() != 1 || !p.Sections[5].Open {
+		t.Error("the Backlog fold did not open, or Done opened with it (Show all opens the history instead)")
 	}
 }
 
 func TestADoneFoldKeepsNothingBackWhenItFits(t *testing.T) {
-	p := Build(In{Screen: Inbox, Tasks: []data.Task{task(1, data.Done, finished(1)), task(2, data.Done, finished(2)), task(3, data.Done, finished(3))}})
+	p := Build(In{Screen: Project, Tasks: []data.Task{task(1, data.Done, finished(1)), task(2, data.Done, finished(2)), task(3, data.Done, finished(3))}})
 	if s := p.Sections[0]; len(s.Tasks) != 3 || s.Hidden() != 0 {
 		t.Errorf("Done %+v, want all three", s)
 	}
@@ -143,7 +142,7 @@ func TestADoneFoldKeepsNothingBackWhenItFits(t *testing.T) {
 
 func TestAListSortsWhatIsDueFirstThenUrgentThenRecent(t *testing.T) {
 	due := t0.Add(time.Hour)
-	p := Build(In{Screen: Inbox, Tasks: []data.Task{
+	p := Build(In{Screen: Project, Tasks: []data.Task{
 		task(1, data.Todo), // oldest, no date, default priority
 		task(2, data.Todo, func(t *data.Task) { t.Priority = data.P0 }),
 		task(3, data.Todo, func(t *data.Task) { t.DueAt = &due }),
@@ -181,13 +180,13 @@ func TestEachColumnFoldsItsOwnBacklogAndDone(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		tasks = append(tasks, task(10+i, data.Done, finished(i+1)), task(20+i, data.Done, agent, finished(i+1)), task(30+i, data.Backlog, agent))
 	}
-	p := Build(In{Screen: Project, Tasks: tasks, Folds: [2]Fold{{}, {AllDone: true, Backlog: true}}})
+	p := Build(In{Screen: Project, Tasks: tasks, Folds: [2]Fold{{}, {Backlog: true}}})
 	mine, ag := p.Of(0), p.Of(1)
 	if len(mine[0].Tasks) != ListDoneRows || mine[0].Hidden() != 2 {
 		t.Errorf("Mine's Done %v", ids(mine[0].Tasks))
 	}
-	if len(ag[0].Tasks) != 5 || len(ag[1].Tasks) != 5 || !ag[1].Open {
-		t.Errorf("Agents' Done %v and Backlog %v, both open", ids(ag[0].Tasks), ids(ag[1].Tasks))
+	if len(ag[0].Tasks) != ListDoneRows || len(ag[1].Tasks) != 5 || !ag[1].Open {
+		t.Errorf("Agents' Done %v and Backlog %v, the Backlog open", ids(ag[0].Tasks), ids(ag[1].Tasks))
 	}
 }
 
@@ -217,10 +216,6 @@ func TestTheBoardHasFourFixedLanesAndBlockedLeadsDoing(t *testing.T) {
 	if p.Sections[0].Total != 0 {
 		t.Error("an empty lane is not empty")
 	}
-	p = Build(In{Screen: Project, Board: true, Tasks: tasks, Cards: tasks, Folds: [2]Fold{{AllDone: true}}})
-	if len(p.Sections[3].Tasks) != 7 {
-		t.Error("Show all did not open the Done lane")
-	}
 }
 
 func TestTheBoardReadsTheCardsNotTheListTasks(t *testing.T) {
@@ -232,7 +227,7 @@ func TestTheBoardReadsTheCardsNotTheListTasks(t *testing.T) {
 	}
 }
 
-func TestSearchGroupsByProjectInTheOrderFirstSeenAndTheInboxLast(t *testing.T) {
+func TestSearchGroupsByProjectInTheOrderFirstSeenAndNoProjectLast(t *testing.T) {
 	proj := func(id int) func(*data.Task) { return func(t *data.Task) { t.ProjectID = data.IntPtr(id) } }
 	found := Found{
 		Tasks: []data.Task{task(1, data.Todo), task(2, data.Todo, proj(7)), task(3, data.Todo, proj(5)), task(4, data.Todo, proj(7)), task(5, data.Todo)},
@@ -248,8 +243,8 @@ func TestSearchGroupsByProjectInTheOrderFirstSeenAndTheInboxLast(t *testing.T) {
 	if p.Total != 5 || !p.More || len(p.Sections) != 3 {
 		t.Fatalf("total %d more %v sections %d", p.Total, p.More, len(p.Sections))
 	}
-	if p.Sections[0].Title != "seven" || p.Sections[1].Title != "five" || !p.Sections[2].Inbox {
-		t.Errorf("groups %q %q inbox=%v", p.Sections[0].Title, p.Sections[1].Title, p.Sections[2].Inbox)
+	if p.Sections[0].Title != "seven" || p.Sections[1].Title != "five" || !p.Sections[2].NoProject {
+		t.Errorf("groups %q %q no project=%v", p.Sections[0].Title, p.Sections[1].Title, p.Sections[2].NoProject)
 	}
 	if want := []int{2, 4, 3, 1, 5}; !slices.Equal(p.IDs(), want) {
 		t.Errorf("ids %v, want %v", p.IDs(), want)
@@ -280,16 +275,13 @@ func TestCompletedGroupsByDayNewestFirst(t *testing.T) {
 	}
 }
 
-func TestScopePicksTheInboxOrTheProjectAndItsMilestone(t *testing.T) {
+func TestScopePicksTheProjectAndItsMilestone(t *testing.T) {
 	inProject := func(p, ms int) data.Task {
 		t := task(1, data.Todo, func(t *data.Task) { t.ProjectID = data.IntPtr(p) })
 		if ms != 0 {
 			t.MilestoneID = data.IntPtr(ms)
 		}
 		return t
-	}
-	if !(Scope{Inbox: true}).Has(task(1, data.Todo)) || (Scope{Inbox: true}).Has(inProject(1, 0)) {
-		t.Error("the Inbox scope is wrong")
 	}
 	if !(Scope{Project: 1}).Has(inProject(1, 4)) || (Scope{Project: 1}).Has(inProject(2, 0)) {
 		t.Error("the project scope is wrong")

@@ -18,15 +18,23 @@ func answered(t *testing.T, tt *ui.Tester, rec *recorder) {
 	tt.Frame()
 }
 
-func TestSummarySitsUnderCompletedInTheSidebarAndCmd6OpensIt(t *testing.T) {
+func TestSummaryHasNoSidebarRowAndOpensFromSeeTodayBesideDoneToday(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
-	if !above(t, tt, "Completed", "Summary") || !above(t, tt, "Summary", "Projects") {
-		t.Errorf("sidebar order: %q", tt.Texts())
+	hasNot(t, tt, "Summary")
+	if !above(t, tt, "Done today", "See today") {
+		// The link is at the right of the header, on its line: neither is above the other.
+		a, _ := tt.Find("Done today")
+		b, ok := tt.Find("See today")
+		if !ok || a.Y != b.Y && (a.Y-b.Y > 4 || b.Y-a.Y > 4) || b.X < a.X+a.W {
+			t.Errorf("See today at %+v is not at the right of Done today at %+v", b, a)
+		}
 	}
-	tt.Key(ui.Cmd, ui.Key6)
+	if err := tt.Click("See today"); err != nil {
+		t.Fatal(err)
+	}
 	if m.nav.screen != screenSummary {
-		t.Fatalf("Cmd+6 went to %+v", m.nav)
+		t.Fatalf("See today went to %+v", m.nav)
 	}
 	if !m.ShowingSummary() && !tt.HasText("Today") {
 		t.Error("Summary does not show")

@@ -81,7 +81,7 @@ func TestCalendarAndSummaryHaveNoSelectButton(t *testing.T) {
 			t.Errorf("screen %v has a Select button", n.screen)
 		}
 	}
-	for _, n := range []nav{{screen: screenAgents}, {screen: screenInbox}, {screen: screenCompleted}, {screen: screenProject, projectID: 1}} {
+	for _, n := range []nav{{screen: screenAgents}, {screen: screenCompleted}, {screen: screenProject, projectID: 1}} {
 		m.goTo(n)
 		tt.Frame()
 		if !tt.HasText("Select") {

@@ -499,7 +499,7 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	before := len(r.app.snap.tasks)
 	r.ask("Water the plants")
-	if len(r.app.snap.tasks) != before+1 || !r.tt.HasText("Added to Inbox") {
+	if len(r.app.snap.tasks) != before+1 || !r.tt.HasText("Added to Today") {
 		t.Errorf("tasks %d, texts %q", len(r.app.snap.tasks), r.tt.Texts())
 	}
 	if got := r.fa.Asked(); len(got) != 0 {
@@ -510,10 +510,10 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 func TestTheAddedToInboxNoticeFadesAfterOneAndAHalfSeconds(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	r.ask("Water the plants")
-	has(t, r.tt, "Added to Inbox")
+	has(t, r.tt, "Added to Today")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	hasNot(t, r.tt, "Added to Inbox")
+	hasNot(t, r.tt, "Added to Today")
 }
 
 func TestAnswerRefreshesTheLists(t *testing.T) {

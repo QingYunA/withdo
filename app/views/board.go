@@ -101,8 +101,8 @@ func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col page.Section) {
 			for _, task := range col.Tasks {
 				m.card(c, t, task)
 			}
-			if col.Hidden() > 0 && link(c, t, m.say.BoardShowAll(col.Total)).Margin(4, 0, 0).Clicked() {
-				m.allDone[m.nav] = true
+			if col.Status == data.Done && len(col.Tasks) > 0 && link(c, t, m.say.ShowAll()).Margin(4, 0, 0).Clicked() {
+				m.openHistory(m.nav.projectID, false)
 			}
 		})
 	})

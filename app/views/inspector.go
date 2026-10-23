@@ -141,7 +141,7 @@ func (m *Main) notesField(c *ui.Context, t *theme.Tokens, task data.Task) {
 // inspectorTopLine says where the task lives: its project, the repository behind it (where the
 // agent's reports come from) and its number. A long name gives way before the number.
 func (m *Main) inspectorTopLine(c *ui.Context, t *theme.Tokens, task data.Task) {
-	name, repo := m.say.NavInbox(), ""
+	name, repo := m.say.NavNoProject(), ""
 	if task.ProjectID != nil {
 		if p, ok := m.app.Project(*task.ProjectID); ok {
 			name, repo = p.Name, p.RepoSlug

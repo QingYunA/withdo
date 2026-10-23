@@ -147,8 +147,8 @@ func TestWithoutAModelTheTextBecomesAPlainTaskInThePlace(t *testing.T) {
 		project   *int
 		wantNotes string
 	}{
-		{"now goes to the inbox", nav{}, nil, "Added to Inbox"},
-		{"inbox", nav{screen: screenInbox}, nil, "Added to Inbox"},
+		{"now goes to the inbox", nav{}, nil, "Added to Today"},
+		{"inbox", nav{}, nil, "Added to Today"},
 		{"project", nav{screen: screenProject, projectID: 1}, data.IntPtr(1), "Added to adhd-todo"},
 	}
 	for _, tc := range tests {
@@ -343,7 +343,7 @@ func TestTheReplyShowsUnderTheComposerThatSentItAndGoesWhenThePageDoes(t *testin
 	if !above(t, r.tt, "Team meeting", "Add a task, or ask me anything") {
 		t.Error("the line is not above the composer")
 	}
-	r.m.goTo(nav{screen: screenInbox})
+	r.m.goTo(nav{})
 	r.tt.Frame()
 	hasNot(t, r.tt, "Team meeting")
 }

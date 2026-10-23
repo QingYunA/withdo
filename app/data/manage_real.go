@@ -187,8 +187,10 @@ func (r *Real) SearchTasks(query string, limit int) ([]Task, error) {
 	return fromTasks(ts), err
 }
 
-func (r *Real) Logbook(limit int) ([]Task, error) {
-	ts, err := r.core.ListLogbook(r.ctx(), limit)
+func (r *Real) Logbook(limit int) ([]Task, error) { return r.LogbookOf(0, false, limit) }
+
+func (r *Real) LogbookOf(project int, agents bool, limit int) ([]Task, error) {
+	ts, err := r.core.ListLogbookOf(r.ctx(), project, agents, limit)
 	return fromTasks(ts), err
 }
 

@@ -12,7 +12,7 @@ func (m *Main) taskProjectRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.propRow(c, t, "project", m.say.ManagePropProject(), func() {
 		name, color := m.app.projectName(task.ProjectID), t.Text
 		if task.ProjectID == nil {
-			name, color = m.say.NavInbox(), t.TextTertiary
+			name, color = m.say.NavNoProject(), t.TextTertiary
 		}
 		btn := valueButton(c, t, "project").Label(m.say.ManageA11yProject(name))
 		if btn.Clicked() {

@@ -24,7 +24,6 @@ type screen = page.Screen
 const (
 	screenMine      = page.Mine
 	screenAgents    = page.Agents
-	screenInbox     = page.Inbox
 	screenProject   = page.Project
 	screenCompleted = page.Completed
 	screenCalendar  = page.Calendar
@@ -32,15 +31,14 @@ const (
 	screenRecent    = page.Recent
 )
 
-// nav says what the sidebar selected: Mine, Agents, the Inbox, or a project. It is comparable, so it keys
-// the per-screen state.
+// nav says what the window shows: Today (screenMine), Agents, a project, and so on. It is comparable,
+// so it keys the per-screen state.
 type nav struct {
 	screen    screen
 	projectID int
-	// cat narrows Mine to one category's page: its id, or catUnsorted; 0 is the whole of Mine.
-	cat int
-	// sub narrows Agents to one agent's page, by the agent's name; "" is the whole screen.
-	sub string
+	// agents narrows the history (screenCompleted) to what agents wrote; projectID narrows it to one
+	// project. Both zero is everything finished.
+	agents bool
 }
 
 // Main is the window: sidebar, one screen and the inspector, with the sheets that float over them.
@@ -56,12 +54,12 @@ type Main struct {
 	nav    nav
 	mine   data.Mine         // all of Mine this frame: the sidebar's count and the hop read it
 	agents data.AgentsScreen // all of Agents this frame
-	// minePage and agentsPage are what the open Mine or Agents page lists: the same as mine and
-	// agents, or one slice of them when nav.cat or nav.sub names one. slices holds the parts of Mine.
+	// minePage and agentsPage are what the open Today or Agents page lists: the same as mine and
+	// agents, or the part of Today in the category the filter bar names.
 	minePage   data.Mine
 	agentsPage data.AgentsScreen
-	slices     mineSlices
-	agentRows  []data.AgentTally   // the agents the sidebar lists under Agents
+	catFilter  int                 // the category the list is narrowed to by a chip, 0 for none
+	histBack   nav                 // where the history (screenCompleted) came from, for its back control
 	hop        hopper              // the hop to the Mine row, and the badge there
 	cols       columnsState        // a project's two columns, and where they were drawn
 	ho         handOffState        // handing a task to an agent, and its motion
@@ -83,7 +81,6 @@ type Main struct {
 	milestone map[int]int  // milestone filter per project, 0 for all
 	board     map[int]bool // projects shown as a board
 	expanded  map[nav]bool // Done and Backlog opened under a list
-	allDone   map[nav]bool // every Done task, not the recent three or five
 
 	cal       calendarState // the Calendar page: its month and its selected day
 	sum       summaryState  // the Summary page: its period, its scene, its paragraphs
@@ -128,7 +125,7 @@ type Main struct {
 func NewMain(a *App) *Main {
 	return &Main{
 		app: a, milestone: map[int]int{}, board: map[int]bool{}, rects: map[int]ui.Rect{}, prevRects: map[int]ui.Rect{},
-		expanded: map[nav]bool{}, allDone: map[nav]bool{},
+		expanded: map[nav]bool{},
 	}
 }
 
@@ -142,7 +139,7 @@ func (m *Main) OpenTask(id int) {
 	m.inspector.reset()
 }
 
-// ShowMine opens the Mine screen, whole.
+// ShowMine opens Today, whole.
 func (m *Main) ShowMine() { m.goTo(nav{}) }
 
 // ShowSummary opens the Summary page on today, or on this week. It plays the scene again.
@@ -169,6 +166,7 @@ func (m *Main) goTo(n nav) {
 		m.voiceCancel() // what is said belongs to the page it was said on
 		m.cmp[surfacePage].keepDraft(m.nav, n)
 		m.nav, m.openID, m.sel = n, 0, 0
+		m.catFilter = 0
 		m.multi.Clear()
 		m.scroll = ui.ScrollState{}
 	}
@@ -190,8 +188,8 @@ func (m *Main) View(c *ui.Context) {
 	if _, ok := m.app.Project(m.nav.projectID); m.nav.screen == screenProject && !ok {
 		m.goTo(nav{}) // archived or deleted, here or by another process
 	}
-	if _, ok := m.app.Category(m.nav.cat); m.nav.cat > 0 && !ok {
-		m.goTo(nav{}) // deleted, here or by another process
+	if _, ok := m.app.Category(m.catFilter); m.catFilter > 0 && !ok {
+		m.catFilter = 0 // deleted, here or by another process
 	}
 	if on := m.searching(); on != m.manage.search.was {
 		m.manage.search.was, m.scroll = on, ui.ScrollState{}
@@ -205,7 +203,7 @@ func (m *Main) View(c *ui.Context) {
 	m.width = m.contentWidth(c)
 	m.buildPages()
 	m.pg = m.pageNow()
-	m.onMine.Store(m.pg.Kind == page.KindMine && m.nav.cat == 0)
+	m.onMine.Store(m.pg.Kind == page.KindMine && m.catFilter == 0)
 	m.onSummary.Store(m.pg.Kind == page.KindSummary)
 	if m.pg.Kind != page.KindSummary {
 		m.leaveSummary()
@@ -285,14 +283,14 @@ func (m *Main) pageNow() page.Page {
 	in := page.In{
 		Screen: m.nav.screen, Searching: m.searching(), Board: m.showsBoard(),
 		Mine: m.minePage, Agents: m.agentsPage, Now: m.app.Now(),
-		Folds: [2]page.Fold{{Backlog: m.expanded[m.nav], AllDone: m.allDone[m.nav]}, {Backlog: m.cols.expanded[m.nav], AllDone: m.cols.allDone[m.nav]}},
+		Folds: [2]page.Fold{{Backlog: m.expanded[m.nav]}, {Backlog: m.cols.expanded[m.nav]}},
 	}
 	switch {
 	case in.Searching:
 		in.Found = m.searchFound()
 	case in.Screen == screenCompleted:
 		in.Done = m.completedTasks()
-	case in.Screen == screenInbox || in.Screen == screenProject:
+	case in.Screen == screenProject:
 		in.Tasks = m.selection(m.app.withCompleting)
 		if in.Board {
 			in.Cards = m.selection(m.app.withCompletingCards)

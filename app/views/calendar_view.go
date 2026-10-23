@@ -24,7 +24,7 @@ func (m *Main) calendarNav(c *ui.Context, t *theme.Tokens) {
 	ui.Row(c.Key("calendar-nav")).Shrink(0).Padding(2).Gap(2).Radius(8).Background(t.BgSubtle).Children(func() {
 		m.navButton(c, t, "prev", theme.IconBack, m.say.CalendarPrevious(), func() { m.shiftMonth(-1) })
 		today := ui.ButtonBase(c.Key("calendar-today")).Height(26).Padding(0, 12).Center().Radius(6).
-			Label(m.say.CalendarToday()).Cursor(ui.CursorPointer).Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))
+			Label(m.say.A11yCalendarToday()).Cursor(ui.CursorPointer).Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))
 		today.Children(func() { theme.Text(c, theme.Meta, t.Text, m.say.CalendarToday()) })
 		if today.Clicked() {
 			m.calendarToday()

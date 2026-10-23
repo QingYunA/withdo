@@ -86,7 +86,7 @@ func (m *Main) projectChoices(on func(project int) bool, run func(project int)) 
 	q := strings.ToLower(strings.TrimSpace(m.pop.filter))
 	hit := func(name string) bool { return q == "" || strings.Contains(strings.ToLower(name), q) }
 	var out []popSpec
-	if inbox := m.say.NavInbox(); hit(inbox) {
+	if inbox := m.say.NavNoProject(); hit(inbox) {
 		out = append(out, popSpec{key: "move-inbox", icon: theme.IconInbox, label: inbox, a11y: m.say.A11yMenuMoveTo(inbox), checked: on(0), run: func() { run(0) }})
 	}
 	for _, p := range m.app.snap.projects {

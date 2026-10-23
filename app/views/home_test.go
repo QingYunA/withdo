@@ -20,12 +20,12 @@ func TestHomeOpensWithTheBigInputAtTheTopAndNoBottomComposer(t *testing.T) {
 	r.tt.Frame()
 	has(t, r.tt, "Wednesday, October 14", "What do you want to do today?", heroPlaceholder, heroHint)
 	input, _ := r.tt.Find(heroPlaceholder)
-	today, ok := r.tt.Find("Today")
+	later, ok := r.tt.Find("Later")
 	if !ok {
-		t.Fatalf("no Today in %q", r.tt.Texts())
+		t.Fatalf("no Later in %q", r.tt.Texts())
 	}
-	if input.Y > 300 || input.Y > today.Y {
-		t.Errorf("the input is at %v and Today at %v: the input belongs at the top, over the lists", input.Y, today.Y)
+	if input.Y > 300 || input.Y > later.Y {
+		t.Errorf("the input is at %v and Later at %v: the input belongs at the top, over the lists", input.Y, later.Y)
 	}
 	if r.m.dockHeight != 0 {
 		t.Errorf("a composer dock of %v pt is pinned at the bottom of Home", r.m.dockHeight)
@@ -43,10 +43,10 @@ func TestHomeGreetingAndHintInChinese(t *testing.T) {
 	has(t, r.tt, "今天想做点什么？", "回车添加 · 在任何 App 里按 ⌥ Space · 一句话里可以有好几件事", "告诉我任何事，我来变成任务")
 }
 
-// Agents, the Inbox and the Calendar have no composer; a project keeps its small one.
+// Agents and the Calendar have no composer; a project keeps its small one.
 func TestOnlyProjectsKeepASmallInput(t *testing.T) {
 	for name, n := range map[string]nav{
-		"agents": {screen: screenAgents}, "inbox": {screen: screenInbox}, "calendar": {screen: screenCalendar},
+		"agents": {screen: screenAgents}, "calendar": {screen: screenCalendar},
 	} {
 		t.Run(name, func(t *testing.T) {
 			r := newAssistRig(t, &data.FakeAssistant{Ready: true})
@@ -68,7 +68,7 @@ func TestOnlyProjectsKeepASmallInput(t *testing.T) {
 
 // Cmd+K on a page with no composer goes to Home and puts the cursor in its big input.
 func TestCmdKFromAgentsGoesHomeAndFocusesTheBigInput(t *testing.T) {
-	for _, n := range []nav{{screen: screenAgents}, {screen: screenInbox}, {screen: screenCalendar}} {
+	for _, n := range []nav{{screen: screenAgents}, {screen: screenCalendar}} {
 		r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 		r.m.goTo(n)
 		r.tt.Frame()
@@ -108,7 +108,7 @@ func TestTheReceiptReplacesTheHintUnderTheBigInput(t *testing.T) {
 	has(t, tt, "Undo")
 	hasNot(t, tt, heroHint)
 	input, _ := tt.Find("Undo")
-	if h, _ := tt.Find("Today"); input.Y > h.Y {
+	if h, _ := tt.Find("Later"); input.Y > h.Y {
 		t.Errorf("the receipt (%v) is under the lists (%v), not under the input", input.Y, h.Y)
 	}
 }
@@ -119,9 +119,9 @@ func TestTheAgentsPanelSitsBesideTheListsInAWideWindow(t *testing.T) {
 	hasNot(t, tt, "From your agents")
 	has(t, tt, "3d", "25m") // the ages, at the right of the title lines
 	title, _ := tt.Find(panelTitle)
-	today, _ := tt.Find("Today")
-	if title.X < today.X+300 {
-		t.Errorf("the panel title at x=%v is not to the right of the lists at x=%v", title.X, today.X)
+	later, _ := tt.Find("Later")
+	if title.X < later.X+300 {
+		t.Errorf("the panel title at x=%v is not to the right of the lists at x=%v", title.X, later.X)
 	}
 }
 

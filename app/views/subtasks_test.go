@@ -20,13 +20,13 @@ func TestAgentsListsWorkingTasksWithTheirSubtasksUnderThem(t *testing.T) {
 	tt.SetSize(1100, 1000)
 	m.goTo(nav{screen: screenAgents})
 	tt.Frame()
-	has(t, tt, "Agents", "3 working", "Working", "Port core to Go", "Issue #218 adaptation", "Fix tray race on launch",
+	has(t, tt, "Agents", "3 working", "Claude Code", "Port core to Go", "Issue #218 adaptation", "Fix tray race on launch",
 		"Port the store and migrations", "Port the MCP tools", "Watch the database for changes", "Vendor icons and one-click install",
 		"Done today", "Port the MCP server", "1 subtask")
 	if !above(t, tt, "Port core to Go", "Port the store and migrations") || !above(t, tt, "Vendor icons and one-click install", "Issue #218 adaptation") {
 		t.Errorf("subtasks belong under their parent: %q", tt.Texts())
 	}
-	if !above(t, tt, "Working", "Port core to Go") || !above(t, tt, "Fix tray race on launch", "Done today") {
+	if !above(t, tt, "Claude Code", "Port core to Go") || !above(t, tt, "Fix tray race on launch", "Done today") {
 		t.Errorf("sections out of order: %q", tt.Texts())
 	}
 	hasNot(t, tt, "Cover the tools with tests") // a finished task's subtasks are a count, not rows
@@ -119,7 +119,6 @@ func TestSubtasksAreNeverTopLevelRowsInListsBoardsInboxAndCompleted(t *testing.T
 	hidden := append(subtaskTitles, "Inbox child")
 	for name, to := range map[string]nav{
 		"list":      {screen: screenProject, projectID: 1},
-		"inbox":     {screen: screenInbox},
 		"completed": {screen: screenCompleted},
 		"calendar":  {screen: screenCalendar},
 	} {

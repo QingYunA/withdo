@@ -88,19 +88,19 @@ func TestScreensTheHop(t *testing.T) {
 	}
 }
 
-// TestScreensSubRows renders the sidebar's sub-rows: the Work page of Mine, an agent's page of Agents
-// (Codex works on one task, so there are two agents to list), and the Category row's strip open in the
-// inspector.
-func TestScreensSubRows(t *testing.T) {
+// TestScreensFilterAndGroups renders Today narrowed to Work by a chip (the filter bar), Agents grouped
+// by agent (Codex works on one task, so there are two groups), and the Category row's strip open in
+// the inspector.
+func TestScreensFilterAndGroups(t *testing.T) {
 	screensTest(t)
 	for _, a := range appearances() {
 		app, store := mineApp(t)
 		store.SeedReportAs(15, "codex", "Writing tests for the reply parser", fixedNow().Add(-time.Minute))
 		app.Refresh()
-		mainShot(t, "mine-work-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
-		mainShot(t, "mine-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: lifeID}) })
-		mainShot(t, "agents-codex-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents, sub: "Codex"}) })
-		zhShot(t, "mine-work-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenMine, cat: workID}) })
+		mainShot(t, "mine-filter-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.catFilter = workID })
+		mainShot(t, "mine-filter-life-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.catFilter = lifeID })
+		mainShot(t, "agents-codex-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents}) })
+		zhShot(t, "mine-filter-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.catFilter = workID })
 		mainShot(t, "inspector-category-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
 			m.OpenTask(18)
 			tt.Frame()

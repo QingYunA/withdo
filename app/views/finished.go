@@ -144,19 +144,40 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 	}
 }
 
-// doneTodaySection is the last section of Mine: what was finished since midnight, by agents and by
-// me, newest first, five rows and then a link to Completed.
+// doneTodaySection is the last section of Today: what was finished since midnight, by agents and by
+// me, newest first, five rows. `See today` at the right of its header opens Summary; `Show all` at
+// its end opens the history of everything finished.
 func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, items []data.Item, more int) {
 	if len(items) == 0 {
 		return
 	}
 	m.section(c, "done-today", itemTasks(items), func() {
-		sectionHeader(c, t, m.say.SectionDoneToday(), len(items)+more)
+		sectionHeaderWith(c, t, m.say.SectionDoneToday(), len(items)+more, func() { m.seeToday(c, t) })
 		for _, it := range items {
 			m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), summary: true})
 		}
 	})
-	if more > 0 && link(c, t, m.say.NowShowAllInCompleted()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
-		m.goTo(nav{screen: screenCompleted})
+	if link(c, t, m.say.ShowAll()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
+		m.openHistory(0, false)
+	}
+}
+
+// seeToday is the link at the right of the Done today header that opens Summary: the words and a
+// pixel chevron.
+func (m *Main) seeToday(c *ui.Context, t *theme.Tokens) {
+	label := m.say.SeeToday()
+	btn := ui.ButtonBase(c.Key("see-today")).Shrink(0).Padding(2, 2, 2, 6).Radius(theme.RadiusControl).Label(label).Cursor(ui.CursorPointer)
+	ink := t.Accent
+	if btn.Hovered() {
+		ink = t.Accent.Mix(t.Text, 0.2)
+	}
+	btn.Children(func() {
+		ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() {
+			theme.Text(c, theme.Meta, ink, label)
+			ui.Icon(c, theme.IconForward).Size(theme.IconSmall, theme.IconSmall).TextColor(ink).Shrink(0)
+		})
+	})
+	if btn.Clicked() {
+		m.ShowSummary(false)
 	}
 }

@@ -265,11 +265,11 @@ func TestTheSpriteInFlightDoesNotBlockTheSidebar(t *testing.T) {
 	r.tt.Frame()
 	r.handOver("Port the watcher")
 	r.leave()
-	r.after(theme.HopLanding / 3) // over the Mine label
+	r.after(theme.HopLanding / 3) // over the Today label
 	if len(r.m.hop.flights) != 1 {
 		t.Fatal("no hop in flight")
 	}
-	if err := r.tt.Click("Mine"); err != nil {
+	if err := r.tt.Click("Today"); err != nil {
 		t.Fatal(err)
 	}
 	if r.m.nav.screen != screenMine {

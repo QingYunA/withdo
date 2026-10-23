@@ -84,9 +84,9 @@ func TestMainSaysWhetherItShowsAllOfMine(t *testing.T) {
 	if !m.ShowingMine() {
 		t.Error("ShowMine did not go back")
 	}
-	m.nav.cat = workID
+	m.catFilter = workID
 	tt.Frame()
 	if m.ShowingMine() {
-		t.Error("a slice of Mine hides the other rows")
+		t.Error("a category filter hides the other rows")
 	}
 }

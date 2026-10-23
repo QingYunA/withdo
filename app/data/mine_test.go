@@ -307,3 +307,39 @@ func TestCompletedBy(t *testing.T) {
 		t.Errorf("a task that is not done was finished by %q", by)
 	}
 }
+
+func TestBuildMineAllLaterLiftsTheCapOnUndatedTasks(t *testing.T) {
+	f := emptyDemo(t)
+	for i := 0; i < MaxUndated+3; i++ {
+		f.CreateTask(CreateTaskInput{Title: "Idea " + itoaT(i)})
+	}
+	in := mineInputOf(t, f)
+	if n := BuildMine(in); len(n.Later) != MaxUndated || n.MoreLater != 3 {
+		t.Fatalf("%d later rows and %d more, want the cap", len(n.Later), n.MoreLater)
+	}
+	in.AllLater = true
+	if n := BuildMine(in); len(n.Later) != MaxUndated+3 || n.MoreLater != 0 {
+		t.Errorf("%d later rows and %d more: no task of mine may be out of reach", len(n.Later), n.MoreLater)
+	}
+}
+
+func TestBuildMineKeepsTasksWithNoProjectParkedInTheBacklogReachable(t *testing.T) {
+	f := emptyDemo(t)
+	p := f.SeedProject("scratch", "me/scratch")
+	f.CreateTask(CreateTaskInput{Title: "Parked idea", Status: Backlog})
+	f.CreateTask(CreateTaskInput{Title: "Parked by an agent", Status: Backlog, Source: SourceAgent})
+	f.CreateTask(CreateTaskInput{Title: "Parked in a project", Status: Backlog, ProjectID: IntPtr(p.ID)}) // its project's page folds it
+	in := mineInputOf(t, f)
+	n := BuildMine(in)
+	if n.ParkedTotal != 2 || len(n.Parked) != 0 || n.Empty() != true {
+		t.Errorf("parked %d (%d rows drawn), empty %v: two are parked and the fold is closed", n.ParkedTotal, len(n.Parked), n.Empty())
+	}
+	in.ParkedOpen = true
+	n = BuildMine(in)
+	if got := titles(n.Parked); !equal(got, []string{"Parked by an agent", "Parked idea"}) {
+		t.Errorf("parked rows %q, want the newest first", got)
+	}
+	if len(n.IDs()) != 2 {
+		t.Errorf("ids %v: the open fold's rows are walked by the keys", n.IDs())
+	}
+}

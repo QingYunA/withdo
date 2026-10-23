@@ -60,7 +60,7 @@ func TestTheThirdEventReplacesThemWithOneSummaryThatLaterEventsUpdate(t *testing
 	r.now = r.now.Add(2 * time.Second)
 	r.event(data.EventStuck, 3)
 	last := r.shown[len(r.shown)-1]
-	if last.ID != SummaryID || last.Title != "3 things need you" || last.Body != "2 finished, 1 stuck · open Mine" {
+	if last.ID != SummaryID || last.Title != "3 things need you" || last.Body != "2 finished, 1 stuck · open Today" {
 		t.Errorf("summary = %+v", last)
 	}
 	if len(r.closed) != 2 || r.closed[0] != "task/1" || r.closed[1] != "task/2" {

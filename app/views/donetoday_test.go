@@ -51,7 +51,7 @@ func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
 	if tt.HasText("Nothing needs you right now") != true {
 		t.Error("Done today alone leaves Mine clear: nothing needs me")
 	}
-	if err := tt.Click("Show all in Completed"); err != nil {
+	if err := tt.Click("Show all"); err != nil {
 		t.Fatal(err)
 	}
 	if m.nav.screen != screenCompleted {
@@ -74,7 +74,7 @@ func TestDoneRowsNameWhoFinishedThemOnlyInCompleted(t *testing.T) {
 			t.Errorf("list: missing %q in %q", want, tt.Texts())
 		}
 	}
-	onlyInSidebar(t, tt, "Claude Code") // the columns say who finished a row
+	hasNot(t, tt, "Claude Code") // the columns say who finished a row
 	m.goTo(nav{screen: screenCompleted})
 	tt.Frame()
 	for _, want := range []string{"Claude Code", "You", "1:50 PM"} {

@@ -81,17 +81,17 @@ func dragOnto(t *testing.T, tt *ui.Tester, from, to string) {
 	tt.Release(tx, ty+8)
 }
 
-func TestTheSidebarHasACalendarRowBetweenInboxAndCompleted(t *testing.T) {
+func TestTheSidebarHasACalendarRowAfterAgentsAndBeforeTheProjects(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
-	has(t, tt, "Inbox", "Calendar", "Completed")
-	if !above(t, tt, "Inbox", "Calendar") || !above(t, tt, "Calendar", "Completed") {
-		t.Error("Calendar is not between Inbox and Completed")
+	has(t, tt, "Agents", "Calendar", "Projects")
+	if !above(t, tt, "Agents", "Calendar") || !above(t, tt, "Calendar", "Projects") {
+		t.Error("Calendar is not between Agents and Projects")
 	}
 	if err := tt.Click("Calendar"); err != nil {
 		t.Fatal(err)
 	}
-	has(t, tt, "October 2026", "Today")
+	has(t, tt, "October 2026", "Go to today")
 }
 
 func TestTheMonthIsTheTitleAndTheGridHasTheSundayFirstInEnglish(t *testing.T) {
@@ -303,7 +303,7 @@ func TestMonthButtonsAndToday(t *testing.T) {
 		t.Fatal(err)
 	}
 	has(t, tt, "September 2026")
-	if err := tt.Click("Today"); err != nil {
+	if err := tt.Click("Go to today"); err != nil {
 		t.Fatal(err)
 	}
 	has(t, tt, "October 2026")
@@ -315,9 +315,9 @@ func TestMonthButtonsAndToday(t *testing.T) {
 func TestTheKeyboardWalksTheDaysAndMonths(t *testing.T) {
 	app, _ := calendarApp(t)
 	tt, m, _ := newTesterFor(app, 1100)
-	tt.Key(ui.Cmd, ui.Key4)
+	tt.Key(ui.Cmd, ui.Key3)
 	if m.nav.screen != screenCalendar {
-		t.Fatal("Cmd+4 did not open the calendar")
+		t.Fatal("Cmd+3 did not open the calendar")
 	}
 	day := func() string { return m.calendarDay().Format("2006-01-02") }
 	for _, step := range []struct {

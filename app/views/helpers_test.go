@@ -142,14 +142,7 @@ func newTestApp(t *testing.T) (*App, *data.Real, *recorder) {
 	cfg.AgentSetup = newAgentRig(t).env
 	app := NewApp(store, rec, cfg)
 	app.Now = fixedNow
-	unfoldSidebar(app)
 	return app, store, rec
-}
-
-// unfoldSidebar shows the sub-rows of Mine and Agents, which are folded until the user unfolds them.
-func unfoldSidebar(app *App) {
-	app.SetMineOpen(true)
-	app.SetAgentsOpen(true)
 }
 
 func newEmptyApp(t *testing.T) (*App, *recorder) {
@@ -159,7 +152,6 @@ func newEmptyApp(t *testing.T) (*App, *recorder) {
 	cfg.AgentSetup = newAgentRig(t).env
 	app := NewApp(demoStore(t, fixedNow, false), rec, cfg)
 	app.Now = fixedNow
-	unfoldSidebar(app)
 	return app, rec
 }
 

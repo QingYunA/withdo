@@ -18,7 +18,7 @@ const archivedRows = 5
 // settingsURLNotifications opens the Notifications pane of System Settings.
 const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
 
-// generalPane is the language, the notifications, the updates, the archived projects, and where the data lives.
+// generalPane is the language, the notifications, the updates, the categories, the archived projects, and where the data lives.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
@@ -30,6 +30,7 @@ func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
 	if s.app.Act.CanUpdate() {
 		group(c, t, "updates", func() { s.updatesRow(c, t) })
 	}
+	s.categoriesGroup(c, t)
 	groupLabel(c, t, s.say.ManageArchivedTitle())
 	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 	group(c, t, "about", func() {

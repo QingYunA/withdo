@@ -41,8 +41,8 @@ func TestFromYourAgentsListsPullRequestsInThePlannedOrder(t *testing.T) {
 		"Native UI with mygo",     // ready for review
 	}
 	// A reminder of mine is not handed over: it is Today.
-	if !above(t, tt, "Native UI with mygo", "Today") || !above(t, tt, "Today", "Reply to design feedback") {
-		t.Errorf("the reminder should be under Today, below what agents handed over: %q", tt.Texts())
+	if !above(t, tt, "Native UI with mygo", "Reply to design feedback") {
+		t.Errorf("the reminder should be in Today, below what agents handed over: %q", tt.Texts())
 	}
 	for i := 1; i < len(order); i++ {
 		if !above(t, tt, order[i-1], order[i]) {
@@ -108,8 +108,8 @@ func TestKeepDismissesTheClosedRowAndLeavesTheTask(t *testing.T) {
 	m.goTo(nav{screen: screenAgents})
 	tt.Frame()
 	has(t, tt, "Rework the sync engine")
-	if !above(t, tt, "Working", "Rework the sync engine") {
-		t.Error("a kept task should be under Working")
+	if !above(t, tt, "Claude Code", "Rework the sync engine") {
+		t.Error("a kept task should be under its agent's header")
 	}
 }
 

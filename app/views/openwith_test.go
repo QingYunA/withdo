@@ -126,7 +126,7 @@ func TestTheOpenInPageIsQuietWhereTheTaskHasNoFolder(t *testing.T) {
 	store.SeedReport(data.Report{TaskID: task.ID, Agent: "gemini-cli", Summary: "hi", CreatedAt: fixedNow().Add(-time.Minute)})
 	app.Refresh()
 	tt, m, _ := newTesterFor(app, 1100)
-	m.goTo(nav{screen: screenInbox})
+	m.goTo(nav{screen: screenAgents})
 	tt.Frame()
 	rightClick(t, tt, "Lost agent")
 	click(t, tt, "Open in…")
@@ -145,7 +145,7 @@ func TestTheOpenInPageIsQuietWhereTheTaskHasNoFolder(t *testing.T) {
 func TestTheMenuOfMyOwnTaskHasNoOpenIn(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	tt, m, _ := newTesterFor(app, 1100)
-	m.goTo(nav{screen: screenInbox})
+	m.goTo(nav{})
 	tt.Frame()
 	rightClick(t, tt, "Book dentist")
 	hasNot(t, tt, "Open in…")

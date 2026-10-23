@@ -11,22 +11,69 @@ func completedTester(t *testing.T) (*ui.Tester, *Main, *App) {
 	t.Helper()
 	tt, m, app := newMainTester(t, 1100)
 	tt.Frame()
-	if err := tt.Click("Completed"); err != nil {
+	if err := tt.Click("Show all"); err != nil { // the end of Done today
 		t.Fatal(err)
 	}
 	return tt, m, app
 }
 
-func TestCompletedSitsUnderInboxInTheSidebar(t *testing.T) {
+func TestTheHistoryHasNoSidebarRowAndOpensFromShowAllWithABackControl(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
-	if !above(t, tt, "Inbox", "Completed") || !above(t, tt, "Completed", "Projects") {
-		t.Errorf("sidebar order: %q", tt.Texts())
+	hasNot(t, tt, "Completed")
+	if err := tt.Click("Show all"); err != nil {
+		t.Fatal(err)
 	}
-	tt.Key(ui.Cmd, ui.Key5)
-	if m.nav.screen != screenCompleted {
-		t.Errorf("Cmd+5 went to %+v", m.nav)
+	tt.Frame()
+	if m.nav != (nav{screen: screenCompleted}) || m.histBack != (nav{}) {
+		t.Fatalf("nav %+v, back %+v", m.nav, m.histBack)
 	}
+	has(t, tt, "Completed", "Done and cancelled, newest first", "Back to Today")
+	if err := tt.Click("Back to Today"); err != nil {
+		t.Fatal(err)
+	}
+	if m.nav != (nav{}) {
+		t.Errorf("the back control went to %+v", m.nav)
+	}
+}
+
+func TestShowAllOfAProjectOpensItsOwnHistoryAndGoesBackToIt(t *testing.T) {
+	tt, m, _ := projectTester(t, 1)
+	tt.SetSize(1100, 1600)
+	tt.Frame()
+	if err := tt.Click("Show all"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if want := (nav{screen: screenCompleted, projectID: 1}); m.nav != want {
+		t.Fatalf("nav %+v, want %+v", m.nav, want)
+	}
+	for _, task := range m.completedTasks() {
+		if task.ProjectID == nil || *task.ProjectID != 1 {
+			t.Errorf("task %q of another project is in this project's history", task.Title)
+		}
+	}
+	has(t, tt, "Back to adhd-todo")
+	click(t, tt, "Back to adhd-todo")
+	if want := (nav{screen: screenProject, projectID: 1}); m.nav != want {
+		t.Errorf("back went to %+v", m.nav)
+	}
+}
+
+func TestShowAllOfAgentsOpensWhatAgentsFinished(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	click(t, tt, "Agents")
+	click(t, tt, "Show all")
+	tt.Frame()
+	if want := (nav{screen: screenCompleted, agents: true}); m.nav != want {
+		t.Fatalf("nav %+v, want %+v", m.nav, want)
+	}
+	for _, task := range m.completedTasks() {
+		if task.Source != data.SourceAgent {
+			t.Errorf("%q was not written by an agent", task.Title)
+		}
+	}
+	has(t, tt, "Back to Agents")
 }
 
 func TestCompletedListsDoneAndCancelledNewestFirstGroupedByDay(t *testing.T) {
@@ -39,14 +86,14 @@ func TestCompletedListsDoneAndCancelledNewestFirstGroupedByDay(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.SetSize(1100, 900)
 	tt.Frame()
-	_ = tt.Click("Completed")
+	_ = tt.Click("Show all")
 	for _, want := range []string{"Completed", "Done and cancelled, newest first", "Today", "Yesterday", "Oct 12", "Oct 9", "Oct 8",
 		"Renew passport", "Draft the UI spec", "Spike the mygo shell", "Map worktrees to the main repo", "Pick a UI toolkit", "2:30 PM"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	order := []string{"Today", "Renew passport", "Yesterday", "Draft the UI spec", "Oct 12", "Spike the mygo shell", "Oct 9", "Map worktrees to the main repo", "Oct 8", "Pick a UI toolkit"}
+	order := []string{"Renew passport", "Yesterday", "Draft the UI spec", "Oct 12", "Spike the mygo shell", "Oct 9", "Map worktrees to the main repo", "Oct 8", "Pick a UI toolkit"}
 	for i := 1; i < len(order); i++ {
 		if !above(t, tt, order[i-1], order[i]) {
 			t.Errorf("%q should be above %q", order[i-1], order[i])
@@ -74,7 +121,7 @@ func TestCompletedGroupsTasksOfOneDayUnderOneHeader(t *testing.T) {
 			days++
 		}
 	}
-	if days != 1 {
+	if days != 3 { // the sidebar row, the back control and the one day header
 		t.Errorf("%d Today headers in %q", days, tt.Texts())
 	}
 }

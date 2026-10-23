@@ -263,7 +263,7 @@ func TestEscWhileTranscribingDropsTheAnswer(t *testing.T) {
 func TestLeavingThePageCancelsTheRecording(t *testing.T) {
 	v := newVoiceRig(t)
 	v.click(t, "Voice input")
-	v.m.goTo(nav{screen: screenInbox})
+	v.m.goTo(nav{screen: screenAgents})
 	if v.rc.cancelled != 1 || v.m.voice.phase != voiceIdle {
 		t.Fatalf("cancelled %d, phase %v", v.rc.cancelled, v.m.voice.phase)
 	}

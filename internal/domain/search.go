@@ -50,11 +50,24 @@ func (c *Core) SearchTasks(ctx context.Context, query string, limit int) ([]Task
 // a row that has no completion time). Tasks of archived projects are left out; limit is
 // DefaultTaskLimit when 0.
 func (c *Core) ListLogbook(ctx context.Context, limit int) ([]Task, error) {
+	return c.ListLogbookOf(ctx, 0, false, limit)
+}
+
+// ListLogbookOf is ListLogbook narrowed to one project (0 for all of them) or, with agents, to the
+// tasks agents wrote.
+func (c *Core) ListLogbookOf(ctx context.Context, project int, agents bool, limit int) ([]Task, error) {
 	if limit <= 0 {
 		limit = DefaultTaskLimit
 	}
-	rows, err := c.db.QueryContext(ctx, "SELECT "+taskCols+" FROM tasks WHERE status IN ('done','cancelled') AND "+liveProject+
-		" ORDER BY COALESCE(completed_at, updated_at) DESC, id DESC LIMIT ?", limit)
+	where, args := "status IN ('done','cancelled') AND "+liveProject, []any{}
+	if project > 0 {
+		where, args = where+" AND project_id = ?", append(args, project)
+	}
+	if agents {
+		where += " AND source = 'agent'"
+	}
+	rows, err := c.db.QueryContext(ctx, "SELECT "+taskCols+" FROM tasks WHERE "+where+
+		" ORDER BY COALESCE(completed_at, updated_at) DESC, id DESC LIMIT ?", append(args, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("list logbook: %w", err)
 	}

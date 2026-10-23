@@ -9,22 +9,19 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// mineScreen is Home: the date, a greeting and the big input; under them the lists of what is mine
-// (today, later, done today) and, beside them when the window is wide enough, the Agents panel with
-// what agents handed over. Narrower, that section shows at the top of the lists. A section with
-// nothing in it is not drawn; with nothing in any of them the screen says All clear.
+// mineScreen is Today, the home page: the date, a greeting and the big input; under them the lists of
+// what is mine (today, later, done today) and, beside them when the window is wide enough, the Agents
+// panel with what agents handed over. Narrower, that section shows at the top of the lists. A section
+// with nothing in it is not drawn; with nothing in any of them the screen says All clear.
 func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
-	// The title is the greeting. A category's page keeps its name at the left, over it.
-	m.pageHeaderOf(c, t, func() {
-		if m.nav.cat != 0 {
-			theme.Text(c, theme.Title, t.Text, m.mineTitle()).Shrink(0)
-		}
-	}, "", nil)
+	// The title is the greeting; the row holds the Select control.
+	m.pageHeaderOf(c, t, func() {}, "", nil)
 	if !m.app.snap.loaded {
 		return
 	}
 	m.mineHero(c, t)
 	m.belowComposer(c, func() {
+		m.filterBar(c, t)
 		if !m.mineSplit() {
 			m.mineLists(c, t, true)
 			return
@@ -122,10 +119,26 @@ func (m *Main) mineLists(c *ui.Context, t *theme.Tokens, inline bool) {
 	}
 	m.mineSection(c, t, m.say.SectionToday(), m.minePage.Today)
 	m.mineSection(c, t, m.say.SectionLater(), m.minePage.Later)
-	if m.minePage.MoreLater > 0 && link(c, t, m.say.NowShowAllInInbox()).Margin(8, 0, 0).Clicked() {
-		m.goTo(nav{screen: screenInbox})
+	if m.minePage.MoreLater > 0 && link(c, t, m.say.ShowAll()).Margin(8, 0, 0).Clicked() {
+		m.app.showAllLater = true
 	}
 	m.doneTodaySection(c, t, m.minePage.Done, m.minePage.MoreDone)
+	m.parkedSection(c, t)
+}
+
+// parkedSection is the last line of Today: the tasks parked in the backlog that no project holds,
+// folded as a project folds its Backlog, so no task of mine is left without a page.
+func (m *Main) parkedSection(c *ui.Context, t *theme.Tokens) {
+	n := m.minePage.ParkedTotal
+	if n == 0 {
+		return
+	}
+	if len(m.minePage.Parked) > 0 {
+		m.mineSection(c, t, statusLabel(m.say, data.Backlog), m.minePage.Parked)
+	}
+	if m.foldLine(c, t, n, m.app.parkedOpen, 16) {
+		m.app.parkedOpen = !m.app.parkedOpen
+	}
 }
 
 // agentsPanel is the column at the right of Home on the tray color: what agents handed over, the
@@ -219,9 +232,18 @@ func (m *Main) pageHeaderOf(c *ui.Context, t *theme.Tokens, title func(), sub st
 
 // sectionHeader is a section's title in sentence case, with its count.
 func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
+	sectionHeaderWith(c, t, title, n, nil)
+}
+
+// sectionHeaderWith is sectionHeader with something at the right end of the line.
+func sectionHeaderWith(c *ui.Context, t *theme.Tokens, title string, n int, end func()) {
 	ui.Row(c).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, title)
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
+		if end != nil {
+			ui.Spacer(c)
+			end()
+		}
 	})
 }
 

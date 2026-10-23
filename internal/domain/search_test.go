@@ -107,3 +107,21 @@ func TestListLogbookIsDoneAndCancelledNewestFirst(t *testing.T) {
 	must[*domain.Project](t)(c.ArchiveProject(ctx, p.ID))
 	sameTitles(t, "archived projects are left out", must[[]domain.Task](t)(c.ListLogbook(ctx, 0)), "c")
 }
+
+func TestListLogbookOfNarrowsToAProjectOrToWhatAgentsWrote(t *testing.T) {
+	c, clk := newCore(t)
+	p := mustProject(t, c, "acme/widgets")
+	mine := mustTask(t, c, domain.CreateTaskInput{Title: "mine", ProjectID: &p.ID})
+	theirs := mustTask(t, c, domain.CreateTaskInput{Title: "theirs", ProjectID: &p.ID, Source: domain.SourceAgent})
+	loose := mustTask(t, c, domain.CreateTaskInput{Title: "loose", Source: domain.SourceAgent})
+	other := mustTask(t, c, domain.CreateTaskInput{Title: "other"})
+	done := domain.StatusDone
+	for _, id := range []int64{mine.ID, theirs.ID, loose.ID, other.ID} {
+		clk.advance(time.Hour)
+		must[*domain.Task](t)(c.UpdateTask(ctx, id, domain.TaskPatch{Status: &done}))
+	}
+	sameTitles(t, "all", must[[]domain.Task](t)(c.ListLogbookOf(ctx, 0, false, 0)), "other", "loose", "theirs", "mine")
+	sameTitles(t, "one project", must[[]domain.Task](t)(c.ListLogbookOf(ctx, int(p.ID), false, 0)), "theirs", "mine")
+	sameTitles(t, "what agents wrote", must[[]domain.Task](t)(c.ListLogbookOf(ctx, 0, true, 0)), "loose", "theirs")
+	sameTitles(t, "an agent in a project", must[[]domain.Task](t)(c.ListLogbookOf(ctx, int(p.ID), true, 0)), "theirs")
+}
