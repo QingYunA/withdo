@@ -3,6 +3,19 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.8.1
+
+No database change: upgrading from 0.8.0 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **Signed in to the wrong account?** If this Mac (or phone) was syncing with one account and you
+  sign in with another, the app now asks first: sign in with the old account again, or move this
+  device to the new one, keeping every task. A device that belongs to another account says so, with
+  a Sign out button, instead of "server not responding".
+- **Link Google to your account** in Settings > Account (the Sync screen on Android), so Continue
+  with Google signs in to the account you already have.
+- "Server not responding" now shows only when the server really cannot be reached.
+
 ## 0.8.0
 
 No database change: upgrading from 0.7.3 is installing the app. On Windows, quit ADHD Todo and your
