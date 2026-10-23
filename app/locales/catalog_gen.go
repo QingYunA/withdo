@@ -11476,6 +11476,282 @@ func (msgs Messages) FoldAfterNextWeek() string {
 	return Catalog.Format(msgs.locale, "foldAfterNextWeek", nil)
 }
 
+// SettingsSyncWrongAccount says "This Mac is linked to another account. Sign out, then sign in with that account."
+// in the language the app shows.
+//
+// The line of This Mac's row when the signed-in account does not own this
+// Mac's device; Sign out is beside it.
+func SettingsSyncWrongAccount() string { return In(i18n.Locale()).SettingsSyncWrongAccount() }
+
+// SettingsSyncWrongAccount says "This Mac is linked to another account. Sign out, then sign in with that account."
+// in the language of msgs.
+//
+// The line of This Mac's row when the signed-in account does not own this
+// Mac's device; Sign out is beside it.
+func (msgs Messages) SettingsSyncWrongAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncWrongAccount", nil)
+}
+
+// SettingsSyncFailedOther says "something went wrong"
+// in the language the app shows.
+//
+// The reason of a failed sync when the cause is not one the pane knows.
+func SettingsSyncFailedOther() string { return In(i18n.Locale()).SettingsSyncFailedOther() }
+
+// SettingsSyncFailedOther says "something went wrong"
+// in the language of msgs.
+//
+// The reason of a failed sync when the cause is not one the pane knows.
+func (msgs Messages) SettingsSyncFailedOther() string {
+	return Catalog.Format(msgs.locale, "settingsSyncFailedOther", nil)
+}
+
+// SettingsSyncOtherTitle says "This Mac was linked to another account"
+// in the language the app shows.
+//
+// The title of the sheet shown when a sign-in succeeds as an account that
+// does not own this Mac.
+func SettingsSyncOtherTitle() string { return In(i18n.Locale()).SettingsSyncOtherTitle() }
+
+// SettingsSyncOtherTitle says "This Mac was linked to another account"
+// in the language of msgs.
+//
+// The title of the sheet shown when a sign-in succeeds as an account that
+// does not own this Mac.
+func (msgs Messages) SettingsSyncOtherTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherTitle", nil)
+}
+
+// SettingsSyncOtherBody says "It was synced with {previous}. You just signed in as {account}."
+// in the language the app shows.
+//
+// The line under the other-account sheet's title when the old email is
+// known.
+func SettingsSyncOtherBody(previous string, account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherBody(previous, account)
+}
+
+// SettingsSyncOtherBody says "It was synced with {previous}. You just signed in as {account}."
+// in the language of msgs.
+//
+// The line under the other-account sheet's title when the old email is
+// known.
+func (msgs Messages) SettingsSyncOtherBody(previous string, account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherBody", map[string]any{"previous": previous, "account": account})
+}
+
+// SettingsSyncOtherBodyUnknown says "You just signed in as {account}."
+// in the language the app shows.
+//
+// The line under the other-account sheet's title when the old email is not
+// remembered.
+func SettingsSyncOtherBodyUnknown(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherBodyUnknown(account)
+}
+
+// SettingsSyncOtherBodyUnknown says "You just signed in as {account}."
+// in the language of msgs.
+//
+// The line under the other-account sheet's title when the old email is not
+// remembered.
+func (msgs Messages) SettingsSyncOtherBodyUnknown(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherBodyUnknown", map[string]any{"account": account})
+}
+
+// SettingsSyncOtherOld says "Sign in with {previous} instead"
+// in the language the app shows.
+//
+// The recommended choice of the other-account sheet.
+func SettingsSyncOtherOld(previous string) string {
+	return In(i18n.Locale()).SettingsSyncOtherOld(previous)
+}
+
+// SettingsSyncOtherOld says "Sign in with {previous} instead"
+// in the language of msgs.
+//
+// The recommended choice of the other-account sheet.
+func (msgs Messages) SettingsSyncOtherOld(previous string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherOld", map[string]any{"previous": previous})
+}
+
+// SettingsSyncOtherOldAnother says "Sign in with another account"
+// in the language the app shows.
+//
+// The recommended choice of the other-account sheet when the old email is
+// not remembered.
+func SettingsSyncOtherOldAnother() string { return In(i18n.Locale()).SettingsSyncOtherOldAnother() }
+
+// SettingsSyncOtherOldAnother says "Sign in with another account"
+// in the language of msgs.
+//
+// The recommended choice of the other-account sheet when the old email is
+// not remembered.
+func (msgs Messages) SettingsSyncOtherOldAnother() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherOldAnother", nil)
+}
+
+// SettingsSyncOtherOldBody says "Sign out of {account} and sign in again with the account this Mac belongs to."
+// in the language the app shows.
+//
+// What the recommended choice of the other-account sheet does.
+func SettingsSyncOtherOldBody(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherOldBody(account)
+}
+
+// SettingsSyncOtherOldBody says "Sign out of {account} and sign in again with the account this Mac belongs to."
+// in the language of msgs.
+//
+// What the recommended choice of the other-account sheet does.
+func (msgs Messages) SettingsSyncOtherOldBody(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherOldBody", map[string]any{"account": account})
+}
+
+// SettingsSyncOtherMove says "Move this Mac to {account}"
+// in the language the app shows.
+//
+// The other choice of the other-account sheet.
+func SettingsSyncOtherMove(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMove(account)
+}
+
+// SettingsSyncOtherMove says "Move this Mac to {account}"
+// in the language of msgs.
+//
+// The other choice of the other-account sheet.
+func (msgs Messages) SettingsSyncOtherMove(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMove", map[string]any{"account": account})
+}
+
+// SettingsSyncOtherMoveBody says "This Mac's tasks go to {account}. They stay on this Mac; {previous} keeps its own copy."
+// in the language the app shows.
+//
+// What moving this Mac does, when the old email is known.
+func SettingsSyncOtherMoveBody(account string, previous string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMoveBody(account, previous)
+}
+
+// SettingsSyncOtherMoveBody says "This Mac's tasks go to {account}. They stay on this Mac; {previous} keeps its own copy."
+// in the language of msgs.
+//
+// What moving this Mac does, when the old email is known.
+func (msgs Messages) SettingsSyncOtherMoveBody(account string, previous string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBody", map[string]any{"account": account, "previous": previous})
+}
+
+// SettingsSyncOtherMoveBodyUnknown says "This Mac's tasks go to {account}. They stay on this Mac."
+// in the language the app shows.
+//
+// What moving this Mac does, when the old email is not remembered.
+func SettingsSyncOtherMoveBodyUnknown(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMoveBodyUnknown(account)
+}
+
+// SettingsSyncOtherMoveBodyUnknown says "This Mac's tasks go to {account}. They stay on this Mac."
+// in the language of msgs.
+//
+// What moving this Mac does, when the old email is not remembered.
+func (msgs Messages) SettingsSyncOtherMoveBodyUnknown(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBodyUnknown", map[string]any{"account": account})
+}
+
+// SettingsSyncGoogleRow says "Google"
+// in the language the app shows.
+//
+// The label of the Google row of the signed-in account.
+func SettingsSyncGoogleRow() string { return In(i18n.Locale()).SettingsSyncGoogleRow() }
+
+// SettingsSyncGoogleRow says "Google"
+// in the language of msgs.
+//
+// The label of the Google row of the signed-in account.
+func (msgs Messages) SettingsSyncGoogleRow() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleRow", nil)
+}
+
+// SettingsSyncGoogleLink says "Link"
+// in the language the app shows.
+//
+// The button that links a Google account to the signed-in account.
+func SettingsSyncGoogleLink() string { return In(i18n.Locale()).SettingsSyncGoogleLink() }
+
+// SettingsSyncGoogleLink says "Link"
+// in the language of msgs.
+//
+// The button that links a Google account to the signed-in account.
+func (msgs Messages) SettingsSyncGoogleLink() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLink", nil)
+}
+
+// SettingsSyncGoogleLinked says "Linked"
+// in the language the app shows.
+//
+// The state of the Google row when the account has Google.
+func SettingsSyncGoogleLinked() string { return In(i18n.Locale()).SettingsSyncGoogleLinked() }
+
+// SettingsSyncGoogleLinked says "Linked"
+// in the language of msgs.
+//
+// The state of the Google row when the account has Google.
+func (msgs Messages) SettingsSyncGoogleLinked() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLinked", nil)
+}
+
+// SettingsSyncGoogleLinkWaiting says "Finish in your browser"
+// in the language the app shows.
+//
+// The state of the Google row while the browser shows Google's page.
+func SettingsSyncGoogleLinkWaiting() string { return In(i18n.Locale()).SettingsSyncGoogleLinkWaiting() }
+
+// SettingsSyncGoogleLinkWaiting says "Finish in your browser"
+// in the language of msgs.
+//
+// The state of the Google row while the browser shows Google's page.
+func (msgs Messages) SettingsSyncGoogleLinkWaiting() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLinkWaiting", nil)
+}
+
+// SettingsSyncGoogleLinkUsed says "This Google account is already used by another account"
+// in the language the app shows.
+//
+// The line when the chosen Google account belongs to another account.
+func SettingsSyncGoogleLinkUsed() string { return In(i18n.Locale()).SettingsSyncGoogleLinkUsed() }
+
+// SettingsSyncGoogleLinkUsed says "This Google account is already used by another account"
+// in the language of msgs.
+//
+// The line when the chosen Google account belongs to another account.
+func (msgs Messages) SettingsSyncGoogleLinkUsed() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLinkUsed", nil)
+}
+
+// SettingsSyncGoogleLinkFailed says "Google didn't finish; try again"
+// in the language the app shows.
+//
+// The line when linking Google failed.
+func SettingsSyncGoogleLinkFailed() string { return In(i18n.Locale()).SettingsSyncGoogleLinkFailed() }
+
+// SettingsSyncGoogleLinkFailed says "Google didn't finish; try again"
+// in the language of msgs.
+//
+// The line when linking Google failed.
+func (msgs Messages) SettingsSyncGoogleLinkFailed() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLinkFailed", nil)
+}
+
+// SettingsSyncGoogleLinkNetwork says "Couldn't reach the server; check the connection"
+// in the language the app shows.
+//
+// The line when linking Google failed for the network.
+func SettingsSyncGoogleLinkNetwork() string { return In(i18n.Locale()).SettingsSyncGoogleLinkNetwork() }
+
+// SettingsSyncGoogleLinkNetwork says "Couldn't reach the server; check the connection"
+// in the language of msgs.
+//
+// The line when linking Google failed for the network.
+func (msgs Messages) SettingsSyncGoogleLinkNetwork() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoogleLinkNetwork", nil)
+}
+
 // PillToReview says "To review"
 // in the language the app shows.
 //

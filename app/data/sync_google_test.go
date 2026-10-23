@@ -42,10 +42,16 @@ func addGoogle(t *testing.T, f *codeServer, withProvider bool) func(code, errTex
 	})
 	f.mux.HandleFunc("POST /api/realtime", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) })
 	f.mux.HandleFunc("POST /api/collections/users/auth-with-oauth2", func(w http.ResponseWriter, _ *http.Request) {
-		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix()})
+		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
+		f.mu.Lock()
+		id := "rec1"
+		if f.foreignID != "" {
+			id = f.foreignID
+		}
+		f.mu.Unlock()
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
-			"record": map[string]any{"email": "ada@gmail.com", "name": "Ada"},
+			"record": map[string]any{"id": id, "email": "ada@gmail.com", "name": "Ada"},
 		})
 	})
 	return func(code, errText string) {

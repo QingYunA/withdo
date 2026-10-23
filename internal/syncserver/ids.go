@@ -45,7 +45,7 @@ func (s *Server) leaseIDs(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1 AND workspace_id = $2 AND user_id = $3`,
 		req.DeviceID, sess.workspaceID, sess.userID).Scan(&ignored); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(w, forbidden("device does not belong to this user"))
+			writeError(w, deviceNotInAccount())
 			return
 		}
 		writeError(w, fmt.Errorf("read device: %w", err))

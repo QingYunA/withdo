@@ -44,7 +44,7 @@ func (c *Client) events(ctx context.Context, deviceID string, onPoke func()) err
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode/100 != 2 {
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return &statusError{status: resp.StatusCode, message: errorMessage(raw)}
+		return newStatusError(resp.StatusCode, raw)
 	}
 
 	reader := bufio.NewReader(resp.Body)

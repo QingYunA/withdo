@@ -56,12 +56,15 @@ import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
+import xyz.sriai.adhdtodo.ui.theme.GoogleMark
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import xyz.sriai.adhdtodo.ui.theme.PixelIcon
 import java.net.URI
 
 /** The states the Sync screen draws, derived from the core or overridden in a debug build. */
-enum class SyncPhase { SIGNED_OUT, SIGNING_IN, CHOOSE, SYNCED, UPLOADING, FAILED, OFFLINE }
+enum class SyncPhase {
+    SIGNED_OUT, SIGNING_IN, CHOOSE, OTHER_ACCOUNT, WRONG_ACCOUNT, SYNCED, UPLOADING, FAILED, OFFLINE,
+}
 
 /** Everything the Sync screen draws in one frame. */
 data class SyncModel(
@@ -77,6 +80,10 @@ data class SyncModel(
     val typedCode: String = "",
     /** The server lists a Google provider: the email step shows Continue with Google. */
     val googleAvailable: Boolean = false,
+    /** The other_account answer, for the sheet that asks which account this phone belongs to. */
+    val otherAccount: SignInState = SignInState(),
+    /** The Google row of the signed-in card. */
+    val googleLink: GoogleLinkRow = GoogleLinkRow(),
 )
 
 /** The account's display name, else its email, else the quiet "Account". */
@@ -107,10 +114,18 @@ fun SyncScreen(
     onServerDraft: (String) -> Unit,
     onSaveServer: () -> Unit,
     onCancelServerEdit: () -> Unit,
+    /** Choice 1 of the other-account sheet: sign out, then the email card with this address. */
+    onUseOldAccount: (String) -> Unit = {},
+    /** Choice 2 of the other-account sheet: link this phone to the account that signed in. */
+    onMoveToAccount: () -> Unit = {},
+    onGoogleLink: () -> Unit = {},
+    onCancelGoogleLink: () -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    var sheetOpen by remember(model.phase) { mutableStateOf(model.phase == SyncPhase.CHOOSE) }
+    var sheetOpen by remember(model.phase) {
+        mutableStateOf(model.phase == SyncPhase.CHOOSE || model.phase == SyncPhase.OTHER_ACCOUNT)
+    }
     val signInStage = signInStageOf(model.phase == SyncPhase.SIGNING_IN, model.status.signInStage)
 
     Column(Modifier.fillMaxWidth()) {
@@ -122,14 +137,25 @@ fun SyncScreen(
                 initialCode = model.typedCode,
                 googleAvailable = model.googleAvailable,
             )
-            SyncPhase.CHOOSE -> {
+            SyncPhase.CHOOSE, SyncPhase.OTHER_ACCOUNT -> {
                 GroupCard {
                     SyncAccountRow(model, words, onSignOut)
+                }
+            }
+            SyncPhase.WRONG_ACCOUNT -> {
+                GroupCard {
+                    SyncAccountRow(model, words, onSignOut, showSignOut = false)
+                    RowRule()
+                    WrongAccountRow(onSignOut)
                 }
             }
             SyncPhase.SYNCED, SyncPhase.UPLOADING, SyncPhase.FAILED, SyncPhase.OFFLINE -> {
                 GroupCard {
                     SyncAccountRow(model, words, onSignOut)
+                    if (model.googleLink.shown) {
+                        RowRule()
+                        GoogleLinkRowView(model.googleLink, onGoogleLink, onCancelGoogleLink)
+                    }
                     RowRule()
                     ThisPhoneRow(model, words, onSyncNow, onRetry)
                 }
@@ -164,6 +190,30 @@ fun SyncScreen(
             onSave = onSaveServer,
             onCancel = onCancelServerEdit,
         )
+    }
+
+    if (sheetOpen && model.phase == SyncPhase.OTHER_ACCOUNT) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                sheetOpen = false
+                onCancelChoose()
+            },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = tokens.bg,
+            contentColor = tokens.text,
+        ) {
+            OtherAccountSheet(
+                answer = model.otherAccount,
+                onCancel = {
+                    sheetOpen = false
+                    onCancelChoose()
+                },
+                onContinue = { useOld ->
+                    sheetOpen = false
+                    if (useOld) onUseOldAccount(model.otherAccount.previousEmail) else onMoveToAccount()
+                },
+            )
+        }
     }
 
     if (sheetOpen && model.phase == SyncPhase.CHOOSE) {
@@ -246,7 +296,7 @@ internal fun SignInField(
 }
 
 @Composable
-private fun SyncAccountRow(model: SyncModel, words: Words, onSignOut: () -> Unit) {
+private fun SyncAccountRow(model: SyncModel, words: Words, onSignOut: () -> Unit, showSignOut: Boolean = true) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     Row(
@@ -272,7 +322,53 @@ private fun SyncAccountRow(model: SyncModel, words: Words, onSignOut: () -> Unit
                 color = tokens.textSecondary,
             )
         }
-        TextLink(stringResource(R.string.sync_sign_out), onSignOut)
+        if (showSignOut) TextLink(stringResource(R.string.sync_sign_out), onSignOut)
+    }
+}
+
+/** The phone's row in the wrong account: no sync line, no retry; the way out is Sign out. */
+@Composable
+private fun WrongAccountRow(onSignOut: () -> Unit) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.sync_this_phone), style = type.body, color = tokens.text)
+            Text(stringResource(R.string.sync_wrong_account), style = type.meta, color = tokens.statusBlocked)
+        }
+        QuietButton(stringResource(R.string.sync_sign_out), onClick = onSignOut)
+    }
+}
+
+/** The signed-in card's Google row: Link, a wait with Cancel, or Linked. */
+@Composable
+private fun GoogleLinkRowView(row: GoogleLinkRow, onLink: () -> Unit, onCancel: () -> Unit) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        GoogleMark(20.dp)
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.sync_google), style = type.body, color = tokens.text)
+            row.message?.let {
+                Text(stringResource(it), style = type.meta, color = tokens.statusBlocked)
+            }
+        }
+        when {
+            row.linked -> Text(stringResource(R.string.sync_google_linked), style = type.meta, color = tokens.statusDone)
+            row.busy -> {
+                PixelSpinner(size = 14.dp, color = tokens.textSecondary)
+                TextLink(stringResource(R.string.sync_google_cancel), onCancel, color = tokens.textSecondary)
+            }
+            else -> QuietButton(stringResource(R.string.sync_google_link), onClick = onLink)
+        }
     }
 }
 
@@ -303,11 +399,7 @@ private fun ThisPhoneRow(model: SyncModel, words: Words, onSyncNow: () -> Unit, 
                     PixelProgressBar(done = done, total = total, modifier = Modifier.padding(top = 6.dp))
                 }
                 SyncPhase.FAILED -> {
-                    val reason = if (isAuthFailure(model.status.lastError)) {
-                        stringResource(R.string.sync_failed_auth)
-                    } else {
-                        stringResource(R.string.sync_failed_no_answer)
-                    }
+                    val reason = stringResource(syncFailureText(syncFailureOf(model.status.lastError)))
                     Text(
                         buildAnnotatedString {
                             withStyle(SpanStyle(color = tokens.statusBlocked)) {
@@ -509,6 +601,70 @@ private fun ChooseSheet(
     }
 }
 
+/** The sheet after a sign-in found this phone linked to another account. */
+@Composable
+private fun OtherAccountSheet(
+    answer: SignInState,
+    onCancel: () -> Unit,
+    onContinue: (Boolean) -> Unit,
+) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    var useOld by remember { mutableStateOf(true) }
+    val previous = answer.previousEmail
+    val current = answer.accountEmail
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            stringResource(R.string.sync_other_title),
+            style = type.input.copy(fontWeight = FontWeight.SemiBold),
+            color = tokens.text,
+        )
+        Text(
+            if (previous.isNotEmpty()) {
+                stringResource(R.string.sync_other_body_previous, previous, current)
+            } else {
+                stringResource(R.string.sync_other_body, current)
+            },
+            style = type.meta,
+            color = tokens.textSecondary,
+        )
+        ChoiceCard(
+            selected = useOld,
+            title = if (previous.isNotEmpty()) {
+                stringResource(R.string.sync_other_back, previous)
+            } else {
+                stringResource(R.string.sync_other_back_unknown)
+            },
+            body = stringResource(R.string.sync_other_back_body, current),
+            recommended = true,
+            onClick = { useOld = true },
+        )
+        ChoiceCard(
+            selected = !useOld,
+            title = stringResource(R.string.sync_other_move, current),
+            body = if (previous.isNotEmpty()) {
+                stringResource(R.string.sync_other_move_body_previous, current, previous)
+            } else {
+                stringResource(R.string.sync_other_move_body, current)
+            },
+            recommended = false,
+            onClick = { useOld = false },
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            QuietButton(stringResource(R.string.action_cancel), onClick = onCancel)
+            Spacer(Modifier.width(8.dp))
+            PrimaryButton(stringResource(R.string.sync_continue), onClick = { onContinue(useOld) })
+        }
+    }
+}
+
 @Composable
 private fun ChoiceCard(
     selected: Boolean,
@@ -536,7 +692,7 @@ private fun ChoiceCard(
         Box(Modifier.padding(top = 3.dp)) { RadioDot(selected) }
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(title, style = type.body, color = tokens.text)
+                Text(title, style = type.body, color = tokens.text, modifier = Modifier.weight(1f, fill = false))
                 if (recommended) AccentTag(stringResource(R.string.sync_recommended))
             }
             Text(body, style = type.meta, color = tokens.textSecondary)
@@ -554,11 +710,18 @@ private fun serverHost(server: String): String {
 }
 
 /** Derives the screen's phase from the core's answer. */
-fun syncPhaseOf(status: SyncStatus, signingIn: Boolean, choosing: Boolean): SyncPhase = when {
+fun syncPhaseOf(
+    status: SyncStatus,
+    signingIn: Boolean,
+    choosing: Boolean,
+    otherAccount: Boolean = false,
+): SyncPhase = when {
+    otherAccount -> SyncPhase.OTHER_ACCOUNT
     choosing -> SyncPhase.CHOOSE
     signingIn -> SyncPhase.SIGNING_IN
     !status.linked -> SyncPhase.SIGNED_OUT
     !status.signedIn -> SyncPhase.SIGNED_OUT
+    status.state == SYNC_WRONG_ACCOUNT -> SyncPhase.WRONG_ACCOUNT
     status.state == "seeding" -> SyncPhase.UPLOADING
     status.state == "error" -> SyncPhase.FAILED
     status.state == "offline" -> SyncPhase.OFFLINE

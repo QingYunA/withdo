@@ -31,6 +31,12 @@ type fakeGoogle struct {
 	exchange    map[string]string // the body fields of the last auth-with-oauth2
 	exchangeBad bool
 	next        int
+	// authHeader is the Authorization of the last exchange; foreignID makes the answer name another
+	// record, as PocketBase does for a Google identity another account owns; linked is what the
+	// _externalAuths list answers.
+	authHeader string
+	foreignID  string
+	linked     bool
 }
 
 func newFakeGoogle(t *testing.T) *fakeGoogle {
@@ -42,6 +48,7 @@ func newFakeGoogle(t *testing.T) *fakeGoogle {
 	mux.HandleFunc("POST /api/realtime", f.subscribe)
 	mux.HandleFunc("GET /api/oauth2-redirect", f.redirect)
 	mux.HandleFunc("POST /api/collections/users/auth-with-oauth2", f.authWithOAuth2)
+	mux.HandleFunc("GET /api/collections/_externalAuths/records", f.externalAuths)
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
 	return f
@@ -115,7 +122,12 @@ func (f *fakeGoogle) authWithOAuth2(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	f.mu.Lock()
 	f.exchange = body
+	f.authHeader = r.Header.Get("Authorization")
 	bad := f.exchangeBad
+	id := "rec1"
+	if f.foreignID != "" {
+		id = f.foreignID
+	}
 	f.mu.Unlock()
 	if bad {
 		http.Error(w, "{}", http.StatusBadRequest)
@@ -125,7 +137,77 @@ func (f *fakeGoogle) authWithOAuth2(w http.ResponseWriter, r *http.Request) {
 	token := f.pb.mint()
 	f.pb.mu.Unlock()
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"token": token, "record": map[string]string{"email": "ada@example.com", "name": "Ada Google"},
+		"token": token, "record": map[string]string{"id": id, "email": "ada@example.com", "name": "Ada Google"},
+	})
+}
+
+func (f *fakeGoogle) externalAuths(w http.ResponseWriter, r *http.Request) {
+	f.mu.Lock()
+	linked := f.linked
+	f.mu.Unlock()
+	if r.Header.Get("Authorization") == "" {
+		http.Error(w, "{}", http.StatusUnauthorized)
+		return
+	}
+	items := []map[string]string{}
+	if linked && r.URL.Query().Get("filter") == "provider='google'" {
+		items = append(items, map[string]string{"provider": "google"})
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"items": items})
+}
+
+func TestLinkGoogleSendsTheSignInToken(t *testing.T) {
+	g := newFakeGoogle(t)
+	secrets := newFakeSecrets()
+	source := syncclient.NewPocketBaseSource(g.URL, secrets)
+	ctx := context.Background()
+	if err := source.SignInWithGoogle(ctx, g.URL, g.browser(t, "authcode", "")); err != nil {
+		t.Fatal(err)
+	}
+	token, _ := source.Token(ctx)
+	if linked, err := source.GoogleLinked(ctx, g.URL); err != nil || linked {
+		t.Fatalf("linked = %v, %v, want false", linked, err)
+	}
+	g.linked = true
+	if linked, err := source.GoogleLinked(ctx, g.URL); err != nil || !linked {
+		t.Fatalf("linked = %v, %v, want true", linked, err)
+	}
+	if err := source.LinkGoogle(ctx, g.URL, g.browser(t, "authcode", "")); err != nil {
+		t.Fatalf("link: %v", err)
+	}
+	if g.authHeader != token {
+		t.Fatalf("the exchange carried %q, want the signed-in token", g.authHeader)
+	}
+}
+
+func TestLinkGoogleFailures(t *testing.T) {
+	t.Run("a Google account of another record", func(t *testing.T) {
+		g := newFakeGoogle(t)
+		source := syncclient.NewPocketBaseSource(g.URL, newFakeSecrets())
+		ctx := context.Background()
+		if err := source.SignInWithGoogle(ctx, g.URL, g.browser(t, "authcode", "")); err != nil {
+			t.Fatal(err)
+		}
+		before, _ := source.Token(ctx)
+		g.foreignID = "someone-else"
+		err := source.LinkGoogle(ctx, g.URL, g.browser(t, "authcode", ""))
+		if !errors.Is(err, syncclient.ErrGoogleAlreadyLinked) {
+			t.Fatalf("err = %v, want ErrGoogleAlreadyLinked", err)
+		}
+		if after, _ := source.Token(ctx); after != before {
+			t.Fatal("the refused link replaced the token")
+		}
+	})
+	t.Run("signed out", func(t *testing.T) {
+		g := newFakeGoogle(t)
+		source := syncclient.NewPocketBaseSource(g.URL, newFakeSecrets())
+		err := source.LinkGoogle(context.Background(), g.URL, func(string) error {
+			t.Error("the browser should not open")
+			return nil
+		})
+		if !errors.Is(err, syncclient.ErrSignedOut) {
+			t.Fatalf("err = %v, want ErrSignedOut", err)
+		}
 	})
 }
 

@@ -67,6 +67,18 @@ func syncScreenStates() []struct {
 	offline := synced
 	offline.Phase = data.SyncOffline
 	offline.Pending = 3
+	wrongDevice := synced
+	wrongDevice.Phase, wrongDevice.Failure = data.SyncWrongAccount, data.SyncFailureWrongAccount
+	wrongDevice.LastError = "sync: this device is linked to another account (status 403)"
+	wrongDevice.Pending = 204
+	otherSheet := both
+	otherSheet.Phase, otherSheet.Conflict = data.SyncOtherAccountSheet, nil
+	otherSheet.Account = "Bee"
+	otherSheet.OtherAccount = &data.SyncOtherAccount{PreviousEmail: "serein7z@163.com", AccountEmail: "bee@example.com"}
+	googleLink := synced
+	googleLink.GoogleLink = data.GoogleLinkAvailable
+	googleLinked := synced
+	googleLinked.GoogleLink = data.GoogleLinkLinked
 	return []struct {
 		name  string
 		snap  data.SyncSnapshot
@@ -88,6 +100,10 @@ func syncScreenStates() []struct {
 		{"synced", synced, nil},
 		{"failed", failed, nil},
 		{"offline", offline, nil},
+		{"wrong-device", wrongDevice, nil},
+		{"other-account-sheet", otherSheet, nil},
+		{"google-link", googleLink, nil},
+		{"google-linked", googleLinked, nil},
 	}
 }
 

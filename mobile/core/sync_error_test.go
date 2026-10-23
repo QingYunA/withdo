@@ -37,7 +37,7 @@ func TestSyncErrorMapsNetworkFailures(t *testing.T) {
 		{"timeout", &net.OpError{Op: "read", Net: "tcp", Err: timeoutError{}}, unreachable},
 		{"context deadline", context.DeadlineExceeded, unreachable},
 		{"cancelled", context.Canceled, "the sync was cancelled"},
-		{"ordinary", errors.New("a row did not fit"), "could not sync; check the connection and try again"},
+		{"ordinary", errors.New("a row did not fit"), "something went wrong; try again"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

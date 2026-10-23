@@ -29,7 +29,10 @@ import xyz.sriai.adhdtodo.core.Listener
 import xyz.sriai.adhdtodo.platform.KeystoreSecrets
 import xyz.sriai.adhdtodo.platform.ReminderReceiver
 import xyz.sriai.adhdtodo.platform.Reminders
+import xyz.sriai.adhdtodo.data.PageJson
+import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.ui.App
+import xyz.sriai.adhdtodo.ui.syncRunnerMayStart
 import xyz.sriai.adhdtodo.ui.theme.AdhdTheme
 import xyz.sriai.adhdtodo.ui.theme.AppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
@@ -111,6 +114,9 @@ class MainActivity : ComponentActivity(), Listener {
     override fun onStart() {
         super.onStart()
         val opened = core ?: return
+        // A phone in the wrong account does not retry; signing out or moving it starts the runner.
+        val state = runCatching { PageJson.decodeFromString<SyncStatus>(status.value).state }.getOrDefault("")
+        if (!syncRunnerMayStart(state)) return
         lifecycleScope.launch(Dispatchers.IO) { runCatching { opened.startSync() } }
     }
 

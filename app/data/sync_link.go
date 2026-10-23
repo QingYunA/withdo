@@ -69,6 +69,10 @@ func (r *Real) signIn(server, loginName, password string) {
 func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.Config, tokens syncclient.AccountSource) {
 	r.setSignInStage(SignInStageDownloading)
 	account, hasAccount := tokens.Account()
+	// The account this Mac was last signed in as, read before the new one replaces it.
+	r.mu.Lock()
+	previousAccount := r.sync.account
+	r.mu.Unlock()
 	if hasAccount {
 		cfg.Account = &account
 	}
@@ -91,7 +95,29 @@ func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.C
 	linked := r.sync.linked
 	r.mu.Unlock()
 	if linked {
-		// The database kept its device when the user signed out: signing in again resumes it.
+		// The database kept its device when the user signed out: signing in again resumes it, when
+		// the account that signed in owns that device. Another account must not sync it.
+		switch err := client.CheckDeviceAccount(ctx); {
+		case err == nil:
+			r.rememberAccount(client)
+		case errors.Is(err, syncclient.ErrDeviceNotInAccount):
+			previous := client.RememberedAccount(ctx)
+			if previous == "" {
+				previous = previousAccount.Email
+			}
+			if emailsEqual(previous, account.Email) {
+				previous = ""
+			}
+			r.mu.Lock()
+			r.sync.signingIn = false
+			r.sync.signInStage = SignInStageNone
+			r.sync.signInFailure = SignInFailureNone
+			r.sync.code = r.sync.code.cleared()
+			r.sync.other = &SyncOtherAccount{PreviousEmail: previous, AccountEmail: account.Email}
+			r.mu.Unlock()
+			r.syncChanged()
+			return
+		}
 		r.mu.Lock()
 		r.sync.signingIn = false
 		r.sync.signInStage = SignInStageNone
@@ -120,6 +146,7 @@ func (r *Real) finishSignIn(ctx context.Context, server string, cfg syncclient.C
 		r.failSignIn(err)
 		return
 	}
+	r.rememberAccount(client)
 	r.mu.Lock()
 	r.sync.linked = true
 	r.sync.signingIn = false
@@ -241,6 +268,7 @@ func (r *Real) SyncUseAccount() {
 
 // finishLink records a successful LinkMerge or LinkReplace and starts the runner.
 func (r *Real) finishLink(client *syncclient.Client) {
+	r.rememberAccount(client)
 	r.mu.Lock()
 	r.sync.linked = true
 	r.sync.signingIn = false
@@ -260,7 +288,8 @@ func (r *Real) finishLink(client *syncclient.Client) {
 func (r *Real) SyncCancel() {
 	r.mu.Lock()
 	conflict := r.sync.conflict
-	r.sync.conflict = nil
+	other := r.sync.other
+	r.sync.conflict, r.sync.other = nil, nil
 	r.sync.code = r.sync.code.cleared()
 	googleCancelled := r.cancelGoogleLocked()
 	r.sync.signingIn = false
@@ -278,7 +307,7 @@ func (r *Real) SyncCancel() {
 	r.sync.account, r.sync.hasAccount = syncclient.Account{}, false
 	r.sync.tokens, r.sync.client = nil, nil
 	r.mu.Unlock()
-	if conflict == nil {
+	if conflict == nil && other == nil {
 		if googleCancelled {
 			r.syncChanged()
 		}

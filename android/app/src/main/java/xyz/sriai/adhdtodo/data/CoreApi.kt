@@ -111,6 +111,24 @@ class CoreApi(private val core: Core_) {
 
     fun codeState(): CodeState = PageJson.decodeFromString(core.codeState())
 
+    /** The other_account sheet's "Move this phone": links this phone to the signed-in account. */
+    fun moveToAccount(deviceName: String): SignInState =
+        PageJson.decodeFromString(core.moveToAccount(deviceName))
+
+    /** Whether the Google row shows: signed in and the server offers Google. Reads the network. */
+    fun googleLinkAvailable(): Boolean = core.googleLinkAvailable()
+
+    /** Whether the signed-in account has a Google identity. The error's text is a link kind. */
+    fun googleLinked(): Boolean = core.googleLinked()
+
+    /** Starts "Link Google" and returns the page for the Custom Tab. */
+    fun googleLinkStart(): String = core.googleLinkStart()
+
+    /** Waits (up to 5 minutes) for the browser's answer; the error's text is a link kind. */
+    fun googleLinkFinish() = core.googleLinkFinish()
+
+    fun googleLinkCancel() = core.googleLinkCancel()
+
     fun linkMerge(deviceName: String) = core.linkMerge(deviceName)
 
     fun linkReplace(deviceName: String): String = core.linkReplace(deviceName)

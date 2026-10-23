@@ -294,6 +294,10 @@ data class SignInState(
     @SerialName("local_tasks") val localTasks: Int = 0,
     @SerialName("local_projects") val localProjects: Int = 0,
     @SerialName("account_devices") val accountDevices: Int = 0,
+    /** The other_account answer: the account this phone was synced with, "" when it is not remembered. */
+    @SerialName("previous_email") val previousEmail: String = "",
+    /** The other_account answer: the account that just signed in. */
+    @SerialName("account_email") val accountEmail: String = "",
 )
 
 /**

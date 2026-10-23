@@ -30,6 +30,12 @@ const (
 	SyncFailed
 	SyncOffline
 	SyncBothHaveTasks
+	// SyncOtherAccountSheet is the sheet "This Mac was linked to another account": a sign-in succeeded
+	// as an account that does not own this Mac's device, and nothing syncs until the person chooses.
+	SyncOtherAccountSheet
+	// SyncWrongAccount is a signed-in account that does not own this Mac's device (the server's
+	// 403): the pane says so and offers Sign out; nothing retries.
+	SyncWrongAccount
 )
 
 // SyncDevice is one device of the account, as the pane lists it.
@@ -48,6 +54,8 @@ const (
 	SyncFailureUnknown SyncFailure = iota
 	SyncFailureNoAnswer
 	SyncFailureAuth
+	// SyncFailureWrongAccount is the server's 403 for a device of another account.
+	SyncFailureWrongAccount
 )
 
 // SignInStage is how far the in-app sign-in has got, so the button can say what is happening.
@@ -134,6 +142,11 @@ type SyncSnapshot struct {
 	ResendAt    time.Time
 	// GoogleAvailable is true once the server's auth methods listed a Google provider.
 	GoogleAvailable bool
+	// OtherAccount is set in phase SyncOtherAccount.
+	OtherAccount *SyncOtherAccount
+	// GoogleLink and GoogleLinkFailure are the Google row of a signed-in account.
+	GoogleLink        GoogleLinkState
+	GoogleLinkFailure GoogleLinkFailure
 }
 
 // The JSON files keyed by task id that a merge must rename, next to the database.
@@ -170,6 +183,12 @@ type syncTask struct {
 	// google is the running Google sign-in's cancel func; gen tells a finished one from a newer.
 	google    context.CancelFunc
 	googleGen int
+	// other is the sign-in that found this Mac linked to a different account, awaiting the choice.
+	other *SyncOtherAccount
+	// googleLink is the Google row of the signed-in account.
+	googleLink googleLinkTask
+	// remembered is set once this run stored the linked account's email.
+	remembered bool
 }
 
 // SetSyncNotify tells the service where to ask for a redraw after a status change. The shell
@@ -195,7 +214,8 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 		SeedTotal:     r.sync.seedTotal, SeedDone: r.sync.seedTotal - r.sync.pending,
 		SignInStep: r.sync.code.step, SignInEmail: r.sync.code.email, ResendAt: r.sync.code.resendAt,
 		GoogleAvailable: r.sync.code.google && r.sync.code.probed == r.sync.server,
-		ThisDeviceID:    r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
+		GoogleLink:      r.sync.googleLink.state, GoogleLinkFailure: r.sync.googleLink.failure,
+		ThisDeviceID: r.syncDeviceIDLocked(), Devices: append([]SyncDevice(nil), r.sync.devices...),
 	}
 	if s.Pending < 0 {
 		s.Pending = 0
@@ -214,10 +234,18 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 			LocalTasks: r.sync.conflict.LocalTasks, LocalProjects: r.sync.conflict.LocalProjects,
 			AccountDevices: r.sync.conflict.AccountDevices,
 		}
+	case r.sync.other != nil:
+		s.Phase = SyncOtherAccountSheet
+		s.OtherAccount = &SyncOtherAccount{
+			PreviousEmail: r.sync.other.PreviousEmail, AccountEmail: r.sync.other.AccountEmail,
+		}
 	case !r.sync.linked:
 		// An unlinked Mac is always signed out: a failed sign-in belongs in the card's error line,
 		// with the fields still there to try again.
 		s.Phase = SyncSignedOut
+	case r.sync.status.State == syncclient.StateWrongAccount:
+		s.Phase = SyncWrongAccount
+		s.Failure = SyncFailureWrongAccount
 	case r.sync.status.State == syncclient.StateIdle:
 		s.Phase = SyncSynced
 	case r.sync.status.State == syncclient.StateSeeding:
@@ -242,18 +270,21 @@ func (r *Real) SyncSnapshot() SyncSnapshot {
 	return s
 }
 
-// syncFailureKind names a runner error in a way the pane can word. An error it does not know is
-// shown as it came.
+// syncFailureKind names a runner error in a way the pane can word. Only a real network failure or
+// a 5xx from the server is "no answer"; any other error is Unknown, which the pane words as a
+// plain failure and never as the server not responding.
 func syncFailureKind(message string) SyncFailure {
 	e := strings.ToLower(message)
 	switch {
 	case e == "":
 		return SyncFailureUnknown
-	case strings.Contains(e, "401"), strings.Contains(e, "unauthorized"),
+	case strings.Contains(e, "linked to another account"):
+		return SyncFailureWrongAccount
+	case strings.Contains(e, "(status 401)"), strings.Contains(e, "unauthorized"),
 		strings.Contains(e, "signed out"), strings.Contains(e, "refresh token"):
 		return SyncFailureAuth
-	case strings.Contains(e, "500"), strings.Contains(e, "502"), strings.Contains(e, "503"),
-		strings.Contains(e, "504"), strings.Contains(e, "no such host"),
+	case strings.Contains(e, "(status 5"), strings.Contains(e, "the server answered 5"),
+		strings.Contains(e, "no such host"),
 		strings.Contains(e, "connection refused"), strings.Contains(e, "connection reset"),
 		strings.Contains(e, "timeout"), strings.Contains(e, "timed out"),
 		strings.Contains(e, "network is unreachable"), strings.Contains(e, "did not answer"):
@@ -371,6 +402,7 @@ func (r *Real) syncDeviceIDLocked() string {
 // SyncSignOut stops the runner and deletes the refresh token. The database stays linked, so the
 // next sign-in resumes the same device.
 func (r *Real) SyncSignOut() {
+	r.rememberBeforeSignOut()
 	r.mu.Lock()
 	runner := r.runner
 	r.runner = nil
@@ -378,9 +410,10 @@ func (r *Real) SyncSignOut() {
 	cfg.Account = nil
 	r.sync.cfg = cfg
 	r.sync.account, r.sync.hasAccount = syncclient.Account{}, false
-	r.sync.signingIn, r.sync.conflict = false, nil
+	r.sync.signingIn, r.sync.conflict, r.sync.other = false, nil, nil
 	r.sync.code = r.sync.code.cleared()
 	r.sync.signInFailure = SignInFailureNone
+	r.sync.googleLink, r.sync.remembered = googleLinkTask{}, false
 	r.sync.status = syncclient.Status{}
 	r.sync.failedSince = time.Time{}
 	r.sync.tokens, r.sync.client = nil, nil
@@ -585,6 +618,9 @@ func (r *Real) syncStatusChanged(st syncclient.Status) {
 		r.sync.failedSince = time.Time{}
 	}
 	r.mu.Unlock()
+	if st.State == syncclient.StateIdle {
+		go r.rememberAccountOnce()
+	}
 	r.syncChanged()
 }
 

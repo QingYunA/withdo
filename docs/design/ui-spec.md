@@ -2295,6 +2295,41 @@ this order: Account, General, Agents, Advanced.
     `Recommended`, picked) and **Use the account** (`以账号为准`); merging gives this Mac's tasks new
     numbers from the account's blocks (`#45` becomes `#2045`, said in the option), using the account
     first backs this Mac's data up into the data folder. **Cancel** and the accent **Continue**.
+  - *Wrong account* (`settings-account-wrong-device-*`): the server answers a device that is not in
+    the signed-in account with 403 and the body `{"error":"device does not belong to this user",
+    "code":"device_not_in_account"}`. The runner stops (no retry loop) and row 2 `This Mac` shows, in
+    `status.blocked`, `This Mac is linked to another account. Sign out, then sign in with that account.`
+    (`这台 Mac 记在另一个账号下。退出后用那个账号登录。`), the `N changes wait on this Mac and are not
+    lost` line under it, and a primary **Sign out** at the right (the account row loses its own link
+    so there is one). No Retry, no Sync now, no Google row. Only a network failure or a 5xx is `the
+    server did not answer`; any other failure reads `Sync failed: something went wrong` (`出了点问题`).
+    The phone says `This phone is linked to another account. Sign out, then sign in with that
+    account.` (`这台手机记在另一个账号下。退出后用那个账号登录。`) with **Sign out** in the same place
+    (`sync-wrong-account-*`).
+  - *Other account sheet* (`settings-account-other-account-sheet-*`): a sign-in (code, password or
+    Google) that succeeds on a database already linked as a device is checked with the account's
+    device list before anything syncs. If the device is not in it, a sheet as the both-have-tasks one:
+    `This Mac was linked to another account` (`这台 Mac 之前登录的是另一个账号`), the line `It was synced
+    with <old email>. You just signed in as <new email>.` (the old email comes from what the database
+    remembered when it last synced or signed out; without it the line is only `You just signed in as
+    <new email>.`), and two choices: **Sign in with <old email> instead** (`改用 <旧邮箱> 登录`, marked
+    `Recommended`, picked: signs out of the new account and opens the email card with the old email
+    filled; `Sign in with another account` without an old email) and **Move this Mac to <new email>**
+    (`把这台 Mac 换到 <新邮箱>`: forgets the old device link, keeps the tasks and links this Mac as a new
+    device of the new account through the usual link, so an empty account is seeded from it and an
+    account with tasks gets the both-have-tasks sheet, whose merge or replace never loses the Mac's
+    changes: merge queues every row again, replace backs the data up first). **Cancel** signs out of
+    the new account. The phone has the same sheet on its card (`sync-other-account-*`).
+  - *Google row* (`settings-account-google-link-*`, `-linked-*`): in the signed-in group, when the
+    server lists Google, a row with the Google mark and `Google`: **Link** (`绑定`) while the account
+    has no Google identity, `Linked` (`已绑定`, the done green) once it has, `Finish in your browser`
+    and a **Cancel** link while the browser is open. PocketBase links the identity to the record whose
+    token comes with the exchange (`auth-with-oauth2` with the `Authorization` header); if that Google
+    account is already linked to another record it answers that other record's sign-in instead, so the
+    client compares the record id, drops the token and says `This Google account is already used by
+    another account` (`这个 Google 账号已经绑在别的账号上了`). The account's own links are read from
+    `_externalAuths` (owner rule); it holds no email, so the row cannot show the Google address. The
+    phone's signed-in card has the same row (`sync-google-link-*`, `sync-google-linked-*`).
   - *Uploading* (the first device seeds): row 2 reads `Uploading this Mac's data`, `1,240 / 3,512 ·
     other devices wait until it is done`, and a pixel progress bar: 40 cells 9 x 8 pt, 2 pt apart,
     `accent` for the done share and 8 % black for the rest. Under the group: the window can close and

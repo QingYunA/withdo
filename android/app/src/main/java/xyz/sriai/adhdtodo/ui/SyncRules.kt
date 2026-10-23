@@ -13,6 +13,15 @@ const val DEFAULT_SYNC_SERVER = "https://todo.sri-ai.xyz"
 /** How long a failed sync may stay quiet before the header's cloud turns red. */
 const val SYNC_ATTENTION_MILLIS = 15 * 60 * 1000L
 
+/** SyncStatus.state of a signed-in account that does not own this phone's device. */
+const val SYNC_WRONG_ACCOUNT = "wrong account"
+
+/**
+ * Whether the app may (re)start the sync runner. A phone in the wrong account has no retry: the
+ * runner stopped on purpose and only signing out (or moving the phone) changes the answer.
+ */
+fun syncRunnerMayStart(state: String): Boolean = state != SYNC_WRONG_ACCOUNT
+
 /**
  * The laptop or phone icon a device gets. The server does not say what a device is, so the name
  * decides, exactly as the desktop's Settings > Sync guesses it.
@@ -35,6 +44,7 @@ fun syncCloudBlocked(
 ): Boolean {
     if (!linked) return false
     if (!signedIn) return true
+    if (state == SYNC_WRONG_ACCOUNT) return true
     return state == "error" && failedSinceMillis != null &&
         nowMillis - failedSinceMillis > SYNC_ATTENTION_MILLIS
 }
@@ -65,6 +75,52 @@ fun isAuthFailure(message: String): Boolean {
     val m = message.lowercase(Locale.ROOT)
     return m.contains("401") || m.contains("unauthorized") || m.contains("signed out") ||
         m.contains("refresh token")
+}
+
+/** What a sync error means to the user, from the core's sentence (syncError in mobile/core). */
+enum class SyncFailure { AUTH, NETWORK, SERVER, REFUSED, OTHER }
+
+/**
+ * Only a real network failure is "the server did not answer"; a 5xx, a refusal and an unknown
+ * error each have their own words.
+ */
+fun syncFailureOf(message: String): SyncFailure {
+    val m = message.lowercase(Locale.ROOT)
+    return when {
+        isAuthFailure(m) || m.contains("sign in again") -> SyncFailure.AUTH
+        m.contains("could not reach the server") || m.contains("did not answer") -> SyncFailure.NETWORK
+        m.contains("had a problem") -> SyncFailure.SERVER
+        m.contains("refused the request") -> SyncFailure.REFUSED
+        else -> SyncFailure.OTHER
+    }
+}
+
+fun syncFailureText(failure: SyncFailure): Int = when (failure) {
+    SyncFailure.AUTH -> R.string.sync_failed_auth
+    SyncFailure.NETWORK -> R.string.sync_failed_no_answer
+    SyncFailure.SERVER -> R.string.sync_failed_server
+    SyncFailure.REFUSED -> R.string.sync_failed_refused
+    SyncFailure.OTHER -> R.string.sync_failed_other
+}
+
+/** What the signed-in card's Google row draws; [shown] is false where the server has no Google. */
+data class GoogleLinkRow(
+    val available: Boolean = false,
+    val linked: Boolean = false,
+    /** True while the browser waits for the user. */
+    val busy: Boolean = false,
+    /** The failure line under the row, a string resource. */
+    val message: Int? = null,
+) {
+    val shown: Boolean get() = available
+}
+
+/** The line for a GoogleLinkFinish error kind; cancelled says nothing. */
+fun googleLinkFailureText(kind: String): Int? = when (kind.trim()) {
+    "cancelled" -> null
+    "already_linked" -> R.string.sync_google_link_taken
+    "network" -> R.string.sync_sign_in_network
+    else -> R.string.sync_google_failed
 }
 
 /** The stage the sign-in button says: the server checks the account, then the tasks download. */

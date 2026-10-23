@@ -368,6 +368,16 @@ type fakePocketBase struct {
 	mu       sync.Mutex
 	login    string
 	password string
+	// token and email are who the next password sign-in answers as; zero means the first account.
+	token string
+	email string
+}
+
+// signInAs makes the next sign-ins answer as another account.
+func (f *fakePocketBase) signInAs(token, email string) {
+	f.mu.Lock()
+	f.token, f.email = token, email
+	f.mu.Unlock()
 }
 
 func newFakePocketBase() *fakePocketBase { return &fakePocketBase{} }
@@ -394,9 +404,15 @@ func (f *fakePocketBase) wrap(next http.Handler) http.Handler {
 				writeTestJSON(w, map[string]string{"message": "Failed to authenticate."})
 				return
 			}
+			f.mu.Lock()
+			token, email := f.token, f.email
+			f.mu.Unlock()
+			if token == "" {
+				token, email = syncTestToken, "ada@example.com"
+			}
 			writeTestJSON(w, map[string]any{
-				"token":  syncTestToken,
-				"record": map[string]string{"email": "ada@example.com", "name": "Ada Lovelace"},
+				"token":  token,
+				"record": map[string]string{"email": email, "name": "Ada Lovelace"},
 			})
 		default:
 			next.ServeHTTP(w, r)

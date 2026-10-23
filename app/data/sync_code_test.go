@@ -20,13 +20,16 @@ import (
 // otp<N>; auth-with-otp accepts only 123456 for the latest id.
 type codeServer struct {
 	*httptest.Server
-	mux        *http.ServeMux
-	mu         sync.Mutex
-	requests   int
-	checks     int
-	resets     int
-	emails     []string
-	status     int // when not 0, request-otp answers it
+	mux      *http.ServeMux
+	mu       sync.Mutex
+	requests int
+	checks   int
+	resets   int
+	emails   []string
+	status   int // when not 0, request-otp answers it
+	// foreignID makes auth-with-oauth2 answer another record, as PocketBase does for a Google
+	// identity another account owns.
+	foreignID  string
 	devicesHit chan struct{}
 	release    chan struct{}
 }
@@ -65,10 +68,10 @@ func newCodeServer(t *testing.T) *codeServer {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix()})
+		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
-			"record": map[string]any{"email": "ada@example.com", "name": "ada"},
+			"record": map[string]any{"id": "rec1", "email": "ada@example.com", "name": "ada"},
 		})
 	})
 	mux.HandleFunc("POST /api/collections/users/request-password-reset", func(w http.ResponseWriter, _ *http.Request) {

@@ -38,6 +38,7 @@ import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectEntry
 import xyz.sriai.adhdtodo.data.ProjectPage
 import xyz.sriai.adhdtodo.data.SignInState
+import xyz.sriai.adhdtodo.ui.GoogleLinkRow
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.testing.FixedTime
@@ -128,6 +129,10 @@ class AndroidScreensTest(private val case: ScreenCase) {
         SYNC_UPLOADING,
         SYNC_FAILED,
         SYNC_CHOOSE,
+        SYNC_WRONG_ACCOUNT,
+        SYNC_OTHER_ACCOUNT,
+        SYNC_GOOGLE_LINK,
+        SYNC_GOOGLE_LINKED,
         TASK_MENU,
         TASK_MENU_MOVE,
         TASK_MENU_REMIND,
@@ -138,7 +143,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
             Screen.SYNC_SIGNIN_EMAIL, Screen.SYNC_SIGNIN_GOOGLE_WAITING, Screen.SYNC_SIGNIN_CODE, Screen.SYNC_SIGNIN_WRONG_CODE,
             Screen.SYNC_SIGNIN_PASSWORD, Screen.SYNC_SIGNING_IN_CHECKING, Screen.SYNC_SIGNING_IN_DOWNLOADING,
         )
-        private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
+        private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.SYNC_OTHER_ACCOUNT, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
@@ -162,13 +167,18 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "sync-uploading" to Screen.SYNC_UPLOADING,
                 "sync-failed" to Screen.SYNC_FAILED,
                 "sync-choose" to Screen.SYNC_CHOOSE,
+                "sync-wrong-account" to Screen.SYNC_WRONG_ACCOUNT,
+                "sync-other-account" to Screen.SYNC_OTHER_ACCOUNT,
+                "sync-google-link" to Screen.SYNC_GOOGLE_LINK,
+                "sync-google-linked" to Screen.SYNC_GOOGLE_LINKED,
                 "task-menu" to Screen.TASK_MENU,
                 "task-menu-move" to Screen.TASK_MENU_MOVE,
                 "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
             val chinese = setOf(
                 "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
-                "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind")
+                "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind",
+                "sync-wrong-account", "sync-other-account", "sync-google-link", "sync-google-linked")
             return screens.flatMap { (name, screen) ->
                 buildList {
                     add(ScreenCase("$name-light", night = false, zh = false, screen = screen))
@@ -347,6 +357,10 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
         AndroidScreensTest.Screen.SYNC_UPLOADING,
         AndroidScreensTest.Screen.SYNC_FAILED,
         AndroidScreensTest.Screen.SYNC_CHOOSE,
+        AndroidScreensTest.Screen.SYNC_WRONG_ACCOUNT,
+        AndroidScreensTest.Screen.SYNC_OTHER_ACCOUNT,
+        AndroidScreensTest.Screen.SYNC_GOOGLE_LINK,
+        AndroidScreensTest.Screen.SYNC_GOOGLE_LINKED,
         -> TestFrame(
             title = stringResource(R.string.sync_title),
             tab = Tab.MINE,
@@ -524,6 +538,27 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
             account,
             devices.filterNot { it.isThis },
             choose = SignInState(state = "choose", localTasks = 128, localProjects = 6, accountDevices = 2),
+        )
+        AndroidScreensTest.Screen.SYNC_WRONG_ACCOUNT -> SyncModel(
+            SyncPhase.WRONG_ACCOUNT,
+            base.copy(state = "wrong account", lastError = "this phone is linked to another account"),
+            account,
+            devices,
+        )
+        AndroidScreensTest.Screen.SYNC_OTHER_ACCOUNT -> SyncModel(
+            SyncPhase.OTHER_ACCOUNT,
+            base.copy(linked = true, signedIn = true),
+            account,
+            emptyList(),
+            otherAccount = SignInState(
+                state = "other_account", previousEmail = "ada@example.com", accountEmail = "cyan@example.com",
+            ),
+        )
+        AndroidScreensTest.Screen.SYNC_GOOGLE_LINK -> SyncModel(
+            SyncPhase.SYNCED, base, account, devices, googleLink = GoogleLinkRow(available = true),
+        )
+        AndroidScreensTest.Screen.SYNC_GOOGLE_LINKED -> SyncModel(
+            SyncPhase.SYNCED, base, account, devices, googleLink = GoogleLinkRow(available = true, linked = true),
         )
         else -> error("not a sync screen: $screen")
     }

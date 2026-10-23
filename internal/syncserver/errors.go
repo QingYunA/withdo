@@ -12,6 +12,8 @@ import (
 type statusError struct {
 	status  int
 	message string
+	// code is a machine-readable reason clients may switch on; empty for most errors.
+	code string
 }
 
 func (e *statusError) Error() string { return e.message }
@@ -32,6 +34,16 @@ func forbidden(format string, args ...any) error {
 	return statusErrorf(http.StatusForbidden, format, args...)
 }
 
+// CodeDeviceNotInAccount is the "code" of the 403 a device id the caller's account does not own
+// gets: the client is signed in as a different account than the one it was linked with.
+const CodeDeviceNotInAccount = "device_not_in_account"
+
+// deviceNotInAccount is the 403 for a device that is not in the caller's account. The message
+// stays what older clients matched on; the code is for newer ones.
+func deviceNotInAccount() error {
+	return &statusError{status: http.StatusForbidden, message: "device does not belong to this user", code: CodeDeviceNotInAccount}
+}
+
 func conflict(format string, args ...any) error {
 	return statusErrorf(http.StatusConflict, format, args...)
 }
@@ -41,7 +53,11 @@ func conflict(format string, args ...any) error {
 func writeError(w http.ResponseWriter, err error) {
 	var se *statusError
 	if errors.As(err, &se) {
-		writeJSON(w, se.status, map[string]string{"error": se.message})
+		body := map[string]string{"error": se.message}
+		if se.code != "" {
+			body["code"] = se.code
+		}
+		writeJSON(w, se.status, body)
 		return
 	}
 	log.Printf("sync server: %v", err)

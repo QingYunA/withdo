@@ -50,6 +50,8 @@ type Settings struct {
 	syncLastSynced    time.Time
 	syncHadConflict   bool
 	syncChoice        SyncChoice
+	syncHadOther      bool
+	syncOtherChoice   int
 	syncEditingServer bool
 	syncServerDraft   string
 	syncServerErr     bool
@@ -125,7 +127,9 @@ func (s *Settings) View(c *ui.Context) {
 		s.categorySheetView(c, t)
 	}
 	if s.pane == PaneAccount && s.app.Sync != nil {
-		s.syncSheet(c, t, s.app.Sync.SyncSnapshot())
+		snap := s.app.Sync.SyncSnapshot()
+		s.syncSheet(c, t, snap)
+		s.syncOtherSheet(c, t, snap)
 	}
 	if title := s.paneName(s.pane); s.OnTitle != nil && title != s.lastTitle {
 		s.lastTitle = title

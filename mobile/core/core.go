@@ -67,6 +67,8 @@ type Core struct {
 	code codeSignIn
 	// google is the Google sign-in between GoogleStart and GoogleFinish, under mu.
 	google *googleSignIn
+	// googleLink is the Link Google flow between GoogleLinkStart and GoogleLinkFinish, under mu.
+	googleLink *googleSignIn
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool

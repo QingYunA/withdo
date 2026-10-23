@@ -138,6 +138,10 @@ type GoogleFlow struct {
 	clientID    string
 	events      chan oauth2Event
 	cancel      context.CancelFunc
+	// linkToken and linkID are set by StartGoogleLink: the signed-in person's token, sent with the
+	// exchange, and their record id, which the answer must name too.
+	linkToken string
+	linkID    string
 }
 
 type oauth2Event struct {
@@ -272,12 +276,15 @@ func (f *GoogleFlow) Wait(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	answer, err := f.s.postAuth(ctx, f.base+"/api/collections/users/auth-with-oauth2", "", body, ErrGoogleFailed)
+	answer, err := f.s.postAuth(ctx, f.base+"/api/collections/users/auth-with-oauth2", f.linkToken, body, ErrGoogleFailed)
 	if err != nil {
 		return googleError(ctx, err)
 	}
 	if answer.Token == "" {
 		return fmt.Errorf("%w: the sign-in answer is missing a token", ErrGoogleFailed)
+	}
+	if f.linkToken != "" {
+		return f.finishLink(answer)
 	}
 	f.s.mu.Lock()
 	defer f.s.mu.Unlock()

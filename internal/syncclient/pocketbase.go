@@ -50,6 +50,7 @@ func NewPocketBaseSource(server string, secrets Secrets) *PocketBaseSource {
 type pocketBaseAnswer struct {
 	Token  string `json:"token"`
 	Record struct {
+		ID    string `json:"id"`
 		Email string `json:"email"`
 		Name  string `json:"name"`
 	} `json:"record"`

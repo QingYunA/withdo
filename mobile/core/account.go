@@ -25,6 +25,25 @@ type signInChooseJSON struct {
 	AccountDevices int    `json:"account_devices"`
 }
 
+// signInOtherAccountJSON is SignIn's "other_account" answer: the phone is linked to a different
+// account than the one that just signed in. Nothing synced. previous_email is the account the
+// phone was linked with, "" when this phone does not remember it; account_email is the account
+// that signed in. The sheet offers signing in with the old one again (SignOut, then the email
+// card) or MoveToAccount.
+type signInOtherAccountJSON struct {
+	State         string `json:"state"`
+	PreviousEmail string `json:"previous_email"`
+	AccountEmail  string `json:"account_email"`
+}
+
+// encodeSignInOtherAccount is SignIn's other_account encoder, split out so the golden test can pin
+// its shape.
+func encodeSignInOtherAccount(previousEmail, accountEmail string) (string, error) {
+	return marshal(signInOtherAccountJSON{
+		State: "other_account", PreviousEmail: previousEmail, AccountEmail: accountEmail,
+	})
+}
+
 // encodeSignInChoose is SignIn's choose encoder, split out so the golden test can pin its shape.
 func encodeSignInChoose(localTasks, localProjects, accountDevices int) (string, error) {
 	return marshal(signInChooseJSON{
@@ -157,6 +176,7 @@ func (c *Core) LinkMerge(deviceName string) error {
 	if _, err := client.LinkMerge(context.Background(), strings.TrimSpace(deviceName)); err != nil {
 		return linkError(err)
 	}
+	c.rememberAccount(client)
 	return nil
 }
 
@@ -174,6 +194,7 @@ func (c *Core) LinkReplace(deviceName string) (string, error) {
 	if err != nil {
 		return backup, linkError(err)
 	}
+	c.rememberAccount(client)
 	return backup, nil
 }
 

@@ -4520,6 +4520,128 @@
   "@foldAfterNextWeek": {
     "description": "Name of the fold at the end of Later on Today: the user's tasks with no project that are due more than a week ahead."
   },
+  "settingsSyncWrongAccount": "This Mac is linked to another account. Sign out, then sign in with that account.",
+  "@settingsSyncWrongAccount": {
+    "description": "The line of This Mac's row when the signed-in account does not own this Mac's device; Sign out is beside it."
+  },
+  "settingsSyncFailedOther": "something went wrong",
+  "@settingsSyncFailedOther": {
+    "description": "The reason of a failed sync when the cause is not one the pane knows."
+  },
+  "settingsSyncOtherTitle": "This Mac was linked to another account",
+  "@settingsSyncOtherTitle": {
+    "description": "The title of the sheet shown when a sign-in succeeds as an account that does not own this Mac."
+  },
+  "settingsSyncOtherBody": "It was synced with {previous}. You just signed in as {account}.",
+  "@settingsSyncOtherBody": {
+    "description": "The line under the other-account sheet's title when the old email is known.",
+    "placeholders": {
+      "previous": {
+        "type": "String",
+        "example": "ada@example.com"
+      },
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherBodyUnknown": "You just signed in as {account}.",
+  "@settingsSyncOtherBodyUnknown": {
+    "description": "The line under the other-account sheet's title when the old email is not remembered.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherOld": "Sign in with {previous} instead",
+  "@settingsSyncOtherOld": {
+    "description": "The recommended choice of the other-account sheet.",
+    "placeholders": {
+      "previous": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherOldAnother": "Sign in with another account",
+  "@settingsSyncOtherOldAnother": {
+    "description": "The recommended choice of the other-account sheet when the old email is not remembered."
+  },
+  "settingsSyncOtherOldBody": "Sign out of {account} and sign in again with the account this Mac belongs to.",
+  "@settingsSyncOtherOldBody": {
+    "description": "What the recommended choice of the other-account sheet does.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherMove": "Move this Mac to {account}",
+  "@settingsSyncOtherMove": {
+    "description": "The other choice of the other-account sheet.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherMoveBody": "This Mac's tasks go to {account}. They stay on this Mac; {previous} keeps its own copy.",
+  "@settingsSyncOtherMoveBody": {
+    "description": "What moving this Mac does, when the old email is known.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      },
+      "previous": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncOtherMoveBodyUnknown": "This Mac's tasks go to {account}. They stay on this Mac.",
+  "@settingsSyncOtherMoveBodyUnknown": {
+    "description": "What moving this Mac does, when the old email is not remembered.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "settingsSyncGoogleRow": "Google",
+  "@settingsSyncGoogleRow": {
+    "description": "The label of the Google row of the signed-in account."
+  },
+  "settingsSyncGoogleLink": "Link",
+  "@settingsSyncGoogleLink": {
+    "description": "The button that links a Google account to the signed-in account."
+  },
+  "settingsSyncGoogleLinked": "Linked",
+  "@settingsSyncGoogleLinked": {
+    "description": "The state of the Google row when the account has Google."
+  },
+  "settingsSyncGoogleLinkWaiting": "Finish in your browser",
+  "@settingsSyncGoogleLinkWaiting": {
+    "description": "The state of the Google row while the browser shows Google's page."
+  },
+  "settingsSyncGoogleLinkUsed": "This Google account is already used by another account",
+  "@settingsSyncGoogleLinkUsed": {
+    "description": "The line when the chosen Google account belongs to another account."
+  },
+  "settingsSyncGoogleLinkFailed": "Google didn't finish; try again",
+  "@settingsSyncGoogleLinkFailed": {
+    "description": "The line when linking Google failed."
+  },
+  "settingsSyncGoogleLinkNetwork": "Couldn't reach the server; check the connection",
+  "@settingsSyncGoogleLinkNetwork": {
+    "description": "The line when linking Google failed for the network."
+  },
   "pillToReview": "To review",
   "@pillToReview": {
     "description": "Small tag on a row of Today: the user's own task is in review and waits for their look."
