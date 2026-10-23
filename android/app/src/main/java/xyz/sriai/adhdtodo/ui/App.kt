@@ -128,6 +128,9 @@ fun App(
     var choose by remember { mutableStateOf(SignInState()) }
     var flow by remember { mutableStateOf(SignInFlow()) }
     var googleAvailable by remember { mutableStateOf(false) }
+    var otherAccount by remember { mutableStateOf(SignInState()) }
+    var otherChoosing by remember { mutableStateOf(false) }
+    var googleRow by remember { mutableStateOf(GoogleLinkRow()) }
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
@@ -440,6 +443,18 @@ fun App(
         }
     }
 
+    // The Google row of the signed-in card: asked once the screen opens with a linked account.
+    val signedInHere = shownStatus.signedIn && shownStatus.linked
+    LaunchedEffect(route == "sync" && signedInHere) {
+        if (route == "sync" && signedInHere) {
+            googleRow = withContext(Dispatchers.IO) {
+                val available = runCatching { api.googleLinkAvailable() }.getOrDefault(false)
+                val linked = available && runCatching { api.googleLinked() }.getOrDefault(false)
+                GoogleLinkRow(available = available, linked = linked)
+            }
+        }
+    }
+
     // Continue with Google shows only where the server lists a Google provider.
     LaunchedEffect(route == "sync") {
         if (route == "sync") {
@@ -528,13 +543,15 @@ fun App(
                 when {
                     route == "sync" -> {
                         val model = fake ?: SyncModel(
-                            phase = syncPhaseOf(shownStatus, signingIn, choosing),
+                            phase = syncPhaseOf(shownStatus, signingIn, choosing, otherChoosing),
                             status = shownStatus,
                             account = account ?: Account(),
                             devices = devices,
                             choose = choose,
                             flow = flow,
                             googleAvailable = googleAvailable,
+                            otherAccount = otherAccount,
+                            googleLink = googleRow,
                         )
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dims.pagePadding)) {
                             syncMessage?.let {
@@ -549,6 +566,7 @@ fun App(
                                 if (!signingIn) {
                                     signingIn = true
                                     choosing = false
+                                    otherChoosing = false
                                     syncMessage = null
                                     flow = flow.copy(failure = null, failureText = null)
                                     scope.launch {
@@ -573,6 +591,12 @@ fun App(
                                             "choose" -> {
                                                 choose = checkNotNull(result)
                                                 choosing = true
+                                                flow = SignInFlow()
+                                            }
+                                            "other_account" -> {
+                                                // Nothing synced; the sheet asks which account the phone belongs to.
+                                                otherAccount = checkNotNull(result)
+                                                otherChoosing = true
                                                 flow = SignInFlow()
                                             }
                                             "linked" -> {
@@ -669,6 +693,7 @@ fun App(
                                 onSignOut = {
                                     flow = SignInFlow()
                                     choosing = false
+                                    otherChoosing = false
                                     signingIn = false
                                     perform { api.signOut() }
                                 },
@@ -698,8 +723,43 @@ fun App(
                                 },
                                 onCancelChoose = {
                                     choosing = false
+                                    otherChoosing = false
                                     perform { api.signOut() }
                                 },
+                                onUseOldAccount = { previous ->
+                                    otherChoosing = false
+                                    signingIn = false
+                                    flow = SignInFlow(email = previous)
+                                    perform { api.signOut() }
+                                },
+                                onMoveToAccount = { runSignIn { api.moveToAccount(Build.MODEL) } },
+                                onGoogleLink = {
+                                    if (!googleRow.busy) {
+                                        googleRow = googleRow.copy(busy = true, message = null)
+                                        scope.launch {
+                                            // null is success; else the core's error kind.
+                                            val kind = withContext(Dispatchers.IO) {
+                                                try {
+                                                    val url = api.googleLinkStart()
+                                                    Handler(Looper.getMainLooper()).post { openCustomTab(url) }
+                                                    api.googleLinkFinish()
+                                                    null
+                                                } catch (e: CancellationException) {
+                                                    throw e
+                                                } catch (e: Exception) {
+                                                    Log.w("adhd-todo", "google link failed", e)
+                                                    e.message?.trim().orEmpty().ifEmpty { "failed" }
+                                                }
+                                            }
+                                            googleRow = if (kind == null) {
+                                                googleRow.copy(busy = false, linked = true, message = null)
+                                            } else {
+                                                googleRow.copy(busy = false, message = googleLinkFailureText(kind))
+                                            }
+                                        }
+                                    }
+                                },
+                                onCancelGoogleLink = { scope.launch(Dispatchers.IO) { api.googleLinkCancel() } },
                                 onStartServerEdit = {
                                     serverEditing = true
                                     serverDraft = shownStatus.server.ifBlank { DEFAULT_SYNC_SERVER }
@@ -940,6 +1000,27 @@ private fun fakeSyncModel(name: String, resources: Resources): SyncModel {
             choose = SignInState(
                 state = "choose", localTasks = 128, localProjects = 6, accountDevices = 2,
             ),
+        )
+        "wrong_account" -> SyncModel(
+            SyncPhase.WRONG_ACCOUNT,
+            base.copy(state = "wrong account", lastError = "this phone is linked to another account"),
+            account,
+            devices,
+        )
+        "other_account" -> SyncModel(
+            SyncPhase.OTHER_ACCOUNT,
+            base.copy(signedIn = true),
+            account,
+            emptyList(),
+            otherAccount = SignInState(
+                state = "other_account", previousEmail = "old@example.com", accountEmail = "cyan@example.com",
+            ),
+        )
+        "google_link" -> SyncModel(
+            SyncPhase.SYNCED, base, account, devices, googleLink = GoogleLinkRow(available = true),
+        )
+        "google_linked" -> SyncModel(
+            SyncPhase.SYNCED, base, account, devices, googleLink = GoogleLinkRow(available = true, linked = true),
         )
         "synced" -> SyncModel(SyncPhase.SYNCED, base, account, devices)
         "uploading" -> SyncModel(

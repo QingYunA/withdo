@@ -35,6 +35,14 @@ type SyncService interface {
 	// SyncSignInWithGoogle starts "Continue with Google" (M13 P3): open is handed Google's URL to
 	// show in the system browser. SyncCancel drops the wait.
 	SyncSignInWithGoogle(open func(url string))
+	// The two choices of the other-account sheet: sign in with the old account again, or move this
+	// Mac to the account that just signed in.
+	SyncUseOldAccount()
+	SyncMoveToAccount()
+	// The Google row of a signed-in account: ask the server, link, and drop a wait.
+	SyncRefreshGoogleLink()
+	SyncLinkGoogle(open func(url string))
+	SyncCancelGoogleLink()
 }
 
 // The sheet of the first sign-in that found tasks on both sides.
@@ -94,6 +102,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		s.syncAsked = true
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
+		svc.SyncRefreshGoogleLink()
 	} else if !snap.LastSynced.IsZero() && !snap.LastSynced.Equal(s.syncLastSynced) {
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
@@ -101,13 +110,13 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	switch snap.Phase {
 	case data.SyncSigningIn, data.SyncUploading:
 		c.After(time.Second)
-	case data.SyncSynced, data.SyncFailed, data.SyncOffline:
+	case data.SyncSynced, data.SyncFailed, data.SyncOffline, data.SyncWrongAccount:
 		c.After(30 * time.Second)
 	}
 	switch snap.Phase {
 	case data.SyncSignedOut, data.SyncSigningIn:
 		s.syncCodeSignInCard(c, t, svc, snap)
-	case data.SyncBothHaveTasks:
+	case data.SyncBothHaveTasks, data.SyncOtherAccountSheet:
 		group(c, t, "sync-account", func() { s.syncAccountRow(c, t, svc, snap, true) })
 	case data.SyncUploading, data.SyncSynced:
 		s.syncAccountGroup(c, t, svc, snap, snap.Phase == data.SyncUploading)
@@ -115,7 +124,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 			theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
 		}
 		s.syncDevices(c, t, snap)
-	default: // failed or offline
+	default: // failed, offline or the wrong account
 		s.syncAccountGroup(c, t, svc, snap, false)
 	}
 	s.syncFooter(c, t, svc, snap)
@@ -154,6 +163,7 @@ func (s *Settings) syncAccountGroup(c *ui.Context, t *theme.Tokens, svc SyncServ
 		} else {
 			s.syncThisMacRow(c, t, svc, snap)
 		}
+		s.syncGoogleRow(c, t, svc, snap)
 	})
 }
 
@@ -162,6 +172,10 @@ func (s *Settings) syncAccountRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 		theme.Text(c, theme.Body, t.Text, s.syncAccountName(snap)).Ellipsis("…")
 		theme.Text(c, theme.Meta, t.TextSecondary, s.syncAccountLine(snap))
 	}, func() {
+		if snap.Phase == data.SyncWrongAccount {
+			// Sign out is in This Mac's row, beside what is wrong.
+			return
+		}
 		if settingsLink(c, t, "sync-signout", s.say.SettingsSyncSignOut(), s.say.SettingsSyncSignOut()).Clicked() {
 			svc.SyncSignOut()
 		}
@@ -169,6 +183,10 @@ func (s *Settings) syncAccountRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 }
 
 func (s *Settings) syncThisMacRow(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+	if snap.Phase == data.SyncWrongAccount {
+		s.syncWrongAccountRow(c, t, svc, snap)
+		return
+	}
 	failed := snap.Phase == data.SyncFailed
 	offline := snap.Phase == data.SyncOffline
 	syncRow(c, t, "this-mac", false, func() {
@@ -461,15 +479,17 @@ func (s *Settings) syncAccountLine(snap data.SyncSnapshot) string {
 	return s.say.SettingsSyncSignedInDevices(itoa(len(snap.Devices)))
 }
 
-// syncFailureText words the reason of a failed sync in the window's language. An error of a kind
-// the pane does not know reads as the server not answering; the technical text stays in the
-// snapshot for the logs.
+// syncFailureText words the reason of a failed sync in the window's language. Only a network
+// failure or a 5xx is the server not answering; an error of a kind the pane does not know is a
+// plain "something went wrong", and the technical text stays in the snapshot for the logs.
 func (s *Settings) syncFailureText(snap data.SyncSnapshot) string {
 	switch snap.Failure {
 	case data.SyncFailureAuth:
 		return s.say.SettingsSyncFailedAuth()
+	case data.SyncFailureNoAnswer:
+		return s.say.SettingsSyncFailedNoAnswer()
 	}
-	return s.say.SettingsSyncFailedNoAnswer()
+	return s.say.SettingsSyncFailedOther()
 }
 
 // syncRetryLine says when a failed sync tries again.
@@ -497,7 +517,7 @@ func (a *App) SyncNeedsAttention() bool {
 	if !snap.Linked {
 		return false
 	}
-	if snap.Phase == data.SyncSignedOut {
+	if snap.Phase == data.SyncSignedOut || snap.Phase == data.SyncWrongAccount {
 		return true
 	}
 	return snap.Phase == data.SyncFailed && !snap.FailedSince.IsZero() && a.Now().Sub(snap.FailedSince) > syncAttention

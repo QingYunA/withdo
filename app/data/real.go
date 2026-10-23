@@ -143,7 +143,7 @@ func (r *Real) startSync(ctx context.Context) {
 		r.mu.Unlock()
 		// A runner a 401 stopped can start again once the user signed in; its client reads the
 		// refresh token the sign-in just stored.
-		if existing.Status().State == syncclient.StateSignedOut {
+		if state := existing.Status().State; state == syncclient.StateSignedOut || state == syncclient.StateWrongAccount {
 			r.mu.Lock()
 			r.sync.status = syncclient.Status{State: syncclient.StateSyncing}
 			r.mu.Unlock()

@@ -20,6 +20,7 @@ type fakeSync struct {
 	checks, resends, googles                                               int
 	open                                                                   func(string)
 	requestedCodes, codes, resets                                          []string
+	useOld, moves, googleRefreshes, googleLinks, googleLinkCancels         int
 }
 
 func (f *fakeSync) SyncSnapshot() data.SyncSnapshot { return f.snap }
@@ -50,10 +51,22 @@ func (f *fakeSync) SyncCancel() {
 	f.snap.Conflict = nil
 	f.snap.Phase = data.SyncSignedOut
 }
-func (f *fakeSync) SyncSignOut()        { f.signOuts++ }
-func (f *fakeSync) SyncNow()            { f.syncNows++ }
-func (f *fakeSync) SyncRetry()          { f.retries++ }
-func (f *fakeSync) SyncRefreshDevices() { f.refreshes++ }
+func (f *fakeSync) SyncUseOldAccount() {
+	f.useOld++
+	f.snap.OtherAccount, f.snap.Phase = nil, data.SyncSignedOut
+	f.snap.SignInEmail = "old"
+}
+func (f *fakeSync) SyncMoveToAccount()     { f.moves++ }
+func (f *fakeSync) SyncRefreshGoogleLink() { f.googleRefreshes++ }
+func (f *fakeSync) SyncLinkGoogle(open func(url string)) {
+	f.googleLinks++
+	f.open = open
+}
+func (f *fakeSync) SyncCancelGoogleLink() { f.googleLinkCancels++ }
+func (f *fakeSync) SyncSignOut()          { f.signOuts++ }
+func (f *fakeSync) SyncNow()              { f.syncNows++ }
+func (f *fakeSync) SyncRetry()            { f.retries++ }
+func (f *fakeSync) SyncRefreshDevices()   { f.refreshes++ }
 func (f *fakeSync) SyncSetServer(server string) error {
 	if f.setErr != nil {
 		return f.setErr
@@ -297,4 +310,121 @@ func TestAReplyReportShowsYou(t *testing.T) {
 	m.OpenTask(task.ID)
 	tt.Frame()
 	has(t, tt, "You", "Thanks, that is done.")
+}
+
+func wrongAccountSnap() data.SyncSnapshot {
+	snap := syncedSync()
+	snap.Phase, snap.Failure = data.SyncWrongAccount, data.SyncFailureWrongAccount
+	snap.LastError = "sync: this device is linked to another account (status 403)"
+	snap.Pending = 204
+	snap.GoogleLink = data.GoogleLinkAvailable
+	return snap
+}
+
+// The server's 403 for a device of another account says so, offers Sign out in This Mac's row, and
+// has no Retry, no Sync now and no "server did not answer".
+func TestSyncPaneWrongAccount(t *testing.T) {
+	r, fs := syncPane(t, wrongAccountSnap())
+	has(t, r.tt, "This Mac is linked to another account. Sign out, then sign in with that account.",
+		"204 changes wait on this Mac and are not lost", "Sign out")
+	hasNot(t, r.tt, "Retry", "Sync now", "Sync failed", "the server did not answer", "Google")
+	if err := r.tt.Click("Sign out"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.signOuts != 1 {
+		t.Errorf("Sign out called %d times", fs.signOuts)
+	}
+}
+
+// An error of a kind the pane does not know is not worded as the server not answering.
+func TestSyncPaneUnknownFailureIsNotNoAnswer(t *testing.T) {
+	snap := syncedSync()
+	snap.Phase, snap.Failure = data.SyncFailed, data.SyncFailureUnknown
+	snap.LastError = "sync server: not found (status 404)"
+	r, _ := syncPane(t, snap)
+	has(t, r.tt, "Sync failed: something went wrong")
+	hasNot(t, r.tt, "did not answer")
+}
+
+func otherAccountSnap(previous string) data.SyncSnapshot {
+	snap := signedOutCodeSync()
+	snap.Phase = data.SyncOtherAccountSheet
+	snap.Linked, snap.Account = true, "Bee"
+	snap.OtherAccount = &data.SyncOtherAccount{PreviousEmail: previous, AccountEmail: "bee@example.com"}
+	return snap
+}
+
+func TestSyncPaneOtherAccountSheetNamesBothAndDefaultsToTheOldAccount(t *testing.T) {
+	r, fs := syncPane(t, otherAccountSnap("serein7z@163.com"))
+	has(t, r.tt, "This Mac was linked to another account",
+		"It was synced with serein7z@163.com. You just signed in as bee@example.com.",
+		"Sign in with serein7z@163.com instead", "Recommended",
+		"Move this Mac to bee@example.com", "Cancel", "Continue")
+	if err := r.tt.Click("Continue"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.useOld != 1 || fs.moves != 0 {
+		t.Fatalf("Continue chose the old account %d times and moved %d times", fs.useOld, fs.moves)
+	}
+	if r.s.syncLogin != "serein7z@163.com" {
+		t.Errorf("the email field = %q, want the old address", r.s.syncLogin)
+	}
+}
+
+func TestSyncPaneOtherAccountMove(t *testing.T) {
+	r, fs := syncPane(t, otherAccountSnap("serein7z@163.com"))
+	if err := r.tt.Click("Move this Mac to bee@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.tt.Click("Continue"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.moves != 1 || fs.useOld != 0 {
+		t.Fatalf("moved %d times, chose the old account %d times", fs.moves, fs.useOld)
+	}
+}
+
+func TestSyncPaneOtherAccountCancelSignsOut(t *testing.T) {
+	r, fs := syncPane(t, otherAccountSnap(""))
+	has(t, r.tt, "You just signed in as bee@example.com.", "Sign in with another account")
+	if err := r.tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.cancels != 1 {
+		t.Errorf("Cancel called %d times", fs.cancels)
+	}
+}
+
+func TestSyncPaneGoogleRow(t *testing.T) {
+	snap := syncedSync()
+	snap.GoogleLink = data.GoogleLinkAvailable
+	r, fs := syncPane(t, snap)
+	has(t, r.tt, "Google", "Link")
+	if err := r.tt.Click("Link"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.googleLinks != 1 {
+		t.Errorf("Link called %d times", fs.googleLinks)
+	}
+	if fs.googleRefreshes < 1 {
+		t.Error("the pane never asked whether Google is linked")
+	}
+
+	snap.GoogleLink = data.GoogleLinkLinked
+	r, _ = syncPane(t, snap)
+	has(t, r.tt, "Google", "Linked")
+
+	snap.GoogleLink, snap.GoogleLinkFailure = data.GoogleLinkAvailable, data.GoogleLinkFailureUsed
+	r, _ = syncPane(t, snap)
+	has(t, r.tt, "This Google account is already used by another account", "Link")
+
+	snap.GoogleLink, snap.GoogleLinkFailure = data.GoogleLinkWaiting, data.GoogleLinkFailureNone
+	r, fs = syncPane(t, snap)
+	has(t, r.tt, "Finish in your browser", "Cancel")
+	if err := r.tt.Click("Cancel"); err != nil {
+		t.Fatal(err)
+	}
+	if fs.googleLinkCancels != 1 {
+		t.Errorf("Cancel called %d times", fs.googleLinkCancels)
+	}
 }
