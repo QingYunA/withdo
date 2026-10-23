@@ -764,5 +764,8 @@
   "settingsSyncCodeExpired": "验证码过期了，已经发了一个新的",
   "settingsSyncTooManyTriesMinute": "试得太频繁了，等一分钟",
   "settingsSyncWrongEmailPassword": "邮箱或密码不对",
-  "settingsSyncSignInShort": "登录"
+  "settingsSyncSignInShort": "登录",
+  "sectionQueued": "排队中",
+  "foldAfterNextWeek": "下周以后",
+  "pillToReview": "待审查"
 }

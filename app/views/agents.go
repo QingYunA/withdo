@@ -36,22 +36,50 @@ func (m *Main) agentsScreen(c *ui.Context, t *theme.Tokens) {
 			})
 			return
 		}
-		m.workingGroups(c, t)
+		m.agentGroups(c, t, "", m.agentsPage.Working)
+		m.queuedGroups(c, t)
 		m.agentsDoneToday(c, t)
+		m.agentsBacklog(c, t)
 	})
 }
 
-// workingGroups are the tasks at work, a group for each agent: a header with its avatar, its name and
-// how many of its tasks are at work, then those rows (buildPages put each agent's rows together).
-func (m *Main) workingGroups(c *ui.Context, t *theme.Tokens) {
-	rows := m.agentsPage.Working
+// queuedGroups are the agent tasks with no project that wait to be started, under their section header.
+func (m *Main) queuedGroups(c *ui.Context, t *theme.Tokens) {
+	if len(m.agentsPage.Queued) == 0 {
+		return
+	}
+	sectionHeader(c, t, m.say.SectionQueued(), len(m.agentsPage.Queued))
+	m.agentGroups(c, t, "queued:", m.agentsPage.Queued)
+}
+
+// agentsBacklog is the last line of Agents: the agent tasks parked in the backlog that no project
+// holds, folded like Today folds its own.
+func (m *Main) agentsBacklog(c *ui.Context, t *theme.Tokens) {
+	n := m.agentsPage.BacklogTotal
+	if n == 0 {
+		return
+	}
+	name := statusLabel(m.say, data.Backlog)
+	if len(m.agentsPage.Backlog) > 0 {
+		sectionHeader(c, t, name, n)
+		m.agentGroups(c, t, "backlog:", m.agentsPage.Backlog)
+	}
+	if m.foldLine(c, t, name, n, m.app.backlogOpen, 16) {
+		m.app.backlogOpen = !m.app.backlogOpen
+	}
+}
+
+// agentGroups are agent tasks, a group for each agent: a header with its avatar, its name and
+// how many of its tasks are there, then those rows (buildPages put each agent's rows together).
+// prefix keeps the headers of two sections apart.
+func (m *Main) agentGroups(c *ui.Context, t *theme.Tokens, prefix string, rows []data.AgentRow) {
 	for i := 0; i < len(rows); {
 		name := agentName(m.app.taskAgent(rows[i].Task))
 		end := i
 		for end < len(rows) && agentName(m.app.taskAgent(rows[end].Task)) == name {
 			end++
 		}
-		m.agentHeader(c, t, name, end-i)
+		m.agentHeader(c, t, prefix+name, name, end-i)
 		for _, r := range rows[i:end] {
 			m.workingRow(c, t, r)
 		}
@@ -60,8 +88,8 @@ func (m *Main) workingGroups(c *ui.Context, t *theme.Tokens) {
 }
 
 // agentHeader heads an agent's group: its avatar, its name and the number of its tasks at work.
-func (m *Main) agentHeader(c *ui.Context, t *theme.Tokens, name string, n int) {
-	ui.Row(c.Key("agent:"+name)).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+func (m *Main) agentHeader(c *ui.Context, t *theme.Tokens, key, name string, n int) {
+	ui.Row(c.Key("agent:"+key)).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.AvatarIcon(c.Key("avatar"), theme.AgentAvatar(strings.ToLower(name)), theme.AvatarRow)
 		theme.Text(c, theme.BodyStrong, t.Text, name).Shrink(1).MinWidth(0).Ellipsis("…")
 		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n)).Shrink(0)
@@ -83,7 +111,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 			switch {
 			case r.Status == data.Blocked:
 				m.statusPill(c, t, "pill", r.Status)
-			case r.Live:
+			case r.Live && r.Status == data.Doing: // a queued or parked task is not at work
 				liveDot(c, t)
 			}
 			m.rowThumb(c, t, r.ID)
@@ -151,8 +179,13 @@ func (m *Main) statusPill(c *ui.Context, t *theme.Tokens, key string, s data.Sta
 	case data.Review, data.Todo, data.Backlog, data.Cancelled:
 		ink, well = t.TextSecondary, t.BgSubtle
 	}
+	return m.pillBox(c, key, ink, well, m.pillLabel(s))
+}
+
+// pillBox is a small tinted label.
+func (m *Main) pillBox(c *ui.Context, key string, ink, well ui.Color, label string) ui.Element {
 	return ui.Row(c.Key(key)).Shrink(0).Padding(1, 7).Radius(theme.RadiusControl).Background(well).AlignItems(ui.Center).
-		Children(func() { theme.Text(c, theme.Meta, ink, m.pillLabel(s)).Shrink(0) })
+		Children(func() { theme.Text(c, theme.Meta, ink, label).Shrink(0) })
 }
 
 // pillLabel is the words of a status pill.

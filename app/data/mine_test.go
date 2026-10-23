@@ -170,8 +170,8 @@ func TestBuildMineReviewWithoutPRAndMyBlockedTask(t *testing.T) {
 	if got := titles(n.FromAgents); !equal(got, []string{"Reviewable"}) || n.FromAgents[0].Kind != NeedReview || n.FromAgents[0].PRNumber != 0 {
 		t.Fatalf("from agents %q: only an agent hands things over", got)
 	}
-	if got := titles(n.Today); !equal(got, []string{"Stuck"}) {
-		t.Errorf("today %q: my blocked task is mine to unblock; a review task of mine waits on others", got)
+	if got := titles(n.Today); !equal(got, []string{"Waiting on someone", "Stuck"}) {
+		t.Errorf("today %q: my blocked task is mine to unblock; a review task of mine waits for my look", got)
 	}
 }
 
@@ -327,19 +327,19 @@ func TestBuildMineKeepsTasksWithNoProjectParkedInTheBacklogReachable(t *testing.
 	f := emptyDemo(t)
 	p := f.SeedProject("scratch", "me/scratch")
 	f.CreateTask(CreateTaskInput{Title: "Parked idea", Status: Backlog})
-	f.CreateTask(CreateTaskInput{Title: "Parked by an agent", Status: Backlog, Source: SourceAgent})
+	f.CreateTask(CreateTaskInput{Title: "Parked by an agent", Status: Backlog, Source: SourceAgent})      // the Agents page folds it
 	f.CreateTask(CreateTaskInput{Title: "Parked in a project", Status: Backlog, ProjectID: IntPtr(p.ID)}) // its project's page folds it
 	in := mineInputOf(t, f)
 	n := BuildMine(in)
-	if n.ParkedTotal != 2 || len(n.Parked) != 0 || n.Empty() != true {
-		t.Errorf("parked %d (%d rows drawn), empty %v: two are parked and the fold is closed", n.ParkedTotal, len(n.Parked), n.Empty())
+	if n.ParkedTotal != 1 || len(n.Parked) != 0 || n.Empty() != true {
+		t.Errorf("parked %d (%d rows drawn), empty %v: one is parked and the fold is closed", n.ParkedTotal, len(n.Parked), n.Empty())
 	}
 	in.ParkedOpen = true
 	n = BuildMine(in)
-	if got := titles(n.Parked); !equal(got, []string{"Parked by an agent", "Parked idea"}) {
-		t.Errorf("parked rows %q, want the newest first", got)
+	if got := titles(n.Parked); !equal(got, []string{"Parked idea"}) {
+		t.Errorf("parked rows %q", got)
 	}
-	if len(n.IDs()) != 2 {
+	if len(n.IDs()) != 1 {
 		t.Errorf("ids %v: the open fold's rows are walked by the keys", n.IDs())
 	}
 }

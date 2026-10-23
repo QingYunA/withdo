@@ -11443,3 +11443,51 @@ func SettingsSyncSignInShort() string { return In(i18n.Locale()).SettingsSyncSig
 func (msgs Messages) SettingsSyncSignInShort() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInShort", nil)
 }
+
+// SectionQueued says "Queued"
+// in the language the app shows.
+//
+// Section of Agents: tasks an agent was given (or filed) that have no
+// project and are not started yet.
+func SectionQueued() string { return In(i18n.Locale()).SectionQueued() }
+
+// SectionQueued says "Queued"
+// in the language of msgs.
+//
+// Section of Agents: tasks an agent was given (or filed) that have no
+// project and are not started yet.
+func (msgs Messages) SectionQueued() string {
+	return Catalog.Format(msgs.locale, "sectionQueued", nil)
+}
+
+// FoldAfterNextWeek says "After next week"
+// in the language the app shows.
+//
+// Name of the fold at the end of Later on Today: the user's tasks with no
+// project that are due more than a week ahead.
+func FoldAfterNextWeek() string { return In(i18n.Locale()).FoldAfterNextWeek() }
+
+// FoldAfterNextWeek says "After next week"
+// in the language of msgs.
+//
+// Name of the fold at the end of Later on Today: the user's tasks with no
+// project that are due more than a week ahead.
+func (msgs Messages) FoldAfterNextWeek() string {
+	return Catalog.Format(msgs.locale, "foldAfterNextWeek", nil)
+}
+
+// PillToReview says "To review"
+// in the language the app shows.
+//
+// Small tag on a row of Today: the user's own task is in review and waits
+// for their look.
+func PillToReview() string { return In(i18n.Locale()).PillToReview() }
+
+// PillToReview says "To review"
+// in the language of msgs.
+//
+// Small tag on a row of Today: the user's own task is in review and waits
+// for their look.
+func (msgs Messages) PillToReview() string {
+	return Catalog.Format(msgs.locale, "pillToReview", nil)
+}

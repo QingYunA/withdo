@@ -122,8 +122,24 @@ func (m *Main) mineLists(c *ui.Context, t *theme.Tokens, inline bool) {
 	if m.minePage.MoreLater > 0 && link(c, t, m.say.ShowAll()).Margin(8, 0, 0).Clicked() {
 		m.app.showAllLater = true
 	}
+	m.afterSection(c, t)
 	m.doneTodaySection(c, t, m.minePage.Done, m.minePage.MoreDone)
 	m.parkedSection(c, t)
+}
+
+// afterSection is the fold at the end of Later: my tasks with no project that are due more than a
+// week ahead, closed until opened, then by date. A project's page holds the ones with a project.
+func (m *Main) afterSection(c *ui.Context, t *theme.Tokens) {
+	n := m.minePage.AfterTotal
+	if n == 0 {
+		return
+	}
+	if len(m.minePage.After) > 0 {
+		m.mineSection(c, t, m.say.FoldAfterNextWeek(), m.minePage.After)
+	}
+	if m.foldLine(c, t, m.say.FoldAfterNextWeek(), n, m.app.afterOpen, 16) {
+		m.app.afterOpen = !m.app.afterOpen
+	}
 }
 
 // parkedSection is the last line of Today: the tasks parked in the backlog that no project holds,
@@ -136,7 +152,7 @@ func (m *Main) parkedSection(c *ui.Context, t *theme.Tokens) {
 	if len(m.minePage.Parked) > 0 {
 		m.mineSection(c, t, statusLabel(m.say, data.Backlog), m.minePage.Parked)
 	}
-	if m.foldLine(c, t, n, m.app.parkedOpen, 16) {
+	if m.foldLine(c, t, statusLabel(m.say, data.Backlog), n, m.app.parkedOpen, 16) {
 		m.app.parkedOpen = !m.app.parkedOpen
 	}
 }
@@ -437,6 +453,9 @@ func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items [
 					m.glyphSlot(c, t, it.Task, ph.fill)
 					body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
 					right(c, func() {
+						if it.Status == data.Review { // mine, and it waits for my look
+							m.pillBox(c, "to-review", t.TextSecondary, t.BgSubtle, m.say.PillToReview())
+						}
 						priorityMark(c, t, it.Task)
 						m.rowThumb(c, t, it.ID)
 						if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {

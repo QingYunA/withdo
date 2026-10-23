@@ -4511,5 +4511,17 @@
   "settingsSyncSignInShort": "Sign in",
   "@settingsSyncSignInShort": {
     "description": "The password step's sign-in button."
+  },
+  "sectionQueued": "Queued",
+  "@sectionQueued": {
+    "description": "Section of Agents: tasks an agent was given (or filed) that have no project and are not started yet."
+  },
+  "foldAfterNextWeek": "After next week",
+  "@foldAfterNextWeek": {
+    "description": "Name of the fold at the end of Later on Today: the user's tasks with no project that are due more than a week ahead."
+  },
+  "pillToReview": "To review",
+  "@pillToReview": {
+    "description": "Small tag on a row of Today: the user's own task is in review and waits for their look."
   }
 }

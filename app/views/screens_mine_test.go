@@ -108,3 +108,27 @@ func TestScreensFilterAndGroups(t *testing.T) {
 		})
 	}
 }
+
+// TestScreensVisibilityGaps renders the rows and folds that keep every task on Today or Agents: a
+// task of mine in review, the After next week fold open, and the queued tasks and Backlog fold of
+// Agents.
+func TestScreensVisibilityGaps(t *testing.T) {
+	screensTest(t)
+	for _, a := range appearances() {
+		app, store := mineApp(t)
+		far := func(days int) *time.Time { return data.TimePtr(fixedNow().Add(time.Duration(days) * 24 * time.Hour)) }
+		store.CreateTask(data.CreateTaskInput{Title: "Check the draft of the launch post", Status: data.Review, Priority: data.P1})
+		store.CreateTask(data.CreateTaskInput{Title: "Renew the passport", DueAt: far(40)})
+		store.CreateTask(data.CreateTaskInput{Title: "Book flights for the conference", DueAt: far(15)})
+		store.CreateTask(data.CreateTaskInput{Title: "Draft the changelog", Status: data.Todo, Source: data.SourceAgent})
+		store.CreateTask(data.CreateTaskInput{Title: "Try a faster diff algorithm", Status: data.Backlog, Source: data.SourceAgent})
+		app.Refresh()
+		mainShot(t, "mine-review-"+a.suffix+".png", app, a.dark, nil)
+		mainShot(t, "mine-after-next-week-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) {
+			app.afterOpen = true
+		})
+		app.afterOpen = false
+		mainShot(t, "agents-queued-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents}) })
+		zhShot(t, "agents-queued-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.goTo(nav{screen: screenAgents}) })
+	}
+}

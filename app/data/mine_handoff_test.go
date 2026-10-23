@@ -49,8 +49,8 @@ func TestAWaitingTaskIsNeitherStaleNorWorking(t *testing.T) {
 		t.Errorf("item: stale %v after %d hours, want not stale: it is To do, nobody went quiet", got.Stale, got.Hours)
 	}
 	a := BuildAgents(in)
-	if a.Count() != 0 || len(a.Working) != 0 || len(a.Done) != 0 || !a.Empty() {
-		t.Errorf("Agents = %+v, want nothing: a waiting task is not at work", a)
+	if a.Count() != 0 || len(a.Working) != 0 || len(a.Done) != 0 || len(a.Queued) != 1 {
+		t.Errorf("Agents = %+v, want it queued only: a waiting task is not at work", a)
 	}
 }
 
