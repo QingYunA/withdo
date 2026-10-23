@@ -61,7 +61,7 @@ func (s *Server) applyPush(ctx context.Context, sess *session, req *syncproto.Pu
 		WHERE id = $1 AND workspace_id = $2 AND user_id = $3 FOR UPDATE`,
 		req.DeviceID, sess.workspaceID, sess.userID).Scan(&last); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, 0, false, forbidden("device does not belong to this user")
+			return 0, 0, false, deviceNotInAccount()
 		}
 		return 0, 0, false, fmt.Errorf("read device: %w", err)
 	}

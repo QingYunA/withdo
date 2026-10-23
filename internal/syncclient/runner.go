@@ -28,6 +28,9 @@ const (
 	StateError     State = "error"
 	StateSeeding   State = "seeding"
 	StateSignedOut State = "signed out"
+	// StateWrongAccount is a signed-in account that does not own this database's device. The runner
+	// stops, like signed out: nothing it could retry would change the answer.
+	StateWrongAccount State = "wrong account"
 )
 
 // Clock is the time source a Runner uses for its debounce, timer and backoff. Tests inject a fake
@@ -143,7 +146,7 @@ func (r *Runner) Start(ctx context.Context) error {
 			return errors.New("syncclient: the runner is closed")
 		}
 		if life := r.life; life != nil {
-			if r.status.State != StateSignedOut {
+			if r.status.State != StateSignedOut && r.status.State != StateWrongAccount {
 				r.mu.Unlock()
 				return nil
 			}
@@ -324,6 +327,10 @@ func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
 		next.State = StateSignedOut
 		next.LastError = err.Error()
 		r.client.RecordResult(ctx, err)
+	case errors.Is(err, ErrDeviceNotInAccount):
+		next.State = StateWrongAccount
+		next.LastError = err.Error()
+		r.client.RecordResult(ctx, err)
 	case errors.Is(err, ErrSeeding):
 		next.State = StateSeeding
 		next.LastError = err.Error()
@@ -337,7 +344,7 @@ func (r *Runner) syncOnce(ctx context.Context) (ok, stop bool) {
 		next.LastError = err.Error()
 		r.client.RecordResult(ctx, err)
 	}
-	if next.State == StateSignedOut {
+	if next.State == StateSignedOut || next.State == StateWrongAccount {
 		r.signOut(next)
 		return false, true
 	}
@@ -458,6 +465,14 @@ func (r *Runner) watchEvents(ctx context.Context) {
 			current := r.Status()
 			r.signOut(Status{
 				State: StateSignedOut, LastSynced: current.LastSynced,
+				LastError: err.Error(), Pending: current.Pending,
+			})
+			return
+		}
+		if errors.Is(err, ErrDeviceNotInAccount) {
+			current := r.Status()
+			r.signOut(Status{
+				State: StateWrongAccount, LastSynced: current.LastSynced,
 				LastError: err.Error(), Pending: current.Pending,
 			})
 			return

@@ -28,7 +28,14 @@ var (
 	ErrSeeding = errors.New("sync: another device is seeding the workspace")
 	// ErrNotLinked says Sync was called on a database Link has not linked yet.
 	ErrNotLinked = errors.New("sync: the database is not linked")
+	// ErrDeviceNotInAccount says the server refused this database's device id (403) because the
+	// signed-in account does not own it: the database is linked to another account. Retrying
+	// cannot help; the user signs out and signs in with the account it belongs to.
+	ErrDeviceNotInAccount = errors.New("sync: this device is linked to another account")
 )
+
+// codeDeviceNotInAccount is the "code" of the server's 403 for a device of another account.
+const codeDeviceNotInAccount = "device_not_in_account"
 
 // Options configure a Client.
 type Options struct {
@@ -87,10 +94,38 @@ func (c *Client) token(ctx context.Context) (string, error) {
 type statusError struct {
 	status  int
 	message string
+	code    string
 }
 
 func (e *statusError) Error() string {
+	if e.foreignDevice() {
+		return fmt.Sprintf("%s (status %d)", ErrDeviceNotInAccount.Error(), e.status)
+	}
 	return fmt.Sprintf("sync server: %s (status %d)", e.message, e.status)
+}
+
+// foreignDevice says whether this is the 403 for a device of another account. A server older than
+// the code answers the same text without it.
+func (e *statusError) foreignDevice() bool {
+	return e.status == http.StatusForbidden &&
+		(e.code == codeDeviceNotInAccount || e.message == "device does not belong to this user")
+}
+
+// Unwrap lets errors.Is(err, ErrDeviceNotInAccount) see through the status.
+func (e *statusError) Unwrap() error {
+	if e.foreignDevice() {
+		return ErrDeviceNotInAccount
+	}
+	return nil
+}
+
+// newStatusError reads a non-2xx answer's {"error","code"} body.
+func newStatusError(status int, raw []byte) *statusError {
+	var body struct {
+		Code string `json:"code"`
+	}
+	_ = json.Unmarshal(raw, &body)
+	return &statusError{status: status, message: errorMessage(raw), code: body.Code}
 }
 
 // isStatus reports whether err is an HTTP answer with the given status.
@@ -131,7 +166,7 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode/100 != 2 {
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return &statusError{status: resp.StatusCode, message: errorMessage(raw)}
+		return newStatusError(resp.StatusCode, raw)
 	}
 	if out == nil {
 		return nil

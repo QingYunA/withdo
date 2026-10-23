@@ -154,7 +154,7 @@ func (s *Server) deviceSeeded(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1 AND workspace_id = $2 AND user_id = $3 FOR UPDATE`,
 		req.DeviceID, sess.workspaceID, sess.userID).Scan(&seeding)
 	if errors.Is(err, pgx.ErrNoRows) {
-		writeError(w, forbidden("device does not belong to this user"))
+		writeError(w, deviceNotInAccount())
 		return
 	}
 	if err != nil {

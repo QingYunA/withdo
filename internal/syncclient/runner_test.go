@@ -92,6 +92,7 @@ type runnerServer struct {
 	*httptest.Server
 	mu          sync.Mutex
 	pullStatus  int
+	pullBody    string
 	pulls       int
 	subs        map[chan struct{}]struct{}
 	pullGate    chan struct{}
@@ -119,6 +120,13 @@ func newRunnerServer(t *testing.T) *runnerServer {
 func (s *runnerServer) setPullStatus(status int) {
 	s.mu.Lock()
 	s.pullStatus = status
+	s.mu.Unlock()
+}
+
+// setPullFailure makes pulls answer status with a JSON body.
+func (s *runnerServer) setPullFailure(status int, body string) {
+	s.mu.Lock()
+	s.pullStatus, s.pullBody = status, body
 	s.mu.Unlock()
 }
 
@@ -159,7 +167,7 @@ func (s *runnerServer) blockNextPull() (release chan struct{}, entered <-chan st
 
 func (s *runnerServer) handlePull(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
-	status := s.pullStatus
+	status, body := s.pullStatus, s.pullBody
 	gate, entered := s.pullGate, s.gateEntered
 	if gate != nil {
 		s.pullGate, s.gateEntered = nil, nil
@@ -179,6 +187,12 @@ func (s *runnerServer) handlePull(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if status != http.StatusOK {
+		if body != "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(status)
+			_, _ = fmt.Fprint(w, body)
+			return
+		}
 		http.Error(w, http.StatusText(status), status)
 		return
 	}

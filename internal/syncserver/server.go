@@ -177,13 +177,13 @@ func (s *Server) lookupDevice(ctx context.Context, sess *session, id string) (de
 		"SELECT user_id, workspace_id, last_mutation_id FROM devices WHERE id = $1", id).
 		Scan(&d.userID, &d.workspaceID, &d.lastMutationID)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return d, forbidden("device does not belong to this user")
+		return d, deviceNotInAccount()
 	}
 	if err != nil {
 		return d, fmt.Errorf("read device: %w", err)
 	}
 	if d.userID != sess.userID || d.workspaceID != sess.workspaceID {
-		return d, forbidden("device does not belong to this user")
+		return d, deviceNotInAccount()
 	}
 	return d, nil
 }
