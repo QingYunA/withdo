@@ -265,4 +265,17 @@
     <string name="title_inbox">Inbox</string>
     <string name="notification_channel_reminders">Reminders</string>
     <string name="notification_channel_reminders_description">Reminders when a task comes due</string>
+
+    <string name="update_available">Version %1$s is available</string>
+    <string name="update_action">Update</string>
+    <string name="update_later">Later</string>
+    <string name="update_downloading">Downloading the update… %1$d%%</string>
+    <string name="update_allow_installs">Allow installs from ADHD Todo in Settings, then come back</string>
+    <string name="update_failed">Couldn’t download the update</string>
+    <string name="update_row_title">App updates</string>
+    <string name="update_row_version">Version %1$s</string>
+    <string name="update_row_checking">Checking…</string>
+    <string name="update_row_up_to_date">Version %1$s · up to date</string>
+    <string name="update_row_check_failed">Couldn’t check; try again later</string>
+    <string name="update_row_check">Check now</string>
 </resources>

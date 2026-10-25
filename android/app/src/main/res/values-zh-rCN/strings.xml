@@ -265,4 +265,17 @@
     <string name="title_inbox">收件箱</string>
     <string name="notification_channel_reminders">提醒</string>
     <string name="notification_channel_reminders_description">任务到点时的提醒</string>
+
+    <string name="update_available">有新版本 %1$s</string>
+    <string name="update_action">更新</string>
+    <string name="update_later">稍后</string>
+    <string name="update_downloading">正在下载更新… %1$d%%</string>
+    <string name="update_allow_installs">请在设置里允许 ADHD Todo 安装应用，然后回来</string>
+    <string name="update_failed">没能下载更新</string>
+    <string name="update_row_title">应用更新</string>
+    <string name="update_row_version">版本 %1$s</string>
+    <string name="update_row_checking">正在检查…</string>
+    <string name="update_row_up_to_date">版本 %1$s · 已是最新</string>
+    <string name="update_row_check_failed">没能检查，稍后再试</string>
+    <string name="update_row_check">立即检查</string>
 </resources>

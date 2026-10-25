@@ -60,6 +60,7 @@ import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.Task
 import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.TaskPage
+import xyz.sriai.adhdtodo.data.UpdateUi
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
@@ -81,6 +82,10 @@ fun App(
     initialRoute: String? = null,
     demoSyncState: String? = null,
     onInitialRouteConsumed: () -> Unit = {},
+    update: UpdateUi = UpdateUi(),
+    onCheckUpdate: () -> Unit = {},
+    onUpdate: () -> Unit = {},
+    onDismissUpdate: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = context.resources
@@ -521,6 +526,7 @@ fun App(
         Column(Modifier.weight(1f).statusBarsPadding().imePadding()) {
             if (route == "home") {
                 PageHeader(title = title, subtitle = subtitle, syncBlocked = blocked, onSync = { openSync() })
+                if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
             } else if (route == "sync") {
                 BackBar(title = stringResource(R.string.sync_title), onBack = { pop() })
             } else if (route.startsWith("project:")) {
@@ -615,6 +621,9 @@ fun App(
                             SyncScreen(
                                 model = model,
                                 words = words,
+                                update = update,
+                                onCheckUpdate = onCheckUpdate,
+                                onUpdate = onUpdate,
                                 serverEditing = serverEditing,
                                 serverDraft = serverDraft,
                                 serverError = serverError,

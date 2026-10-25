@@ -68,6 +68,9 @@ import xyz.sriai.adhdtodo.ui.SyncPhase
 import xyz.sriai.adhdtodo.ui.SyncScreen
 import xyz.sriai.adhdtodo.ui.Tab
 import xyz.sriai.adhdtodo.ui.TaskScreen
+import xyz.sriai.adhdtodo.ui.UpdateBanner
+import xyz.sriai.adhdtodo.data.UpdatePhase
+import xyz.sriai.adhdtodo.data.UpdateUi
 import xyz.sriai.adhdtodo.ui.Words
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
@@ -118,6 +121,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
         TASK,
         MINE_EMPTY,
         CALENDAR,
+        UPDATE_BANNER,
+        UPDATE_BANNER_DOWNLOADING,
+        SYNC_UPDATE_AVAILABLE,
         SYNC_SIGNING_IN_CHECKING,
         SYNC_SIGNING_IN_DOWNLOADING,
         SYNC_SIGNIN_EMAIL,
@@ -156,6 +162,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task" to Screen.TASK,
                 "mine-empty" to Screen.MINE_EMPTY,
                 "calendar" to Screen.CALENDAR,
+                "update-banner" to Screen.UPDATE_BANNER,
+                "update-banner-downloading" to Screen.UPDATE_BANNER_DOWNLOADING,
+                "sync-update-available" to Screen.SYNC_UPDATE_AVAILABLE,
                 "sync-signing-in-checking" to Screen.SYNC_SIGNING_IN_CHECKING,
                 "sync-signing-in-downloading" to Screen.SYNC_SIGNING_IN_DOWNLOADING,
                 "sync-signin-email" to Screen.SYNC_SIGNIN_EMAIL,
@@ -178,7 +187,8 @@ class AndroidScreensTest(private val case: ScreenCase) {
             val chinese = setOf(
                 "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
                 "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind",
-                "sync-wrong-account", "sync-other-account", "sync-google-link", "sync-google-linked")
+                "sync-wrong-account", "sync-other-account", "sync-google-link", "sync-google-linked",
+                "update-banner", "sync-update-available")
             return screens.flatMap { (name, screen) ->
                 buildList {
                     add(ScreenCase("$name-light", night = false, zh = false, screen = screen))
@@ -346,6 +356,41 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
             }
         }
 
+        AndroidScreensTest.Screen.UPDATE_BANNER,
+        AndroidScreensTest.Screen.UPDATE_BANNER_DOWNLOADING,
+        -> TestFrame(
+            title = stringResource(R.string.title_mine),
+            subtitle = words.headerDate(),
+            tab = Tab.MINE,
+            count = mine.fromAgents.size,
+            composer = stringResource(R.string.composer_placeholder_mine),
+            belowHeader = {
+                UpdateBanner(
+                    update = if (screen == AndroidScreensTest.Screen.UPDATE_BANNER) {
+                        UpdateUi(UpdatePhase.AVAILABLE, current = "0.8.1", version = "0.9.0")
+                    } else {
+                        UpdateUi(UpdatePhase.DOWNLOADING, current = "0.8.1", version = "0.9.0", percent = 42)
+                    },
+                    onUpdate = {},
+                    onDismiss = {},
+                )
+            },
+        ) {
+            MineScreen(
+                page = mine,
+                agents = mineAgents(mine),
+                words = words,
+                onAccept = {},
+                onComplete = {},
+                onAnswer = {},
+                onOpenUrl = {},
+                onOpenTask = {},
+                onHowToConnect = {},
+                onComingSoon = {},
+            )
+        }
+
+        AndroidScreensTest.Screen.SYNC_UPDATE_AVAILABLE,
         AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL,
         AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING,
         AndroidScreensTest.Screen.SYNC_SIGNIN_CODE,
@@ -392,6 +437,11 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                     onServerDraft = {},
                     onSaveServer = {},
                     onCancelServerEdit = {},
+                    update = if (screen == AndroidScreensTest.Screen.SYNC_UPDATE_AVAILABLE) {
+                        UpdateUi(UpdatePhase.AVAILABLE, current = "0.8.1", version = "0.9.0")
+                    } else {
+                        UpdateUi(current = "0.8.1")
+                    },
                 )
             }
         }
@@ -408,6 +458,7 @@ private fun TestFrame(
     back: String? = null,
     backRight: @Composable RowScope.() -> Unit = {},
     topBar: (@Composable () -> Unit)? = null,
+    belowHeader: (@Composable () -> Unit)? = null,
     showNav: Boolean = true,
     composer: String? = null,
     content: @Composable () -> Unit,
@@ -422,6 +473,7 @@ private fun TestFrame(
             } else {
                 BackBar(title = back, onBack = {}, right = backRight)
             }
+            belowHeader?.invoke()
             Box(Modifier.weight(1f)) { content() }
             if (composer != null) {
                 Composer(
@@ -513,6 +565,7 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
             flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com"),
             typedCode = "482913",
         )
+        AndroidScreensTest.Screen.SYNC_UPDATE_AVAILABLE,
         AndroidScreensTest.Screen.SYNC_SIGNED_IN -> SyncModel(SyncPhase.SYNCED, base, account, devices)
         AndroidScreensTest.Screen.SYNC_UPLOADING -> SyncModel(
             SyncPhase.UPLOADING,

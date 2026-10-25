@@ -26,6 +26,7 @@ import kotlinx.coroutines.withContext
 import xyz.sriai.adhdtodo.core.Core
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.core.Listener
+import xyz.sriai.adhdtodo.platform.AppUpdater
 import xyz.sriai.adhdtodo.platform.KeystoreSecrets
 import xyz.sriai.adhdtodo.platform.ReminderReceiver
 import xyz.sriai.adhdtodo.platform.Reminders
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity(), Listener {
     private val status = mutableStateOf("")
     private val initialRoute = mutableStateOf<String?>(null)
     private val demoSyncState = mutableStateOf<String?>(null)
+    private val updater by lazy { AppUpdater(this, lifecycleScope, BuildConfig.VERSION_NAME) }
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -88,6 +90,10 @@ class MainActivity : ComponentActivity(), Listener {
                         initialRoute = initialRoute.value,
                         demoSyncState = demoSyncState.value,
                         onInitialRouteConsumed = { initialRoute.value = null },
+                        update = updater.ui.value,
+                        onCheckUpdate = updater::checkNow,
+                        onUpdate = updater::install,
+                        onDismissUpdate = updater::dismiss,
                     )
                 }
             }
@@ -113,6 +119,7 @@ class MainActivity : ComponentActivity(), Listener {
 
     override fun onStart() {
         super.onStart()
+        updater.checkIfDue()
         val opened = core ?: return
         // A phone in the wrong account does not retry; signing out or moving it starts the runner.
         val state = runCatching { PageJson.decodeFromString<SyncStatus>(status.value).state }.getOrDefault("")
@@ -130,6 +137,7 @@ class MainActivity : ComponentActivity(), Listener {
 
     override fun onResume() {
         super.onResume()
+        updater.resumeAfterSettings()
         scheduleReminders()
     }
 

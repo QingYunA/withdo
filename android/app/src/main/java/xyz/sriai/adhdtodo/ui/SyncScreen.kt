@@ -54,6 +54,7 @@ import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.SignInState
 import xyz.sriai.adhdtodo.data.SyncStatus
+import xyz.sriai.adhdtodo.data.UpdateUi
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.GoogleMark
@@ -120,6 +121,9 @@ fun SyncScreen(
     onMoveToAccount: () -> Unit = {},
     onGoogleLink: () -> Unit = {},
     onCancelGoogleLink: () -> Unit = {},
+    update: UpdateUi = UpdateUi(),
+    onCheckUpdate: () -> Unit = {},
+    onUpdate: () -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -179,6 +183,8 @@ fun SyncScreen(
                 }
             }
         }
+        Spacer(Modifier.height(16.dp))
+        GroupCard { UpdateRow(update, onCheckUpdate, onUpdate) }
         ServerFooter(
             server = model.status.server.ifBlank { DEFAULT_SYNC_SERVER },
             editing = serverEditing,
