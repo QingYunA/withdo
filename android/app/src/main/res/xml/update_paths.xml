@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one folder the system installer may read from, through AppUpdater's FileProvider: the APK
+     it downloaded into the app's cache. -->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

@@ -3,25 +3,38 @@
 User request: the app updates itself from GitHub releases, and the `adhd-core` CLI / MCP binary
 updates with it.
 
-**Status: updates are off.** `QingYunA/adhd-todo` is private, so its release files answer 404 to an
-app that is not signed in to GitHub, and mygo's updater needs them public. v0.5.0 was published with
-updates on, found unable to update, withdrawn, and re-released without them: `app/mygo.json` has no
-`updates`, so `mygo.Updater.Enabled()` is false and the app loads no update plugin, shows no `Check
-for Updates…` and no Settings switch. `adhd-core` is still the app's own program and is linked on launch.
-
-To turn updates on, once the release files are public (this repository made public, or a public
-repository holding only the releases, named in `github`): put back in `app/mygo.json`
+**Status: updates are on.** `QingYunA/adhd-todo` is private, so its release files answer 404 to an app
+that is not signed in to GitHub (v0.5.0 shipped with updates on, could not update, and was withdrawn).
+Installers and update files therefore go to the public repository `QingYunA/adhd-todo-releases`, which
+holds nothing else (the way Obsidian does it); `app/mygo.json` names it:
 
 ```json
 "updates": {
   "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
-  "github": "QingYunA/adhd-todo",
+  "github": "QingYunA/adhd-todo-releases",
   "changelog": "../CHANGELOG.md"
 }
 ```
 
-and build with `scripts/build-release.sh`, which then asks for the private key (see below). The first
-version built so is the last one to install by hand.
+`scripts/build-release.sh` needs the private key (see below) and stops without it. The first version
+built so is the last one to install by hand. An installed app asks
+`https://github.com/QingYunA/adhd-todo-releases/releases/latest/download/update-<target>.json`
+(`darwin-universal` or `windows-amd64`), which names the signed archive of its release,
+`.../releases/download/v<version>/adhd-todo-<version>-<target>.tar.gz`, and the deltas.
+
+Per version `mygo build` makes, for each platform: the signed archive `adhd-todo-<v>-<target>.tar.gz`,
+`update-<target>.json` (notes, URL, size, signature), and from the second published version on up to
+three `adhd-todo-<from>-to-<v>-<target>.delta` files. Windows works as macOS does: mygo signs and
+archives every target with the same code when cross-building from macOS (`CGO_ENABLED=0`), and the
+updater plugin replaces a running executable on Windows by renaming it away.
+
+The phone updates itself separately (mygo does not cover Android): see the Android section of
+`docs/design/ui-spec.md`. It asks the same repository's latest release through the GitHub API and takes
+`adhd-todo-<v>.apk`, verified against `SHA256SUMS.txt`; it is Kotlin (`android/.../data/UpdateRules.kt`
+for the pure rules, `platform/AppUpdater.kt` for the network and the installer), not `mobile/core`:
+nothing in it touches the task data, and keeping it out of the Go core spares a core rebuild.
+`REQUEST_INSTALL_PACKAGES` is in the manifest, the APK goes through a `FileProvider` over
+`cache/updates/`.
 
 ## Decisions
 
@@ -71,15 +84,20 @@ version built so is the last one to install by hand.
 2. `scripts/build-release.sh`: builds macOS and Windows x64, which every release ships, and gathers
    into `app/build/release/` `ADHD-Todo-<v>-macos-universal.dmg`,
    `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe` (which carries
-   `adhd-core.exe`), the signed update archives and manifests when updates are on, and
+   `adhd-core.exe`), the signed update archives and manifests of both platforms, and
    `SHA256SUMS.txt`.
 3. `scripts/android-release.sh`: builds `dist/adhd-todo-<v>.apk`, signed with the release keystore
    (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK, found
    at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
    step 2 (which empties that folder) and append its line:
    `(cd app/build/release && shasum -a 256 adhd-todo-<v>.apk >> SHA256SUMS.txt)`.
-4. Upload them all to a draft release `v<v>`, with the notes below, then publish it: that makes it
-   the latest, which is what installed apps ask.
+4. `scripts/publish-release.sh <v>` makes the draft release `v<v>` on `QingYunA/adhd-todo-releases`
+   with every file of `app/build/release/` (it copies `dist/adhd-todo-<v>.apk` in and appends its line
+   to `SHA256SUMS.txt` when step 3's copy is not there) and the notes of the `## <v>` section of
+   `CHANGELOG.md` plus the restart line below. Look at the draft, then `scripts/publish-release.sh <v>
+   --publish`: that makes it the latest release, which is what installed apps ask, and tags `v<v>` on
+   `origin/main` of the private repository (no assets there). Needs `gh` signed in with write access to
+   the releases repository.
 
 The release notes say (the changelog's 0.5.0 entry does too): **a coding agent keeps running the
 old `adhd-core` process until it is restarted**, so after an update restart Claude Code and the other
@@ -91,8 +109,8 @@ agents to pick up the new tools.
   install from the DMG needs right-click > Open. Updates do not: the app replaces itself, and mygo
   has checked their signature. Set `macos.signingIdentity` and `macos.notarize` in `app/mygo.json`
   when there is a Developer ID.
-- **Delta updates** begin with the second published version: mygo reads the published manifest to
+- **Delta updates** (macOS and Windows) begin with the second published version: mygo reads the published manifest to
   make them, and there is none yet.
 - **Restarting agents.** The app cannot restart a coding agent's MCP process after an update.
-- **Windows and Linux** updates: the plugin supports them, but the build script and the symlink are
-  macOS only.
+- **Linux** updates: the plugin supports them, but there is no Linux build. The agents' symlink is
+  macOS only; Windows agents use the `adhd-core.exe` next to the app.

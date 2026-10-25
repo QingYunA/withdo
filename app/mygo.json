@@ -3,6 +3,11 @@
   "identifier": "dev.adhdtodo.desktop",
   "version": "0.8.1",
   "out": "build",
+  "updates": {
+    "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
+    "github": "QingYunA/adhd-todo-releases",
+    "changelog": "../CHANGELOG.md"
+  },
   "i18n": {
     "dir": "locales",
     "source": "en"

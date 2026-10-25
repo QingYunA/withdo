@@ -2,22 +2,23 @@
 # Builds the release files of both platforms each release ships, macOS and Windows x64, and gathers
 # the ones to upload into app/build/release with their SHA256SUMS.txt:
 #   macOS:   the DMG of the universal app (which is adhd-core too), the standalone adhd-core tarball,
-#            and the signed update archive and manifest when updates are on;
-#   Windows: the NSIS installer of the app, which carries the console adhd-core.exe next to it.
-# It uploads nothing.
+#            and the signed update archive, deltas and manifest (adhd-todo-<v>-darwin-universal.tar.gz,
+#            update-darwin-universal.json);
+#   Windows: the NSIS installer of the app, which carries the console adhd-core.exe next to it, and
+#            the signed update archive and manifest (adhd-todo-<v>-windows-amd64.tar.gz,
+#            update-windows-amd64.json).
+# It uploads nothing; scripts/publish-release.sh does.
 #   scripts/build-release.sh
 # The update key is the secret half of mygo's key pair (mygo keygen). It stays out of the repository;
 # set MYGO_UPDATE_KEY to use another file than the default.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# Updates are off while the repository is private (docs/plans/m10-auto-update.md): with no "updates"
-# in mygo.json the app is built without them, and no key is needed.
+# Updates are on (docs/plans/m10-auto-update.md): mygo signs every platform's update archive with the
+# private key, so the build needs it and stops without it rather than make an app that cannot update.
 KEY="${MYGO_UPDATE_KEY:-$HOME/Library/Application Support/mygo/update-keys/mygo-update.key}"
-if grep -q '"updates"' app/mygo.json; then
-  [ -r "$KEY" ] || { echo "no update key at $KEY (set MYGO_UPDATE_KEY, or run: cd app && go tool mygo keygen)" >&2; exit 1; }
-  export MYGO_UPDATER_PRIVATE_KEY="$(cat "$KEY")"
-fi
+[ -r "$KEY" ] || { echo "no update key at $KEY (set MYGO_UPDATE_KEY; the key pair is made once by: cd app && go tool mygo keygen)" >&2; exit 1; }
+export MYGO_UPDATER_PRIVATE_KEY="$(cat "$KEY")"
 
 version="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' app/mygo.json)"
 mac="$PWD/app/build/darwin-universal"
@@ -50,6 +51,11 @@ tar -czf "$release/adhd-core-$version-macos-universal.tar.gz" -C "$work/mac" adh
 cp "$win/ADHD Todo Setup $version amd64.exe" "$release/ADHD-Todo-Setup-$version-windows-x64.exe"
 for f in "$mac"/adhd-todo-* "$mac"/update-*.json "$win"/adhd-todo-* "$win"/update-*.json; do
   if [ -e "$f" ]; then cp "$f" "$release/"; fi
+done
+# Without these an installed app finds no update, so a build that lacks one is no release.
+for f in "adhd-todo-$version-darwin-universal.tar.gz" update-darwin-universal.json \
+         "adhd-todo-$version-windows-amd64.tar.gz" update-windows-amd64.json; do
+  [ -e "$release/$f" ] || { echo "the build made no $f" >&2; exit 1; }
 done
 (cd "$release" && shasum -a 256 * > SHA256SUMS.txt)
 echo "built $version into $release"
