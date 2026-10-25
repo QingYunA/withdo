@@ -2032,10 +2032,11 @@ The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the i
 
 ### Updates (M10)
 
-The app updates itself from GitHub releases with mygo's native updater plugin (`native.Plugin`); the
-window is the plugin's own, so the app draws nothing of it. All of it shows only in a build that can
-update (`mygo.Updater.Enabled()`: `updates` in `app/mygo.json`); updates are off for now, see
-`docs/plans/m10-auto-update.md`.
+The app updates itself from the releases of the public repository `QingYunA/adhd-todo-releases` with
+mygo's native updater plugin (`native.Plugin`); the window is the plugin's own, so the app draws
+nothing of it. All of it shows only in a build that can update (`mygo.Updater.Enabled()`: `updates` in
+`app/mygo.json`, which it has), see `docs/plans/m10-auto-update.md`. Screens: `settings-general-*`
+show the switch.
 
 - **The menu item**: `Check for Updates…` (`检查更新…`) in the app menu right after About. It opens the
   plugin's window at once: release notes of the new version, **Install Update**, **Remind Me Later**,
@@ -2404,6 +2405,21 @@ wide; rows are at least 48 dp tall (Android's touch target). Light and dark foll
   - The desktop's `Open in…` and `Ask about this task…` have no phone version.
 - **Notifications**: reminders that come due use Android's notifications; agents being stuck do not
   push in the first version.
+- **Updates** (screens `update-banner-*`, `update-banner-downloading-*`, `sync-update-available-*`).
+  mygo does not cover Android, so the phone has its own updater, quiet like the desktop's. At most once
+  a day, when the app starts or comes back to the front, it asks the latest release of
+  `QingYunA/adhd-todo-releases` (no sign-in; a failed answer, such as GitHub's rate limit, says nothing
+  and waits for tomorrow). A newer `v<x.y.z>` with an `adhd-todo-<x.y.z>.apk` shows a **banner** under
+  the Mine header (and the other tabs' header): a `GroupCard` of one 56 dp row, `Version 0.9.0 is
+  available` (`有新版本 0.9.0`) in `body`, a `Later` text link (`稍后`) and a `QuietButton` **Update**
+  (`更新`). `Later` hides the banner until a newer version. **Update** swaps the row for `Downloading
+  the update… 42%` over the pixel progress bar, checks the file's SHA-256 against the release's
+  `SHA256SUMS.txt`, and opens the system installer. If installs from this app are not allowed yet, the
+  row says `Allow installs from ADHD Todo in Settings, then come back` while Android's settings screen
+  is open, and the installer opens by itself on return. A failed download or checksum shows `Couldn’t
+  download the update` in `status.blocked` with Later and Update again. The **Sync screen** has the
+  same offer as its own group above the Server footer, always shown: `App updates`, the version or
+  the state below it, and `Check now` (`立即检查`) or `Update`.
 
 ## Writing
 
