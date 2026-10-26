@@ -2506,7 +2506,7 @@ this block disagrees with the bullets around it, it wins.
     second action as `slate 11` text (`回复`, `打开 PR`, `标为完成`). `打开页面` is no longer a
     button.
   - **Today**, **Next**, **No date** (a fold) and **Done today** (`查看全部` at the right),
-    with the desktop's rules.
+    with the desktop's rules; `查看全部` is left out until the phone has a summary.
   - Rows are 48 dp. Categories are their name in color.
 - **The composer.**
   - **Place.** It stays docked above the bottom bar, where a thumb reaches; it is the page's only
@@ -2515,8 +2515,9 @@ this block disagrees with the bullets around it, it wins.
   - **Text row.** 14 dp in from the edge. The 24 dp assistant avatar, then 17 sp text. The
     placeholder is `明天 9 点打给房东，让 Claude 修 bug` / `Call the landlord at 9 tomorrow, have
     Claude fix the bug` (one line on a 412 dp screen).
-  - **Control row.** Image and microphone (40 dp, radius 12), and the send button at the right
-    (40 dp, radius 12; `slate 3` while empty, `iris 9` with a white arrow once there is text).
+  - **Control row.** Only once the phone can add images or dictate (not yet): image and microphone
+    (40 dp, radius 12). Until then the send button sits at the end of the text row. The send button
+    is 40 dp, radius 12; `slate 3` while empty, `iris 9` with a white arrow once there is text.
   - **No key hint.**
   - **Answers.** The receipt and the other answers sit **above** the composer (the bar is below
     it), in 13 sp `slate 11`, with `撤销` in `iris 11`.
