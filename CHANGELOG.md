@@ -3,6 +3,16 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.10.1
+
+No database change; the desktop app updates itself from 0.10.0.
+
+- **Android gets the new Today page.** The date is the title, your agents' cards come first, then
+  Today, Next, a folded No date list and Done today. The input stays at the bottom where your thumb
+  reaches it.
+- **Do today** in the long-press menu on Android.
+- New colors on Android, light and dark, matching the desktop.
+
 ## 0.10.0
 
 No database change. From 0.9.0 the app updates itself; on Windows, quit your coding agents before
