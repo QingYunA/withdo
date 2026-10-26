@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -21,24 +22,34 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import xyz.sriai.adhdtodo.ui.theme.PixelIcon
 
 /** A section's title in sentence case, with its quiet count. */
 @Composable
-fun SectionHeader(title: String, count: Int? = null) {
+fun SectionHeader(
+    title: String,
+    count: Int? = null,
+    start: androidx.compose.ui.unit.Dp = 0.dp,
+    end: (@Composable () -> Unit)? = null,
+) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 22.dp, bottom = 6.dp),
+            .padding(start = start, top = 22.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(title, style = type.section, color = tokens.textSecondary)
-        if (count != null) Text(count.toString(), style = type.meta, color = tokens.textTertiary)
+        if (count != null) Text(count.toString(), style = type.meta, color = tokens.textSecondary)
+        if (end != null) {
+            Spacer(Modifier.weight(1f))
+            end()
+        }
     }
 }
 
@@ -51,7 +62,7 @@ fun PriorityBadge(priority: String) {
     val shape = RoundedCornerShape(5.dp)
     Box(
         modifier = Modifier
-            .border(1.dp, tokens.priorityRing(priority), shape)
+            .border(Dims.hairline, tokens.priorityRing(priority), shape)
             .padding(horizontal = 5.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -118,7 +129,7 @@ fun EmptyState(
             Text(
                 link,
                 style = type.body,
-                color = tokens.accent,
+                color = tokens.accentInk,
                 modifier = Modifier.padding(top = 6.dp).clickable { onLink() },
             )
         }
@@ -159,7 +170,7 @@ fun HowToConnectDialog(onDismiss: () -> Unit) {
         text = { Text(stringResource(xyz.sriai.adhdtodo.R.string.connect_body)) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(xyz.sriai.adhdtodo.R.string.close), color = tokens.accent)
+                Text(stringResource(xyz.sriai.adhdtodo.R.string.close), color = tokens.accentInk)
             }
         },
     )
@@ -177,7 +188,7 @@ fun TaskSoonDialog(onDismiss: () -> Unit) {
         text = { Text(stringResource(xyz.sriai.adhdtodo.R.string.coming_soon_body)) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(xyz.sriai.adhdtodo.R.string.close), color = tokens.accent)
+                Text(stringResource(xyz.sriai.adhdtodo.R.string.close), color = tokens.accentInk)
             }
         },
     )

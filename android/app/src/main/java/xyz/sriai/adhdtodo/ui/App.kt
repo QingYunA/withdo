@@ -115,13 +115,16 @@ fun App(
     var draft by rememberSaveable { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
     var notice by remember { mutableStateOf<String?>(null) }
+    var noticeUndo by remember { mutableStateOf<(() -> Unit)?>(null) }
     var noticeId by remember { mutableIntStateOf(0) }
+    var noDateOpen by rememberSaveable { mutableStateOf(false) }
+    var highlightId by remember { mutableStateOf(0L) }
+    var toast by remember { mutableStateOf<UndoToast?>(null) }
     var replyTo by remember { mutableStateOf<Item?>(null) }
     var connect by remember { mutableStateOf(false) }
     var comingSoon by remember { mutableStateOf(false) }
     var menuData by remember { mutableStateOf<TaskMenuData?>(null) }
     var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
-    var deleted by remember { mutableStateOf<DeletedTask?>(null) }
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
@@ -158,8 +161,9 @@ fun App(
         if (stack.size > 1) stack = stack.dropLast(1)
     }
 
-    fun showNotice(text: String) {
+    fun showNotice(text: String, undo: (() -> Unit)? = null) {
         notice = text
+        noticeUndo = undo
         noticeId++
     }
 
@@ -199,7 +203,19 @@ fun App(
                 null
             }
             if (snapshot != null) {
-                deleted = DeletedTask(task.title, snapshot)
+                val message = resources.getString(R.string.menu_deleted, task.title)
+                toast = UndoToast(message) {
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) { api.restoreTask(snapshot) }
+                            tick++
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.w("adhd-todo", "restore failed", e)
+                        }
+                    }
+                }
                 if (onTaskPage) pop()
                 tick++
             }
@@ -210,15 +226,23 @@ fun App(
 
     LaunchedEffect(noticeId) {
         if (notice != null) {
-            delay(1500)
+            delay(if (noticeUndo != null) 5000 else 1500)
             notice = null
+            noticeUndo = null
         }
     }
 
-    LaunchedEffect(deleted) {
-        if (deleted == null) return@LaunchedEffect
+    LaunchedEffect(toast) {
+        if (toast == null) return@LaunchedEffect
         delay(6000)
-        deleted = null
+        toast = null
+    }
+
+    // A row the composer just made keeps the iris 3 fill for 2 s.
+    LaunchedEffect(highlightId) {
+        if (highlightId == 0L) return@LaunchedEffect
+        delay(2000)
+        highlightId = 0L
     }
 
     LaunchedEffect(initialRoute) {
@@ -242,7 +266,7 @@ fun App(
                     val loaded = try {
                         withContext(Dispatchers.IO) {
                             val page = api.mine()
-                            page to api.agentInfo(page)
+                            Triple(page, api.agentInfo(page), runCatching { api.categories() }.getOrNull())
                         }
                     } catch (e: CancellationException) {
                         throw e
@@ -252,6 +276,7 @@ fun App(
                     if (loaded != null) {
                         mine = loaded.first
                         mineAgents = loaded.second
+                        loaded.third?.let { categories = it }
                     }
                 }
                 Tab.AGENTS -> {
@@ -356,33 +381,38 @@ fun App(
         }
     }
 
-    fun undoDelete(item: DeletedTask) {
-        deleted = null
-        perform { api.restoreTask(item.snapshot) }
-    }
-
     val submit: () -> Unit = {
         val title = draft.trim()
         val projectId = if (route.startsWith("project:")) route.substringAfter(':').toLongOrNull() else null
         if (title.isNotEmpty() && !sending) {
             sending = true
             scope.launch {
-                val ok = try {
+                val made = try {
                     withContext(Dispatchers.IO) { api.createTask(title, projectId) }
-                    true
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
-                    false
+                    null
                 }
                 sending = false
-                if (ok) {
+                if (made != null) {
                     draft = ""
+                    // An undated add opens the No date fold, where the new row shows for 2 s.
+                    if (projectId == null) {
+                        noDateOpen = true
+                        highlightId = made
+                    }
                     showNotice(
                         if (projectId != null) {
                             resources.getString(R.string.added_to_project, projectPage?.project?.name.orEmpty())
                         } else {
                             resources.getString(R.string.added_to_inbox)
+                        },
+                        undo = {
+                            highlightId = 0L
+                            perform { api.deleteTask(made) }
+                            notice = null
+                            noticeUndo = null
                         },
                     )
                     tick++
@@ -479,7 +509,9 @@ fun App(
         if (route != "sync") push("sync")
     }
 
+    val onToday = route == "home" && tab == Tab.MINE
     val title = when {
+        onToday -> words.headerDate()
         route == "sync" -> stringResource(R.string.sync_title)
         route.startsWith("project:") -> stringResource(R.string.title_projects)
         route.startsWith("task:") -> when (tab) {
@@ -495,7 +527,7 @@ fun App(
 
     val subtitle = when {
         route != "home" -> ""
-        tab == Tab.MINE -> words.headerDate()
+        tab == Tab.MINE -> ""
         tab == Tab.AGENTS -> {
             val working = agents?.working?.size ?: 0
             if (working > 0) resources.getString(R.string.agents_working, working) else ""
@@ -525,7 +557,13 @@ fun App(
     Column(Modifier.fillMaxSize().background(tokens.bg)) {
         Column(Modifier.weight(1f).statusBarsPadding().imePadding()) {
             if (route == "home") {
-                PageHeader(title = title, subtitle = subtitle, syncBlocked = blocked, onSync = { openSync() })
+                PageHeader(
+                    title = title,
+                    subtitle = subtitle,
+                    syncBlocked = blocked,
+                    onSync = { openSync() },
+                    start = if (onToday) 28.dp else Dims.pagePadding,
+                )
                 if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
             } else if (route == "sync") {
                 BackBar(title = stringResource(R.string.sync_title), onBack = { pop() })
@@ -835,8 +873,13 @@ fun App(
                             onOpenUrl = openUrl,
                             onOpenTask = { id -> push(taskRoute(id, 0)) },
                             onHowToConnect = { connect = true },
-                            onComingSoon = { comingSoon = true },
+                            // The phone has no Summary; the Agents tab lists what agents finished today.
+                            onViewAll = { tabName = Tab.AGENTS.name },
                             onLongPress = { id -> openTaskMenu(id) },
+                            categories = categories,
+                            noDateOpen = noDateOpen,
+                            onToggleNoDate = { noDateOpen = !noDateOpen },
+                            highlightId = highlightId,
                         )
                         Tab.AGENTS -> AgentsScreen(
                             page = agents,
@@ -862,7 +905,9 @@ fun App(
                 }
             }
 
-            DeletedSnackbar(deleted = deleted, onUndo = { undoDelete(it) })
+            toast?.let { current ->
+                UndoBar(message = current.message, onUndo = { toast = null; current.undo() })
+            }
 
             if (composerVisible) {
                 val placeholder = composerPlaceholder
@@ -873,6 +918,9 @@ fun App(
                     sending = sending,
                     onValueChange = { draft = it },
                     onSend = if (route.startsWith("task:")) sendReply else submit,
+                    onUndo = noticeUndo,
+                    onImage = { comingSoon = true },
+                    onVoice = { comingSoon = true },
                 )
             }
         }
@@ -898,6 +946,25 @@ fun App(
             presets = data.presets,
             initialPage = menuPage,
             onDismiss = { menuData = null },
+            onDoToday = {
+                val id = data.task.id
+                scope.launch {
+                    val before = try {
+                        withContext(Dispatchers.IO) { api.doToday(id) }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w("adhd-todo", "do today failed", e)
+                        null
+                    }
+                    if (before != null) {
+                        toast = UndoToast(resources.getString(R.string.toast_moved_to_today)) {
+                            perform { api.restoreDue(id, before) }
+                        }
+                        tick++
+                    }
+                }
+            },
             onStatus = { status -> perform { api.updateTask(data.task.id, TaskPatch(status = status)) } },
             onPriority = { priority -> perform { api.updateTask(data.task.id, TaskPatch(priority = priority)) } },
             onCategory = { id -> perform { api.updateTask(data.task.id, TaskPatch(category = id.toLong())) } },
@@ -936,6 +1003,9 @@ fun App(
     if (comingSoon) TaskSoonDialog(onDismiss = { comingSoon = false })
 
 }
+
+/** A snackbar above the composer: a message and what Undo does. */
+private data class UndoToast(val message: String, val undo: () -> Unit)
 
 /** What the task menu draws: the fresh task and the three lists its pages need. */
 private data class TaskMenuData(

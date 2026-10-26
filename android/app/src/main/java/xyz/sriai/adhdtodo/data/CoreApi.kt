@@ -54,14 +54,30 @@ class CoreApi(private val core: Core_) {
         ProjectEntry(project = project, open = open)
     }
 
-    fun createTask(title: String, projectId: Long? = null) {
-        core.createTask(PageJson.encodeToString(NewTask(title = title, projectId = projectId)))
+    /** Makes a plain task and returns its id, which the receipt's Undo deletes. */
+    fun createTask(title: String, projectId: Long? = null): Long =
+        PageJson.decodeFromString<Task>(
+            core.createTask(PageJson.encodeToString(NewTask(title = title, projectId = projectId))),
+        ).id
+
+    /**
+     * The task menu's Do today: the core moves the due date to today and returns the old one
+     * (RFC 3339, empty when there was none), which Undo hands back to updateTask.
+     */
+    fun doToday(id: Long): String = core.doToday(id)
+
+    /** Undo of doToday: the old due date back, or none. */
+    fun restoreDue(id: Long, before: String) {
+        updateTask(id, if (before.isEmpty()) TaskPatch(clearDueAt = true) else TaskPatch(dueAt = before))
     }
 
     fun updateTask(id: Long, patch: TaskPatch) {
         val fields = PageJson.encodeToJsonElement(patch).jsonObject
-        val body = if (patch.clearRemindAt) JsonObject(fields + ("remind_at" to JsonNull)) else fields
-        core.updateTask(id, body.toString())
+        val cleared = buildMap {
+            if (patch.clearRemindAt) put("remind_at", JsonNull)
+            if (patch.clearDueAt) put("due_at", JsonNull)
+        }
+        core.updateTask(id, JsonObject(fields + cleared).toString())
     }
 
     /** Deletes a task and returns the snapshot RestoreTask takes, unchanged. */

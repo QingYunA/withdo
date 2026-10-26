@@ -28,7 +28,7 @@ class Words(
 
     private val monthDay = DateTimeFormatter.ofPattern(if (chinese) "M月d日" else "MMM d", locale)
     private val weekday = DateTimeFormatter.ofPattern("EEE", locale)
-    private val headerFormatter = DateTimeFormatter.ofPattern(if (chinese) "M月d日EEEE" else "EEEE, MMM d", locale)
+    private val headerFormatter = DateTimeFormatter.ofPattern(if (chinese) "M月d日 EEEE" else "EEEE, MMMM d", locale)
     private val clock = DateTimeFormatter.ofPattern(if (chinese) "ah:mm" else "h:mm a", locale)
     // v30 writes "上午 9:00" with a space, which the plain clock pattern does not add.
     private val remindClock = DateTimeFormatter.ofPattern(if (chinese) "a h:mm" else "h:mm a", locale)
@@ -53,6 +53,25 @@ class Words(
             minutes < 60 * 24 * 7 -> res.getString(R.string.age_days, minutes / (60 * 24))
             else -> monthDay.format(then.atZone(zone))
         }
+    }
+
+    /** An age in words for the Agents tray: `17 min ago`, `4 days ago` (zh `17分钟前`, `4天前`). */
+    fun agoFull(value: String?, now: Instant = timeSource()): String {
+        val then = instant(value) ?: return ""
+        val minutes = ChronoUnit.MINUTES.between(then, now).coerceAtLeast(0)
+        return when {
+            minutes < 1 -> res.getString(R.string.age_now)
+            minutes < 60 -> res.getString(R.string.age_full_minutes, minutes)
+            minutes < 60 * 24 -> res.getString(R.string.age_full_hours, minutes / 60)
+            minutes < 60 * 24 * 7 -> res.getString(R.string.age_full_days, minutes / (60 * 24))
+            else -> monthDay.format(then.atZone(zone))
+        }
+    }
+
+    /** Whether the task's due date is today: the menu's Do today is not offered then. */
+    fun dueToday(task: Task, now: ZonedDateTime = timeSource().atZone(zone)): Boolean {
+        val due = instant(task.dueAt)?.atZone(zone) ?: return false
+        return due.toLocalDate() == now.toLocalDate()
     }
 
     /** A task's due label: Today, Tomorrow, Fri, Oct 20, or the time of day for a reminder today. */

@@ -115,6 +115,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
 
     enum class Screen {
         MINE,
+        MINE_NO_DATE,
         AGENTS,
         PROJECTS,
         PROJECT,
@@ -156,6 +157,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
         fun cases(): List<ScreenCase> {
             val screens = listOf(
                 "mine" to Screen.MINE,
+                "mine-no-date" to Screen.MINE_NO_DATE,
                 "agents" to Screen.AGENTS,
                 "projects" to Screen.PROJECTS,
                 "project" to Screen.PROJECT,
@@ -185,7 +187,7 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
             val chinese = setOf(
-                "mine", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
+                "mine", "mine-no-date", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
                 "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind",
                 "sync-wrong-account", "sync-other-account", "sync-google-link", "sync-google-linked",
                 "update-banner", "sync-update-available")
@@ -215,25 +217,34 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
     val categories = remember { Golden.load<List<Category>>("categories.golden.json") }
 
     when (screen) {
-        AndroidScreensTest.Screen.MINE -> TestFrame(
-            title = stringResource(R.string.title_mine),
-            subtitle = words.headerDate(),
-            tab = Tab.MINE,
-            count = mine.fromAgents.size,
-            composer = stringResource(R.string.composer_placeholder_mine),
-        ) {
-            MineScreen(
-                page = mine,
-                agents = mineAgents(mine),
-                words = words,
-                onAccept = {},
-                onComplete = {},
-                onAnswer = {},
-                onOpenUrl = {},
-                onOpenTask = {},
-                onHowToConnect = {},
-                onComingSoon = {},
-            )
+        AndroidScreensTest.Screen.MINE, AndroidScreensTest.Screen.MINE_NO_DATE -> {
+            // The second picture is the moment after an undated add: the fold open, the new row
+            // filled, the receipt with Undo above the composer, and no Agents tray (scrolled off).
+            val added = screen == AndroidScreensTest.Screen.MINE_NO_DATE
+            TestFrame(
+                title = words.headerDate(),
+                headerStart = 28.dp,
+                tab = Tab.MINE,
+                count = mine.fromAgents.size,
+                composer = stringResource(R.string.composer_placeholder_mine),
+                notice = if (added) stringResource(R.string.added_to_inbox) else null,
+            ) {
+                MineScreen(
+                    page = if (added) mine.copy(fromAgents = emptyList()) else mine,
+                    agents = mineAgents(mine),
+                    words = words,
+                    onAccept = {},
+                    onComplete = {},
+                    onAnswer = {},
+                    onOpenUrl = {},
+                    onOpenTask = {},
+                    onHowToConnect = {},
+                    onViewAll = {},
+                    categories = categories,
+                    noDateOpen = added,
+                    highlightId = if (added) mine.noDate.first().id else 0,
+                )
+            }
         }
 
         AndroidScreensTest.Screen.AGENTS -> TestFrame(
@@ -304,8 +315,9 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
         AndroidScreensTest.Screen.TASK_MENU_REMIND,
         -> {
             Screen(AndroidScreensTest.Screen.MINE)
+            // A task of mine that is not due today, so the menu offers Do today.
             TaskMenuSheet(
-                task = task.task,
+                task = task.task.copy(source = "user", dueAt = null),
                 words = words,
                 agent = task.latestAgent,
                 categories = categories,
@@ -321,8 +333,8 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
         }
 
         AndroidScreensTest.Screen.MINE_EMPTY -> TestFrame(
-            title = stringResource(R.string.title_mine),
-            subtitle = words.headerDate(),
+            title = words.headerDate(),
+            headerStart = 28.dp,
             tab = Tab.MINE,
             count = 0,
             composer = stringResource(R.string.composer_placeholder_mine),
@@ -337,7 +349,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onComingSoon = {},
+                onViewAll = {},
             )
         }
 
@@ -386,7 +398,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onComingSoon = {},
+                onViewAll = {},
             )
         }
 
@@ -461,6 +473,8 @@ private fun TestFrame(
     belowHeader: (@Composable () -> Unit)? = null,
     showNav: Boolean = true,
     composer: String? = null,
+    headerStart: androidx.compose.ui.unit.Dp = Dims.pagePadding,
+    notice: String? = null,
     content: @Composable () -> Unit,
 ) {
     val tokens = LocalTokens.current
@@ -469,7 +483,7 @@ private fun TestFrame(
             if (topBar != null) {
                 topBar()
             } else if (back == null) {
-                PageHeader(title = title, subtitle = subtitle, syncBlocked = false, onSync = {})
+                PageHeader(title = title, subtitle = subtitle, syncBlocked = false, onSync = {}, start = headerStart)
             } else {
                 BackBar(title = back, onBack = {}, right = backRight)
             }
@@ -479,10 +493,11 @@ private fun TestFrame(
                 Composer(
                     value = "",
                     placeholder = composer,
-                    notice = null,
+                    notice = notice,
                     sending = false,
                     onValueChange = {},
                     onSend = {},
+                    onUndo = if (notice != null) ({}) else null,
                 )
             }
         }

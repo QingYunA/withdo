@@ -2,33 +2,31 @@
 <resources>
     <string name="app_name">adhd-todo</string>
 
-    <string name="nav_mine">Mine</string>
+    <string name="nav_mine">Today</string>
     <string name="nav_agents">Agents</string>
     <string name="nav_calendar">Calendar</string>
     <string name="nav_projects">Projects</string>
 
-    <string name="title_mine">Mine</string>
+    <string name="title_mine">Today</string>
     <string name="title_agents">Agents</string>
     <string name="title_calendar">Calendar</string>
     <string name="title_projects">Projects</string>
 
     <string name="section_from_agents">From your agents</string>
     <string name="section_today">Today</string>
-    <string name="section_later">Later</string>
     <string name="section_done_today">Done today</string>
     <string name="section_working">Working</string>
     <string name="agents_working">%1$d working</string>
 
-    <string name="composer_placeholder_mine">Tell me anything and I’ll make it a task</string>
+    <string name="composer_placeholder_mine">Call the landlord at 9 tomorrow, have Claude fix the bug</string>
     <string name="composer_placeholder_agents">Ask what your agents are doing</string>
     <string name="composer_placeholder_inbox">Add to Inbox</string>
-    <string name="added_to_inbox">Added to Inbox</string>
+    <string name="added_to_inbox">Added to No date</string>
     <string name="add_failed">Couldn’t add the task</string>
 
-    <string name="action_answer">Answer</string>
-    <string name="action_accept">Accept</string>
+    <string name="action_answer">Reply</string>
+    <string name="action_accept">Mark done</string>
     <string name="action_open_pr">Open PR</string>
-    <string name="action_open_page">Open page</string>
     <string name="action_open">Open</string>
     <string name="action_review">Review</string>
     <string name="action_done">Done</string>
@@ -53,13 +51,13 @@
     <string name="projects_placeholder_title">Projects come next</string>
     <string name="projects_placeholder_body">The project list and its tasks arrive in the next update.</string>
 
-    <string name="need_blocked_with_words">%1$s is stuck: “%2$s”</string>
-    <string name="need_blocked">%1$s is stuck and waits for you</string>
-    <string name="need_reminder">You asked to be reminded at %1$s</string>
+    <string name="need_blocked_with_words">Waiting for your reply: “%1$s”</string>
+    <string name="need_blocked">Waiting for your reply</string>
+    <string name="need_reminder">Reminder at %1$s</string>
     <string name="need_pr_closed">PR #%1$d was closed without merging</string>
     <string name="need_pr_failing">Checks are failing on PR #%1$d</string>
     <string name="need_pr_changes">Changes were requested on PR #%1$d</string>
-    <string name="need_review_pr">PR #%1$d is ready for your review</string>
+    <string name="need_review_pr">PR #%1$d to review</string>
     <string name="need_review">%1$s finished and is waiting for you</string>
     <string name="need_stale">No update for %1$s</string>
 
@@ -74,10 +72,8 @@
     <string name="agent_unnamed">Agent</string>
     <string name="next_step_prefix">; next:\u0020</string>
 
-    <string name="show_all_in_inbox">Show all in Inbox</string>
-    <string name="show_all_in_completed">Show all in Completed</string>
-    <string name="coming_soon_title">Task details come next</string>
-    <string name="coming_soon_body">The full task screen arrives with the next Android update.</string>
+    <string name="coming_soon_title">Not on the phone yet</string>
+    <string name="coming_soon_body">Adding images and dictating arrive in a later Android update.</string>
     <string name="error_core">Couldn’t open the data store.</string>
 
     <string name="age_now">now</string>
@@ -278,4 +274,18 @@
     <string name="update_row_up_to_date">Version %1$s · up to date</string>
     <string name="update_row_check_failed">Couldn’t check; try again later</string>
     <string name="update_row_check">Check now</string>
+
+    <!-- Home (v35) -->
+    <string name="segment_mine">Mine</string>
+    <string name="section_next">Next</string>
+    <string name="section_no_date">No date</string>
+    <string name="view_all">View all</string>
+    <string name="agents_tray_title">Agent</string>
+    <string name="age_full_minutes">%1$d min ago</string>
+    <string name="age_full_hours">%1$d h ago</string>
+    <string name="age_full_days">%1$d days ago</string>
+    <string name="menu_do_today">Do today</string>
+    <string name="toast_moved_to_today">Moved to today</string>
+    <string name="composer_image">Add an image</string>
+    <string name="composer_voice">Dictate</string>
 </resources>

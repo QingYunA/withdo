@@ -285,7 +285,7 @@ internal fun SignInField(
             .semantics { this.contentType = contentType }
             .background(tokens.bg, RoundedCornerShape(10.dp))
             .border(
-                if (focused) 2.dp else 1.dp,
+                if (focused) 1.dp else Dims.hairline,
                 if (focused) tokens.accent else tokens.border,
                 RoundedCornerShape(10.dp),
             )
@@ -686,7 +686,7 @@ private fun ChoiceCard(
             .fillMaxWidth()
             .padding(top = 8.dp)
             .border(
-                if (selected) 2.dp else 1.dp,
+                if (selected) 1.dp else Dims.hairline,
                 if (selected) tokens.accent else tokens.border,
                 RoundedCornerShape(10.dp),
             )

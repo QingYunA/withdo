@@ -129,7 +129,7 @@ fun TaskScreen(
                     Text(
                         "#${task.prNumber}",
                         style = type.body,
-                        color = tokens.accent,
+                        color = tokens.accentInk,
                         modifier = Modifier.clickable { onOpenUrl(task.prUrl) },
                     )
                     val state = prState(task)
@@ -264,7 +264,7 @@ private fun PriorityStrip(priority: String, onSetPriority: (String) -> Unit) {
                 Text(
                     value,
                     style = type.badge,
-                    color = if (selected) tokens.accent else tokens.textSecondary,
+                    color = if (selected) tokens.text else tokens.textSecondary,
                 )
             }
         }
@@ -327,7 +327,7 @@ private fun ActivityRail(reports: List<Report>, words: Words) {
                     color = tokens.border,
                     start = Offset(x, 10.dp.toPx()),
                     end = Offset(x, size.height - 6.dp.toPx()),
-                    strokeWidth = 1.dp.toPx(),
+                    strokeWidth = Dims.hairline.toPx(),
                 )
             },
     ) {

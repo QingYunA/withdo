@@ -124,6 +124,7 @@ data class Item(
     @SerialName("Title") val title: String = "",
     @SerialName("Status") val status: String = "",
     @SerialName("Priority") val priority: String = "",
+    @SerialName("CategoryID") val categoryId: Int = 0,
     @SerialName("DueAt") val dueAt: String? = null,
     @SerialName("RemindAt") val remindAt: String? = null,
     @SerialName("Branch") val branch: String = "",
@@ -180,13 +181,17 @@ data class AgentRow(
 data class MinePage(
     @SerialName("FromAgents") val fromAgents: List<Item> = emptyList(),
     @SerialName("Today") val today: List<Item> = emptyList(),
-    @SerialName("Later") val later: List<Item> = emptyList(),
-    @SerialName("MoreLater") val moreLater: Int = 0,
+    /** My tasks dated within the next week, by date. */
+    @SerialName("Next") val next: List<Item> = emptyList(),
+    /** My undated tasks that have no project: the fold's rows. */
+    @SerialName("NoDate") val noDate: List<Item> = emptyList(),
+    @SerialName("NoDateTotal") val noDateTotal: Int = 0,
     @SerialName("Done") val done: List<Item> = emptyList(),
     @SerialName("MoreDone") val moreDone: Int = 0,
 ) {
-    /** data.Mine.Empty: what agents handed over, today and later are all empty. */
-    val empty: Boolean get() = fromAgents.isEmpty() && today.isEmpty() && later.isEmpty()
+    /** data.Mine.Empty: what agents handed over, today, next and the undated are all empty. */
+    val empty: Boolean
+        get() = fromAgents.isEmpty() && today.isEmpty() && next.isEmpty() && noDate.isEmpty() && noDateTotal == 0
 
     /** data.Mine.Count: the plain count beside Mine once nothing is unseen (the badge is fromAgents). */
     val count: Int get() = fromAgents.size + today.size
@@ -251,6 +256,8 @@ data class TaskPatch(
     @SerialName("remind_at") val remindAt: String? = null,
     @SerialName("category") val category: Long? = null,
     @SerialName("project_id") val projectId: Long? = null,
+    /** True writes `"due_at": null`, which the core reads as clear: the Undo of a first due date. */
+    @Transient val clearDueAt: Boolean = false,
     /**
      * True writes `"remind_at": null`, which the Go core reads as clear. The plain null above is
      * absent from the JSON (explicitNulls = false) and leaves the reminder alone.

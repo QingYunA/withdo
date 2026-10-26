@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import xyz.sriai.adhdtodo.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.Glyphs
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
@@ -104,7 +105,7 @@ fun QuietButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
         modifier = Modifier
             .heightIn(min = 40.dp)
             .clip(RoundedCornerShape(6.dp))
-            .border(1.dp, tokens.border, RoundedCornerShape(6.dp))
+            .border(Dims.hairline, tokens.border, RoundedCornerShape(6.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
@@ -124,7 +125,7 @@ fun TextLink(label: String, onClick: () -> Unit, color: Color? = null) {
     Text(
         label,
         style = type.meta,
-        color = color ?: tokens.accent,
+        color = color ?: tokens.accentInk,
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
@@ -142,7 +143,7 @@ fun GroupCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(tokens.bg)
-            .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
+            .border(Dims.hairline, tokens.border, RoundedCornerShape(12.dp)),
         content = content,
     )
 }
@@ -152,7 +153,7 @@ fun RowRule() {
     Box(
         Modifier
             .fillMaxWidth()
-            .height(1.dp)
+            .height(Dims.hairline)
             .padding(horizontal = 14.dp)
             .background(LocalTokens.current.border),
     )
@@ -177,7 +178,7 @@ fun OutlineTag(text: String, color: Color? = null) {
     val type = LocalAppType.current
     Box(
         modifier = Modifier
-            .border(1.dp, color ?: tokens.border, RoundedCornerShape(5.dp))
+            .border(Dims.hairline, color ?: tokens.border, RoundedCornerShape(5.dp))
             .padding(horizontal = 5.dp),
     ) {
         Text(text, style = type.badge, color = color ?: tokens.textSecondary)
@@ -191,10 +192,10 @@ fun AccentTag(text: String) {
     val type = LocalAppType.current
     Box(
         modifier = Modifier
-            .background(tokens.bgSelected, RoundedCornerShape(5.dp))
+            .background(tokens.accentSoft, RoundedCornerShape(5.dp))
             .padding(horizontal = 5.dp),
     ) {
-        Text(text, style = type.badge, color = tokens.accent)
+        Text(text, style = type.badge, color = tokens.accentInk)
     }
 }
 

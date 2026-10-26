@@ -2,33 +2,31 @@
 <resources>
     <string name="app_name">adhd-todo</string>
 
-    <string name="nav_mine">我的</string>
+    <string name="nav_mine">今天</string>
     <string name="nav_agents">Agent</string>
     <string name="nav_calendar">日历</string>
     <string name="nav_projects">项目</string>
 
-    <string name="title_mine">我的</string>
+    <string name="title_mine">今天</string>
     <string name="title_agents">Agent</string>
     <string name="title_calendar">日历</string>
     <string name="title_projects">项目</string>
 
     <string name="section_from_agents">Agent 交过来的</string>
     <string name="section_today">今天</string>
-    <string name="section_later">之后</string>
     <string name="section_done_today">今天做完</string>
     <string name="section_working">在做</string>
     <string name="agents_working">%1$d 个在做</string>
 
-    <string name="composer_placeholder_mine">告诉我任何事，我来变成任务</string>
+    <string name="composer_placeholder_mine">明天 9 点打给房东，再让 Claude 修 bug</string>
     <string name="composer_placeholder_agents">问问 Agent 们在做什么</string>
     <string name="composer_placeholder_inbox">加到收件箱</string>
-    <string name="added_to_inbox">已添加到收件箱</string>
+    <string name="added_to_inbox">已添加到没定时间</string>
     <string name="add_failed">没能添加任务</string>
 
-    <string name="action_answer">回答</string>
-    <string name="action_accept">收下</string>
+    <string name="action_answer">回复</string>
+    <string name="action_accept">标为完成</string>
     <string name="action_open_pr">打开 PR</string>
-    <string name="action_open_page">打开页面</string>
     <string name="action_open">打开</string>
     <string name="action_review">去看看</string>
     <string name="action_done">完成</string>
@@ -53,13 +51,13 @@
     <string name="projects_placeholder_title">项目页下一步就来</string>
     <string name="projects_placeholder_body">项目列表和任务会在下一步加入</string>
 
-    <string name="need_blocked_with_words">%1$s 卡住了：“%2$s”</string>
-    <string name="need_blocked">%1$s 卡住了，在等你</string>
-    <string name="need_reminder">你要求 %1$s 提醒</string>
-    <string name="need_pr_closed">PR #%1$d 未合并就关闭了</string>
-    <string name="need_pr_failing">PR #%1$d 的检查没通过</string>
+    <string name="need_blocked_with_words">等你回复：%1$s</string>
+    <string name="need_blocked">等你回复</string>
+    <string name="need_reminder">%1$s 的提醒</string>
+    <string name="need_pr_closed">PR #%1$d 已关闭，未合并</string>
+    <string name="need_pr_failing">PR #%1$d 的检查未通过</string>
     <string name="need_pr_changes">PR #%1$d 被要求修改</string>
-    <string name="need_review_pr">PR #%1$d 等你审查</string>
+    <string name="need_review_pr">PR #%1$d 待审查</string>
     <string name="need_review">%1$s 做完了，等你试用</string>
     <string name="need_stale">%1$s没更新</string>
 
@@ -74,10 +72,8 @@
     <string name="agent_unnamed">Agent</string>
     <string name="next_step_prefix">；下一步：</string>
 
-    <string name="show_all_in_inbox">在收件箱里看全部</string>
-    <string name="show_all_in_completed">在已完成里看全部</string>
-    <string name="coming_soon_title">任务详情下一步就来</string>
-    <string name="coming_soon_body">完整的任务页会在下一次 Android 更新里加入。</string>
+    <string name="coming_soon_title">手机上暂时还不能用</string>
+    <string name="coming_soon_body">添加图片和语音输入会在之后的 Android 更新里到来。</string>
     <string name="error_core">打不开数据。</string>
 
     <string name="age_now">刚刚</string>
@@ -278,4 +274,18 @@
     <string name="update_row_up_to_date">版本 %1$s · 已是最新</string>
     <string name="update_row_check_failed">没能检查，稍后再试</string>
     <string name="update_row_check">立即检查</string>
+
+    <!-- Home (v35) -->
+    <string name="segment_mine">我的</string>
+    <string name="section_next">接下来</string>
+    <string name="section_no_date">没定时间</string>
+    <string name="view_all">查看全部</string>
+    <string name="agents_tray_title">Agent</string>
+    <string name="age_full_minutes">%1$d 分钟前</string>
+    <string name="age_full_hours">%1$d 小时前</string>
+    <string name="age_full_days">%1$d 天前</string>
+    <string name="menu_do_today">今天做</string>
+    <string name="toast_moved_to_today">已移到今天</string>
+    <string name="composer_image">添加图片</string>
+    <string name="composer_voice">语音输入</string>
 </resources>
