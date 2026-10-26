@@ -165,6 +165,9 @@ func newTester(view func(c *ui.Context), width, height int) *ui.Tester {
 	rv := reflect.ValueOf(tt).Elem()
 	for _, name := range []string{"now", "frameAt"} {
 		f := rv.FieldByName(name)
+		if !f.IsValid() || f.Type() != reflect.TypeOf(time.Time{}) {
+			panic("ui.Tester has no time.Time field " + name + " any more: mygo changed; fix newTester")
+		}
 		reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem().Set(reflect.ValueOf(fixedNow()))
 	}
 	tt.Frame()
