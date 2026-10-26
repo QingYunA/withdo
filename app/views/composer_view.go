@@ -101,13 +101,13 @@ func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style th
 	cs.dragOver = ready && box.FileDragOver()
 	switch {
 	case cs.dragOver:
-		box.Background(t.Accent.Alpha(0.06)).Border(1, t.Accent).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
+		box.Background(t.Accent.Alpha(0.06)).Border(theme.Hairline, t.Accent).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
 	case active:
-		box.Background(t.Bg).Border(1, t.Accent.Alpha(0.5)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
+		box.Background(t.Bg).Border(theme.Hairline, t.Accent.Alpha(0.5)).Shadow(0, 0, 0, 3, t.Accent.Alpha(0.1))
 	case box.Hovered():
-		box.Background(t.Bg).Border(1, t.Border.Mix(t.Text, 0.25))
+		box.Background(t.Bg).Border(theme.Hairline, t.Border.Mix(t.Text, 0.25))
 	default:
-		box.Background(t.Bg).Border(1, t.Border)
+		box.Background(t.Bg).Border(theme.Hairline, t.Border)
 	}
 	if hero && !cs.dragOver && !active {
 		box.Shadow(0, 2, 10, 0, t.Shadow.Alpha(0.08))

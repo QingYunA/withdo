@@ -25,7 +25,7 @@ const managePanelWidth float32 = 400
 func sheet(c *ui.Context, t *theme.Tokens, open *bool, body func()) {
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.32))
-		panel.Width(managePanelWidth).Padding(24).Radius(theme.RadiusPanel).Background(t.Bg).Border(1, t.Border).
+		panel.Width(managePanelWidth).Padding(24).Radius(theme.RadiusPanel).Background(t.Bg).Border(theme.Hairline, t.Border).
 			Shadow(0, 20, 48, 0, t.Shadow)
 		ui.Column(c).Gap(16).Children(body)
 	})

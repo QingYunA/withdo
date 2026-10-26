@@ -57,9 +57,9 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 	s := &m.manage.search
 	focused := m.searchRef.Focused(c)
 	row := ui.Row(c.Key("search")).Height(30).Shrink(0).Margin(0, 10, 8).Padding(0, 8).Gap(6).AlignItems(ui.Center).
-		Radius(7).Background(t.Text.Alpha(0.06)).Border(1, ui.Transparent)
+		Radius(7).Background(t.Text.Alpha(0.06)).Border(theme.Hairline, ui.Transparent)
 	if focused {
-		row.Border(1, t.Accent.Alpha(0.5))
+		row.Border(theme.Hairline, t.Accent.Alpha(0.5))
 	}
 	row.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	row.Children(func() {

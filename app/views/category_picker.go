@@ -80,7 +80,7 @@ func (m *Main) categoryPicker(c *ui.Context, t *theme.Tokens, s *categorySheet) 
 			}
 		})
 	})
-	ui.Scroll(c.Key("icon-scroll")).Height(pickerHeight).Shrink(0).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
+	ui.Scroll(c.Key("icon-scroll")).Height(pickerHeight).Shrink(0).Radius(theme.RadiusPanel).Border(theme.Hairline, t.Border).Children(func() {
 		ui.Column(c).Padding(8).Gap(4).Children(func() {
 			if strings.TrimSpace(s.query) != "" {
 				m.iconResults(c, t, s, theme.SearchCategoryIcons(s.query))

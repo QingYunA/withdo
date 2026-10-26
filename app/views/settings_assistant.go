@@ -207,7 +207,7 @@ func settingsButton(c *ui.Context, t *theme.Tokens, key, text string, primary bo
 		}
 		ink = t.AccentText
 	default:
-		btn.Background(t.SettingsGroup()).Border(1, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06))
+		btn.Background(t.SettingsGroup()).Border(theme.Hairline, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06))
 		if btn.Hovered() {
 			btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
 		}

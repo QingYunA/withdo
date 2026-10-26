@@ -85,7 +85,7 @@ const menuRuleH float32 = 11
 
 // menuRule is the hairline between groups of lines.
 func menuRule(c *ui.Context, t *theme.Tokens) {
-	ui.Box(c).Height(1).Shrink(0).Margin(5, 8).Background(t.Border)
+	ui.Box(c).Height(theme.Hairline).Shrink(0).Margin(5, 8).Background(t.Border)
 }
 
 // mainPage is the whole menu: the strips, then what else can be done with the task.

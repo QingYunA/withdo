@@ -17,7 +17,7 @@ const sidebarRowGap float32 = 10
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
 	if !vibrant {
-		side.Background(t.BgSubtle)
+		side.Background(t.BgSidebar)
 	}
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()

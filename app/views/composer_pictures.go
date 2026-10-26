@@ -223,7 +223,7 @@ func (m *Main) thumbnails(c *ui.Context, t *theme.Tokens, s surface) {
 // picture shows, letterboxed on a light well, so two similar screenshots can be told apart.
 func (m *Main) thumbnail(c *ui.Context, t *theme.Tokens, s surface, i int, p picture) {
 	key := "thumb-" + itoa(int(s)) + "-" + itoa(i)
-	ui.Box(c.Key(key)).Size(thumbW, thumbH).Shrink(0).Radius(thumbRadius).Background(t.BgSubtle).Border(1, t.Border).Role(ui.RoleImage).
+	ui.Box(c.Key(key)).Size(thumbW, thumbH).Shrink(0).Radius(thumbRadius).Background(t.BgSubtle).Border(theme.Hairline, t.Border).Role(ui.RoleImage).
 		Label(m.say.ComposerPicture(p.att.Name)).Children(func() {
 		ui.Image(c, p.thumb).Size(thumbW, thumbH).Fit(ui.Contain).Radius(thumbRadius)
 		label := m.say.ComposerPictureRemove(p.att.Name)

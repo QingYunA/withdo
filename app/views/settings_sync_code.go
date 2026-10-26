@@ -98,7 +98,7 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 		if busy {
 			well.Opacity(0.5)
 		} else if well.FocusWithin() {
-			well.Border(1, t.Accent)
+			well.Border(theme.Hairline, t.Accent)
 		}
 	})
 	s.syncFocusAccount = false
@@ -230,11 +230,11 @@ func (s *Settings) syncCodeCells(c *ui.Context, t *theme.Tokens, busy bool) {
 				ui.Box(c.Key("sync-code-dash")).Size(syncCodeDashWidth, syncCodeDashHeight).Shrink(0).Background(t.TextTertiary)
 			}
 			cell := ui.Box(c.Key("sync-code-cell-"+itoa(i))).Size(syncCodeCellW, syncCodeCellH).Shrink(0).Center().
-				Radius(theme.RadiusControl).Background(t.BgSubtle).Border(1, t.Border) // cells read on the white card
+				Radius(theme.RadiusControl).Background(t.BgSubtle).Border(theme.Hairline, t.Border) // cells read on the white card
 			if busy {
 				cell.Opacity(0.5)
 			} else if i == len(digits) {
-				cell.Border(1, t.Accent)
+				cell.Border(theme.Hairline, t.Accent)
 			}
 			if i < len(digits) {
 				cell.Children(func() { theme.Text(c, syncCodeDigit, t.Text, string(digits[i])) })
@@ -306,7 +306,7 @@ func (s *Settings) syncPasswordStep(c *ui.Context, t *theme.Tokens, svc SyncServ
 		if busy {
 			well.Opacity(0.5)
 		} else if well.FocusWithin() {
-			well.Border(1, t.Accent)
+			well.Border(theme.Hairline, t.Accent)
 		}
 	})
 	s.syncFocusPassword = false
@@ -384,7 +384,7 @@ func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncServ
 	text := s.say.SettingsSyncContinueGoogle()
 	btn := ui.ButtonBase(c.Key("sync-google")).Width(syncFormWidth).Height(syncGoogleButtonH).Shrink(0).Margin(16, 0, 0).
 		Radius(7).Label(text).Cursor(ui.CursorPointer).Center().
-		Background(t.SettingsGroup()).Border(1, t.Border) // the hairline reads on the white card
+		Background(t.SettingsGroup()).Border(theme.Hairline, t.Border) // the hairline reads on the white card
 	if btn.Hovered() {
 		btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
 	}
@@ -400,9 +400,9 @@ func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncServ
 		svc.SyncSignInWithGoogle(s.app.Act.OpenURL)
 	}
 	ui.Row(c.Key("sync-or")).Width(syncFormWidth).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(12, 0, 0).Children(func() {
-		ui.Box(c.Key("sync-or-left")).Grow(1).Height(1).Background(t.Border)
+		ui.Box(c.Key("sync-or-left")).Grow(1).Height(theme.Hairline).Background(t.Border)
 		theme.Text(c, syncOrText, t.TextTertiary, s.say.SettingsSyncOr())
-		ui.Box(c.Key("sync-or-right")).Grow(1).Height(1).Background(t.Border)
+		ui.Box(c.Key("sync-or-right")).Grow(1).Height(theme.Hairline).Background(t.Border)
 	})
 }
 

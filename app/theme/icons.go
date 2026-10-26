@@ -89,8 +89,32 @@ var (
 
 // ProjectColors tint a project's folder; the color follows the project's name.
 var ProjectColors = []ui.Color{
-	ui.Hex("#5B5BD6"), ui.Hex("#E0A800"), ui.Hex("#30A46C"), ui.Hex("#E5484D"),
-	ui.Hex("#3B82F6"), ui.Hex("#D9488B"), ui.Hex("#0EA5A4"), ui.Hex("#E08A1E"),
+	ui.Hex("#5B5BD6"), ui.Hex("#FFC53D"), ui.Hex("#30A46C"), ui.Hex("#E5484D"),
+	ui.Hex("#0090FF"), ui.Hex("#D6409F"), ui.Hex("#12A594"), ui.Hex("#F76B15"),
+}
+
+// projectInk is step 11 of each project color's Radix scale (iris, amber, green, red, blue, pink,
+// teal, orange), for the light appearance then the dark one: the color of a word, where
+// ProjectColors (step 9) is for icons.
+var projectInk = [2][8]ui.Color{
+	{ui.Hex("#5753C6"), ui.Hex("#AB6400"), ui.Hex("#218358"), ui.Hex("#CE2C31"),
+		ui.Hex("#0D74CE"), ui.Hex("#C2298A"), ui.Hex("#008573"), ui.Hex("#CC4E00")},
+	{ui.Hex("#B1A9FF"), ui.Hex("#FFCA16"), ui.Hex("#3DD68C"), ui.Hex("#FF9592"),
+		ui.Hex("#70B8FF"), ui.Hex("#FF8DCC"), ui.Hex("#0BD8B6"), ui.Hex("#FFA057")},
+}
+
+// CategoryInk is a category's color as a word: step 11 of its scale, for the appearance of t.
+func (t *Tokens) CategoryInk(key string) ui.Color {
+	i := 0
+	if t.Dark {
+		i = 1
+	}
+	for j, k := range domain.CategoryColors {
+		if k == key {
+			return projectInk[i][j]
+		}
+	}
+	return projectInk[i][0]
 }
 
 // CategoryColor is the color a category's key stands for: domain.CategoryColors are the project

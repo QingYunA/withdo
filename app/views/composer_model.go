@@ -83,7 +83,7 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, compact bool
 	}
 	ui.PopoverBase(c, chip, &cs.modelOpen, func(panel ui.Element) {
 		panel.AttachTo(chip, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0)
-		panel.Width(modelPopWidth).Padding(popPad).Radius(theme.RadiusPanel).Background(t.Bg).Border(1, t.Border).
+		panel.Width(modelPopWidth).Padding(popPad).Radius(theme.RadiusPanel).Background(t.Bg).Border(theme.Hairline, t.Border).
 			Role(ui.RoleDialog).Label(m.say.ComposerModelTitle()).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.25)).Shadow(0, 12, 36, 0, t.Shadow.Alpha(0.6))
 		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerModelTitle()).Padding(6, 9, 2).Shrink(0)

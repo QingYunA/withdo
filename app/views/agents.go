@@ -125,7 +125,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 		return
 	}
 	ui.Row(c.Key("subs-"+itoa(r.ID))).Shrink(0).AlignItems(ui.Stretch).Margin(2, 0, 4, theme.AvatarRow/2).Children(func() {
-		ui.Box(c.Key("rail")).Width(1).Shrink(0).Background(t.Border)
+		ui.Box(c.Key("rail")).Width(theme.Hairline).Shrink(0).Background(t.Border)
 		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 			for _, s := range r.Subs {
 				m.subtaskRow(c, t, s)

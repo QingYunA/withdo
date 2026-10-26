@@ -28,7 +28,7 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 		ui.Column(c).Width(theme.AvatarRow).Shrink(0).AlignItems(ui.Center).Children(func() {
 			m.reportAvatar(c, t, r)
 			if !last {
-				ui.Box(c).Width(1).Grow(1).Margin(4, 0, 0).Background(t.Border)
+				ui.Box(c).Width(theme.Hairline).Grow(1).Margin(4, 0, 0).Background(t.Border)
 			}
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Padding(0, 0, 16).Children(func() {

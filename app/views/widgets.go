@@ -11,12 +11,12 @@ const readmeURL = "https://github.com/QingYunA/adhd-todo#connect-claude-code"
 
 // hairline is a one pixel rule across its container.
 func hairline(c *ui.Context, t *theme.Tokens) ui.Element {
-	return ui.Box(c).Height(1).Shrink(0).Background(t.Border)
+	return ui.Box(c).Height(theme.Hairline).Shrink(0).Background(t.Border)
 }
 
 // vline is a one pixel rule down its container.
 func vline(c *ui.Context, t *theme.Tokens) ui.Element {
-	return ui.Box(c).Width(1).Shrink(0).Background(t.Border)
+	return ui.Box(c).Width(theme.Hairline).Shrink(0).Background(t.Border)
 }
 
 // pill is a branch or pull request number in the mono face, on a quiet well.

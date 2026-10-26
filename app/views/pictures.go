@@ -92,7 +92,7 @@ func (tc *thumbCache) put(path string, bmp *ui.Bitmap) {
 // thumbnail, a card's band, a tile. A w of 0 takes the width of the parent. While the thumbnail is
 // read the well is empty.
 func (m *Main) pictureWell(c *ui.Context, t *theme.Tokens, key any, im data.TaskImage, w, h, radius float32) ui.Element {
-	well := ui.Box(c.Key(key)).Height(h).Shrink(0).Radius(radius).Background(t.BgSubtle).Border(1, t.Border)
+	well := ui.Box(c.Key(key)).Height(h).Shrink(0).Radius(radius).Background(t.BgSubtle).Border(theme.Hairline, t.Border)
 	if w > 0 {
 		well.Width(w)
 	} else {
@@ -156,7 +156,7 @@ func (m *Main) cardBand(c *ui.Context, t *theme.Tokens, id int) {
 				ui.Image(c, bmp).FillWidth().Height(cardBandH).Fit(ui.Contain)
 			}
 		})
-		ui.Box(c.Key("band-line")).FillWidth().Height(1).Background(t.Border).Absolute().Left(0).Right(0).Bottom(0).PassThrough()
+		ui.Box(c.Key("band-line")).FillWidth().Height(theme.Hairline).Background(t.Border).Absolute().Left(0).Right(0).Bottom(0).PassThrough()
 		moreBadge(c, len(imgs)-1)
 	})
 	if btn.Clicked() {

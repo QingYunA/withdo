@@ -34,7 +34,7 @@ func settingsRowLead(c *ui.Context, t *theme.Tokens, key, label, sub string, fir
 // settingsRowInk is settingsRowLead with the second line in a color of its own, for a warning.
 func settingsRowInk(c *ui.Context, t *theme.Tokens, key, label, sub string, subInk ui.Color, first bool, control, lead func()) {
 	if !first {
-		ui.Box(c.Key("rule-"+key)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+		ui.Box(c.Key("rule-"+key)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
 	ui.Row(c.Key("row-"+key)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
 		if lead != nil {
@@ -79,7 +79,7 @@ func popUpIn(c *ui.Context, t *theme.Tokens, key, current string, opts []popOpti
 		}
 	}
 	parts.Trigger.Padding(3, 10, 3, 12).Gap(8).Radius(theme.RadiusControl).AlignItems(ui.Center).Shrink(0).
-		Background(t.Bg).Border(1, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06)).Cursor(ui.CursorPointer).Label(label)
+		Background(t.Bg).Border(theme.Hairline, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06)).Cursor(ui.CursorPointer).Label(label)
 	if fill {
 		parts.Trigger.Grow(1).MinWidth(0).Justify(ui.SpaceBetween).Height(28)
 	}
@@ -88,7 +88,7 @@ func popUpIn(c *ui.Context, t *theme.Tokens, key, current string, opts []popOpti
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextSecondary)
 	})
 	parts.Popup(func(panel ui.Element) {
-		panel.Margin(4, 0, 0).Padding(4).Radius(theme.RadiusCard).Background(t.Bg).Border(1, t.Border).Shadow(0, 8, 24, 0, t.Shadow)
+		panel.Margin(4, 0, 0).Padding(4).Radius(theme.RadiusCard).Background(t.Bg).Border(theme.Hairline, t.Border).Shadow(0, 8, 24, 0, t.Shadow)
 		for _, o := range opts {
 			item := parts.Item(o.value).Padding(5, 10).Radius(theme.RadiusControl).Gap(8).AlignItems(ui.Center)
 			ink := t.Text
@@ -109,7 +109,7 @@ const wellWidth float32 = 230
 // A width of 0 leaves the width to the row it sits in.
 func fieldWell(c *ui.Context, t *theme.Tokens, key string, width float32, body func()) ui.Element {
 	well := ui.Row(c.Key("well-"+key)).Height(28).Shrink(0).Padding(0, 10).AlignItems(ui.Center).
-		Radius(theme.RadiusControl).Background(t.Bg).Border(1, t.ComposerBorder())
+		Radius(theme.RadiusControl).Background(t.Bg).Border(theme.Hairline, t.ComposerBorder())
 	if width > 0 {
 		well.Width(width)
 	}

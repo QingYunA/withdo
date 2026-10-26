@@ -172,7 +172,7 @@ func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui
 			ui.Spacer(c)
 			m.selectControlsIn(c, t, int(s)+1, m.columnIDs(s))
 		})
-		ui.Box(c).FillWidth().Height(1).Background(line)
+		ui.Box(c).FillWidth().Height(theme.Hairline).Background(line)
 	})
 }
 

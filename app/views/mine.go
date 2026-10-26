@@ -212,7 +212,7 @@ func (m *Main) dropTarget(c *ui.Context, t *theme.Tokens, over bool) {
 		line, color = t.Accent.Alpha(0.5), t.Accent
 	}
 	ui.Row(c.Key("panel-drop")).FillWidth().Shrink(0).Margin(14, 0, 0).Padding(11, 12).Gap(8).AlignItems(ui.Start).
-		Radius(theme.RadiusControl).Border(1, line).BorderStyle(ui.BorderDashed).Children(func() {
+		Radius(theme.RadiusControl).Border(theme.Hairline, line).BorderStyle(ui.BorderDashed).Children(func() {
 		ui.Icon(c, theme.IconMove).Size(theme.IconSmall, theme.IconSmall).TextColor(color).Shrink(0).Margin(1, 0, 0)
 		theme.Paragraph(c, theme.Meta, color, m.say.AgentsPanelDrop(), 0).Shrink(1).MinWidth(0)
 	})
@@ -280,7 +280,7 @@ func (m *Main) fromAgentsSection(c *ui.Context, t *theme.Tokens, items []data.It
 	}
 	m.section(c, "from-agents", itemTasks(items), func() {
 		sectionHeader(c, t, m.say.SectionFromAgents(), len(items))
-		ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() { m.handedRows(c, t, items) })
+		ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(theme.Hairline, t.Border).Children(func() { m.handedRows(c, t, items) })
 	})
 }
 

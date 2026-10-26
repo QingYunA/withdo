@@ -132,7 +132,7 @@ func TestTheComposerIsOneLineAtRestAndGrowsFromOneToSixLinesThenScrolls(t *testi
 	if extra := one - rest; extra < 28 || extra > 40 {
 		t.Errorf("with one line of text the box grew by %v, want the second row (28 to 40): rest %v, one line %v", extra, rest, one)
 	}
-	if four-two != 50 || six-four != 50 {
+	if four-two != 48 || six-four != 48 {
 		t.Errorf("the box does not grow a line at a time: 1 line %v, 2 lines %v, 4 lines %v, 6 lines %v", one, two, four, six)
 	}
 	if nine != six {
