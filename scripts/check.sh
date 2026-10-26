@@ -2,7 +2,8 @@
 # Checks before a commit or a PR.
 #   scripts/check.sh [static|fast|full|race]
 #   scripts/check.sh linux [go test args]   (default ./...)
-# static: gofmt, vet, i18n, the 800-line file limit, the generated catalog. fast (default): static + short tests. full: fast + race on the core.
+# static: gofmt, vet, i18n, the 800-line file limit, the generated catalog.
+# fast (default): static + short tests. full: fast + race on the core.
 # race: only the race tests of full, which CI runs as a job of its own beside fast.
 # linux: go test -short in a Docker image like CI's (scripts/ci-linux.Dockerfile), to reproduce a
 # failure that passes on the Mac (GOOS-dependent text, timing). The module and build caches live in
@@ -67,10 +68,12 @@ if [ -n "$long" ]; then
   exit 1
 fi
 
-# The generated catalog must match the JSON catalogs.
+# The generated catalog must match the JSON catalogs: generating it again changes nothing.
+catalog=app/locales/catalog_gen.go
+before="$(shasum "$catalog")"
 (cd app && go tool mygo generate >/dev/null)
-if ! git diff --quiet -- app/locales/catalog_gen.go; then
-  echo "app/locales/catalog_gen.go is stale: run (cd app && go tool mygo generate) and commit it" >&2
+if [ "$(shasum "$catalog")" != "$before" ]; then
+  echo "$catalog was stale; it is regenerated now: commit it" >&2
   exit 1
 fi
 [ "$mode" = static ] && exit 0
