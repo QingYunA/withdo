@@ -4,7 +4,7 @@
 # static: gofmt, vet, i18n. fast (default): static + short tests. full: fast + race on the core.
 # race: only the race tests of full, which CI runs as a job of its own beside fast.
 # android: the Kotlin unit tests and lint, as CI's android job runs them. It builds the Go core
-# (android/core/core.aar) first when missing; delete the .aar after changing mobile/core.
+# (android/core/core.aar) first when it is missing or older than the Go sources.
 # The sync tests need Postgres: ADHD_SYNC_TEST_DATABASE_URL, else the local adhd-sync-pg container.
 # The design screens (TestScreens*, skipped under -short) are rendered by scripts/screens.sh and
 # reviewed in the PR.
@@ -20,7 +20,11 @@ if [ "$mode" = android ]; then
     export JAVA_HOME
   fi
   export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
-  [ -f android/core/core.aar ] || scripts/android-core.sh
+  # Rebuild the Go core when any Go file or go.mod is newer than it, so the tests never run an old one.
+  aar=android/core/core.aar
+  if [ ! -f "$aar" ] || [ -n "$(find mobile internal app go.mod -newer "$aar" \( -name '*.go' ! -name '*_test.go' -o -name go.mod \) | head -1)" ]; then
+    scripts/android-core.sh
+  fi
   (cd android && ./gradlew --no-daemon testDebugUnitTest lintDebug)
   exit 0
 fi
