@@ -3,6 +3,17 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.9.0
+
+No database change: upgrading from 0.8.1 is installing the app. On Windows, quit ADHD Todo and your
+coding agents before you install.
+
+- **The app updates itself.** This is the last version to install by hand. From now on ADHD Todo
+  checks for new versions once a day (Settings > General > Software updates; `Check for Updates…` in
+  the app menu), downloads them, checks their signature and asks you to restart. On Android a banner
+  says when a new version is out; Update downloads it and opens the installer.
+- Downloads moved to a public page: github.com/QingYunA/adhd-todo-releases.
+
 ## 0.8.1
 
 No database change: upgrading from 0.8.0 is installing the app. On Windows, quit ADHD Todo and your
