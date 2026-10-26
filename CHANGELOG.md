@@ -3,6 +3,20 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.10.0
+
+No database change. From 0.9.0 the app updates itself; on Windows, quit your coding agents before
+you restart into the new version.
+
+- **A calmer Today page.** The date is the title and the input sits across the top: type or say
+  what you need, several things in one sentence, some for you and some for an agent.
+- **Sorted by time only.** Today, then Next (what is due in the coming week), then a folded No date
+  list for undated tasks with no project. Undated tasks of a project stay on the project page.
+- **Do today.** Right-click a task (or press T) to make it due today.
+- **Agents beside your list** as cards, each with one main button. Drag a task onto them to hand it
+  over; the drop area shows only while you drag.
+- New colors throughout, light and dark, with thinner lines and neutral selection.
+
 ## 0.9.0
 
 No database change: upgrading from 0.8.1 is installing the app. On Windows, quit ADHD Todo and your
