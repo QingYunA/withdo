@@ -205,7 +205,7 @@ func (m *Main) drawTools(c *ui.Context, t *theme.Tokens, s *categorySheet) {
 // textTool is a 26 pt button with a label, and a 12 pt icon before it when icon is not nil; it
 // reports a click.
 func (m *Main) textTool(c *ui.Context, t *theme.Tokens, key, label string, icon *ui.SVG) bool {
-	btn := ui.ButtonBase(c.Key(key)).Height(toolButton).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).Border(1, t.Border).
+	btn := ui.ButtonBase(c.Key(key)).Height(toolButton).Padding(0, 8).Gap(6).Radius(theme.RadiusControl).Border(theme.Hairline, t.Border).
 		AlignItems(ui.Center).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)
@@ -222,7 +222,7 @@ func (m *Main) textTool(c *ui.Context, t *theme.Tokens, key, label string, icon 
 // toolButton is a square button with a 12 pt icon, labeled for assistive technology; it reports a
 // click.
 func (m *Main) toolButton(c *ui.Context, t *theme.Tokens, key, label string, icon *ui.SVG) bool {
-	btn := ui.ButtonBase(c.Key(key)).Size(toolButton, toolButton).Shrink(0).Center().Radius(theme.RadiusControl).Border(1, t.Border).
+	btn := ui.ButtonBase(c.Key(key)).Size(toolButton, toolButton).Shrink(0).Center().Radius(theme.RadiusControl).Border(theme.Hairline, t.Border).
 		Label(label).Tooltip(label).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)
@@ -237,7 +237,7 @@ func (m *Main) toolButton(c *ui.Context, t *theme.Tokens, key, label string, ico
 func (m *Main) drawPalette(c *ui.Context, t *theme.Tokens, s *categorySheet) {
 	ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
 		m.penSwatch(c, t, s, pixmap.Own, theme.CategoryColor(s.color), m.say.CategoryPenOwn())
-		ui.Box(c).Width(1).Height(paletteSwatch).Shrink(0).Margin(0, 4).Background(t.Border)
+		ui.Box(c).Width(theme.Hairline).Height(paletteSwatch).Shrink(0).Margin(0, 4).Background(t.Border)
 		for i := 0; i < pixmap.Colors; i++ {
 			letter := pixmap.FirstColor + byte(i)
 			m.penSwatch(c, t, s, letter, theme.PaletteColor(letter), m.say.A11yCategoryPen(m.paletteName(i)))
@@ -251,7 +251,7 @@ func (m *Main) penSwatch(c *ui.Context, t *theme.Tokens, s *categorySheet, pen b
 	if s.draw.pen == pen {
 		btn.Border(2, t.Text)
 	} else {
-		btn.Border(1, t.Border)
+		btn.Border(theme.Hairline, t.Border)
 	}
 	if btn.Clicked() {
 		s.draw.pen = pen

@@ -188,7 +188,7 @@ func (m *Main) draggableRow(c *ui.Context, t *theme.Tokens, task data.Task, from
 		}
 	})
 	if dragging {
-		slot.Radius(theme.RadiusCard).Border(1, t.Border).BorderStyle(ui.BorderDashed)
+		slot.Radius(theme.RadiusCard).Border(theme.Hairline, t.Border).BorderStyle(ui.BorderDashed)
 	}
 }
 
@@ -204,11 +204,11 @@ func (m *Main) liftRow(c *ui.Context, t *theme.Tokens, row ui.Element, id int, d
 		row.Rotate(2*tilt).Scale(1+0.025*tilt, 1+0.025*tilt)
 	}
 	if dragging { // the copy in flight is a card, not the width of a column
-		row.MaxWidth(dragCardWidth).Radius(theme.RadiusCard).Border(1, t.TextTertiary).
+		row.MaxWidth(dragCardWidth).Radius(theme.RadiusCard).Border(theme.Hairline, t.TextTertiary).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
 		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
 			lifted := !c.Preferences().ReduceMotion
-			row.Background(ui.Transparent).Border(1, ui.Transparent).
+			row.Background(ui.Transparent).Border(theme.Hairline, ui.Transparent).
 				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusCard, lifted) })
 		} else {
 			row.Background(t.Bg)

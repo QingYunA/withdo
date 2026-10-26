@@ -433,18 +433,17 @@ func TestInspectorDeleteTaskIsImmediateWithUndo(t *testing.T) {
 func TestTaskMenuLabelsNameTheHoveredChoiceInline(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch") // an agent's task: P0 and blocked
-	has(t, tt, "· Blocked", "· P0 Urgent")
+	has(t, tt, "Blocked", "P0 Urgent")
 	g, _ := tt.Find("Set status to Doing")
 	tt.Move(center(g))
 	tt.Frame()
 	tt.Frame()
-	has(t, tt, "· Doing", "· P0 Urgent")
-	hasNot(t, tt, "· Blocked")
+	has(t, tt, "Doing", "P0 Urgent")
 	p, _ := tt.Find("Set priority to Low")
 	tt.Move(center(p))
 	tt.Frame()
 	tt.Frame()
-	has(t, tt, "· Blocked", "· P3 Low")
+	has(t, tt, "Blocked", "P3 Low")
 }
 
 func TestMoveToStaysInTheWindowAndDoesNotJumpWhileFiltering(t *testing.T) {

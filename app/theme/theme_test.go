@@ -20,16 +20,20 @@ func TestDefaultMacAccentIsIgnored(t *testing.T) {
 
 func TestTokensFollowTheSpec(t *testing.T) {
 	light, dark := For(false, ui.Transparent), For(true, ui.Transparent)
-	if light.Accent != ui.Hex("#5B5BD6") || dark.Accent != ui.Hex("#7C7CF0") {
+	if light.Accent != ui.Hex("#5B5BD6") || dark.Accent != ui.Hex("#5B5BD6") {
 		t.Error("default accents differ from the spec")
 	}
-	if light.Blocked() != ui.Hex("#E5484D") || dark.Blocked() != ui.Hex("#FF6369") {
+	if light.Blocked() != ui.Hex("#E5484D") || dark.Blocked() != ui.Hex("#E5484D") {
 		t.Error("blocked red differs from the spec")
 	}
-	if light.BgSelected.A != 31 || dark.BgSelected.A != 56 { // 12% and 22% of 255
-		t.Errorf("selection alphas %d and %d", light.BgSelected.A, dark.BgSelected.A)
-	}
+	// Selection is neutral (slate 4) and does not follow the accent.
 	chosen := For(false, ui.RGB(255, 149, 0))
+	if light.BgSelected != ui.Hex("#E8E8EC") || dark.BgSelected != ui.Hex("#272A2D") || chosen.BgSelected != light.BgSelected {
+		t.Error("selection is not neutral slate 4")
+	}
+	if light.AccentSoft != ui.Hex("#F0F1FE") || light.AccentInk != ui.Hex("#5753C6") || dark.BorderControl != ui.Hex("#43484E") {
+		t.Error("accent.soft, accent.ink or border.control differ from the spec")
+	}
 	if chosen.Accent != ui.RGB(255, 149, 0) {
 		t.Error("a chosen system accent is ignored")
 	}
@@ -47,7 +51,7 @@ func TestTypeScaleIsTheM4cOne(t *testing.T) {
 		size, line float32
 		weight     int
 	}{
-		"title": {Title, 26, 32, 700}, "input": {Input, 17, 25, 400},
+		"title": {Title, 24, 32, 600}, "input": {Input, 17, 24, 400},
 		"body": {Body, 15, 22, 400}, "body.strong": {BodyStrong, 15, 22, 500},
 		"meta": {Meta, 13, 18, 400}, "section": {Section, 13, 18, 600}, "mono": {Mono, 12.5, 18, 400},
 	} {

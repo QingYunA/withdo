@@ -22,7 +22,7 @@ func (m *Main) recentGroup(c *ui.Context, t *theme.Tokens, repo, title string, l
 	}
 	ui.Row(c.Key("recent-group-"+repo+title)).Margin(10, 0, 2).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, title)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(lines)))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(lines)))
 	})
 	for _, l := range lines {
 		m.recentLine(c, t, l, now)
@@ -150,7 +150,7 @@ func (m *Main) recentMeta(c *ui.Context, t *theme.Tokens, it data.RecentItem, no
 			parts = append(parts, name, m.recentWhen(it.ClosedAt, now))
 		}
 		parts = append(parts, "#"+itoa(it.Number))
-		theme.Text(c, theme.Meta, t.TextTertiary, strings.Join(parts, " · ")).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, strings.Join(parts, " · ")).Ellipsis("…")
 	})
 }
 
@@ -241,7 +241,7 @@ func (m *Main) explanationBody(c *ui.Context, t *theme.Tokens, it data.RecentIte
 	if it.Kind == data.RecentIssue {
 		source = m.say.RecentExplainSourceIssue()
 	}
-	theme.Text(c, theme.Meta, t.TextTertiary, source)
+	theme.Text(c, theme.Meta, t.TextSecondary, source)
 	x, ok := m.recentCache().Explanation(m.recent.lang, it)
 	w := m.explanationOf(it.URL)
 	switch {
@@ -304,7 +304,7 @@ func (m *Main) linesBubble(c *ui.Context, t *theme.Tokens, s recentSec, now time
 				}
 			}
 			ui.Row(c.Key("recent-ai-head-" + repo)).FillWidth().Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-				theme.Text(c, theme.Meta, t.TextTertiary, m.say.RecentWritten(st.days)).Shrink(1).MinWidth(0).Ellipsis("…")
+				theme.Text(c, theme.Meta, t.TextSecondary, m.say.RecentWritten(st.days)).Shrink(1).MinWidth(0).Ellipsis("…")
 				ui.Spacer(c)
 				if has && s.newSince(stored.WrittenAt) && !w.writing {
 					theme.Dot(c, t.Accent, 7).Shrink(0).Tooltip(m.say.RecentRewriteNew())
@@ -322,7 +322,7 @@ func (m *Main) linesBubble(c *ui.Context, t *theme.Tokens, s recentSec, now time
 			case has:
 				theme.Paragraph(c, theme.Compact, t.Text, stored.Text, 0).FillWidth()
 			case w.failed:
-				theme.Paragraph(c, theme.Compact, t.TextTertiary, m.say.SummaryFailed(), 0).FillWidth()
+				theme.Paragraph(c, theme.Compact, t.TextSecondary, m.say.SummaryFailed(), 0).FillWidth()
 			default:
 				ui.Box(c).Height(theme.Compact.Line).Shrink(0)
 			}

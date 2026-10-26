@@ -105,10 +105,12 @@ func TestImportedColorsDrawInTheSidebarAfterCreate(t *testing.T) {
 	if cat.Icon != r.icon() {
 		t.Errorf("stored %s, shown %s", cat.Icon.Grid(), r.icon().Grid())
 	}
-	row, _ := r.tt.Find("Flags")
-	slot := ui.Rect{X: row.X - sidebarRowGap - theme.AvatarSmall, Y: row.Y, W: theme.AvatarSmall, H: row.H}
+	// A row names its category in words; the icon shows where the category narrows the list.
+	click(t, r.tt, "Show only Flags")
+	row, _ := r.tt.Find("Showing Flags")
+	slot := ui.Rect{X: row.X - 6 - theme.IconSmall, Y: row.Y, W: theme.IconSmall, H: row.H}
 	if !paintedIn(r.tt.Image(), 1100, slot, theme.PaletteColor('e'), 40) {
-		t.Error("the sidebar icon is not blue")
+		t.Error("the category icon is not blue")
 	}
 }
 

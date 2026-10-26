@@ -120,8 +120,8 @@ func TestPullRequestRowsApplyToMyTasksAndSkipBacklogAndFinishedOnes(t *testing.T
 	if got := titles(n.FromAgents); !equal(got, []string{"mine"}) {
 		t.Errorf("needs %q", got)
 	}
-	if len(n.Today)+len(n.Later) != 0 {
-		t.Errorf("a task handed over is not also in Today or Later: %d %d", len(n.Today), len(n.Later))
+	if len(n.Today)+len(n.Next) != 0 {
+		t.Errorf("a task handed over is not also in Today or Later: %d %d", len(n.Today), len(n.Next))
 	}
 }
 

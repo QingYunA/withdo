@@ -105,7 +105,7 @@ func splitAgents(status map[string]agentsetup.Status, reported map[string]agentR
 func (s *Settings) agentsSectionHead(c *ui.Context, t *theme.Tokens, key, label string, count int, above, below float32) {
 	ui.Row(c.Key("agents-head-"+key)).Shrink(0).Gap(6).AlignItems(ui.Center).Margin(above, 4, below).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, label)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(count))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(count))
 	})
 }
 
@@ -115,7 +115,7 @@ func (s *Settings) agentsLocal(c *ui.Context, t *theme.Tokens, local []agentsetu
 	ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Start).Children(func() {
 		for col := 0; col < 2; col++ {
 			ui.Column(c.Key("agent-col-"+itoa(col))).Grow(1).Basis(0).MinWidth(0).Radius(theme.SettingsRadius).
-				Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(func() {
+				Background(t.SettingsGroup()).Border(theme.Hairline, t.Border.Alpha(0.08)).Children(func() {
 				first := true
 				for i, a := range local {
 					if i%2 != col {
@@ -150,7 +150,7 @@ func (s *Settings) agentsMore(c *ui.Context, t *theme.Tokens, more []agentsetup.
 		Border(1, t.Border.Alpha(0.08)).Children(func() {
 		for i := 0; i < len(more); i += 2 {
 			if i > 0 {
-				ui.Box(c.Key("rule-more-"+itoa(i))).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+				ui.Box(c.Key("rule-more-"+itoa(i))).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
 			}
 			ui.Row(c.Key("agent-more-"+itoa(i))).Height(agentMoreRowSize).Shrink(0).Gap(agentsMoreGap).Padding(0, 14).Children(func() {
 				for j := 0; j < 2; j++ {
@@ -246,7 +246,7 @@ func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, 
 	installed := st.Installed || rep.ever
 	sub := s.agentSub(st, rep)
 	if !first {
-		ui.Box(c.Key("rule-agent-"+a.ID)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+		ui.Box(c.Key("rule-agent-"+a.ID)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
 	ui.Row(c.Key("agent-"+a.ID)).MinHeight(agentRowSize).Shrink(0).Padding(0, 14).Gap(10).AlignItems(ui.Center).Children(func() {
 		theme.HarnessMark(c, a.ID, agentMarkSize).Shrink(0)

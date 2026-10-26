@@ -15,16 +15,22 @@ type Tokens struct {
 	Dark bool
 
 	Bg            ui.Color // window content
-	BgSubtle      ui.Color // board wells, input wells
-	BgTray        ui.Color // the Agents column of a project: half as dark as BgSubtle
-	BgHover       ui.Color // row hover
-	BgSelected    ui.Color // selected row, keyboard highlight
-	Border        ui.Color // hairlines
+	BgSidebar     ui.Color // the sidebar (slate 2)
+	BgSubtle      ui.Color // wells: search, finished cards, the idle send button (slate 3)
+	BgTray        ui.Color // the Agents tray (slate 2)
+	BgHover       ui.Color // row hover (slate 3)
+	BgSelected    ui.Color // selected row, keyboard highlight (slate 4, neutral)
+	Border        ui.Color // hairlines, always Hairline wide (slate 6)
+	BorderControl ui.Color // the composer's edge, controls (slate 7)
 	Text          ui.Color
 	TextSecondary ui.Color
 	TextTertiary  ui.Color
-	Accent        ui.Color
+	Accent        ui.Color // iris 9
 	AccentText    ui.Color
+	AccentSoft    ui.Color // iris 3: tinted buttons, a just-added row, the focus ring
+	AccentInk     ui.Color // iris 11: links, tinted button text, Undo
+	AccentEdge    ui.Color // iris 8: the focus edge, the drop target's edge
+	AccentWell    ui.Color // iris 2: the drop target's well
 	Stale         ui.Color
 	Shadow        ui.Color // floating things only
 	Merged        ui.Color // a closed issue, as GitHub paints it
@@ -45,52 +51,66 @@ func (t *Tokens) Blocked() ui.Color { return t.Status(data.Blocked) }
 
 var light = &Tokens{
 	Bg:            ui.Hex("#FFFFFF"),
-	BgSubtle:      ui.Hex("#F5F5F7"),
-	BgTray:        ui.Hex("#F8F8FA"),
-	BgHover:       ui.Hex("#0000000A"),
-	Border:        ui.Hex("#0000001A"),
-	Text:          ui.Hex("#1D1D1F"),
-	TextSecondary: ui.Hex("#6E6E73"),
-	TextTertiary:  ui.Hex("#AEAEB2"),
+	BgSidebar:     ui.Hex("#F9F9FB"),
+	BgSubtle:      ui.Hex("#F0F0F3"),
+	BgTray:        ui.Hex("#F9F9FB"),
+	BgHover:       ui.Hex("#F0F0F3"),
+	BgSelected:    ui.Hex("#E8E8EC"),
+	Border:        ui.Hex("#D9D9E0"),
+	BorderControl: ui.Hex("#CDCED6"),
+	Text:          ui.Hex("#1C2024"),
+	TextSecondary: ui.Hex("#60646C"),
+	TextTertiary:  ui.Hex("#8B8D98"),
 	Accent:        ui.Hex("#5B5BD6"),
 	AccentText:    ui.Hex("#FFFFFF"),
-	Stale:         ui.Hex("#D97706"),
+	AccentSoft:    ui.Hex("#F0F1FE"),
+	AccentInk:     ui.Hex("#5753C6"),
+	AccentEdge:    ui.Hex("#9B9EF0"),
+	AccentWell:    ui.Hex("#F8F8FF"),
+	Stale:         ui.Hex("#CC4E00"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.26),
 	Merged:        ui.Hex("#8E4EC6"),
 	status: map[data.Status]ui.Color{
-		data.Backlog:   ui.Hex("#AEAEB2"),
-		data.Todo:      ui.Hex("#8E8E93"),
-		data.Doing:     ui.Hex("#3B82F6"),
+		data.Backlog:   ui.Hex("#B9BBC6"),
+		data.Todo:      ui.Hex("#8B8D98"),
+		data.Doing:     ui.Hex("#0090FF"),
 		data.Blocked:   ui.Hex("#E5484D"),
-		data.Review:    ui.Hex("#E0A800"),
+		data.Review:    ui.Hex("#FFC53D"),
 		data.Done:      ui.Hex("#30A46C"),
-		data.Cancelled: ui.Hex("#AEAEB2"),
+		data.Cancelled: ui.Hex("#B9BBC6"),
 	},
 }
 
 var dark = &Tokens{
 	Dark:          true,
-	Bg:            ui.Hex("#1C1C1E"),
-	BgSubtle:      ui.Hex("#232326"),
-	BgTray:        ui.Hex("#202023"),
-	BgHover:       ui.Hex("#FFFFFF0F"),
-	Border:        ui.Hex("#FFFFFF1A"),
-	Text:          ui.Hex("#F5F5F7"),
-	TextSecondary: ui.Hex("#A1A1A6"),
-	TextTertiary:  ui.Hex("#636366"),
-	Accent:        ui.Hex("#7C7CF0"),
+	Bg:            ui.Hex("#111113"),
+	BgSidebar:     ui.Hex("#18191B"),
+	BgSubtle:      ui.Hex("#212225"),
+	BgTray:        ui.Hex("#18191B"),
+	BgHover:       ui.Hex("#212225"),
+	BgSelected:    ui.Hex("#272A2D"),
+	Border:        ui.Hex("#363A3F"),
+	BorderControl: ui.Hex("#43484E"),
+	Text:          ui.Hex("#EDEEF0"),
+	TextSecondary: ui.Hex("#B0B4BA"),
+	TextTertiary:  ui.Hex("#696E77"),
+	Accent:        ui.Hex("#5B5BD6"),
 	AccentText:    ui.Hex("#FFFFFF"),
-	Stale:         ui.Hex("#F59E0B"),
+	AccentSoft:    ui.Hex("#202248"),
+	AccentInk:     ui.Hex("#B1A9FF"),
+	AccentEdge:    ui.Hex("#5958B1"),
+	AccentWell:    ui.Hex("#171625"),
+	Stale:         ui.Hex("#FF801F"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.5),
 	Merged:        ui.Hex("#B388EB"),
 	status: map[data.Status]ui.Color{
-		data.Backlog:   ui.Hex("#636366"),
-		data.Todo:      ui.Hex("#8E8E93"),
-		data.Doing:     ui.Hex("#60A5FA"),
-		data.Blocked:   ui.Hex("#FF6369"),
-		data.Review:    ui.Hex("#F5C542"),
-		data.Done:      ui.Hex("#4CC38A"),
-		data.Cancelled: ui.Hex("#636366"),
+		data.Backlog:   ui.Hex("#5A6169"),
+		data.Todo:      ui.Hex("#696E77"),
+		data.Doing:     ui.Hex("#0090FF"),
+		data.Blocked:   ui.Hex("#E5484D"),
+		data.Review:    ui.Hex("#FFC53D"),
+		data.Done:      ui.Hex("#30A46C"),
+		data.Cancelled: ui.Hex("#5A6169"),
 	},
 }
 
@@ -105,11 +125,6 @@ func For(isDark bool, accent ui.Color) *Tokens {
 	if accent.A > 0 {
 		t.Accent = accent
 		t.AccentText = ui.Hex("#FFFFFF")
-	}
-	if isDark {
-		t.BgSelected = t.Accent.Alpha(0.22)
-	} else {
-		t.BgSelected = t.Accent.Alpha(0.12)
 	}
 	return &t
 }
@@ -161,10 +176,15 @@ func (t *Tokens) widgetTheme() *ui.Theme {
 	return w
 }
 
+// Hairline is the width of every border, divider and hairline (Craft rule 6). mygo takes a float
+// width, so the half point is drawn as is.
+const Hairline float32 = 0.5
+
 // Radii in points.
 const (
 	RadiusControl float32 = 6  // pills, inputs
-	RadiusCard    float32 = 9  // cards, rows
+	RadiusCard    float32 = 9  // cards
+	RadiusRow     float32 = 8  // rows (v34)
 	RadiusPanel   float32 = 12 // composer, From your agents container, popovers, sheets
 	RadiusTile    float32 = 10 // board cards
 )

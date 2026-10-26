@@ -33,7 +33,7 @@ func TestMyTaskInReviewIsInTodayWithAToReviewTag(t *testing.T) {
 	}
 }
 
-func TestAfterNextWeekFoldsMyDatedTasksWithNoProjectAndOpensByDate(t *testing.T) {
+func TestTasksDatedBeyondAWeekAreOnTheCalendarNotOnHome(t *testing.T) {
 	app, store := visibilityApp(t)
 	far := func(days int) *time.Time { return data.TimePtr(fixedNow().Add(time.Duration(days) * 24 * time.Hour)) }
 	store.CreateTask(data.CreateTaskInput{Title: "Renew passport", DueAt: far(40)})
@@ -41,13 +41,7 @@ func TestAfterNextWeekFoldsMyDatedTasksWithNoProjectAndOpensByDate(t *testing.T)
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()
-	has(t, tt, "After next week 2")
-	hasNot(t, tt, "Renew passport", "Book flights")
-	click(t, tt, "After next week 2")
-	has(t, tt, "Renew passport", "Book flights")
-	if !above(t, tt, "Book flights", "Renew passport") {
-		t.Error("the rows are not by due date")
-	}
+	hasNot(t, tt, "Renew passport", "Book flights", "After next week", "No date")
 }
 
 func TestAgentsListsQueuedTasksAndFoldsTheBacklogOfTasksWithNoProject(t *testing.T) {
@@ -67,9 +61,10 @@ func TestAgentsListsQueuedTasksAndFoldsTheBacklogOfTasksWithNoProject(t *testing
 func TestARepositoryTaskShowsNoWorkChipUnlessWorkWasSetOnIt(t *testing.T) {
 	app, store := visibilityApp(t)
 	p := store.SeedProject("scratch", "me/scratch")
-	store.CreateTask(data.CreateTaskInput{Title: "Implied work", ProjectID: data.IntPtr(p.ID)})
-	store.CreateTask(data.CreateTaskInput{Title: "Set work", ProjectID: data.IntPtr(p.ID), Category: workID})
-	store.CreateTask(data.CreateTaskInput{Title: "Set life", Category: lifeID})
+	tomorrow := data.TimePtr(fixedNow().Add(24 * time.Hour))
+	store.CreateTask(data.CreateTaskInput{Title: "Implied work", ProjectID: data.IntPtr(p.ID), DueAt: tomorrow})
+	store.CreateTask(data.CreateTaskInput{Title: "Set work", ProjectID: data.IntPtr(p.ID), Category: workID, DueAt: tomorrow})
+	store.CreateTask(data.CreateTaskInput{Title: "Set life", Category: lifeID, DueAt: tomorrow})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()

@@ -32,13 +32,18 @@ func (m *Main) rowShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, ph 
 // plainShell is the row inside its box.
 func (m *Main) plainShell(c *ui.Context, t *theme.Tokens, id int, st rowStyle, opacity float32) ui.Element {
 	row := ui.Row(c.Key(id)).Shrink(0).Margin(0, -st.horz).Padding(st.vert, st.horz).Gap(rowGap).
-		Radius(theme.RadiusCard).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
+		Radius(theme.RadiusRow).AlignItems(ui.Stretch).Cursor(ui.CursorPointer)
 	picked := m.multi.Has(id)
 	switch {
 	case picked || m.sel == id || m.openID == id || (m.pop.open && m.pop.task == id):
 		row.Background(t.BgSelected)
-	case row.Hovered():
-		row.Background(t.BgHover)
+	default:
+		if share, until := m.freshShare(id); share > 0 {
+			row.Background(t.Bg.Mix(t.AccentSoft, share))
+			c.After(until)
+		} else if row.Hovered() {
+			row.Background(t.BgHover)
+		}
 	}
 	if picked {
 		m.pickedRow(t, row, id)
@@ -66,7 +71,7 @@ func (m *Main) pickedRow(t *theme.Tokens, row ui.Element, id int) {
 	r := row.Bounds()
 	m.rects[id] = r
 	above, below := m.joinedNeighbours(id, r)
-	top, bottom := theme.RadiusCard, theme.RadiusCard
+	top, bottom := theme.RadiusRow, theme.RadiusRow
 	if above {
 		top = 0
 	}
@@ -76,7 +81,7 @@ func (m *Main) pickedRow(t *theme.Tokens, row ui.Element, id int) {
 	row.Radius(top, top, bottom, bottom).Checked(true)
 	if m.sel == id {
 		row.DrawOver(func(p *ui.Painter, box ui.Rect) {
-			p.Stroke(box, t.Accent.Alpha(0.55), theme.RadiusCard, 1.5)
+			p.Stroke(box, t.Accent.Alpha(0.55), theme.RadiusRow, 1.5)
 		})
 	}
 }
@@ -134,7 +139,7 @@ func (m *Main) titleLine(c *ui.Context, t *theme.Tokens, task data.Task, project
 			m.rowChip(c, t, cat)
 		}
 		if project != "" && m.width >= dropProjectBelow {
-			theme.Text(c, theme.Meta, t.TextTertiary, project).Shrink(8).MinWidth(0).Ellipsis("…")
+			theme.Text(c, theme.Meta, t.TextSecondary, project).Shrink(8).MinWidth(0).Ellipsis("…")
 		}
 	})
 }
@@ -239,7 +244,7 @@ func actionButtonKeyed(c *ui.Context, t *theme.Tokens, key, text, label string) 
 // icon draws it (12 pt, in the color of the word) before the word.
 func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame int, icon *ui.SVG) ui.Element {
 	btn := ui.ButtonBase(c.Key(key)).Padding(3, 9).Radius(theme.RadiusControl).Shrink(0).
-		Background(t.BgSelected).Label(label).Cursor(ui.CursorPointer)
+		Background(t.AccentSoft).Label(label).Cursor(ui.CursorPointer)
 	if frame >= 0 {
 		ink := t.Status(data.Done)
 		btn.Background(ink.Alpha(0.16)).Children(func() {
@@ -251,17 +256,17 @@ func stampButton(c *ui.Context, t *theme.Tokens, key, text, label string, frame 
 		return btn
 	}
 	if btn.Hovered() {
-		btn.Background(t.Accent.Alpha(0.2))
+		btn.Background(t.AccentSoft.Mix(t.Accent, 0.15))
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	btn.Children(func() {
 		if icon == nil {
-			theme.Text(c, theme.MetaStrong, t.Accent, text)
+			theme.Text(c, theme.MetaStrong, t.AccentInk, text)
 			return
 		}
 		ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, icon).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent)
-			theme.Text(c, theme.MetaStrong, t.Accent, text)
+			ui.Icon(c, icon).Size(theme.IconSmall, theme.IconSmall).TextColor(t.AccentInk)
+			theme.Text(c, theme.MetaStrong, t.AccentInk, text)
 		})
 	})
 	return btn

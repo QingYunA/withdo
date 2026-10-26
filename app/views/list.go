@@ -87,7 +87,7 @@ func groupHeader(c *ui.Context, t *theme.Tokens, key string, n int, name string,
 	ui.Row(c.Key(key)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		glyph()
 		theme.Text(c, theme.BodyStrong, t.Text, name)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(n))
 	})
 }
 
@@ -168,7 +168,7 @@ func (m *Main) listRight(c *ui.Context, t *theme.Tokens, task data.Task, ot data
 }
 
 func plainText(c *ui.Context, t *theme.Tokens, text string) {
-	theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
+	theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(0)
 }
 
 // foldLine is the last line of a list, which folds Backlog or another group: "Backlog 2 — show". It reports a click.
@@ -181,7 +181,7 @@ func (m *Main) foldLine(c *ui.Context, t *theme.Tokens, name string, n int, open
 	line := ui.Row(c.Key("fold:"+name)).Height(theme.RowOneLine).Shrink(0).Margin(above, 0, 0).Gap(6).AlignItems(ui.Center).
 		Cursor(ui.CursorPointer).Label(label)
 	line.Children(func() {
-		theme.Text(c, theme.BodyStrong, t.TextTertiary, count)
+		theme.Text(c, theme.BodyStrong, t.TextSecondary, count)
 		verbColor := t.TextTertiary
 		if line.Hovered() {
 			verbColor = t.TextSecondary

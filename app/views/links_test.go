@@ -124,7 +124,7 @@ func TestAFileLinkShowsItsPathFromTheHomeFolder(t *testing.T) {
 func TestAReviewRowOffersOpenPageBeforeOpenPRAndAccept(t *testing.T) {
 	app, _, rec := linksApp(t)
 	tt, m, _ := newTesterFor(app, 1100)
-	has(t, tt, "Open page", "Open PR", "Accept")
+	has(t, tt, "Open page", "Open PR", "Mark done")
 	x := func(text string) float32 {
 		r, ok := tt.Find(text)
 		if !ok {
@@ -132,7 +132,7 @@ func TestAReviewRowOffersOpenPageBeforeOpenPRAndAccept(t *testing.T) {
 		}
 		return r.X
 	}
-	if !(x("Open page") < x("Open PR") && x("Open PR") < x("Accept")) {
+	if !(x("Open page") < x("Open PR") && x("Open PR") < x("Mark done")) {
 		t.Errorf("order: Open page %v, Open PR %v, Accept %v", x("Open page"), x("Open PR"), x("Accept"))
 	}
 	if err := tt.Click("Open page: Native UI with mygo"); err != nil {
@@ -166,7 +166,7 @@ func TestOnlyATaskInReviewGetsOpenPage(t *testing.T) {
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
 	hasNot(t, tt, "Open page")
-	has(t, tt, "Answer")
+	has(t, tt, "Reply")
 }
 
 func TestAnAgentsRowAndACardShowOpenPageWhenHovered(t *testing.T) {
@@ -176,14 +176,14 @@ func TestAnAgentsRowAndACardShowOpenPageWhenHovered(t *testing.T) {
 	tt.Frame()
 	hasNot(t, tt, "Open page")
 	hover(t, tt, "Native UI with mygo")
-	has(t, tt, "Open page", "Open PR", "Accept")
+	has(t, tt, "Open page", "Open PR", "Mark done")
 	m.board[1] = true
 	tt.Move(2, 700)
 	tt.Frame()
 	tt.Frame()
 	hasNot(t, tt, "Open page")
 	hover(t, tt, "Native UI with mygo")
-	has(t, tt, "Open page", "Open PR", "Accept")
+	has(t, tt, "Open page", "Open PR", "Mark done")
 }
 
 func TestTheSummaryExportEndsATaskLineWithItsPagesOnce(t *testing.T) {

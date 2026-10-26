@@ -83,7 +83,7 @@ func (pm *popMenu) openPage(page menuPage) {
 
 // manyMainPage is the whole menu of the selection: the actions in their groups.
 func (m *Main) manyMainPage(c *ui.Context, t *theme.Tokens, ids []int) {
-	theme.Text(c, theme.Meta, t.TextTertiary, m.say.MenuManyHeader(len(ids))).Padding(6, 8, 4)
+	theme.Text(c, theme.Meta, t.TextSecondary, m.say.MenuManyHeader(len(ids))).Padding(6, 8, 4)
 	group := 0
 	for _, a := range actionsFor(m.tasksOf(ids)) {
 		if a.Group != group {

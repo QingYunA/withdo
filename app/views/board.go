@@ -85,7 +85,7 @@ func (m *Main) column(c *ui.Context, t *theme.Tokens, col page.Section, width fl
 		ui.Row(c.Key("header")).Height(theme.RowOneLine).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			theme.StatusGlyph(c, t, col.Status, 0)
 			theme.Text(c, theme.BodyStrong, t.Text, statusLabel(m.say, col.Status))
-			theme.Text(c, theme.Meta, t.TextTertiary, itoa(col.Total))
+			theme.Text(c, theme.Meta, t.TextSecondary, itoa(col.Total))
 		})
 		m.columnBody(c, t, col)
 	})
@@ -96,7 +96,7 @@ func (m *Main) columnBody(c *ui.Context, t *theme.Tokens, col page.Section) {
 	ui.Scroll(c.Key("scroll")).Grow(1).MinHeight(0).Children(func() {
 		ui.Column(c).Gap(8).Padding(8, 0, 16+m.barInset()).Children(func() {
 			if col.Total == 0 {
-				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.laneEmpty(col.Status), 2)
+				theme.Paragraph(c, theme.Meta, t.TextSecondary, m.laneEmpty(col.Status), 2)
 			}
 			for _, task := range col.Tasks {
 				m.card(c, t, task)

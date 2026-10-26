@@ -268,11 +268,12 @@ func TestCreateStoresTheDrawingAndTheSidebarShowsItsColors(t *testing.T) {
 	if cat.Icon.At(2, 2) != 'd' || cat.Icon.At(9, 9) != 'g' || cat.Icon.At(5, 5) != pixmap.Own || cat.Icon.Count() != 8+8+4 {
 		t.Errorf("the stored drawing:\n%s", cat.Icon.Grid())
 	}
-	row, ok := tt.Find("Paint")
+	click(t, tt, "Show only Paint") // a row names its category in words; the icon shows where it narrows the list
+	row, ok := tt.Find("Showing Paint")
 	if !ok {
-		t.Fatalf("no sidebar row in %q", tt.Texts())
+		t.Fatalf("no filter line in %q", tt.Texts())
 	}
-	slot := ui.Rect{X: row.X - sidebarRowGap - theme.AvatarSmall, Y: row.Y, W: theme.AvatarSmall, H: row.H}
+	slot := ui.Rect{X: row.X - 6 - theme.IconSmall, Y: row.Y, W: theme.IconSmall, H: row.H}
 	img := tt.Image()
 	for _, want := range []ui.Color{theme.PaletteColor('d'), theme.PaletteColor('g'), theme.CategoryColor(cat.Color)} {
 		if !paintedIn(img, 1100, slot, want, 40) {

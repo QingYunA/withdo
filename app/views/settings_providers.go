@@ -124,7 +124,7 @@ func formRow(c *ui.Context, t *theme.Tokens, label string, margin bool, body fun
 func (s *Settings) providerForm(c *ui.Context, t *theme.Tokens, p data.Provider) {
 	d := s.draftOf(p.ID)
 	ui.Column(c.Key("form-"+p.ID)).Shrink(0).Margin(8, 0, 18).Padding(16).Radius(theme.SettingsRadius).
-		Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(func() {
+		Background(t.SettingsGroup()).Border(theme.Hairline, t.Border.Alpha(0.08)).Children(func() {
 		if p.ID == "custom" {
 			formRow(c, t, s.say.ModelsBaseURL(), true, func() { s.baseField(c, t, p, d) })
 			formRow(c, t, s.say.ModelsProtocol(), true, func() { s.protocolPick(c, t, p, d) })

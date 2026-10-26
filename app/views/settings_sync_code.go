@@ -98,7 +98,7 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 		if busy {
 			well.Opacity(0.5)
 		} else if well.FocusWithin() {
-			well.Border(1, t.Accent)
+			well.Border(theme.Hairline, t.Accent)
 		}
 	})
 	s.syncFocusAccount = false
@@ -110,7 +110,7 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 		s.submitSyncEmail(svc, busy)
 	}
 	s.syncStatusLine(c, t, snap, busy)
-	theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncLocalNote(), 0).
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncLocalNote(), 0).
 		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
 }
 
@@ -210,7 +210,7 @@ func (s *Settings) syncCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService,
 	if left > 0 {
 		c.After(time.Second)
 		if snap.SignInFailure == data.SignInFailureNone {
-			theme.Text(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncResendIn(countdown(left))).Margin(10, 0, 0)
+			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResendIn(countdown(left))).Margin(10, 0, 0)
 		}
 	} else if settingsLink(c, t, "sync-resend", s.say.SettingsSyncResendCode(), s.say.SettingsSyncResendCode()).Margin(8, 0, 0).Clicked() {
 		svc.SyncResendCode()
@@ -230,11 +230,11 @@ func (s *Settings) syncCodeCells(c *ui.Context, t *theme.Tokens, busy bool) {
 				ui.Box(c.Key("sync-code-dash")).Size(syncCodeDashWidth, syncCodeDashHeight).Shrink(0).Background(t.TextTertiary)
 			}
 			cell := ui.Box(c.Key("sync-code-cell-"+itoa(i))).Size(syncCodeCellW, syncCodeCellH).Shrink(0).Center().
-				Radius(theme.RadiusControl).Background(t.BgSubtle).Border(1, t.Border) // cells read on the white card
+				Radius(theme.RadiusControl).Background(t.BgSubtle).Border(theme.Hairline, t.Border) // cells read on the white card
 			if busy {
 				cell.Opacity(0.5)
 			} else if i == len(digits) {
-				cell.Border(1, t.Accent)
+				cell.Border(theme.Hairline, t.Accent)
 			}
 			if i < len(digits) {
 				cell.Children(func() { theme.Text(c, syncCodeDigit, t.Text, string(digits[i])) })
@@ -306,7 +306,7 @@ func (s *Settings) syncPasswordStep(c *ui.Context, t *theme.Tokens, svc SyncServ
 		if busy {
 			well.Opacity(0.5)
 		} else if well.FocusWithin() {
-			well.Border(1, t.Accent)
+			well.Border(theme.Hairline, t.Accent)
 		}
 	})
 	s.syncFocusPassword = false
@@ -325,7 +325,7 @@ func (s *Settings) syncPasswordStep(c *ui.Context, t *theme.Tokens, svc SyncServ
 		if settingsLink(c, t, "sync-forgot", s.say.SettingsSyncForgotPassword(), s.say.SettingsSyncForgotPassword()).Clicked() {
 			svc.SyncRequestPasswordReset(snap.SignInEmail)
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, "·")
+		theme.Text(c, theme.Meta, t.TextSecondary, "·")
 		if settingsLink(c, t, "sync-use-code", s.say.SettingsSyncUseCode(), s.say.SettingsSyncUseCode()).Clicked() {
 			svc.SyncRequestCode(snap.SignInEmail)
 		}
@@ -384,7 +384,7 @@ func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncServ
 	text := s.say.SettingsSyncContinueGoogle()
 	btn := ui.ButtonBase(c.Key("sync-google")).Width(syncFormWidth).Height(syncGoogleButtonH).Shrink(0).Margin(16, 0, 0).
 		Radius(7).Label(text).Cursor(ui.CursorPointer).Center().
-		Background(t.SettingsGroup()).Border(1, t.Border) // the hairline reads on the white card
+		Background(t.SettingsGroup()).Border(theme.Hairline, t.Border) // the hairline reads on the white card
 	if btn.Hovered() {
 		btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
 	}
@@ -400,9 +400,9 @@ func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncServ
 		svc.SyncSignInWithGoogle(s.app.Act.OpenURL)
 	}
 	ui.Row(c.Key("sync-or")).Width(syncFormWidth).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(12, 0, 0).Children(func() {
-		ui.Box(c.Key("sync-or-left")).Grow(1).Height(1).Background(t.Border)
-		theme.Text(c, syncOrText, t.TextTertiary, s.say.SettingsSyncOr())
-		ui.Box(c.Key("sync-or-right")).Grow(1).Height(1).Background(t.Border)
+		ui.Box(c.Key("sync-or-left")).Grow(1).Height(theme.Hairline).Background(t.Border)
+		theme.Text(c, syncOrText, t.TextSecondary, s.say.SettingsSyncOr())
+		ui.Box(c.Key("sync-or-right")).Grow(1).Height(theme.Hairline).Background(t.Border)
 	})
 }
 

@@ -499,7 +499,7 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	before := len(r.app.snap.tasks)
 	r.ask("Water the plants")
-	if len(r.app.snap.tasks) != before+1 || !r.tt.HasText("Added to Today") {
+	if len(r.app.snap.tasks) != before+1 || !r.tt.HasText("Added to No date") {
 		t.Errorf("tasks %d, texts %q", len(r.app.snap.tasks), r.tt.Texts())
 	}
 	if got := r.fa.Asked(); len(got) != 0 {
@@ -510,10 +510,10 @@ func TestWithoutAModelEnterStillAddsToTheInbox(t *testing.T) {
 func TestTheAddedToInboxNoticeFadesAfterOneAndAHalfSeconds(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: false})
 	r.ask("Water the plants")
-	has(t, r.tt, "Added to Today")
+	has(t, r.tt, "Added to No date")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	hasNot(t, r.tt, "Added to Today")
+	hasNot(t, r.tt, "Added to No date")
 }
 
 func TestAnswerRefreshesTheLists(t *testing.T) {
@@ -522,7 +522,7 @@ func TestAnswerRefreshesTheLists(t *testing.T) {
 	app := NewApp(store, rec, testConfig())
 	app.Now = fixedNow
 	app.Assistant = &data.FakeAssistant{Ready: true, Script: func(string) (data.Reply, error) {
-		_, err := store.CreateTask(data.CreateTaskInput{Title: "Made by the agent", Source: data.SourceUser})
+		_, err := store.CreateTask(data.CreateTaskInput{Title: "Made by the agent", Source: data.SourceUser, DueAt: data.TimePtr(fixedNow().Add(24 * time.Hour))})
 		return data.Reply{Text: "Added."}, err
 	}}
 	r := &assistRig{app: app, rec: rec, now: fixedNow()}

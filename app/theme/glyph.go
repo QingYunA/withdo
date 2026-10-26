@@ -149,7 +149,7 @@ func PriorityBadge(c *ui.Context, t *Tokens, p data.Priority) ui.Element {
 	if p == data.P0 {
 		ink, ring = t.Blocked(), t.Blocked().Alpha(0.35)
 	}
-	return ui.Row(c.Key("badge-"+string(p))).Shrink(0).Padding(0, 5).Radius(5).Border(1, ring).AlignItems(ui.Center).
+	return ui.Row(c.Key("badge-"+string(p))).Shrink(0).Padding(0, 5).Radius(5).Border(Hairline, ring).AlignItems(ui.Center).
 		Children(func() { Text(c, Badge, ink, string(p)) })
 }
 
