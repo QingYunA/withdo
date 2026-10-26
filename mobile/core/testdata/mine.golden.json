@@ -272,9 +272,9 @@
     }
   ],
   "MoreLater": 0,
-  "After": null,
+  "After": [],
   "AfterTotal": 0,
-  "Parked": null,
+  "Parked": [],
   "ParkedTotal": 1,
   "Done": [
     {

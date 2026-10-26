@@ -28,7 +28,7 @@ func (c *Core) Mine() (string, error) {
 		return "", shortError(err)
 	}
 	m := data.BuildMine(data.MineInput{Snapshot: snap, Now: c.nowTime()})
-	return marshal(m)
+	return marshal(mineWithLists(m))
 }
 
 // Agents returns the Agents screen as JSON: app/data.AgentsScreen, built like the desktop's.
@@ -43,7 +43,7 @@ func (c *Core) Agents() (string, error) {
 		return "", shortError(err)
 	}
 	a := data.BuildAgents(data.MineInput{Snapshot: snap, Now: c.nowTime()})
-	return marshal(a)
+	return marshal(agentsWithLists(a))
 }
 
 // Projects returns the sidebar's projects as JSON: a []data.Project of the projects that are not
@@ -192,6 +192,21 @@ func (c *Core) Search(query string) (string, error) {
 		tasks = []data.Task{}
 	}
 	return marshal(tasks)
+}
+
+// mineWithLists and agentsWithLists make every list of the screen an array even when empty (see
+// emptyIfNil). A list added to data.Mine or data.AgentsScreen is caught by
+// TestJSONOfANewDatabaseHasNoNull until it is added here.
+func mineWithLists(m data.Mine) data.Mine {
+	m.FromAgents, m.Today, m.Later = emptyIfNil(m.FromAgents), emptyIfNil(m.Today), emptyIfNil(m.Later)
+	m.After, m.Parked, m.Done = emptyIfNil(m.After), emptyIfNil(m.Parked), emptyIfNil(m.Done)
+	return m
+}
+
+func agentsWithLists(a data.AgentsScreen) data.AgentsScreen {
+	a.Working, a.Queued = emptyIfNil(a.Working), emptyIfNil(a.Queued)
+	a.Backlog, a.Done = emptyIfNil(a.Backlog), emptyIfNil(a.Done)
+	return a
 }
 
 // emptyIfNil keeps an empty list a JSON array: encoding/json writes a nil slice as null, which the
