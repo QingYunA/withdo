@@ -101,7 +101,7 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = { opened = it },
                 onHowToConnect = {},
-                onViewAll = {},
+                onViewAll = null,
             )
         }
         compose.clickText("Reply to design feedback")
@@ -122,7 +122,7 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onViewAll = {},
+                onViewAll = null,
             )
         }
         compose.clickCompletion("Reply to design feedback")
@@ -143,7 +143,7 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onViewAll = {},
+                onViewAll = null,
             )
         }
         compose.clickText("Mark done")

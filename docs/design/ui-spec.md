@@ -2513,7 +2513,7 @@ this block disagrees with the bullets around it, it wins.
     floating surface.
   - **Shape.** Radius 20, a 0.5 dp `slate 7` edge, and a soft shadow up and down.
   - **Text row.** 14 dp in from the edge. The 24 dp assistant avatar, then 17 sp text. The
-    placeholder is `明天 9 点打给房东，再让 Claude 修 bug` / `Call the landlord at 9 tomorrow, have
+    placeholder is `明天 9 点打给房东，让 Claude 修 bug` / `Call the landlord at 9 tomorrow, have
     Claude fix the bug` (one line on a 412 dp screen).
   - **Control row.** Image and microphone (40 dp, radius 12), and the send button at the right
     (40 dp, radius 12; `slate 3` while empty, `iris 9` with a white arrow once there is text).

@@ -175,21 +175,3 @@ fun HowToConnectDialog(onDismiss: () -> Unit) {
         },
     )
 }
-
-@Composable
-fun TaskSoonDialog(onDismiss: () -> Unit) {
-    val tokens = LocalTokens.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = tokens.bg,
-        titleContentColor = tokens.text,
-        textContentColor = tokens.textSecondary,
-        title = { Text(stringResource(xyz.sriai.adhdtodo.R.string.coming_soon_title)) },
-        text = { Text(stringResource(xyz.sriai.adhdtodo.R.string.coming_soon_body)) },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(xyz.sriai.adhdtodo.R.string.close), color = tokens.accentInk)
-            }
-        },
-    )
-}

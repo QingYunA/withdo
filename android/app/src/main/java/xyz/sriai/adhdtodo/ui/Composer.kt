@@ -53,8 +53,8 @@ fun Composer(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onUndo: (() -> Unit)? = null,
-    onImage: () -> Unit = {},
-    onVoice: () -> Unit = {},
+    onImage: (() -> Unit)? = null,
+    onVoice: (() -> Unit)? = null,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -95,7 +95,7 @@ fun Composer(
                 .border(Dims.hairline, tokens.borderControl, shape),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = if (onImage == null && onVoice == null) 8.dp else 14.dp, top = if (onImage == null && onVoice == null) 8.dp else 14.dp, bottom = if (onImage == null && onVoice == null) 8.dp else 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -119,7 +119,7 @@ fun Composer(
                                     placeholder,
                                     style = type.input,
                                     color = tokens.textSecondary,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
@@ -127,30 +127,43 @@ fun Composer(
                         }
                     },
                 )
+                if (onImage == null && onVoice == null) {
+                    SendButton(hasText) { if (hasText && !sending) onSend() }
+                }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val image = stringResource(R.string.composer_image)
-                val voice = stringResource(R.string.composer_voice)
-                val send = stringResource(R.string.action_send)
-                ControlButton(label = image, onClick = onImage) {
-                    PixelIcon("image", size = 24.dp, tint = tokens.textSecondary)
-                }
-                ControlButton(label = voice, onClick = onVoice) {
-                    MicGlyph(size = 24.dp, tint = tokens.textSecondary)
-                }
-                Spacer(Modifier.weight(1f))
-                ControlButton(
-                    label = send,
-                    fill = if (hasText) tokens.accent else tokens.bgSubtle,
-                    onClick = { if (hasText && !sending) onSend() },
+            if (onImage != null || onVoice != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PixelIcon("arrow-up", size = 24.dp, tint = if (hasText) tokens.onAccent else tokens.textTertiary)
+                    if (onImage != null) {
+                        ControlButton(label = stringResource(R.string.composer_image), onClick = onImage) {
+                            PixelIcon("image", size = 24.dp, tint = tokens.textSecondary)
+                        }
+                    }
+                    if (onVoice != null) {
+                        ControlButton(label = stringResource(R.string.composer_voice), onClick = onVoice) {
+                            MicGlyph(size = 24.dp, tint = tokens.textSecondary)
+                        }
+                    }
+                    Spacer(Modifier.weight(1f))
+                    SendButton(hasText) { if (hasText && !sending) onSend() }
                 }
             }
         }
+    }
+}
+
+/** The send button: slate 3 while empty, iris 9 with a white arrow once there is text. */
+@Composable
+private fun SendButton(hasText: Boolean, onClick: () -> Unit) {
+    val tokens = LocalTokens.current
+    ControlButton(
+        label = stringResource(R.string.action_send),
+        fill = if (hasText) tokens.accent else tokens.bgSubtle,
+        onClick = onClick,
+    ) {
+        PixelIcon("arrow-up", size = 24.dp, tint = if (hasText) tokens.onAccent else tokens.textTertiary)
     }
 }
 

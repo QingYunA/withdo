@@ -239,7 +239,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                     onOpenUrl = {},
                     onOpenTask = {},
                     onHowToConnect = {},
-                    onViewAll = {},
+                    onViewAll = null,
                     categories = categories,
                     noDateOpen = added,
                     highlightId = if (added) mine.noDate.first().id else 0,
@@ -349,7 +349,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onViewAll = {},
+                onViewAll = null,
             )
         }
 
@@ -398,7 +398,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onViewAll = {},
+                onViewAll = null,
             )
         }
 

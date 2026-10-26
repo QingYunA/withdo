@@ -122,7 +122,6 @@ fun App(
     var toast by remember { mutableStateOf<UndoToast?>(null) }
     var replyTo by remember { mutableStateOf<Item?>(null) }
     var connect by remember { mutableStateOf(false) }
-    var comingSoon by remember { mutableStateOf(false) }
     var menuData by remember { mutableStateOf<TaskMenuData?>(null) }
     var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
 
@@ -874,7 +873,7 @@ fun App(
                             onOpenTask = { id -> push(taskRoute(id, 0)) },
                             onHowToConnect = { connect = true },
                             // The phone has no Summary; the Agents tab lists what agents finished today.
-                            onViewAll = { tabName = Tab.AGENTS.name },
+                            onViewAll = null,
                             onLongPress = { id -> openTaskMenu(id) },
                             categories = categories,
                             noDateOpen = noDateOpen,
@@ -919,8 +918,6 @@ fun App(
                     onValueChange = { draft = it },
                     onSend = if (route.startsWith("task:")) sendReply else submit,
                     onUndo = noticeUndo,
-                    onImage = { comingSoon = true },
-                    onVoice = { comingSoon = true },
                 )
             }
         }
@@ -1000,7 +997,6 @@ fun App(
         )
     }
     if (connect) HowToConnectDialog(onDismiss = { connect = false })
-    if (comingSoon) TaskSoonDialog(onDismiss = { comingSoon = false })
 
 }
 

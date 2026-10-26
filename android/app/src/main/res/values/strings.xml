@@ -71,9 +71,6 @@
     <string name="done_by_you">You</string>
     <string name="agent_unnamed">Agent</string>
     <string name="next_step_prefix">; next:\u0020</string>
-
-    <string name="coming_soon_title">Not on the phone yet</string>
-    <string name="coming_soon_body">Adding images and dictating arrive in a later Android update.</string>
     <string name="error_core">Couldn’t open the data store.</string>
 
     <string name="age_now">now</string>

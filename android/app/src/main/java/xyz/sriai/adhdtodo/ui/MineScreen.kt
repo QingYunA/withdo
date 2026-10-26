@@ -60,7 +60,7 @@ fun MineScreen(
     onOpenUrl: (String) -> Unit,
     onOpenTask: (Long) -> Unit,
     onHowToConnect: () -> Unit,
-    onViewAll: () -> Unit,
+    onViewAll: (() -> Unit)?,
     onLongPress: (Long) -> Unit = {},
     categories: List<Category> = emptyList(),
     noDateOpen: Boolean = false,
@@ -493,7 +493,7 @@ private fun DoneTodaySection(
     items: List<Item>,
     more: Int,
     words: Words,
-    onViewAll: () -> Unit,
+    onViewAll: (() -> Unit)?,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit,
 ) {
@@ -503,17 +503,17 @@ private fun DoneTodaySection(
         stringResource(R.string.section_done_today),
         items.size + more,
         start = TextInset,
-        end = {
+        end = onViewAll?.let { open -> {
             Text(
                 stringResource(R.string.view_all),
                 style = type.meta,
                 color = tokens.accentInk,
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .clickable(onClick = onViewAll)
+                    .clickable(onClick = open)
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             )
-        },
+        } },
     )
     for (item in items) {
         LongPressRow(
