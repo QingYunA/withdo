@@ -2489,6 +2489,43 @@ wide; rows are at least 48 dp tall (Android's touch target). Light and dark foll
   right the sync state as an 18 dp pixel cloud in `text.tertiary`; it only turns `status.blocked` for
   the reasons the desktop's sidebar does.
 - **The composer** is pinned above the bottom bar, as on the desktop.
+
+**v35 (2026-10-26), reference `docs/design/mockups/v35.html`.** Home on the phone follows v34. Where
+this block disagrees with the bullets around it, it wins.
+
+- **Colors and lines.**
+  - The phone takes the Radix tokens of **Color**, light and dark.
+  - Lines are 0.5 dp.
+  - Selection is neutral (`bg.selected`, slate 4): the bottom bar's pill and a highlighted sheet row.
+- **Bottom bar.**
+  - The first tab is `Today` / `今天` (was Mine / 我的).
+  - The bar is `bg.sidebar` with a 0.5 dp top line.
+- **Header.** The date is the title: 24 sp / 600, `10月20日 星期二`. The cloud stays at the right.
+- **Page order, top to bottom:**
+  - **The Agents tray**, the desktop's v34 tray and cards: one tinted button per card and the
+    second action as `slate 11` text (`回复`, `打开 PR`, `标为完成`). `打开页面` is no longer a
+    button.
+  - **Today**, **Next**, **No date** (a fold) and **Done today** (`查看全部` at the right),
+    with the desktop's rules.
+  - Rows are 48 dp. Categories are their name in color.
+- **The composer.**
+  - **Place.** It stays docked above the bottom bar, where a thumb reaches; it is the page's only
+    floating surface.
+  - **Shape.** Radius 20, a 0.5 dp `slate 7` edge, and a soft shadow up and down.
+  - **Text row.** 14 dp in from the edge. The 24 dp assistant avatar, then 17 sp text. The
+    placeholder is `明天 9 点打给房东，再让 Claude 修 bug` / `Call the landlord at 9 tomorrow, have
+    Claude fix the bug` (one line on a 412 dp screen).
+  - **Control row.** Image and microphone (40 dp, radius 12), and the send button at the right
+    (40 dp, radius 12; `slate 3` while empty, `iris 9` with a white arrow once there is text).
+  - **No key hint.**
+  - **Answers.** The receipt and the other answers sit **above** the composer (the bar is below
+    it), in 13 sp `slate 11`, with `撤销` in `iris 11`.
+  - **A new row** gets the `iris 3` fill for 2 s. An undated add opens the No date fold.
+- **The task menu sheet.**
+  - **Do today** / `今天做` (calendar icon) comes first under the status strip, for a task of
+    mine that is not done and not due today.
+  - The strip's buttons are 44 dp, radius 12; rows are 52 dp.
+
 - **Mine** and **Agents** keep the desktop's sections and rows. In **From your agents** the buttons go
   under the summary (the rule for content under 420 pt), left-aligned, with the age at the right of
   that line. **Answer** on a phone writes a reply that is filed in the task's activity, which the
