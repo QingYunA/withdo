@@ -14,12 +14,12 @@ import (
 // Mine returns the Mine screen as JSON: app/data.Mine, built from the same snapshot and builders
 // the desktop uses. Its keys are the Go field names:
 //
-//	{"FromAgents":[Item...],"Today":[Item...],"Later":[Item...],"MoreLater":0,
-//	 "Done":[Item...],"MoreDone":0}
+//	{"FromAgents":[Item...],"Today":[Item...],"Next":[Item...],"NoDate":[Item...],
+//	 "NoDateTotal":0,"Done":[Item...],"MoreDone":0}
 //
-// The desktop's v34 Home splits Later into Next (dated within a week) and the No date fold; the
-// phone keeps its one Later list: the wire holds both (Next, NoDate) and Later is their sum, so the
-// Android app is unchanged and no task is out of its reach.
+// It is the desktop's v34 Home: Next holds my tasks dated within a week, NoDate my undated tasks
+// that have no project (the fold; the phone always gets its rows), and Done what was finished
+// today. A Done row's By names the agent that finished it and Summary what its report said.
 //
 // An Item is data.Item with its data.Task fields promoted to the top level, plus Project, Kind,
 // Summary, NextStep, Words, Since, Stale, Hours, Live and By. Kind is data.NeedKind as an integer
@@ -32,14 +32,7 @@ func (c *Core) Mine() (string, error) {
 		return "", shortError(err)
 	}
 	m := data.BuildMine(data.MineInput{Snapshot: snap, Now: c.nowTime(), NoDateOpen: true})
-	return marshal(mobileMine{Mine: mineWithLists(m), Later: append(append([]data.Item{}, m.Next...), m.NoDate...)})
-}
-
-// mobileMine is data.Mine with the phone's Later list.
-type mobileMine struct {
-	data.Mine
-	Later     []data.Item
-	MoreLater int
+	return marshal(mineWithLists(m))
 }
 
 // Agents returns the Agents screen as JSON: app/data.AgentsScreen, built like the desktop's.

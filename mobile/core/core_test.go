@@ -75,7 +75,7 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	sort.Strings(methods)
 	want := []string{
 		"Accept", "Account", "Agents", "Categories", "ClaimDueReminders", "Close", "CodeState",
-		"Complete", "CreateTask", "DeleteTask", "Devices", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable", "GoogleLinkCancel",
+		"Complete", "CreateTask", "DeleteTask", "Devices", "DoToday", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable", "GoogleLinkCancel",
 		"GoogleLinkFinish", "GoogleLinkStart", "GoogleLinked", "GoogleStart", "LinkMerge", "LinkReplace", "Mine",
 		"MoveToAccount", "NextReminderAt",
 		"Project", "Projects", "RemindPresets", "Reply", "RequestCode",

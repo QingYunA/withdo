@@ -260,11 +260,11 @@ func mineItem(t *testing.T, c *Core, id int) data.Item {
 	if err != nil {
 		t.Fatalf("Mine: %v", err)
 	}
-	var mine mobileMine
+	var mine data.Mine
 	if err := json.Unmarshal([]byte(raw), &mine); err != nil {
 		t.Fatalf("decode Mine: %v", err)
 	}
-	for _, section := range [][]data.Item{mine.FromAgents, mine.Today, mine.Later, mine.Done} {
+	for _, section := range [][]data.Item{mine.FromAgents, mine.Today, mine.Next, mine.NoDate, mine.Done} {
 		for _, item := range section {
 			if item.ID == id {
 				return item
