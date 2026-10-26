@@ -7394,13 +7394,13 @@ func (msgs Messages) SettingsUpdates() string {
 	return Catalog.Format(msgs.locale, "settingsUpdates", nil)
 }
 
-// SettingsUpdatesMeta says "Checked once a day; you choose when to install"
+// SettingsUpdatesMeta says "Checked every four hours; you choose when to install"
 // in the language the app shows.
 //
 // Quiet line under the updates switch.
 func SettingsUpdatesMeta() string { return In(i18n.Locale()).SettingsUpdatesMeta() }
 
-// SettingsUpdatesMeta says "Checked once a day; you choose when to install"
+// SettingsUpdatesMeta says "Checked every four hours; you choose when to install"
 // in the language of msgs.
 //
 // Quiet line under the updates switch.

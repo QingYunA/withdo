@@ -159,7 +159,8 @@ func (m *Main) didWhat(c *ui.Context, t *theme.Tokens, task data.Task) {
 	if said == "" {
 		said = agentName(by)
 	}
-	ui.Row(c.Key("did-what")).Shrink(1).MinWidth(0).Gap(6).AlignItems(ui.Center).Children(func() {
+	// The title comes first: what the agent said gives way first and never takes more than 240 pt.
+	ui.Row(c.Key("did-what")).Shrink(8).MinWidth(0).MaxWidth(240).Gap(6).AlignItems(ui.Center).Children(func() {
 		theme.AvatarIcon(c.Key("did-who"), theme.AgentAvatar(by), 14).Shrink(0)
 		theme.Text(c, theme.Meta, t.TextSecondary, said).Shrink(1).MinWidth(0).Ellipsis("…")
 	})

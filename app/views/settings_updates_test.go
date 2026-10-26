@@ -4,7 +4,7 @@ import "testing"
 
 func TestGeneralPaneHasTheAutomaticUpdatesSwitchOnByDefault(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "Software updates", "Checked once a day; you choose when to install", "Automatically check for updates")
+	has(t, r.tt, "Software updates", "Checked every four hours; you choose when to install", "Automatically check for updates")
 	if !r.rec.AutomaticUpdates() {
 		t.Error("updates are not checked until the user says so")
 	}

@@ -3039,7 +3039,7 @@
   "@settingsUpdates": {
     "description": "Label of the updates switch in Settings > General."
   },
-  "settingsUpdatesMeta": "Checked once a day; you choose when to install",
+  "settingsUpdatesMeta": "Checked every four hours; you choose when to install",
   "@settingsUpdatesMeta": {
     "description": "Quiet line under the updates switch."
   },
