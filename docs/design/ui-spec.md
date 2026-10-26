@@ -46,6 +46,43 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
     reason the existing ones cannot carry.
 
+### Craft rules (2026-10-26)
+
+The owner's rules for every screen, first applied in `docs/design/mockups/v34.html`. Where a token or
+a section below disagrees, these win until it is rewritten.
+
+1. **No middle dot as a separator.** Never join pieces of copy with `·`. Use a line break, space,
+   weight or color, or say it as one phrase.
+2. **No explanatory text in the UI.** A label, a placeholder or the control itself must carry the
+   meaning. Hints, captions and "how this works" lines cost attention and dirty the screen.
+3. **Copy fits its reader and its place.** Plain words for the audience on that screen, not chatty and
+   not invented. Length fits the job: a button is a verb, a header is a noun, a status is a short
+   phrase.
+4. **Radix Colors only.** Every color is a step of a Radix UI Colors scale (neutral `slate`, accent
+   `iris`, status `red`, `amber`, `orange`, `green`, `blue`; dark mode uses the dark scales), used as
+   Radix intends:
+   - steps 1 and 2 for backgrounds;
+   - 3, 4 and 5 for an element's rest, hover and pressed or selected fills;
+   - 6, 7 and 8 for borders (subtle, element, focus);
+   - 9 and 10 for solid fills;
+   - 11 for secondary text and 12 for primary text.
+5. **Optical alignment and concentric corners.** Align what the eye compares: text with text, icons
+   with glyphs, not boxes with boxes. A rounded thing inside a rounded thing has radius = outer radius
+   minus the inset.
+6. **Lines are 0.5 pt.** Every border, divider and hairline.
+7. **Little motion.** Animate only what explains a change. When something must move: ease-out,
+   250 ms as the base.
+8. **At most four text sizes, better three; none under 12 pt.** Build structure with weight, color and
+   space before adding a size.
+9. **Few decisions.** Do not put choices on the page that the user did not come to make. When a
+   choice is needed, put it where the user already decides (a menu, the moment of a drag, Settings).
+   Rank what a page shows and order it; remove what does not earn its place.
+10. **Corners and shadows with purpose.** No rounding or shadow by habit, and never a colored stripe
+    on a card's left edge. A radius or shadow must fit what the thing is: floating surfaces get a
+    shadow, flat content does not.
+11. **No decorative eyebrows.** No small label or uppercase overline above a title unless it adds
+    information the title does not. Build hierarchy with size, weight, spacing and white space.
+
 ## Input first (v31)
 
 Decided 2026-10-21. Reference: `docs/design/mockups/v31.html` (rendered: `v31.png`). The feature set
