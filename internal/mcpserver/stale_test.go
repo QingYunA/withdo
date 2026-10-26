@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -19,6 +18,7 @@ import (
 
 func TestToolCallsAreRefusedOnceTheBinaryIsReplaced(t *testing.T) {
 	testutil.IsolateGit(t)
+	t.Cleanup(mcpserver.CheckForStaleBinaryOnEveryCall())
 	db, dbPath := testutil.OpenDB(t)
 	exe := filepath.Join(t.TempDir(), "adhd-core")
 	if err := os.WriteFile(exe, []byte("old build"), 0o755); err != nil {
@@ -44,7 +44,6 @@ func TestToolCallsAreRefusedOnceTheBinaryIsReplaced(t *testing.T) {
 		t.Fatalf("a fresh binary was refused: %s", res.Text)
 	}
 
-	time.Sleep(2100 * time.Millisecond) // past the check interval
 	if err := os.WriteFile(exe, []byte("new build, longer"), 0o755); err != nil {
 		t.Fatal(err)
 	}
