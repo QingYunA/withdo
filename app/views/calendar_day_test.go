@@ -353,7 +353,7 @@ func TestTheCardGrowsLeftAndUpNearTheEdgesOfTheWindow(t *testing.T) {
 // element that asks for clicks takes them alone.
 func TestADoubleClickIsTwoClicksAndOneDoubleClick(t *testing.T) {
 	var outer, inner, double, innerDouble int
-	tt := ui.NewTester(func(c *ui.Context) {
+	tt := newTester(func(c *ui.Context) {
 		box := ui.Column(c.Key("outer")).Size(200, 100).Padding(60, 0, 0)
 		box.Children(func() {
 			in := ui.ButtonBase(c.Key("inner")).Size(100, 30).Label("inner")

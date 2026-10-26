@@ -51,7 +51,7 @@ func menuHeight(items []string) float32 {
 // menuImage renders one menu at 2x.
 func menuImage(items []string, subs, checked map[string]bool, dark bool, lang string) *image.RGBA {
 	w, h := int(menuWidth), int(menuHeight(items))
-	tt := ui.NewTester(func(c *ui.Context) {
+	tt := newTester(func(c *ui.Context) {
 		t := theme.Resolve(c)
 		ui.Column(c).Fill().Padding(5, 0).Background(t.Bg).Border(1, t.BgSelected.Mix(t.Text, 0.15)).Radius(8).Children(func() {
 			for _, it := range items {
@@ -120,7 +120,7 @@ func withMenu(win *image.RGBA, m menuSpec, dark bool, lang string) *image.RGBA {
 func manageShot(t *testing.T, name string, app *App, dark bool, lang string, setup func(tt *ui.Tester, m *Main) *menuSpec) {
 	t.Helper()
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

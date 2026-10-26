@@ -74,7 +74,7 @@ func TestScreensTheHop(t *testing.T) {
 			app.Now = func() time.Time { return clock }
 			m := NewMain(app)
 			m.nav = nav{screen: screenAgents}
-			tt := ui.NewTester(m.View, 1100, 720)
+			tt := newTester(m.View, 1100, 720)
 			tt.SetScale(2)
 			tt.SetDark(a.dark)
 			tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

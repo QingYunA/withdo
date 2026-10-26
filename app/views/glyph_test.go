@@ -44,7 +44,7 @@ func TestScreensGlyphs(t *testing.T) {
 				})
 			})
 		}
-		tt := ui.NewTester(view, 560, 150)
+		tt := newTester(view, 560, 150)
 		tt.SetScale(4)
 		tt.SetDark(dark)
 		still(tt)

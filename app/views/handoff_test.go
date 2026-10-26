@@ -26,7 +26,7 @@ func newHandRig(t *testing.T, reduceMotion bool) *handRig {
 	r.app = NewApp(r.store, &recorder{}, testConfig())
 	r.app.Now = func() time.Time { return r.now }
 	r.m = NewMain(r.app)
-	r.tt = ui.NewTester(r.m.View, 1100, 720)
+	r.tt = newTester(r.m.View, 1100, 720)
 	r.tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
 	r.tt.SetPreferences(ui.Preferences{ReduceMotion: reduceMotion})
 	r.m.goTo(nav{screen: screenProject, projectID: 1})

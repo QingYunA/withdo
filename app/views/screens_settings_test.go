@@ -18,7 +18,7 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 	t.Helper()
 	s := NewSettings(app)
 	w, h := s.ContentSize()
-	tt := ui.NewTester(s.View, int(w), int(h))
+	tt := newTester(s.View, int(w), int(h))
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: SettingsTitleBarHeight, Left: 78})

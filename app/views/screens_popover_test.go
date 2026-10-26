@@ -1,10 +1,6 @@
 package views
 
-import (
-	"testing"
-
-	"github.com/egoist/mygo/ui"
-)
+import "testing"
 
 // The menu bar panel, in light and dark, English and Chinese (-zh), on a backdrop as it floats over
 // the desktop. Render with
@@ -18,7 +14,7 @@ func TestScreensPopover(t *testing.T) {
 			p := NewPopover(app)
 			height := 500
 			p.Resize = func(h int) { height = h }
-			tt := ui.NewTester(p.View, int(PopoverWidth), height)
+			tt := newTester(p.View, int(PopoverWidth), height)
 			tt.SetScale(2)
 			tt.SetDark(a.dark)
 			still(tt)

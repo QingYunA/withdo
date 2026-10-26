@@ -8,9 +8,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/egoist/mygo/ui"
@@ -155,6 +157,23 @@ func newEmptyApp(t *testing.T) (*App, *recorder) {
 	return app, rec
 }
 
+// newTester is a ui.Tester whose clock starts at fixedNow instead of the wall clock, so what the
+// widgets read from it (the calendar's today, the phase of a spinner) is the same on every run.
+// The Tester has no setter for its start time, so the private fields are written.
+func newTester(view func(c *ui.Context), width, height int) *ui.Tester {
+	tt := ui.NewTester(view, width, height)
+	rv := reflect.ValueOf(tt).Elem()
+	for _, name := range []string{"now", "frameAt"} {
+		f := rv.FieldByName(name)
+		if !f.IsValid() || f.Type() != reflect.TypeOf(time.Time{}) {
+			panic("ui.Tester has no time.Time field " + name + " any more: mygo changed; fix newTester")
+		}
+		reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem().Set(reflect.ValueOf(fixedNow()))
+	}
+	tt.Frame()
+	return tt
+}
+
 // still turns motion off so frames are deterministic.
 func still(tt *ui.Tester) { tt.SetPreferences(ui.Preferences{ReduceMotion: true}) }
 
@@ -260,7 +279,7 @@ func newMainTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 
 func newTesterFor(app *App, width int) (*ui.Tester, *Main, *App) {
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, width, 720)
+	tt := newTester(m.View, width, 720)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
 	still(tt)
 	return tt, m, app

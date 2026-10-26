@@ -305,7 +305,7 @@ func TestAReplyReportShowsYou(t *testing.T) {
 	})
 	app.Refresh()
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	still(tt)
 	m.OpenTask(task.ID)
 	tt.Frame()
