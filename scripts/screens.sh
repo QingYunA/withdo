@@ -28,6 +28,14 @@ jobs="$(sysctl -n hw.ncpu 2>/dev/null || nproc)"
 echo "$tests" | xargs -P "$jobs" -I{} \
   sh -c '"$BIN" -test.run "^{}\$" -test.count=1 >"$LOGS/{}.log" 2>&1 || { echo "FAIL {}"; cat "$LOGS/{}.log"; exit 255; }'
 
+# Antialiasing of rotated text moves a pixel by a level between runs, which changes the PNG bytes
+# and nothing visible: put back the committed file of every modified PNG that looks the same.
+(cd "$root" && go build -o "$work/pngsame" ./internal/pngdiff/cmd/pngsame)
+git -C "$root" diff --name-only -- docs/design/screens | while read -r f; do
+  git -C "$root" show "HEAD:$f" >"$work/head.png"
+  if "$work/pngsame" "$work/head.png" "$root/$f"; then git -C "$root" checkout -q -- "$f"; fi
+done
+
 echo "rendered $(echo "$tests" | wc -l | tr -d ' ') screen tests into docs/design/screens"
 echo "changed PNGs (git status --short docs/design/screens):"
 git -C "$root" status --short docs/design/screens

@@ -1,13 +1,14 @@
 package views
 
 import (
-	"bytes"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"sync"
 	"testing"
+
+	"github.com/QingYunA/adhd-todo/internal/pngdiff"
 )
 
 // renderInFreshProcess runs one screen test in a new process of this test binary, writing its
@@ -38,9 +39,8 @@ func differingScreens(t *testing.T, a, b string) []string {
 	}
 	var differ []string
 	for name := range names {
-		x, errX := os.ReadFile(filepath.Join(a, name))
-		y, errY := os.ReadFile(filepath.Join(b, name))
-		if errX != nil || errY != nil || !bytes.Equal(x, y) {
+		same, err := pngdiff.SameFiles(filepath.Join(a, name), filepath.Join(b, name))
+		if err != nil || !same {
 			differ = append(differ, name)
 		}
 	}
