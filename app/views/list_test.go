@@ -108,7 +108,7 @@ func TestTheComposerCreatesATodoInTheProjectWithoutAModel(t *testing.T) {
 	}
 }
 
-func TestATaskWithNoProjectIsInTodayOrLaterLikeAnyTaskOfMine(t *testing.T) {
+func TestAnUndatedTaskWithNoProjectIsInTheNoDateFoldWhichOpensForIt(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	tt.Frame()
 	if !tt.HasText("Book dentist") {
@@ -135,8 +135,14 @@ func TestATaskWithNoProjectIsInTodayOrLaterLikeAnyTaskOfMine(t *testing.T) {
 		}
 		return false
 	}
-	if !in(m.minePage.Later) || in(m.minePage.Today) {
-		t.Errorf("an undated task with no project is in Later: today %v, later %v", titles(m.minePage.Today), titles(m.minePage.Later))
+	if !in(m.minePage.NoDate) || in(m.minePage.Today) || in(m.minePage.Next) {
+		t.Errorf("an undated task with no project is in No date: today %v, no date %v", titles(m.minePage.Today), titles(m.minePage.NoDate))
+	}
+	if !m.app.noDateOpen || !tt.HasText("Added to No date") {
+		t.Errorf("the fold stays shut or the receipt does not say where it went: open %v, %q", m.app.noDateOpen, tt.Texts())
+	}
+	if !tt.HasText("Call mum") {
+		t.Errorf("the new row is not drawn: %q", tt.Texts())
 	}
 }
 

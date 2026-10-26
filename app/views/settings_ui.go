@@ -161,7 +161,7 @@ func draftField(c *ui.Context, t *theme.Tokens, fs fields, s draftSpec, buf *str
 			if shown == "" {
 				shown = s.value
 			}
-			theme.Text(c, theme.Body, t.TextTertiary, shown).Absolute().Left(0).Top(0).PassThrough()
+			theme.Text(c, theme.Body, t.TextSecondary, shown).Absolute().Left(0).Top(0).PassThrough()
 		}
 	})
 	focused := el.Focused()

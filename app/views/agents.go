@@ -92,7 +92,7 @@ func (m *Main) agentHeader(c *ui.Context, t *theme.Tokens, key, name string, n i
 	ui.Row(c.Key("agent:"+key)).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.AvatarIcon(c.Key("avatar"), theme.AgentAvatar(strings.ToLower(name)), theme.AvatarRow)
 		theme.Text(c, theme.BodyStrong, t.Text, name).Shrink(1).MinWidth(0).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n)).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(n)).Shrink(0)
 	})
 }
 

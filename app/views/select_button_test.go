@@ -7,8 +7,9 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
+// Home has no Select control (v34): ⌘-click and Shift-click select there. A project page has it.
 func TestSelectButtonTurnsOnSelectModeWhereAClickTicksARow(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	tt, m, _ := projectTester(t, 1)
 	if err := tt.Click("Select"); err != nil {
 		t.Fatal(err)
 	}
@@ -18,21 +19,21 @@ func TestSelectButtonTurnsOnSelectModeWhereAClickTicksARow(t *testing.T) {
 			t.Errorf("select mode lacks %q in %q", want, tt.Texts())
 		}
 	}
-	if err := tt.Click("Book dentist"); err != nil {
+	if err := tt.Click("Write the release notes"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
 	if m.openID != 0 {
 		t.Error("a click in select mode opened the inspector")
 	}
-	wantPicked(t, m, "Book dentist")
+	wantPicked(t, m, "Write the release notes")
 	if !tt.HasText("1 selected") {
 		t.Errorf("the count did not follow: %q", tt.Texts())
 	}
 	if err := tt.Click("Select all"); err != nil {
 		t.Fatal(err)
 	}
-	if m.multi.Count() != len(m.pg.IDs()) {
+	if m.multi.Count() < 2 { // the rows of mine; the agents' rows of a project are not tickable
 		t.Errorf("Select all ticked %d of %d rows", m.multi.Count(), len(m.pg.IDs()))
 	}
 	if err := tt.Click("Done"); err != nil {
@@ -44,7 +45,7 @@ func TestSelectButtonTurnsOnSelectModeWhereAClickTicksARow(t *testing.T) {
 }
 
 func TestEscLeavesSelectMode(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	tt, m, _ := projectTester(t, 1)
 	if err := tt.Click("Select"); err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +56,7 @@ func TestEscLeavesSelectMode(t *testing.T) {
 }
 
 func TestSpaceTicksTheKeyboardRowInSelectMode(t *testing.T) {
-	tt, m, _ := newMainTester(t, 1100)
+	tt, m, _ := projectTester(t, 1)
 	if err := tt.Click("Select"); err != nil {
 		t.Fatal(err)
 	}

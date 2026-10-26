@@ -105,7 +105,7 @@ func splitAgents(status map[string]agentsetup.Status, reported map[string]agentR
 func (s *Settings) agentsSectionHead(c *ui.Context, t *theme.Tokens, key, label string, count int, above, below float32) {
 	ui.Row(c.Key("agents-head-"+key)).Shrink(0).Gap(6).AlignItems(ui.Center).Margin(above, 4, below).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, label)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(count))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(count))
 	})
 }
 

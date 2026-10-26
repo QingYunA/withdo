@@ -260,7 +260,7 @@
   "@a11yViewList": {
     "description": "Accessibility label of the List segment."
   },
-  "actionAccept": "Accept",
+  "actionAccept": "Mark done",
   "@actionAccept": {
     "description": "Button on the row of a task an agent finished and handed over for review: accepts the work and sets the task to done."
   },
@@ -970,7 +970,7 @@
   "@a11yTaskMenu": {
     "description": "Accessibility label of the popover menu of a task (status, priority, move, remind, delete)."
   },
-  "doneByAgent": "{agent} · {summary}",
+  "doneByAgent": "{agent}: {summary}",
   "@doneByAgent": {
     "description": "Right side of a Done today row: the agent that finished the task and what its latest report said, kept to one line.",
     "placeholders": {
@@ -1348,7 +1348,7 @@
       }
     }
   },
-  "needReviewPR": "PR #{number} is ready for your review",
+  "needReviewPR": "PR #{number} to review",
   "@needReviewPR": {
     "description": "Second line of an agent task waiting for review, with its pull request.",
     "placeholders": {
@@ -1534,21 +1534,7 @@
       }
     }
   },
-  "mineHeroGreeting": "What do you want to do today?",
-  "@mineHeroGreeting": {
-    "description": "Heading of Home, over the big input."
-  },
-  "mineHeroHint": "Return to add · {key} from any app · One sentence can hold several things",
-  "@mineHeroHint": {
-    "description": "Hint line under the big input on Home. key is the global shortcut that opens the quick input, such as ⌥ Space.",
-    "placeholders": {
-      "key": {
-        "type": "String",
-        "example": "⌥ Space"
-      }
-    }
-  },
-  "agentsPanelTitle": "What your agents are doing",
+  "agentsPanelTitle": "Agent",
   "@agentsPanelTitle": {
     "description": "Title of the Agents panel at the right of Home."
   },
@@ -1556,7 +1542,7 @@
   "@agentsPanelEmpty": {
     "description": "Quiet line in the Agents panel of Home when no agent has anything for the user."
   },
-  "agentsPanelDrop": "Drag a to-do here to hand it to an agent",
+  "agentsPanelDrop": "Hand to an agent",
   "@agentsPanelDrop": {
     "description": "The drop target at the foot of the Agents panel on Home."
   },
@@ -2406,10 +2392,6 @@
   "@sectionToday": {
     "description": "Section of Mine: the user's tasks due or reminded today, and the ones in progress."
   },
-  "sectionLater": "Later",
-  "@sectionLater": {
-    "description": "Section of Mine: the user's tasks of the next days, then the ones with no date."
-  },
   "sectionWorking": "Working",
   "@sectionWorking": {
     "description": "Section of Agents: tasks the agents are working on."
@@ -2456,31 +2438,22 @@
       }
     }
   },
-  "needAgentStuck": "{agent} is stuck: “{words}”",
+  "needAgentStuck": "Waiting for your reply: “{words}”",
   "@needAgentStuck": {
     "description": "Second line of a blocked agent task; words is what the agent said it needs.",
     "placeholders": {
-      "agent": {
-        "type": "String",
-        "example": "Codex"
-      },
       "words": {
         "type": "String",
         "example": "Which branch should I use?"
       }
     }
   },
-  "needAgentStuckPlain": "{agent} is stuck and waits for you",
+  "needAgentStuckPlain": "Waiting for your reply",
   "@needAgentStuckPlain": {
     "description": "Second line of a blocked agent task with nothing more to say.",
-    "placeholders": {
-      "agent": {
-        "type": "String",
-        "example": "Codex"
-      }
-    }
+    "placeholders": {}
   },
-  "actionAnswer": "Answer",
+  "actionAnswer": "Reply",
   "@actionAnswer": {
     "description": "Button of a row where an agent waits for an answer."
   },
@@ -3990,10 +3963,6 @@
   "@recentLinkTip": {
     "description": "Tooltip of the Recent changes link on a project page."
   },
-  "seeToday": "See today",
-  "@seeToday": {
-    "description": "Link at the right of the Done today header on Today; opens Summary. A pixel chevron follows it."
-  },
   "settingsCategories": "Categories",
   "@settingsCategories": {
     "description": "Label of the group of categories in Settings > General."
@@ -4516,10 +4485,6 @@
   "@sectionQueued": {
     "description": "Section of Agents: tasks an agent was given (or filed) that have no project and are not started yet."
   },
-  "foldAfterNextWeek": "After next week",
-  "@foldAfterNextWeek": {
-    "description": "Name of the fold at the end of Later on Today: the user's tasks with no project that are due more than a week ahead."
-  },
   "settingsSyncWrongAccount": "This Mac is linked to another account. Sign out, then sign in with that account.",
   "@settingsSyncWrongAccount": {
     "description": "The line of This Mac's row when the signed-in account does not own this Mac's device; Sign out is beside it."
@@ -4645,5 +4610,29 @@
   "pillToReview": "To review",
   "@pillToReview": {
     "description": "Small tag on a row of Today: the user's own task is in review and waits for their look."
+  },
+  "sectionNext": "Next",
+  "@sectionNext": {
+    "description": "Header of the section of Today with my tasks dated within the next 7 days."
+  },
+  "foldNoDate": "No date",
+  "@foldNoDate": {
+    "description": "Name of the fold of Today with my tasks that have no date and no project, backlog ones included."
+  },
+  "composerPlaceholderHome": "Call the landlord tomorrow at 9, and have Claude fix the login bug",
+  "@composerPlaceholderHome": {
+    "description": "Placeholder of the big input on Today: one real example, one errand of the user and one hand-off to an agent."
+  },
+  "doneTodayViewAll": "View all",
+  "@doneTodayViewAll": {
+    "description": "Link at the right of the Done today header on Today; opens Summary."
+  },
+  "actionDoToday": "Do today",
+  "@actionDoToday": {
+    "description": "Task menu item that sets the due date to today, keeping any time."
+  },
+  "toastMovedToToday": "Moved to today",
+  "@toastMovedToToday": {
+    "description": "Toast after Do today; it carries Undo."
   }
 }

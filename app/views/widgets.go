@@ -29,7 +29,7 @@ func pill(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 
 // link is accent text that does something when clicked.
 func link(c *ui.Context, t *theme.Tokens, text string) ui.Element {
-	l := theme.Text(c, theme.Meta, t.Accent, text).Cursor(ui.CursorPointer)
+	l := theme.Text(c, theme.Meta, t.AccentInk, text).Cursor(ui.CursorPointer)
 	if l.Hovered() {
 		l.Underline()
 	}

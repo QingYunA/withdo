@@ -128,14 +128,14 @@ func TestAnAgentsRowsStayTogetherWhateverTheOrderOfTheirReports(t *testing.T) {
 	}
 }
 
-func TestTodayFoldsTheBacklogOfTasksWithNoProjectSoNothingIsOutOfReach(t *testing.T) {
+func TestTodayFoldsTheBacklogOfTasksWithNoProjectInNoDateSoNothingIsOutOfReach(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	tt.SetSize(1100, 1400)
 	tt.Frame()
-	has(t, tt, "Backlog 1", "show Backlog 1")
+	has(t, tt, "No date", "No date 2")
 	hasNot(t, tt, "Renew passport") // parked, no project: the seed's
-	click(t, tt, "show Backlog 1")
+	click(t, tt, "No date")
 	tt.Frame()
-	has(t, tt, "Renew passport", "hide Backlog 1")
+	has(t, tt, "Renew passport")
 	hasNot(t, tt, "Poll gh for PR status") // a project's backlog is on its page
 }

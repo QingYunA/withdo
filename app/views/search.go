@@ -69,7 +69,7 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 			theme.Compact.Apply(ui.TextInputBase(c.Key("search-input"), &s.query)).TextColor(t.Text).
 				Label(m.say.ManageSearchLabel()).Bind(&m.searchRef).OnTextKey(m.searchKey)
 			if s.query == "" {
-				theme.Text(c, theme.Compact, t.TextTertiary, m.say.ManageSearch()).Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Compact, t.TextSecondary, m.say.ManageSearch()).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 		switch {
@@ -81,7 +81,7 @@ func (m *Main) searchField(c *ui.Context, t *theme.Tokens) {
 				m.clearSearch()
 			}
 		case !focused:
-			theme.Text(c, theme.Meta, t.TextTertiary, keyHint("⌘F")).Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, keyHint("⌘F")).Shrink(0)
 		}
 	})
 }
@@ -138,7 +138,7 @@ func (m *Main) searchScreen(c *ui.Context, t *theme.Tokens) {
 		m.searchGroup(c, t, g)
 	}
 	if pg.More {
-		theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.ManageSearchMore(searchLimit), 0).Margin(20, 0, 0)
+		theme.Paragraph(c, theme.Meta, t.TextSecondary, m.say.ManageSearchMore(searchLimit), 0).Margin(20, 0, 0)
 	}
 }
 
@@ -154,10 +154,10 @@ func (m *Main) searchGroup(c *ui.Context, t *theme.Tokens, g page.Section) {
 				ui.Icon(c, theme.IconInbox).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary)
 				return
 			}
-			theme.Text(c, theme.Body, t.TextTertiary, "#")
+			theme.Text(c, theme.Body, t.TextSecondary, "#")
 		})
 		theme.Text(c, theme.BodyStrong, t.Text, name)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(g.Tasks)))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(g.Tasks)))
 	})
 	for _, task := range g.Tasks {
 		m.searchRow(c, t, task)

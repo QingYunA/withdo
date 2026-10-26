@@ -43,7 +43,7 @@ func wellInput(c *ui.Context, t *theme.Tokens, key string, value *string, label,
 				in.AutoFocus()
 			}
 			if *value == "" {
-				theme.Text(c, style, t.TextTertiary, placeholder).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
+				theme.Text(c, style, t.TextSecondary, placeholder).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
 			}
 		})
 	})

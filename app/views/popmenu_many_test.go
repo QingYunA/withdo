@@ -42,7 +42,7 @@ func TestRightClickOnAnUnselectedRowActsOnThatRowAndKeepsTheSelection(t *testing
 	tt, m, _ := newMainTester(t, 1100)
 	cmdClick(t, tt, "Reply to design feedback", "Book dentist")
 	tt.Frame()
-	if err := tt.RightClick("Look into Liquid Glass for the sidebar"); err != nil {
+	if err := tt.RightClick("Write the release notes"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()

@@ -110,7 +110,7 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 		s.submitSyncEmail(svc, busy)
 	}
 	s.syncStatusLine(c, t, snap, busy)
-	theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncLocalNote(), 0).
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncLocalNote(), 0).
 		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
 }
 
@@ -210,7 +210,7 @@ func (s *Settings) syncCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService,
 	if left > 0 {
 		c.After(time.Second)
 		if snap.SignInFailure == data.SignInFailureNone {
-			theme.Text(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncResendIn(countdown(left))).Margin(10, 0, 0)
+			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResendIn(countdown(left))).Margin(10, 0, 0)
 		}
 	} else if settingsLink(c, t, "sync-resend", s.say.SettingsSyncResendCode(), s.say.SettingsSyncResendCode()).Margin(8, 0, 0).Clicked() {
 		svc.SyncResendCode()
@@ -325,7 +325,7 @@ func (s *Settings) syncPasswordStep(c *ui.Context, t *theme.Tokens, svc SyncServ
 		if settingsLink(c, t, "sync-forgot", s.say.SettingsSyncForgotPassword(), s.say.SettingsSyncForgotPassword()).Clicked() {
 			svc.SyncRequestPasswordReset(snap.SignInEmail)
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, "·")
+		theme.Text(c, theme.Meta, t.TextSecondary, "·")
 		if settingsLink(c, t, "sync-use-code", s.say.SettingsSyncUseCode(), s.say.SettingsSyncUseCode()).Clicked() {
 			svc.SyncRequestCode(snap.SignInEmail)
 		}
@@ -401,7 +401,7 @@ func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncServ
 	}
 	ui.Row(c.Key("sync-or")).Width(syncFormWidth).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(12, 0, 0).Children(func() {
 		ui.Box(c.Key("sync-or-left")).Grow(1).Height(theme.Hairline).Background(t.Border)
-		theme.Text(c, syncOrText, t.TextTertiary, s.say.SettingsSyncOr())
+		theme.Text(c, syncOrText, t.TextSecondary, s.say.SettingsSyncOr())
 		ui.Box(c.Key("sync-or-right")).Grow(1).Height(theme.Hairline).Background(t.Border)
 	})
 }

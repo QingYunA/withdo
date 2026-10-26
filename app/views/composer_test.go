@@ -147,8 +147,8 @@ func TestWithoutAModelTheTextBecomesAPlainTaskInThePlace(t *testing.T) {
 		project   *int
 		wantNotes string
 	}{
-		{"now goes to the inbox", nav{}, nil, "Added to Today"},
-		{"inbox", nav{}, nil, "Added to Today"},
+		{"now goes to the inbox", nav{}, nil, "Added to No date"},
+		{"inbox", nav{}, nil, "Added to No date"},
 		{"project", nav{screen: screenProject, projectID: 1}, data.IntPtr(1), "Added to adhd-todo"},
 	}
 	for _, tc := range tests {
@@ -218,7 +218,7 @@ func TestTheInspectorComposerIsHiddenWithoutAModel(t *testing.T) {
 
 func TestThePlaceholderIsShortAndTheTitleNamesThePlace(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
-	has(t, r.tt, "Tell me anything — I'll turn it into tasks")
+	has(t, r.tt, "Call the landlord tomorrow at 9, and have Claude fix the login bug")
 	r.m.goTo(nav{screen: screenProject, projectID: 1})
 	r.tt.Frame()
 	has(t, r.tt, "Add a task, or ask me anything")
@@ -305,7 +305,7 @@ func TestCompletedAndSearchHaveNoComposer(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenCompleted})
 	tt.Frame()
-	hasNot(t, tt, "Tell me anything — I'll turn it into tasks")
+	hasNot(t, tt, "Call the landlord tomorrow at 9, and have Claude fix the login bug")
 }
 
 func TestEscClosesTheReplyThenLeavesTheComposer(t *testing.T) {

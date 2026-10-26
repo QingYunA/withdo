@@ -63,6 +63,11 @@ func (m *Main) addPlain(text string) {
 	if plain(drafts) {
 		cs.noticeLen = noticeFor
 	}
+	m.freshen(made)
+	if project == "" && undated(drafts) { // they are in No date: open it, so the new rows show
+		m.app.noDateOpen = true
+		m.app.Refresh()
+	}
 	cs.undoTicket = m.undos.offer(undoEntry{
 		title: cs.noticeText, until: now.Add(cs.noticeLen),
 		undo: func() { _, _ = m.app.DeleteTasks(made) },
@@ -75,11 +80,24 @@ func plain(drafts []quickadd.Draft) bool {
 	return len(drafts) == 1 && d.Due == nil && d.RemindAt == nil && d.Category == "" && !d.Important
 }
 
+// undated says whether none of the drafts has a due time or a reminder.
+func undated(drafts []quickadd.Draft) bool {
+	for _, d := range drafts {
+		if d.Due != nil || d.RemindAt != nil {
+			return false
+		}
+	}
+	return true
+}
+
 // receipt is the line that says what was added: "Added to Inbox" for a plain task, else what the
 // words were taken to mean, "Added 2: 体检 (Mon 9:00 AM reminder), 交房租 (due Fri)".
 func (m *Main) receipt(drafts []quickadd.Draft, project string) string {
 	if plain(drafts) {
-		return m.say.DetailAdded(m.inboxOr(project))
+		if project == "" {
+			return m.say.DetailAdded(m.say.FoldNoDate())
+		}
+		return m.say.DetailAdded(project)
 	}
 	now := m.app.Now()
 	var items []string

@@ -121,7 +121,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	case data.SyncUploading, data.SyncSynced:
 		s.syncAccountGroup(c, t, svc, snap, snap.Phase == data.SyncUploading)
 		if snap.Phase == data.SyncUploading {
-			theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
 		}
 		s.syncDevices(c, t, snap)
 	default: // failed, offline or the wrong account
@@ -281,7 +281,7 @@ func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevi
 // syncFooter is the server line: the host, and Change, which edits it in place.
 func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	ui.Row(c.Key("sync-footer")).Margin(14, 4, 0).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncServer())
+		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncServer())
 		if s.syncEditingServer {
 			fieldWell(c, t, "sync-server", 330, func() {
 				var field ui.Element
@@ -309,8 +309,8 @@ func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, s
 			}
 			return
 		}
-		theme.Text(c, theme.Mono, t.TextTertiary, serverHost(snap.Server)).Shrink(1).MinWidth(0).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextTertiary, "·")
+		theme.Text(c, theme.Mono, t.TextSecondary, serverHost(snap.Server)).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, "·")
 		if settingsLink(c, t, "sync-change", s.say.SettingsSyncChange(), s.say.SettingsSyncServerAddress()).Clicked() {
 			s.syncEditingServer = true
 			s.syncServerDraft = snap.Server

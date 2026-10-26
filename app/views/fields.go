@@ -90,7 +90,7 @@ func textField(c *ui.Context, t *theme.Tokens, fs fields, s fieldSpec) (saved st
 			el.AutoFocus()
 		}
 		if f.buf == "" && s.placeholder != "" {
-			theme.Text(c, s.style, t.TextTertiary, s.placeholder).Absolute().Left(0).Top(0).PassThrough()
+			theme.Text(c, s.style, t.TextSecondary, s.placeholder).Absolute().Left(0).Top(0).PassThrough()
 		}
 	})
 	focused := el.Focused()

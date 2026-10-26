@@ -42,7 +42,7 @@ func (m *Main) mineStatusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 				m.app.SetStatus(task, mineStates[i])
 			}
 			if sel < 0 {
-				theme.Text(c, theme.Meta, t.TextTertiary, statusLabel(m.say, task.Status)).Shrink(1).MinWidth(0).Ellipsis("…")
+				theme.Text(c, theme.Meta, t.TextSecondary, statusLabel(m.say, task.Status)).Shrink(1).MinWidth(0).Ellipsis("…")
 			}
 		})
 	})

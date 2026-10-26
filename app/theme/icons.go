@@ -43,6 +43,7 @@ var (
 	IconCopy      = pixelIcon("copy")
 	IconMilestone = pixelIcon("flag")
 	IconPlus      = pixelIcon("plus")
+	IconImage     = pixelIcon("image")
 	IconSparkle   = pixelIcon("sparkle")
 	IconBell      = pixelIcon("bell")
 	IconNow       = pixelIcon("circle")

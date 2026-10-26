@@ -206,9 +206,9 @@ func (m *Main) needSummary(it data.Item) string {
 	switch it.Kind {
 	case data.NeedBlocked:
 		if it.Words == "" {
-			return m.say.NeedAgentStuckPlain(agent)
+			return m.say.NeedAgentStuckPlain()
 		}
-		return m.say.NeedAgentStuck(agent, it.Words)
+		return m.say.NeedAgentStuck(it.Words)
 	case data.NeedReminder:
 		return m.clock.Reminder(*it.RemindAt, now)
 	case data.NeedPRClosed:

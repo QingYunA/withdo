@@ -247,7 +247,8 @@ func (m *Main) pictureNotice(c *ui.Context, t *theme.Tokens, s surface) {
 		return
 	}
 	c.After(pictureNoticeFor - age)
-	ui.Row(c.Key("picture-notice-"+itoa(int(s)))).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).
+	top, left := m.lineEdge()
+	ui.Row(c.Key("picture-notice-"+itoa(int(s)))).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).
 		AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Compact, t.TextSecondary, cs.problem).Ellipsis("…")
 	})

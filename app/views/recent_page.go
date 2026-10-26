@@ -315,10 +315,10 @@ func (m *Main) sectionHead(c *ui.Context, t *theme.Tokens, s recentSec) {
 		if name.Clicked() {
 			m.recentPick(repo)
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, repo).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, repo).Shrink(1).MinWidth(0).Ellipsis("…")
 		ui.Spacer(c)
 		if counts := m.sectionCounts(s); counts != "" {
-			theme.Text(c, theme.Meta, t.TextTertiary, counts).Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, counts).Shrink(0)
 		}
 	})
 }

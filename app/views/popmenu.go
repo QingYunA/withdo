@@ -226,6 +226,11 @@ func (m *Main) menuLetters(c *ui.Context, panel ui.Element) {
 	switch {
 	case keyStatus.inMenu(panel):
 		pm.page, pm.back, pm.hl = pageStatus, true, -1
+	case keyToday.inMenu(panel):
+		if task, ok := m.app.Task(pm.task); ok && m.canDoToday(task) {
+			m.closeMenu()
+			m.doToday(c, task)
+		}
 	case keyPriority.inMenu(panel):
 		if task, ok := m.app.Task(pm.task); ok && mine(task) {
 			m.toggleImportant(task)
@@ -267,7 +272,7 @@ func (m *Main) menuBack() {
 	m.closeMenu()
 }
 
-// stripLabel is the name above a strip and, after a dot, the name of the choice under the pointer
+// stripLabel is the name above a strip and, beside it, the name of the choice under the pointer
 // or the arrows, or else of the current one: "Status · Doing". It is in the label row because a
 // tooltip would cover the label.
 func (m *Main) stripLabel(c *ui.Context, t *theme.Tokens, strip, text, current string) {
@@ -275,9 +280,9 @@ func (m *Main) stripLabel(c *ui.Context, t *theme.Tokens, strip, text, current s
 	if m.pop.tip.strip == strip {
 		name = m.pop.tip.name
 	}
-	ui.Row(c).Shrink(0).Padding(6, 8, 4).Gap(5).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Shrink(0).Padding(6, 8, 4).Gap(6).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, text)
-		theme.Text(c, theme.Meta, t.TextTertiary, "· "+name)
+		theme.Text(c, theme.Meta, t.TextSecondary, name)
 	})
 }
 

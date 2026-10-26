@@ -209,7 +209,7 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 
 func plainMeta(text string) func(*ui.Context, *theme.Tokens) {
 	return func(c *ui.Context, t *theme.Tokens) {
-		theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(0)
 	}
 }
 

@@ -30,11 +30,12 @@ func (m *Main) answerView(c *ui.Context, t *theme.Tokens, compact bool) {
 		c.Invalidate()  // and the box gives its second row back
 		return
 	}
-	turn, left := cv.turns[len(cv.turns)-1], float32(16)
+	turn := cv.turns[len(cv.turns)-1]
+	top, left := m.lineEdge()
 	if compact {
-		left = 0
+		top, left = 8, 0
 	}
-	ui.Column(c.Key("answer")).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, left).Opacity(fade).Children(func() {
+	ui.Column(c.Key("answer")).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).Opacity(fade).Children(func() {
 		switch {
 		case m.convo.thinking && turn.reply == "":
 			m.workingLine(c, t)
@@ -46,7 +47,7 @@ func (m *Main) answerView(c *ui.Context, t *theme.Tokens, compact bool) {
 			m.sentenceLine(c, t, turn.reply)
 		}
 		if turn.stopped {
-			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoStopped()).Margin(4, 0, 0)
+			theme.Text(c, theme.Meta, t.TextSecondary, m.say.ConvoStopped()).Margin(4, 0, 0)
 		}
 		if turn.err != "" {
 			m.errorView(c, t, turn.err)
@@ -71,9 +72,9 @@ func (m *Main) workingLine(c *ui.Context, t *theme.Tokens) {
 	ui.Row(c.Key("working")).Height(answerLineHeight).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.PixelSpinner(c, theme.AvatarRow, t.TextSecondary, theme.SpinnerFrame(now, reduce))
 		theme.Text(c, theme.Meta, t.TextSecondary, words).Shrink(0)
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoElapsed(int(elapsed/time.Second))).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.ConvoElapsed(int(elapsed/time.Second))).Shrink(0)
 		ui.Spacer(c)
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoEscCancel()).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.ConvoEscCancel()).Shrink(0)
 	})
 }
 
@@ -114,7 +115,7 @@ func (m *Main) receiptLines(c *ui.Context, t *theme.Tokens, turn convoTurn, comp
 		m.receiptLine(c, t, r, compact && r.TaskID == m.inspector.lastOpen)
 	}
 	if more := len(turn.receipts) - len(shown); more > 0 {
-		theme.Text(c, theme.Compact, t.TextTertiary, m.say.ResultMore(more)).Margin(0, 0, 0, 22).Height(24)
+		theme.Text(c, theme.Compact, t.TextSecondary, m.say.ResultMore(more)).Margin(0, 0, 0, 22).Height(24)
 	}
 }
 
@@ -152,7 +153,7 @@ func (m *Main) receiptLine(c *ui.Context, t *theme.Tokens, r data.Receipt, noTit
 		}
 		ui.Spacer(c)
 		if undone {
-			theme.Text(c, theme.Meta, t.TextTertiary, m.say.ConvoUndone()).Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, m.say.ConvoUndone()).Shrink(0)
 		} else if m.undoButton(c, t, r).Clicked() {
 			m.undo(r)
 		}

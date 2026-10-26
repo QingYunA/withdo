@@ -29,6 +29,8 @@ type Tokens struct {
 	AccentText    ui.Color
 	AccentSoft    ui.Color // iris 3: tinted buttons, a just-added row, the focus ring
 	AccentInk     ui.Color // iris 11: links, tinted button text, Undo
+	AccentEdge    ui.Color // iris 8: the focus edge, the drop target's edge
+	AccentWell    ui.Color // iris 2: the drop target's well
 	Stale         ui.Color
 	Shadow        ui.Color // floating things only
 	Merged        ui.Color // a closed issue, as GitHub paints it
@@ -63,6 +65,8 @@ var light = &Tokens{
 	AccentText:    ui.Hex("#FFFFFF"),
 	AccentSoft:    ui.Hex("#F0F1FE"),
 	AccentInk:     ui.Hex("#5753C6"),
+	AccentEdge:    ui.Hex("#9B9EF0"),
+	AccentWell:    ui.Hex("#F8F8FF"),
 	Stale:         ui.Hex("#CC4E00"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.26),
 	Merged:        ui.Hex("#8E4EC6"),
@@ -94,6 +98,8 @@ var dark = &Tokens{
 	AccentText:    ui.Hex("#FFFFFF"),
 	AccentSoft:    ui.Hex("#202248"),
 	AccentInk:     ui.Hex("#B1A9FF"),
+	AccentEdge:    ui.Hex("#5958B1"),
+	AccentWell:    ui.Hex("#171625"),
 	Stale:         ui.Hex("#FF801F"),
 	Shadow:        ui.RGBA(0, 0, 0, 0.5),
 	Merged:        ui.Hex("#B388EB"),
@@ -177,7 +183,8 @@ const Hairline float32 = 0.5
 // Radii in points.
 const (
 	RadiusControl float32 = 6  // pills, inputs
-	RadiusCard    float32 = 9  // cards, rows
+	RadiusCard    float32 = 9  // cards
+	RadiusRow     float32 = 8  // rows (v34)
 	RadiusPanel   float32 = 12 // composer, From your agents container, popovers, sheets
 	RadiusTile    float32 = 10 // board cards
 )

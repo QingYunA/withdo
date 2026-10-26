@@ -41,7 +41,7 @@ func (m *Main) reportRow(c *ui.Context, t *theme.Tokens, r data.Report, last, fi
 				if first && r.Status == data.Blocked {
 					name.TextColor(t.Blocked()) // the one report that needs attention
 				}
-				theme.Text(c, theme.Meta, t.TextTertiary, m.clock.Age(r.CreatedAt, m.app.Now()))
+				theme.Text(c, theme.Meta, t.TextSecondary, m.clock.Age(r.CreatedAt, m.app.Now()))
 			})
 			theme.Paragraph(c, theme.Body, t.Text, r.Summary, 0)
 			if r.NextStep != "" {

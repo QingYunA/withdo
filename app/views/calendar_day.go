@@ -171,7 +171,7 @@ func (m *Main) dayCardBody(c *ui.Context, t *theme.Tokens, day data.CalDay, g da
 func (m *Main) dayCardHeader(c *ui.Context, t *theme.Tokens, day data.CalDay) {
 	ui.Row(c.Key("day-card-head")).Height(theme.DayCardHead).Shrink(0).AlignItems(ui.Center).Gap(8).Children(func() {
 		theme.Text(c, theme.BodyStrong, t.Text, m.clock.DayTitle(day.Date)).Shrink(1).MinWidth(0).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.CalendarDayCount(len(day.Items))).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.CalendarDayCount(len(day.Items))).Shrink(0)
 		ui.Box(c).Grow(1)
 		label := m.say.A11yCalendarDayClose()
 		btn := ui.ButtonBase(c.Key("day-card-close")).Size(24, 24).Shrink(0).Center().Radius(theme.RadiusControl).

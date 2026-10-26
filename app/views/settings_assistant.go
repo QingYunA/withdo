@@ -131,14 +131,14 @@ func (s *Settings) statusLine(c *ui.Context, t *theme.Tokens, p data.Provider, r
 		}
 		switch {
 		case res.running:
-			theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsTesting())
+			theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsTesting())
 		case res.ok:
-			theme.Text(c, theme.Meta, t.TextTertiary, "·")
+			theme.Text(c, theme.Meta, t.TextSecondary, "·")
 			statusDot(c, t.Status(data.Done))
 			theme.Text(c, theme.Meta, t.Status(data.Done), res.text)
 		default:
 			if res.text == "" {
-				theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsStatusNone())
+				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsStatusNone())
 			}
 			link := s.say.ModelsTest()
 			if res.text != "" {

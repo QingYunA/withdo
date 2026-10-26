@@ -446,14 +446,14 @@ func (msgs Messages) A11yViewList() string {
 	return Catalog.Format(msgs.locale, "a11yViewList", nil)
 }
 
-// ActionAccept says "Accept"
+// ActionAccept says "Mark done"
 // in the language the app shows.
 //
 // Button on the row of a task an agent finished and handed over for review:
 // accepts the work and sets the task to done.
 func ActionAccept() string { return In(i18n.Locale()).ActionAccept() }
 
-// ActionAccept says "Accept"
+// ActionAccept says "Mark done"
 // in the language of msgs.
 //
 // Button on the row of a task an agent finished and handed over for review:
@@ -2084,7 +2084,7 @@ func (msgs Messages) A11yTaskMenu() string {
 	return Catalog.Format(msgs.locale, "a11yTaskMenu", nil)
 }
 
-// DoneByAgent says "{agent} · {summary}"
+// DoneByAgent says "{agent}: {summary}"
 // in the language the app shows.
 //
 // Right side of a Done today row: the agent that finished the task and what
@@ -2093,7 +2093,7 @@ func DoneByAgent(agent string, summary string) string {
 	return In(i18n.Locale()).DoneByAgent(agent, summary)
 }
 
-// DoneByAgent says "{agent} · {summary}"
+// DoneByAgent says "{agent}: {summary}"
 // in the language of msgs.
 //
 // Right side of a Done today row: the agent that finished the task and what
@@ -3060,13 +3060,13 @@ func (msgs Messages) NeedReminderYesterday(time_ string) string {
 	return Catalog.Format(msgs.locale, "needReminderYesterday", map[string]any{"time": time_})
 }
 
-// NeedReviewPR says "PR #{number} is ready for your review"
+// NeedReviewPR says "PR #{number} to review"
 // in the language the app shows.
 //
 // Second line of an agent task waiting for review, with its pull request.
 func NeedReviewPR(number string) string { return In(i18n.Locale()).NeedReviewPR(number) }
 
-// NeedReviewPR says "PR #{number} is ready for your review"
+// NeedReviewPR says "PR #{number} to review"
 // in the language of msgs.
 //
 // Second line of an agent task waiting for review, with its pull request.
@@ -3408,43 +3408,13 @@ func (msgs Messages) NotifyReminder(title string) string {
 	return Catalog.Format(msgs.locale, "notifyReminder", map[string]any{"title": title})
 }
 
-// MineHeroGreeting says "What do you want to do today?"
-// in the language the app shows.
-//
-// Heading of Home, over the big input.
-func MineHeroGreeting() string { return In(i18n.Locale()).MineHeroGreeting() }
-
-// MineHeroGreeting says "What do you want to do today?"
-// in the language of msgs.
-//
-// Heading of Home, over the big input.
-func (msgs Messages) MineHeroGreeting() string {
-	return Catalog.Format(msgs.locale, "mineHeroGreeting", nil)
-}
-
-// MineHeroHint says "Return to add · {key} from any app · One sentence can hold several things"
-// in the language the app shows.
-//
-// Hint line under the big input on Home. key is the global shortcut that
-// opens the quick input, such as ⌥ Space.
-func MineHeroHint(key string) string { return In(i18n.Locale()).MineHeroHint(key) }
-
-// MineHeroHint says "Return to add · {key} from any app · One sentence can hold several things"
-// in the language of msgs.
-//
-// Hint line under the big input on Home. key is the global shortcut that
-// opens the quick input, such as ⌥ Space.
-func (msgs Messages) MineHeroHint(key string) string {
-	return Catalog.Format(msgs.locale, "mineHeroHint", map[string]any{"key": key})
-}
-
-// AgentsPanelTitle says "What your agents are doing"
+// AgentsPanelTitle says "Agent"
 // in the language the app shows.
 //
 // Title of the Agents panel at the right of Home.
 func AgentsPanelTitle() string { return In(i18n.Locale()).AgentsPanelTitle() }
 
-// AgentsPanelTitle says "What your agents are doing"
+// AgentsPanelTitle says "Agent"
 // in the language of msgs.
 //
 // Title of the Agents panel at the right of Home.
@@ -3468,13 +3438,13 @@ func (msgs Messages) AgentsPanelEmpty() string {
 	return Catalog.Format(msgs.locale, "agentsPanelEmpty", nil)
 }
 
-// AgentsPanelDrop says "Drag a to-do here to hand it to an agent"
+// AgentsPanelDrop says "Hand to an agent"
 // in the language the app shows.
 //
 // The drop target at the foot of the Agents panel on Home.
 func AgentsPanelDrop() string { return In(i18n.Locale()).AgentsPanelDrop() }
 
-// AgentsPanelDrop says "Drag a to-do here to hand it to an agent"
+// AgentsPanelDrop says "Hand to an agent"
 // in the language of msgs.
 //
 // The drop target at the foot of the Agents panel on Home.
@@ -5894,22 +5864,6 @@ func (msgs Messages) SectionToday() string {
 	return Catalog.Format(msgs.locale, "sectionToday", nil)
 }
 
-// SectionLater says "Later"
-// in the language the app shows.
-//
-// Section of Mine: the user's tasks of the next days, then the ones with no
-// date.
-func SectionLater() string { return In(i18n.Locale()).SectionLater() }
-
-// SectionLater says "Later"
-// in the language of msgs.
-//
-// Section of Mine: the user's tasks of the next days, then the ones with no
-// date.
-func (msgs Messages) SectionLater() string {
-	return Catalog.Format(msgs.locale, "sectionLater", nil)
-}
-
 // SectionWorking says "Working"
 // in the language the app shows.
 //
@@ -6012,45 +5966,43 @@ func (msgs Messages) NeedAgentDone(agent string) string {
 	return Catalog.Format(msgs.locale, "needAgentDone", map[string]any{"agent": agent})
 }
 
-// NeedAgentStuck says "{agent} is stuck: “{words}”"
+// NeedAgentStuck says "Waiting for your reply: “{words}”"
 // in the language the app shows.
 //
 // Second line of a blocked agent task; words is what the agent said it
 // needs.
-func NeedAgentStuck(agent string, words string) string {
-	return In(i18n.Locale()).NeedAgentStuck(agent, words)
-}
+func NeedAgentStuck(words string) string { return In(i18n.Locale()).NeedAgentStuck(words) }
 
-// NeedAgentStuck says "{agent} is stuck: “{words}”"
+// NeedAgentStuck says "Waiting for your reply: “{words}”"
 // in the language of msgs.
 //
 // Second line of a blocked agent task; words is what the agent said it
 // needs.
-func (msgs Messages) NeedAgentStuck(agent string, words string) string {
-	return Catalog.Format(msgs.locale, "needAgentStuck", map[string]any{"agent": agent, "words": words})
+func (msgs Messages) NeedAgentStuck(words string) string {
+	return Catalog.Format(msgs.locale, "needAgentStuck", map[string]any{"words": words})
 }
 
-// NeedAgentStuckPlain says "{agent} is stuck and waits for you"
+// NeedAgentStuckPlain says "Waiting for your reply"
 // in the language the app shows.
 //
 // Second line of a blocked agent task with nothing more to say.
-func NeedAgentStuckPlain(agent string) string { return In(i18n.Locale()).NeedAgentStuckPlain(agent) }
+func NeedAgentStuckPlain() string { return In(i18n.Locale()).NeedAgentStuckPlain() }
 
-// NeedAgentStuckPlain says "{agent} is stuck and waits for you"
+// NeedAgentStuckPlain says "Waiting for your reply"
 // in the language of msgs.
 //
 // Second line of a blocked agent task with nothing more to say.
-func (msgs Messages) NeedAgentStuckPlain(agent string) string {
-	return Catalog.Format(msgs.locale, "needAgentStuckPlain", map[string]any{"agent": agent})
+func (msgs Messages) NeedAgentStuckPlain() string {
+	return Catalog.Format(msgs.locale, "needAgentStuckPlain", nil)
 }
 
-// ActionAnswer says "Answer"
+// ActionAnswer says "Reply"
 // in the language the app shows.
 //
 // Button of a row where an agent waits for an answer.
 func ActionAnswer() string { return In(i18n.Locale()).ActionAnswer() }
 
-// ActionAnswer says "Answer"
+// ActionAnswer says "Reply"
 // in the language of msgs.
 //
 // Button of a row where an agent waits for an answer.
@@ -9850,22 +9802,6 @@ func (msgs Messages) RecentLinkTip() string {
 	return Catalog.Format(msgs.locale, "recentLinkTip", nil)
 }
 
-// SeeToday says "See today"
-// in the language the app shows.
-//
-// Link at the right of the Done today header on Today; opens Summary. A
-// pixel chevron follows it.
-func SeeToday() string { return In(i18n.Locale()).SeeToday() }
-
-// SeeToday says "See today"
-// in the language of msgs.
-//
-// Link at the right of the Done today header on Today; opens Summary. A
-// pixel chevron follows it.
-func (msgs Messages) SeeToday() string {
-	return Catalog.Format(msgs.locale, "seeToday", nil)
-}
-
 // SettingsCategories says "Categories"
 // in the language the app shows.
 //
@@ -11460,22 +11396,6 @@ func (msgs Messages) SectionQueued() string {
 	return Catalog.Format(msgs.locale, "sectionQueued", nil)
 }
 
-// FoldAfterNextWeek says "After next week"
-// in the language the app shows.
-//
-// Name of the fold at the end of Later on Today: the user's tasks with no
-// project that are due more than a week ahead.
-func FoldAfterNextWeek() string { return In(i18n.Locale()).FoldAfterNextWeek() }
-
-// FoldAfterNextWeek says "After next week"
-// in the language of msgs.
-//
-// Name of the fold at the end of Later on Today: the user's tasks with no
-// project that are due more than a week ahead.
-func (msgs Messages) FoldAfterNextWeek() string {
-	return Catalog.Format(msgs.locale, "foldAfterNextWeek", nil)
-}
-
 // SettingsSyncWrongAccount says "This Mac is linked to another account. Sign out, then sign in with that account."
 // in the language the app shows.
 //
@@ -11766,4 +11686,94 @@ func PillToReview() string { return In(i18n.Locale()).PillToReview() }
 // for their look.
 func (msgs Messages) PillToReview() string {
 	return Catalog.Format(msgs.locale, "pillToReview", nil)
+}
+
+// SectionNext says "Next"
+// in the language the app shows.
+//
+// Header of the section of Today with my tasks dated within the next 7
+// days.
+func SectionNext() string { return In(i18n.Locale()).SectionNext() }
+
+// SectionNext says "Next"
+// in the language of msgs.
+//
+// Header of the section of Today with my tasks dated within the next 7
+// days.
+func (msgs Messages) SectionNext() string {
+	return Catalog.Format(msgs.locale, "sectionNext", nil)
+}
+
+// FoldNoDate says "No date"
+// in the language the app shows.
+//
+// Name of the fold of Today with my tasks that have no date and no project,
+// backlog ones included.
+func FoldNoDate() string { return In(i18n.Locale()).FoldNoDate() }
+
+// FoldNoDate says "No date"
+// in the language of msgs.
+//
+// Name of the fold of Today with my tasks that have no date and no project,
+// backlog ones included.
+func (msgs Messages) FoldNoDate() string {
+	return Catalog.Format(msgs.locale, "foldNoDate", nil)
+}
+
+// ComposerPlaceholderHome says "Call the landlord tomorrow at 9, and have Claude fix the login bug"
+// in the language the app shows.
+//
+// Placeholder of the big input on Today: one real example, one errand of
+// the user and one hand-off to an agent.
+func ComposerPlaceholderHome() string { return In(i18n.Locale()).ComposerPlaceholderHome() }
+
+// ComposerPlaceholderHome says "Call the landlord tomorrow at 9, and have Claude fix the login bug"
+// in the language of msgs.
+//
+// Placeholder of the big input on Today: one real example, one errand of
+// the user and one hand-off to an agent.
+func (msgs Messages) ComposerPlaceholderHome() string {
+	return Catalog.Format(msgs.locale, "composerPlaceholderHome", nil)
+}
+
+// DoneTodayViewAll says "View all"
+// in the language the app shows.
+//
+// Link at the right of the Done today header on Today; opens Summary.
+func DoneTodayViewAll() string { return In(i18n.Locale()).DoneTodayViewAll() }
+
+// DoneTodayViewAll says "View all"
+// in the language of msgs.
+//
+// Link at the right of the Done today header on Today; opens Summary.
+func (msgs Messages) DoneTodayViewAll() string {
+	return Catalog.Format(msgs.locale, "doneTodayViewAll", nil)
+}
+
+// ActionDoToday says "Do today"
+// in the language the app shows.
+//
+// Task menu item that sets the due date to today, keeping any time.
+func ActionDoToday() string { return In(i18n.Locale()).ActionDoToday() }
+
+// ActionDoToday says "Do today"
+// in the language of msgs.
+//
+// Task menu item that sets the due date to today, keeping any time.
+func (msgs Messages) ActionDoToday() string {
+	return Catalog.Format(msgs.locale, "actionDoToday", nil)
+}
+
+// ToastMovedToToday says "Moved to today"
+// in the language the app shows.
+//
+// Toast after Do today; it carries Undo.
+func ToastMovedToToday() string { return In(i18n.Locale()).ToastMovedToToday() }
+
+// ToastMovedToToday says "Moved to today"
+// in the language of msgs.
+//
+// Toast after Do today; it carries Undo.
+func (msgs Messages) ToastMovedToToday() string {
+	return Catalog.Format(msgs.locale, "toastMovedToToday", nil)
 }

@@ -17,6 +17,9 @@ type finishedOpts struct {
 	project string // the project's name beside the title
 	when    string // the day or the time of day it was finished
 	summary bool   // what the closing report said, after the agent's name
+	// what shows who finished it as the agent's avatar and what it did ("PR #335 merged"), and
+	// nothing when it was me (Done today).
+	what bool
 	// quiet leaves out who finished it, which the avatar already says (the Agents screen), and note,
 	// when it is not empty, goes before the time: "3 subtasks".
 	quiet bool
@@ -123,17 +126,19 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 			ui.Row(c).Gap(8).MinWidth(0).AlignItems(ui.Center).Children(func() {
 				theme.Text(c, theme.Body, t.TextSecondary, task.Title).Shrink(1).MinWidth(0).Ellipsis("…")
 				if o.project != "" && m.width >= dropProjectBelow {
-					theme.Text(c, theme.Meta, t.TextTertiary, o.project).Shrink(8).MinWidth(0).Ellipsis("…")
+					theme.Text(c, theme.Meta, t.TextSecondary, o.project).Shrink(8).MinWidth(0).Ellipsis("…")
 				}
 			})
 		})
 		right(c, func() {
 			if o.note != "" && m.width >= dropPillsBelow {
-				theme.Text(c, theme.Meta, t.TextTertiary, o.note).Shrink(0)
+				theme.Text(c, theme.Meta, t.TextSecondary, o.note).Shrink(0)
 			}
-			if m.width >= dropPillsBelow && !o.quiet {
+			if o.what {
+				m.didWhat(c, t, task)
+			} else if m.width >= dropPillsBelow && !o.quiet {
 				who := m.whoFinished(task, o.summary && m.width >= dropProjectBelow)
-				theme.Text(c, theme.Meta, t.TextTertiary, who).MaxWidth(300).Shrink(2).MinWidth(0).Ellipsis("…")
+				theme.Text(c, theme.Meta, t.TextSecondary, who).MaxWidth(300).Shrink(2).MinWidth(0).Ellipsis("…")
 			}
 			m.rowThumb(c, t, task.ID)
 			plainText(c, t, o.when)
@@ -144,40 +149,36 @@ func (m *Main) finishedRow(c *ui.Context, t *theme.Tokens, task data.Task, o fin
 	}
 }
 
+// didWhat is what an agent did to finish a task: its avatar and what its closing report said (`PR #335
+// merged`), or its name when it said nothing. A task I finished says nothing.
+func (m *Main) didWhat(c *ui.Context, t *theme.Tokens, task data.Task) {
+	by, said := m.app.completedBy(task)
+	if by == "" || m.width < dropPillsBelow {
+		return
+	}
+	if said == "" {
+		said = agentName(by)
+	}
+	ui.Row(c.Key("did-what")).Shrink(1).MinWidth(0).Gap(6).AlignItems(ui.Center).Children(func() {
+		theme.AvatarIcon(c.Key("did-who"), theme.AgentAvatar(by), 14).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, said).Shrink(1).MinWidth(0).Ellipsis("…")
+	})
+}
+
 // doneTodaySection is the last section of Today: what was finished since midnight, by agents and by
-// me, newest first, five rows. `See today` at the right of its header opens Summary; `Show all` at
-// its end opens the history of everything finished.
+// me, newest first, five rows. `View all` at the right of its header opens Summary.
 func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, items []data.Item, more int) {
 	if len(items) == 0 {
 		return
 	}
 	m.section(c, "done-today", itemTasks(items), func() {
-		sectionHeaderWith(c, t, m.say.SectionDoneToday(), len(items)+more, func() { m.seeToday(c, t) })
+		sectionHeaderWith(c, t, m.say.SectionDoneToday(), len(items)+more, func() {
+			if link(c, t, m.say.DoneTodayViewAll()).Clicked() {
+				m.ShowSummary(false)
+			}
+		})
 		for _, it := range items {
-			m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), summary: true})
+			m.finishedRow(c, t, it.Task, finishedOpts{glyph: true, project: it.Project, when: m.clock.Time(it.Since), what: true})
 		}
 	})
-	if link(c, t, m.say.ShowAll()).Margin(8, 0, 0, theme.GlyphSize+8).Clicked() {
-		m.openHistory(0, false)
-	}
-}
-
-// seeToday is the link at the right of the Done today header that opens Summary: the words and a
-// pixel chevron.
-func (m *Main) seeToday(c *ui.Context, t *theme.Tokens) {
-	label := m.say.SeeToday()
-	btn := ui.ButtonBase(c.Key("see-today")).Shrink(0).Padding(2, 2, 2, 6).Radius(theme.RadiusControl).Label(label).Cursor(ui.CursorPointer)
-	ink := t.Accent
-	if btn.Hovered() {
-		ink = t.Accent.Mix(t.Text, 0.2)
-	}
-	btn.Children(func() {
-		ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() {
-			theme.Text(c, theme.Meta, ink, label)
-			ui.Icon(c, theme.IconForward).Size(theme.IconSmall, theme.IconSmall).TextColor(ink).Shrink(0)
-		})
-	})
-	if btn.Clicked() {
-		m.ShowSummary(false)
-	}
 }

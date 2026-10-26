@@ -72,13 +72,6 @@ func (m *Main) pageComposer(c *ui.Context, t *theme.Tokens) {
 // images attached sit above the text as thumbnails. The place is named by the page's title, not by
 // the input.
 func (m *Main) composerBox(c *ui.Context, t *theme.Tokens, s surface, style theme.Style) {
-	m.composerBoxAs(c, t, s, style, false)
-}
-
-// composerBoxAs is composerBox, as Home's big input when hero: 58 pt tall, 14 pt radius, a soft
-// shadow at rest that the focus ring takes the place of, and no ⌘K at its right (the hint line under
-// the box says the keys). Everything else, focus included, is the same box.
-func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style theme.Style, hero bool) {
 	cs := &m.cmp[s]
 	ready := m.assistReady()
 	focused, typed := cs.ref.Focused(c), cs.buf != ""
@@ -92,12 +85,8 @@ func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style th
 	if s == surfaceInspector {
 		key = "inspector-card"
 	}
-	height, radius := theme.ComposerHeight, theme.ComposerRadius
-	if hero {
-		height, radius = theme.HeroHeight, theme.HeroRadius
-	}
-	box := ui.Column(c.Key(key)).Shrink(0).MinHeight(height).Padding(10, 10, 10, 16).Gap(8).
-		Justify(ui.Center).Radius(radius)
+	box := ui.Column(c.Key(key)).Shrink(0).MinHeight(theme.ComposerHeight).Padding(10, 10, 10, 16).Gap(8).
+		Justify(ui.Center).Radius(theme.ComposerRadius)
 	cs.dragOver = ready && box.FileDragOver()
 	switch {
 	case cs.dragOver:
@@ -108,9 +97,6 @@ func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style th
 		box.Background(t.Bg).Border(theme.Hairline, t.Border.Mix(t.Text, 0.25))
 	default:
 		box.Background(t.Bg).Border(theme.Hairline, t.Border)
-	}
-	if hero && !cs.dragOver && !active {
-		box.Shadow(0, 2, 10, 0, t.Shadow.Alpha(0.08))
 	}
 	box.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
 	if ready {
@@ -143,8 +129,8 @@ func (m *Main) composerBoxAs(c *ui.Context, t *theme.Tokens, s surface, style th
 			case bar:
 			case typed:
 				m.sendButton(c, t, s)
-			case s == surfacePage && !hero:
-				theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerHintIdle(keyHint("⌘K"))).Shrink(0)
+			case s == surfacePage:
+				theme.Text(c, theme.Meta, t.TextSecondary, m.say.ComposerHintIdle(keyHint("⌘K"))).Shrink(0)
 			}
 		})
 		if bar {
@@ -192,7 +178,7 @@ func (m *Main) composerField(c *ui.Context, t *theme.Tokens, s surface, style th
 		m.takeFocus(c, s)
 		// An input method's composition is drawn before it reaches buf: the placeholder gives way to it.
 		if cs.buf == "" && !field.Composing() {
-			theme.Text(c, style, t.TextTertiary, m.placeholder(s)).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
+			theme.Text(c, style, t.TextSecondary, m.placeholder(s)).Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
 		}
 	})
 }
@@ -208,6 +194,9 @@ func (m *Main) placeholder(s surface) string {
 	switch {
 	case cv.open && cv.owner == s && len(cv.turns) > 0 && cv.turns[len(cv.turns)-1].question != nil:
 		return m.say.AskAnswerHint()
+	}
+	if s == surfacePage && m.pg.Hero {
+		return m.say.ComposerPlaceholderHome()
 	}
 	switch m.placeOf(s).Kind {
 	case data.PlaceProject:
@@ -260,7 +249,11 @@ func (m *Main) stopButton(c *ui.Context, t *theme.Tokens) {
 // assistantMark is the assistant's 18 pt avatar at the left of the input. While it works on a
 // request from s it pulses, unless Reduce Motion is on.
 func (m *Main) assistantMark(c *ui.Context, s surface) {
-	icon := theme.AvatarIcon(c.Key("assistant"), theme.Assistant, theme.AvatarRow).Shrink(0)
+	m.pulse(c, theme.AvatarIcon(c.Key("assistant"), theme.Assistant, theme.AvatarRow).Shrink(0), s)
+}
+
+// pulse makes the assistant's avatar breathe while it works on a request from s.
+func (m *Main) pulse(c *ui.Context, icon ui.Element, s surface) {
 	if !m.convo.thinking || m.convo.owner != s || c.Preferences().ReduceMotion {
 		return
 	}
@@ -292,10 +285,15 @@ func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 	if age > length-300*time.Millisecond {
 		opacity = float32(length-age) / float32(300*time.Millisecond)
 	}
-	ui.Row(c.Key("notice")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).Gap(6).
+	top, left := m.lineEdge()
+	ui.Row(c.Key("notice")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).Gap(6).
 		Opacity(opacity).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done)).Shrink(0)
-		theme.Text(c, theme.Compact, t.TextSecondary, cs.noticeText).Shrink(1).MinWidth(0).Ellipsis("…")
+		style := theme.Meta
+		if !m.homeLine {
+			ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done)).Shrink(0)
+			style = theme.Compact
+		}
+		theme.Text(c, style, t.TextSecondary, cs.noticeText).Shrink(0).MinWidth(0).Ellipsis("…")
 		if m.undos.cur == nil || m.undos.seq != cs.undoTicket {
 			return
 		}
@@ -318,7 +316,8 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 	}
 	// A press on the line takes the focus from the field: the line stays while the pointer is on it,
 	// so the click is not lost.
-	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).AlignItems(ui.Center).Children(func() {
+	top, left := m.lineEdge()
+	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).AlignItems(ui.Center).Children(func() {
 		l := link(c, t, m.say.ComposerChipSetUp())
 		cs.setUpHover = l.Hovered()
 		if l.Clicked() {

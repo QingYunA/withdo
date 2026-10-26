@@ -129,7 +129,7 @@ func TestTheCategoryPageHasNoMatchLine(t *testing.T) {
 
 func TestCategoryGivesATaskTheChipOfThatCategory(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	rightClick(t, tt, "Look into Liquid Glass for the sidebar")
+	rightClick(t, tt, "Write the release notes")
 	click(t, tt, "Category")
 	click(t, tt, "Set category to Work")
 	tt.Frame()
@@ -151,11 +151,15 @@ func TestInChineseTheCategoryRowSpeaksChinese(t *testing.T) {
 }
 
 func TestTheCategoryPageDrawsEachIconInItsColor(t *testing.T) {
-	tt, _, app := projectTester(t, 1)
+	tt, m, app := projectTester(t, 1)
 	addCategory(t, app, "Reading", "orange")
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Category")
-	for label, key := range map[string]string{"Set category to Work": "blue", "Set category to Life": "green", "Set category to Reading": "orange"} {
+	for _, cat := range app.snap.categories {
+		label, key := "Set category to "+categoryTitle(m.say, cat), cat.Color
+		if cat.Builtin == data.BuiltinWork {
+			key = "indigo" // the built-in Work icon is drawn in iris, whatever color the category is stored with
+		}
 		r, ok := tt.Find(label)
 		if !ok {
 			t.Fatalf("no %q", label)

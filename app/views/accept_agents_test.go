@@ -19,7 +19,7 @@ func hover(t *testing.T, tt *ui.Tester, text string) {
 	tt.Frame()
 }
 
-var rowButtons = []string{"Open PR", "Accept", "Answer", "Review"}
+var rowButtons = []string{"Open PR", "Mark done", "Reply", "Review"}
 
 func TestAnAgentsRowShowsItsButtonsOnlyWhileHoveredAndOnlyWhenItWaitsForYou(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
@@ -28,9 +28,9 @@ func TestAnAgentsRowShowsItsButtonsOnlyWhileHoveredAndOnlyWhenItWaitsForYou(t *t
 		title string
 		want  []string
 	}{
-		{"Native UI with mygo", []string{"Open PR", "Accept"}}, // in review, with a pull request
-		{"Fix tray race on launch", []string{"Answer"}},        // blocked
-		{"Port core to Go", nil},                               // doing: a click opens it
+		{"Native UI with mygo", []string{"Open PR", "Mark done"}}, // in review, with a pull request
+		{"Fix tray race on launch", []string{"Reply"}},            // blocked
+		{"Port core to Go", nil},                                  // doing: a click opens it
 	} {
 		hover(t, tt, c.title)
 		for _, b := range rowButtons {
@@ -111,10 +111,10 @@ func TestABoardCardShowsTheButtonsInPlaceOfTheAgeAndAcceptMovesItToDone(t *testi
 	moving(tt)
 	hasNot(t, tt, rowButtons...)
 	hover(t, tt, "Fix tray race on launch")
-	has(t, tt, "Answer")
-	hasNot(t, tt, "Accept")
+	has(t, tt, "Reply")
+	hasNot(t, tt, "Mark done")
 	hover(t, tt, "Native UI with mygo")
-	has(t, tt, "Open PR", "Accept")
+	has(t, tt, "Open PR", "Mark done")
 	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
 		t.Fatal(err)
 	}
