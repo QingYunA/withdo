@@ -17,6 +17,10 @@ import (
 //	{"FromAgents":[Item...],"Today":[Item...],"Later":[Item...],"MoreLater":0,
 //	 "Done":[Item...],"MoreDone":0}
 //
+// The desktop's v34 Home splits Later into Next (dated within a week) and the No date fold; the
+// phone keeps its one Later list: the wire holds both (Next, NoDate) and Later is their sum, so the
+// Android app is unchanged and no task is out of its reach.
+//
 // An Item is data.Item with its data.Task fields promoted to the top level, plus Project, Kind,
 // Summary, NextStep, Words, Since, Stale, Hours, Live and By. Kind is data.NeedKind as an integer
 // (Blocked 0, Reminder 1, PRClosed 2, PRFailing 3, PRChanges 4, Review 5, Stale 6). Times are
@@ -27,8 +31,15 @@ func (c *Core) Mine() (string, error) {
 	if err != nil {
 		return "", shortError(err)
 	}
-	m := data.BuildMine(data.MineInput{Snapshot: snap, Now: c.nowTime()})
-	return marshal(m)
+	m := data.BuildMine(data.MineInput{Snapshot: snap, Now: c.nowTime(), NoDateOpen: true})
+	return marshal(mobileMine{Mine: m, Later: append(append([]data.Item{}, m.Next...), m.NoDate...)})
+}
+
+// mobileMine is data.Mine with the phone's Later list.
+type mobileMine struct {
+	data.Mine
+	Later     []data.Item
+	MoreLater int
 }
 
 // Agents returns the Agents screen as JSON: app/data.AgentsScreen, built like the desktop's.

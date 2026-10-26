@@ -260,7 +260,7 @@ func mineItem(t *testing.T, c *Core, id int) data.Item {
 	if err != nil {
 		t.Fatalf("Mine: %v", err)
 	}
-	var mine data.Mine
+	var mine mobileMine
 	if err := json.Unmarshal([]byte(raw), &mine); err != nil {
 		t.Fatalf("decode Mine: %v", err)
 	}
