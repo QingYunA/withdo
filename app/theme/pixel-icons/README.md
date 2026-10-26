@@ -3,3 +3,4 @@ M11 additions (2.4.2): cloud, laptop and smartphone, used by Settings > Sync and
 Settings four panes: user, the Account pane's icon.
 M13 P2 additions (2.4.2): mail, the code step and the reset-sent step of Account / Sync.
 M34 addition (2.4.2): image, the picture button of the Home composer.
+v36 addition (2.4.2): chart (the framed bars; 2.4.2 has no chart-bar), the Summary row of the sidebar.

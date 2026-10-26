@@ -21,7 +21,7 @@ const (
 // Limits of the Mine and Agents screens.
 const (
 	LiveWithin      = 10 * time.Minute // an agent report this fresh draws the live dot
-	MaxDoneToday    = 5                // rows of Done today before "View all" (the Summary)
+	MaxDoneToday    = 5                // rows of Done today before "See summary" (the Summary)
 	finishWindow    = 5 * time.Second  // a report this close to a completion is what closed the task
 	YoursHorizonDay = 7                // dated tasks of mine appear in Next when due within this many days
 )

@@ -143,10 +143,10 @@ that section in detail. Until then the older text describes the app as it is.
    it with the input focused; holding it listens. On Windows the tray icon's left click opens the
    same panel. Replaces "No flyout panel, no global shortcut" and "macOS: no tray icon" in
    **Surfaces**.
-7. **Three sidebar entries.** `Today`, `Agents`, `Calendar`, then Projects and the gear.
+7. **Four sidebar entries.** `Today`, `Agents`, `Calendar`, `Summary` (back since v36), then Projects and the gear.
    - Inbox goes into Today: a task with no project lands in Today or Later by its date.
    - Completed goes into each list's `Done` fold, which opens the full history; search finds it too.
-   - Summary opens from `See today ›` beside Done today, and from the end-of-day notification.
+   - Summary opens from its sidebar row (v36), from `See summary ›` beside Done today, and from the end-of-day notification.
    - The category sub-rows go: a category is a colored chip on the row; clicking it filters the
      list (a dismissible filter bar above it).
    - The agent sub-rows go: the Agents page groups by agent.
@@ -485,11 +485,11 @@ Unified title bar. Columns: sidebar (216 pt) | content | inspector (360 pt, only
 is open). Content is a centered column, max 780 pt wide, 48 pt side padding, so lists read
 like a document, not a spreadsheet.
 
-**Sidebar.** A search field first (see **Search**), then three entries, `⌘1` to `⌘3` in that order:
+**Sidebar.** A search field first (see **Search**), then four entries, `⌘1` to `⌘3` for the first three:
 `Today` / `今天` (the page that was Mine: a plain count of the rows from your agents plus Today; when the
 user has not seen what agents handed over, a 18 pt red badge with their number instead, `status.blocked`
 with white `badge` text), `Agents` / `Agent` (count = tasks at work, never their subtasks) and
-`Calendar` / `日历` (no count). Then `Projects` (sentence case, `section` style) with a quiet `+` at the
+`Calendar` / `日历` (no count) and `Summary` / `总结` (v36: `chart` pixelarticon, no count, no key; it opens the Summary page on today). Then `Projects` (sentence case, `section` style) with a quiet `+` at the
 right of its header: one row per project (a folder icon tinted with the project's color, name only),
 **on one line, ellipsized** (`answer-me-with-ht…`), its sub-projects under it (see **Sub-projects**); a
 6 pt red dot at the right when it has a blocked task, otherwise the count of active tasks in
@@ -498,7 +498,7 @@ Rows are 32 pt tall in `body` 14 pt (the sidebar is one step smaller than the pa
 `bg.selected`, 7 pt radius. With **Recent changes** switched on (Settings > Advanced) its row follows
 Calendar, `⌘4`.
 
-There are no other rows, no sub-rows and no folding chevrons (v31). What the old rows were:
+There are no other rows, no sub-rows and no folding chevrons (v31; `Summary` returned in v36). What the old rows were:
 
 - **Inbox** is Today: a task of mine with no project shows in Today or Later by its date (see **No
   project**).
@@ -605,8 +605,8 @@ the paragraphs below wherever they disagree, until they are rewritten.
     tasks **with no project**, including those in the backlog. It replaces the Backlog fold.
     When the input adds an undated task, the fold opens and the receipt names it:
     `已添加到没定时间`.
-  - **Done today** / `今天完成`. At the right of its header, `查看全部` (`iris 11`) opens the
-    Summary; `See today` and `Show all` are gone. A row an agent finished shows the agent's
+  - **Done today** / `今天完成`. At the right of its header, `看总结 ›` / `See summary ›` (`iris 11`,
+    a 12 pt pixel chevron after the words, v36) opens the Summary; `See today` and `Show all` are gone. A row an agent finished shows the agent's
     avatar and what it did (`PR #335 已合并`) before the time.
   - **Undated tasks of a project** are not on Home. They stay on their project page. To bring
     one in, use **Do today** in the task menu, or say it to the composer.
@@ -620,6 +620,18 @@ the paragraphs below wherever they disagree, until they are rewritten.
   - **Tray.** `slate 2`, radius 12, 4 pt inset, a 0.5 pt `slate 6` edge. Its header is the bot
     avatar, `Agent` and the count.
   - **Cards.** One per row, on `bg`, radius 8 (12 − 4), a 0.5 pt `slate 6` edge, 4 pt apart.
+  - **Idle (v36, reference `docs/design/mockups/v36.html`, "推荐 A").** With no agent task the header
+    shows `空闲` / `Idle` in 13 `slate 11` where the count would be, and under it one card in the
+    style of the others (14 pt above, 12 pt at the sides and below). Left: the robot asleep,
+    `avatars/bot-asleep.png` at 36 pt (3 pt a cell, the gray template with its eyes shut), and two
+    pixel `z` letters (5 x 5 cells at 2 pt, `slate 9`) at the upper right of its head. They rise 4 pt
+    in steps (2 pt every 500 ms) over a 2 s loop, shown for the middle two steps only, the second
+    half a loop behind; with Reduce Motion both stand still. Right: `都在歇着` / `All resting` at 15 / 500, and
+    under it the 14 pt avatar of the agent that reported last and `Claude Code · 12m` (13 `slate 11`;
+    left out when no agent ever reported). A 0.5 pt `slate 5` hairline 12 pt below, then
+    `把一件事拖到这里交给它们` / `Drag a task here to hand it off`, `拖到这里` / `Drag a task here`
+    in 13 / 500 `slate 12`, the rest in `slate 11`. While a row is dragged the drop target takes
+    the card's place.
   - **Copy.** Ages say `4 天前` / `17 分钟前`; stale ones are in `orange 11`. Reasons are short:
     `等你回复：…`, `PR #330 待审查`.
   - **One tinted button per card** (`iris 3` fill, `iris 11` text, radius 6): `回复`,
@@ -1614,8 +1626,10 @@ The end-of-day ledger (#67). References: `docs/design/mockups/v18.html` (the sce
 Stardew-Valley-style shipping: everyone who finished something throws it into a shipping bin, then
 a ledger counts it up.
 
-**Where.** No sidebar row (v31). On Today, `See today` / `看看今天` with a pixel chevron, at the right of
-the `Done today` header, opens it, and so does the end-of-day notification (`ShowSummary`). Header: the
+**Where.** A sidebar row `Summary` / `总结` under Calendar (v36; v31 had taken it out), `chart`
+pixelarticon, selected while the page shows; it opens on today and plays the scene again. On Today,
+`See summary ›` / `看总结 ›` at the right of the `Done today` header opens it, and so does the
+end-of-day notification (`ShowSummary`). Header: the
 title, a `Today | This week` segment (`今天 | 本周`), `‹ date ›` paging back (a day or a week; `›`
 stops at today), and `Export Markdown` (`导出 Markdown`) on the right. Under it, top to bottom: the
 scene, the assistant's paragraph, the ledger. The page scrolls; the scene scrolls with it.

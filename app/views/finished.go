@@ -166,15 +166,31 @@ func (m *Main) didWhat(c *ui.Context, t *theme.Tokens, task data.Task) {
 	})
 }
 
+// doneTodayLink is the accent link at the right of the Done today header: its words and a small
+// chevron after them in the same ink.
+func doneTodayLink(c *ui.Context, t *theme.Tokens, text string) ui.Element {
+	btn := ui.ButtonBase(c.Key("done-today-link")).Shrink(0).Radius(theme.RadiusControl).Cursor(ui.CursorPointer).Label(text)
+	btn.Children(func() {
+		ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() {
+			label := theme.Text(c, theme.Meta, t.AccentInk, text)
+			if btn.Hovered() {
+				label.Underline()
+			}
+			ui.Icon(c, theme.IconForward).Size(theme.IconSmall, theme.IconSmall).TextColor(t.AccentInk).Shrink(0)
+		})
+	})
+	return btn
+}
+
 // doneTodaySection is the last section of Today: what was finished since midnight, by agents and by
-// me, newest first, five rows. `View all` at the right of its header opens Summary.
+// me, newest first, five rows. `See summary ›` at the right of its header opens Summary.
 func (m *Main) doneTodaySection(c *ui.Context, t *theme.Tokens, items []data.Item, more int) {
 	if len(items) == 0 {
 		return
 	}
 	m.section(c, "done-today", itemTasks(items), func() {
 		sectionHeaderWith(c, t, m.say.SectionDoneToday(), len(items)+more, func() {
-			if link(c, t, m.say.DoneTodayViewAll()).Clicked() {
+			if doneTodayLink(c, t, m.say.DoneTodayViewAll()).Clicked() {
 				m.ShowSummary(false)
 			}
 		})

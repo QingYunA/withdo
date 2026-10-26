@@ -175,10 +175,11 @@ func TestTheAgentsPanelInChinese(t *testing.T) {
 	has(t, tt, "Agent", "回复", "标为完成", "等你回复：", "PR #12 待审查")
 }
 
-func TestAnEmptyAgentsPanelIsQuietAndKeepsTheDropTarget(t *testing.T) {
+func TestAnEmptyAgentsPanelIsTheIdleCard(t *testing.T) {
 	app, _ := newEmptyApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
-	has(t, tt, panelTitle, "No agent is working on anything")
+	has(t, tt, panelTitle, "Idle", "All resting", "Drag a task here", " to hand it off")
+	hasNot(t, tt, "Claude Code") // no agent ever reported
 }
 
 // Dropping one of my rows on the panel hands the task over, as dragging it onto the tray of a project.

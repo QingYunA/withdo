@@ -133,6 +133,7 @@ type snapshot struct {
 	milestones map[int][]data.Milestone
 	details    map[int]data.TaskDetail
 	images     map[int][]data.TaskImage // the pictures of the tasks that have any
+	lastReport *data.Report             // the newest report any agent filed, or nil
 }
 
 // NewApp loads the first snapshot.
@@ -152,6 +153,7 @@ func (a *App) Refresh() {
 			all: all, projects: all.Projects, categories: all.Categories, archived: all.Archived,
 			tasks: all.Tasks, milestones: all.Milestones, details: all.Details(),
 		}
+		s.lastReport = newestReport(all)
 		ids := make([]int, len(s.tasks))
 		for i, t := range s.tasks {
 			ids[i] = t.ID
@@ -304,6 +306,17 @@ func byPriorityThenRecent(ts []data.Task) {
 		}
 		return ts[i].UpdatedAt.After(ts[j].UpdatedAt)
 	})
+}
+
+// newestReport is the newest report an agent filed against any task, or nil when none ever did.
+func newestReport(all data.Snapshot) *data.Report {
+	var out *data.Report
+	for id := range all.Reports {
+		if r := all.LatestReport(id); r != nil && (out == nil || r.CreatedAt.After(out.CreatedAt)) {
+			out = r
+		}
+	}
+	return out
 }
 
 // latestReport is the newest report an agent filed against a task, githubReport the newest GitHub

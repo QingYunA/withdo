@@ -53,7 +53,7 @@ func TestDoneTodayStopsAtFiveAndLinksToTheSummary(t *testing.T) {
 		t.Error("Done today alone leaves Mine clear: nothing needs me")
 	}
 	hasNot(t, tt, "Show all")
-	if err := tt.Click("View all"); err != nil {
+	if err := tt.Click("See summary"); err != nil {
 		t.Fatal(err)
 	}
 	if m.nav.screen != screenSummary {
