@@ -3422,20 +3422,86 @@ func (msgs Messages) AgentsPanelTitle() string {
 	return Catalog.Format(msgs.locale, "agentsPanelTitle", nil)
 }
 
-// AgentsPanelEmpty says "No agent is working on anything"
+// AgentsPanelIdle says "Idle"
 // in the language the app shows.
 //
-// Quiet line in the Agents panel of Home when no agent has anything for the
-// user.
-func AgentsPanelEmpty() string { return In(i18n.Locale()).AgentsPanelEmpty() }
+// At the right of the Agents panel header on Home, where the count is, when
+// no agent has anything for the user.
+func AgentsPanelIdle() string { return In(i18n.Locale()).AgentsPanelIdle() }
 
-// AgentsPanelEmpty says "No agent is working on anything"
+// AgentsPanelIdle says "Idle"
 // in the language of msgs.
 //
-// Quiet line in the Agents panel of Home when no agent has anything for the
-// user.
-func (msgs Messages) AgentsPanelEmpty() string {
-	return Catalog.Format(msgs.locale, "agentsPanelEmpty", nil)
+// At the right of the Agents panel header on Home, where the count is, when
+// no agent has anything for the user.
+func (msgs Messages) AgentsPanelIdle() string {
+	return Catalog.Format(msgs.locale, "agentsPanelIdle", nil)
+}
+
+// AgentsIdleTitle says "All resting"
+// in the language the app shows.
+//
+// Title of the card in the idle Agents panel on Home, beside the sleeping
+// robot.
+func AgentsIdleTitle() string { return In(i18n.Locale()).AgentsIdleTitle() }
+
+// AgentsIdleTitle says "All resting"
+// in the language of msgs.
+//
+// Title of the card in the idle Agents panel on Home, beside the sleeping
+// robot.
+func (msgs Messages) AgentsIdleTitle() string {
+	return Catalog.Format(msgs.locale, "agentsIdleTitle", nil)
+}
+
+// AgentsIdleLast says "{agent} · {age}"
+// in the language the app shows.
+//
+// Under the title of the idle Agents panel card: the agent that reported
+// most recently and how long ago.
+func AgentsIdleLast(agent string, age string) string {
+	return In(i18n.Locale()).AgentsIdleLast(agent, age)
+}
+
+// AgentsIdleLast says "{agent} · {age}"
+// in the language of msgs.
+//
+// Under the title of the idle Agents panel card: the agent that reported
+// most recently and how long ago.
+func (msgs Messages) AgentsIdleLast(agent string, age string) string {
+	return Catalog.Format(msgs.locale, "agentsIdleLast", map[string]any{"agent": agent, "age": age})
+}
+
+// AgentsIdleHint says "Drag a task here to hand it off"
+// in the language the app shows.
+//
+// Hint under the divider of the idle Agents panel card. It contains the
+// next message, which is shown emphasized.
+func AgentsIdleHint() string { return In(i18n.Locale()).AgentsIdleHint() }
+
+// AgentsIdleHint says "Drag a task here to hand it off"
+// in the language of msgs.
+//
+// Hint under the divider of the idle Agents panel card. It contains the
+// next message, which is shown emphasized.
+func (msgs Messages) AgentsIdleHint() string {
+	return Catalog.Format(msgs.locale, "agentsIdleHint", nil)
+}
+
+// AgentsIdleHintEmph says "Drag a task here"
+// in the language the app shows.
+//
+// The part of the idle Agents panel hint that is shown emphasized; it must
+// appear in the hint word for word.
+func AgentsIdleHintEmph() string { return In(i18n.Locale()).AgentsIdleHintEmph() }
+
+// AgentsIdleHintEmph says "Drag a task here"
+// in the language of msgs.
+//
+// The part of the idle Agents panel hint that is shown emphasized; it must
+// appear in the hint word for word.
+func (msgs Messages) AgentsIdleHintEmph() string {
+	return Catalog.Format(msgs.locale, "agentsIdleHintEmph", nil)
 }
 
 // AgentsPanelDrop says "Hand to an agent"
@@ -11736,16 +11802,18 @@ func (msgs Messages) ComposerPlaceholderHome() string {
 	return Catalog.Format(msgs.locale, "composerPlaceholderHome", nil)
 }
 
-// DoneTodayViewAll says "View all"
+// DoneTodayViewAll says "See summary"
 // in the language the app shows.
 //
-// Link at the right of the Done today header on Today; opens Summary.
+// Link at the right of the Done today header on Today, followed by a
+// chevron; opens Summary.
 func DoneTodayViewAll() string { return In(i18n.Locale()).DoneTodayViewAll() }
 
-// DoneTodayViewAll says "View all"
+// DoneTodayViewAll says "See summary"
 // in the language of msgs.
 //
-// Link at the right of the Done today header on Today; opens Summary.
+// Link at the right of the Done today header on Today, followed by a
+// chevron; opens Summary.
 func (msgs Messages) DoneTodayViewAll() string {
 	return Catalog.Format(msgs.locale, "doneTodayViewAll", nil)
 }

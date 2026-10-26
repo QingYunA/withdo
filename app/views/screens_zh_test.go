@@ -54,6 +54,7 @@ func TestScreensChineseSeed(t *testing.T) {
 		zhShot(t, "inspector-zh-"+a.suffix+".png", app, a.dark, func(tt *ui.Tester, m *Main) { m.OpenTask(3) })
 		empty, _ := newEmptyApp(t)
 		zhShot(t, "mine-empty-zh-"+a.suffix+".png", empty, a.dark, nil)
+		zhShot(t, "mine-idle-zh-"+a.suffix+".png", idleApp(t), a.dark, nil)
 	}
 }
 

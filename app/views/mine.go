@@ -136,6 +136,8 @@ func (m *Main) agentsPanel(c *ui.Context, t *theme.Tokens) {
 			ui.Spacer(c)
 			if len(items) > 0 {
 				theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(items))).Shrink(0)
+			} else {
+				theme.Text(c, theme.Meta, t.TextSecondary, m.say.AgentsPanelIdle()).Shrink(0)
 			}
 		})
 		switch {
@@ -150,7 +152,7 @@ func (m *Main) agentsPanel(c *ui.Context, t *theme.Tokens) {
 				})
 			})
 		case !dragging:
-			quietLine(c, t, m.say.AgentsPanelEmpty(), nil)
+			m.idleCard(c, t)
 		}
 		if dragging {
 			m.dropTarget(c, t, over)

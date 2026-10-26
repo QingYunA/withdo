@@ -94,12 +94,12 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 
 func TestSidebarListsTodayAgentsCalendarAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Today", "Agents", "Calendar", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+	for _, want := range []string{"Today", "Agents", "Calendar", "Summary", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
 		if !tt.HasText(want) {
 			t.Errorf("sidebar is missing %q", want)
 		}
 	}
-	for _, gone := range []string{"Mine", "Inbox", "Completed", "Summary", "Unsorted", "Expand Today", "Collapse Today"} {
+	for _, gone := range []string{"Mine", "Inbox", "Completed", "Unsorted", "Expand Today", "Collapse Today"} {
 		if tt.HasText(gone) {
 			t.Errorf("the sidebar still has %q", gone)
 		}
@@ -144,8 +144,8 @@ func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 		}
 		return -1
 	}
-	if got[idx("Today")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Calendar")+1] != "Projects" {
-		t.Errorf("counts after Today, Agents and Calendar: %q", got[:10])
+	if got[idx("Today")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Calendar")+1] != "Summary" || got[idx("Summary")+1] != "Projects" {
+		t.Errorf("counts after Today, Agents, Calendar and Summary: %q", got[:10])
 	}
 	if got[idx("adhd-todo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
 		t.Errorf("project counts: %q", got[:14])

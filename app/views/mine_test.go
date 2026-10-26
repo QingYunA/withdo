@@ -395,7 +395,7 @@ func TestTheNoDateFoldIsClosedWithItsCountAndOpensWithEveryUndatedTaskNoCap(t *t
 
 func TestHomeHasTheDateAsTitleAndNoGreetingHintOrSelectControl(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	has(t, tt, "Wednesday, October 14", "Next", "Today", "Done today", "View all")
+	has(t, tt, "Wednesday, October 14", "Next", "Today", "Done today", "See summary")
 	hasNot(t, tt, "What do you want to do today?", "Select", "Select tasks", "See today", "Show all", "Later", "After next week")
 	for _, text := range tt.Texts() {
 		if strings.Contains(text, "·") {

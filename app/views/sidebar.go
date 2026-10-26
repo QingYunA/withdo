@@ -12,7 +12,7 @@ const sidebarRowPad float32 = 10
 // sidebarRowGap is the room between the icon and the label of a sidebar row.
 const sidebarRowGap float32 = 10
 
-// sidebar is the source list over the window's material: Today, Agents and Calendar (and Recent
+// sidebar is the source list over the window's material: Today, Agents, Calendar and Summary (and Recent
 // changes, once it is switched on), then the projects, then Settings at the bottom.
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
@@ -25,6 +25,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		m.mineRow(c, t)
 		m.agentsRow(c, t)
 		m.navRow(c, t, "calendar", nav{screen: screenCalendar}, theme.IconCalendar, m.say.NavCalendar(), 0)
+		m.navRow(c, t, "summary", nav{screen: screenSummary}, theme.IconSummary, m.say.NavSummary(), 0)
 		if m.app.RecentChangesOn() {
 			m.navRow(c, t, "recent", nav{screen: screenRecent}, theme.IconBranch, m.say.NavRecent(), 0)
 		}
@@ -112,7 +113,11 @@ func (m *Main) navRow(c *ui.Context, t *theme.Tokens, key string, to nav, icon *
 		sidebarCount(c, t, count)
 	})
 	if row.Clicked() {
-		m.goTo(to)
+		if to.screen == screenSummary {
+			m.ShowSummary(false) // today again, the scene plays
+		} else {
+			m.goTo(to)
+		}
 	}
 }
 

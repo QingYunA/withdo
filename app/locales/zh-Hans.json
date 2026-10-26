@@ -227,7 +227,11 @@
   "settingsNotifyOpenSettings": "打开系统设置",
   "notifyReminder": "提醒：{title}",
   "agentsPanelTitle": "Agent",
-  "agentsPanelEmpty": "没有 Agent 在干活",
+  "agentsPanelIdle": "空闲",
+  "agentsIdleTitle": "都在歇着",
+  "agentsIdleLast": "{agent} · {age}",
+  "agentsIdleHint": "把一件事拖到这里交给它们",
+  "agentsIdleHintEmph": "拖到这里",
   "agentsPanelDrop": "交给 Agent",
   "nowAllClear": "现在没有要你处理的事",
   "nowAllClearBody": "Agent 们在干活，有动静会出现在这里",
@@ -784,7 +788,7 @@
   "sectionNext": "接下来",
   "foldNoDate": "没定时间",
   "composerPlaceholderHome": "明天 9 点给房东打电话，再让 Claude 修一下登录的 bug",
-  "doneTodayViewAll": "查看全部",
+  "doneTodayViewAll": "看总结",
   "actionDoToday": "今天做",
   "toastMovedToToday": "已移到今天"
 }

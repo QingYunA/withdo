@@ -1538,9 +1538,35 @@
   "@agentsPanelTitle": {
     "description": "Title of the Agents panel at the right of Home."
   },
-  "agentsPanelEmpty": "No agent is working on anything",
-  "@agentsPanelEmpty": {
-    "description": "Quiet line in the Agents panel of Home when no agent has anything for the user."
+  "agentsPanelIdle": "Idle",
+  "@agentsPanelIdle": {
+    "description": "At the right of the Agents panel header on Home, where the count is, when no agent has anything for the user."
+  },
+  "agentsIdleTitle": "All resting",
+  "@agentsIdleTitle": {
+    "description": "Title of the card in the idle Agents panel on Home, beside the sleeping robot."
+  },
+  "agentsIdleLast": "{agent} · {age}",
+  "@agentsIdleLast": {
+    "description": "Under the title of the idle Agents panel card: the agent that reported most recently and how long ago.",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "age": {
+        "type": "String",
+        "example": "12 min ago"
+      }
+    }
+  },
+  "agentsIdleHint": "Drag a task here to hand it off",
+  "@agentsIdleHint": {
+    "description": "Hint under the divider of the idle Agents panel card. It contains the next message, which is shown emphasized."
+  },
+  "agentsIdleHintEmph": "Drag a task here",
+  "@agentsIdleHintEmph": {
+    "description": "The part of the idle Agents panel hint that is shown emphasized; it must appear in the hint word for word."
   },
   "agentsPanelDrop": "Hand to an agent",
   "@agentsPanelDrop": {
@@ -4623,9 +4649,9 @@
   "@composerPlaceholderHome": {
     "description": "Placeholder of the big input on Today: one real example, one errand of the user and one hand-off to an agent."
   },
-  "doneTodayViewAll": "View all",
+  "doneTodayViewAll": "See summary",
   "@doneTodayViewAll": {
-    "description": "Link at the right of the Done today header on Today; opens Summary."
+    "description": "Link at the right of the Done today header on Today, followed by a chevron; opens Summary."
   },
   "actionDoToday": "Do today",
   "@actionDoToday": {

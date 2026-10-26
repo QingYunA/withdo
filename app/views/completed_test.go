@@ -11,7 +11,7 @@ func completedTester(t *testing.T) (*ui.Tester, *Main, *App) {
 	t.Helper()
 	tt, m, app := newMainTester(t, 1100)
 	tt.Frame()
-	m.openHistory(0, false) // Home has no way in: View all opens the Summary
+	m.openHistory(0, false) // Home has no way in: See summary opens the Summary
 	tt.Frame()
 	return tt, m, app
 }

@@ -94,6 +94,7 @@ func TestScreensEmpty(t *testing.T) {
 	for _, a := range appearances() {
 		empty, _ := newEmptyApp(t)
 		mainShot(t, "mine-empty-"+a.suffix+".png", empty, a.dark, nil)
+		mainShot(t, "mine-idle-"+a.suffix+".png", idleApp(t), a.dark, nil)
 		withProject, p := emptyProjectApp(t)
 		mainShot(t, "project-empty-"+a.suffix+".png", withProject, a.dark, toProject(p.ID))
 	}
