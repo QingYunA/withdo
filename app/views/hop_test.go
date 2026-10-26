@@ -297,7 +297,7 @@ func TestHandedOverRowsHaveActionsThatDoTheNextThing(t *testing.T) {
 	if len(rec.opens) != 1 || m.openID != 0 {
 		t.Errorf("Answer opened %v and the inspector on %d: it goes to the agent, not the inspector", rec.opens, m.openID)
 	}
-	has(t, tt, "Answer", "Open PR")
+	has(t, tt, "Reply", "Open PR")
 	hasNot(t, tt, "Review")
 }
 

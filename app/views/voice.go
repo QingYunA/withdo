@@ -283,7 +283,8 @@ func (m *Main) voiceLine(c *ui.Context, t *theme.Tokens) {
 	v := &m.voice
 	now := m.app.Now()
 	row := func(children func()) {
-		ui.Row(c.Key("voice-line")).Height(answerLineHeight).Shrink(0).Margin(8, 0, 0).Padding(0, 12, 0, 16).Gap(10).
+		top, left := m.lineEdge()
+		ui.Row(c.Key("voice-line")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).Gap(10).
 			AlignItems(ui.Center).Children(children)
 	}
 	switch v.phase {

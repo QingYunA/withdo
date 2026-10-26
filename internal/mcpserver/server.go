@@ -51,6 +51,9 @@ type Options struct {
 	DefaultCwd string
 	// ImagesDir is the folder holding the pictures of tasks (paths.ImagesDir).
 	ImagesDir string
+	// Executable is the binary whose replacement marks this process stale (see refuseWhenStale);
+	// os.Executable() when empty.
+	Executable string
 	// Logger receives diagnostics. It must not write to stdout, which belongs
 	// to the stdio transport. Defaults to a text logger on stderr.
 	Logger *slog.Logger
@@ -77,7 +80,7 @@ func New(core *domain.Core, opts Options) *mcp.Server {
 	}
 	server := mcp.NewServer(&mcp.Implementation{Name: Name, Version: Version},
 		&mcp.ServerOptions{Instructions: Instructions, Logger: t.log})
-	server.AddReceivingMiddleware(rewriteSchemaErrors)
+	server.AddReceivingMiddleware(rewriteSchemaErrors, refuseWhenStale(watchBinary(opts.Executable)))
 	t.registerReportProgress(server)
 	t.registerCreateTask(server)
 	t.registerUpdateTask(server)

@@ -131,14 +131,14 @@ func (s *Settings) statusLine(c *ui.Context, t *theme.Tokens, p data.Provider, r
 		}
 		switch {
 		case res.running:
-			theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsTesting())
+			theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsTesting())
 		case res.ok:
-			theme.Text(c, theme.Meta, t.TextTertiary, "·")
+			theme.Text(c, theme.Meta, t.TextSecondary, "·")
 			statusDot(c, t.Status(data.Done))
 			theme.Text(c, theme.Meta, t.Status(data.Done), res.text)
 		default:
 			if res.text == "" {
-				theme.Text(c, theme.Meta, t.TextTertiary, "· "+s.say.ModelsStatusNone())
+				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsStatusNone())
 			}
 			link := s.say.ModelsTest()
 			if res.text != "" {
@@ -207,7 +207,7 @@ func settingsButton(c *ui.Context, t *theme.Tokens, key, text string, primary bo
 		}
 		ink = t.AccentText
 	default:
-		btn.Background(t.SettingsGroup()).Border(1, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06))
+		btn.Background(t.SettingsGroup()).Border(theme.Hairline, t.ComposerBorder()).Shadow(0, 1, 1, 0, t.Shadow.Alpha(0.06))
 		if btn.Hovered() {
 			btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
 		}

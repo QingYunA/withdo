@@ -341,8 +341,8 @@ func TestRealFeedsTheNowScreen(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := BuildMine(MineInput{Now: now, Snapshot: snap})
-	if len(n.FromAgents) != 2 || len(n.Today) != 1 || len(n.Later) != 0 {
-		t.Fatalf("sections %d/%d/%d: %+v", len(n.FromAgents), len(n.Today), len(n.Later), n.FromAgents)
+	if len(n.FromAgents) != 2 || len(n.Today) != 1 || len(n.Next) != 0 {
+		t.Fatalf("sections %d/%d/%d: %+v", len(n.FromAgents), len(n.Today), len(n.Next), n.FromAgents)
 	}
 	if n.FromAgents[0].Kind != NeedBlocked || n.FromAgents[1].Kind != NeedReview {
 		t.Errorf("order %v %v", n.FromAgents[0].Kind, n.FromAgents[1].Kind)

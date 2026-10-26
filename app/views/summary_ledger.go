@@ -146,7 +146,7 @@ func (m *Main) ledgerCount(c *ui.Context, t *theme.Tokens, shown, final int, tot
 	ink := t.Text
 	ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, ledgerCountStyle, ink, itoa(shown)).Width(ledgerCountWidth(final)).TextAlign(ui.End)
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.SummaryUnit(final)).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.SummaryUnit(final)).Shrink(0)
 	})
 }
 
@@ -184,7 +184,7 @@ func (m *Main) ledgerTask(c *ui.Context, t *theme.Tokens, v *summaryView, task d
 				theme.Text(c, theme.Meta, t.TextSecondary, task.Project).Ellipsis("…")
 			})
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, m.taskTime(v.period, task)).Shrink(0).Margin(2, 0, 0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.taskTime(v.period, task)).Shrink(0).Margin(2, 0, 0)
 	})
 	if row.Clicked() {
 		m.openRow(task.ID)

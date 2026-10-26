@@ -81,12 +81,19 @@ func (m *Main) modelChip(c *ui.Context, t *theme.Tokens, s surface, compact bool
 	if chip.Clicked() {
 		cs.modelOpen = !cs.modelOpen
 	}
-	ui.PopoverBase(c, chip, &cs.modelOpen, func(panel ui.Element) {
-		panel.AttachTo(chip, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0)
-		panel.Width(modelPopWidth).Padding(popPad).Radius(theme.RadiusPanel).Background(t.Bg).Border(1, t.Border).
+	m.modelPopover(c, t, s, chip, all)
+}
+
+// modelPopover is the list of providers under an element: the chip, or on Home, where the chip is
+// not drawn, the key beside send. Home opens it when the model cannot read the pictures sent.
+func (m *Main) modelPopover(c *ui.Context, t *theme.Tokens, s surface, anchor ui.Element, all []data.Provider) {
+	cs := &m.cmp[s]
+	ui.PopoverBase(c, anchor, &cs.modelOpen, func(panel ui.Element) {
+		panel.AttachTo(anchor, ui.AnchorBottomRight, ui.AnchorTopRight).Margin(6, 0, 0)
+		panel.Width(modelPopWidth).Padding(popPad).Radius(theme.RadiusPanel).Background(t.Bg).Border(theme.Hairline, t.Border).
 			Role(ui.RoleDialog).Label(m.say.ComposerModelTitle()).
 			Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.25)).Shadow(0, 12, 36, 0, t.Shadow.Alpha(0.6))
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.ComposerModelTitle()).Padding(6, 9, 2).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.ComposerModelTitle()).Padding(6, 9, 2).Shrink(0)
 		for _, p := range all {
 			m.modelRow(c, t, s, p)
 		}
@@ -118,7 +125,7 @@ func (m *Main) modelRow(c *ui.Context, t *theme.Tokens, s surface, p data.Provid
 	row.Children(func() {
 		providerMark(c, t, p, modelLogo).Shrink(0)
 		theme.Text(c, theme.Compact, t.Text, p.Name).Shrink(0)
-		theme.Text(c, theme.Meta, t.TextTertiary, p.Model).Grow(1).MinWidth(0).Ellipsis("…").TextAlign(ui.End)
+		theme.Text(c, theme.Meta, t.TextSecondary, p.Model).Grow(1).MinWidth(0).Ellipsis("…").TextAlign(ui.End)
 		if p.Active {
 			ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Accent).Shrink(0)
 		}

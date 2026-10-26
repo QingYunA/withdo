@@ -134,7 +134,7 @@ func (m *Main) repoPopUp(c *ui.Context, t *theme.Tokens, current string, opts []
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextTertiary).Shrink(0)
 	})
 	parts.Popup(func(panel ui.Element) {
-		panel.Margin(4, 0, 0).Padding(4).MinWidth(260).Radius(theme.RadiusCard).Background(t.Bg).Border(1, t.Border).Shadow(0, 8, 24, 0, t.Shadow)
+		panel.Margin(4, 0, 0).Padding(4).MinWidth(260).Radius(theme.RadiusCard).Background(t.Bg).Border(theme.Hairline, t.Border).Shadow(0, 8, 24, 0, t.Shadow)
 		for _, o := range opts {
 			item := parts.Item(o.value).Padding(5, 10).Radius(theme.RadiusControl).Gap(8).AlignItems(ui.Center)
 			if o.count >= 0 {
@@ -315,10 +315,10 @@ func (m *Main) sectionHead(c *ui.Context, t *theme.Tokens, s recentSec) {
 		if name.Clicked() {
 			m.recentPick(repo)
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, repo).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, repo).Shrink(1).MinWidth(0).Ellipsis("…")
 		ui.Spacer(c)
 		if counts := m.sectionCounts(s); counts != "" {
-			theme.Text(c, theme.Meta, t.TextTertiary, counts).Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, counts).Shrink(0)
 		}
 	})
 }

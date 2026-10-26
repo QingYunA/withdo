@@ -47,13 +47,13 @@ func (m *Main) movePageOf(c *ui.Context, t *theme.Tokens, words finder, choose f
 			theme.Compact.Apply(ui.TextInputBase(c.Key("pop-filter-input"), &pm.filter)).TextColor(t.Text).
 				Label(words.placeholder).AutoFocus().OnTextKey(m.filterKey)
 			if pm.filter == "" {
-				theme.Text(c, theme.Compact, t.TextTertiary, words.placeholder).Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Compact, t.TextSecondary, words.placeholder).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 	})
 	choices := choose()
 	if len(choices) == 0 {
-		theme.Text(c, theme.Meta, t.TextTertiary, words.noMatch).Padding(8, 10, 10)
+		theme.Text(c, theme.Meta, t.TextSecondary, words.noMatch).Padding(8, 10, 10)
 	} else {
 		list := ui.Scroll(c.Key("pop-list")).Shrink(0).Height(float32(min(len(choices), maxMoveRows)) * popRowH)
 		list.Children(func() {

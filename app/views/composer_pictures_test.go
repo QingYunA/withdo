@@ -257,6 +257,7 @@ func TestThePlusOpensTheFilePanelAndTakesWhatIsChosen(t *testing.T) {
 func TestTheChipNamesTheModelInUseAndSwitchesIt(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true})
 	r.withModels(t)
+	r.onProject() // Home has no chip: the model is chosen in Settings
 	if !r.tt.HasText("DeepSeek · deepseek-chat") {
 		t.Error("no chip on the empty box at rest")
 	}

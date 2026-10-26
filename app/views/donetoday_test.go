@@ -10,16 +10,17 @@ import (
 
 func TestMineShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Done today", "Port the MCP server", "Claude Code · PR #14 merged", "1:50 PM",
-		"Send the packaging answer", "You", "11:30 AM"} {
+	for _, want := range []string{"Done today", "Port the MCP server", "PR #14 merged", "1:50 PM",
+		"Send the packaging answer", "11:30 AM"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if !above(t, tt, "Later", "Done today") || !above(t, tt, "Done today", "Port the MCP server") ||
+	if !above(t, tt, "Next", "Done today") || !above(t, tt, "Done today", "Port the MCP server") ||
 		!above(t, tt, "Port the MCP server", "Send the packaging answer") {
 		t.Error("Done today comes last, newest first")
 	}
+	hasNot(t, tt, "You", "Claude Code") // an agent shows as its avatar and what it did; I show as nothing
 	if tt.HasText("Draft the UI spec") {
 		t.Error("yesterday's task is in Done today")
 	}
@@ -28,7 +29,7 @@ func TestMineShowsDoneTodayLastWithWhoFinishedItAndWhen(t *testing.T) {
 	}
 }
 
-func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
+func TestDoneTodayStopsAtFiveAndLinksToTheSummary(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 7; i++ {
 		task, _ := f.CreateTask(data.CreateTaskInput{Title: "Finished " + itoa(i)})
@@ -51,10 +52,11 @@ func TestDoneTodayStopsAtFiveAndLinksToCompleted(t *testing.T) {
 	if tt.HasText("Nothing needs you right now") != true {
 		t.Error("Done today alone leaves Mine clear: nothing needs me")
 	}
-	if err := tt.Click("Show all"); err != nil {
+	hasNot(t, tt, "Show all")
+	if err := tt.Click("View all"); err != nil {
 		t.Fatal(err)
 	}
-	if m.nav.screen != screenCompleted {
+	if m.nav.screen != screenSummary {
 		t.Errorf("went to %+v", m.nav)
 	}
 }

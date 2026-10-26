@@ -167,12 +167,12 @@ func (m *Main) columnHead(c *ui.Context, t *theme.Tokens, s side, n int, line ui
 			}
 			theme.Text(c, theme.BodyStrong, t.Text, name)
 			if n > 0 {
-				theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
+				theme.Text(c, theme.Meta, t.TextSecondary, itoa(n))
 			}
 			ui.Spacer(c)
 			m.selectControlsIn(c, t, int(s)+1, m.columnIDs(s))
 		})
-		ui.Box(c).FillWidth().Height(1).Background(line)
+		ui.Box(c).FillWidth().Height(theme.Hairline).Background(line)
 	})
 }
 
@@ -210,7 +210,7 @@ func (m *Main) agentsEmpty(c *ui.Context, t *theme.Tokens) {
 // quietLine is one line in text.tertiary under a column's header, and an optional link after it.
 func quietLine(c *ui.Context, t *theme.Tokens, text string, after func()) {
 	ui.Row(c).Shrink(0).Margin(18, 0, 0, 2).Gap(6).AlignItems(ui.Start).Children(func() {
-		theme.Paragraph(c, theme.Meta, t.TextTertiary, text, 0).Shrink(1).MinWidth(0)
+		theme.Paragraph(c, theme.Meta, t.TextSecondary, text, 0).Shrink(1).MinWidth(0)
 		if after != nil {
 			after()
 		}

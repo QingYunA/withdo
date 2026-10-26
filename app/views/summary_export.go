@@ -60,7 +60,7 @@ func (m *Main) exportSheetView(c *ui.Context, t *theme.Tokens, v *summaryView) {
 	md := m.summaryMarkdown(v)
 	ui.DialogBase(c, &ex.open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.32))
-		panel.Width(exportWidth).Padding(24).Radius(theme.RadiusPanel).Background(t.Bg).Border(1, t.Border).Shadow(0, 20, 48, 0, t.Shadow)
+		panel.Width(exportWidth).Padding(24).Radius(theme.RadiusPanel).Background(t.Bg).Border(theme.Hairline, t.Border).Shadow(0, 20, 48, 0, t.Shadow)
 		ui.Column(c).Gap(16).Children(func() {
 			theme.Text(c, theme.BodyStrong, t.Text, m.say.SummaryExportTitle())
 			ui.Scroll(c.Key("export-well")).FillWidth().MaxHeight(exportHeight).Radius(theme.RadiusControl).Background(t.BgSubtle).Children(func() {

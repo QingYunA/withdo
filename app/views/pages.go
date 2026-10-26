@@ -100,22 +100,17 @@ func (m *Main) rowCategory(task data.Task) (data.Category, bool) {
 	return m.app.Category(task.CategoryID)
 }
 
-// rowChip is the small colored chip of a row's category: its swatch and name in meta, on
-// bg.subtle. Clicking it narrows the list to that category.
+// rowChip is a row's category: its name in the category's own color (step 11 of its scale), with no
+// fill and no icon. Clicking it narrows the list to that category.
 func (m *Main) rowChip(c *ui.Context, t *theme.Tokens, cat data.Category) {
 	name := categoryTitle(m.say, cat)
 	label := m.say.A11yFilterCategory(name)
-	btn := ui.ButtonBase(c.Key("chip")).Shrink(0).Padding(2, 7).Radius(theme.RadiusControl).Background(t.BgSubtle).
-		Label(label).Tooltip(label).Cursor(ui.CursorPointer)
+	btn := ui.ButtonBase(c.Key("chip")).Shrink(0).Radius(theme.RadiusControl).Label(label).Tooltip(label).Cursor(ui.CursorPointer)
+	ink := t.CategoryInk(cat.Color)
 	if btn.Hovered() {
-		btn.Background(t.BgHover)
+		ink = ink.Mix(t.Text, 0.2)
 	}
-	btn.Children(func() {
-		ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
-			categoryGlyph(c, cat, theme.IconSmall)
-			theme.Text(c, theme.Meta, t.TextSecondary, name).Shrink(0)
-		})
-	})
+	btn.Children(func() { theme.Text(c, theme.MetaStrong, ink, name).Shrink(0) })
 	if btn.Clicked() {
 		m.catFilter = cat.ID
 		m.sel = 0

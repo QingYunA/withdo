@@ -42,7 +42,7 @@ func (m *Main) mineStatusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 				m.app.SetStatus(task, mineStates[i])
 			}
 			if sel < 0 {
-				theme.Text(c, theme.Meta, t.TextTertiary, statusLabel(m.say, task.Status)).Shrink(1).MinWidth(0).Ellipsis("…")
+				theme.Text(c, theme.Meta, t.TextSecondary, statusLabel(m.say, task.Status)).Shrink(1).MinWidth(0).Ellipsis("…")
 			}
 		})
 	})
@@ -158,7 +158,7 @@ func (m *Main) handOffButton(c *ui.Context, t *theme.Tokens, task data.Task) {
 		return
 	}
 	label := m.say.InspectorHandOff()
-	btn := ui.ButtonBase(c.Key("hand-off")).Height(32).Padding(0, 12).Gap(8).Radius(theme.RadiusControl).Border(1, t.Border).
+	btn := ui.ButtonBase(c.Key("hand-off")).Height(32).Padding(0, 12).Gap(8).Radius(theme.RadiusControl).Border(theme.Hairline, t.Border).
 		AlignItems(ui.Center).Justify(ui.Center).Label(label).Cursor(ui.CursorPointer)
 	if btn.Hovered() {
 		btn.Background(t.BgHover)

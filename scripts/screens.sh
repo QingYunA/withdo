@@ -10,6 +10,8 @@
 set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
+# Without -trimpath every worktree path gets its own build cache entries and each new worktree recompiles everything.
+export GOFLAGS="${GOFLAGS:--trimpath}"
 
 out="$root/docs/design/screens"
 pattern="${1:-TestScreens}"

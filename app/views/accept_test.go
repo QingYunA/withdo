@@ -77,7 +77,7 @@ func TestAcceptStampsInSevenFramesHoldsThenFolds(t *testing.T) {
 func TestAcceptedRowStaysThroughTheStampThenFoldsAwaySmoothly(t *testing.T) {
 	tt, m, app := newMainTester(t, inlineWidth)
 	moving(tt)
-	y0, done0 := yOf(t, tt, "Later"), yOf(t, tt, "Port the MCP server")
+	y0, done0 := yOf(t, tt, "Next"), yOf(t, tt, "Port the MCP server")
 	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
 		t.Fatal(err)
 	}
@@ -86,23 +86,23 @@ func TestAcceptedRowStaysThroughTheStampThenFoldsAwaySmoothly(t *testing.T) {
 	}
 	for _, d := range []int{0, 17, 50, 119, 150, 198} {
 		at(tt, app, ms(d))
-		if !tt.HasText("Native UI with mygo") || yOf(t, tt, "Later") != y0 || yOf(t, tt, "Port the MCP server") != done0 {
-			t.Errorf("at %d ms the row should hold still: Later %v, was %v", d, yOf(t, tt, "Later"), y0)
+		if !tt.HasText("Native UI with mygo") || yOf(t, tt, "Next") != y0 || yOf(t, tt, "Port the MCP server") != done0 {
+			t.Errorf("at %d ms the row should hold still: Later %v, was %v", d, yOf(t, tt, "Next"), y0)
 		}
 	}
 	prev := y0
 	for _, d := range []int{230, 260, 300, 340, 380, 410} {
 		at(tt, app, ms(d))
-		if y := yOf(t, tt, "Later"); y >= prev {
+		if y := yOf(t, tt, "Next"); y >= prev {
 			t.Errorf("at %d ms Later is at %v, not above %v: the rows below slide up as the row folds", d, y, prev)
 		} else {
 			prev = y
 		}
 	}
 	at(tt, app, ms(419))
-	last := yOf(t, tt, "Later")
+	last := yOf(t, tt, "Next")
 	at(tt, app, ms(440))
-	if got := yOf(t, tt, "Later"); !near(got, last) {
+	if got := yOf(t, tt, "Next"); !near(got, last) {
 		t.Errorf("Today jumps %v pt when the animation ends", got-last)
 	}
 	if !above(t, tt, "Done today", "Native UI with mygo") || tt.HasText("PR #12 is ready for your review · adhd-todo") {
@@ -136,14 +136,14 @@ func TestTheDoneRowOpensAtTheTopOfDoneTodayWhileTheOtherFolds(t *testing.T) {
 
 func TestAcceptWithReducedMotionFadesThenIsGoneWithNoFoldOrOpening(t *testing.T) {
 	tt, _, app := newMainTester(t, inlineWidth) // Reduce Motion
-	y0, gap0 := yOf(t, tt, "Later"), yOf(t, tt, "Port the MCP server")-yOf(t, tt, "Done today")
+	y0, gap0 := yOf(t, tt, "Next"), yOf(t, tt, "Port the MCP server")-yOf(t, tt, "Done today")
 	if err := tt.Click("Accept: Native UI with mygo"); err != nil {
 		t.Fatal(err)
 	}
 	for _, d := range []int{0, 100, 250, 300} {
 		at(tt, app, ms(d))
-		if yOf(t, tt, "Later") != y0 {
-			t.Errorf("at %d ms Later moved (%v, was %v): the row only fades", d, yOf(t, tt, "Later"), y0)
+		if yOf(t, tt, "Next") != y0 {
+			t.Errorf("at %d ms Later moved (%v, was %v): the row only fades", d, yOf(t, tt, "Next"), y0)
 		}
 	}
 	at(tt, app, ms(199))
@@ -151,8 +151,8 @@ func TestAcceptWithReducedMotionFadesThenIsGoneWithNoFoldOrOpening(t *testing.T)
 		t.Errorf("the Done row should be there at once when the fade begins: %v pt more", g-gap0)
 	}
 	at(tt, app, ms(199+180))
-	if yOf(t, tt, "Later") >= y0 {
-		t.Errorf("after the fade the row is gone and Later is at %v, was %v", yOf(t, tt, "Later"), y0)
+	if yOf(t, tt, "Next") >= y0 {
+		t.Errorf("after the fade the row is gone and Later is at %v, was %v", yOf(t, tt, "Next"), y0)
 	}
 }
 
@@ -165,19 +165,19 @@ func TestTheSectionFoldsWithItsLastRowAndLeavesNoJumpAtTheEnd(t *testing.T) {
 	tt, _, _ := newTesterFor(app, inlineWidth)
 	moving(tt)
 	has(t, tt, "From your agents", "Tidy the docs")
-	y0 := yOf(t, tt, "Later")
+	y0 := yOf(t, tt, "No date")
 	if err := tt.Click("Accept: Tidy the docs"); err != nil {
 		t.Fatal(err)
 	}
 	at(tt, app, ms(309)) // 110 ms into the fold: an eighth of the section is left
-	mid := yOf(t, tt, "Later")
+	mid := yOf(t, tt, "No date")
 	at(tt, app, ms(415))
-	almost := yOf(t, tt, "Later")
+	almost := yOf(t, tt, "No date")
 	at(tt, app, ms(440))
 	if tt.HasText("From your agents") {
 		t.Error("the header of an emptied section is still drawn")
 	}
-	end := yOf(t, tt, "Later")
+	end := yOf(t, tt, "No date")
 	if want := end + (y0-end)/8; !near(mid, want) {
 		t.Errorf("mid-fold Later is at %v, want %v: the header and the box close with the row (from %v to %v)", mid, want, y0, end)
 	}
@@ -202,22 +202,22 @@ func TestAHairlineFoldsWithItsRowAndNoneStandsAtTheTopOfTheBox(t *testing.T) {
 func TestOtherCompletionsFoldTheRowAfterTheirGlyphFill(t *testing.T) {
 	tt, _, app := newMainTester(t, 1100)
 	moving(tt)
-	y0 := yOf(t, tt, "Later")
+	y0 := yOf(t, tt, "Next")
 	click(t, tt, "Mark done: Reply to design feedback")
 	for _, d := range []int{100, 220, 290} {
 		at(tt, app, ms(d))
-		if yOf(t, tt, "Later") != y0 {
-			t.Errorf("at %d ms the glyph is still filling and holding: Later at %v, was %v", d, yOf(t, tt, "Later"), y0)
+		if yOf(t, tt, "Next") != y0 {
+			t.Errorf("at %d ms the glyph is still filling and holding: Later at %v, was %v", d, yOf(t, tt, "Next"), y0)
 		}
 	}
 	at(tt, app, ms(400))
-	if y := yOf(t, tt, "Later"); y >= y0 {
+	if y := yOf(t, tt, "Next"); y >= y0 {
 		t.Errorf("at 400 ms the row should be folding: Later at %v, was %v", y, y0)
 	}
 	at(tt, app, ms(520))
-	end := yOf(t, tt, "Later")
+	end := yOf(t, tt, "Next")
 	at(tt, app, ms(560))
-	if got := yOf(t, tt, "Later"); !near(got, end) {
+	if got := yOf(t, tt, "Next"); !near(got, end) {
 		t.Errorf("the page jumps %v pt when the fold ends", got-end)
 	}
 }

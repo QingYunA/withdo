@@ -74,8 +74,11 @@ func (k Clock) Date(t, now time.Time) string {
 // Heading is the day at the top of Now: "Wednesday, Oct 14".
 func (k Clock) Heading(now time.Time) string { return k.format(now, "MMMEEEEd") }
 
-// HeroDate is the day over the greeting on Home: "Thursday, October 23".
-func (k Clock) HeroDate(now time.Time) string { return k.format(now, "MMMMEEEEd") }
+// HeroDate is the day as the title of Home: "Thursday, October 23", "10月23日 星期四" (a space
+// between the date and the weekday).
+func (k Clock) HeroDate(now time.Time) string {
+	return strings.Replace(k.format(now, "MMMMEEEEd"), "日星期", "日 星期", 1)
+}
 
 // Age is how long ago t was, short: "now", "2m", "3h", "2d", then a date once it is a week or
 // more.

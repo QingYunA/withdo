@@ -85,7 +85,7 @@ const menuRuleH float32 = 11
 
 // menuRule is the hairline between groups of lines.
 func menuRule(c *ui.Context, t *theme.Tokens) {
-	ui.Box(c).Height(1).Shrink(0).Margin(5, 8).Background(t.Border)
+	ui.Box(c).Height(theme.Hairline).Shrink(0).Margin(5, 8).Background(t.Border)
 }
 
 // mainPage is the whole menu: the strips, then what else can be done with the task.
@@ -94,6 +94,12 @@ func (m *Main) mainPage(c *ui.Context, t *theme.Tokens, task data.Task) {
 	m.stripLabel(c, t, "status", m.say.PropStatus(), statusLabel(m.say, task.Status))
 	m.statusStrip(c, t, task, false)
 	one := []data.Task{task}
+	if m.canDoToday(task) {
+		m.popRow(c, t, popSpec{key: "today", icon: theme.IconCalendar, label: m.say.ActionDoToday(), hint: keyToday.hint(), run: func() {
+			m.closeMenu()
+			m.doToday(c, task)
+		}})
+	}
 	if mine(task) { // the user's own task has the star, one line, not the four priorities
 		m.popRow(c, t, m.starPopRow(t, task))
 	} else {

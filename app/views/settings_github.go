@@ -82,7 +82,7 @@ func (s *Settings) checkNowLink(c *ui.Context, t *theme.Tokens, st data.GitHubSt
 	switch {
 	case st.State == data.GitHubUnknown:
 	case st.Checking:
-		theme.Text(c, theme.Body, t.TextTertiary, s.say.SettingsGitHubChecking()).Shrink(0)
+		theme.Text(c, theme.Body, t.TextSecondary, s.say.SettingsGitHubChecking()).Shrink(0)
 	default:
 		if settingsLink(c, t, "github-check", s.say.SettingsGitHubCheckNow(), s.say.SettingsGitHubCheckNow()).Clicked() {
 			s.app.GitHub.CheckNow()

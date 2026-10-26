@@ -76,11 +76,11 @@ func (m *Main) categoryPicker(c *ui.Context, t *theme.Tokens, s *categorySheet) 
 		box.Children(func() {
 			theme.Body.Apply(ui.TextInputBase(c.Key("icon-search-input"), &s.query)).TextColor(t.Text).Label(m.say.CategorySearchIcons())
 			if s.query == "" {
-				theme.Text(c, theme.Body, t.TextTertiary, m.say.CategorySearchIcons()).Absolute().Left(0).Top(0).PassThrough()
+				theme.Text(c, theme.Body, t.TextSecondary, m.say.CategorySearchIcons()).Absolute().Left(0).Top(0).PassThrough()
 			}
 		})
 	})
-	ui.Scroll(c.Key("icon-scroll")).Height(pickerHeight).Shrink(0).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() {
+	ui.Scroll(c.Key("icon-scroll")).Height(pickerHeight).Shrink(0).Radius(theme.RadiusPanel).Border(theme.Hairline, t.Border).Children(func() {
 		ui.Column(c).Padding(8).Gap(4).Children(func() {
 			if strings.TrimSpace(s.query) != "" {
 				m.iconResults(c, t, s, theme.SearchCategoryIcons(s.query))
@@ -97,7 +97,7 @@ func (m *Main) categoryPicker(c *ui.Context, t *theme.Tokens, s *categorySheet) 
 // iconResults is what a search found, or the line that says it found nothing.
 func (m *Main) iconResults(c *ui.Context, t *theme.Tokens, s *categorySheet, hits []theme.CategoryIconEntry) {
 	if len(hits) == 0 {
-		theme.Text(c, theme.Body, t.TextTertiary, m.say.CategoryNoIconMatch()).Margin(80, 0, 0, 0).AlignSelf(ui.Center)
+		theme.Text(c, theme.Body, t.TextSecondary, m.say.CategoryNoIconMatch()).Margin(80, 0, 0, 0).AlignSelf(ui.Center)
 		return
 	}
 	m.iconGrid(c, t, s, hits)

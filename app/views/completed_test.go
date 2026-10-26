@@ -11,19 +11,16 @@ func completedTester(t *testing.T) (*ui.Tester, *Main, *App) {
 	t.Helper()
 	tt, m, app := newMainTester(t, 1100)
 	tt.Frame()
-	if err := tt.Click("Show all"); err != nil { // the end of Done today
-		t.Fatal(err)
-	}
+	m.openHistory(0, false) // Home has no way in: View all opens the Summary
+	tt.Frame()
 	return tt, m, app
 }
 
-func TestTheHistoryHasNoSidebarRowAndOpensFromShowAllWithABackControl(t *testing.T) {
+func TestTheHistoryHasNoSidebarRowAndHasABackControl(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
-	hasNot(t, tt, "Completed")
-	if err := tt.Click("Show all"); err != nil {
-		t.Fatal(err)
-	}
+	hasNot(t, tt, "Completed", "Show all")
+	m.openHistory(0, false)
 	tt.Frame()
 	if m.nav != (nav{screen: screenCompleted}) || m.histBack != (nav{}) {
 		t.Fatalf("nav %+v, back %+v", m.nav, m.histBack)
@@ -83,10 +80,11 @@ func TestCompletedListsDoneAndCancelledNewestFirstGroupedByDay(t *testing.T) {
 		t.Fatal(err)
 	}
 	app.Refresh()
-	tt, _, _ := newTesterFor(app, 1100)
+	tt, m, _ := newTesterFor(app, 1100)
 	tt.SetSize(1100, 900)
 	tt.Frame()
-	_ = tt.Click("Show all")
+	m.openHistory(0, false)
+	tt.Frame()
 	for _, want := range []string{"Completed", "Done and cancelled, newest first", "Today", "Yesterday", "Oct 12", "Oct 9", "Oct 8",
 		"Renew passport", "Draft the UI spec", "Spike the mygo shell", "Map worktrees to the main repo", "Pick a UI toolkit", "2:30 PM"} {
 		if !tt.HasText(want) {

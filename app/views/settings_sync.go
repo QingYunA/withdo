@@ -121,7 +121,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	case data.SyncUploading, data.SyncSynced:
 		s.syncAccountGroup(c, t, svc, snap, snap.Phase == data.SyncUploading)
 		if snap.Phase == data.SyncUploading {
-			theme.Paragraph(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
 		}
 		s.syncDevices(c, t, snap)
 	default: // failed, offline or the wrong account
@@ -256,7 +256,7 @@ func (s *Settings) syncDevices(c *ui.Context, t *theme.Tokens, snap data.SyncSna
 
 func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevice, first bool) {
 	if !first {
-		ui.Box(c.Key("sync-device-rule-"+d.ID)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+		ui.Box(c.Key("sync-device-rule-"+d.ID)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
 	ui.Row(c.Key("sync-device-"+d.ID)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
 		icon := theme.IconLaptop
@@ -281,7 +281,7 @@ func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevi
 // syncFooter is the server line: the host, and Change, which edits it in place.
 func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	ui.Row(c.Key("sync-footer")).Margin(14, 4, 0).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextTertiary, s.say.SettingsSyncServer())
+		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncServer())
 		if s.syncEditingServer {
 			fieldWell(c, t, "sync-server", 330, func() {
 				var field ui.Element
@@ -309,8 +309,8 @@ func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, s
 			}
 			return
 		}
-		theme.Text(c, theme.Mono, t.TextTertiary, serverHost(snap.Server)).Shrink(1).MinWidth(0).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextTertiary, "·")
+		theme.Text(c, theme.Mono, t.TextSecondary, serverHost(snap.Server)).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, "·")
 		if settingsLink(c, t, "sync-change", s.say.SettingsSyncChange(), s.say.SettingsSyncServerAddress()).Clicked() {
 			s.syncEditingServer = true
 			s.syncServerDraft = snap.Server
@@ -376,7 +376,7 @@ func syncChoiceCard(c *ui.Context, t *theme.Tokens, key, title, body string, sel
 	if selected {
 		card.Border(2, t.Accent)
 	} else {
-		card.Border(1, t.Border)
+		card.Border(theme.Hairline, t.Border)
 		if card.Hovered() {
 			card.Background(t.BgHover)
 		}
@@ -409,7 +409,7 @@ func syncChoiceCard(c *ui.Context, t *theme.Tokens, key, title, body string, sel
 // failure or the bar of an upload.
 func syncRow(c *ui.Context, t *theme.Tokens, key string, first bool, body, control func()) {
 	if !first {
-		ui.Box(c.Key("sync-rule-"+key)).Height(1).Shrink(0).Margin(0, 14).Background(t.Border)
+		ui.Box(c.Key("sync-rule-"+key)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
 	}
 	ui.Row(c.Key("sync-row-"+key)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(body)
@@ -453,7 +453,7 @@ func syncBarFilled(done, total int) int {
 
 // syncBadge is the outlined "This Mac" badge of a device row.
 func syncBadge(c *ui.Context, t *theme.Tokens, text string) {
-	ui.Row(c).Padding(0, 5).Height(16).Shrink(0).Radius(5).Border(1, t.Border).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Padding(0, 5).Height(16).Shrink(0).Radius(5).Border(theme.Hairline, t.Border).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Badge, t.TextSecondary, text)
 	})
 }

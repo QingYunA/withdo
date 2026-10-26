@@ -92,7 +92,7 @@ func (m *Main) agentHeader(c *ui.Context, t *theme.Tokens, key, name string, n i
 	ui.Row(c.Key("agent:"+key)).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.AvatarIcon(c.Key("avatar"), theme.AgentAvatar(strings.ToLower(name)), theme.AvatarRow)
 		theme.Text(c, theme.BodyStrong, t.Text, name).Shrink(1).MinWidth(0).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n)).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(n)).Shrink(0)
 	})
 }
 
@@ -125,7 +125,7 @@ func (m *Main) workingRow(c *ui.Context, t *theme.Tokens, r data.AgentRow) {
 		return
 	}
 	ui.Row(c.Key("subs-"+itoa(r.ID))).Shrink(0).AlignItems(ui.Stretch).Margin(2, 0, 4, theme.AvatarRow/2).Children(func() {
-		ui.Box(c.Key("rail")).Width(1).Shrink(0).Background(t.Border)
+		ui.Box(c.Key("rail")).Width(theme.Hairline).Shrink(0).Background(t.Border)
 		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 			for _, s := range r.Subs {
 				m.subtaskRow(c, t, s)

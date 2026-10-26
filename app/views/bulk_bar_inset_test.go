@@ -47,6 +47,8 @@ func TestTheLastRowOfALongListScrollsAboveTheBarToo(t *testing.T) {
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, m, _ := newTesterFor(app, 1100)
+	app.noDateOpen = true // the undated tasks of mine with no project are in the No date fold
+	app.Refresh()
 	m.goTo(nav{})
 	tt.Frame()
 	tt.Key(ui.Cmd, ui.KeyA)
