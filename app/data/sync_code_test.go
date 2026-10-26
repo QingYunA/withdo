@@ -32,6 +32,9 @@ type codeServer struct {
 	foreignID  string
 	devicesHit chan struct{}
 	release    chan struct{}
+	// holdCheck, when set before the code is sent, keeps auth-with-otp waiting until it is closed,
+	// so a test can see the checking stage before the sign-in moves on.
+	holdCheck chan struct{}
 }
 
 func newCodeServer(t *testing.T) *codeServer {
@@ -61,6 +64,9 @@ func newCodeServer(t *testing.T) *codeServer {
 			Password string `json:"password"`
 		}
 		_ = json.NewDecoder(r.Body).Decode(&body)
+		if f.holdCheck != nil {
+			<-f.holdCheck
+		}
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		f.checks++
@@ -204,10 +210,12 @@ func TestRightCodeLinksLikeAPasswordSignIn(t *testing.T) {
 	r.SyncRequestCode("ada@example.com")
 	waitSnap(t, r, "the code step", atCodeStep)
 
+	f.holdCheck = make(chan struct{})
 	r.SyncSignInWithCode("123456")
 	if snap := r.SyncSnapshot(); snap.Phase != SyncSigningIn || snap.SignInStage != SignInStageChecking {
 		t.Fatalf("while checking: phase %v stage %q", snap.Phase, snap.SignInStage)
 	}
+	close(f.holdCheck)
 	waitSignal(t, f.devicesHit, "the device registration")
 	snap := r.SyncSnapshot()
 	if snap.Phase != SyncSigningIn || snap.SignInStage != SignInStageDownloading {
