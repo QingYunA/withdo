@@ -3,6 +3,15 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.10.2
+
+No database change; the app updates itself from 0.10.0.
+
+- Done today keeps the task's name in view when an agent left a long note, and the row no longer
+  runs under the agents beside it.
+- Sharper picture and send buttons in the input.
+- The app now looks for updates every four hours instead of once a day.
+
 ## 0.10.1
 
 No database change; the desktop app updates itself from 0.10.0.
