@@ -101,7 +101,7 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = { opened = it },
                 onHowToConnect = {},
-                onComingSoon = {},
+                onViewAll = null,
             )
         }
         compose.clickText("Reply to design feedback")
@@ -122,7 +122,7 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onComingSoon = {},
+                onViewAll = null,
             )
         }
         compose.clickCompletion("Reply to design feedback")
@@ -143,10 +143,10 @@ class InteractionTest {
                 onOpenUrl = {},
                 onOpenTask = {},
                 onHowToConnect = {},
-                onComingSoon = {},
+                onViewAll = null,
             )
         }
-        compose.clickText("Accept")
+        compose.clickText("Mark done")
         compose.runOnIdle { assertEquals(2L, accepted) }
     }
 
@@ -304,7 +304,7 @@ class InteractionTest {
                 BottomNav(tab = tab.value, count = 0, onSelect = { tab.value = it })
             }
         }
-        for ((label, value) in listOf("Mine" to Tab.MINE, "Agents" to Tab.AGENTS, "Calendar" to Tab.CALENDAR, "Projects" to Tab.PROJECTS)) {
+        for ((label, value) in listOf("Today" to Tab.MINE, "Agents" to Tab.AGENTS, "Calendar" to Tab.CALENDAR, "Projects" to Tab.PROJECTS)) {
             compose.clickText(label)
             compose.onNodeWithText("tab ${value.name}").assertExists()
             val layout = compose.onNodeWithText(label, useUnmergedTree = true).textLayout()

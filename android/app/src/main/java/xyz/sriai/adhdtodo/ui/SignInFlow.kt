@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
 import kotlinx.coroutines.delay
 import xyz.sriai.adhdtodo.R
+import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.GoogleMark
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
@@ -254,7 +255,7 @@ private fun OutlineButton(
             .alpha(if (enabled) 1f else 0.45f)
             .clip(shape)
             .background(tokens.bg, shape)
-            .border(1.dp, tokens.border, shape)
+            .border(Dims.hairline, tokens.border, shape)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 11.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
@@ -274,13 +275,13 @@ private fun OrRule(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.weight(1f).height(1.dp).background(tokens.border))
+        Box(Modifier.weight(1f).height(Dims.hairline).background(tokens.border))
         Text(
             stringResource(R.string.sync_signin_or),
             style = LocalAppType.current.meta.copy(fontSize = 12.sp),
             color = tokens.textTertiary,
         )
-        Box(Modifier.weight(1f).height(1.dp).background(tokens.border))
+        Box(Modifier.weight(1f).height(Dims.hairline).background(tokens.border))
     }
 }
 
@@ -410,7 +411,7 @@ private fun CodeEntry(
                                 .alpha(if (enabled) 1f else 0.5f)
                                 .background(tokens.bg, RoundedCornerShape(10.dp))
                                 .border(
-                                    if (ring) 2.dp else 1.dp,
+                                    if (ring) 1.dp else Dims.hairline,
                                     if (ring) tokens.accent else tokens.border,
                                     RoundedCornerShape(10.dp),
                                 ),

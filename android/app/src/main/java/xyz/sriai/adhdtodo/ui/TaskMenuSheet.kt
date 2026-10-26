@@ -3,6 +3,7 @@ package xyz.sriai.adhdtodo.ui
 import android.text.format.DateFormat
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -100,6 +101,7 @@ fun TaskMenuSheet(
     onCategory: (Int) -> Unit = {},
     onMove: (Long?) -> Unit = {},
     onRemind: (Long?) -> Unit = {},
+    onDoToday: () -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
     onDelete: () -> Unit = {},
 ) {
@@ -134,6 +136,7 @@ fun TaskMenuSheet(
             onCategory = onCategory,
             onMove = onMove,
             onRemind = onRemind,
+            onDoToday = onDoToday,
             onOpenUrl = onOpenUrl,
             onDelete = onDelete,
         )
@@ -155,6 +158,7 @@ private fun TaskMenuBody(
     onCategory: (Int) -> Unit,
     onMove: (Long?) -> Unit,
     onRemind: (Long?) -> Unit,
+    onDoToday: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -196,6 +200,7 @@ private fun TaskMenuBody(
                 onCategory = { page = TaskMenuPage.Category },
                 onMove = { page = TaskMenuPage.Move },
                 onRemind = { page = TaskMenuPage.Remind },
+                onDoToday = { choose { onDoToday() } },
                 onOpenUrl = { url -> choose { onOpenUrl(url) } },
                 onDelete = { choose { onDelete() } },
             )
@@ -236,17 +241,21 @@ private fun MainPage(
     onCategory: () -> Unit,
     onMove: () -> Unit,
     onRemind: () -> Unit,
+    onDoToday: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
+    // Do today (v35): a task of mine that is not finished and is not due today already.
+    val canDoToday = task.source == "user" && task.status != "done" && task.status != "cancelled" &&
+        !words.dueToday(task)
     val category = categories.firstOrNull { it.id.toInt() == task.categoryId }
     val project = projects.firstOrNull { it.id == task.projectId }
     val meta = buildString {
         append('#').append(task.id)
-        if (agent.isNotEmpty()) append(" · ").append(words.agent(agent))
-        append(" · ").append(project?.name ?: stringResource(R.string.title_inbox))
+        if (agent.isNotEmpty()) append("  ").append(words.agent(agent))
+        append("  ").append(project?.name ?: stringResource(R.string.title_inbox))
     }
 
     Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 10.dp)) {
@@ -257,7 +266,7 @@ private fun MainPage(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(meta, style = type.meta, color = tokens.textTertiary, modifier = Modifier.padding(top = 2.dp))
+        Text(meta, style = type.meta, color = tokens.textSecondary, modifier = Modifier.padding(top = 2.dp))
     }
     MenuLabel(stringResource(R.string.property_status), words.menuStatus(task.status))
     Row(
@@ -269,7 +278,7 @@ private fun MainPage(
             Box(
                 Modifier
                     .weight(1f)
-                    .height(52.dp)
+                    .height(44.dp)
                     .then(if (selected) Modifier.background(tokens.bgSelected, RoundedCornerShape(12.dp)) else Modifier)
                     .clickable { onStatus(status) }
                     .semantics { contentDescription = words.menuStatus(status) },
@@ -309,7 +318,7 @@ private fun MainPage(
                     style = type.bodyStrong.copy(fontSize = 15.sp, lineHeight = 22.sp),
                     color = when {
                         priority == "P0" -> tokens.statusBlocked
-                        selected -> tokens.accent
+                        selected -> tokens.text
                         else -> tokens.text
                     },
                 )
@@ -317,6 +326,13 @@ private fun MainPage(
         }
     }
     MenuRule()
+    if (canDoToday) {
+        MenuRow(
+            icon = "calendar",
+            label = stringResource(R.string.menu_do_today),
+            onClick = onDoToday,
+        )
+    }
     MenuRow(
         icon = "bulletlist",
         label = stringResource(R.string.property_category),
@@ -498,7 +514,7 @@ private fun RemindPage(
                     showDate = false
                     showTime = true
                 }) {
-                    Text(stringResource(R.string.action_done), color = LocalTokens.current.accent)
+                    Text(stringResource(R.string.action_done), color = LocalTokens.current.accentInk)
                 }
             },
             dismissButton = {
@@ -544,7 +560,7 @@ private fun RemindPage(
                             showTime = false
                             onPick(millis)
                         }) {
-                            Text(stringResource(R.string.action_done), color = LocalTokens.current.accent)
+                            Text(stringResource(R.string.action_done), color = LocalTokens.current.accentInk)
                         }
                     }
                 }
@@ -648,7 +664,7 @@ private fun MenuLabel(label: String, value: String, top: androidx.compose.ui.uni
     Row(Modifier.padding(start = 20.dp, end = 20.dp, top = top, bottom = 6.dp)) {
         Text(label, style = type.section, color = tokens.textSecondary)
         if (value.isNotEmpty()) {
-            Text(" · $value", style = type.section, color = tokens.textTertiary)
+            Text("  $value", style = type.meta, color = tokens.textSecondary)
         }
     }
 }
@@ -659,7 +675,7 @@ private fun MenuRule() {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 10.dp)
-            .height(1.dp)
+            .height(Dims.hairline)
             .background(LocalTokens.current.border),
     )
 }
@@ -709,7 +725,7 @@ private fun MenuRow(
             modifier = Modifier.weight(1f),
         )
         if (hint != null) {
-            Text(hint, style = type.body, color = tokens.textTertiary, maxLines = 1)
+            Text(hint, style = type.body, color = tokens.textSecondary, maxLines = 1)
         }
         if (chevron) {
             PixelIcon("chevron-right", size = 16.dp, tint = tokens.textTertiary)
@@ -746,21 +762,29 @@ fun DeletedSnackbar(
     modifier: Modifier = Modifier,
 ) {
     if (deleted == null) return
+    UndoBar(stringResource(R.string.menu_deleted, deleted.title), { onUndo(deleted) }, modifier)
+}
+
+/** A snackbar with one message and Undo: `Deleted “title”`, `Moved to today`. */
+@Composable
+fun UndoBar(message: String, onUndo: () -> Unit, modifier: Modifier = Modifier) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
+    val shape = RoundedCornerShape(12.dp)
     Row(
         modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .height(48.dp)
-            .background(tokens.text, RoundedCornerShape(12.dp))
+            .background(tokens.bgSubtle, shape)
+            .border(Dims.hairline, tokens.border, shape)
             .padding(start = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            stringResource(R.string.menu_deleted, deleted.title),
+            message,
             style = type.body,
-            color = tokens.bg,
+            color = tokens.text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -768,9 +792,9 @@ fun DeletedSnackbar(
         Text(
             stringResource(R.string.menu_undo),
             style = type.bodyStrong,
-            color = tokens.accent,
+            color = tokens.accentInk,
             modifier = Modifier
-                .clickable { onUndo(deleted) }
+                .clickable { onUndo() }
                 .padding(horizontal = 10.dp, vertical = 12.dp),
         )
     }

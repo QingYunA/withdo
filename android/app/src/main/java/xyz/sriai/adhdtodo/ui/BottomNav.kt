@@ -38,12 +38,15 @@ enum class Tab(val label: Int, val icon: String) {
     PROJECTS(R.string.nav_projects, "folder"),
 }
 
-/** The sidebar becomes the phone's bottom bar: 18 dp icon over a 12 sp label, 64 dp tall. */
+/**
+ * The sidebar becomes the phone's bottom bar: 18 dp icon over a 12 sp label, 64 dp tall, on
+ * bg.sidebar with a 0.5 dp line above it. The selected tab sits on the neutral bg.selected pill.
+ */
 @Composable
 fun BottomNav(tab: Tab, count: Int, onSelect: (Tab) -> Unit) {
     val tokens = LocalTokens.current
-    Column(Modifier.fillMaxWidth().background(tokens.bg).navigationBarsPadding()) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(tokens.border))
+    Column(Modifier.fillMaxWidth().background(tokens.bgSidebar).navigationBarsPadding()) {
+        Box(Modifier.fillMaxWidth().height(Dims.hairline).background(tokens.border))
         Row(Modifier.fillMaxWidth().height(Dims.navHeight)) {
             for (entry in Tab.entries) {
                 NavItem(
@@ -63,7 +66,7 @@ private fun NavItem(tab: Tab, selected: Boolean, count: Int, modifier: Modifier,
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val ink = if (selected) tokens.text else tokens.textSecondary
-    val iconInk = if (selected) tokens.accent else tokens.textSecondary
+    val iconInk = if (selected) tokens.text else tokens.textSecondary
     Column(
         modifier = modifier.fillMaxHeight().clickable { onSelect() },
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -239,7 +239,7 @@ private fun SegmentControl(
             .padding(3.dp),
     ) {
         Segment(
-            label = stringResource(R.string.nav_mine),
+            label = stringResource(R.string.segment_mine),
             count = mine,
             selected = !agentsSelected,
             modifier = Modifier.weight(1f),
@@ -271,7 +271,7 @@ private fun Segment(
             .clip(RoundedCornerShape(6.dp))
             .then(
                 if (selected) {
-                    Modifier.background(tokens.bg).border(1.dp, tokens.border, RoundedCornerShape(6.dp))
+                    Modifier.background(tokens.bg).border(Dims.hairline, tokens.border, RoundedCornerShape(6.dp))
                 } else {
                     Modifier
                 },

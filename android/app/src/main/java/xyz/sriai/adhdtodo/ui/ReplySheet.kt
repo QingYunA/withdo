@@ -80,7 +80,7 @@ fun ReplySheet(agent: String, onReply: (String) -> Unit, onDismiss: () -> Unit) 
                 ) {
                     Text(
                         stringResource(R.string.action_send),
-                        color = if (text.isNotBlank()) tokens.accent else tokens.textTertiary,
+                        color = if (text.isNotBlank()) tokens.accentInk else tokens.textTertiary,
                     )
                 }
             }

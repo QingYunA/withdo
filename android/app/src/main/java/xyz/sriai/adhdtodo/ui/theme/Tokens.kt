@@ -23,18 +23,33 @@ import androidx.compose.ui.unit.sp
 data class Tokens(
     val dark: Boolean,
     val bg: Color,
+    /** The bottom bar (slate 2). */
+    val bgSidebar: Color,
+    /** Wells: the idle send button, the segmented control (slate 3). */
     val bgSubtle: Color,
+    /** The Agents tray (slate 2). */
+    val bgTray: Color,
+    /** The neutral selection: the bar's pill, a pressed row, a highlighted sheet row (slate 4). */
     val bgSelected: Color,
-    /** The hover tint a chosen row of the task menu's pages takes. */
+    /** The hover tint a chosen row of the task menu's pages takes (slate 3). */
     val bgHover: Color,
     /** The 32 % black behind a modal sheet. */
     val scrim: Color,
+    /** Hairlines, always 0.5 dp (slate 6). */
     val border: Color,
+    /** The composer's edge, controls (slate 7). */
+    val borderControl: Color,
     val text: Color,
     val textSecondary: Color,
+    /** Icons and glyphs only, never words. */
     val textTertiary: Color,
+    /** iris 9: the send button, the caret, a ring. */
     val accent: Color,
     val onAccent: Color,
+    /** iris 3: tinted buttons, a just-added row. */
+    val accentSoft: Color,
+    /** iris 11: links, tinted button text, Undo. */
+    val accentInk: Color,
     val statusBacklog: Color,
     val statusTodo: Color,
     val statusDoing: Color,
@@ -42,8 +57,10 @@ data class Tokens(
     val statusReview: Color,
     val statusDone: Color,
     val stale: Color,
-    /** The eight folder colors of app/theme/icons.go, in the same order. */
+    /** The eight folder colors of app/theme/icons.go, in the same order (step 9). */
     val projectColors: List<Color>,
+    /** Step 11 of the same eight scales, for a category's name as a word. */
+    val projectInks: List<Color>,
 ) {
     /**
      * A category's color comes from the eight project colors, in domain.CategoryColors' order, as
@@ -52,6 +69,12 @@ data class Tokens(
     fun categoryColor(key: String): Color {
         val index = CategoryColorKeys.indexOf(key)
         return projectColors[if (index >= 0) index else 0]
+    }
+
+    /** A category's name as a word: step 11 of its scale (app/theme CategoryInk). */
+    fun categoryInk(key: String): Color {
+        val index = CategoryColorKeys.indexOf(key)
+        return projectInks[if (index >= 0) index else 0]
     }
 
     /** The fixed colors of a category icon's palette letters a to l, after the project colors. */
@@ -67,7 +90,7 @@ data class Tokens(
         "blocked" -> statusBlocked
         "review" -> statusReview
         "done" -> statusDone
-        "cancelled" -> textTertiary
+        "cancelled" -> statusBacklog
         else -> statusTodo
     }
 
@@ -101,54 +124,77 @@ private val CategoryColorKeys = listOf(
 
 /** app/theme/icons.go's ProjectColors, the same eight in both appearances. */
 private val ProjectPalette = listOf(
-    Color(0xFF5B5BD6), Color(0xFFE0A800), Color(0xFF30A46C), Color(0xFFE5484D),
-    Color(0xFF3B82F6), Color(0xFFD9488B), Color(0xFF0EA5A4), Color(0xFFE08A1E),
+    Color(0xFF5B5BD6), Color(0xFFFFC53D), Color(0xFF30A46C), Color(0xFFE5484D),
+    Color(0xFF0090FF), Color(0xFFD6409F), Color(0xFF12A594), Color(0xFFF76B15),
 )
 
+private val InkLight = listOf(
+    Color(0xFF5753C6), Color(0xFFAB6400), Color(0xFF218358), Color(0xFFCE2C31),
+    Color(0xFF0D74CE), Color(0xFFC2298A), Color(0xFF008573), Color(0xFFCC4E00),
+)
+private val InkDark = listOf(
+    Color(0xFFB1A9FF), Color(0xFFFFCA16), Color(0xFF3DD68C), Color(0xFFFF9592),
+    Color(0xFF70B8FF), Color(0xFFFF8DCC), Color(0xFF0BD8B6), Color(0xFFFFA057),
+)
+
+/** The values of docs/design/ui-spec.md's Color table: Radix slate and iris, light. */
 val LightTokens = Tokens(
     dark = false,
     bg = Color(0xFFFFFFFF),
-    bgSubtle = Color(0xFFF5F5F7),
-    bgSelected = Color(0xFF5B5BD6).copy(alpha = 0.12f),
-    bgHover = Color(0xFF000000).copy(alpha = 0.05f),
+    bgSidebar = Color(0xFFF9F9FB),
+    bgSubtle = Color(0xFFF0F0F3),
+    bgTray = Color(0xFFF9F9FB),
+    bgSelected = Color(0xFFE8E8EC),
+    bgHover = Color(0xFFF0F0F3),
     scrim = Color(0xFF000000).copy(alpha = 0.32f),
-    border = Color(0xFF000000).copy(alpha = 0.10f),
-    text = Color(0xFF1D1D1F),
-    textSecondary = Color(0xFF6E6E73),
-    textTertiary = Color(0xFFAEAEB2),
+    border = Color(0xFFD9D9E0),
+    borderControl = Color(0xFFCDCED6),
+    text = Color(0xFF1C2024),
+    textSecondary = Color(0xFF60646C),
+    textTertiary = Color(0xFF8B8D98),
     accent = Color(0xFF5B5BD6),
     onAccent = Color(0xFFFFFFFF),
-    statusBacklog = Color(0xFFAEAEB2),
-    statusTodo = Color(0xFF8E8E93),
-    statusDoing = Color(0xFF3B82F6),
+    accentSoft = Color(0xFFF0F1FE),
+    accentInk = Color(0xFF5753C6),
+    statusBacklog = Color(0xFFB9BBC6),
+    statusTodo = Color(0xFF8B8D98),
+    statusDoing = Color(0xFF0090FF),
     statusBlocked = Color(0xFFE5484D),
-    statusReview = Color(0xFFE0A800),
+    statusReview = Color(0xFFFFC53D),
     statusDone = Color(0xFF30A46C),
-    stale = Color(0xFFD97706),
+    stale = Color(0xFFCC4E00),
     projectColors = ProjectPalette,
+    projectInks = InkLight,
 )
 
+/** The same table in the dark scales. */
 val DarkTokens = Tokens(
     dark = true,
-    bg = Color(0xFF1C1C1E),
-    bgSubtle = Color(0xFF232326),
-    bgSelected = Color(0xFF7C7CF0).copy(alpha = 0.22f),
-    bgHover = Color(0xFFFFFFFF).copy(alpha = 0.06f),
+    bg = Color(0xFF111113),
+    bgSidebar = Color(0xFF18191B),
+    bgSubtle = Color(0xFF212225),
+    bgTray = Color(0xFF18191B),
+    bgSelected = Color(0xFF272A2D),
+    bgHover = Color(0xFF212225),
     scrim = Color(0xFF000000).copy(alpha = 0.32f),
-    border = Color(0xFFFFFFFF).copy(alpha = 0.10f),
-    text = Color(0xFFF5F5F7),
-    textSecondary = Color(0xFFA1A1A6),
-    textTertiary = Color(0xFF636366),
-    accent = Color(0xFF7C7CF0),
+    border = Color(0xFF363A3F),
+    borderControl = Color(0xFF43484E),
+    text = Color(0xFFEDEEF0),
+    textSecondary = Color(0xFFB0B4BA),
+    textTertiary = Color(0xFF696E77),
+    accent = Color(0xFF5B5BD6),
     onAccent = Color(0xFFFFFFFF),
-    statusBacklog = Color(0xFF636366),
-    statusTodo = Color(0xFF8E8E93),
-    statusDoing = Color(0xFF60A5FA),
-    statusBlocked = Color(0xFFFF6369),
-    statusReview = Color(0xFFF5C542),
-    statusDone = Color(0xFF4CC38A),
-    stale = Color(0xFFF59E0B),
+    accentSoft = Color(0xFF202248),
+    accentInk = Color(0xFFB1A9FF),
+    statusBacklog = Color(0xFF5A6169),
+    statusTodo = Color(0xFF696E77),
+    statusDoing = Color(0xFF0090FF),
+    statusBlocked = Color(0xFFE5484D),
+    statusReview = Color(0xFFFFC53D),
+    statusDone = Color(0xFF30A46C),
+    stale = Color(0xFFFF801F),
     projectColors = ProjectPalette,
+    projectInks = InkDark,
 )
 
 @Immutable
@@ -169,7 +215,7 @@ data class Type(
 private val system = FontFamily.Default
 
 val AppType = Type(
-    title = TextStyle(fontFamily = system, fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold),
+    title = TextStyle(fontFamily = system, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
     taskTitle = TextStyle(fontFamily = system, fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold),
     input = TextStyle(fontFamily = system, fontSize = 17.sp, lineHeight = 25.sp),
     body = TextStyle(fontFamily = system, fontSize = 15.sp, lineHeight = 22.sp),
@@ -185,6 +231,9 @@ val AppType = Type(
 object Dims {
     val pagePadding = 20.dp
     val rowHeight = 48.dp
+
+    /** Every border, divider and hairline (Craft rule 6). */
+    val hairline = 0.5.dp
     val navHeight = 64.dp
     val composerHeight = 52.dp
     val glyph = 18.dp

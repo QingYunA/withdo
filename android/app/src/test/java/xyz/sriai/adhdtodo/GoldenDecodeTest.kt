@@ -42,6 +42,10 @@ class GoldenDecodeTest {
                     assertEquals(0, page.fromAgents[0].kind)
                     assertEquals("Needs a decision on the activation policy", page.fromAgents[0].words)
                     assertEquals(2, page.today.size)
+                    assertEquals(2, page.next.size)
+                    assertEquals("Book dentist", page.next[0].title)
+                    assertEquals(2, page.noDate.size)
+                    assertEquals(2, page.noDateTotal)
                     assertEquals(4, page.count)
                     assertEquals(2, page.done.size)
                     assertEquals("claude-code", page.done[0].by)
@@ -161,7 +165,7 @@ class GoldenDecodeTest {
 
     @Test
     fun `unknown keys are ignored`() {
-        val json = """{"FromAgents":[],"Today":[],"Later":[],"Done":[],"MoreLater":0,"MoreDone":0,"FromTheFuture":true}"""
+        val json = """{"FromAgents":[],"Today":[],"Next":[],"NoDate":[],"NoDateTotal":0,"Done":[],"MoreDone":0,"FromTheFuture":true}"""
         val page = PageJson.decodeFromString<MinePage>(json)
         assertTrue(page.empty)
     }

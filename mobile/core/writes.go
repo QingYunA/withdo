@@ -198,6 +198,49 @@ func (c *Core) Reply(id int64, text string) error {
 	return nil
 }
 
+// defaultDueHour is the time of day a deadline given as a bare day gets, as in app/views.
+const defaultDueHour = 18
+
+// DoToday is the task menu's Do today, the desktop's doToday: it sets the due date of a task of
+// mine to today, keeping the time of day it had; a task with no due time gets 18:00, which reads
+// as the day alone. It returns the old due date (RFC 3339, "" when there was none) for the
+// Undo, which is UpdateTask with that due_at. A task that is not mine, is finished, or is due
+// today already is refused, as the menu does not offer it.
+func (c *Core) DoToday(id int64) (string, error) {
+	snap, err := c.real.Snapshot()
+	if err != nil {
+		return "", shortError(err)
+	}
+	var task *data.Task
+	for i := range snap.Tasks {
+		if int64(snap.Tasks[i].ID) == id {
+			task = &snap.Tasks[i]
+			break
+		}
+	}
+	if task == nil {
+		return "", errors.New("the task was not found")
+	}
+	now := c.nowTime()
+	if task.Source != data.SourceUser || task.Status.Terminal() ||
+		(task.DueAt != nil && data.DaysFrom(*task.DueAt, now) == 0) {
+		return "", errors.New("this task cannot be moved to today")
+	}
+	hour, minute := defaultDueHour, 0
+	before := ""
+	if task.DueAt != nil {
+		l := task.DueAt.In(now.Location())
+		hour, minute = l.Hour(), l.Minute()
+		before = task.DueAt.Format(time.RFC3339Nano)
+	}
+	y, mo, d := now.Date()
+	due := time.Date(y, mo, d, hour, minute, 0, 0, now.Location())
+	if _, err := c.real.UpdateTask(int(id), data.Patch{DueAt: data.TimePtr(due)}); err != nil {
+		return "", shortError(err)
+	}
+	return before, nil
+}
+
 // optionalTime parses an ISO 8601 date or datetime; "" and spaces mean no time.
 func optionalTime(raw string) (*time.Time, error) {
 	raw = strings.TrimSpace(raw)

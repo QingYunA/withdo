@@ -186,7 +186,7 @@ private fun SubtaskRail(
                     color = tokens.border,
                     start = Offset(0.5.dp.toPx(), 0f),
                     end = Offset(0.5.dp.toPx(), size.height),
-                    strokeWidth = 1.dp.toPx(),
+                    strokeWidth = Dims.hairline.toPx(),
                 )
             }
             .padding(start = 18.dp),
