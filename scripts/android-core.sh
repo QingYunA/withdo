@@ -4,6 +4,8 @@
 # Needs gomobile (already initialized), the Android SDK and NDK, and a JDK 17.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+# Without -trimpath every worktree path gets its own build cache entries and each new worktree recompiles everything.
+export GOFLAGS="${GOFLAGS:--trimpath}"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.2.12479018}"

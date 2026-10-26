@@ -15,6 +15,17 @@ M4d (2026-10-15) made every screen **one title, one input, one list**: what is n
 act appears on hover, in a right-click menu or in the inspector. The reference for it is
 `docs/design/mockups/v3.html` (rendered: `v3.png`); `docs/plans/m4d-restraint.md` is the plan.
 
+## Names in code
+
+Where the name in the UI and the name in code differ (grep for the code name, not the UI one):
+
+| UI | Code | Screens |
+|---|---|---|
+| Today / `今天` | `Mine`: `page.Mine`, `screenMine`, `NavMine()`, `app/views/mine.go` | `mine-*` |
+| Backlog / `待规划` | `domain.StatusBacklog`, message `statusBacklog` | |
+| In review | `domain.StatusReview` (`"review"`), message `statusReview` | |
+| No project | the Inbox: `data.PlaceInbox`, "Inbox" in `internal/domain` comments | |
+
 ## References and what we take from each
 
 | Reference | Take | Leave |
