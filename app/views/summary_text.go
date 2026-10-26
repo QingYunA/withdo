@@ -201,7 +201,7 @@ func (m *Main) bubbleBody(c *ui.Context, t *theme.Tokens, v *summaryView, para *
 // was finished since.
 func (m *Main) bubbleHeader(c *ui.Context, t *theme.Tokens, v *summaryView, para *paragraph, now time.Time) {
 	ui.Row(c.Key("summary-ai-head")).FillWidth().Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextTertiary, m.say.SummaryWritten(m.bubblePeriod(v.period, now))).Shrink(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, m.say.SummaryWritten(m.bubblePeriod(v.period, now))).Shrink(1).MinWidth(0).Ellipsis("…")
 		ui.Spacer(c)
 		if m.newSince(v, para, now) && !para.writing {
 			theme.Dot(c, t.Accent, 7).Shrink(0).Tooltip(m.say.SummaryRewriteNew())
@@ -248,7 +248,7 @@ func (m *Main) bubbleText(c *ui.Context, t *theme.Tokens, para *paragraph, now t
 		text, typing := para.shownText(now, reduce)
 		body(text, typing || para.writing)
 	case para.failed:
-		theme.Paragraph(c, theme.Body, t.TextTertiary, m.say.SummaryFailed(), 0).MinHeight(44)
+		theme.Paragraph(c, theme.Body, t.TextSecondary, m.say.SummaryFailed(), 0).MinHeight(44)
 	default:
 		body("", !reduce)
 	}

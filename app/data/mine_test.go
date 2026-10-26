@@ -51,10 +51,10 @@ func TestBuildMineSeedMatchesTheMockup(t *testing.T) {
 	if got := titles(n.Today); !equal(got, []string{"Reply to design feedback", "Decide on the activation policy"}) {
 		t.Errorf("today %q: the reminder that came due, then what is due in five hours", got)
 	}
-	if got := titles(n.Later); !equal(got, []string{"Book dentist", "Write the release notes", "Look into Liquid Glass for the sidebar"}) {
-		t.Errorf("later %q", got)
+	if got := titles(n.Next); !equal(got, []string{"Book dentist", "Write the release notes"}) {
+		t.Errorf("next %q: the undated task of a project is not on Home", got)
 	}
-	if n.Count() != 4 || n.Empty() || len(n.IDs()) != 4+3+len(n.Done) {
+	if n.Count() != 4 || n.Empty() || len(n.IDs()) != 4+2+len(n.Done) {
 		t.Errorf("count %d", n.Count())
 	}
 }
@@ -116,7 +116,7 @@ func TestSubtasksAreNeverTopLevelRows(t *testing.T) {
 	}
 	f.CreateTask(CreateTaskInput{Title: "my child", ParentID: IntPtr(parent.ID), Status: Doing})
 	m := mineOf(t, f)
-	if len(m.FromAgents)+len(m.Today)+len(m.Later)+len(m.Done) != 0 {
+	if len(m.FromAgents)+len(m.Today)+len(m.Next)+len(m.Done) != 0 {
 		t.Errorf("subtasks leaked into Mine: %+v", m)
 	}
 	a := buildAgentsOf(t, f)
@@ -142,8 +142,8 @@ func TestBuildMineEmptySectionsAndAllClear(t *testing.T) {
 	f := emptyDemo(t)
 	f.CreateTask(CreateTaskInput{Title: "Only mine"})
 	n := mineOf(t, f)
-	if len(n.FromAgents) != 0 || len(n.Today) != 0 || len(n.Later) != 1 {
-		t.Errorf("one undated user task gave %d/%d/%d", len(n.FromAgents), len(n.Today), len(n.Later))
+	if len(n.FromAgents) != 0 || len(n.Today) != 0 || n.NoDateTotal != 1 {
+		t.Errorf("one undated user task gave %d/%d/%d", len(n.FromAgents), len(n.Today), n.NoDateTotal)
 	}
 }
 
@@ -175,7 +175,7 @@ func TestBuildMineReviewWithoutPRAndMyBlockedTask(t *testing.T) {
 	}
 }
 
-func TestBuildMineTodayAndLaterLimitsAndHorizon(t *testing.T) {
+func TestBuildMineTodayAndNextHorizon(t *testing.T) {
 	now := fixedNow()
 	f := openDemo(t, func() time.Time { return now }, false)
 	for i := 0; i < 10; i++ {
@@ -185,22 +185,24 @@ func TestBuildMineTodayAndLaterLimitsAndHorizon(t *testing.T) {
 	f.UpdateTask(far.ID, Patch{DueAt: TimePtr(now.Add(30 * 24 * time.Hour))})
 	over, _ := f.CreateTask(CreateTaskInput{Title: "Overdue"})
 	f.UpdateTask(over.ID, Patch{DueAt: TimePtr(now.Add(-26 * time.Hour))})
-	soon, _ := f.CreateTask(CreateTaskInput{Title: "Next week"})
+	soon, _ := f.CreateTask(CreateTaskInput{Title: "In three days"})
 	f.UpdateTask(soon.ID, Patch{DueAt: TimePtr(now.Add(3 * 24 * time.Hour))})
-	doing, _ := f.CreateTask(CreateTaskInput{Title: "In progress", Status: Doing})
+	f.CreateTask(CreateTaskInput{Title: "In progress", Status: Doing})
 	n := mineOf(t, f)
 	if got := titles(n.Today); !equal(got, []string{"Overdue", "In progress"}) {
 		t.Errorf("today %q: overdue first, then what I am doing", got)
 	}
-	if n.Later[0].Title != "Next week" || len(n.Later) != 1+MaxUndated || n.MoreLater != 3 {
-		t.Errorf("%d later rows (first %q), %d more", len(n.Later), n.Later[0].Title, n.MoreLater)
+	if got := titles(n.Next); !equal(got, []string{"In three days"}) {
+		t.Errorf("next %q: only what is dated within the week, no undated task", got)
 	}
-	for _, it := range append(n.Today, n.Later...) {
+	if n.NoDateTotal != 10 {
+		t.Errorf("%d in No date, want the ten undated tasks with no cap", n.NoDateTotal)
+	}
+	for _, it := range append(n.Today, n.Next...) {
 		if it.Title == "Far away" {
-			t.Error("a task due in a month is on Mine")
+			t.Error("a task due in a month is on Home")
 		}
 	}
-	_ = doing
 }
 
 func TestBuildMineMyReminderDueNowIsTodayNotFromAgents(t *testing.T) {
@@ -231,7 +233,7 @@ func TestBuildMineDoneTodayListsWhatAnyoneFinishedSinceMidnightNewestFirst(t *te
 	if got := titles(n.Done); !equal(got, []string{"Port the MCP server", "Send the packaging answer"}) {
 		t.Errorf("done today %q: want what finished at 1:50 PM and 11:30 AM; yesterday's and older stay out", got)
 	}
-	if n.MoreDone != 0 || n.Count() != 4 || len(n.IDs()) != 4+3+2 {
+	if n.MoreDone != 0 || n.Count() != 4 || len(n.IDs()) != 4+2+2 {
 		t.Errorf("more %d, count %d (done tasks are no part of it), ids %d (the rows drawn)", n.MoreDone, n.Count(), len(n.IDs()))
 	}
 }
@@ -308,38 +310,44 @@ func TestCompletedBy(t *testing.T) {
 	}
 }
 
-func TestBuildMineAllLaterLiftsTheCapOnUndatedTasks(t *testing.T) {
+func TestBuildMineNextIsMyDatedTasksWithinAWeekByDateProjectOnesIncluded(t *testing.T) {
 	f := emptyDemo(t)
-	for i := 0; i < MaxUndated+3; i++ {
-		f.CreateTask(CreateTaskInput{Title: "Idea " + itoaT(i)})
+	p := f.SeedProject("scratch", "me/scratch")
+	now := f.Now()
+	at := func(days int) *time.Time { return TimePtr(now.Add(time.Duration(days) * 24 * time.Hour)) }
+	f.CreateTask(CreateTaskInput{Title: "Edge of the week", DueAt: at(YoursHorizonDay)})
+	f.CreateTask(CreateTaskInput{Title: "Tomorrow in a project", DueAt: at(1), ProjectID: IntPtr(p.ID)})
+	f.CreateTask(CreateTaskInput{Title: "Beyond", DueAt: at(YoursHorizonDay + 1)})
+	f.CreateTask(CreateTaskInput{Title: "An agent's", DueAt: at(2), Source: SourceAgent})
+	n := mineOf(t, f)
+	if got := titles(n.Next); !equal(got, []string{"Tomorrow in a project", "Edge of the week"}) {
+		t.Errorf("next %q: by date, the horizon day counts, a project's task counts, an agent's does not", got)
 	}
-	in := mineInputOf(t, f)
-	if n := BuildMine(in); len(n.Later) != MaxUndated || n.MoreLater != 3 {
-		t.Fatalf("%d later rows and %d more, want the cap", len(n.Later), n.MoreLater)
-	}
-	in.AllLater = true
-	if n := BuildMine(in); len(n.Later) != MaxUndated+3 || n.MoreLater != 0 {
-		t.Errorf("%d later rows and %d more: no task of mine may be out of reach", len(n.Later), n.MoreLater)
+	if n.NoDateTotal != 0 || len(n.IDs()) != 2 {
+		t.Errorf("no date %d, ids %v: a task dated beyond the week is on the Calendar only", n.NoDateTotal, n.IDs())
 	}
 }
 
-func TestBuildMineKeepsTasksWithNoProjectParkedInTheBacklogReachable(t *testing.T) {
+func TestBuildMineNoDateFoldHoldsMyUndatedTasksWithNoProjectBacklogIncluded(t *testing.T) {
 	f := emptyDemo(t)
 	p := f.SeedProject("scratch", "me/scratch")
+	f.CreateTask(CreateTaskInput{Title: "Idea"})
+	f.CreateTask(CreateTaskInput{Title: "Urgent idea", Priority: P0})
 	f.CreateTask(CreateTaskInput{Title: "Parked idea", Status: Backlog})
-	f.CreateTask(CreateTaskInput{Title: "Parked by an agent", Status: Backlog, Source: SourceAgent})      // the Agents page folds it
-	f.CreateTask(CreateTaskInput{Title: "Parked in a project", Status: Backlog, ProjectID: IntPtr(p.ID)}) // its project's page folds it
+	f.CreateTask(CreateTaskInput{Title: "Undated in a project", ProjectID: IntPtr(p.ID)})
+	f.CreateTask(CreateTaskInput{Title: "Parked in a project", Status: Backlog, ProjectID: IntPtr(p.ID)})
+	f.CreateTask(CreateTaskInput{Title: "Parked by an agent", Status: Backlog, Source: SourceAgent}) // the Agents page folds it
 	in := mineInputOf(t, f)
 	n := BuildMine(in)
-	if n.ParkedTotal != 1 || len(n.Parked) != 0 || n.Empty() != true {
-		t.Errorf("parked %d (%d rows drawn), empty %v: one is parked and the fold is closed", n.ParkedTotal, len(n.Parked), n.Empty())
+	if n.NoDateTotal != 3 || len(n.NoDate) != 0 || n.Empty() {
+		t.Errorf("no date %d (%d rows drawn), empty %v: three are undated with no project and the fold is closed", n.NoDateTotal, len(n.NoDate), n.Empty())
 	}
-	in.ParkedOpen = true
+	in.NoDateOpen = true
 	n = BuildMine(in)
-	if got := titles(n.Parked); !equal(got, []string{"Parked idea"}) {
-		t.Errorf("parked rows %q", got)
+	if got := titles(n.NoDate); !equal(got, []string{"Urgent idea", "Parked idea", "Idea"}) {
+		t.Errorf("no date rows %q, want priority first, then the newest", got)
 	}
-	if len(n.IDs()) != 1 {
+	if len(n.IDs()) != 3 {
 		t.Errorf("ids %v: the open fold's rows are walked by the keys", n.IDs())
 	}
 }

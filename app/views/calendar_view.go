@@ -52,7 +52,7 @@ func (m *Main) monthGrid(c *ui.Context, t *theme.Tokens, days []data.CalDay) {
 	ui.Grid(c.Key("calendar-weekdays")).Columns(7).Gap(1).Padding(0, 1).Height(theme.CalendarHeadLine).Shrink(0).Children(func() {
 		for _, d := range days[:7] {
 			ui.Row(c).AlignItems(ui.Center).Padding(0, theme.CalendarPadX+2).Children(func() {
-				theme.Text(c, theme.Meta, t.TextTertiary, m.clock.Weekday(d.Date))
+				theme.Text(c, theme.Meta, t.TextSecondary, m.clock.Weekday(d.Date))
 			})
 		}
 	})
@@ -176,7 +176,7 @@ func (m *Main) dayNumber(c *ui.Context, t *theme.Tokens, d data.CalDay) {
 	case d.InMonth:
 		row.Padding(0, 4).Children(func() { theme.Text(c, theme.Meta, t.TextSecondary, label) })
 	default:
-		row.Padding(0, 4).Children(func() { theme.Text(c, theme.Meta, t.TextTertiary, label) })
+		row.Padding(0, 4).Children(func() { theme.Text(c, theme.Meta, t.TextSecondary, label) })
 	}
 }
 
@@ -251,7 +251,7 @@ func (m *Main) reminderTime(c *ui.Context, t *theme.Tokens, it data.CalItem, wid
 	w, _ := c.MeasureText(0, ui.Span{Text: at, Size: theme.Meta.Size, Weight: theme.Meta.Weight})
 	room := width - 2*calendarChipPad - theme.AvatarSmall - 5
 	if room-w-5 >= minTitle {
-		theme.Text(c, theme.Meta, t.TextTertiary, at).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, at).Shrink(0)
 	}
 }
 

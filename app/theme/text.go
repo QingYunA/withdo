@@ -18,9 +18,9 @@ type Style struct {
 // The type scale (M4c: one step larger than the first version). A view uses at most three of
 // these.
 var (
-	Title         = Style{Size: 26, Line: 32, Weight: 700}
+	Title         = Style{Size: 24, Line: 32, Weight: 600}
 	Heading       = Style{Size: 21, Line: 28, Weight: 700} // the title of the task in the inspector
-	Input         = Style{Size: 17, Line: 25, Weight: 400}
+	Input         = Style{Size: 17, Line: 24, Weight: 400}
 	Body          = Style{Size: 15, Line: 22, Weight: 400}
 	BodyStrong    = Style{Size: 15, Line: 22, Weight: 500}
 	BodyBold      = Style{Size: 15, Line: 22, Weight: 600} // a project's name on Recent changes

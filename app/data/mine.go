@@ -21,10 +21,9 @@ const (
 // Limits of the Mine and Agents screens.
 const (
 	LiveWithin      = 10 * time.Minute // an agent report this fresh draws the live dot
-	MaxUndated      = 7                // undated tasks of mine shown in Later before "Show all"
-	MaxDoneToday    = 5                // rows of Done today before "Show all in Completed"
+	MaxDoneToday    = 5                // rows of Done today before "View all" (the Summary)
 	finishWindow    = 5 * time.Second  // a report this close to a completion is what closed the task
-	YoursHorizonDay = 7                // dated tasks of mine appear in Later when due within this many days
+	YoursHorizonDay = 7                // dated tasks of mine appear in Next when due within this many days
 )
 
 // Item is one row of the Mine or the Agents screen.
@@ -46,20 +45,13 @@ type Item struct {
 type Mine struct {
 	FromAgents []Item // what agents handed over: stuck, done and waiting for a look, a pull request, a reminder
 	Today      []Item // mine, due or reminded today (or overdue), and what I am doing
-	Later      []Item // mine, due in the next week, then undated by priority
-	// MoreLater counts undated tasks of mine that did not fit; the screen offers "Show all" for them.
-	MoreLater int
-	// After are my tasks with no project that are due more than YoursHorizonDay days ahead: no project
-	// page holds them and Later stops at the horizon, so Today folds them (the Calendar has them
-	// too). AfterTotal is how many there are; After holds the rows, by date, when the fold is open
-	// (see MineInput.AfterOpen).
-	After      []Item
-	AfterTotal int
-	// Parked are the tasks parked in the backlog that have no project: no project page folds them,
-	// so Today does, and nothing is unreachable now that there is no Inbox. ParkedTotal is how many
-	// there are; Parked holds the rows when the fold is open (see MineInput.ParkedOpen).
-	Parked      []Item
-	ParkedTotal int
+	Next       []Item // mine, dated within the next week (YoursHorizonDay), by date
+	// NoDate are my undated tasks that have no project, backlog ones included: no project page holds
+	// them. NoDateTotal is how many there are; NoDate holds the rows, by priority, when the fold is
+	// open (see MineInput.NoDateOpen). Undated tasks of a project stay on the project's page, and
+	// tasks dated beyond the week on the Calendar.
+	NoDate      []Item
+	NoDateTotal int
 	// Done is what was finished since local midnight, by agents and by me, newest first, at most
 	// MaxDoneToday; MoreDone counts the rest. Since is when it was finished, Summary what the
 	// report that closed it said. It is no part of Count or Empty: it is a record, not a to-do.
@@ -68,11 +60,11 @@ type Mine struct {
 }
 
 // Count is what the sidebar shows beside Mine when nothing is unseen: the rows that ask for
-// attention now, handed over or due today. Later waits.
+// attention now, handed over or due today. Next waits.
 func (m Mine) Count() int { return len(m.FromAgents) + len(m.Today) }
 
 // Empty reports whether the screen shows "All clear".
-func (m Mine) Empty() bool { return len(m.FromAgents)+len(m.Today)+len(m.Later) == 0 }
+func (m Mine) Empty() bool { return len(m.FromAgents)+len(m.Today)+len(m.Next)+m.NoDateTotal == 0 }
 
 // WithoutDismissed is m without the handed-over rows the user put aside: a row stays away until its
 // task is handed over again (a newer Since). The other sections are not the agents' to dismiss.
@@ -81,12 +73,11 @@ func (m Mine) WithoutDismissed(d Seen) Mine {
 	return m
 }
 
-// Only is m with the rows of the tasks keep rejects left out, for the counts of a slice. MoreLater
+// Only is m with the rows of the tasks keep rejects left out, for the counts of a slice. NoDateTotal
 // and MoreDone stay as they are: build the slice itself (MineInput.Keep) to have them right.
 func (m Mine) Only(keep func(Task) bool) Mine {
-	m.FromAgents, m.Today, m.Later, m.Done = only(m.FromAgents, keep), only(m.Today, keep), only(m.Later, keep), only(m.Done, keep)
-	m.Parked = only(m.Parked, keep)
-	m.After = only(m.After, keep)
+	m.FromAgents, m.Today, m.Next, m.Done = only(m.FromAgents, keep), only(m.Today, keep), only(m.Next, keep), only(m.Done, keep)
+	m.NoDate = only(m.NoDate, keep)
 	return m
 }
 
@@ -102,8 +93,8 @@ func only(items []Item, keep func(Task) bool) []Item {
 
 // IDs lists the task ids in the order the rows are drawn.
 func (m Mine) IDs() []int {
-	ids := make([]int, 0, len(m.FromAgents)+len(m.Today)+len(m.Later)+len(m.Done)+len(m.Parked)+len(m.After))
-	for _, section := range [][]Item{m.FromAgents, m.Today, m.Later, m.After, m.Done, m.Parked} {
+	ids := make([]int, 0, len(m.FromAgents)+len(m.Today)+len(m.Next)+len(m.NoDate)+len(m.Done))
+	for _, section := range [][]Item{m.FromAgents, m.Today, m.Next, m.NoDate, m.Done} {
 		for _, it := range section {
 			ids = append(ids, it.ID)
 		}
@@ -190,10 +181,8 @@ type MineInput struct {
 	// Keep, when set, limits the screen to the top-level tasks it accepts; their subtasks go where
 	// they go. The screen is built from those tasks alone, so its counts and overflow are its own.
 	Keep func(Task) bool
-	// AllLater lifts the cap on the undated tasks of Later; ParkedOpen fills Mine.Parked.
-	AllLater, ParkedOpen bool
-	// AfterOpen fills Mine.After; BacklogOpen fills AgentsScreen.Backlog.
-	AfterOpen, BacklogOpen bool
+	// NoDateOpen fills Mine.NoDate; BacklogOpen fills AgentsScreen.Backlog.
+	NoDateOpen, BacklogOpen bool
 }
 
 // BuildMine sorts tasks into the sections of the Mine screen. Subtasks never get a row of their
@@ -215,8 +204,9 @@ func BuildMine(in MineInput) Mine {
 		}
 	}
 	sortHanded(out.FromAgents)
-	out.Today, out.Later, out.MoreLater, out.After, out.AfterTotal = b.mine(mine)
-	out.Parked, out.ParkedTotal = b.parked(parked)
+	var undated []Item
+	out.Today, out.Next, undated = b.mine(mine)
+	out.NoDate, out.NoDateTotal = b.noDate(undated, parked)
 	out.Done, out.MoreDone = b.doneToday(func(Task) bool { return true })
 	return out
 }
@@ -413,13 +403,12 @@ func NextMoment(t Task) (at time.Time, ok bool) {
 	return at, ok
 }
 
-// mine splits my tasks into Today, Later and the fold After. Today is what I am doing and what is due or reminded
-// today or earlier, dated ones first. Later is the dated ones of the next week, then the undated
-// by priority, at most MaxUndated of them; more says how many did not fit. Tasks due further away
-// have their project's page, and the Calendar; the ones with no project are the fold after, by date
-// (afterTotal is how many, the rows in after are kept only when the fold is open).
-func (b nowBuilder) mine(tasks []Task) (today, later []Item, more int, after []Item, afterTotal int) {
-	var todayDated, todayDoing, laterDated, undated, far []Item
+// mine splits my tasks into Today, Next and the undated ones that have no project. Today is what I am
+// doing and what is due or reminded today or earlier, dated ones first. Next is the dated ones of
+// the next week, by date. A task dated further away is on the Calendar, and an undated one that has a
+// project on its project's page; neither is on Home.
+func (b nowBuilder) mine(tasks []Task) (today, next, undated []Item) {
+	var todayDated, todayDoing, nextDated []Item
 	for _, t := range tasks {
 		it := b.item(t)
 		doing := t.Status != Todo
@@ -433,48 +422,42 @@ func (b nowBuilder) mine(tasks []Task) (today, later []Item, more int, after []I
 		case doing:
 			todayDoing = append(todayDoing, it)
 		case !ok:
-			undated = append(undated, it)
+			if t.ProjectID == nil {
+				undated = append(undated, it)
+			}
 		case days <= YoursHorizonDay:
-			laterDated = append(laterDated, it)
-		case t.ProjectID == nil:
-			far = append(far, it)
+			nextDated = append(nextDated, it)
 		}
 	}
 	byMoment := func(s []Item) {
 		sort.SliceStable(s, func(i, j int) bool { return s[i].Since.Before(s[j].Since) })
 	}
-	byPriority := func(s []Item) {
-		sort.SliceStable(s, func(i, j int) bool {
-			if s[i].Priority != s[j].Priority {
-				return s[i].Priority < s[j].Priority
-			}
-			return s[i].ID > s[j].ID
-		})
-	}
 	byMoment(todayDated)
-	byMoment(laterDated)
-	byMoment(far)
+	byMoment(nextDated)
 	byPriority(todayDoing)
-	byPriority(undated)
-	if len(undated) > MaxUndated && !b.AllLater {
-		more, undated = len(undated)-MaxUndated, undated[:MaxUndated]
-	}
-	afterTotal = len(far)
-	if b.AfterOpen {
-		after = far
-	}
-	return append(todayDated, todayDoing...), append(laterDated, undated...), more, after, afterTotal
+	return append(todayDated, todayDoing...), nextDated, undated
 }
 
-// parked sorts the backlog tasks that have no project, newest first; the rows are kept only when
-// the fold is open.
-func (b nowBuilder) parked(tasks []Task) (rows []Item, total int) {
-	for _, t := range tasks {
+// byPriority sorts the most pressing first, the newest first among equals.
+func byPriority(s []Item) {
+	sort.SliceStable(s, func(i, j int) bool {
+		if s[i].Priority != s[j].Priority {
+			return s[i].Priority < s[j].Priority
+		}
+		return s[i].ID > s[j].ID
+	})
+}
+
+// noDate is the fold of my tasks with no date and no project: the undated ones and those parked in
+// the backlog, by priority. The rows are kept only when the fold is open.
+func (b nowBuilder) noDate(undated []Item, parked []Task) (rows []Item, total int) {
+	rows = undated
+	for _, t := range parked {
 		rows = append(rows, b.item(t))
 	}
-	sort.SliceStable(rows, func(i, j int) bool { return rows[i].ID > rows[j].ID })
+	byPriority(rows)
 	total = len(rows)
-	if !b.ParkedOpen {
+	if !b.NoDateOpen {
 		rows = nil
 	}
 	return rows, total

@@ -31,11 +31,11 @@ func TestTheBulkBarAppearsWithTwoRowsSelectedAndLeavesWithOne(t *testing.T) {
 }
 
 func TestTheBarIsUpWithOneRowInSelectMode(t *testing.T) {
-	tt, _, _ := newMainTester(t, 1100)
+	tt, _, _ := projectTester(t, 1)
 	if err := tt.Click("Select"); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.Click("Book dentist"); err != nil {
+	if err := tt.Click("Write the release notes"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()

@@ -70,10 +70,29 @@ func (m *Main) actionButtons(c *ui.Context, t *theme.Tokens, id int, actions []r
 		if a.accepts {
 			stamp = ph.stamp
 		}
-		if stampButton(c, t, "action-"+itoa(i)+"-"+itoa(id), a.text, a.label, stamp, a.icon).Clicked() {
+		key := "action-" + itoa(i) + "-" + itoa(id)
+		if m.inPanel && i > 0 && stamp < 0 { // a card has one tinted button; the others are words
+			if quietButton(c, t, key, a.text, a.label).Clicked() {
+				a.run()
+			}
+			continue
+		}
+		if stampButton(c, t, key, a.text, a.label, stamp, a.icon).Clicked() {
 			a.run()
 		}
 	}
+}
+
+// quietButton is a second action of a card: the words in slate 11, darker under the pointer.
+func quietButton(c *ui.Context, t *theme.Tokens, key, text, label string) ui.Element {
+	btn := ui.ButtonBase(c.Key(key)).Padding(3, 6).Radius(theme.RadiusControl).Shrink(0).Label(label).Cursor(ui.CursorPointer)
+	ink := t.TextSecondary
+	if btn.Hovered() {
+		ink = t.Text
+	}
+	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
+	btn.Children(func() { theme.Text(c, theme.MetaStrong, ink, text) })
+	return btn
 }
 
 // agentRight is the right end of an agent's row in a list or a column: the buttons of its next step

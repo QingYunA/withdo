@@ -37,7 +37,7 @@ func categoryNamed(t *testing.T, app *App, name string) data.Category {
 func openNewCategory(t *testing.T, tt *ui.Tester) {
 	t.Helper()
 	tt.Frame()
-	rightClick(t, tt, "Look into Liquid Glass for the sidebar")
+	rightClick(t, tt, "Write the release notes")
 	click(t, tt, "Category")
 	click(t, tt, "New category…")
 	tt.Frame()
@@ -190,7 +190,7 @@ func TestNewCategoryFromTheTaskMenuIsGivenToTheTask(t *testing.T) {
 func TestTheSheetSpeaksChinese(t *testing.T) {
 	tt, _, _ := newChineseTester(t, 1100)
 	tt.Frame()
-	rightClick(t, tt, "Look into Liquid Glass for the sidebar")
+	rightClick(t, tt, "Write the release notes")
 	click(t, tt, "分类")
 	click(t, tt, "新建类别…")
 	tt.Frame()

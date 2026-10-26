@@ -29,16 +29,16 @@ func newChineseTester(t *testing.T, width int) (*ui.Tester, *Main, *App) {
 func TestChineseMineScreen(t *testing.T) {
 	tt, _, _ := newChineseTester(t, inlineWidth)
 	has(t, tt,
-		"10月14日星期三",
-		"Agent 交过来的", "今天", "之后",
-		"Claude Code 卡住了：“Needs a decision on the activation policy”",
-		"下午2:30", "PR #12 等你审查",
-		"打开 PR", "回答", "收下",
+		"10月14日 星期三",
+		"Agent 交过来的", "今天", "接下来",
+		"等你回复：Needs a decision on the activation policy",
+		"下午2:30", "PR #12 待审查",
+		"打开 PR", "回复", "标为完成",
 		"3天前", "25分钟前",
 		"明天", "周五",
 		"日历", "项目", "设置",
 	)
-	if !above(t, tt, "Agent 交过来的", "之后") {
+	if !above(t, tt, "Agent 交过来的", "接下来") {
 		t.Error("sections are out of order")
 	}
 	hasNot(t, tt, "From your agents", "Settings", "Inbox", "收件箱", "我的")
@@ -46,12 +46,12 @@ func TestChineseMineScreen(t *testing.T) {
 
 func TestChineseSectionHeadersAreNotSpacedOrCapitalized(t *testing.T) {
 	tt, _, _ := newChineseTester(t, 1100)
-	r, ok := tt.Find("之后")
+	r, ok := tt.Find("接下来")
 	if !ok {
 		t.Fatalf("no header in %q", tt.Texts())
 	}
-	// Letter spacing on each of 2 characters would add to the 13 pt glyphs' width.
-	if w := r.W; w > 2*13+0.5 {
+	// Letter spacing on each of 3 characters would add to the 13 pt glyphs' width.
+	if w := r.W; w > 3*13+0.5 {
 		t.Errorf("the header is %v pt wide: Han characters were spaced", w)
 	}
 }
@@ -61,7 +61,7 @@ func TestChineseAllClearAndAsk(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	inChinese(tt)
 	has(t, tt, "现在没有要你处理的事", "Agent 们在干活，有动静会出现在这里", "如何连接",
-		"告诉我任何事，我来变成任务", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
+		"明天 9 点给房东打电话，再让 Claude 修一下登录的 bug", "Agent 从代码仓库汇报进度后，项目会出现在这里。")
 }
 
 func TestLanguageFollowsTheWindowLive(t *testing.T) {
@@ -196,10 +196,10 @@ func TestChineseNoModelSetUpLineAndInboxNotice(t *testing.T) {
 	r.tt.Type("x")
 	r.tt.Key(0, ui.KeyBackspace)
 	r.ask("浇花")
-	has(t, r.tt, "已添加到今天")
+	has(t, r.tt, "已添加到没定时间")
 	r.now = r.now.Add(2 * time.Second)
 	r.tt.Frame()
-	hasNot(t, r.tt, "已添加到今天")
+	hasNot(t, r.tt, "已添加到没定时间")
 }
 
 func TestChineseComposerPlaceholders(t *testing.T) {
@@ -207,6 +207,6 @@ func TestChineseComposerPlaceholders(t *testing.T) {
 	inChinese(r.tt)
 	r.m.OpenTask(5)
 	r.tt.Frame()
-	has(t, r.tt, "告诉我任何事，我来变成任务", "说说要怎么改这个任务")
+	has(t, r.tt, "明天 9 点给房东打电话，再让 Claude 修一下登录的 bug", "说说要怎么改这个任务")
 	hasNot(t, r.tt, "助手 ·")
 }

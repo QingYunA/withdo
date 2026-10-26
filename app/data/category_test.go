@@ -76,10 +76,11 @@ func categoryTasks(t *testing.T) (MineInput, func(Task) int) {
 	f := emptyDemo(t)
 	f.SeedProject("app", "me/app")
 	f.SeedProject("Home", "")
-	f.CreateTask(CreateTaskInput{Title: "work task", Category: workID})
-	f.CreateTask(CreateTaskInput{Title: "life task", Category: lifeID})
-	f.CreateTask(CreateTaskInput{Title: "repo task", ProjectID: IntPtr(1)})
-	f.CreateTask(CreateTaskInput{Title: "loose task", ProjectID: IntPtr(2)})
+	tomorrow := TimePtr(f.Now().Add(24 * time.Hour))
+	f.CreateTask(CreateTaskInput{Title: "work task", Category: workID, DueAt: tomorrow})
+	f.CreateTask(CreateTaskInput{Title: "life task", Category: lifeID, DueAt: tomorrow})
+	f.CreateTask(CreateTaskInput{Title: "repo task", ProjectID: IntPtr(1), DueAt: tomorrow})
+	f.CreateTask(CreateTaskInput{Title: "loose task", ProjectID: IntPtr(2), DueAt: tomorrow})
 	of := func(task Task) int { return CategoryOf(task, func(p *int) bool { return p != nil && *p == 1 }, workID) }
 	return mineInputOf(t, f), of
 }
@@ -89,7 +90,7 @@ func TestBuildMineKeepsOnlyTheTasksOfASlice(t *testing.T) {
 	slice := func(c int) []string {
 		in := in
 		in.Keep = func(task Task) bool { return of(task) == c }
-		return titles(BuildMine(in).Later)
+		return titles(BuildMine(in).Next)
 	}
 	if got := slice(workID); !equal(got, []string{"repo task", "work task"}) {
 		t.Errorf("work %q: its own category, and a repository's project", got)
@@ -100,22 +101,21 @@ func TestBuildMineKeepsOnlyTheTasksOfASlice(t *testing.T) {
 	if got := slice(0); !equal(got, []string{"loose task"}) {
 		t.Errorf("unsorted %q", got)
 	}
-	if got := len(BuildMine(in).Later); got != 4 {
+	if got := len(BuildMine(in).Next); got != 4 {
 		t.Errorf("without a filter %d rows, want all 4", got)
 	}
 }
 
-func TestBuildMineSliceCountsItsOwnLaterOverflow(t *testing.T) {
+func TestBuildMineSliceCountsItsOwnNoDateFold(t *testing.T) {
 	f := emptyDemo(t)
-	for i := 0; i < MaxUndated+3; i++ {
+	for i := 0; i < 10; i++ {
 		f.CreateTask(CreateTaskInput{Title: "work " + itoaT(i), Category: workID})
 	}
 	f.CreateTask(CreateTaskInput{Title: "life", Category: lifeID})
 	in := mineInputOf(t, f)
 	in.Keep = func(task Task) bool { return task.CategoryID == lifeID }
-	m := BuildMine(in)
-	if len(m.Later) != 1 || m.MoreLater != 0 {
-		t.Errorf("life slice shows %d rows and %d more: the work tasks must not crowd it", len(m.Later), m.MoreLater)
+	if m := BuildMine(in); m.NoDateTotal != 1 {
+		t.Errorf("life slice counts %d in No date: the work tasks must not crowd it", m.NoDateTotal)
 	}
 }
 
@@ -137,10 +137,10 @@ func TestMineOnlyFiltersTheSections(t *testing.T) {
 	f := emptyDemo(t)
 	f.CreateTask(CreateTaskInput{Title: "w", Category: workID, Status: Doing})
 	f.CreateTask(CreateTaskInput{Title: "l", Category: lifeID, Status: Doing})
-	f.CreateTask(CreateTaskInput{Title: "later", Category: lifeID})
+	f.CreateTask(CreateTaskInput{Title: "later", Category: lifeID, DueAt: TimePtr(f.Now().Add(24 * time.Hour))})
 	m := mineOf(t, f)
 	life := m.Only(func(task Task) bool { return task.CategoryID == lifeID })
-	if got := titles(life.Today); !equal(got, []string{"l"}) || len(life.Later) != 1 || life.Count() != 1 || life.Empty() {
+	if got := titles(life.Today); !equal(got, []string{"l"}) || len(life.Next) != 1 || life.Count() != 1 || life.Empty() {
 		t.Errorf("life %+v", life)
 	}
 	none := m.Only(func(task Task) bool { return task.CategoryID == 0 })

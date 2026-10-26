@@ -157,7 +157,7 @@ func TestAgentWordsIgnoreGitHubReports(t *testing.T) {
 	store.SeedReport(data.Report{TaskID: 3, Agent: data.GitHubAgent, Summary: "PR #14 was closed without merging", CreatedAt: fixedNow()})
 	app.Refresh()
 	tt, _, _ := newTesterFor(app, 1100)
-	has(t, tt, "Claude Code is stuck: “Needs a decision on the activation policy”")
+	has(t, tt, "Waiting for your reply: “Needs a decision on the activation policy”")
 	hasNot(t, tt, "PR #14 was closed without merging")
 }
 

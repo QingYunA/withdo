@@ -17,7 +17,7 @@ const sidebarRowGap float32 = 10
 func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 	side := ui.Column(c).Width(theme.SidebarWidth).Shrink(0)
 	if !vibrant {
-		side.Background(t.BgSubtle)
+		side.Background(t.BgSidebar)
 	}
 	side.Children(func() {
 		ui.Box(c).Height(titleBarHeight).Shrink(0).DragWindow()
@@ -31,7 +31,7 @@ func (m *Main) sidebar(c *ui.Context, t *theme.Tokens, vibrant bool) {
 		m.projectsHeader(c, t)
 		m.projectRows(c, t)
 		if len(m.app.snap.projects) == 0 {
-			theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.NavNoProjects(), 0).Padding(0, 18)
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, m.say.NavNoProjects(), 0).Padding(0, 18)
 		}
 		ui.Spacer(c)
 		m.settingsRow(c, t)
@@ -215,7 +215,7 @@ func (m *Main) projectMenu(mn *ui.Menu, p data.Project) {
 // projectsHeader is PROJECTS with a quiet plus that opens the New project sheet.
 func (m *Main) projectsHeader(c *ui.Context, t *theme.Tokens) {
 	ui.Row(c).Padding(12, 12, 2, 18).Shrink(0).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Section, t.TextTertiary, m.say.NavProjects())
+		theme.Text(c, theme.Section, t.TextSecondary, m.say.NavProjects())
 		ui.Spacer(c)
 		tip := m.say.ManageNewProjectTip()
 		btn := ui.ButtonBase(c.Key("new-project")).Size(theme.HitTarget, theme.HitTarget).Shrink(0).Center().
@@ -240,7 +240,7 @@ func (m *Main) settingsRow(c *ui.Context, t *theme.Tokens) {
 			ui.Icon(c, theme.IconCloud).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Blocked()).
 				Shrink(0).Label(m.say.SettingsSyncAlert())
 		}
-		theme.Text(c, theme.Meta, t.TextTertiary, keyHint("⌘,")).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, keyHint("⌘,")).Shrink(0)
 	})
 	if row.Clicked() {
 		if alert {
@@ -274,6 +274,6 @@ func sidebarLabel(c *ui.Context, t *theme.Tokens, text string, selected bool) {
 
 func sidebarCount(c *ui.Context, t *theme.Tokens, n int) {
 	if n > 0 {
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n)).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(n)).Shrink(0)
 	}
 }

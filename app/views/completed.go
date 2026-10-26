@@ -70,7 +70,7 @@ func (m *Main) completedScreen(c *ui.Context, t *theme.Tokens) {
 		label := m.clock.Day(d.Day, now)
 		ui.Row(c.Key("completed-day-"+label)).Margin(20, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			theme.Text(c, theme.BodyStrong, t.Text, label)
-			theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(d.Tasks)))
+			theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(d.Tasks)))
 		})
 		for _, task := range d.Tasks {
 			m.completedRow(c, t, task)

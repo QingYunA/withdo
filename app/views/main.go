@@ -93,13 +93,15 @@ type Main struct {
 	// request and the reply are dealt with, closes the panel. Nil in the window.
 	closePanel func()
 
-	cmp     [2]composer                  // the composer of the page and the inspector's, by surface
-	convo   convo                        // the answer under the composer that sent the last request
-	voice   voiceState                   // the microphone button: recording, transcribing, or the line about a failure
-	marks   map[int]map[string]time.Time // fields the assistant set, by task and row key
-	filed   []data.Receipt               // tasks the assistant sorted by itself, waiting for their toast
-	listRef ui.Handle                    // the page, so the arrow keys and Space reach it
-	queue   queued                       // what a text input's last key asked of the next frame
+	cmp      [2]composer                  // the composer of the page and the inspector's, by surface
+	convo    convo                        // the answer under the composer that sent the last request
+	voice    voiceState                   // the microphone button: recording, transcribing, or the line about a failure
+	marks    map[int]map[string]time.Time // fields the assistant set, by task and row key
+	homeLine bool                         // a line under the Home composer is being built (see lineEdge)
+	fresh    map[int]time.Time            // tasks the input just made, for the tint of their rows
+	filed    []data.Receipt               // tasks the assistant sorted by itself, waiting for their toast
+	listRef  ui.Handle                    // the page, so the arrow keys and Space reach it
+	queue    queued                       // what a text input's last key asked of the next frame
 
 	pop      popMenu     // the task menu
 	openFail openFailure // the last failure to open an agent's work, drawn under its row

@@ -141,9 +141,6 @@ func TestTheInspectorSaysWhoWroteTheTask(t *testing.T) {
 	if !paintedIn(tt.Image(), 1100, ui.Rect{X: from.X + labelWidth - 28, Y: from.Y - 8, W: 30, H: from.H + 16}, claudeColor, 6) {
 		t.Error("no Claude avatar before the name in the From row")
 	}
-	m.OpenTask(5) // mine
-	tt.Frame()
-	has(t, tt, "From", "You")
 }
 
 func TestEachReportOfTheActivityStartsWithItsAgentsAvatar(t *testing.T) {

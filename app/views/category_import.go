@@ -111,7 +111,7 @@ func (m *Main) categoryImport(c *ui.Context, t *theme.Tokens, s *categorySheet) 
 // importThumb is the picture as it was, 144 pt square on a light well, with the file's name under it.
 func (m *Main) importThumb(c *ui.Context, t *theme.Tokens, imp *importing) {
 	ui.Column(c).Gap(6).Width(importSide).Shrink(0).Children(func() {
-		ui.Box(c.Key("import-source")).Size(importSide, importSide).Radius(6).Background(t.BgSubtle).Border(1, t.Border).Role(ui.RoleImage).
+		ui.Box(c.Key("import-source")).Size(importSide, importSide).Radius(6).Background(t.BgSubtle).Border(theme.Hairline, t.Border).Role(ui.RoleImage).
 			Label(imp.src.Name).Children(func() {
 			ui.Image(c, imp.thumb).Size(importSide, importSide).Fit(ui.Contain).Radius(6)
 		})

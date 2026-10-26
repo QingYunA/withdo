@@ -66,7 +66,7 @@ func (m *Main) card(c *ui.Context, t *theme.Tokens, task data.Task) {
 		}
 	})
 	if dragging {
-		slot.Radius(theme.RadiusTile).Border(1, t.Border).BorderStyle(ui.BorderDashed)
+		slot.Radius(theme.RadiusTile).Border(theme.Hairline, t.Border).BorderStyle(ui.BorderDashed)
 	}
 }
 
@@ -92,7 +92,7 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 	case card.Hovered():
 		border = t.TextTertiary
 	}
-	card.Background(bg).Border(1, border)
+	card.Background(bg).Border(theme.Hairline, border)
 	if !flat {
 		card.Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.14))
 	}
@@ -106,7 +106,7 @@ func (m *Main) styleCard(c *ui.Context, t *theme.Tokens, card ui.Element, task d
 		card.Shadow(0, 2, 6, 0, t.Shadow.Alpha(0.5)).Shadow(0, 16, 32, 0, t.Shadow).Opacity(0)
 		if n := len(m.ho.stack); n > 1 { // cards fan out behind it, painted with its own
 			lifted := !c.Preferences().ReduceMotion
-			card.Background(ui.Transparent).Border(1, ui.Transparent).
+			card.Background(ui.Transparent).Border(theme.Hairline, ui.Transparent).
 				Draw(func(p *ui.Painter, r ui.Rect) { stackPaint(p, r, t, n, theme.RadiusTile, lifted) })
 		}
 	}
@@ -209,7 +209,7 @@ func (m *Main) metaRight(task data.Task) func(*ui.Context, *theme.Tokens) {
 
 func plainMeta(text string) func(*ui.Context, *theme.Tokens) {
 	return func(c *ui.Context, t *theme.Tokens) {
-		theme.Text(c, theme.Meta, t.TextTertiary, text).Shrink(0)
+		theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(0)
 	}
 }
 

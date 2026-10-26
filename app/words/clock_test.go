@@ -100,7 +100,7 @@ func TestChineseWords(t *testing.T) {
 	check(t, "Age 10d", k.Age(now.Add(-10*24*time.Hour), now), "10月4日")
 	check(t, "Stale", k.Stale(80), "停滞3天")
 	check(t, "Heading", k.Heading(now), "10月14日星期三")
-	check(t, "HeroDate", k.HeroDate(now), "10月14日星期三")
+	check(t, "HeroDate", k.HeroDate(now), "10月14日 星期三")
 	check(t, "Time", k.Time(at(0, 16, 0)), "下午4:00")
 	check(t, "When", k.When(at(1, 9, 0), now), "明天上午9:00")
 	check(t, "Reminder", k.Reminder(at(0, 16, 0), now.Add(2*time.Hour)), "你设置了下午4:00的提醒")

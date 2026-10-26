@@ -36,7 +36,7 @@ func TestAWaitingTaskIsNotHandedBackToTheUserOnMine(t *testing.T) {
 	for name, mutate := range cases {
 		t.Run(name, func(t *testing.T) {
 			n := mineOfTasks([]Task{waitingTask(mutate)}, nil, nil)
-			if len(n.FromAgents)+len(n.Today)+len(n.Later) != 0 || n.Count() != 0 || !n.Empty() {
+			if len(n.FromAgents)+len(n.Today)+len(n.Next) != 0 || n.Count() != 0 || !n.Empty() {
 				t.Errorf("Mine = %+v, want nothing: the task waits for its agent", n)
 			}
 		})

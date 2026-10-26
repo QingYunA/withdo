@@ -146,7 +146,7 @@ func (p *Popover) today(c *ui.Context, t *theme.Tokens, rows []data.Item) {
 	m := p.m
 	ui.Row(c).Margin(12, 0, 4).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, m.say.SectionToday())
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(m.mine.Today)))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(m.mine.Today)))
 	})
 	for _, it := range rows {
 		ph := m.rowPhase(c, it.Task)
@@ -156,7 +156,7 @@ func (p *Popover) today(c *ui.Context, t *theme.Tokens, rows []data.Item) {
 			body(c, func() { m.titleLine(c, t, it.Task, "", false) })
 			right(c, func() {
 				if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
-					theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
+					theme.Text(c, theme.Meta, t.TextSecondary, label).Shrink(0)
 				}
 			})
 		})
@@ -175,10 +175,10 @@ func (p *Popover) footer(c *ui.Context, t *theme.Tokens) {
 	hairline(c, t).Margin(8, 0, 0)
 	ui.Row(c).Height(popoverFoot - 9).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
 		if working > 0 {
-			theme.Text(c, theme.Meta, t.TextTertiary, m.say.PopoverWorking(working)).Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, m.say.PopoverWorking(working)).Shrink(0)
 		}
 		if working > 0 && stuck > 0 {
-			theme.Text(c, theme.Meta, t.TextTertiary, "·").Shrink(0)
+			theme.Text(c, theme.Meta, t.TextSecondary, "·").Shrink(0)
 		}
 		if stuck > 0 {
 			theme.Text(c, theme.Meta, t.Blocked(), m.say.PopoverStuck(stuck)).Shrink(0)

@@ -56,6 +56,12 @@ func (m *Main) taskKeys(c *ui.Context, typing bool) {
 	if typing {
 		return
 	}
+	if keyToday.down(c) {
+		if m.canDoToday(task) {
+			m.doToday(c, task)
+		}
+		return
+	}
 	pages := map[binding]menuPage{keyStatus: pageStatus, keyPriority: pagePriority, keyMove: pageMove, keyRemind: pageRemind}
 	for key, page := range pages {
 		if key.down(c) {

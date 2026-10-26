@@ -33,6 +33,7 @@ var (
 	keyPriority = binding{0, ui.KeyP, "P"}
 	keyMove     = binding{0, ui.KeyM, "M"}
 	keyRemind   = binding{0, ui.KeyR, "R"}
+	keyToday    = binding{0, ui.KeyT, "T"}
 	keyAsk      = binding{ui.Cmd, ui.KeyJ, "⌘J"}
 	keyDone     = binding{ui.Cmd, ui.KeyEnter, "⌘↵"}
 	keyHandOff  = binding{ui.Cmd | ui.Shift, ui.KeyA, "⌘⇧A"}

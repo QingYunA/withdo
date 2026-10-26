@@ -46,6 +46,43 @@ When in doubt, remove. A screen is finished when nothing more can be taken away.
 10. **Add features with restraint.** A feature that adds a control, a setting or a screen needs a
     reason the existing ones cannot carry.
 
+### Craft rules (2026-10-26)
+
+The owner's rules for every screen, first applied in `docs/design/mockups/v34.html`. Where a token or
+a section below disagrees, these win until it is rewritten.
+
+1. **No middle dot as a separator.** Never join pieces of copy with `·`. Use a line break, space,
+   weight or color, or say it as one phrase.
+2. **No explanatory text in the UI.** A label, a placeholder or the control itself must carry the
+   meaning. Hints, captions and "how this works" lines cost attention and dirty the screen.
+3. **Copy fits its reader and its place.** Plain words for the audience on that screen, not chatty and
+   not invented. Length fits the job: a button is a verb, a header is a noun, a status is a short
+   phrase.
+4. **Radix Colors only.** Every color is a step of a Radix UI Colors scale (neutral `slate`, accent
+   `iris`, status `red`, `amber`, `orange`, `green`, `blue`; dark mode uses the dark scales), used as
+   Radix intends:
+   - steps 1 and 2 for backgrounds;
+   - 3, 4 and 5 for an element's rest, hover and pressed or selected fills;
+   - 6, 7 and 8 for borders (subtle, element, focus);
+   - 9 and 10 for solid fills;
+   - 11 for secondary text and 12 for primary text.
+5. **Optical alignment and concentric corners.** Align what the eye compares: text with text, icons
+   with glyphs, not boxes with boxes. A rounded thing inside a rounded thing has radius = outer radius
+   minus the inset.
+6. **Lines are 0.5 pt.** Every border, divider and hairline.
+7. **Little motion.** Animate only what explains a change. When something must move: ease-out,
+   250 ms as the base.
+8. **At most four text sizes, better three; none under 12 pt.** Build structure with weight, color and
+   space before adding a size.
+9. **Few decisions.** Do not put choices on the page that the user did not come to make. When a
+   choice is needed, put it where the user already decides (a menu, the moment of a drag, Settings).
+   Rank what a page shows and order it; remove what does not earn its place.
+10. **Corners and shadows with purpose.** No rounding or shadow by habit, and never a colored stripe
+    on a card's left edge. A radius or shadow must fit what the thing is: floating surfaces get a
+    shadow, flat content does not.
+11. **No decorative eyebrows.** No small label or uppercase overline above a title unless it adds
+    information the title does not. Build hierarchy with size, weight, spacing and white space.
+
 ## Input first (v31)
 
 Decided 2026-10-21. Reference: `docs/design/mockups/v31.html` (rendered: `v31.png`). The feature set
@@ -123,40 +160,49 @@ that section in detail. Until then the older text describes the app as it is.
 
 ### Color
 
-Neutrals are a cool gray. One accent. Status colors are muted so a board of them stays calm.
+Radix UI Colors (v34, Craft rule 4): neutral `slate`, accent `iris`, status `blue`, `red`, `amber`,
+`green`, `orange`. Dark mode uses the dark scales. The step is named in brackets.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `bg` | `#FFFFFF` | `#1C1C1E` | window content |
-| `bg.sidebar` | material (vibrancy) | material (vibrancy) | sidebar |
-| `bg.subtle` | `#F5F5F7` | `#232326` | the input at rest, finished cards, the view control's well |
-| `bg.tray` | `#F8F8FA` | `#202023` | the Agents column of a project, a tray half as dark as `bg.subtle` |
-| `bg.hover` | `#0000000A` | `#FFFFFF0F` | row hover |
-| `bg.selected` | `accent @ 12%` | `accent @ 22%` | selected row, keyboard highlight |
-| `border` | `#0000001A` | `#FFFFFF1A` | hairlines (1 px) |
-| `text` | `#1D1D1F` | `#F5F5F7` | primary |
-| `text.secondary` | `#6E6E73` | `#A1A1A6` | metadata, summaries |
-| `text.tertiary` | `#AEAEB2` | `#636366` | placeholders, hints |
-| `accent` | `#5B5BD6` | `#7C7CF0` | selection, primary button, focus ring, links |
-| `status.backlog` | `#AEAEB2` | `#636366` | |
-| `status.todo` | `#8E8E93` | `#8E8E93` | |
-| `status.doing` | `#3B82F6` | `#60A5FA` | |
-| `status.blocked` | `#E5484D` | `#FF6369` | the only red in the app |
-| `status.review` | `#E0A800` | `#F5C542` | |
-| `status.done` | `#30A46C` | `#4CC38A` | |
-| `stale` | `#D97706` | `#F59E0B` | stale label text |
+| `bg` | `#FFFFFF` | `#111113` (slate 1) | window content |
+| `bg.sidebar` | `#F9F9FB` (slate 2) | `#18191B` (slate 2) | sidebar, with a 0.5 pt `border` at its right |
+| `bg.subtle` | `#F0F0F3` (slate 3) | `#212225` (slate 3) | wells: search, finished cards, the view control, the idle send button |
+| `bg.tray` | `#F9F9FB` (slate 2) | `#18191B` (slate 2) | the Agents tray on Home, the Agents column of a project |
+| `bg.hover` | `#F0F0F3` (slate 3) | `#212225` (slate 3) | row hover |
+| `bg.selected` | `#E8E8EC` (slate 4) | `#272A2D` (slate 4) | selected row, keyboard highlight, the sidebar's current page, a highlighted menu item |
+| `border` | `#D9D9E0` (slate 6) | `#363A3F` (slate 6) | hairlines, always 0.5 pt |
+| `border.control` | `#CDCED6` (slate 7) | `#43484E` (slate 7) | the composer's edge, controls |
+| `text` | `#1C2024` (slate 12) | `#EDEEF0` (slate 12) | primary |
+| `text.secondary` | `#60646C` (slate 11) | `#B0B4BA` (slate 11) | every grey word: metadata, summaries, placeholders, section headers |
+| `text.tertiary` | `#8B8D98` (slate 9) | `#696E77` (slate 9) | icons and glyphs only, never words (under 4.5:1) |
+| `accent` | `#5B5BD6` (iris 9) | `#5B5BD6` (iris 9) | the send button, focus ring edge (iris 8), the drag target |
+| `accent.soft` | `#F0F1FE` (iris 3) | `#202248` (iris 3) | tinted buttons, a just-added row, the focus ring |
+| `accent.ink` | `#5753C6` (iris 11) | `#B1A9FF` (iris 11) | links, tinted button text, `Undo` |
+| `status.backlog` | `#B9BBC6` (slate 8) | `#5A6169` (slate 8) | |
+| `status.todo` | `#8B8D98` (slate 9) | `#696E77` (slate 9) | |
+| `status.doing` | `#0090FF` (blue 9) | `#0090FF` (blue 9) | |
+| `status.blocked` | `#E5484D` (red 9) | `#E5484D` (red 9) | the only red in the app |
+| `status.review` | `#FFC53D` (amber 9) | `#FFC53D` (amber 9) | also the star |
+| `status.done` | `#30A46C` (green 9) | `#30A46C` (green 9) | |
+| `stale` | `#CC4E00` (orange 11) | `#FF801F` (orange 11) | stale label text |
+
+Category colors and project folder colors take step 9 of their Radix scale for icons and step 11 for
+words. Selection is neutral: the accent is kept for actions and links, so it does not compete with
+the composer.
 
 Follow the system appearance (light/dark) and the system accent only if the user changed it
 from the default; otherwise use `accent`.
 
 ### Type
 
-System font (SF Pro), SF Mono for branches and PR numbers. Use at most three sizes in one view.
+System font (SF Pro), SF Mono for branches and PR numbers. Use at most three sizes in one view,
+four on Home where the composer has its own (Craft rule 8).
 
 | Token | Size / line | Weight | Use |
 |---|---|---|---|
-| `title` | 26 / 32 | 700 | main window project title |
-| `input` | 17 / 25 | 400 | the composer |
+| `title` | 24 / 32 | 600 | page title (v34; was 26 / 700) |
+| `input` | 17 / 24 | 400 | the composer |
 | `body` | 15 / 22 | 400 | rows, cards, fields, menus |
 | `body.strong` | 15 / 22 | 500 | task titles |
 | `meta` | 13 / 18 | 400 | summaries, ages, field labels |
@@ -505,6 +551,71 @@ takes a repository from the sheet if the user gives it one.
 ### Mine (home)
 
 *Decision 1 of **Input first (v31)** is built here; items 3 and 5 still replace parts of it.*
+
+**v34 (2026-10-26), reference `docs/design/mockups/v34.html`.** Approved by the owner; it wins over
+the paragraphs below wherever they disagree, until they are rewritten.
+
+- **The page reads top to bottom:** the date as the title, the composer, then two columns: the
+  lists, and the Agents tray at their right.
+  - **Title.** The date, left-aligned at 24 / 600: `10月26日 星期一` / `Monday, October 26`.
+    There is no greeting and no hint line.
+  - **Left edge.** The title, the section headers and the status glyphs share one left edge,
+    14 pt in from the column.
+  - **No `Select` control.** `⌘`-click and `Shift`-click still select several rows.
+- **The composer is the page's main surface** (the owner: "everything starts in this box"):
+  - **Size and place.** It spans the whole content width, over both columns. It is two rows tall:
+    16 pt above the text, a 20 pt gap, then a row of controls, 8 pt from the edge.
+  - **Radius and surface.** Radius 16. It is the page's only shadowed surface: a 0.5 pt `slate 7`
+    edge and `0 12 32 -12` at 18 % black.
+  - **Text.** 17 / 24; no other text on the page uses this size.
+  - **Left.** The 24 pt pixel assistant avatar.
+  - **Placeholder.** One real example, not an explanation: `明天 9 点给房东打电话，再让 Claude
+    修一下登录的 bug` / `Call the landlord tomorrow at 9, and have Claude fix the login bug`.
+    One errand of mine, one hand-off.
+  - **Control row.** Image and microphone (32 pt, radius 8, `slate 11`), aligned under the text.
+    At the right: the key `⌥ Space` in 13 pt `slate 11`, and the send button (32 pt, radius 8).
+    The send button is `slate 3` while empty and `iris 9` with a white arrow once there is text.
+    It is the only solid button on the page.
+  - **Focus.** The edge turns `iris 8` with a 4 pt `iris 3` ring.
+  - **No model chip.** The model is chosen in Settings.
+- **Answers under the composer.** The receipt and every other line the composer says back sit
+  under it, 12 pt below, in 13 pt `slate 11`, with `Undo` / `撤销` in `iris 11`. Example:
+  `已添加 1 件，交给 Claude Code 1 件`. A row the input just made gets an `iris 3` fill that fades
+  out after 2 s (250 ms ease-out).
+- **Live preview (later, a separate change).** While typing, the composer lists what it will
+  make under the text, each with its glyph or agent avatar and where it goes (`明天 9:00`,
+  `交给 Claude Code`). It needs the model to parse while the user types, so it ships after the rest.
+- **The lists, by time only:**
+  - **Section headers.** 13 / 600 `slate 11`, with the count in regular weight.
+  - **Today.** Unchanged.
+  - **Next** / `接下来`. Replaces Later. Only my tasks dated within the next 7 days, by date.
+    Nothing undated, no cap, no `Show all`.
+  - **No date** / `没定时间`. A fold, closed by default, with its count. It holds my undated
+    tasks **with no project**, including those in the backlog. It replaces the Backlog fold.
+    When the input adds an undated task, the fold opens and the receipt names it:
+    `已添加到没定时间`.
+  - **Done today** / `今天完成`. At the right of its header, `查看全部` (`iris 11`) opens the
+    Summary; `See today` and `Show all` are gone. A row an agent finished shows the agent's
+    avatar and what it did (`PR #335 已合并`) before the time.
+  - **Undated tasks of a project** are not on Home. They stay on their project page. To bring
+    one in, use **Do today** in the task menu, or say it to the composer.
+  - **Dated beyond 7 days.** On the Calendar; the `After next week` fold is gone. A task
+    shows in Next by itself once it is within 7 days.
+- **Rows.** 40 pt tall, radius 8.
+  - Doing is shown by its glyph alone; the row does not say `进行中`.
+  - A category is its name in its own color (`green 11`, `blue 11`), with no fill and no dot.
+  - The star sits before the date.
+- **The Agents tray:**
+  - **Tray.** `slate 2`, radius 12, 4 pt inset, a 0.5 pt `slate 6` edge. Its header is the bot
+    avatar, `Agent` and the count.
+  - **Cards.** One per row, on `bg`, radius 8 (12 − 4), a 0.5 pt `slate 6` edge, 4 pt apart.
+  - **Copy.** Ages say `4 天前` / `17 分钟前`; stale ones are in `orange 11`. Reasons are short:
+    `等你回复：…`, `PR #330 待审查`.
+  - **One tinted button per card** (`iris 3` fill, `iris 11` text, radius 6): `回复`,
+    `打开 PR`. A second action is a text action in `slate 11`: `标为完成` (it was `收下` / Accept).
+  - **The drop target shows only while a row is dragged.** It is an `iris 2` well with a
+    0.5 pt `iris 8` edge, radius 8, saying `交给 Agent`.
+
 
 Home is the page `Today` / `今天` in the sidebar (it was `Mine` / `我的`; the code and the screens
 `mine-*` keep the old name). It opens with one big input, not a title. Reference: `docs/design/mockups/v31.html` (the proposal frame), screens `mine-*`.
@@ -1132,9 +1243,10 @@ Decisions made while building it (2026-10-14):
 There is no Inbox page (v31). A task with no project is a task like any other, and it is found
 where its kind is found:
 
-- **Mine**, to do, doing or blocked: Today or Later by its date (undated ones in Later, after the
-  seven that fit and `Show all`, so none is out of reach). Dated beyond a week: the Calendar.
-- **Mine, parked in the backlog**: the `Backlog` fold at the end of Today (a project has its own).
+- **Mine**, to do, doing or blocked: Today or Next by its date. Dated beyond a week: the Calendar.
+  Undated: the `No date` fold of Home (v34); undated tasks with a project are on their project
+  page only.
+- **Mine, parked in the backlog**: the `No date` fold of Home (a project has its own backlog).
 - **An agent's**: Agents while it is at work, From your agents when it asks for you, Done today and
   the history after.
 - **Done or cancelled**: Done today, then the history (`Show all`), and search.
@@ -1305,7 +1417,10 @@ Main page, top to bottom (10 pt padding):
 2. `Priority` and a strip `P0 P1 P2 P3` (P0 in `status.blocked`, the current one tinted); its label
    reads `Priority · P1 High` the same way. **For a task of mine** (v31) there is no strip: one line,
    `Mark important` / `标为重要` (`Not important` / `取消重要` while it is set, its star in
-   `status.review`), key hint `P`, toggles the star and closes the menu. The status strip keeps all
+   `status.review`), key hint `P`, toggles the star and closes the menu. Above it, for a task of
+   mine that is not done (v34): **Do today** / `今天做` with the calendar icon, key hint `T`. It sets
+   the due date to today (a time already set is kept) and closes the menu, with the toast
+   `Moved to Today` / `已移到今天` and Undo. It is hidden when the task is already due today. The status strip keeps all
    seven statuses, which is how Backlog and Cancelled are reached for a task of mine.
 3. One row, `Category` with the 18 pt icon of the task's category in its color (`IconList` when it
    has none), its name as the hint at the right and a `›`: it opens the **Category page**, which is

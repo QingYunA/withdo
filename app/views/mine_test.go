@@ -11,7 +11,7 @@ import (
 
 func TestTodayShowsItsSectionsInOrder(t *testing.T) {
 	tt, _, _ := newMainTester(t, inlineWidth)
-	for _, want := range []string{"Today", "Wednesday, October 14", "From your agents", "Later", "Fix tray race on launch", "Book dentist", "Done today"} {
+	for _, want := range []string{"Today", "Wednesday, October 14", "From your agents", "Next", "Fix tray race on launch", "Book dentist", "Done today"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -20,7 +20,7 @@ func TestTodayShowsItsSectionsInOrder(t *testing.T) {
 	if n := countText(tt, "Today"); n < 2 {
 		t.Errorf("%d Today in %q: the sidebar row and the section", n, tt.Texts())
 	}
-	if !above(t, tt, "From your agents", "Later") || !above(t, tt, "Later", "Done today") {
+	if !above(t, tt, "From your agents", "Next") || !above(t, tt, "Next", "Done today") {
 		t.Error("sections are out of order")
 	}
 	for _, gone := range []string{"Port core to Go", "Port the MCP tools", "Needs you", "Now"} {
@@ -36,7 +36,7 @@ func TestMineEmptySectionsAreNotDrawn(t *testing.T) {
 	app := NewApp(f, &recorder{}, testConfig())
 	app.Now = fixedNow
 	tt, _, _ := newTesterFor(app, 1100)
-	if !tt.HasText("Later") || !tt.HasText("Only mine") {
+	if !tt.HasText("No date") || tt.HasText("Next") || tt.HasText("Only mine") { // the fold is closed
 		t.Fatalf("texts %q", tt.Texts())
 	}
 	for _, gone := range []string{"From your agents", "Nothing needs you right now"} {
@@ -57,7 +57,7 @@ func TestMineAllClearWhenNothingIsHappening(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	for _, gone := range []string{"From your agents", "Later"} {
+	for _, gone := range []string{"From your agents", "Next"} {
 		if tt.HasText(gone) {
 			t.Errorf("%q in the All clear state", gone)
 		}
@@ -79,9 +79,9 @@ func TestFromYourAgentsOrderIsBlockedThenReview(t *testing.T) {
 		t.Errorf("order wrong in %q", tt.Texts())
 	}
 	for _, want := range []string{
-		"Claude Code is stuck: “Needs a decision on the activation policy” · adhd-todo",
-		"PR #12 is ready for your review · adhd-todo",
-		"Answer", "Open PR",
+		"Waiting for your reply: “Needs a decision on the activation policy”, adhd-todo",
+		"PR #12 to review, adhd-todo",
+		"Reply", "Open PR",
 	} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q", want)
@@ -282,7 +282,7 @@ func TestAskFieldEnterAddsToInboxAndConfirms(t *testing.T) {
 	if added.ProjectID != nil || added.Source != data.SourceUser || added.Status != data.Todo {
 		t.Errorf("added %+v", added)
 	}
-	if !tt.HasText("Added to Today") {
+	if !tt.HasText("Added to No date") {
 		t.Errorf("no confirmation in %q", tt.Texts())
 	}
 	// It is mine and undated, so it also shows under Yours, and the field is empty again.
@@ -376,7 +376,7 @@ func TestCmdNumbersSwitchScreens(t *testing.T) {
 	}
 }
 
-func TestTodayShowsEveryUndatedTaskOfMineWithNoProjectAfterShowAll(t *testing.T) {
+func TestTheNoDateFoldIsClosedWithItsCountAndOpensWithEveryUndatedTaskNoCap(t *testing.T) {
 	f := demoStore(t, fixedNow, false)
 	for i := 0; i < 9; i++ {
 		_, _ = f.CreateTask(data.CreateTaskInput{Title: "Idea " + itoa(i)})
@@ -385,14 +385,36 @@ func TestTodayShowsEveryUndatedTaskOfMineWithNoProjectAfterShowAll(t *testing.T)
 	app.Now = fixedNow
 	tt, m, _ := newTesterFor(app, 1100)
 	tt.SetSize(1100, 1400)
-	if !tt.HasText("Show all") || tt.HasText("Idea 0") && tt.HasText("Idea 8") {
-		t.Fatalf("seven of nine fit, with a link: %q", tt.Texts())
+	has(t, tt, "No date", "9")
+	hasNot(t, tt, "Idea 0", "Show all", "Next", "Backlog")
+	click(t, tt, "No date")
+	if m.nav.screen != screenMine || len(m.minePage.NoDate) != 9 || !tt.HasText("Idea 0") || !tt.HasText("Idea 8") {
+		t.Errorf("nav %+v with %d rows in No date: no task of mine may be out of reach", m.nav, len(m.minePage.NoDate))
 	}
-	if err := tt.Click("Show all"); err != nil {
-		t.Fatal(err)
+}
+
+func TestHomeHasTheDateAsTitleAndNoGreetingHintOrSelectControl(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
+	has(t, tt, "Wednesday, October 14", "Next", "Today", "Done today", "View all")
+	hasNot(t, tt, "What do you want to do today?", "Select", "Select tasks", "See today", "Show all", "Later", "After next week")
+	for _, text := range tt.Texts() {
+		if strings.Contains(text, "·") {
+			t.Errorf("a middle dot separates copy in %q", text)
+		}
 	}
-	tt.Frame()
-	if m.nav.screen != screenMine || len(m.minePage.Later) != 9 || m.minePage.MoreLater != 0 {
-		t.Errorf("nav %+v with %d rows in Later, %d more: no task of mine may be out of reach", m.nav, len(m.minePage.Later), m.minePage.MoreLater)
+}
+
+func TestNextHoldsOnlyMyTasksDatedWithinAWeekAndNoUndatedTaskOfAProject(t *testing.T) {
+	tt, m, _ := newMainTester(t, 1100)
+	titles := func(items []data.Item) []string {
+		var out []string
+		for _, it := range items {
+			out = append(out, it.Title)
+		}
+		return out
 	}
+	if got := titles(m.minePage.Next); len(got) != 2 || got[0] != "Book dentist" || got[1] != "Write the release notes" {
+		t.Errorf("next %q", got)
+	}
+	hasNot(t, tt, "Look into Liquid Glass for the sidebar") // undated, in a project: its project's page has it
 }

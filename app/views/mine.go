@@ -1,33 +1,34 @@
 package views
 
 import (
-	"strings"
-
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/page"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
 
-// mineScreen is Today, the home page: the date, a greeting and the big input; under them the lists of
-// what is mine (today, later, done today) and, beside them when the window is wide enough, the Agents
-// panel with what agents handed over. Narrower, that section shows at the top of the lists. A section
-// with nothing in it is not drawn; with nothing in any of them the screen says All clear.
+// mineScreen is Today, the home page: the date as the title, the composer across the whole content
+// width, and under it the lists of what is mine (today, next, no date, done today) and, beside them
+// when the window is wide enough, the Agents tray with what agents handed over. Narrower, that
+// section shows at the top of the lists. A section with nothing in it is not drawn; with nothing in
+// any of them the screen says All clear.
 func (m *Main) mineScreen(c *ui.Context, t *theme.Tokens) {
-	// The title is the greeting; the row holds the Select control.
-	m.pageHeaderOf(c, t, func() {}, "", nil)
 	if !m.app.snap.loaded {
 		return
 	}
-	m.mineHero(c, t)
+	ui.Row(c.Key("mine-title")).FillWidth().Height(32).Shrink(0).Padding(0, homeLineLeft).Margin(8, 0, 16).AlignItems(ui.Center).Children(func() {
+		theme.Text(c, theme.Title, t.Text, m.clock.HeroDate(m.app.Now())).Shrink(1).MinWidth(0).Ellipsis("…")
+	})
+	m.homeComposer(c, t)
 	m.belowComposer(c, func() {
+		m.homeLines(c, t)
 		m.filterBar(c, t)
 		if !m.mineSplit() {
 			m.mineLists(c, t, true)
 			return
 		}
-		ui.Row(c.Key("mine-cols")).FillWidth().Shrink(0).Gap(theme.MineGap).AlignItems(ui.Start).Children(func() {
-			ui.Column(c.Key("mine-lists")).Grow(1).MinWidth(0).Children(func() { m.mineLists(c, t, false) })
+		ui.Row(c.Key("mine-cols")).FillWidth().Shrink(0).Margin(8, 0, 0).Gap(theme.MineGap).AlignItems(ui.Start).Children(func() {
+			ui.Column(c.Key("mine-lists")).Grow(1).MinWidth(0).Padding(0, homeLineLeft).Children(func() { m.mineLists(c, t, false) })
 			m.agentsPanel(c, t)
 		})
 	})
@@ -56,29 +57,6 @@ func (m *Main) mineMax() float32 {
 	return theme.ContentMax + theme.MineGap + theme.AgentsPanelWidth
 }
 
-// mineHero is the top of Home: the day, the greeting, the big input (the composer, in its hero
-// size) and under it the hint. What the input says back (the answer, the receipt with Undo, a voice
-// or picture line) shows under the box where the hint is, and the hint is back when it is gone.
-func (m *Main) mineHero(c *ui.Context, t *theme.Tokens) {
-	ui.Column(c.Key("hero")).FillWidth().Shrink(0).AlignItems(ui.Center).Padding(14, 0, 22).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, m.clock.HeroDate(m.app.Now())).Shrink(0)
-		theme.Paragraph(c, theme.Title, t.Text, m.say.MineHeroGreeting(), 0).TextAlign(ui.Center).Margin(4, 0, 0)
-		ui.Column(c.Key("hero-input")).FillWidth().MaxWidth(theme.HeroMax).Margin(18, 0, 0).Children(func() {
-			m.composerBoxAs(c, t, surfacePage, theme.Input, true)
-			if m.replyIn(surfacePage, 0) {
-				ui.Box(c).Height(8).Shrink(0)
-				m.answerView(c, t, false)
-			}
-			m.voiceLine(c, t)
-			m.notice(c, t)
-			m.pictureNotice(c, t, surfacePage)
-			if !m.inputLineLive(c) {
-				theme.Paragraph(c, theme.Meta, t.TextTertiary, m.say.MineHeroHint(panelKeyHint()), 0).TextAlign(ui.Center).Margin(10, 0, 0)
-			}
-		})
-	})
-}
-
 // panelKeyHint is the global shortcut that opens the menu bar panel, as the hint writes it.
 func panelKeyHint() string {
 	if systemGOOS == "darwin" {
@@ -87,29 +65,8 @@ func panelKeyHint() string {
 	return "Alt+Space"
 }
 
-// inputLineLive reports whether a line shows under the big input (an answer, a voice line, a
-// receipt, a picture problem, the sign-in line), which takes the hint's place.
-func (m *Main) inputLineLive(c *ui.Context) bool {
-	cs, now := &m.cmp[surfacePage], m.app.Now()
-	length := cs.noticeLen
-	if length == 0 {
-		length = noticeFor
-	}
-	switch {
-	case m.replyIn(surfacePage, 0):
-	case m.voice.phase == voiceListening || m.voice.phase == voiceTranscribing:
-	case m.voice.problem != voiceNoProblem && now.Sub(m.voice.problemAt) < voiceProblemFor:
-	case !cs.noticeAt.IsZero() && now.Sub(cs.noticeAt) < length:
-	case strings.TrimSpace(cs.problem) != "" && now.Sub(cs.problemAt) < pictureNoticeFor:
-	case m.app.Assistant != nil && !m.assistReady() && cs.buf == "" && (cs.ref.Focused(c) || cs.setUpHover):
-	default:
-		return false
-	}
-	return true
-}
-
-// mineLists are the lists of Home. With inline the section of what agents handed over comes first,
-// as the panel is not beside them.
+// mineLists are the lists of Home, by time only. With inline the section of what agents handed over
+// comes first, as the tray is not beside them.
 func (m *Main) mineLists(c *ui.Context, t *theme.Tokens, inline bool) {
 	if m.minePage.Empty() {
 		m.allClear(c, t)
@@ -118,52 +75,49 @@ func (m *Main) mineLists(c *ui.Context, t *theme.Tokens, inline bool) {
 		m.fromAgentsSection(c, t, m.minePage.FromAgents)
 	}
 	m.mineSection(c, t, m.say.SectionToday(), m.minePage.Today)
-	m.mineSection(c, t, m.say.SectionLater(), m.minePage.Later)
-	if m.minePage.MoreLater > 0 && link(c, t, m.say.ShowAll()).Margin(8, 0, 0).Clicked() {
-		m.app.showAllLater = true
-	}
-	m.afterSection(c, t)
+	m.mineSection(c, t, m.say.SectionNext(), m.minePage.Next)
+	m.noDateSection(c, t)
 	m.doneTodaySection(c, t, m.minePage.Done, m.minePage.MoreDone)
-	m.parkedSection(c, t)
 }
 
-// afterSection is the fold at the end of Later: my tasks with no project that are due more than a
-// week ahead, closed until opened, then by date. A project's page holds the ones with a project.
-func (m *Main) afterSection(c *ui.Context, t *theme.Tokens) {
-	n := m.minePage.AfterTotal
+// noDateSection is the fold of my tasks with no date and no project, closed until opened. A task
+// of a project that has no date is on its project's page, one dated beyond the week on the Calendar.
+func (m *Main) noDateSection(c *ui.Context, t *theme.Tokens) {
+	n := m.minePage.NoDateTotal
 	if n == 0 {
 		return
 	}
-	if len(m.minePage.After) > 0 {
-		m.mineSection(c, t, m.say.FoldAfterNextWeek(), m.minePage.After)
-	}
-	if m.foldLine(c, t, m.say.FoldAfterNextWeek(), n, m.app.afterOpen, 16) {
-		m.app.afterOpen = !m.app.afterOpen
-	}
+	m.section(c, "no-date", itemTasks(m.minePage.NoDate), func() {
+		name, open := m.say.FoldNoDate(), m.app.noDateOpen
+		head := ui.ButtonBase(c.Key("fold-no-date")).Margin(22, 0, 6).Shrink(0).AlignSelf(ui.Start).Radius(theme.RadiusControl).
+			Cursor(ui.CursorPointer).Label(m.say.FoldCount(name, n))
+		head.Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				theme.Text(c, theme.Section, t.TextSecondary, name)
+				theme.Text(c, theme.Meta, t.TextSecondary, itoa(n))
+				chevron := theme.IconForward
+				if open {
+					chevron = theme.IconChevron
+				}
+				ui.Icon(c, chevron).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary).Shrink(0)
+			})
+		})
+		if head.Clicked() {
+			m.app.noDateOpen = !open
+			m.app.Refresh()
+		}
+		if open {
+			m.mineRows(c, t, m.minePage.NoDate)
+		}
+	})
 }
 
-// parkedSection is the last line of Today: the tasks parked in the backlog that no project holds,
-// folded as a project folds its Backlog, so no task of mine is left without a page.
-func (m *Main) parkedSection(c *ui.Context, t *theme.Tokens) {
-	n := m.minePage.ParkedTotal
-	if n == 0 {
-		return
-	}
-	if len(m.minePage.Parked) > 0 {
-		m.mineSection(c, t, statusLabel(m.say, data.Backlog), m.minePage.Parked)
-	}
-	if m.foldLine(c, t, statusLabel(m.say, data.Backlog), n, m.app.parkedOpen, 16) {
-		m.app.parkedOpen = !m.app.parkedOpen
-	}
-}
-
-// agentsPanel is the column at the right of Home on the tray color: what agents handed over, the
-// same rows as the inline section, and at its foot the drop target where a row of mine hands its
-// task over.
+// agentsPanel is the tray at the right of Home: what agents handed over, one card each, and while a
+// row of mine is dragged the well where it hands its task over.
 func (m *Main) agentsPanel(c *ui.Context, t *theme.Tokens) {
 	items := m.minePage.FromAgents
-	zone := ui.Column(c.Key("agents-panel")).Width(theme.AgentsPanelWidth).Shrink(0).Padding(14-trayRing, 16-trayRing, 16-trayRing).
-		Radius(theme.TrayRadius).Background(t.BgTray).Border(trayRing, ui.Transparent)
+	zone := ui.Column(c.Key("agents-panel")).Width(theme.AgentsPanelWidth).Shrink(0).Padding(theme.TrayInset).Gap(theme.TrayInset).
+		Radius(theme.RadiusPanel).Background(t.BgTray).Border(theme.Hairline, t.Border)
 	d, over := ui.DragOver[dragRow](zone)
 	over = over && !d.fromAgents
 	m.ho.setOver(over, m.app.Now())
@@ -174,47 +128,47 @@ func (m *Main) agentsPanel(c *ui.Context, t *theme.Tokens) {
 			m.handOff(c, d.id)
 		}
 	}
-	if over {
-		zone.Background(t.BgTray.Mix(t.Accent, 0.07)).Border(trayRing, t.Accent.Alpha(0.35))
-	}
-	zone.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
+	dragging := m.ho.carry.seen || m.ho.stackSeen
 	zone.Children(func() {
-		ui.Row(c.Key("panel-head")).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		ui.Row(c.Key("panel-head")).Shrink(0).Gap(8).Padding(8, 10, 4).AlignItems(ui.Center).Children(func() {
 			m.agentBot(c, t, theme.AvatarRow)
-			theme.Text(c, theme.BodyStrong, t.Text, m.say.AgentsPanelTitle()).Shrink(1).MinWidth(0).Ellipsis("…")
+			theme.Text(c, theme.BodyStrong, t.TextSecondary, m.say.AgentsPanelTitle()).Shrink(1).MinWidth(0).Ellipsis("…")
 			ui.Spacer(c)
 			if len(items) > 0 {
-				theme.Text(c, theme.Meta, t.TextTertiary, itoa(len(items))).Shrink(0)
+				theme.Text(c, theme.Meta, t.TextSecondary, itoa(len(items))).Shrink(0)
 			}
 		})
-		if len(items) == 0 {
-			quietLine(c, t, m.say.AgentsPanelEmpty(), nil)
-		} else {
+		switch {
+		case len(items) > 0:
 			m.section(c, "from-agents", itemTasks(items), func() {
-				ui.Column(c).Shrink(0).Margin(8, 0, 0).Children(func() {
-					// The panel is narrow: its rows lay out as in a narrow window, buttons under the summary.
+				ui.Column(c).Shrink(0).Gap(theme.TrayInset).Children(func() {
+					// The tray is narrow: its cards lay out as in a narrow window, buttons under the summary.
 					wide := m.width
 					m.width, m.inPanel = theme.AgentsPanelWidth, true
 					defer func() { m.width, m.inPanel = wide, false }()
 					m.handedRows(c, t, items)
 				})
 			})
+		case !dragging:
+			quietLine(c, t, m.say.AgentsPanelEmpty(), nil)
 		}
-		m.dropTarget(c, t, over)
+		if dragging {
+			m.dropTarget(c, t, over)
+		}
 	})
 }
 
-// dropTarget is the dashed box at the foot of the Agents panel; it takes the accent while a row of
-// mine is over the panel.
+// dropTarget is the well of the Agents tray, drawn only while a row of mine is dragged: iris 2 with a
+// 0.5 pt iris 8 edge (a full point while the row is over it).
 func (m *Main) dropTarget(c *ui.Context, t *theme.Tokens, over bool) {
-	line, color := t.Border, t.TextTertiary
+	edge := theme.Hairline
 	if over {
-		line, color = t.Accent.Alpha(0.5), t.Accent
+		edge = 1
 	}
-	ui.Row(c.Key("panel-drop")).FillWidth().Shrink(0).Margin(14, 0, 0).Padding(11, 12).Gap(8).AlignItems(ui.Start).
-		Radius(theme.RadiusControl).Border(1, line).BorderStyle(ui.BorderDashed).Children(func() {
-		ui.Icon(c, theme.IconMove).Size(theme.IconSmall, theme.IconSmall).TextColor(color).Shrink(0).Margin(1, 0, 0)
-		theme.Paragraph(c, theme.Meta, color, m.say.AgentsPanelDrop(), 0).Shrink(1).MinWidth(0)
+	ui.Row(c.Key("panel-drop")).FillWidth().Shrink(0).MinHeight(120).Gap(8).AlignItems(ui.Center).Justify(ui.Center).
+		Radius(theme.RadiusRow).Background(t.AccentWell).Border(edge, t.AccentEdge).Children(func() {
+		ui.Icon(c, theme.IconMove).Size(theme.IconSmall, theme.IconSmall).TextColor(t.AccentInk).Shrink(0)
+		theme.Text(c, theme.Meta, t.AccentInk, m.say.AgentsPanelDrop()).Shrink(0)
 	})
 }
 
@@ -234,7 +188,7 @@ func (m *Main) pageHeaderOf(c *ui.Context, t *theme.Tokens, title func(), sub st
 	ui.Row(c).Height(36).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
 		title()
 		if sub != "" {
-			theme.Text(c, theme.Body, t.TextTertiary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
+			theme.Text(c, theme.Body, t.TextSecondary, sub).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
 		ui.Spacer(c)
 		if m.pg.Kind != page.KindColumns { // there each column's head has it
@@ -255,7 +209,7 @@ func sectionHeader(c *ui.Context, t *theme.Tokens, title string, n int) {
 func sectionHeaderWith(c *ui.Context, t *theme.Tokens, title string, n int, end func()) {
 	ui.Row(c).Margin(22, 0, 6).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, title)
-		theme.Text(c, theme.Meta, t.TextTertiary, itoa(n))
+		theme.Text(c, theme.Meta, t.TextSecondary, itoa(n))
 		if end != nil {
 			ui.Spacer(c)
 			end()
@@ -280,7 +234,7 @@ func (m *Main) fromAgentsSection(c *ui.Context, t *theme.Tokens, items []data.It
 	}
 	m.section(c, "from-agents", itemTasks(items), func() {
 		sectionHeader(c, t, m.say.SectionFromAgents(), len(items))
-		ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(1, t.Border).Children(func() { m.handedRows(c, t, items) })
+		ui.Column(c).Shrink(0).Padding(4, 14).Radius(theme.RadiusPanel).Border(theme.Hairline, t.Border).Children(func() { m.handedRows(c, t, items) })
 	})
 }
 
@@ -292,7 +246,7 @@ func (m *Main) handedRows(c *ui.Context, t *theme.Tokens, items []data.Item) {
 	}
 	rules := ruleShares(phs)
 	for i, it := range items {
-		if i > 0 {
+		if i > 0 && !m.inPanel { // the cards of the tray have no rules between them
 			m.rule(c, t, it.ID, rules[i], phs[i].opacity)
 		}
 		m.handedRow(c, t, it, phs[i])
@@ -309,7 +263,17 @@ func (m *Main) rule(c *ui.Context, t *theme.Tokens, id int, share, opacity float
 }
 
 func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase) {
-	row := m.rowShell(c, t, it.ID, needRow, ph)
+	style := needRow
+	if m.inPanel {
+		style = cardRow
+	}
+	row := m.rowShell(c, t, it.ID, style, ph)
+	if m.inPanel { // a card on bg, radius 8 (the tray's 12 less its 4 pt inset), a 0.5 pt edge
+		row.Margin(0).Radius(theme.RadiusRow).Border(theme.Hairline, t.Border)
+		if !(row.Hovered() || m.sel == it.ID || m.openID == it.ID) {
+			row.Background(t.Bg)
+		}
+	}
 	actions := m.actionsFor(it)
 	showNotNow := row.Hovered() || m.sel == it.ID
 	// Two buttons beside a title in a narrow row leave it no room: they go under the summary, and
@@ -356,6 +320,9 @@ func (m *Main) handedRow(c *ui.Context, t *theme.Tokens, it data.Item, ph phase)
 	}
 }
 
+// cardRow is the padding of a card of the Agents tray.
+var cardRow = rowStyle{10, 12}
+
 // rowRightGap is the gap between the parts of the cluster at the right of a row (see right).
 const rowRightGap float32 = 10
 
@@ -398,7 +365,7 @@ func (m *Main) notNowButton(c *ui.Context, t *theme.Tokens, it data.Item, shown 
 func (m *Main) handedSummary(it data.Item) string {
 	reason := m.needSummary(it)
 	if it.Project != "" && m.width >= dropProjectBelow {
-		return reason + " · " + it.Project
+		return reason + ", " + it.Project
 	}
 	return reason
 }
@@ -437,42 +404,51 @@ func (m *Main) actionsFor(it data.Item) []rowAction {
 	return []rowAction{{text: m.say.ActionOpen(), label: m.say.A11yOpenTask(it.Title), run: func() { m.openRow(it.ID) }}}
 }
 
-// mineSection is a plain section of my own tasks: Today or Later. Each row has the status glyph,
-// which ticks the task off, its title, and at the right how pressing it is and when it is due.
-// Beside the Agents panel a row drags onto it, to hand the task over.
+// mineSection is a plain section of my own tasks: Today or Next.
 func (m *Main) mineSection(c *ui.Context, t *theme.Tokens, title string, items []data.Item) {
 	if len(items) == 0 {
 		return
 	}
 	m.section(c, "section-"+title, itemTasks(items), func() {
 		sectionHeader(c, t, title, len(items))
-		for _, it := range items {
-			ph := m.rowPhase(c, it.Task)
-			fill := func(row ui.Element, _ bool) {
-				row.AlignItems(ui.Center).Children(func() {
-					m.glyphSlot(c, t, it.Task, ph.fill)
-					body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
-					right(c, func() {
-						if it.Status == data.Review { // mine, and it waits for my look
-							m.pillBox(c, "to-review", t.TextSecondary, t.BgSubtle, m.say.PillToReview())
-						}
-						priorityMark(c, t, it.Task)
-						m.rowThumb(c, t, it.ID)
-						if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" {
-							theme.Text(c, theme.Meta, t.TextTertiary, label).Shrink(0)
-						}
-					})
-				})
-			}
-			if m.mineSplit() { // the Agents panel is there to drop a row on
-				m.draggableRow(c, t, it.Task, false, ph, fill)
-				continue
-			}
-			row := m.rowShell(c, t, it.ID, plainRow, ph)
-			fill(row, false)
-			if m.rowClicked(row, it.ID) {
-				m.openRow(it.ID)
-			}
-		}
+		m.mineRows(c, t, items)
 	})
+}
+
+// mineRows are the rows of my own tasks. Each has the status glyph, which ticks the task off, its
+// title with its category, and at the right how pressing it is and when it is due. Beside the Agents
+// tray a row drags onto it, to hand the task over.
+func (m *Main) mineRows(c *ui.Context, t *theme.Tokens, items []data.Item) {
+	for _, it := range items {
+		ph := m.rowPhase(c, it.Task)
+		fill := func(row ui.Element, _ bool) {
+			row.AlignItems(ui.Center).Children(func() {
+				m.glyphSlot(c, t, it.Task, ph.fill)
+				body(c, func() { m.titleLine(c, t, it.Task, it.Project, true) })
+				right(c, func() {
+					if it.Status == data.Review { // mine, and it waits for my look
+						m.pillBox(c, "to-review", t.TextSecondary, t.BgSubtle, m.say.PillToReview())
+					}
+					m.rowThumb(c, t, it.ID)
+					if label := m.clock.DueLabel(it.Task, m.app.Now()); label != "" || starred(it.Task) {
+						ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
+							priorityMark(c, t, it.Task) // the star sits before the date
+							if label != "" {
+								theme.Text(c, theme.Meta, t.TextSecondary, label).Shrink(0)
+							}
+						})
+					}
+				})
+			})
+		}
+		if m.mineSplit() { // the Agents tray is there to drop a row on
+			m.draggableRow(c, t, it.Task, false, ph, fill)
+			continue
+		}
+		row := m.rowShell(c, t, it.ID, plainRow, ph)
+		fill(row, false)
+		if m.rowClicked(row, it.ID) {
+			m.openRow(it.ID)
+		}
+	}
 }
