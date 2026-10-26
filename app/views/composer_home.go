@@ -14,12 +14,15 @@ import (
 
 // Metrics of the Home composer, in points.
 const (
-	homeAvatar   float32 = 24
-	homeTop      float32 = 16 // above the text
-	homeRowsGap  float32 = 20 // between the text and the controls
-	homeBottom   float32 = 8  // under the controls
-	homeSide     float32 = 16
-	homeControl  float32 = 32 // the picture, the microphone and send
+	homeAvatar  float32 = 24
+	homeTop     float32 = 16 // above the text
+	homeRowsGap float32 = 20 // between the text and the controls
+	homeBottom  float32 = 8  // under the controls
+	homeSide    float32 = 16
+	homeControl float32 = 32 // the picture, the microphone and send
+	// homeIcon is the picture in each: pixelarticons are drawn on a 24 grid, so 24 pt keeps every
+	// pixel whole (18 pt blurred them), and it matches the 24 pt microphone.
+	homeIcon     float32 = 24
 	homeLineGap  float32 = 12 // between the box and what it says back
 	homeLineLeft float32 = 14 // the left edge of the page (title, section headers, glyphs)
 )
@@ -81,8 +84,8 @@ func (m *Main) homeAvatar(c *ui.Context, s surface) {
 // and at the right the key and send (stop while the assistant works).
 func (m *Main) homeControls(c *ui.Context, t *theme.Tokens, s surface, ready, working bool) {
 	cs := &m.cmp[s]
-	// The text starts one avatar and a gap in; the 16 pt pictures sit in 32 pt buttons.
-	inset := homeAvatar + 10 - (homeControl-theme.IconRow)/2
+	// The text starts one avatar and a gap in; the 24 pt pictures sit in 32 pt buttons.
+	inset := homeAvatar + 10 - (homeControl-homeIcon)/2
 	ui.Row(c.Key("composer-controls")).FillWidth().Shrink(0).Height(homeControl).Gap(4).AlignItems(ui.Center).Children(func() {
 		ui.Box(c).Width(inset - 4).Shrink(0)
 		if ready {
@@ -118,7 +121,7 @@ func (m *Main) homeAttach(c *ui.Context, t *theme.Tokens, s surface) {
 		ink = t.Text
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	btn.Children(func() { ui.Icon(c, theme.IconImage).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
+	btn.Children(func() { ui.Icon(c, theme.IconImage).Size(homeIcon, homeIcon).TextColor(ink) })
 	if btn.Clicked() && !full {
 		m.choosePictures(s)
 	}
@@ -143,7 +146,7 @@ func (m *Main) homeSend(c *ui.Context, t *theme.Tokens, s surface, holds bool) {
 		btn.Background(t.BgSubtle)
 	}
 	btn.Transition(ui.ElementTransition{Colors: true, Duration: theme.MotionFast})
-	btn.Children(func() { ui.Icon(c, theme.IconSend).Size(theme.IconRow, theme.IconRow).TextColor(ink) })
+	btn.Children(func() { ui.Icon(c, theme.IconSend).Size(homeIcon, homeIcon).TextColor(ink) })
 	if btn.Clicked() && can {
 		m.submit(s)
 	}

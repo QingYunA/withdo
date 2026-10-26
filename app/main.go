@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
@@ -79,7 +80,9 @@ func main() {
 	// The update window is native UI like the app's own; its choices live in the plugin's updater.json.
 	// A build without updates in mygo.json (or a dev build) cannot update, so it offers nothing.
 	if mygo.Updater.Enabled() {
-		mygo.Use(native.Plugin)
+		// Every four hours, not the plugin's daily default: the app stays open for days, and a fix
+		// should reach it the same afternoon. It checks 10 s after launch as well.
+		mygo.Use(native.New(updater.Options{Interval: 4 * time.Hour}))
 		updater.OnChange(s.invalidateSettings)
 	}
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { s.quitting.Store(true) })

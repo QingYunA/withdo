@@ -2169,7 +2169,7 @@ show the switch.
   **Skip This Version**, a progress bar while it downloads, then a relaunch. When there is none, the
   window says the app is up to date; a failed check says why. The label follows the app's language.
 - **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
-  checks run once a day, the first 10 s after launch when one is due, and never in a development build.
+  checks run every four hours, the first 10 s after launch when one is due, and never in a development build.
 - **The switch**: Settings > General > Software updates (below).
 - `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
 
@@ -2210,7 +2210,7 @@ this order: Account, General, Agents, Advanced.
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
   reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
   link). **Software updates** (M10; only in a build that can update): a group of one row after Notifications, `Software
-  updates` (`软件更新`), `meta` `Checked once a day; you choose when to install` (`每天检查一次，装不装由你决定`),
+  updates` (`软件更新`), `meta` `Checked every four hours; you choose when to install` (`每 4 小时检查一次，装不装由你决定`),
   and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
   plugin keeps it in its own `updater.json`, not in the prefs, and the row reads it back whenever the
   plugin reports a change (a check, an answer in the update window).
