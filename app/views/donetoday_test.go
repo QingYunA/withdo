@@ -117,7 +117,7 @@ func TestCompletionFillsTheGlyphUnlessMotionIsReduced(t *testing.T) {
 		{false, func(f float32) bool { return f > 0 && f < 1 }, "between 0 and 1: the fill is animated"},
 		{true, func(f float32) bool { return f == 1 }, "1: the plain, full fill"},
 	} {
-		tt := ui.NewTester(func(c *ui.Context) { fill = app.completionPhase(c, data.Task{ID: 8, Status: data.Todo}).fill }, 10, 10)
+		tt := newTester(func(c *ui.Context) { fill = app.completionPhase(c, data.Task{ID: 8, Status: data.Todo}).fill }, 10, 10)
 		tt.SetPreferences(ui.Preferences{ReduceMotion: c.reduce})
 		tt.Frame()
 		if !c.check(fill) {

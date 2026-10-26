@@ -18,7 +18,7 @@ func acceptShot(t *testing.T, name string, zh, dark bool, in time.Duration, setu
 	t.Helper()
 	app, _, _ := newTestApp(t)
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

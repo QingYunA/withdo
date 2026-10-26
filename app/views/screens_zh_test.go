@@ -22,7 +22,7 @@ import (
 func zhShot(t *testing.T, name string, app *App, dark bool, setup func(tt *ui.Tester, m *Main)) {
 	t.Helper()
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

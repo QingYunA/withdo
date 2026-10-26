@@ -38,7 +38,7 @@ func near(a, b float32) bool { return a-b < 1.01 && b-a < 1.01 }
 func phaseAt(app *App, task data.Task, d time.Duration, reduce bool) phase {
 	app.Now = func() time.Time { return fixedNow().Add(d) }
 	var ph phase
-	tt := ui.NewTester(func(c *ui.Context) { ph = app.completionPhase(c, task) }, 10, 10)
+	tt := newTester(func(c *ui.Context) { ph = app.completionPhase(c, task) }, 10, 10)
 	tt.SetPreferences(ui.Preferences{ReduceMotion: reduce})
 	tt.Frame()
 	return ph

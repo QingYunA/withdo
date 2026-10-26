@@ -36,7 +36,7 @@ func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
 	r.s = NewSettings(app)
 	r.s.OnTitle = func(title string) { r.title = title }
 	w, h := r.s.ContentSize()
-	r.tt = ui.NewTester(r.s.View, int(w), int(h))
+	r.tt = newTester(r.s.View, int(w), int(h))
 	r.tt.SetTitleBar(ui.TitleBar{Height: SettingsTitleBarHeight, Left: 78})
 	still(r.tt)
 	r.tt.Frame()

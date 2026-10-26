@@ -79,7 +79,7 @@ func calendarShowcase(t *testing.T) *App {
 func calendarShot(t *testing.T, name string, dark, chinese bool, w, h int, setup func(*ui.Tester, *Main)) {
 	t.Helper()
 	m := NewMain(calendarShowcase(t))
-	tt := ui.NewTester(m.View, w, h)
+	tt := newTester(m.View, w, h)
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

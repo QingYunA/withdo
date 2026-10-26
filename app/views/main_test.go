@@ -80,7 +80,7 @@ func TestInspectorEllipsizesALongBranchAndEditsItOnClick(t *testing.T) {
 func TestInspectorOpensThePullRequest(t *testing.T) {
 	app, _, rec := newTestApp(t)
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	still(tt)
 	m.OpenTask(2)
 	tt.Frame()

@@ -149,7 +149,7 @@ func TestTheInspectorSaysWhoWroteTheTask(t *testing.T) {
 func TestEachReportOfTheActivityStartsWithItsAgentsAvatar(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 800) // the line for images pushes the activity down
+	tt := newTester(m.View, 1100, 800) // the line for images pushes the activity down
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
 	still(tt)
 	m.OpenTask(3)
@@ -180,7 +180,7 @@ func TestAChangeFreeAnswerStartsWithTheAssistantsAvatar(t *testing.T) {
 func TestTheSidebarHasAnIconForEveryRowAndTintsTheProjects(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, 1100, 720)
+	tt := newTester(m.View, 1100, 720)
 	tt.SetScale(2)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
 	still(tt)

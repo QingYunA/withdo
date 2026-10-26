@@ -520,7 +520,7 @@ func TestTheSceneAndTheLedgerFollowTheClock(t *testing.T) {
 // testContext is a context with the preferences of the tester, for the functions that read them.
 func testContext(tt *ui.Tester) *ui.Context {
 	var got *ui.Context
-	probe := ui.NewTester(func(c *ui.Context) { got = c }, 10, 10)
+	probe := newTester(func(c *ui.Context) { got = c }, 10, 10)
 	probe.SetPreferences(ui.Preferences{})
 	probe.Frame()
 	_ = tt

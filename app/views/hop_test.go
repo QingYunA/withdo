@@ -34,7 +34,7 @@ func newHopRig(t *testing.T, reduceMotion bool) *hopRig {
 // start opens the window, as a launch does.
 func (r *hopRig) start(reduceMotion bool) {
 	r.m = NewMain(r.app)
-	r.tt = ui.NewTester(r.m.View, 1100, 720)
+	r.tt = newTester(r.m.View, 1100, 720)
 	r.tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})
 	r.tt.SetPreferences(ui.Preferences{ReduceMotion: reduceMotion})
 }

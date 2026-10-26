@@ -17,7 +17,7 @@ import (
 func columnsShot(t *testing.T, name string, zh bool, app *App, dark bool, size [2]int, setup func(tt *ui.Tester, m *Main)) {
 	t.Helper()
 	m := NewMain(app)
-	tt := ui.NewTester(m.View, size[0], size[1])
+	tt := newTester(m.View, size[0], size[1])
 	tt.SetScale(2)
 	tt.SetDark(dark)
 	tt.SetTitleBar(ui.TitleBar{Height: 52, Left: 78})

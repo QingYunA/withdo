@@ -23,7 +23,7 @@ func newPopoverRig(t *testing.T, app *App) *popoverRig {
 	height := 600
 	r.p.Close = func() { r.closed++ }
 	r.p.Resize = func(h int) { height = h }
-	r.tt = ui.NewTester(r.p.View, int(PopoverWidth), height)
+	r.tt = newTester(r.p.View, int(PopoverWidth), height)
 	still(r.tt)
 	r.p.Show()
 	// The composer takes the keyboard on the third frame; the panel's height is known after the first.
@@ -206,7 +206,7 @@ func TestPopoverHasItsOwnDraftAndReplyApartFromTheWindow(t *testing.T) {
 func TestPopoverSpeaksChinese(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	p := NewPopover(app)
-	tt := ui.NewTester(p.View, int(PopoverWidth), 500)
+	tt := newTester(p.View, int(PopoverWidth), 500)
 	still(tt)
 	inChinese(tt)
 	tt.Frame()
