@@ -39,6 +39,11 @@ android {
             }
         }
     }
+    // Lint found 3 errors and 31 warnings when CI began to run it; they are recorded here so that
+    // only new findings fail. Fix some, then regenerate: delete the file and run lintDebug.
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
     buildFeatures {
         compose = true
         buildConfig = true

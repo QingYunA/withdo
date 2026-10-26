@@ -88,3 +88,29 @@ jobs:
       - run: scripts/check.sh race
         env:
           ADHD_SYNC_TEST_DATABASE_URL: postgres://postgres:dev@127.0.0.1:5432/adhd_sync_test?sslmode=disable
+
+  # The Kotlin unit tests and lint, which no other job runs. Not in `check`: it needs the JDK, the
+  # Android SDK and a gomobile build of mobile/core, a few minutes `check` should not wait for.
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # AGP 9 needs JDK 17 or newer; the app compiles for 17.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      # The runner ships an SDK (ANDROID_HOME) but not the NDK version scripts/android-core.sh pins.
+      - run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      # go.mod declares gobind as a tool but not gomobile; install the version of x/mobile it pins.
+      - run: |
+          go install golang.org/x/mobile/cmd/gomobile@"$(go list -m -f '{{.Version}}' golang.org/x/mobile)"
+          go install golang.org/x/mobile/cmd/gobind@"$(go list -m -f '{{.Version}}' golang.org/x/mobile)"
+          gomobile init
+      - run: scripts/check.sh android

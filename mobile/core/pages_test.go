@@ -42,7 +42,7 @@ func TestPagesMatchTheDesktop(t *testing.T) {
 		if err := json.Unmarshal([]byte(raw), &got); err != nil {
 			t.Fatalf("decode Mine: %v", err)
 		}
-		want := data.BuildMine(data.MineInput{Snapshot: snap, Now: demoNow, NoDateOpen: true}) // the phone shows the fold open
+		want := mineWithLists(data.BuildMine(data.MineInput{Snapshot: snap, Now: demoNow, NoDateOpen: true})) // the phone shows the fold open
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("Mine differs from the desktop's\nphone: %+v\nwant: %+v", got, want)
 		}
@@ -58,7 +58,7 @@ func TestPagesMatchTheDesktop(t *testing.T) {
 		if err := json.Unmarshal([]byte(raw), &got); err != nil {
 			t.Fatalf("decode Agents: %v", err)
 		}
-		want := data.BuildAgents(data.MineInput{Snapshot: snap, Now: demoNow})
+		want := agentsWithLists(data.BuildAgents(data.MineInput{Snapshot: snap, Now: demoNow}))
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("Agents differs from the desktop's\nphone: %+v\nwant: %+v", got, want)
 		}

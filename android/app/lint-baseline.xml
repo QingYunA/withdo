@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="OldTargetApi"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
+        errorLine1="        targetSdk = 35"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="15"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.76.0 is available: 1.77.0"
+        errorLine1="    testImplementation(&quot;io.github.takahirom.roborazzi:roborazzi-compose:1.76.0&quot;)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="88"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="LocalContextConfigurationRead"
+        message="Reading Configuration using LocalContext.current.resources.configuration is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="    val words = remember(resources.configuration) { Words(resources, FixedTime.clock, FixedTime.zone) }"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/xyz/sriai/adhdtodo/AndroidScreensTest.kt"
+            line="209"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="LocalContextConfigurationRead"
+        message="Reading Configuration using LocalContext.current.resources.configuration is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="    val words = remember(resources.configuration) { Words(resources) }"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/ui/App.kt"
+            line="93"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="LocalContextConfigurationRead"
+        message="Reading Configuration using LocalContext.current.resources.configuration is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="        return remember(resources.configuration) { Words(resources, FixedTime.clock, FixedTime.zone) }"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/test/java/xyz/sriai/adhdtodo/InteractionTest.kt"
+            line="391"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/ui/Parts.kt"
+            line="80"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/ui/SyncScreen.kt"
+            line="266"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        message="The native library `arm64-v8a/libgojni.so` (from `__local_aars__:/Users/mac/cyq/Code/开源/adhd-todo/.claude/worktrees/agent-a1192c79323b3c141/android/core/core.aar:unspecified`) is not 16 KB aligned">
+        <location
+            file="$GRADLE_USER_HOME/caches/9.8.2/transforms/5310320f2c9515a25d88e515e3030157/transformed/core/jni/arm64-v8a/libgojni.so"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        message="The native library `arm64-v8a/libgojni.so` (from `__local_aars__:/Users/mac/cyq/Code/开源/adhd-todo/.claude/worktrees/agent-a1192c79323b3c141/android/core/core.aar:unspecified`) is not 16 KB aligned">
+        <location
+            file="$GRADLE_USER_HOME/caches/9.8.2/transforms/5310320f2c9515a25d88e515e3030157/transformed/core/jni/arm64-v8a/libgojni.so"/>
+    </issue>
+
+    <issue
+        id="Aligned16KB"
+        message="The native library `arm64-v8a/libgojni.so` (from `__local_aars__:/Users/mac/cyq/Code/开源/adhd-todo/.claude/worktrees/agent-a1192c79323b3c141/android/core/core.aar:unspecified`) is not 16 KB aligned">
+        <location
+            file="$GRADLE_USER_HOME/caches/9.8.2/transforms/5310320f2c9515a25d88e515e3030157/transformed/core/jni/arm64-v8a/libgojni.so"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;working&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;agents_working&quot;>%1$d working&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="20"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;was&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;need_pr_closed&quot;>PR #%1$d was closed without merging&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;devices&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;sync_signed_in_devices&quot;>Signed in · %1$d devices&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="175"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;changes&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;sync_waiting&quot;>%1$d changes wait on this phone and are not lost&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="208"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;waiting&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;sync_offline&quot;>Offline · changes sync when you are back online (%1$d waiting)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="209"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;devices&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;sync_both_body&quot;>The account already has data from %1$d devices. This phone has %2$d tasks and %3$d projects.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="214"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;subtasks&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="90"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="DataExtractionRules"
+        message="The attribute `android:dataExtractionRules` only applies for Android 12 and higher; since `minSdkVersion` is API 26 you should also set `android:fullBackupContent`"
+        errorLine1="    &lt;application android:allowBackup=&quot;false&quot; android:dataExtractionRules=&quot;@xml/data_extraction_rules&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:roundIcon=&quot;@mipmap/ic_launcher_round&quot; android:label=&quot;ADHD Todo&quot; android:theme=&quot;@android:style/Theme.Material.NoActionBar&quot;>"
+        errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="8"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; `SDK_INT` is never &lt; 26"
+        errorLine1="        if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.O) return"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/Reminders.kt"
+            line="28"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.app_name` appears to be unused"
+        errorLine1="    &lt;string name=&quot;app_name&quot;>adhd-todo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="3"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.projects_placeholder_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;projects_placeholder_title&quot;>Projects come next&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="53"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.projects_placeholder_body` appears to be unused"
+        errorLine1="    &lt;string name=&quot;projects_placeholder_body&quot;>The project list and its tasks arrive in the next update.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="54"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.sync_uploading` appears to be unused"
+        errorLine1="    &lt;string name=&quot;sync_uploading&quot;>Uploading this phone’s data&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="185"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))"
+        errorLine2="                                                                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/ui/App.kt"
+            line="425"
+            column="66"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                    .launchUrl(context, Uri.parse(url))"
+        errorLine2="                                        ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/ui/App.kt"
+            line="444"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().putString(DISMISSED, version).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/AppUpdater.kt"
+            line="67"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putLong(LAST_CHECK, System.currentTimeMillis()).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/AppUpdater.kt"
+            line="108"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/AppUpdater.kt"
+            line="145"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().remove(OFFER_VERSION).remove(OFFER_APK).remove(OFFER_SUMS).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/AppUpdater.kt"
+            line="154"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse(&quot;package:${context.packageName}&quot;))"
+        errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/AppUpdater.kt"
+            line="201"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        if (!preferences.edit().putString(key, value).commit()) {"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/KeystoreSecrets.kt"
+            line="71"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        return preferences.edit().remove(key).commit()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/platform/KeystoreSecrets.kt"
+            line="80"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().putBoolean(&quot;asked_notifications&quot;, true).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/xyz/sriai/adhdtodo/MainActivity.kt"
+            line="173"
+            column="9"/>
+    </issue>
+
+</issues>

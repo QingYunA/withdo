@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks before a commit or a PR.
-#   scripts/check.sh [static|fast|full|race]
+#   scripts/check.sh [static|fast|full|race|linux|android]
 #   scripts/check.sh linux [go test args]   (default ./...)
 # static: gofmt, vet, i18n, the 800-line file limit, the generated catalog.
 # fast (default): static + short tests. full: fast + race on the core.
@@ -9,6 +9,8 @@
 # failure that passes on the Mac (GOOS-dependent text, timing). The module and build caches live in
 # named volumes. The sync Postgres tests skip there: the container has no database.
 #   scripts/check.sh linux ./app/views -run TestX
+# android: the Kotlin unit tests and lint, as CI's android job runs them. It builds the Go core
+# (android/core/core.aar) first when it is missing or older than the Go sources.
 # The sync tests need Postgres: ADHD_SYNC_TEST_DATABASE_URL, else the local adhd-sync-pg container.
 # The design screens (TestScreens*, skipped under -short) are rendered by scripts/screens.sh and
 # reviewed in the PR.
@@ -18,7 +20,22 @@ cd "$(git rev-parse --show-toplevel)"
 export GOFLAGS="${GOFLAGS:--trimpath}"
 
 mode="${1:-fast}"
-case "$mode" in static | fast | full | race | linux) ;; *) echo "usage: $0 [static|fast|full|race|linux]" >&2; exit 2 ;; esac
+case "$mode" in static | fast | full | race | linux | android) ;; *) echo "usage: $0 [static|fast|full|race|linux|android]" >&2; exit 2 ;; esac
+
+if [ "$mode" = android ]; then
+  if [ -z "${JAVA_HOME:-}" ] && command -v brew >/dev/null 2>&1; then
+    JAVA_HOME="$(brew --prefix openjdk@17)"
+    export JAVA_HOME
+  fi
+  export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+  # Rebuild the Go core when any Go file or go.mod is newer than it, so the tests never run an old one.
+  aar=android/core/core.aar
+  if [ ! -f "$aar" ] || [ -n "$(find mobile internal app go.mod -newer "$aar" \( -name '*.go' ! -name '*_test.go' -o -name go.mod \) | head -1)" ]; then
+    scripts/android-core.sh
+  fi
+  (cd android && ./gradlew --no-daemon testDebugUnitTest lintDebug)
+  exit 0
+fi
 
 if [ "$mode" = linux ]; then
   shift
