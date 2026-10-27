@@ -7,7 +7,7 @@ Thanks for helping. Bug reports, translations, design notes and code are all wel
 - **Bugs and ideas**: open an issue first for anything bigger than a small fix, so we can agree on the
   approach before you spend time on it.
 - **Security problems**: do not open a public issue. Report them privately through
-  [GitHub's security advisories](https://github.com/QingYunA/adhd-todo/security/advisories/new).
+  [GitHub's security advisories](https://github.com/QingYunA/withdo/security/advisories/new).
 - **The CLA**: pull requests from outside the project need a signed
   [Contributor License Agreement](CLA.md). The CLA bot asks you to sign it, once, on your first pull
   request. You keep the copyright; the agreement lets the project ship your work in the open-source
