@@ -11,8 +11,8 @@ You sign it once, from your pull request: the CLA bot posts a link the first tim
 ## 1. Definitions
 
 - **"You"**: the person, or the legal entity on whose behalf you act, who sends a Contribution.
-- **"Maintainer"**: the owner of the project's repository on GitHub (`github.com/QingYunA`) and any
-  successor or legal entity the owner transfers the project to.
+- **"Maintainer"**: Cyan Chan, the owner of the project's repository on GitHub
+  (`github.com/QingYunA`), and any successor or legal entity Cyan Chan transfers the project to.
 - **"Project"**: the software in the repository this agreement is linked to, and the services the
   Maintainer runs with it.
 - **"Contribution"**: any work of authorship (code, documentation, design, translation, artwork) that
