@@ -14,14 +14,17 @@ func init() {
 }
 
 // renameToWithdo gives a database that already ran the earlier migrations the product's new name:
-// PocketBase's app name, and the sign-in code mail's subject and body, which the OTP migration
-// saved with the old name. Only the old name is replaced, so a template the owner edited in the
+// PocketBase's app name, the mail sender's name when the owner set it to the old name in the admin
+// UI, and the sign-in code mail's subject and body, which the OTP migration saved with the old name. Only the old name is replaced, so a template the owner edited in the
 // admin UI keeps its own wording. A database made after the rename has nothing left to replace, so
 // running it again changes nothing.
 func renameToWithdo(txApp core.App) error {
 	settings := txApp.Settings()
-	if settings.Meta.AppName != appName {
+	if settings.Meta.AppName != appName || settings.Meta.SenderName == legacyAppName {
 		settings.Meta.AppName = appName
+		if settings.Meta.SenderName == legacyAppName {
+			settings.Meta.SenderName = appName
+		}
 		if err := txApp.Save(settings); err != nil {
 			return err
 		}

@@ -17,6 +17,7 @@ func TestRenameToWithdoRewritesAnOldDatabaseAndIsIdempotent(t *testing.T) {
 	// A database the earlier migrations set up under the old name.
 	settings := app.Settings()
 	settings.Meta.AppName = legacyAppName
+	settings.Meta.SenderName = legacyAppName
 	if err := app.Save(settings); err != nil {
 		t.Fatal(err)
 	}
@@ -46,6 +47,9 @@ func TestRenameToWithdoRewritesAnOldDatabaseAndIsIdempotent(t *testing.T) {
 		}
 		if got := app.Settings().Meta.AppName; got != "Withdo" {
 			t.Errorf("run %d: app name = %q", run, got)
+		}
+		if got := app.Settings().Meta.SenderName; got != "Withdo" {
+			t.Errorf("run %d: sender name = %q", run, got)
 		}
 	}
 	if strings.Contains(users.OTP.EmailTemplate.Subject+users.OTP.EmailTemplate.Body, legacyAppName) {
