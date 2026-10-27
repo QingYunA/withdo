@@ -1,0 +1,93 @@
+<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><title>v38 Withdo / Duodo 图标</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8e8ec;font-family:-apple-system,"PingFang SC","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1c2024;padding:48px;width:1240px}
+.pt{font-size:22px;line-height:28px;font-weight:600}.pn{font-size:15px;line-height:22px;color:#60646c;margin-top:6px;max-width:1100px}
+.sec{font-size:17px;font-weight:600;margin:40px 0 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:16px}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 0 0 .5px rgba(0,0,0,.12)}
+.card h3{font-size:15px;font-weight:600;margin-top:16px}.card p{font-size:13px;line-height:18px;color:#60646c;margin-top:4px}
+.sizes{display:flex;align-items:flex-end;gap:16px;margin-top:16px}
+.bars{display:flex;gap:12px;margin-top:16px}
+.bar{height:44px;border-radius:8px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:13px;flex:1}
+.bar.l{background:#f0f0f3;color:#1c2024}.bar.d{background:#212225;color:#edeef0}
+canvas{display:block;image-rendering:pixelated}
+</style></head><body>
+<div class="pt">v38 · Withdo / Duodo 图标草稿</div>
+<div class="pn">同一套颜色：<b>橙</b>是人，<b>苔绿</b>是 Agent，深石板底。每版都有一个对勾，讲"待办"。App 图标 16 × 16 网格，菜单栏 12 × 12 模板图。</div>
+<div class="sec">Withdo</div><div class="grid" id="w"></div>
+<div class="sec">Duodo</div><div class="grid" id="d"></div>
+<script>
+const P={'.':null,
+ Y:'#ffc46b',y:'#f5a83a',Z:'#c8691f',
+ G:'#c3dc93',g:'#8fb663',H:'#5e8a3f',
+ w:'#f3f1e6',v:'#cfcab4',k:'#1c2024',b:'#8a8f9c',B:'#b3b8c3',n:'#5d6270'};
+const BG='#262d38';
+const blank=n=>Array.from({length:n},()=>Array(n).fill('.'));
+const put=(g,x,y,c)=>{if(g[y]&&x>=0&&x<g.length)g[y][x]=c};
+// a 45-degree stroke two cells thick, from (x0,y0) to (x1,y1)
+function stroke(g,x0,y0,x1,y1,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));
+ for(let s=0;s<=n;s++){const x=Math.round(x0+(x1-x0)*s/n),y=Math.round(y0+(y1-y0)*s/n);put(g,x,y,c);put(g,x+1,y,c);}}
+function check(g,x,y,short,long,a,b){stroke(g,x,y,x+short,y+short,a);stroke(g,x+short,y+short,x+short+long,y+short-long,b||a)}
+function fill(g,rows,ox,oy,c){rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch==='#')put(g,ox+i,oy+j,c)}))}
+// shade a flat blob: light on the top-left edge, deep on the bottom-right edge
+function shade(g,from,tone){const at=(i,j)=>g[j]&&g[j][i]!==undefined?g[j][i]:'.';const out=g.map(r=>r.slice());
+ g.forEach((row,j)=>row.forEach((c,i)=>{if(c!==from)return;const t=tone;
+  if(at(i+1,j)==='.'||at(i,j+1)==='.'||at(i+1,j+1)==='.')out[j][i]=t[2];else if(at(i-1,j)==='.'||at(i,j-1)==='.')out[j][i]=t[0];}));return out}
+const C9=['...###...','.#######.','.#######.','#########','#########','#########','.#######.','.#######.','...###...'];
+const SQ=n=>Array.from({length:n},(_,j)=>[...Array(n)].map((_,i)=>((i===0||i===n-1)&&(j===0||j===n-1))?'.':'#').join(''));
+const rows=g=>g.map(r=>r.join(''));
+const ink=g=>rows(g).map(l=>l.replace(/[^.]/g,'#'));
+
+// W1: a white check crosses both circles
+function W1(){let g=blank(16);fill(g,C9,0,3,'y');fill(g,C9,6,3,'g');
+ g=shade(g,'y',['Y','y','Z']);g=shade(g,'g',['G','g','H']);check(g,3,7,2,5,'w');return rows(g)}
+function W1s(){const g=blank(12);fill(g,['..###..','.#####.','#######','#######','#######','.#####.','..###..'],0,2,'#');fill(g,['..###..','.#####.','#######','#######','#######','.#####.','..###..'],5,2,'#');
+ check(g,2,5,2,4,'.');return rows(g)}
+// W2: one check, the short stroke by the person, the long stroke by the agent
+function W2(){let g=blank(16);fill(g,SQ(14),1,1,'w');g=shade(g,'w',['w','w','v']);check(g,3,7,3,7,'y','g');return rows(g)}
+function W2s(){const g=blank(12);fill(g,SQ(12),0,0,'#');check(g,2,5,2,5,'.');return rows(g)}
+// W3: two checks side by side read as the W
+function W3(){const g=blank(16);check(g,0,7,3,5,'y');check(g,6,7,3,5,'g');return rows(g)}
+function W3s(){const g=blank(12);check(g,0,4,2,4,'#');check(g,4,4,2,4,'#');return rows(g)}
+// D1: a double tick, one of each
+function D1(){const g=blank(16);check(g,1,8,2,5,'y');check(g,5,8,2,7,'g');return rows(g)}
+function D1s(){const g=blank(12);check(g,0,6,2,4,'#');check(g,3,6,2,6,'#');return rows(g)}
+// D2: a pixel dodo, a check on its wing; the mascot for the film
+const DODO=[
+'................',
+'.....bbbb.......',
+'....bBBBbb......',
+'....bBkBbbYY....',
+'....bbbbbYYYY...',
+'.....bbbbYZZZ...',
+'......bbb..Z....',
+'...bbbbbbb......',
+'..bBBbbbbbbb....',
+'.bBBbwbbbwbbb...',
+'.bbbbbwbwbbbb...',
+'.nbbbbbwbbbbn...',
+'..nbbbbbbbbn....',
+'...nnnnnnnn.....',
+'....yy...yy.....',
+'...yyy..yyy.....'];
+const DODOs=['............','...####.....','..######....','..#.##.##...','..########..','...####.....','.########...','##########..','##########..','.########...','..##..##....','.###.###....'];
+const W=[['W1 · 对勾穿过两个圆','橙圆是人，绿圆是 Agent，一个白对勾从一边划到另一边：事情是两边一起做完的。',W1(),W1s()],
+ ['W2 · 一个对勾，两人各画一笔','短的一笔是人定下要做什么，长的一笔是 Agent 去做完。最像待办，也最直白。',W2(),W2s()],
+ ['W3 · 两个对勾拼成 W','橙勾加绿勾，连起来读是 W，Withdo 的首字母。名字和待办都在里面。',W3(),W3s()]];
+const D=[['D1 · 双对勾','一前一后两个对勾，"duo + do"。缺点是像聊天软件的"已读"双勾。',D1(),D1s()],
+ ['D2 · 像素渡渡鸟','把 dodo 的谐音变成吉祥物，翅膀上一个白对勾。宣传片里可以当主角，但小尺寸不好认。',DODO,DODOs]];
+function draw(rows,px,rad){const n=rows.length,pad=Math.round(n*px*0.14),size=n*px+pad*2;
+ const cv=document.createElement('canvas');cv.width=cv.height=size;const x=cv.getContext('2d');
+ x.fillStyle=BG;x.beginPath();x.roundRect(0,0,size,size,rad*size);x.fill();
+ rows.forEach((row,j)=>[...row].forEach((ch,i)=>{const c=P[ch];if(!c)return;x.fillStyle=c;x.fillRect(pad+i*px,pad+j*px,px,px)}));return cv}
+function tmpl(rows,px,col){const n=rows.length,cv=document.createElement('canvas');cv.width=cv.height=n*px;const x=cv.getContext('2d');x.fillStyle=col;
+ rows.forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch==='#')x.fillRect(i*px,j*px,px,px)}));return cv}
+function cards(el,items){for(const [t,p,r16,r12] of items){const card=document.createElement('div');card.className='card';
+ card.appendChild(draw(r16,14,0.225));
+ const s=document.createElement('div');s.className='sizes';[6,4,2].forEach(px=>s.appendChild(draw(r16,px,0.225)));card.appendChild(s);
+ const bars=document.createElement('div');bars.className='bars';
+ [['l','#1c2024'],['d','#edeef0']].forEach(([k,col])=>{const b=document.createElement('div');b.className='bar '+k;b.appendChild(tmpl(r12,2,col));b.append('菜单栏 12×12');bars.appendChild(b)});
+ card.appendChild(bars);
+ const h=document.createElement('h3');h.textContent=t;card.appendChild(h);const q=document.createElement('p');q.textContent=p;card.appendChild(q);el.appendChild(card)}}
+cards(document.getElementById('w'),W);cards(document.getElementById('d'),D);
+</script></body></html>

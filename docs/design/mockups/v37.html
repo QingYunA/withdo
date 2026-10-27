@@ -1,0 +1,70 @@
+<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><title>v37 Lichen 图标</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8e8ec;font-family:-apple-system,"PingFang SC","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1c2024;padding:48px;width:1240px}
+.pt{font-size:22px;line-height:28px;font-weight:600}.pn{font-size:15px;line-height:22px;color:#60646c;margin-top:6px;max-width:1100px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:32px}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 0 0 .5px rgba(0,0,0,.12)}
+.card h3{font-size:15px;font-weight:600;margin-top:16px}.card p{font-size:13px;line-height:18px;color:#60646c;margin-top:4px}
+.sizes{display:flex;align-items:flex-end;gap:16px;margin-top:16px}
+.bars{display:flex;gap:12px;margin-top:16px}
+.bar{height:44px;border-radius:8px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:13px;flex:1}
+.bar.l{background:#f0f0f3;color:#1c2024}.bar.d{background:#212225;color:#edeef0}
+canvas{display:block;image-rendering:pixelated}
+.key{display:flex;gap:16px;margin-top:24px;font-size:13px;color:#60646c}.key i{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:6px}
+</style></head><body>
+<div class="pt">v37 · Lichen 图标草稿</div>
+<div class="pn">地衣是真菌和藻类长成的一个生物。<b>橙</b>是人（岩石上的橙色石黄衣），<b>苔绿</b>是 Agent，重叠处的<b>金</b>是两方长成的新东西。底色是深石板。App 图标 16 × 16 网格，菜单栏 12 × 12 模板图。</div>
+<div class="key"><span><i style="background:#f5a83a"></i>人</span><span><i style="background:#8fb663"></i>Agent</span><span><i style="background:#d4bf4f"></i>两方合成</span><span><i style="background:#262d38"></i>石板底</span></div>
+<div class="grid" id="g"></div>
+<script>
+const P={'.':null,
+ Y:'#ffc46b',y:'#f5a83a',Z:'#c8691f',   // human: light, mid, deep
+ G:'#c3dc93',g:'#8fb663',H:'#5e8a3f',   // agent
+ O:'#efe08a',o:'#d4bf4f',Q:'#9c8a2c'};  // the overlap
+const BG='#262d38';
+// Two hand-drawn pixel circles grown into one. Light on the top-left edge, deep on the bottom-right.
+const C9=['...###...','.#######.','.#######.','#########','#########','#########','.#######.','.#######.','...###...'];
+const C7=['..###..','.#####.','#######','#######','#######','.#####.','..###..'];
+function mask(n,circle,at){const m=Array.from({length:n},()=>Array(n).fill(false));
+ circle.forEach((row,j)=>[...row].forEach((c,i)=>{if(c==='#')m[at[1]+j][at[0]+i]=true}));return m}
+function fuse(n,circle,a,b,speck){const A=mask(n,circle,a),B=mask(n,circle,b);
+ const g=A.map((row,j)=>row.map((x,i)=>x&&B[j][i]?'o':x?'y':B[j][i]?'g':'.'));
+ const at=(i,j)=>g[j]&&g[j][i]?g[j][i]:'.';const tone={y:['Y','y','Z'],g:['G','g','H'],o:['O','o','Q']};
+ return g.map((row,j)=>row.map((c,i)=>{if(c==='.')return '.';const t=tone[c];
+  if(at(i+1,j)==='.'||at(i,j+1)==='.'||at(i+1,j+1)==='.')return t[2];
+  if(at(i-1,j)==='.'||at(i,j-1)==='.')return t[0];
+  if(speck&&speck.some(([x,y])=>x===i&&y===j))return t[0];
+  return t[1]}).join(''))}
+// menu bar: both circles in ink, the overlap cut out, so one colour still reads as two
+function knot(n,circle,a,b){const A=mask(n,circle,a),B=mask(n,circle,b);
+ return A.map((row,j)=>row.map((x,i)=>(x!==B[j][i])?'#':'.').join(''))}
+const ink=rows=>rows.map(l=>l.replace(/[^.]/g,'#'));
+// Two L pieces locked into one square
+const C=[
+'................','................',
+'..yyy.GGGGGGGG..','..yyZ.ggggggHg..','..yyZ.ggggggHg..','..yyZ.ggggggHg..','..yyZ.ggggggHg..','..yyZ.ggggggHg..',
+'..yyZ.HHHHHHHg..','..yyZ...........','..yyZyyyyyyyyy..','..yyZyyyyyyyyy..','..ZZZZZZZZZZZZ..',
+'................','................','................'];
+const C12=['............','..#.######..','..#.######..','..#.######..','..#.######..','..#.######..','..#.........','..#########.','..#########.','............','............','............'];
+const A=fuse(16,C9,[1,1],[6,6]), A12=knot(12,C7,[0,0],[5,5]);
+const B=fuse(16,C9,[1,1],[6,6],[[3,4],[5,2],[2,7],[11,10],[9,13],[12,9]]), B12=A12;
+
+function draw(rows,px,bg,rad){const n=rows.length,pad=Math.round(n*px*0.14),size=n*px+pad*2;
+ const cv=document.createElement('canvas');cv.width=cv.height=size;const x=cv.getContext('2d');
+ x.fillStyle=bg;x.beginPath();x.roundRect(0,0,size,size,rad*size);x.fill();
+ rows.forEach((row,j)=>[...row].forEach((ch,i)=>{const c=P[ch];if(!c)return;x.fillStyle=c;x.fillRect(pad+i*px,pad+j*px,px,px)}));return cv}
+function tmpl(rows,px,col){const n=rows.length,cv=document.createElement('canvas');cv.width=cv.height=n*px;const x=cv.getContext('2d');x.fillStyle=col;
+ rows.forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch==='#')x.fillRect(i*px,j*px,px,px)}));return cv}
+const items=[
+ ['A · 两个细胞长成一个','橙是人，绿是 Agent，重叠处是第三种颜色：两方合成的新东西。菜单栏版把重叠处挖空，单色也读得出是两个。',A,A12],
+ ['B · 同上，加地衣颗粒','圆里撒几颗亮点，像地衣表面的粉芽。大图更有质感，小图和 A 一样。',B,B12],
+ ['C · 两块 L','两块 L 形拼成一个正方形，也是首字母。最几何，离"地衣"最远。',C,C12]];
+const g=document.getElementById('g');
+for(const [t,p,rows,r12] of items){const card=document.createElement('div');card.className='card';
+ card.appendChild(draw(rows,14,BG,0.225));
+ const s=document.createElement('div');s.className='sizes';[6,4,2].forEach(px=>s.appendChild(draw(rows,px,BG,0.225)));card.appendChild(s);
+ const bars=document.createElement('div');bars.className='bars';
+ [['l','#1c2024'],['d','#edeef0']].forEach(([k,col])=>{const b=document.createElement('div');b.className='bar '+k;b.appendChild(tmpl(r12,2,col));b.append('菜单栏 12×12');bars.appendChild(b)});
+ card.appendChild(bars);
+ const h=document.createElement('h3');h.textContent=t;card.appendChild(h);const q=document.createElement('p');q.textContent=p;card.appendChild(q);g.appendChild(card)}
+</script></body></html>
