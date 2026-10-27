@@ -10,9 +10,9 @@ func TestCopyForAgentNamesTheTasksTheWayAPersonWouldSayIt(t *testing.T) {
 		ids  []int
 		want string
 	}{
-		{[]int{12}, "Do adhd-todo task #12."},
-		{[]int{31, 32}, "Do adhd-todo tasks #31 and #32."},
-		{[]int{33, 31, 32}, "Do adhd-todo tasks #31, #32 and #33."},
+		{[]int{12}, "Do Withdo task #12."},
+		{[]int{31, 32}, "Do Withdo tasks #31 and #32."},
+		{[]int{33, 31, 32}, "Do Withdo tasks #31, #32 and #33."},
 	} {
 		if got := copyForAgent(c.ids); got != c.want {
 			t.Errorf("copyForAgent(%v) = %q, want %q", c.ids, got, c.want)
@@ -28,7 +28,7 @@ func TestTheHandOffToastOfOneTaskCopiesForTheAgentAndKeepsShowing(t *testing.T) 
 		t.Fatal(err)
 	}
 	r.tt.Frame()
-	if got := r.tt.Clipboard(); got != "Do adhd-todo task #5." {
+	if got := r.tt.Clipboard(); got != "Do Withdo task #5." {
 		t.Errorf("the clipboard holds %q", got)
 	}
 	has(t, r.tt, "Copied", "Undo", "Handed to an agent")
@@ -45,7 +45,7 @@ func TestTheHandOffToastOfAStackCopiesAllTheirNumbers(t *testing.T) {
 	if err := r.tt.Click("Copy for the agent"); err != nil {
 		t.Fatal(err)
 	}
-	if got := r.tt.Clipboard(); got != "Do adhd-todo tasks #5 and #6." {
+	if got := r.tt.Clipboard(); got != "Do Withdo tasks #5 and #6." {
 		t.Errorf("the clipboard holds %q", got)
 	}
 }

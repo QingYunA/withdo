@@ -55,7 +55,7 @@ the static tokens of `-tokens`. The log has one line the first time each subject
 - **Password guessing** is limited to 10 user sign-ins and 5 superuser sign-ins a minute per client address (PocketBase's rate limit,
   counting by the `X-Real-IP` nginx sets).
 - **Mail** goes out through Resend's SMTP (`smtp.resend.com:465`, TLS, user `resend`, the password a
-  send-only API key for `sri-ai.xyz`), from `ADHD Todo <noreply@sri-ai.xyz>`. It is set in
+  send-only API key for `sri-ai.xyz`), from `Withdo <noreply@sri-ai.xyz>` (the sender name was `ADHD Todo` before the rename; change it there by hand). It is set in
   PocketBase's settings (admin UI > Settings > Mail), not in this repo; the key is also in the owner's
   keychain as `adhd-todo-resend-smtp`. The domain's DKIM, the `send` and `rsend` CNAMEs and DMARC are
   Cloudflare records Resend gave (2026-10-22); no MX, so Resend does not receive mail for the domain.

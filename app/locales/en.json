@@ -802,7 +802,7 @@
   "@linkNotFound": {
     "description": "Tip shown when the user clicks a link to a local file that is no longer there (a page an agent attached to a report)."
   },
-  "listEmptyBody": "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself.",
+  "listEmptyBody": "Coding agents add tasks here through the Withdo MCP server. You can add one yourself.",
   "@listEmptyBody": {
     "description": "Body of an empty project list."
   },
@@ -1516,7 +1516,7 @@
   "@settingsNotifyMeta": {
     "description": "Quiet line under the system notifications switch."
   },
-  "settingsNotifyDenied": "macOS does not allow adhd-todo to notify",
+  "settingsNotifyDenied": "macOS does not allow Withdo to notify",
   "@settingsNotifyDenied": {
     "description": "Quiet line, in the warning color, when macOS refused the last notification."
   },
@@ -1864,7 +1864,7 @@
   "@menuSettings": {
     "description": "Item of the app menu that opens the Settings window (⌘,)."
   },
-  "trayOpen": "Open ADHD Todo",
+  "trayOpen": "Open Withdo",
   "@trayOpen": {
     "description": "Item of the menu of the tray icon (Windows) that brings the main window back; also the link at the right of the footer of the menu bar panel."
   },
@@ -1916,7 +1916,7 @@
   "@settingsAboutLicense": {
     "description": "Second line of the About row of Settings > General."
   },
-  "a11yAboutGitHub": "adhd-todo on GitHub",
+  "a11yAboutGitHub": "Withdo on GitHub",
   "@a11yAboutGitHub": {
     "description": "Accessibility label of the GitHub link in Settings > General > About"
   },
@@ -1924,7 +1924,7 @@
   "@settingsAboutLink": {
     "description": "Link of the About row of Settings > General that opens the project on GitHub."
   },
-  "settingsAboutName": "adhd-todo {version}",
+  "settingsAboutName": "Withdo {version}",
   "@settingsAboutName": {
     "description": "Name and version row of Settings > General.",
     "placeholders": {
@@ -2028,7 +2028,7 @@
   "@viewList": {
     "description": "Segment of the List | Board switch."
   },
-  "windowTitle": "ADHD Todo",
+  "windowTitle": "Withdo",
   "@windowTitle": {
     "description": "Title of the main window."
   },
@@ -2168,7 +2168,7 @@
   "@settingsAgentsTitle": {
     "description": "Group label above the list of coding agents in Settings > Agents."
   },
-  "settingsAgentsBody": "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or start the agent.",
+  "settingsAgentsBody": "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or start the agent.",
   "@settingsAgentsBody": {
     "description": "One plain line under the title of Settings > Agents: what Install MCP does and does not do."
   },
@@ -2200,7 +2200,7 @@
   },
   "settingsAgentInstall": "Install MCP",
   "@settingsAgentInstall": {
-    "description": "Button that adds adhd-todo's MCP server to an agent."
+    "description": "Button that adds Withdo's MCP server to an agent."
   },
   "settingsAgentInstalling": "Installing…",
   "@settingsAgentInstalling": {
@@ -2208,7 +2208,7 @@
   },
   "settingsAgentInstalled": "MCP installed",
   "@settingsAgentInstalled": {
-    "description": "At the right of an agent that already has adhd-todo's MCP server. A check mark comes before it."
+    "description": "At the right of an agent that already has Withdo's MCP server. A check mark comes before it."
   },
   "settingsAgentGet": "Get it",
   "@settingsAgentGet": {
@@ -2242,21 +2242,21 @@
   "@settingsAgentOther": {
     "description": "Label of the row at the bottom of Settings > Agents for an agent that is not in the list."
   },
-  "settingsAgentOtherBody": "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself.",
+  "settingsAgentOtherBody": "Not in the list? Copy this guide and paste it to the agent: it adds Withdo itself.",
   "@settingsAgentOtherBody": {
     "description": "Second line of the Another agent row in Settings > Agents."
   },
   "settingsCopyGuide": "Copy setup guide",
   "@settingsCopyGuide": {
-    "description": "Button that copies the guide an agent follows to add adhd-todo's MCP server to itself; also its accessibility label."
+    "description": "Button that copies the guide an agent follows to add Withdo's MCP server to itself; also its accessibility label."
   },
-  "settingsAgentNoCore": "adhd-core isn't at {path}. Build it first, then try again.",
+  "settingsAgentNoCore": "withdo isn't at {path}. Build it first, then try again.",
   "@settingsAgentNoCore": {
-    "description": "Why Install MCP did nothing: the adhd-core program the agent would run is missing.",
+    "description": "Why Install MCP did nothing: the withdo program the agent would run is missing.",
     "placeholders": {
       "path": {
         "type": "String",
-        "example": "~/.local/bin/adhd-core"
+        "example": "~/.local/bin/withdo"
       }
     }
   },
@@ -2294,7 +2294,7 @@
       }
     }
   },
-  "settingsAgentManual": "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:",
+  "settingsAgentManual": "{file} isn't plain JSON, so Withdo won't rewrite it. Add this to it:",
   "@settingsAgentManual": {
     "description": "Shown under the agents when a config file cannot be edited safely (a JSON file with comments, or a Cordis patch that is not a list); the snippet to add follows in a box.",
     "placeholders": {
@@ -3303,7 +3303,7 @@
   },
   "handOffCopy": "Copy for the agent",
   "@handOffCopy": {
-    "description": "Button of the hand-off toast. It puts a sentence on the clipboard to paste into an agent so it picks up the handed tasks, such as: Do adhd-todo task #12."
+    "description": "Button of the hand-off toast. It puts a sentence on the clipboard to paste into an agent so it picks up the handed tasks, such as: Do Withdo task #12."
   },
   "handOffCopied": "Copied",
   "@handOffCopied": {
@@ -3931,7 +3931,7 @@
   "@recentSignedOutTitle": {
     "description": "Title of the Recent changes page when gh is signed out."
   },
-  "recentGHBody": "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:",
+  "recentGHBody": "Withdo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:",
   "@recentGHBody": {
     "description": "Body of the Recent changes page when gh is missing or signed out; the command to run follows."
   },
