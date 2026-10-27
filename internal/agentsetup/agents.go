@@ -1,11 +1,15 @@
-// Package agentsetup finds the coding agents on this Mac and adds adhd-todo's MCP server to them.
+// Package agentsetup finds the coding agents on this Mac and adds Withdo's MCP server to them.
 //
 // Detect says whether an agent is here (its command is on PATH, or its config folder exists) and
-// whether adhd-todo is already in its MCP config. Install adds it: through the agent's own
+// whether Withdo is already in its MCP config. Install adds it: through the agent's own
 // `mcp add` command where it has one, otherwise by editing its config file, after a backup,
 // leaving the rest of the file as it was. DeepSeek Harness is neither: its servers are a Cordis
-// patch list (YAML), and its own patch layer is edited instead. Nothing here runs on its own: the
-// app calls Install from a button.
+// patch list (YAML), and its own patch layer is edited instead.
+//
+// The server was called adhd-todo before the product became Withdo. An agent that has only that
+// entry (Status.Legacy) is not Installed: Install adds withdo and removes adhd-todo, and Migrate
+// does that for every such agent. Apart from Migrate, which the app runs once at startup, nothing
+// here runs on its own: the app calls Install from a button.
 package agentsetup
 
 import "runtime"
@@ -19,7 +23,7 @@ const (
 	viaYAML                // an entry added to the agent's Cordis patch list (DeepSeek Harness)
 )
 
-// Agent is a coding agent adhd-todo knows how to set up.
+// Agent is a coding agent Withdo knows how to set up.
 type Agent struct {
 	ID   string // stable key: "claude", "codex", ...
 	Name string // as people write it; the avatar and the reports' names follow it
@@ -93,5 +97,8 @@ func ByID(id string) (Agent, bool) {
 	return Agent{}, false
 }
 
-// serverName is the name adhd-todo goes by in every agent's config.
-const serverName = "adhd-todo"
+// serverName is the name Withdo goes by in every agent's config.
+const serverName = "withdo"
+
+// legacyServerName is what serverName was before the rename; configs written then still have it.
+const legacyServerName = "adhd-todo"

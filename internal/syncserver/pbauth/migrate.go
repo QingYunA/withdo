@@ -8,7 +8,7 @@ import (
 const UsersCollection = "users"
 
 // appName is what PocketBase's emails and admin UI call the product.
-const appName = "ADHD Todo"
+const appName = "Withdo"
 
 // signInsPerMinute is how many password sign-ins one address may try in a minute.
 const signInsPerMinute = 10

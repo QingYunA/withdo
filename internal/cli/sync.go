@@ -25,7 +25,7 @@ var syncEntities = []string{
 	syncproto.EntityTasks, syncproto.EntityReports,
 }
 
-const syncUsage = `Usage: adhd-core sync <command>
+const syncUsage = `Usage: withdo sync <command>
 
 Commands:
   link --server URL --token-file FILE --name NAME [--merge|--replace]
@@ -41,10 +41,10 @@ Commands:
 --merge joins this device's tasks to the account; --replace backs this device up and uses the account's data.
 `
 
-// runSync runs one `adhd-core sync` subcommand.
+// runSync runs one `withdo sync` subcommand.
 func runSync(ctx context.Context, args []string, d deps) error {
 	if len(args) == 0 {
-		return errors.New("usage: adhd-core sync link|login|logout|status|now")
+		return errors.New("usage: withdo sync link|login|logout|status|now")
 	}
 	dbPath := paths.DBPath(d.getenv, runtime.GOOS, d.home)
 	db, err := store.Open(ctx, dbPath)
@@ -201,7 +201,7 @@ func readPassword(stdin io.Reader) (string, error) {
 // syncLogout forgets the PocketBase token and any refresh token an older version left. The sync.json stays, so signing in again needs no link.
 func syncLogout(args []string, dbPath string, d deps) error {
 	if len(args) > 0 {
-		return errors.New("usage: adhd-core sync logout")
+		return errors.New("usage: withdo sync logout")
 	}
 	if d.secrets == nil {
 		return errors.New("sync logout: no keychain available; use the desktop app")
@@ -423,7 +423,7 @@ func syncFriendlyError(err error) error {
 	case errors.Is(err, syncclient.ErrSeeding):
 		return errors.New("the workspace is still uploading its first snapshot; try again later")
 	case errors.Is(err, syncclient.ErrNotLinked):
-		return errors.New("this database is not linked; run adhd-core sync link first")
+		return errors.New("this database is not linked; run withdo sync link first")
 	case errors.Is(err, syncclient.ErrInvalidCredentials):
 		return errors.New("the login name or password is wrong")
 	case errors.Is(err, syncclient.ErrAccountLocked):
@@ -433,9 +433,9 @@ func syncFriendlyError(err error) error {
 	case errors.Is(err, syncclient.ErrSignInUnsupported):
 		return errors.New("this sync server does not support in-app sign-in; update it")
 	case syncclient.IsSignedOut(err):
-		return errors.New("not signed in; run adhd-core sync login")
+		return errors.New("not signed in; run withdo sync login")
 	case syncclient.IsUnauthorized(err):
-		return errors.New("the sync server refused the token; run adhd-core sync login again")
+		return errors.New("the sync server refused the token; run withdo sync login again")
 	default:
 		return err
 	}

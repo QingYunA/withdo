@@ -1,12 +1,12 @@
-# Connect yourself to adhd-todo
+# Connect yourself to Withdo
 
 ## 1. Goal
 
-Add adhd-todo's MCP server to yourself, at user scope (all projects), so you can report your work to the user's adhd-todo app.
+Add Withdo's MCP server to yourself, at user scope (all projects), so you can report your work to the user's Withdo app.
 
 ## 2. The server
 
-- Name: `adhd-todo`
+- Name: `withdo`
 - Transport: stdio
 - Command: `{{CORE}}`
 - Args: `["mcp"]`
@@ -21,8 +21,9 @@ As a generic JSON entry:
 ## 3. How to install
 
 1. Prefer your own command for adding MCP servers (for example an `mcp add` subcommand), at user scope.
-2. If you have none, edit your MCP config file: copy it to `<file>.adhd-todo.bak` first, add only the `adhd-todo` entry, change nothing else, and keep the file valid.
+2. If you have none, edit your MCP config file: copy it to `<file>.withdo.bak` first, add only the `withdo` entry, change nothing else, and keep the file valid.
 3. If you cannot tell where your config is, ask the user instead of guessing.
+4. If you already have an MCP server named `adhd-todo` (Withdo was called adhd-todo before, and its command was `adhd-core`), it is the old entry of the same app: add `withdo` as above, then remove the `adhd-todo` entry (for example with your `mcp remove adhd-todo` command, or by deleting that one entry from your config file).
 
 Do not install anything else.
 
@@ -42,7 +43,7 @@ Call `report_progress`:
 - when you open a PR (pr_url, status "review"),
 - when you finish (status "done").
 
-Always pass `cwd`: your current working directory. Pass `task_id` when the user names an adhd-todo task ("do #44"); read it with `get_task` first (it lists attached pictures; `get_task_image` shows one). When one piece of work covers several tasks, report on each with its own `task_id`. Write summaries in the user's language. Keep each report to one or two short sentences. Do not report trivial questions or read-only exploration.
+Always pass `cwd`: your current working directory. Pass `task_id` when the user names a Withdo task ("do #44"); read it with `get_task` first (it lists attached pictures; `get_task_image` shows one). When one piece of work covers several tasks, report on each with its own `task_id`. Write summaries in the user's language. Keep each report to one or two short sentences. Do not report trivial questions or read-only exploration.
 
 ## 6. Optional: a standing rule
 

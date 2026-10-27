@@ -1,5 +1,7 @@
-// Package corelink keeps the stable adhd-core path the coding agents run ($HOME/.local/bin/adhd-core)
-// pointing at the app's executable, which is adhd-core too, so that it updates with the app.
+// Package corelink keeps the stable withdo path the coding agents run ($HOME/.local/bin/withdo)
+// pointing at the app's executable, which is withdo too, so that it updates with the app. The app
+// does the same for the legacy adhd-core name beside it, so that agent configs written before the
+// rename keep working.
 package corelink
 
 import (
@@ -29,7 +31,7 @@ type Result struct {
 	Reason string
 }
 
-// versionTimeout bounds one `adhd-core --version`.
+// versionTimeout bounds one `withdo --version`.
 const versionTimeout = 5 * time.Second
 
 // Ensure makes link a symlink to bundled when link is missing, is a symlink into some .app bundle
@@ -39,7 +41,7 @@ const versionTimeout = 5 * time.Second
 func Ensure(link, bundled string) (Result, error) {
 	bundledVersion, err := versionOf(bundled)
 	if err != nil {
-		return Result{}, fmt.Errorf("bundled adhd-core: %w", err)
+		return Result{}, fmt.Errorf("bundled withdo: %w", err)
 	}
 	fi, err := os.Lstat(link)
 	switch {

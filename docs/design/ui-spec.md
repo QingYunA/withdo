@@ -1,4 +1,4 @@
-# adhd-todo UI spec
+# Withdo UI spec
 
 The app answers one question at a glance: **what is happening right now, and what needs me?**
 Every screen is judged against that question. The audience is a developer with ADHD who runs
@@ -139,7 +139,7 @@ that section in detail. Until then the older text describes the app as it is.
 6. **Menu bar icon and `⌥ Space`.** On macOS a pixel icon in the menu bar opens a popover (mygo
    `NewTray` + `NewFlyout` with `Popover`): the same input, up to five of today's rows (a click opens
    the task in the main window), and one footer line, `2 agents working · 1 stuck` (the stuck number
-   in `status.blocked`, the only strong color there) and `Open ADHD Todo`. `⌥ Space` anywhere opens
+   in `status.blocked`, the only strong color there) and `Open Withdo`. `⌥ Space` anywhere opens
    it with the input focused; holding it listens. On Windows the tray icon's left click opens the
    same panel. Replaces "No flyout panel, no global shortcut" and "macOS: no tray icon" in
    **Surfaces**.
@@ -450,7 +450,7 @@ A second launch starts no second process: it brings the window back (one instanc
 - **Menu bar icon (macOS).** The app icon redrawn on the 12 x 12 grid (`app/theme/sprites/tray.png`)
   as a template image: the dark cells black and the check mark cut out (`theme.TrayTemplateIcon`,
   36 x 36 px, which the menu bar draws 18 pt tall), so it follows the menu bar's light or dark
-  appearance. Tooltip `ADHD Todo`. A click opens the panel; the icon has no menu (the Dock has
+  appearance. Tooltip `Withdo`. A click opens the panel; the icon has no menu (the Dock has
   `Settings…` and Quit).
 - **The panel** (`app/views/popover.go`, `app/panel.go`). mygo `NewFlyout` anchored to the icon
   (`Tray`, `PlacementBottom`, `Focusable`) with `Popover` on macOS: an `NSPopover` draws the material,
@@ -468,7 +468,7 @@ A second launch starts no second process: it brings the window back (one instanc
   3. a hairline and one footer line: `2 agents working · 1 stuck` / `2 个 Agent 在干活 · 1 个卡住`
      at the left, `text.tertiary`, the stuck count in `status.blocked`, the only strong color there
      (working = agent tasks in doing, stuck = blocked; a part with a zero count is left out, and with
-     both zero the left is empty), and `Open ADHD Todo` / `打开 ADHD Todo` at the right as a link,
+     both zero the left is empty), and `Open Withdo` / `打开 Withdo` at the right as a link,
      which brings the main window forward and closes the panel.
   Esc or a click away closes it; the icon's own click toggles it.
 - **Global shortcut `⌥ Space`** (`Alt+Space` on Windows), `mygo.GlobalShortcut`, registered when the
@@ -476,8 +476,8 @@ A second launch starts no second process: it brings the window back (one instanc
   holds the keys the registration fails, the app logs it and carries on; the icon still works.
 - **Windows** has no Dock, so the app has a tray icon there (decided 2026-10-20, v28,
   `docs/design/mockups/v28.html`): the same sprite in color (shown 2x as 24 x 24 px), tooltip
-  `ADHD Todo`. A left click opens the panel under the icon (above it with the taskbar at the bottom
-  of the screen: mygo flips it); a right click opens its menu: `Open ADHD Todo` / `打开 ADHD Todo`,
+  `Withdo`. A left click opens the panel under the icon (above it with the taskbar at the bottom
+  of the screen: mygo flips it); a right click opens its menu: `Open Withdo` / `打开 Withdo`,
   `Settings…` / `设置…`, a separator, `Exit` / `退出`. The menu bar's File menu holds `Settings…`
   (Ctrl+,) and `Exit`, since Windows has no app menu.
 - **Not in the panel (yet):** the microphone and holding the shortcut to listen are decision 4 of
@@ -1533,8 +1533,8 @@ search results. Calendar and Summary do not select.
   selected takes only that row and clears the selection. On a board, dragging selected cards to
   another lane changes all their statuses.
 - **The hand-off toast** (one task or many): `Handed 3 tasks to an agent` / `已交给 Agent：3 件`,
-  **Copy for the agent** / `复制给 Agent` and **Undo**. Copy puts `Do adhd-todo tasks #31, #32 and
-  #33.` (`Do adhd-todo task #12.` for one) on the clipboard and reads `Copied` / `已复制` for 1.5 s.
+  **Copy for the agent** / `复制给 Agent` and **Undo**. Copy puts `Do Withdo tasks #31, #32 and
+  #33.` (`Do Withdo task #12.` for one) on the clipboard and reads `Copied` / `已复制` for 1.5 s.
 
 Decisions made while building it (2026-10-18; screens `select-*`):
 
@@ -2192,7 +2192,7 @@ show the switch.
 - **The window** is the plugin's native-UI window (no webview), in the language of the app. Background
   checks run every four hours, the first 10 s after launch when one is due, and never in a development build.
 - **The switch**: Settings > General > Software updates (below).
-- `adhd-core` is the app's own executable, linked at `~/.local/bin/adhd-core`, and updates with it; see `docs/plans/m10-auto-update.md`.
+- `withdo` is the app's own executable, linked at `~/.local/bin/withdo` (`adhd-core` stays as a legacy alias), and updates with it; see `docs/plans/m10-auto-update.md`.
 
 ### Settings
 
@@ -2224,12 +2224,12 @@ this order: Account, General, Agents, Advanced.
   row (the end-of-day reminder is in Advanced), **System notifications** (`系统通知`) with the `meta` line `Agents done or stuck, failing or merged
   PRs, and reminders` (`Agent 交回或卡住、PR 检查没过或合并、提醒到点时通知你`)
   and a switch at the right, on by default. When the last notification was refused by macOS
-  (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow adhd-todo to
-  notify` (`macOS 不允许 adhd-todo 发通知，开关不起作用`) and an **Open System Settings** link
+  (`mygo.ErrNotificationsDenied`) the `meta` line reads, in `stale`, `macOS does not allow Withdo to
+  notify` (`macOS 不允许 Withdo 发通知，开关不起作用`) and an **Open System Settings** link
   (`打开系统设置`, followed by the pixel external-link icon, as every Settings link that leaves the app) opens the Notifications settings (macOS only: Windows shows notification-area balloons and never refuses one, so the line never shows there); **Categories** (a row per category with its arrows, Edit and Delete, and `New category…`, see **Categories (M9)**); **Archived projects** (a row per
   archived project with a **Restore** link, or the empty line); **Data folder** (the path in `meta`, written
   from the home folder as `~/Library/Application Support/adhd-todo`; **Show in Finder** at the right
-  reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`adhd-todo 0.3.0`, `Open source, MIT license`, a GitHub
+  reveals the real path; on Windows **Show in File Explorer** / `在文件资源管理器中显示`); About (`Withdo 0.3.0`, `Open source, MIT license`, a GitHub
   link). **Software updates** (M10; only in a build that can update): a group of one row after Notifications, `Software
   updates` (`软件更新`), `meta` `Checked every four hours; you choose when to install` (`每 4 小时检查一次，装不装由你决定`),
   and a switch at the right, on by default, which is mygo's updater plugin's "automatic checks": the
@@ -2305,12 +2305,12 @@ this order: Account, General, Agents, Advanced.
     right, which opens the agent's URL. There is no status line and no "Not on this computer" (the
     group says it), and More never folds.
   Under the two sections, exactly as before: the manual snippet when a config file is not plain
-  JSON, or when a Cordis patch is not a patch list adhd-todo can append to; then the **Open agent
+  JSON, or when a Cordis patch is not a patch list Withdo can append to; then the **Open agent
   work in** / `去看看时打开` row with its pop-up (`The agent's app` default,
   `Terminal`, `Editor`, `Finder`), and the `claude mcp add` command in a mono well with **Copy**.
   Under it, **Another agent** / `其他 Agent`: one `meta` line and **Copy setup guide** /
-  `复制接入说明`, which copies a guide any agent can follow to add adhd-todo itself (`agentsetup`
-  Guide, also printed by `adhd-core guide`): the server, how to install it (its own command first,
+  `复制接入说明`, which copies a guide any agent can follow to add Withdo itself (`agentsetup`
+  Guide, also printed by `withdo guide`): the server, how to install it (its own command first,
   else its config file after a backup), how to check it (`get_overview`), how to report, and an
   offer to add the reporting rule to the agent's global instructions after asking the user. The
   manual snippet of a failed install has the same button. (#86)
@@ -2319,12 +2319,17 @@ this order: Account, General, Agents, Advanced.
   never called connecting. Detection (`internal/agentsetup`) reads files and looks on PATH (plus
   `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin` and the like, which a Dock-launched app's
   PATH lacks) every 30 s and after an install; **nothing is installed without the button**.
-  - Commands, run with the absolute `~/.local/bin/adhd-core` and a 30 s timeout: `claude mcp add --scope
-    user adhd-todo -- <core> mcp`; `codex mcp add adhd-todo -- <core> mcp`; `gemini mcp add -s user
-    adhd-todo <core> mcp`; `qwen mcp add --scope user adhd-todo <core> mcp`; `kimi mcp add --transport
-    stdio adhd-todo -- <core> mcp`; `amp mcp add adhd-todo -- <core> mcp`; `code --add-mcp
-    '{"name":"adhd-todo","command":"<core>","args":["mcp"]}'`.
-  - Files (copied first to `<file>.adhd-todo.bak`, key order, number text and indentation kept, created
+  - Commands, run with the absolute `~/.local/bin/withdo` and a 30 s timeout: `claude mcp add --scope
+    user withdo -- <core> mcp`; `codex mcp add withdo -- <core> mcp`; `gemini mcp add -s user
+    withdo <core> mcp`; `qwen mcp add --scope user withdo <core> mcp`; `kimi mcp add --transport
+    stdio withdo -- <core> mcp`; `amp mcp add withdo -- <core> mcp`; `code --add-mcp
+    '{"name":"withdo","command":"<core>","args":["mcp"]}'`.
+  - **The entry before the rename** (`adhd-todo`, running `adhd-core`) is moved to `withdo` by the
+    app on launch, in the background and without asking: `withdo` is added, then `adhd-todo` is
+    removed with the agent's own `mcp remove` (Claude, Gemini and Qwen at user scope; VS Code has
+    none, so its `mcp.json` is edited) or out of its config file. An agent that still has only the
+    old entry shows **Install MCP**, which does the same.
+  - Files (copied first to `<file>.withdo.bak`, key order, number text and indentation kept, created
     when missing): Cursor `~/.cursor/mcp.json` `mcpServers`; opencode `~/.config/opencode/opencode.json`
     `mcp` (`type: local`, `command: [core, "mcp"]`); Windsurf `~/.codeium/windsurf/mcp_config.json`
     `mcpServers`; Kiro `~/.kiro/settings/mcp.json` `mcpServers`; Cline `~/Library/Application
@@ -2333,11 +2338,11 @@ this order: Account, General, Agents, Advanced.
   - **DeepSeek Harness is the one that is not JSON.** It takes MCP servers as Cordis patch entries,
     and it is detected by `~/.dsh` alone (the design's `dsh` is not on PATH). Install appends one
     entry to `~/.dsh/cordis.patch.yml`, the home patch layer every profile reads after its own:
-    `- insert:` with `@deepseek-ai/dsh-mcp-client`, `serverName: adhd-todo`, `transport: stdio`,
+    `- insert:` with `@deepseek-ai/dsh-mcp-client`, `serverName: withdo`, `transport: stdio`,
     `command: <core>`, `args: [mcp]`, `failOnStartupError: false` (the plugin's documented minimal
     stdio configuration, with one change: true would make the plugin refuse to activate when
-    adhd-core fails to start, and false degrades to no tools, so adhd-todo can never stop DeepSeek
-    Harness from starting). A patch file that is not a patch list adhd-todo can append to (a
+    withdo fails to start, and false degrades to no tools, so Withdo can never stop DeepSeek
+    Harness from starting). A patch file that is not a patch list Withdo can append to (a
     mapping, a flow sequence or a list indented from column 0, for example) is not rewritten: the
     pane falls back to the manual snippet, as for a JSON file it cannot safely edit. Installed is
     read from the home layer and every profile's `cordis.patch.yml`.
@@ -2346,7 +2351,7 @@ this order: Account, General, Agents, Advanced.
     installed state. Kiro and Cline are found by their folder/file and installed by adding the
     server to their MCP JSON. Nothing was guessed: an agent whose method could not be verified is
     listed in More only, never given a button that would fail.
-  - Installed is read from `~/.claude.json`, `~/.codex/config.toml` (`[mcp_servers.adhd-todo]`),
+  - Installed is read from `~/.claude.json`, `~/.codex/config.toml` (`[mcp_servers.withdo]`),
     `~/.gemini/settings.json`, `~/.qwen/settings.json`, `~/.kimi/mcp.json`, the files above, VS
     Code's user `mcp.json` (`servers`), `~/.config/amp/settings.json` (`amp.mcpServers`), and
     DeepSeek Harness's patch layers.
@@ -2425,7 +2430,7 @@ this order: Account, General, Agents, Advanced.
     `This account is deactivated; ask the admin` and a network failure's sentence as before. The
     email is never said to have, or not have, an account.
   - *The code email* (PocketBase's OTP template, English only, the product being for people outside
-    China): from `ADHD Todo <noreply@sri-ai.xyz>`, subject `<code> is your ADHD Todo code`, the code
+    China): from `Withdo <noreply@sri-ai.xyz>`, subject `<code> is your Withdo code`, the code
     in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
     nobody can sign in without the code.`
   - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same steps on its card (Google
@@ -2600,7 +2605,7 @@ this block disagrees with the bullets around it, it wins.
   (`更新`). `Later` hides the banner until a newer version. **Update** swaps the row for `Downloading
   the update… 42%` over the pixel progress bar, checks the file's SHA-256 against the release's
   `SHA256SUMS.txt`, and opens the system installer. If installs from this app are not allowed yet, the
-  row says `Allow installs from ADHD Todo in Settings, then come back` while Android's settings screen
+  row says `Allow installs from Withdo in Settings, then come back` while Android's settings screen
   is open, and the installer opens by itself on return. A failed download or checksum shows `Couldn’t
   download the update` in `status.blocked` with Later and Update again. The **Sync screen** has the
   same offer as its own group above the Server footer, always shown: `App updates`, the version or

@@ -20,7 +20,7 @@ func TestToolCallsAreRefusedOnceTheBinaryIsReplaced(t *testing.T) {
 	testutil.IsolateGit(t)
 	t.Cleanup(mcpserver.CheckForStaleBinaryOnEveryCall())
 	db, dbPath := testutil.OpenDB(t)
-	exe := filepath.Join(t.TempDir(), "adhd-core")
+	exe := filepath.Join(t.TempDir(), "withdo")
 	if err := os.WriteFile(exe, []byte("old build"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestToolCallsAreRefusedOnceTheBinaryIsReplaced(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := r.call("list_categories", nil)
-	if !res.IsError || !strings.Contains(res.Text, "adhd-core was updated") {
+	if !res.IsError || !strings.Contains(res.Text, "Withdo was updated") {
 		t.Fatalf("a replaced binary was not refused: %+v", res)
 	}
 }

@@ -19,7 +19,7 @@ type Runner func(ctx context.Context, path string, args ...string) ([]byte, erro
 // one. A zero field means the real thing.
 type Env struct {
 	Home     string                            // the user's home folder
-	Core     string                            // the adhd-core binary the agents run; default defaultCore
+	Core     string                            // the withdo binary the agents run; default defaultCore
 	LookPath func(string) (string, error)      // finds a command; default: PATH plus the usual places
 	Run      Runner                            // runs a command; default: os/exec with a PATH an app launched from the Dock lacks
 	Timeout  time.Duration                     // for one command; default 30 s
@@ -40,14 +40,14 @@ func (e *Env) core() string {
 	return defaultCore(runtime.GOOS, e.Home, exe)
 }
 
-// defaultCore is the adhd-core the agents run: on Windows the console adhd-core.exe the installer
-// puts next to the app (exe is this process's executable), elsewhere $HOME/.local/bin/adhd-core,
+// defaultCore is the withdo the agents run: on Windows the console withdo.exe the installer
+// puts next to the app (exe is this process's executable), elsewhere $HOME/.local/bin/withdo,
 // which the macOS app links to itself.
 func defaultCore(goos, home, exe string) string {
 	if goos == "windows" && exe != "" {
-		return filepath.Join(filepath.Dir(exe), "adhd-core.exe")
+		return filepath.Join(filepath.Dir(exe), "withdo.exe")
 	}
-	return filepath.Join(home, ".local", "bin", "adhd-core")
+	return filepath.Join(home, ".local", "bin", "withdo")
 }
 
 // searchPath is a PATH that starts with dirs and ends with old.
@@ -55,7 +55,7 @@ func searchPath(dirs []string, old string) string {
 	return strings.Join(dirs, string(filepath.ListSeparator)) + string(filepath.ListSeparator) + old
 }
 
-// CorePath is the adhd-core binary the agents will run.
+// CorePath is the withdo binary the agents will run.
 func (e *Env) CorePath() string { return e.core() }
 
 func (e *Env) timeout() time.Duration {

@@ -1,6 +1,6 @@
-// Command adhd-todo is the desktop app: one window with the Mine and Agents screens and a list per project,
-// drawn with mygo native UI. It reads and writes the same SQLite database as the adhd-core MCP
-// server, so what agents report shows up live. The same executable is adhd-core too (cli.go).
+// Command adhd-todo is the Withdo desktop app: one window with the Mine and Agents screens and a list per
+// project, drawn with mygo native UI. It reads and writes the same SQLite database as the withdo MCP
+// server, so what agents report shows up live. The same executable is withdo too (cli.go).
 package main
 
 import (
@@ -24,7 +24,7 @@ import (
 
 const version = "0.10.2"
 
-// connectCommand registers the MCP server with Claude Code. core is the adhd-core path the agents
+// connectCommand registers the MCP server with Claude Code. core is the withdo path the agents
 // run: shown under ~ outside Windows, where neither PowerShell nor cmd expands it, and there in
 // quotes, since the install folder has a space.
 func connectCommand(goos, core, home string) string {
@@ -33,7 +33,7 @@ func connectCommand(goos, core, home string) string {
 	} else if rest, ok := strings.CutPrefix(core, home+"/"); ok {
 		core = "~/" + rest
 	}
-	return "claude mcp add --scope user adhd-todo -- " + core + " mcp"
+	return "claude mcp add --scope user withdo -- " + core + " mcp"
 }
 
 func main() {
@@ -43,6 +43,12 @@ func main() {
 	fake := flag.Bool("fake", false, "use demo data in a temporary database instead of the real one (for screenshots)")
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
+
+	// An install an old version updated still has the old bundle name; renaming it restarts the app,
+	// which must happen before this process takes the single-instance lock below.
+	if !*fake && !*empty && restartRenamedBundle() {
+		return
+	}
 
 	// A second launch hands over to the running app and ends here, before it opens the database. The
 	// demo modes use a database of their own and may run beside the real one.
@@ -112,7 +118,8 @@ func main() {
 	})
 	mygo.App.WhenReady(func() {
 		s.setMenu()
-		go linkOwnExecutable(app.Config.AgentSetup.CorePath())
+		go prepareAgents(app.Config.AgentSetup, !*fake && !*empty)
+		go migrateWindowsInstall()
 		s.createMain()
 		if tray = s.newTray(); tray != nil {
 			s.registerShortcut()

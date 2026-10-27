@@ -261,7 +261,7 @@ func TestClosingAParentClosesItsOpenSubtasks(t *testing.T) {
 					t.Error("completed_at should be set")
 				}
 				rs := reportsOf(t, c, id)
-				if len(rs) != 1 || rs[0].Agent != "adhd-todo" || rs[0].Summary != "Closed with its parent task" ||
+				if len(rs) != 1 || rs[0].Agent != "withdo" || rs[0].Summary != "Closed with its parent task" ||
 					rs[0].Status == nil || *rs[0].Status != domain.StatusDone {
 					t.Errorf("reports of %d = %+v", id, rs)
 				}
@@ -358,7 +358,7 @@ func TestCloseFinishedSubtasks(t *testing.T) {
 	for _, closed := range []*domain.Task{gone, merged} {
 		eq(t, "status of "+closed.Title, statusOf(t, c, closed.ID), domain.StatusDone)
 		rs := reportsOf(t, c, closed.ID)
-		if len(rs) != 1 || rs[0].Agent != "adhd-todo" || rs[0].Summary != "Its branch was merged or deleted" ||
+		if len(rs) != 1 || rs[0].Agent != "withdo" || rs[0].Summary != "Its branch was merged or deleted" ||
 			rs[0].Status == nil || *rs[0].Status != domain.StatusDone {
 			t.Errorf("reports of %s = %+v", closed.Title, rs)
 		}

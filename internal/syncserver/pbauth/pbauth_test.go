@@ -190,11 +190,11 @@ func TestMigrationSetsUpUsersCollection(t *testing.T) {
 		t.Errorf("code = %d digits for %d s, want 6 for 600", users.OTP.Length, users.OTP.Duration)
 	}
 	tpl := users.OTP.EmailTemplate
-	if tpl.Subject != "{OTP} is your ADHD Todo code" || !strings.Contains(tpl.Body, "{OTP}") ||
+	if tpl.Subject != "{OTP} is your Withdo code" || !strings.Contains(tpl.Body, "{OTP}") ||
 		!strings.Contains(tpl.Body, "It works for 10 minutes") {
 		t.Errorf("OTP template = %q / %q", tpl.Subject, tpl.Body)
 	}
-	if got := app.Settings().Meta.AppName; got != "ADHD Todo" {
+	if got := app.Settings().Meta.AppName; got != "Withdo" {
 		t.Errorf("app name = %q", got)
 	}
 }
@@ -316,7 +316,7 @@ func authWithOTP(t *testing.T, base, otpID, code string) (int, string) {
 	return status, out.Token
 }
 
-var sixDigits = regexp.MustCompile(`^(\d{6}) is your ADHD Todo code$`)
+var sixDigits = regexp.MustCompile(`^(\d{6}) is your Withdo code$`)
 
 func TestNewEmailGetsAnAccountAndACode(t *testing.T) {
 	app := openApp(t)

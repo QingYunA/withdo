@@ -190,7 +190,7 @@ func (a *Agent) prepare(ctx context.Context, scope Scope, images int) (*toolbox,
 	}
 	prompt := BuildPrompt(a.cfg.Now(), projects, categories, scope, focus) + imageRules(images) + a.memoryPrompt()
 	ag, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
-		Name: "adhd-todo", Description: "Turns requests into task changes.",
+		Name: "withdo", Description: "Turns requests into task changes.",
 		Instruction: prompt, Model: m, MaxIterations: maxIterations,
 		ToolsConfig: adk.ToolsConfig{ToolsNodeConfig: toolsNode(tools), ReturnDirectly: direct},
 		// The prompt has literal braces nowhere today, but it must never be treated as a template.

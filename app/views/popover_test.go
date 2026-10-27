@@ -84,7 +84,7 @@ func TestPopoverHeightGrowsWithRowsAndWhatIsUnderTheComposer(t *testing.T) {
 func TestPopoverShowsTodayAndTheFooter(t *testing.T) {
 	app, _, _ := newTestApp(t)
 	r := newPopoverRig(t, app)
-	for _, want := range []string{"Today", "Reply to design feedback", "Open ADHD Todo"} {
+	for _, want := range []string{"Today", "Reply to design feedback", "Open Withdo"} {
 		if !r.tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, r.tt.Texts())
 		}
@@ -113,7 +113,7 @@ func TestPopoverFooterSaysNothingWithoutAgents(t *testing.T) {
 			}
 		}
 	}
-	if !r.tt.HasText("Open ADHD Todo") {
+	if !r.tt.HasText("Open Withdo") {
 		t.Errorf("no way to the main window: %q", r.tt.Texts())
 	}
 }
@@ -175,7 +175,7 @@ func TestPopoverRowOpensTheTaskInTheMainWindowAndCloses(t *testing.T) {
 func TestPopoverOpenLinkBringsTheMainWindowAndCloses(t *testing.T) {
 	app, _, rec := newTestApp(t)
 	r := newPopoverRig(t, app)
-	if err := r.tt.Click("Open ADHD Todo"); err != nil {
+	if err := r.tt.Click("Open Withdo"); err != nil {
 		t.Fatal(err)
 	}
 	if rec.mains != 1 || r.closed != 1 {
@@ -210,7 +210,7 @@ func TestPopoverSpeaksChinese(t *testing.T) {
 	still(tt)
 	inChinese(tt)
 	tt.Frame()
-	for _, want := range []string{"今天", "打开 ADHD Todo"} {
+	for _, want := range []string{"今天", "打开 Withdo"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}

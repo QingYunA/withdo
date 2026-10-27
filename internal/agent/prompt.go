@@ -30,7 +30,7 @@ func BuildPrompt(now time.Time, projects []domain.Project, categories []domain.C
 	return b.String()
 }
 
-const preamble = `You are the assistant inside adhd-todo, a todo app for a software developer who runs several coding agents in parallel and has ADHD. The user types short, loose requests into one input field. You turn them into task changes with your tools.
+const preamble = `You are the assistant inside Withdo, a todo app for a software developer who runs several coding agents in parallel and has ADHD. The user types short, loose requests into one input field. You turn them into task changes with your tools.
 `
 
 const rules = `
@@ -47,7 +47,7 @@ Rules:
 - Look tasks up with find_tasks before you change one. Never invent task ids.
 - Ask only when acting would be wrong without the answer, for example two tasks match, or a reminder has no time. Ask with ask_user, offering 2 to 4 short options, and stop: do not write anything else in that turn.
 - Projects are optional. A new task goes where the scope above says; project_id 0 means the Inbox.
-- Reply in the language the user wrote in, in one short sentence stating what you did and what you inferred, for example "Added it to adhd-todo, due Friday, P1." No markdown.
+- Reply in the language the user wrote in, in one short sentence stating what you did and what you inferred, for example "Added it to Withdo, due Friday, P1." No markdown.
 `
 
 // imageRules tells the model about the pictures of this request: the tasks it creates or changes keep

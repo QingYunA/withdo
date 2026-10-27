@@ -21,14 +21,14 @@ func script(t *testing.T, path, body string) string {
 	return path
 }
 
-// versionScript is a fake adhd-core that prints version for --version.
+// versionScript is a fake withdo that prints version for --version.
 func versionScript(t *testing.T, path, version string) string {
-	return script(t, path, `[ "$1" = --version ] && echo "adhd-core `+version+`" || exit 2`)
+	return script(t, path, `[ "$1" = --version ] && echo "withdo `+version+`" || exit 2`)
 }
 
-// bundle is the executable of an app bundle under root, which is adhd-core too, at version 0.5.0.
+// bundle is the executable of an app bundle under root, which is withdo too, at version 0.5.0.
 func bundle(t *testing.T, root string) string {
-	return versionScript(t, filepath.Join(root, "ADHD Todo.app", "Contents", "MacOS", "ADHD Todo"), "0.5.0")
+	return versionScript(t, filepath.Join(root, "Withdo.app", "Contents", "MacOS", "Withdo"), "0.5.0")
 }
 
 func target(t *testing.T, link string) string {
@@ -43,7 +43,7 @@ func target(t *testing.T, link string) string {
 func TestMissingLinkIsCreatedWithItsFolder(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "home", ".local", "bin", "adhd-core")
+	link := filepath.Join(root, "home", ".local", "bin", "withdo")
 	r, err := Ensure(link, b)
 	if err != nil || r.Action != Linked {
 		t.Fatalf("Ensure = %+v, %v", r, err)
@@ -56,7 +56,7 @@ func TestMissingLinkIsCreatedWithItsFolder(t *testing.T) {
 func TestLinkIntoTheSameBundleIsLeftAlone(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "adhd-core")
+	link := filepath.Join(root, "withdo")
 	if err := os.Symlink(b, link); err != nil {
 		t.Fatal(err)
 	}
@@ -68,9 +68,9 @@ func TestLinkIntoTheSameBundleIsLeftAlone(t *testing.T) {
 func TestLinkToTheResourceCopyOfAnOlderAppIsRepointedToTheExecutable(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "adhd-core")
+	link := filepath.Join(root, "withdo")
 	// What v0.5.0 linked: the copy in Resources, which the updated app no longer has.
-	if err := os.Symlink(filepath.Join(root, "ADHD Todo.app", "Contents", "Resources", "adhd-core"), link); err != nil {
+	if err := os.Symlink(filepath.Join(root, "Withdo.app", "Contents", "Resources", "withdo"), link); err != nil {
 		t.Fatal(err)
 	}
 	if r, err := Ensure(link, b); err != nil || r.Action != Linked {
@@ -84,9 +84,25 @@ func TestLinkToTheResourceCopyOfAnOlderAppIsRepointedToTheExecutable(t *testing.
 func TestLinkIntoAnotherAppBundleIsRepointed(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "adhd-core")
+	link := filepath.Join(root, "withdo")
 	// The old app is gone, so the link is broken: it still names an app bundle.
-	if err := os.Symlink("/Volumes/Old/ADHD Todo.app/Contents/Resources/adhd-core", link); err != nil {
+	if err := os.Symlink("/Volumes/Old/Withdo.app/Contents/Resources/withdo", link); err != nil {
+		t.Fatal(err)
+	}
+	if r, err := Ensure(link, b); err != nil || r.Action != Linked {
+		t.Fatalf("Ensure = %+v, %v", r, err)
+	}
+	if got := target(t, link); got != b {
+		t.Errorf("points at %s, want %s", got, b)
+	}
+}
+
+func TestLegacyLinkIntoTheRenamedAppBundleIsRepointed(t *testing.T) {
+	root := t.TempDir()
+	b := bundle(t, root)
+	link := filepath.Join(root, "adhd-core")
+	// What the app linked before it was renamed: a path into ADHD Todo.app.
+	if err := os.Symlink("/Applications/ADHD Todo.app/Contents/MacOS/ADHD Todo", link); err != nil {
 		t.Fatal(err)
 	}
 	if r, err := Ensure(link, b); err != nil || r.Action != Linked {
@@ -100,8 +116,8 @@ func TestLinkIntoAnotherAppBundleIsRepointed(t *testing.T) {
 func TestLinkToSomewhereElseIsKept(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	mine := versionScript(t, filepath.Join(root, "src", "adhd-core"), "0.1.0")
-	link := filepath.Join(root, "adhd-core")
+	mine := versionScript(t, filepath.Join(root, "src", "withdo"), "0.1.0")
+	link := filepath.Join(root, "withdo")
 	if err := os.Symlink(mine, link); err != nil {
 		t.Fatal(err)
 	}
@@ -115,15 +131,15 @@ func TestLinkToSomewhereElseIsKept(t *testing.T) {
 
 func TestRegularFileOlderThanTheBundledOneIsReplaced(t *testing.T) {
 	for name, body := range map[string]string{
-		"older":             `echo "adhd-core 0.4.0"`,
-		"older patch":       `echo "adhd-core 0.4.9"`,
+		"older":             `echo "withdo 0.4.0"`,
+		"older patch":       `echo "withdo 0.4.9"`,
 		"no --version flag": `echo "Unknown command: --version"; exit 2`,
 		"not a program":     `exit 1`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			b := bundle(t, root)
-			link := script(t, filepath.Join(root, "adhd-core"), body)
+			link := script(t, filepath.Join(root, "withdo"), body)
 			if r, err := Ensure(link, b); err != nil || r.Action != Linked {
 				t.Fatalf("Ensure = %+v, %v", r, err)
 			}
@@ -143,7 +159,7 @@ func TestRegularFileAsNewAsTheBundledOneIsKept(t *testing.T) {
 		t.Run(v, func(t *testing.T) {
 			root := t.TempDir()
 			b := bundle(t, root)
-			link := versionScript(t, filepath.Join(root, "adhd-core"), v)
+			link := versionScript(t, filepath.Join(root, "withdo"), v)
 			if r, err := Ensure(link, b); err != nil || r.Action != Kept {
 				t.Fatalf("Ensure = %+v, %v", r, err)
 			}
@@ -157,7 +173,7 @@ func TestRegularFileAsNewAsTheBundledOneIsKept(t *testing.T) {
 func TestDirectoryIsNeverReplaced(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "adhd-core")
+	link := filepath.Join(root, "withdo")
 	if err := os.Mkdir(link, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -171,8 +187,8 @@ func TestDirectoryIsNeverReplaced(t *testing.T) {
 
 func TestMissingBundledBinaryChangesNothing(t *testing.T) {
 	root := t.TempDir()
-	link := versionScript(t, filepath.Join(root, "adhd-core"), "0.4.0")
-	if _, err := Ensure(link, filepath.Join(root, "nope", "adhd-core")); err == nil {
+	link := versionScript(t, filepath.Join(root, "withdo"), "0.4.0")
+	if _, err := Ensure(link, filepath.Join(root, "nope", "withdo")); err == nil {
 		t.Fatal("no error for a missing bundled binary")
 	}
 	if _, err := os.Readlink(link); err == nil {
@@ -187,7 +203,7 @@ func TestLinkBelowAFileIsAnError(t *testing.T) {
 	if err := os.WriteFile(file, nil, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Ensure(filepath.Join(file, "adhd-core"), b); err == nil {
+	if _, err := Ensure(filepath.Join(file, "withdo"), b); err == nil {
 		t.Fatal("no error for a link below a regular file")
 	}
 }
@@ -197,7 +213,7 @@ func TestUnreadableLinkIsAnError(t *testing.T) {
 	b := bundle(t, root)
 	// Readlink fails for anything that is not a symlink; Ensure only gets here after Lstat
 	// saw one, so call fromSymlink on a regular file directly.
-	if _, err := fromSymlink(script(t, filepath.Join(root, "adhd-core"), "exit 1"), b); err == nil {
+	if _, err := fromSymlink(script(t, filepath.Join(root, "withdo"), "exit 1"), b); err == nil {
 		t.Fatal("no error for a link that cannot be read")
 	}
 }
@@ -205,7 +221,7 @@ func TestUnreadableLinkIsAnError(t *testing.T) {
 func TestOldFileThatCannotBeKeptIsNotReplaced(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := versionScript(t, filepath.Join(root, "adhd-core"), "0.4.0")
+	link := versionScript(t, filepath.Join(root, "withdo"), "0.4.0")
 	old := link + ".old"
 	if err := os.Mkdir(old, 0o755); err != nil {
 		t.Fatal(err)
@@ -225,7 +241,7 @@ func TestOldFileThatCannotBeKeptIsNotReplaced(t *testing.T) {
 func TestLinkWhoseTempPathIsTakenIsAnError(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := filepath.Join(root, "home", ".local", "bin", "adhd-core")
+	link := filepath.Join(root, "home", ".local", "bin", "withdo")
 	// A stale .new directory is in the way, so the new link cannot be made.
 	tmp := link + ".new"
 	if err := os.MkdirAll(tmp, 0o755); err != nil {
@@ -252,14 +268,14 @@ func TestReplaceFailures(t *testing.T) {
 		if err := os.WriteFile(file, nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := replace(filepath.Join(file, "adhd-core"), b, "test"); err == nil {
+		if _, err := replace(filepath.Join(file, "withdo"), b, "test"); err == nil {
 			t.Fatal("no error for a link below a regular file")
 		}
 	})
 	t.Run("link is a non-empty directory", func(t *testing.T) {
 		root := t.TempDir()
 		b := bundle(t, root)
-		link := filepath.Join(root, "adhd-core")
+		link := filepath.Join(root, "withdo")
 		if err := os.Mkdir(link, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -281,7 +297,7 @@ func TestReplaceFailures(t *testing.T) {
 func TestFilePrintingNoVersionIsReplaced(t *testing.T) {
 	root := t.TempDir()
 	b := bundle(t, root)
-	link := script(t, filepath.Join(root, "adhd-core"), "exit 0")
+	link := script(t, filepath.Join(root, "withdo"), "exit 0")
 	r, err := Ensure(link, b)
 	if err != nil || r.Action != Linked {
 		t.Fatalf("Ensure = %+v, %v", r, err)

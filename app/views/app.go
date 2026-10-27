@@ -1,4 +1,4 @@
-// Package views draws the adhd-todo windows with mygo native UI: the main window (the sidebar,
+// Package views draws the Withdo windows with mygo native UI: the main window (the sidebar,
 // the Mine and Agents screens, the project lists and board, the inbox and the inspector) and the Settings
 // window. It reads and writes through data.Store.
 package views

@@ -12,12 +12,12 @@ import (
 )
 
 // An MCP server lives as long as the agent session, often days, while the app that ships
-// adhd-core is upgraded under it. The old process then keeps writing to the shared database with
+// Withdo is upgraded under it. The old process then keeps writing to the shared database with
 // its old rules (once: ids from SQLite instead of the sync id blocks, which collided with rows of
 // the new build). refuseWhenStale makes such a process refuse every tool call instead.
 
-const staleMessage = "adhd-core was updated; this MCP server is an old copy and no longer writes to the database. " +
-	"Restart the agent session (or reconnect the adhd-todo MCP server) to load the new one."
+const staleMessage = "Withdo was updated; this MCP server is an old copy and no longer writes to the database. " +
+	"Restart the agent session (or reconnect the withdo MCP server) to load the new one."
 
 // staleCheckEvery bounds how often a busy agent makes us stat the binary; a variable for the tests.
 var staleCheckEvery = 2 * time.Second

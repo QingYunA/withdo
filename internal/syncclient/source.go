@@ -11,7 +11,7 @@ import (
 const AuthPocketBase = "pocketbase"
 
 // AccountSource is a TokenSource that signs in with an account and a password and remembers the
-// sign-in in Secrets. PocketBaseSource implements it, so the app, the phone core and adhd-core
+// sign-in in Secrets. PocketBaseSource implements it, so the app, the phone core and withdo
 // treat it through one interface.
 type AccountSource interface {
 	TokenSource

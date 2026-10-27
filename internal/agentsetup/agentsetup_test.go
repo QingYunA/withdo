@@ -50,11 +50,11 @@ func newRig(t *testing.T) *rig {
 		}
 		return "", exec.ErrNotFound
 	}}
-	r.write(".local/bin/adhd-core", "#!/bin/sh\n")
+	r.write(".local/bin/withdo", "#!/bin/sh\n")
 	return r
 }
 
-func (r *rig) core() string { return filepath.Join(r.home, ".local", "bin", "adhd-core") }
+func (r *rig) core() string { return filepath.Join(r.home, ".local", "bin", "withdo") }
 
 func (r *rig) write(rel, content string) {
 	r.t.Helper()
@@ -116,19 +116,19 @@ func TestACommandAloneDoesNotCountForAnAgentWhoseFolderIsItsConfig(t *testing.T)
 func TestInstalledReadsEachAgentsConfig(t *testing.T) {
 	r := newRig(t)
 	cases := map[string][2]string{ // agent: file, content
-		"claude":   {".claude.json", `{"numStartups":3,"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"codex":    {".codex/config.toml", "model = \"o3\"\n\n[mcp_servers.adhd-todo]\ncommand = \"x\"\n"},
-		"gemini":   {".gemini/settings.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"qwen":     {".qwen/settings.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"kimi":     {".kimi/mcp.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"cursor":   {".cursor/mcp.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"opencode": {".config/opencode/opencode.json", `{"mcp":{"adhd-todo":{"type":"local"}}}`},
-		"windsurf": {".codeium/windsurf/mcp_config.json", `{"mcpServers":{"adhd-todo":{}}}`},
-		"copilot":  {"Library/Application Support/Code/User/mcp.json", "{\n// mine\n\"servers\": {\"adhd-todo\": {\"command\": \"x\",},},\n}"},
-		"zed":      {".config/zed/settings.json", "// Zed settings\n{\n  /* servers */\n  \"context_servers\": {\n    \"adhd-todo\": { \"command\": \"x\" }, // here\n  },\n}"},
-		"amp":      {".config/amp/settings.json", `{"amp.mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"kiro":     {".kiro/settings/mcp.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
-		"cline":    {"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`},
+		"claude":   {".claude.json", `{"numStartups":3,"mcpServers":{"withdo":{"command":"x"}}}`},
+		"codex":    {".codex/config.toml", "model = \"o3\"\n\n[mcp_servers.withdo]\ncommand = \"x\"\n"},
+		"gemini":   {".gemini/settings.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
+		"qwen":     {".qwen/settings.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
+		"kimi":     {".kimi/mcp.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
+		"cursor":   {".cursor/mcp.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
+		"opencode": {".config/opencode/opencode.json", `{"mcp":{"withdo":{"type":"local"}}}`},
+		"windsurf": {".codeium/windsurf/mcp_config.json", `{"mcpServers":{"withdo":{}}}`},
+		"copilot":  {"Library/Application Support/Code/User/mcp.json", "{\n// mine\n\"servers\": {\"withdo\": {\"command\": \"x\",},},\n}"},
+		"zed":      {".config/zed/settings.json", "// Zed settings\n{\n  /* servers */\n  \"context_servers\": {\n    \"withdo\": { \"command\": \"x\" }, // here\n  },\n}"},
+		"amp":      {".config/amp/settings.json", `{"amp.mcpServers":{"withdo":{"command":"x"}}}`},
+		"kiro":     {".kiro/settings/mcp.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
+		"cline":    {"Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", `{"mcpServers":{"withdo":{"command":"x"}}}`},
 	}
 	for id, c := range cases {
 		a := r.agent(id)
@@ -145,14 +145,14 @@ func TestInstalledReadsEachAgentsConfig(t *testing.T) {
 func TestInstalledSaysNoToAnotherServerAndToABrokenFile(t *testing.T) {
 	r := newRig(t)
 	r.write(".gemini/settings.json", `{"mcpServers":{"other":{}}}`)
-	r.write(".codex/config.toml", "[mcp_servers.other]\ncommand = \"x\"\n# [mcp_servers.adhd-todo]\n")
+	r.write(".codex/config.toml", "[mcp_servers.other]\ncommand = \"x\"\n# [mcp_servers.withdo]\n")
 	r.write(".kimi/mcp.json", `{"mcpServers": `)
 	for _, id := range []string{"gemini", "codex", "kimi"} {
 		if r.env.Installed(r.agent(id)) {
 			t.Errorf("%s: seen as installed", id)
 		}
 	}
-	r.write(".codex/config.toml", "[mcp_servers.\"adhd-todo\".env]\nA = \"1\"\n")
+	r.write(".codex/config.toml", "[mcp_servers.\"withdo\".env]\nA = \"1\"\n")
 	if !r.env.Installed(r.agent("codex")) {
 		t.Error("a quoted table name was missed")
 	}
@@ -161,12 +161,12 @@ func TestInstalledSaysNoToAnotherServerAndToABrokenFile(t *testing.T) {
 func TestInstallRunsEachAgentsOwnCommandWithTheAbsolutePathOfTheCore(t *testing.T) {
 	core := ""
 	for id, want := range map[string][]string{
-		"claude": {"mcp", "add", "--scope", "user", "adhd-todo", "--", "CORE", "mcp"},
-		"codex":  {"mcp", "add", "adhd-todo", "--", "CORE", "mcp"},
-		"gemini": {"mcp", "add", "-s", "user", "adhd-todo", "CORE", "mcp"},
-		"qwen":   {"mcp", "add", "--scope", "user", "adhd-todo", "CORE", "mcp"},
-		"kimi":   {"mcp", "add", "--transport", "stdio", "adhd-todo", "--", "CORE", "mcp"},
-		"amp":    {"mcp", "add", "adhd-todo", "--", "CORE", "mcp"},
+		"claude": {"mcp", "add", "--scope", "user", "withdo", "--", "CORE", "mcp"},
+		"codex":  {"mcp", "add", "withdo", "--", "CORE", "mcp"},
+		"gemini": {"mcp", "add", "-s", "user", "withdo", "CORE", "mcp"},
+		"qwen":   {"mcp", "add", "--scope", "user", "withdo", "CORE", "mcp"},
+		"kimi":   {"mcp", "add", "--transport", "stdio", "withdo", "--", "CORE", "mcp"},
+		"amp":    {"mcp", "add", "withdo", "--", "CORE", "mcp"},
 	} {
 		r := newRig(t)
 		core = r.core()
@@ -203,7 +203,7 @@ func TestInstallCopilotAddsTheServerToVSCodeAsJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(call[2]), &spec); err != nil {
 		t.Fatal(err)
 	}
-	if spec.Name != "adhd-todo" || spec.Command != r.core() || !slices.Equal(spec.Args, []string{"mcp"}) {
+	if spec.Name != "withdo" || spec.Command != r.core() || !slices.Equal(spec.Args, []string{"mcp"}) {
 		t.Errorf("spec %+v", spec)
 	}
 }
@@ -211,8 +211,8 @@ func TestInstallCopilotAddsTheServerToVSCodeAsJSON(t *testing.T) {
 func TestInstallDoesNothingWhenItIsThereAlready(t *testing.T) {
 	r := newRig(t)
 	r.path["gemini"] = "/bin/gemini"
-	r.write(".gemini/settings.json", `{"mcpServers":{"adhd-todo":{}}}`)
-	r.write(".cursor/mcp.json", `{"mcpServers":{"adhd-todo":{"command":"mine"}}}`)
+	r.write(".gemini/settings.json", `{"mcpServers":{"withdo":{}}}`)
+	r.write(".cursor/mcp.json", `{"mcpServers":{"withdo":{"command":"mine"}}}`)
 	for _, id := range []string{"gemini", "cursor"} {
 		if err := r.env.Install(context.Background(), r.agent(id)); err != nil {
 			t.Errorf("%s: %v", id, err)
@@ -224,7 +224,7 @@ func TestInstallDoesNothingWhenItIsThereAlready(t *testing.T) {
 	if got := r.read(".cursor/mcp.json"); !strings.Contains(got, `"mine"`) {
 		t.Errorf("the entry was rewritten: %s", got)
 	}
-	if _, err := os.Stat(filepath.Join(r.home, ".cursor", "mcp.json.adhd-todo.bak")); err == nil {
+	if _, err := os.Stat(filepath.Join(r.home, ".cursor", "mcp.json.withdo.bak")); err == nil {
 		t.Error("a backup was made for a file that did not change")
 	}
 }
@@ -265,7 +265,7 @@ func TestInstallEditsAFileKeepingTheRestInOrderAfterABackup(t *testing.T) {
 	if err := r.env.Install(context.Background(), r.agent("cursor")); err != nil {
 		t.Fatal(err)
 	}
-	if got := r.read(".cursor/mcp.json.adhd-todo.bak"); got != orig {
+	if got := r.read(".cursor/mcp.json.withdo.bak"); got != orig {
 		t.Errorf("backup %q", got)
 	}
 	got := r.read(".cursor/mcp.json")
@@ -275,7 +275,7 @@ func TestInstallEditsAFileKeepingTheRestInOrderAfterABackup(t *testing.T) {
 		}
 	}
 	if !(strings.Index(got, `"theme"`) < strings.Index(got, `"big"`) && strings.Index(got, `"big"`) < strings.Index(got, `"mcpServers"`) &&
-		strings.Index(got, `"other"`) < strings.Index(got, `"adhd-todo"`) && strings.Index(got, `"mcpServers"`) < strings.Index(got, `"z"`)) {
+		strings.Index(got, `"other"`) < strings.Index(got, `"withdo"`) && strings.Index(got, `"mcpServers"`) < strings.Index(got, `"z"`)) {
 		t.Errorf("the order changed:\n%s", got)
 	}
 	var v struct {
@@ -288,7 +288,7 @@ func TestInstallEditsAFileKeepingTheRestInOrderAfterABackup(t *testing.T) {
 	if err := json.Unmarshal([]byte(got), &v); err != nil {
 		t.Fatal(err)
 	}
-	if e := v.MCPServers["adhd-todo"]; e.Type != "stdio" || e.Command != r.core() || !slices.Equal(e.Args, []string{"mcp"}) {
+	if e := v.MCPServers["withdo"]; e.Type != "stdio" || e.Command != r.core() || !slices.Equal(e.Args, []string{"mcp"}) {
 		t.Errorf("entry %+v", e)
 	}
 	if !r.env.Installed(r.agent("cursor")) {
@@ -298,10 +298,10 @@ func TestInstallEditsAFileKeepingTheRestInOrderAfterABackup(t *testing.T) {
 
 func TestInstallCreatesAMissingFileEachAgentsWay(t *testing.T) {
 	want := map[string]string{
-		"cursor":   `"mcpServers": {"adhd-todo": {"type":"stdio","command":"CORE","args":["mcp"]}}`,
-		"opencode": `"mcp": {"adhd-todo": {"type":"local","command":["CORE","mcp"],"enabled":true}}`,
-		"windsurf": `"mcpServers": {"adhd-todo": {"command":"CORE","args":["mcp"]}}`,
-		"zed":      `"context_servers": {"adhd-todo": {"command":"CORE","args":["mcp"],"env":{}}}`,
+		"cursor":   `"mcpServers": {"withdo": {"type":"stdio","command":"CORE","args":["mcp"]}}`,
+		"opencode": `"mcp": {"withdo": {"type":"local","command":["CORE","mcp"],"enabled":true}}`,
+		"windsurf": `"mcpServers": {"withdo": {"command":"CORE","args":["mcp"]}}`,
+		"zed":      `"context_servers": {"withdo": {"command":"CORE","args":["mcp"],"env":{}}}`,
 	}
 	for id, w := range want {
 		r := newRig(t)
@@ -320,7 +320,7 @@ func TestInstallCreatesAMissingFileEachAgentsWay(t *testing.T) {
 		if gj, _ := json.Marshal(got); string(gj) != mustMarshal(t, exp) {
 			t.Errorf("%s wrote %s, want %s", id, gj, mustMarshal(t, exp))
 		}
-		if _, err := os.Stat(filepath.Join(r.home, filepath.FromSlash(a.Files[0])+".adhd-todo.bak")); err == nil {
+		if _, err := os.Stat(filepath.Join(r.home, filepath.FromSlash(a.Files[0])+".withdo.bak")); err == nil {
 			t.Errorf("%s: a backup of a file that was not there", id)
 		}
 	}
@@ -347,7 +347,7 @@ func TestInstallLeavesAFileWithCommentsAloneAndOffersTheSnippet(t *testing.T) {
 	if r.read(".config/zed/settings.json") != orig {
 		t.Error("the file was rewritten")
 	}
-	for _, want := range []string{`"context_servers": {`, `"adhd-todo": {`, `"command": ` + mustMarshal(t, r.core()), `"args": [`, `"env": {}`} {
+	for _, want := range []string{`"context_servers": {`, `"withdo": {`, `"command": ` + mustMarshal(t, r.core()), `"args": [`, `"env": {}`} {
 		if !strings.Contains(me.Snippet, want) {
 			t.Errorf("snippet lacks %q:\n%s", want, me.Snippet)
 		}
@@ -355,7 +355,7 @@ func TestInstallLeavesAFileWithCommentsAloneAndOffersTheSnippet(t *testing.T) {
 	if strings.HasPrefix(me.Snippet, "{") || strings.HasPrefix(me.Snippet, " ") {
 		t.Errorf("the snippet is not what goes inside an existing object:\n%s", me.Snippet)
 	}
-	if _, err := os.Stat(filepath.Join(r.home, ".config", "zed", "settings.json.adhd-todo.bak")); err == nil {
+	if _, err := os.Stat(filepath.Join(r.home, ".config", "zed", "settings.json.withdo.bak")); err == nil {
 		t.Error("a backup for a file that did not change")
 	}
 }
@@ -389,7 +389,7 @@ func TestInstallKeepsTheModeOfTheFileAndItsTwoSpaceIndent(t *testing.T) {
 	if fi, _ := os.Stat(p); runtime.GOOS != "windows" && fi.Mode().Perm() != 0o600 {
 		t.Errorf("mode %v", fi.Mode().Perm())
 	}
-	if got := r.read(".codeium/windsurf/mcp_config.json"); !strings.HasPrefix(got, "{\n  \"a\": 1,\n  \"mcpServers\": {\n    \"adhd-todo\"") {
+	if got := r.read(".codeium/windsurf/mcp_config.json"); !strings.HasPrefix(got, "{\n  \"a\": 1,\n  \"mcpServers\": {\n    \"withdo\"") {
 		t.Errorf("indent changed:\n%s", got)
 	}
 }
@@ -458,11 +458,11 @@ func TestDeepSeekHarnessInstalledReadsEveryPatchLayer(t *testing.T) {
 	if r.env.Installed(a) {
 		t.Fatal("installed on an empty Mac")
 	}
-	r.write(".dsh/cordis.patch.yml", "# - insert:\n#     - name: '@deepseek-ai/dsh-mcp-client'\n#       config:\n#         serverName: adhd-todo\n")
+	r.write(".dsh/cordis.patch.yml", "# - insert:\n#     - name: '@deepseek-ai/dsh-mcp-client'\n#       config:\n#         serverName: withdo\n")
 	if r.env.Installed(a) {
 		t.Error("a commented example counted")
 	}
-	r.write(".dsh/profiles/web/cordis.patch.yml", "- insert:\n    - id: mcp-adhd-todo\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: adhd-todo\n        transport: stdio\n        command: '/x/adhd-core'\n        args: ['mcp']\n")
+	r.write(".dsh/profiles/web/cordis.patch.yml", "- insert:\n    - id: mcp-withdo\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: withdo\n        transport: stdio\n        command: '/x/withdo'\n        args: ['mcp']\n")
 	if !r.env.Installed(a) {
 		t.Error("the profile patch layer was not read")
 	}
@@ -478,15 +478,15 @@ func TestInstallDeepSeekHarnessAppendsACordisPatchEntry(t *testing.T) {
 	got := r.read(".dsh/cordis.patch.yml")
 	for _, want := range []string{
 		"# my patches", "- id: ui-chat", "    transcriptView: standard",
-		"- insert:", "id: adhd-todo-mcp", "name: '@deepseek-ai/dsh-mcp-client'",
-		"serverName: adhd-todo", "transport: stdio", "command: '" + r.core() + "'",
+		"- insert:", "id: withdo-mcp", "name: '@deepseek-ai/dsh-mcp-client'",
+		"serverName: withdo", "transport: stdio", "command: '" + r.core() + "'",
 		"args: ['mcp']", "failOnStartupError: false",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the patch lacks %q:\n%s", want, got)
 		}
 	}
-	if r.read(".dsh/cordis.patch.yml.adhd-todo.bak") != orig {
+	if r.read(".dsh/cordis.patch.yml.withdo.bak") != orig {
 		t.Error("no backup of the patch layer")
 	}
 	if len(r.run.calls) != 0 {
@@ -511,7 +511,7 @@ func TestInstallDeepSeekHarnessCreatesTheHomePatchOrFillsAnEmptyList(t *testing.
 	if got := r.read(".dsh/cordis.patch.yml"); !strings.HasPrefix(got, "- insert:\n") {
 		t.Errorf("a created patch starts %q", got)
 	}
-	if _, err := os.Stat(filepath.Join(r.home, ".dsh", "cordis.patch.yml.adhd-todo.bak")); err == nil {
+	if _, err := os.Stat(filepath.Join(r.home, ".dsh", "cordis.patch.yml.withdo.bak")); err == nil {
 		t.Error("a backup of a file that was not there")
 	}
 	r.write(".dsh/cordis.patch.yml", "[]\n")
@@ -519,7 +519,7 @@ func TestInstallDeepSeekHarnessCreatesTheHomePatchOrFillsAnEmptyList(t *testing.
 		t.Fatal(err)
 	}
 	got := r.read(".dsh/cordis.patch.yml")
-	if strings.Contains(got, "[]") || !strings.Contains(got, "serverName: adhd-todo") {
+	if strings.Contains(got, "[]") || !strings.Contains(got, "serverName: withdo") {
 		t.Errorf("the empty list was not replaced:\n%s", got)
 	}
 }
@@ -535,7 +535,7 @@ func TestInstallDeepSeekHarnessHandsBackAPatchItCannotAppendTo(t *testing.T) {
 	if r.read(".dsh/cordis.patch.yml") != orig {
 		t.Error("the patch was rewritten")
 	}
-	for _, want := range []string{"- insert:", "@deepseek-ai/dsh-mcp-client", "serverName: adhd-todo", "command: '" + r.core() + "'"} {
+	for _, want := range []string{"- insert:", "@deepseek-ai/dsh-mcp-client", "serverName: withdo", "command: '" + r.core() + "'"} {
 		if !strings.Contains(me.Snippet, want) {
 			t.Errorf("snippet lacks %q:\n%s", want, me.Snippet)
 		}
@@ -569,20 +569,20 @@ func TestInstallDeepSeekHarnessAppendsAfterADocumentMarker(t *testing.T) {
 	if err := r.env.Install(context.Background(), r.agent("deepseek")); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(r.read(".dsh/cordis.patch.yml"), "serverName: adhd-todo") {
+	if !strings.Contains(r.read(".dsh/cordis.patch.yml"), "serverName: withdo") {
 		t.Error("the entry was not appended")
 	}
 }
 
 // A comment after the serverName value is not part of it.
 func TestDeepSeekHarnessServerNameMayHaveATrailingComment(t *testing.T) {
-	for _, line := range []string{"serverName: adhd-todo  # note", `serverName: "adhd-todo" # x`} {
+	for _, line := range []string{"serverName: withdo  # note", `serverName: "withdo" # x`} {
 		text := "- insert:\n    - name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        " + line + "\n"
-		if !dshPatchHasServer(text) {
+		if !dshPatchHasServer(text, "withdo") {
 			t.Errorf("%q did not count as installed", line)
 		}
 	}
-	if dshPatchHasServer("- insert:\n    - name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: other # adhd-todo\n") {
+	if dshPatchHasServer("- insert:\n    - name: '@deepseek-ai/dsh-mcp-client'\n      config:\n        serverName: other # withdo\n", "withdo") {
 		t.Error("a name in the comment counted")
 	}
 }
@@ -603,7 +603,7 @@ func TestInstallKiroAndClineWriteTheirMcpJson(t *testing.T) {
 		if err := json.Unmarshal([]byte(r.read(a.Files[0])), &got); err != nil {
 			t.Fatalf("%s wrote invalid JSON: %v", id, err)
 		}
-		e := got.MCPServers["adhd-todo"]
+		e := got.MCPServers["withdo"]
 		if e.Command != r.core() || !slices.Equal(e.Args, []string{"mcp"}) {
 			t.Errorf("%s entry %+v", id, e)
 		}
@@ -619,7 +619,7 @@ func TestInstallAmpUsesItsOwnMCPCommand(t *testing.T) {
 	if err := r.env.Install(context.Background(), r.agent("amp")); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"/usr/local/bin/amp", "mcp", "add", "adhd-todo", "--", r.core(), "mcp"}
+	want := []string{"/usr/local/bin/amp", "mcp", "add", "withdo", "--", r.core(), "mcp"}
 	if len(r.run.calls) != 1 || !slices.Equal(r.run.calls[0], want) {
 		t.Errorf("ran %q, want %q", r.run.calls, want)
 	}
@@ -628,10 +628,11 @@ func TestInstallAmpUsesItsOwnMCPCommand(t *testing.T) {
 func TestDefaultCore(t *testing.T) {
 	cases := []struct{ name, goos, home, exe, want string }{
 		// filepath is the host's, so the Windows case uses slashes to run the same on every OS
-		{"windows runs the one next to the app", "windows", "/home/me", "/home/me/Programs/ADHD Todo/ADHD Todo.exe", filepath.Join("/home/me", "Programs", "ADHD Todo", "adhd-core.exe")},
-		{"windows without a known executable", "windows", "/home/me", "", filepath.Join("/home/me", ".local", "bin", "adhd-core")},
-		{"darwin", "darwin", "/Users/me", "/Applications/ADHD Todo.app/Contents/MacOS/ADHD Todo", filepath.Join("/Users/me", ".local", "bin", "adhd-core")},
-		{"linux", "linux", "/home/me", "/usr/bin/adhd-todo", filepath.Join("/home/me", ".local", "bin", "adhd-core")},
+		{"windows runs the one next to the app", "windows", "/home/me", "/home/me/Programs/Withdo/Withdo.exe", filepath.Join("/home/me", "Programs", "Withdo", "withdo.exe")},
+		{"windows in the folder of the old name", "windows", "/home/me", "/home/me/Programs/ADHD Todo/ADHD Todo.exe", filepath.Join("/home/me", "Programs", "ADHD Todo", "withdo.exe")},
+		{"windows without a known executable", "windows", "/home/me", "", filepath.Join("/home/me", ".local", "bin", "withdo")},
+		{"darwin", "darwin", "/Users/me", "/Applications/Withdo.app/Contents/MacOS/Withdo", filepath.Join("/Users/me", ".local", "bin", "withdo")},
+		{"linux", "linux", "/home/me", "/usr/bin/withdo", filepath.Join("/home/me", ".local", "bin", "withdo")},
 	}
 	for _, c := range cases {
 		if got := defaultCore(c.goos, c.home, c.exe); got != c.want {
