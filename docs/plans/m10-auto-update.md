@@ -3,22 +3,23 @@
 User request: the app updates itself from GitHub releases, and the `adhd-core` CLI / MCP binary
 updates with it.
 
-**Status: updates are on.** `QingYunA/adhd-todo` is private, so its release files answer 404 to an app
-that is not signed in to GitHub (v0.5.0 shipped with updates on, could not update, and was withdrawn).
-Installers and update files therefore go to the public repository `QingYunA/adhd-todo-releases`, which
-holds nothing else (the way Obsidian does it); `app/mygo.json` names it:
+**Status: updates are on.** While the code repository was private its release files answered 404 to an
+app not signed in to GitHub (v0.5.0 shipped with updates on, could not update, and was withdrawn), so
+from 0.9.0 to 0.10.2 installers and update files went to the public repository
+`QingYunA/adhd-todo-releases`. The code repository is public now, as `QingYunA/withdo`, and releases
+are back on it (see **Moving to QingYunA/withdo**); `app/mygo.json` names it:
 
 ```json
 "updates": {
   "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
-  "github": "QingYunA/adhd-todo-releases",
+  "github": "QingYunA/withdo",
   "changelog": "../CHANGELOG.md"
 }
 ```
 
 `scripts/build-release.sh` needs the private key (see below) and stops without it. The first version
 built so is the last one to install by hand. An installed app asks
-`https://github.com/QingYunA/adhd-todo-releases/releases/latest/download/update-<target>.json`
+`https://github.com/QingYunA/withdo/releases/latest/download/update-<target>.json`
 (`darwin-universal` or `windows-amd64`), which names the signed archive of its release,
 `.../releases/download/v<version>/adhd-todo-<version>-<target>.tar.gz`, and the deltas.
 
@@ -91,17 +92,32 @@ nothing in it touches the task data, and keeping it out of the Go core spares a 
    at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
    step 2 (which empties that folder) and append its line:
    `(cd app/build/release && shasum -a 256 adhd-todo-<v>.apk >> SHA256SUMS.txt)`.
-4. `scripts/publish-release.sh <v>` makes the draft release `v<v>` on `QingYunA/adhd-todo-releases`
+4. `scripts/publish-release.sh <v>` makes the draft release `v<v>` on `QingYunA/withdo` (and on
+   `QingYunA/adhd-todo-releases` while that is not archived, see **Moving to QingYunA/withdo**)
    with every file of `app/build/release/` (it copies `dist/adhd-todo-<v>.apk` in and appends its line
    to `SHA256SUMS.txt` when step 3's copy is not there) and the notes of the `## <v>` section of
    `CHANGELOG.md` plus the restart line below. Look at the draft, then `scripts/publish-release.sh <v>
    --publish`: that makes it the latest release, which is what installed apps ask, and tags `v<v>` on
-   `origin/main` of the private repository (no assets there). Needs `gh` signed in with write access to
-   the releases repository.
+   `origin/main` first. Needs `gh` signed in with write access to both repositories.
 
 The release notes say (the changelog's 0.5.0 entry does too): **a coding agent keeps running the
 old `adhd-core` process until it is restarted**, so after an update restart Claude Code and the other
 agents to pick up the new tools.
+
+## Moving to QingYunA/withdo (2026-10-27)
+
+The code repository went public as `QingYunA/withdo`, so releases live there too and
+`QingYunA/adhd-todo-releases` is no longer needed. Apps up to 0.10.2 still read it (`updates.github`
+was built in, and the phone's `LATEST_RELEASE_URL`), so the move goes in three steps:
+
+1. Release `v0.10.2` was copied to `QingYunA/withdo` as its latest release, so the next build finds a
+   published manifest there and makes deltas from 0.10.x.
+2. The first release built with `"github": "QingYunA/withdo"` is the bridge: `publish-release.sh`
+   publishes it on both repositories. An app on 0.10.2 or older finds it on the old one, installs it,
+   and from then on asks `QingYunA/withdo`. Its manifest points at the downloads on `QingYunA/withdo`.
+3. After the bridge is published, archive `QingYunA/adhd-todo-releases` (`gh repo archive`). Do not
+   delete it: an app that stays offline through the bridge still needs to find it there, and the
+   manifests of 0.10.x name archives there. Once it is archived the script sends nothing there.
 
 ## Not done
 

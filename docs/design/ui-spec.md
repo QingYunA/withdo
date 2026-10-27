@@ -2179,7 +2179,8 @@ The agent is named as people write it (`Claude Code`, `Codex`, ...), as in the i
 
 ### Updates (M10)
 
-The app updates itself from the releases of the public repository `QingYunA/adhd-todo-releases` with
+The app updates itself from the releases of the public repository `QingYunA/withdo` (until 0.10.2:
+`QingYunA/adhd-todo-releases`, see `docs/plans/m10-auto-update.md`) with
 mygo's native updater plugin (`native.Plugin`); the window is the plugin's own, so the app draws
 nothing of it. All of it shows only in a build that can update (`mygo.Updater.Enabled()`: `updates` in
 `app/mygo.json`, which it has), see `docs/plans/m10-auto-update.md`. Screens: `settings-general-*`
@@ -2598,7 +2599,7 @@ this block disagrees with the bullets around it, it wins.
 - **Updates** (screens `update-banner-*`, `update-banner-downloading-*`, `sync-update-available-*`).
   mygo does not cover Android, so the phone has its own updater, quiet like the desktop's. At most once
   a day, when the app starts or comes back to the front, it asks the latest release of
-  `QingYunA/adhd-todo-releases` (no sign-in; a failed answer, such as GitHub's rate limit, says nothing
+  `QingYunA/withdo` (no sign-in; a failed answer, such as GitHub's rate limit, says nothing
   and waits for tomorrow). A newer `v<x.y.z>` with an `adhd-todo-<x.y.z>.apk` shows a **banner** under
   the Mine header (and the other tabs' header): a `GroupCard` of one 56 dp row, `Version 0.9.0 is
   available` (`有新版本 0.9.0`) in `body`, a `Later` text link (`稍后`) and a `QuietButton` **Update**

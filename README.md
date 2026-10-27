@@ -16,7 +16,7 @@ More in [`docs/design/screens/`](docs/design/screens/); the design is specified 
 
 ## Install and update
 
-Install the app once from the DMG of the [latest release](https://github.com/QingYunA/adhd-todo-releases/releases/latest)
+Install the app once from the DMG of the [latest release](https://github.com/QingYunA/withdo/releases/latest)
 (drag it to Applications; the app is not notarized, so open it the first time with right-click >
 Open). Install a later version the same way. Automatic updates are built in but off for now
 (`docs/plans/m10-auto-update.md`).
