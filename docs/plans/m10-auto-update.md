@@ -92,13 +92,12 @@ nothing in it touches the task data, and keeping it out of the Go core spares a 
    at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
    step 2 (which empties that folder) and append its line:
    `(cd app/build/release && shasum -a 256 adhd-todo-<v>.apk >> SHA256SUMS.txt)`.
-4. `scripts/publish-release.sh <v>` makes the draft release `v<v>` on `QingYunA/withdo` (and on
-   `QingYunA/adhd-todo-releases` while that is not archived, see **Moving to QingYunA/withdo**)
+4. `scripts/publish-release.sh <v>` makes the draft release `v<v>` on `QingYunA/withdo`
    with every file of `app/build/release/` (it copies `dist/adhd-todo-<v>.apk` in and appends its line
    to `SHA256SUMS.txt` when step 3's copy is not there) and the notes of the `## <v>` section of
    `CHANGELOG.md` plus the restart line below. Look at the draft, then `scripts/publish-release.sh <v>
    --publish`: that makes it the latest release, which is what installed apps ask, and tags `v<v>` on
-   `origin/main` first. Needs `gh` signed in with write access to both repositories.
+   `origin/main` first. Needs `gh` signed in with write access to the repository.
 
 The release notes say (the changelog's 0.5.0 entry does too): **a coding agent keeps running the
 old `adhd-core` process until it is restarted**, so after an update restart Claude Code and the other
@@ -106,18 +105,11 @@ agents to pick up the new tools.
 
 ## Moving to QingYunA/withdo (2026-10-27)
 
-The code repository went public as `QingYunA/withdo`, so releases live there too and
-`QingYunA/adhd-todo-releases` is no longer needed. Apps up to 0.10.2 still read it (`updates.github`
-was built in, and the phone's `LATEST_RELEASE_URL`), so the move goes in three steps:
-
-1. Release `v0.10.2` was copied to `QingYunA/withdo` as its latest release, so the next build finds a
-   published manifest there and makes deltas from 0.10.x.
-2. The first release built with `"github": "QingYunA/withdo"` is the bridge: `publish-release.sh`
-   publishes it on both repositories. An app on 0.10.2 or older finds it on the old one, installs it,
-   and from then on asks `QingYunA/withdo`. Its manifest points at the downloads on `QingYunA/withdo`.
-3. After the bridge is published, archive `QingYunA/adhd-todo-releases` (`gh repo archive`). Do not
-   delete it: an app that stays offline through the bridge still needs to find it there, and the
-   manifests of 0.10.x name archives there. Once it is archived the script sends nothing there.
+The code repository went public as `QingYunA/withdo`, so releases live there and
+`QingYunA/adhd-todo-releases` is retired. No installs of 0.10.2 or older are left to carry over, so
+there is no bridge release: apps built from now on ask `QingYunA/withdo` only. Release `v0.10.2` was
+copied to `QingYunA/withdo` as its latest release, so the next build finds a published manifest there
+and makes deltas from 0.10.x (whose archives the 0.10.2 manifest names on the old repository).
 
 ## Not done
 
