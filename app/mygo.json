@@ -1,7 +1,7 @@
 {
   "name": "Withdo",
   "identifier": "dev.adhdtodo.desktop",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "out": "build",
   "updates": {
     "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
