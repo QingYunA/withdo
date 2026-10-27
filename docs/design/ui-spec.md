@@ -440,6 +440,13 @@ global shortcut and no macOS tray icon). Closing the window hides it, so reminde
 day and pull request news keep coming, and the panel works while the window is hidden; Quit quits.
 A second launch starts no second process: it brings the window back (one instance on both systems).
 
+- **App icon** (decided 2026-10-27, v40 C, `docs/design/mockups/v40.html`; drafts v37–v39). A pixel
+  check on the navy square (`#1E293B`), on a 24 x 24 grid with a brush three cells square: the short
+  stroke in iris (`#B1A9FF`, the color of you) is the person deciding what to do, the long stroke in
+  white (`#F8FAFC`) is the agent getting it done, and the vertex belongs to the long stroke.
+  `docs/design/tools/app_icon.py` draws `app/resources/icon.png` (keeping the shape of the square,
+  28 px a cell) and the Android foreground (3 dp a cell); `docs/design/tools/tray_icon.py` draws the
+  12 x 12 tray picture with the same two colors.
 - **Menu bar icon (macOS).** The app icon redrawn on the 12 x 12 grid (`app/theme/sprites/tray.png`)
   as a template image: the dark cells black and the check mark cut out (`theme.TrayTemplateIcon`,
   36 x 36 px, which the menu bar draws 18 pt tall), so it follows the menu bar's light or dark

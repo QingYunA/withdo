@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The desktop icon's check on the 12 x 12 grid of app/theme/sprites/tray.png, 6 dp a cell,
+<!-- The desktop icon's check (docs/design/tools/app_icon.py): 24 x 24 grid, 3 dp a cell,
      centered in the 108 dp adaptive canvas (inside its 66 dp safe zone). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -7,6 +7,9 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
+        android:fillColor="#B1A9FF"
+        android:pathData="M25.5,51h3v3h-3zM28.5,51h3v3h-3zM31.5,51h3v3h-3zM25.5,54h3v3h-3zM28.5,54h3v3h-3zM31.5,54h3v3h-3zM34.5,54h3v3h-3zM25.5,57h3v3h-3zM28.5,57h3v3h-3zM31.5,57h3v3h-3zM34.5,57h3v3h-3zM37.5,57h3v3h-3zM28.5,60h3v3h-3zM31.5,60h3v3h-3zM34.5,60h3v3h-3zM37.5,60h3v3h-3zM40.5,60h3v3h-3zM31.5,63h3v3h-3zM34.5,63h3v3h-3zM37.5,63h3v3h-3zM40.5,63h3v3h-3zM34.5,66h3v3h-3zM37.5,66h3v3h-3zM37.5,69h3v3h-3z" />
+    <path
         android:fillColor="#F8FAFC"
-        android:pathData="M66,36h6v6h-6zM72,36h6v6h-6zM60,42h6v6h-6zM66,42h6v6h-6zM54,48h6v6h-6zM60,48h6v6h-6zM30,54h6v6h-6zM36,54h6v6h-6zM48,54h6v6h-6zM54,54h6v6h-6zM36,60h6v6h-6zM42,60h6v6h-6zM48,60h6v6h-6zM42,66h6v6h-6z" />
+        android:pathData="M73.5,33h3v3h-3zM76.5,33h3v3h-3zM79.5,33h3v3h-3zM70.5,36h3v3h-3zM73.5,36h3v3h-3zM76.5,36h3v3h-3zM79.5,36h3v3h-3zM67.5,39h3v3h-3zM70.5,39h3v3h-3zM73.5,39h3v3h-3zM76.5,39h3v3h-3zM79.5,39h3v3h-3zM64.5,42h3v3h-3zM67.5,42h3v3h-3zM70.5,42h3v3h-3zM73.5,42h3v3h-3zM76.5,42h3v3h-3zM61.5,45h3v3h-3zM64.5,45h3v3h-3zM67.5,45h3v3h-3zM70.5,45h3v3h-3zM73.5,45h3v3h-3zM58.5,48h3v3h-3zM61.5,48h3v3h-3zM64.5,48h3v3h-3zM67.5,48h3v3h-3zM70.5,48h3v3h-3zM55.5,51h3v3h-3zM58.5,51h3v3h-3zM61.5,51h3v3h-3zM64.5,51h3v3h-3zM67.5,51h3v3h-3zM52.5,54h3v3h-3zM55.5,54h3v3h-3zM58.5,54h3v3h-3zM61.5,54h3v3h-3zM64.5,54h3v3h-3zM49.5,57h3v3h-3zM52.5,57h3v3h-3zM55.5,57h3v3h-3zM58.5,57h3v3h-3zM61.5,57h3v3h-3zM46.5,60h3v3h-3zM49.5,60h3v3h-3zM52.5,60h3v3h-3zM55.5,60h3v3h-3zM58.5,60h3v3h-3zM43.5,63h3v3h-3zM46.5,63h3v3h-3zM49.5,63h3v3h-3zM52.5,63h3v3h-3zM55.5,63h3v3h-3zM40.5,66h3v3h-3zM43.5,66h3v3h-3zM46.5,66h3v3h-3zM49.5,66h3v3h-3zM52.5,66h3v3h-3zM40.5,69h3v3h-3zM43.5,69h3v3h-3zM46.5,69h3v3h-3zM49.5,69h3v3h-3zM40.5,72h3v3h-3zM43.5,72h3v3h-3zM46.5,72h3v3h-3z" />
 </vector>
