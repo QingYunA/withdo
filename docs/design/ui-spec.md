@@ -2317,7 +2317,12 @@ this order: Account, General, Agents, Advanced.
     withdo <core> mcp`; `qwen mcp add --scope user withdo <core> mcp`; `kimi mcp add --transport
     stdio withdo -- <core> mcp`; `amp mcp add withdo -- <core> mcp`; `code --add-mcp
     '{"name":"withdo","command":"<core>","args":["mcp"]}'`.
-  - Files (copied first to `<file>.adhd-todo.bak`, key order, number text and indentation kept, created
+  - **The entry before the rename** (`adhd-todo`, running `adhd-core`) is moved to `withdo` by the
+    app on launch, in the background and without asking: `withdo` is added, then `adhd-todo` is
+    removed with the agent's own `mcp remove` (Claude, Gemini and Qwen at user scope; VS Code has
+    none, so its `mcp.json` is edited) or out of its config file. An agent that still has only the
+    old entry shows **Install MCP**, which does the same.
+  - Files (copied first to `<file>.withdo.bak`, key order, number text and indentation kept, created
     when missing): Cursor `~/.cursor/mcp.json` `mcpServers`; opencode `~/.config/opencode/opencode.json`
     `mcp` (`type: local`, `command: [core, "mcp"]`); Windsurf `~/.codeium/windsurf/mcp_config.json`
     `mcpServers`; Kiro `~/.kiro/settings/mcp.json` `mcpServers`; Cline `~/Library/Application
