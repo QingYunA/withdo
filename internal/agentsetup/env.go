@@ -40,12 +40,12 @@ func (e *Env) core() string {
 	return defaultCore(runtime.GOOS, e.Home, exe)
 }
 
-// defaultCore is the withdo the agents run: on Windows the console withdo.exe the installer
+// defaultCore is the withdo the agents run: on Windows the console withdo-cli.exe the installer
 // puts next to the app (exe is this process's executable), elsewhere $HOME/.local/bin/withdo,
 // which the macOS app links to itself.
 func defaultCore(goos, home, exe string) string {
 	if goos == "windows" && exe != "" {
-		return filepath.Join(filepath.Dir(exe), "withdo.exe")
+		return filepath.Join(filepath.Dir(exe), "withdo-cli.exe")
 	}
 	return filepath.Join(home, ".local", "bin", "withdo")
 }

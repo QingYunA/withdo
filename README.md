@@ -43,7 +43,7 @@ go build -o ~/.local/bin/withdo ./cmd/withdo
 `scripts/build-release.sh` makes the release files of both platforms each release ships into
 `app/build/release/`: for macOS the DMG of the universal app (which is `withdo` too) and the
 standalone `withdo` tarball, plus the signed update archive when updates are on; for Windows x64
-the installer, which carries the console `withdo.exe` next to the app. See `docs/plans/m10-auto-update.md`.
+the installer, which carries the console `withdo-cli.exe` next to the app. See `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 
@@ -53,7 +53,7 @@ Register the MCP server once (user scope):
 claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp
 ```
 
-On Windows use the command shown in Settings > Agents instead: it names the `withdo.exe` in the
+On Windows use the command shown in Settings > Agents instead: it names the `withdo-cli.exe` in the
 install folder.
 
 Other agents can add the server themselves: paste them the output of `withdo guide` (or use

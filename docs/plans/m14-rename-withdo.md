@@ -12,7 +12,7 @@ keeps the old name and why, how installed copies move over, and the steps outsid
   app name, mail sender and sign-in code mail (a new migration, `pbauth/migrate_withdo.go`, renames
   a database that already ran the earlier ones), the release file names and titles.
 - What agents see: the MCP server is `withdo` (tools `mcp__withdo__*`), the command line is `withdo`
-  (`cmd/withdo`, `~/.local/bin/withdo`, Windows `withdo.exe` next to the app), its guide and the
+  (`cmd/withdo`, `~/.local/bin/withdo`, Windows `withdo-cli.exe` next to the app), its guide and the
   server's instructions say Withdo. Reports the core files itself are by `withdo`.
 
 ## What keeps the old name

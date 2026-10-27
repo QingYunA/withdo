@@ -4,7 +4,7 @@
 #   macOS:   the DMG of the universal app (which is the withdo command too), the standalone withdo
 #            tarball, and the signed update archive, deltas and manifest
 #            (withdo-<v>-darwin-universal.tar.gz, update-darwin-universal.json);
-#   Windows: the NSIS installer of the app, which carries the console withdo.exe next to it (and
+#   Windows: the NSIS installer of the app, which carries the console withdo-cli.exe next to it (and
 #            adhd-core.exe, the name old agent configs run), and the signed update archive and
 #            manifest (withdo-<v>-windows-amd64.tar.gz, update-windows-amd64.json).
 # It uploads nothing; scripts/publish-release.sh does.
@@ -28,13 +28,17 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 # The app is withdo too (app/cli.go), so the macOS bundle carries one program. On Windows the
-# app is a GUI program that cannot be an MCP stdio server, so the console withdo.exe the agents
+# app is a GUI program that cannot be an MCP stdio server, so the console withdo-cli.exe the agents
 # run is built into app/resources/windows-amd64/, which mygo installs next to the app. A copy is
 # named adhd-core.exe, the program the agent configs written before the rename run. makensis,
 # which makes the Windows installer, aborts with std::bad_alloc unless the locale is UTF-8.
+# Its name must differ from the app's Withdo.exe in more than case: Windows file names ignore case, so
+# withdo.exe would replace the app. The folder is emptied first, so a file of an earlier build cannot
+# linger in the installer.
+rm -rf app/resources/windows-amd64
 mkdir -p app/resources/windows-amd64
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/withdo.exe ./cmd/withdo
-cp app/resources/windows-amd64/withdo.exe app/resources/windows-amd64/adhd-core.exe
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/withdo-cli.exe ./cmd/withdo
+cp app/resources/windows-amd64/withdo-cli.exe app/resources/windows-amd64/adhd-core.exe
 # "ADHD Todo.exe" is the launcher that stands in for the app's old executable name: the old version's
 # updater swaps the new files into its folder and starts "ADHD Todo.exe" again, as do the shortcuts it
 # made. The launcher starts Withdo.exe next to it (cmd/legacy-launcher).

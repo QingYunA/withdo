@@ -628,8 +628,8 @@ func TestInstallAmpUsesItsOwnMCPCommand(t *testing.T) {
 func TestDefaultCore(t *testing.T) {
 	cases := []struct{ name, goos, home, exe, want string }{
 		// filepath is the host's, so the Windows case uses slashes to run the same on every OS
-		{"windows runs the one next to the app", "windows", "/home/me", "/home/me/Programs/Withdo/Withdo.exe", filepath.Join("/home/me", "Programs", "Withdo", "withdo.exe")},
-		{"windows in the folder of the old name", "windows", "/home/me", "/home/me/Programs/ADHD Todo/ADHD Todo.exe", filepath.Join("/home/me", "Programs", "ADHD Todo", "withdo.exe")},
+		{"windows runs the one next to the app", "windows", "/home/me", "/home/me/Programs/Withdo/Withdo.exe", filepath.Join("/home/me", "Programs", "Withdo", "withdo-cli.exe")},
+		{"windows in the folder of the old name", "windows", "/home/me", "/home/me/Programs/ADHD Todo/ADHD Todo.exe", filepath.Join("/home/me", "Programs", "ADHD Todo", "withdo-cli.exe")},
 		{"windows without a known executable", "windows", "/home/me", "", filepath.Join("/home/me", ".local", "bin", "withdo")},
 		{"darwin", "darwin", "/Users/me", "/Applications/Withdo.app/Contents/MacOS/Withdo", filepath.Join("/Users/me", ".local", "bin", "withdo")},
 		{"linux", "linux", "/home/me", "/usr/bin/withdo", filepath.Join("/home/me", ".local", "bin", "withdo")},
