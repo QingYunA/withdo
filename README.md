@@ -95,3 +95,11 @@ go run ./app -fake                               # demo data instead of the data
 Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
 `app/` (mygo UI: `data`, `theme`, `views`).
 
+
+Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md). Pull requests from outside need a signed [CLA](CLA.md).
+
+## License
+
+[AGPL-3.0](LICENSE). You may run, change and share the code; if you run a changed version as a
+network service, you must offer its source to the people who use it. The name and the icon are not
+covered by the license: a fork must use its own.

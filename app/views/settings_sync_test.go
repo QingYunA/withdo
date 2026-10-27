@@ -355,10 +355,10 @@ func otherAccountSnap(previous string) data.SyncSnapshot {
 }
 
 func TestSyncPaneOtherAccountSheetNamesBothAndDefaultsToTheOldAccount(t *testing.T) {
-	r, fs := syncPane(t, otherAccountSnap("serein7z@163.com"))
+	r, fs := syncPane(t, otherAccountSnap("ada@example.com"))
 	has(t, r.tt, "This Mac was linked to another account",
-		"It was synced with serein7z@163.com. You just signed in as bee@example.com.",
-		"Sign in with serein7z@163.com instead", "Recommended",
+		"It was synced with ada@example.com. You just signed in as bee@example.com.",
+		"Sign in with ada@example.com instead", "Recommended",
 		"Move this Mac to bee@example.com", "Cancel", "Continue")
 	if err := r.tt.Click("Continue"); err != nil {
 		t.Fatal(err)
@@ -366,13 +366,13 @@ func TestSyncPaneOtherAccountSheetNamesBothAndDefaultsToTheOldAccount(t *testing
 	if fs.useOld != 1 || fs.moves != 0 {
 		t.Fatalf("Continue chose the old account %d times and moved %d times", fs.useOld, fs.moves)
 	}
-	if r.s.syncLogin != "serein7z@163.com" {
+	if r.s.syncLogin != "ada@example.com" {
 		t.Errorf("the email field = %q, want the old address", r.s.syncLogin)
 	}
 }
 
 func TestSyncPaneOtherAccountMove(t *testing.T) {
-	r, fs := syncPane(t, otherAccountSnap("serein7z@163.com"))
+	r, fs := syncPane(t, otherAccountSnap("ada@example.com"))
 	if err := r.tt.Click("Move this Mac to bee@example.com"); err != nil {
 		t.Fatal(err)
 	}
