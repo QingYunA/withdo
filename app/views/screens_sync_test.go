@@ -74,7 +74,7 @@ func syncScreenStates() []struct {
 	otherSheet := both
 	otherSheet.Phase, otherSheet.Conflict = data.SyncOtherAccountSheet, nil
 	otherSheet.Account = "Bee"
-	otherSheet.OtherAccount = &data.SyncOtherAccount{PreviousEmail: "serein7z@163.com", AccountEmail: "bee@example.com"}
+	otherSheet.OtherAccount = &data.SyncOtherAccount{PreviousEmail: "ada@example.com", AccountEmail: "bee@example.com"}
 	googleLink := synced
 	googleLink.GoogleLink = data.GoogleLinkAvailable
 	googleLinked := synced
