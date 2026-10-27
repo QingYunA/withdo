@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
  */
 
 /** Where the latest release is asked, from the public repository that holds the installers. */
-const val LATEST_RELEASE_URL = "https://api.github.com/repos/QingYunA/adhd-todo-releases/releases/latest"
+const val LATEST_RELEASE_URL = "https://api.github.com/repos/QingYunA/withdo/releases/latest"
 
 /** At most one check a day on start or return to the app. */
 const val UPDATE_CHECK_INTERVAL_MILLIS = 24L * 60 * 60 * 1000

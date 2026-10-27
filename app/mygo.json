@@ -5,7 +5,7 @@
   "out": "build",
   "updates": {
     "publicKey": "JKSbO8LWKNM6FUnzD1oemJTAfCx/wkg2hfS4osPS6qw=",
-    "github": "QingYunA/adhd-todo-releases",
+    "github": "QingYunA/withdo",
     "changelog": "../CHANGELOG.md"
   },
   "i18n": {
