@@ -93,6 +93,7 @@ func TestEventsOnlyTheReportsThatMoveATaskToReviewOrBlocked(t *testing.T) {
 	g.report(domain.ProgressInput{TaskID: &id, Agent: "claude-code", Summary: "working", Status: status(domain.StatusDoing)})
 	g.report(domain.ProgressInput{TaskID: &id, Agent: "claude-code", Summary: "a note"})
 	g.report(domain.ProgressInput{TaskID: &id, Agent: domain.HousekeepingAgent, Summary: "closed", Status: status(domain.StatusReview)})
+	g.report(domain.ProgressInput{TaskID: &id, Agent: domain.LegacyHousekeepingAgent, Summary: "closed", Status: status(domain.StatusReview)})
 	// What the user does in the app writes no report, so it tells nothing.
 	if _, err := g.r.UpdateTask(int(id), Patch{Status: StatusPtr(Blocked)}); err != nil {
 		t.Fatal(err)

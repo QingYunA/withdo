@@ -66,7 +66,7 @@ func TestAgentsAreToldToReportOnEveryTask(t *testing.T) {
 			desc = tool.Description
 		}
 	}
-	if !strings.Contains(desc, "several adhd-todo tasks") {
+	if !strings.Contains(desc, "several Withdo tasks") {
 		t.Errorf("report_progress description = %q", desc)
 	}
 }

@@ -8,14 +8,15 @@ import (
 
 // Status is what is known of one agent on this Mac.
 type Status struct {
-	Found     bool   // its command is on PATH or its config folder exists (or adhd-todo is already in its config)
+	Found     bool   // its command is on PATH or its config folder exists (or Withdo is already in its config)
 	Via       string // what was found: the command ("gemini") or the folder ("~/.cursor")
-	Installed bool   // adhd-todo is in its MCP config
+	Installed bool   // withdo is in its MCP config
+	Legacy    bool   // the old adhd-todo entry is in its MCP config (with or without withdo)
 }
 
 // Detect looks at one agent: reads its config, runs nothing.
 func (e *Env) Detect(a Agent) Status {
-	st := Status{Installed: e.Installed(a)}
+	st := Status{Installed: e.Installed(a), Legacy: e.hasServer(a, legacyServerName)}
 	for _, c := range a.Commands {
 		if _, err := e.lookPath(c); err == nil {
 			st.Found, st.Via = true, c
@@ -28,7 +29,7 @@ func (e *Env) Detect(a Agent) Status {
 			return st
 		}
 	}
-	if st.Installed { // its config is all there is to show
+	if st.Installed || st.Legacy { // its config is all there is to show
 		for _, f := range a.Files {
 			if e.exists(e.path(f)) {
 				st.Found, st.Via = true, "~/"+f
@@ -48,14 +49,26 @@ func (e *Env) DetectAll() map[string]Status {
 	return out
 }
 
-// tomlServer matches the header of Codex's [mcp_servers.adhd-todo] table (and its sub-tables).
-var tomlServer = regexp.MustCompile(`(?m)^[ \t]*\[[ \t]*mcp_servers[ \t]*\.[ \t]*("adhd-todo"|'adhd-todo'|adhd-todo)[ \t]*(\.[^\]\n]*)?\]`)
+// tomlServer matches the header of Codex's [mcp_servers.<name>] table (and its sub-tables).
+func tomlServer(name string) *regexp.Regexp {
+	n := regexp.QuoteMeta(name)
+	return regexp.MustCompile(`(?m)^[ \t]*\[[ \t]*mcp_servers[ \t]*\.[ \t]*("` + n + `"|'` + n + `'|` + n + `)[ \t]*(\.[^\]\n]*)?\]`)
+}
 
-// Installed reports whether adhd-todo is in the agent's MCP config. A config it cannot read or
+// tomlServers is tomlServer for each name a server has gone by.
+var tomlServers = map[string]*regexp.Regexp{
+	serverName:       tomlServer(serverName),
+	legacyServerName: tomlServer(legacyServerName),
+}
+
+// Installed reports whether withdo is in the agent's MCP config. A config it cannot read or
 // parse says no.
-func (e *Env) Installed(a Agent) bool {
+func (e *Env) Installed(a Agent) bool { return e.hasServer(a, serverName) }
+
+// hasServer reports whether a server of that name is in the agent's MCP config.
+func (e *Env) hasServer(a Agent, name string) bool {
 	if a.kind == viaYAML {
-		return e.dshInstalled()
+		return e.dshHasServer(name)
 	}
 	for _, f := range a.Files {
 		b, err := os.ReadFile(e.path(f))
@@ -63,7 +76,7 @@ func (e *Env) Installed(a Agent) bool {
 			continue
 		}
 		if a.Key == "" {
-			if tomlServer.Match(b) {
+			if tomlServers[name].Match(b) {
 				return true
 			}
 			continue
@@ -76,7 +89,7 @@ func (e *Env) Installed(a Agent) bool {
 		if json.Unmarshal(top[a.Key], &servers) != nil {
 			continue
 		}
-		if _, ok := servers[serverName]; ok {
+		if _, ok := servers[name]; ok {
 			return true
 		}
 	}

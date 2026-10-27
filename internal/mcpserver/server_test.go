@@ -130,7 +130,7 @@ func TestListsTheTenTools(t *testing.T) {
 func TestInitializeAdvertisesNameAndInstructions(t *testing.T) {
 	r := newRig(t)
 	init := r.session.InitializeResult()
-	if init.ServerInfo.Name != "adhd-todo" {
+	if init.ServerInfo.Name != "withdo" {
 		t.Errorf("server name = %q", init.ServerInfo.Name)
 	}
 	for _, w := range []string{"report_progress", "start", "blocked", "PR", "finish", "Always pass cwd",

@@ -12,9 +12,11 @@ func TestCLIArgsDecidesBetweenTheCommandLineAndTheWindow(t *testing.T) {
 		args []string
 		cli  bool
 	}{
-		{"linked name without arguments", []string{"/Users/me/.local/bin/adhd-core"}, []string{}, true},
-		{"linked name with a command", []string{"adhd-core", "mcp"}, []string{"mcp"}, true},
-		{"linked name with an unknown argument", []string{"adhd-core", "bogus"}, []string{"bogus"}, true},
+		{"linked name without arguments", []string{"/Users/me/.local/bin/withdo"}, []string{}, true},
+		{"linked name with a command", []string{"withdo", "mcp"}, []string{"mcp"}, true},
+		{"linked name with an unknown argument", []string{"withdo", "bogus"}, []string{"bogus"}, true},
+		{"legacy name without arguments", []string{"/Users/me/.local/bin/adhd-core"}, []string{}, true},
+		{"legacy name with a command", []string{"adhd-core", "mcp"}, []string{"mcp"}, true},
 		{"app name with a command", []string{"/Applications/ADHD Todo.app/Contents/MacOS/ADHD Todo", "--version"}, []string{"--version"}, true},
 		{"app name with help", []string{"ADHD Todo", "-h"}, []string{"-h"}, true},
 		{"app name without arguments", []string{"ADHD Todo"}, nil, false},

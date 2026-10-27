@@ -114,8 +114,8 @@ func oneLineError(t *testing.T, stderr string) {
 	if got := strings.Count(strings.TrimSpace(stderr), "\n"); got != 0 {
 		t.Fatalf("stderr is not one line: %q", stderr)
 	}
-	if !strings.HasPrefix(stderr, "adhd-core: ") {
-		t.Fatalf("stderr = %q, want the adhd-core prefix", stderr)
+	if !strings.HasPrefix(stderr, "withdo: ") {
+		t.Fatalf("stderr = %q, want the withdo prefix", stderr)
 	}
 }
 

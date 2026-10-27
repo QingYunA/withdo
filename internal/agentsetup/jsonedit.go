@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -112,6 +113,24 @@ func (v *jval) setPath(path []string, val *jval) error {
 		cur = next
 	}
 	return nil
+}
+
+// delPath removes the key at path under the root object. A path that is not there, or that runs
+// through something that is not an object, is left alone.
+func (v *jval) delPath(path []string) {
+	cur := v
+	for _, key := range path[:len(path)-1] {
+		if cur = cur.get(key); cur == nil || cur.kind != 'o' {
+			return
+		}
+	}
+	last := path[len(path)-1]
+	for i, k := range cur.keys {
+		if k == last {
+			cur.keys, cur.vals = slices.Delete(cur.keys, i, i+1), slices.Delete(cur.vals, i, i+1)
+			return
+		}
+	}
 }
 
 func (v *jval) compact(buf *bytes.Buffer) {

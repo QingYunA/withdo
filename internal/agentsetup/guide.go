@@ -10,7 +10,7 @@ import (
 var guideTemplate string
 
 // Guide is a self-contained setup guide for any coding agent: the user pastes it to an agent that
-// adhd-todo does not know, and the agent adds the MCP server to itself. The path of adhd-core is
+// Withdo does not know, and the agent adds the MCP server to itself. The path of withdo is
 // the one the known agents get.
 func (e *Env) Guide() string {
 	core := e.core()

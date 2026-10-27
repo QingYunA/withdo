@@ -14,7 +14,10 @@ import (
 // Reports the core files itself when it closes a subtask.
 const (
 	// HousekeepingAgent is the agent name on reports the core files by itself.
-	HousekeepingAgent = "adhd-todo"
+	HousekeepingAgent = "withdo"
+	// LegacyHousekeepingAgent is what HousekeepingAgent was called before the rename; reports filed
+	// under it are still in people's databases.
+	LegacyHousekeepingAgent = "adhd-todo"
 	// ClosedWithParentSummary is the report of a subtask closed because its parent finished.
 	ClosedWithParentSummary = "Closed with its parent task"
 	// BranchFinishedSummary is the report of a subtask whose branch was merged or deleted.

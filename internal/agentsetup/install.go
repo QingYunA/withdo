@@ -12,8 +12,8 @@ import (
 
 // Why an install did not happen. The app turns each into a sentence of its own language.
 var (
-	// ErrNoCore is when the adhd-core binary the agent would run is not where it should be.
-	ErrNoCore = errors.New("adhd-core is not installed")
+	// ErrNoCore is when the withdo binary the agent would run is not where it should be.
+	ErrNoCore = errors.New("withdo is not installed")
 	// ErrNotFound is when the agent's command is not on this Mac.
 	ErrNotFound = errors.New("the agent is not installed")
 	// ErrTimeout is when the agent's own command took too long.
@@ -47,8 +47,23 @@ func (e *ManualError) Error() string {
 	return "cannot edit " + e.File + " safely"
 }
 
-// Install adds adhd-todo's MCP server to the agent, unless it is there already. It runs the
-// agent's own command or edits its config file (after a copy to <file>.adhd-todo.bak).
+// LegacyError is an install that worked, while the old adhd-todo entry could not be removed from
+// the agent's config: the agent now has both servers.
+type LegacyError struct {
+	Agent string
+	Err   error
+}
+
+func (e *LegacyError) Error() string {
+	return e.Agent + ": added withdo, but could not remove the old adhd-todo entry: " + e.Err.Error()
+}
+
+func (e *LegacyError) Unwrap() error { return e.Err }
+
+// Install adds Withdo's MCP server to the agent, unless it is there already. It runs the
+// agent's own command or edits its config file (after a copy to <file>.withdo.bak). An agent that
+// has the old adhd-todo entry gets it removed in the same go; if that fails after withdo was
+// added, the error is a *LegacyError.
 func (e *Env) Install(ctx context.Context, a Agent) error {
 	if e.Installed(a) {
 		return nil
@@ -56,13 +71,77 @@ func (e *Env) Install(ctx context.Context, a Agent) error {
 	if !e.exists(e.core()) {
 		return ErrNoCore
 	}
-	if a.kind == viaYAML {
-		return e.installYAML(a)
+	legacy := e.hasServer(a, legacyServerName)
+	var err error
+	switch a.kind {
+	case viaYAML:
+		err = e.installYAML(a)
+	case viaFile:
+		err = e.installFile(a)
+	default:
+		err = e.installCommand(ctx, a)
 	}
-	if a.kind == viaFile {
-		return e.installFile(a)
+	if err != nil || !legacy {
+		return err
 	}
-	return e.installCommand(ctx, a)
+	return e.retireLegacy(ctx, a)
+}
+
+// retireLegacy removes the old adhd-todo entry that installing withdo did not already take along
+// (the file edits do; an agent's own command is run for the rest). It ends by looking at the
+// config: whatever the command said, an entry that is gone is gone.
+func (e *Env) retireLegacy(ctx context.Context, a Agent) error {
+	if !e.hasServer(a, legacyServerName) {
+		return nil
+	}
+	var cause error
+	if program, args := e.removeLine(a); program != "" {
+		cause = e.runAgent(ctx, a, program, args)
+	} else if a.kind == viaCommand {
+		cause = e.editFile(a, false, func(root *jval) error {
+			root.delPath([]string{a.Key, legacyServerName})
+			return nil
+		})
+	} else {
+		cause = errors.New("it is in a file Withdo does not edit")
+	}
+	if !e.hasServer(a, legacyServerName) {
+		return nil
+	}
+	if cause == nil {
+		cause = errors.New("it is still in the config")
+	}
+	return &LegacyError{Agent: a.Name, Err: cause}
+}
+
+// removeLine is the agent's own `mcp remove` command for the old adhd-todo entry, without the
+// program's path. Each is the syntax of that agent's documented command, at user scope where it has
+// scopes (gemini's default is the project, qwen's and claude's the user and wherever it is found):
+//
+//	claude mcp remove --scope user NAME     (claude mcp remove --help)
+//	codex mcp remove NAME                   (codex mcp remove --help)
+//	gemini mcp remove --scope user NAME     (gemini-cli packages/cli/src/commands/mcp/remove.ts)
+//	qwen mcp remove --scope user NAME       (qwen-code packages/cli/src/commands/mcp/remove.ts)
+//	kimi mcp remove NAME                    (Kimi CLI docs, kimi mcp remove)
+//	amp mcp remove NAME                     (amp mcp remove --help)
+//
+// VS Code has `--add-mcp` and nothing to remove, so Copilot's file is edited instead.
+func (e *Env) removeLine(a Agent) (program string, args []string) {
+	switch a.ID {
+	case "claude":
+		return "claude", []string{"mcp", "remove", "--scope", "user", legacyServerName}
+	case "codex":
+		return "codex", []string{"mcp", "remove", legacyServerName}
+	case "gemini":
+		return "gemini", []string{"mcp", "remove", "--scope", "user", legacyServerName}
+	case "qwen":
+		return "qwen", []string{"mcp", "remove", "--scope", "user", legacyServerName}
+	case "kimi":
+		return "kimi", []string{"mcp", "remove", legacyServerName}
+	case "amp":
+		return "amp", []string{"mcp", "remove", legacyServerName}
+	}
+	return "", nil
 }
 
 // commandLine is the agent's own `mcp add` command, without the program's path.
@@ -97,6 +176,11 @@ func (e *Env) installCommand(ctx context.Context, a Agent) error {
 	if program == "" {
 		return fmt.Errorf("%s has no install command", a.Name)
 	}
+	return e.runAgent(ctx, a, program, args)
+}
+
+// runAgent runs one of the agent's own commands under the timeout.
+func (e *Env) runAgent(ctx context.Context, a Agent, program string, args []string) error {
 	path, err := e.lookPath(program)
 	if err != nil {
 		return ErrNotFound
@@ -119,7 +203,7 @@ func lastLine(out []byte) string {
 	return strings.TrimSpace(lines[len(lines)-1])
 }
 
-// entry is the JSON of adhd-todo's server as the agent's config spells it.
+// entry is the JSON of Withdo's server as the agent's config spells it.
 func (e *Env) entry(a Agent) []byte {
 	core := e.core()
 	var v any
@@ -152,7 +236,7 @@ func (e *Env) entry(a Agent) []byte {
 	return b
 }
 
-// Snippet is what to add by hand to the agent's config file: the key with adhd-todo under it.
+// Snippet is what to add by hand to the agent's config file: the key with withdo under it.
 func (e *Env) Snippet(a Agent) string {
 	if a.kind == viaYAML {
 		return e.dshSnippet()
@@ -182,7 +266,27 @@ func (e *Env) configFile(a Agent) string {
 	return e.path(a.Files[0])
 }
 
+// installFile adds withdo to the agent's JSON config, and takes the old adhd-todo entry out of it
+// in the same write.
 func (e *Env) installFile(a Agent) error {
+	entry, err := parseJSON(e.entry(a))
+	if err != nil {
+		return err
+	}
+	return e.editFile(a, true, func(root *jval) error {
+		if err := root.setPath([]string{a.Key, serverName}, entry); err != nil {
+			return err
+		}
+		root.delPath([]string{a.Key, legacyServerName})
+		return nil
+	})
+}
+
+// editFile applies edit to the agent's JSON config and writes it back, after a copy to
+// <file>.withdo.bak, changing nothing else in it. A file that is not plain JSON, or whose shape
+// edit cannot handle, is not written: it is handed back as a *ManualError. A file that does not
+// exist is only made when create is set.
+func (e *Env) editFile(a Agent, create bool, edit func(root *jval) error) error {
 	file := e.configFile(a)
 	manual := &ManualError{File: file, Snippet: e.Snippet(a)}
 	old, err := os.ReadFile(file)
@@ -190,23 +294,22 @@ func (e *Env) installFile(a Agent) error {
 		return fmt.Errorf("cannot read %s: %w", file, err)
 	}
 	exists := err == nil
+	if !exists && !create {
+		return nil
+	}
 	root := &jval{kind: 'o'}
 	if strings.TrimSpace(string(old)) != "" {
 		if root, err = parseJSON(old); err != nil || root.kind != 'o' {
 			return manual
 		}
 	}
-	entry, err := parseJSON(e.entry(a))
-	if err != nil {
-		return err
-	}
-	if err := root.setPath([]string{a.Key, serverName}, entry); err != nil {
+	if err := edit(root); err != nil {
 		return manual
 	}
 	out := root.render(indentOf(old))
 	out = append(out, '\n')
 	if exists {
-		if err := writeFile(file+".adhd-todo.bak", old, 0o600); err != nil {
+		if err := writeFile(file+".withdo.bak", old, 0o600); err != nil {
 			return fmt.Errorf("cannot back up %s: %w", file, err)
 		}
 	}
@@ -226,7 +329,7 @@ func writeFile(file string, b []byte, mode os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(file), ".adhd-todo-*")
+	tmp, err := os.CreateTemp(filepath.Dir(file), ".withdo-*")
 	if err != nil {
 		return err
 	}

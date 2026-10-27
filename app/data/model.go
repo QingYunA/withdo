@@ -1,4 +1,4 @@
-// Package data is the UI's view of adhd-todo: the domain types, the Store the views read and
+// Package data is the UI's view of Withdo: the domain types, the Store the views read and
 // write through, and Real, its one implementation over internal/domain and SQLite. OpenDemo opens
 // it on a temporary file with realistic seed data.
 //

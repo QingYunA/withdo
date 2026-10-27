@@ -29,7 +29,7 @@ func newAgentRig(t *testing.T) *agentRig {
 	t.Helper()
 	r := &agentRig{t: t, home: t.TempDir(), path: map[string]string{}}
 	r.env = &agentsetup.Env{Home: r.home, LookPath: r.lookPath, Run: r.runCommand}
-	r.write(".local/bin/adhd-core", "#!/bin/sh\n")
+	r.write(".local/bin/withdo", "#!/bin/sh\n")
 	return r
 }
 

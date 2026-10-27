@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -20,8 +21,8 @@ func agentsRig(t *testing.T) *settingsRig {
 	t.Helper()
 	r := newSettingsRig(t)
 	r.mac.has("claude", "codex", "gemini", "opencode", "code")
-	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`)
-	r.mac.write(".codex/config.toml", "[mcp_servers.adhd-todo]\ncommand = \"x\"\n")
+	r.mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
+	r.mac.write(".codex/config.toml", "[mcp_servers.withdo]\ncommand = \"x\"\n")
 	r.mac.write(".cursor/mcp.json", "{}")
 	r.pane(t, "Agents")
 	return r
@@ -210,7 +211,7 @@ func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
 	r.mac.mu.Lock()
 	r.mac.gate = gate
 	r.mac.run = func(string, []string) ([]byte, error) {
-		r.mac.write(".gemini/settings.json", `{"mcpServers":{"adhd-todo":{}}}`)
+		r.mac.write(".gemini/settings.json", `{"mcpServers":{"withdo":{}}}`)
 		return nil, nil
 	}
 	r.mac.mu.Unlock()
@@ -230,7 +231,7 @@ func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
 		t.Errorf("%d agents with the MCP installed, want 3", got)
 	}
 	cmds := r.mac.commands()
-	if len(cmds) != 1 || cmds[0][0] != "/usr/local/bin/gemini" || !strings.Contains(strings.Join(cmds[0], " "), "mcp add -s user adhd-todo "+filepath.Join(r.mac.home, ".local/bin/adhd-core")+" mcp") {
+	if len(cmds) != 1 || cmds[0][0] != "/usr/local/bin/gemini" || !strings.Contains(strings.Join(cmds[0], " "), "mcp add -s user withdo "+filepath.Join(r.mac.home, ".local/bin/withdo")+" mcp") {
 		t.Errorf("ran %q", cmds)
 	}
 }
@@ -253,11 +254,11 @@ func TestInstallMCPShowsAFailureInTheRow(t *testing.T) {
 
 func TestInstallMCPWithoutTheCoreSaysSo(t *testing.T) {
 	r := agentsRig(t)
-	mustNil(t, os.Remove(filepath.Join(r.mac.home, ".local", "bin", "adhd-core")))
+	mustNil(t, os.Remove(filepath.Join(r.mac.home, ".local", "bin", "withdo")))
 	mustNil(t, r.tt.Click("Install the MCP in Gemini CLI"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "adhd-core isn't at ~/.local/bin/adhd-core. Build it first, then try again.")
+	has(t, r.tt, r.s.say.SettingsAgentNoCore("~/.local/bin/withdo"))
 	if len(r.mac.commands()) != 0 {
 		t.Errorf("ran %q", r.mac.commands())
 	}
@@ -273,7 +274,7 @@ func TestInstallMCPEditsACursorFileAndShowsItInstalled(t *testing.T) {
 	}
 	b, err := os.ReadFile(filepath.Join(r.mac.home, ".cursor", "mcp.json"))
 	mustNil(t, err)
-	if !strings.Contains(string(b), `"adhd-todo"`) {
+	if !strings.Contains(string(b), `"withdo"`) {
 		t.Errorf("not written: %s", b)
 	}
 	if len(r.mac.commands()) != 0 {
@@ -293,7 +294,7 @@ func TestInstallMCPAppendsADeepSeekHarnessCordisPatch(t *testing.T) {
 	has(t, r.tt, "MCP installed")
 	b, err := os.ReadFile(filepath.Join(r.mac.home, ".dsh", "cordis.patch.yml"))
 	mustNil(t, err)
-	if !strings.Contains(string(b), "# mine") || !strings.Contains(string(b), "serverName: adhd-todo") {
+	if !strings.Contains(string(b), "# mine") || !strings.Contains(string(b), "serverName: withdo") {
 		t.Errorf("the patch layer was not appended to:\n%s", b)
 	}
 	if len(r.mac.commands()) != 0 {
@@ -352,7 +353,7 @@ func TestAZedFileWithCommentsIsNotRewrittenAndTheSnippetCanBeCopied(t *testing.T
 	r.tt.Scroll(340, 300, 0, 330) // the snippet's well comes into view
 	r.tt.Frame()
 	mustNil(t, r.tt.Click("Copy command"))
-	if clip := r.tt.Clipboard(); !strings.Contains(clip, `"adhd-todo": {`) || strings.Contains(clip, "claude mcp add") {
+	if clip := r.tt.Clipboard(); !strings.Contains(clip, `"withdo": {`) || strings.Contains(clip, "claude mcp add") {
 		t.Errorf("clipboard %q", clip)
 	}
 }
@@ -379,7 +380,7 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.mac.has("gemini")
-	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{}}}`)
+	r.mac.write(".claude.json", `{"mcpServers":{"withdo":{}}}`)
 	r.app.Store.(*data.Real).SeedReportAs(1, "codex", "one", fixedNow().Add(-6*time.Minute))
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
@@ -404,5 +405,38 @@ func TestEveryAgentOfTheListHasAnAvatarAndAName(t *testing.T) {
 		if got := agentName(a.Name); got != a.Name {
 			t.Errorf("agentName(%q) = %q: a row's name and the name reports go by differ", a.Name, got)
 		}
+	}
+}
+
+// An agent that only has the pre-rename adhd-todo entry has not got Withdo yet, even though it
+// reported before: it offers the install, which adds withdo and takes the old entry out.
+func TestAnAgentWithOnlyTheOldEntryOffersTheInstallAndMigrates(t *testing.T) {
+	r := newSettingsRig(t)
+	r.mac.has("claude")
+	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`)
+	r.app.Store.(*data.Real).SeedReportAs(1, "claude-code", "one", fixedNow().Add(-6*time.Minute))
+	r.app.Refresh()
+	r.pane(t, "Agents")
+	has(t, r.tt, "Claude Code", "Install MCP")
+	hasNot(t, r.tt, "MCP installed")
+
+	r.mac.mu.Lock()
+	r.mac.run = func(_ string, args []string) ([]byte, error) {
+		if slices.Contains(args, "add") {
+			r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"},"withdo":{"command":"y"}}}`)
+		} else {
+			r.mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"y"}}}`)
+		}
+		return nil, nil
+	}
+	r.mac.mu.Unlock()
+	mustNil(t, r.tt.Click("Install the MCP in Claude Code"))
+	r.rec.drain(t)
+	r.tt.Frame()
+	has(t, r.tt, "MCP installed")
+	hasNot(t, r.tt, "Install MCP")
+	cmds := r.mac.commands()
+	if len(cmds) != 2 || !slices.Contains(cmds[0], "add") || !slices.Contains(cmds[1], "remove") || !slices.Contains(cmds[1], "adhd-todo") {
+		t.Errorf("ran %q", cmds)
 	}
 }
