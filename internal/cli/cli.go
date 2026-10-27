@@ -1,6 +1,6 @@
-// Package cli is adhd-core, the command line: an MCP server for coding agents (mcp) and a plain-text
-// report of what they are doing (overview). The standalone cmd/adhd-core and the app, which is
-// adhd-core too when run under that name or with one of its commands, both call Main.
+// Package cli is withdo, the command line: an MCP server for coding agents (mcp) and a plain-text
+// report of what they are doing (overview). The standalone cmd/withdo and the app, which is
+// withdo too when run under that name or with one of its commands, both call Main.
 package cli
 
 import (
@@ -25,7 +25,7 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
-const usage = `Usage: adhd-core <command>
+const usage = `Usage: withdo <command>
 
 Commands:
   mcp        Run the MCP server on stdio
@@ -42,19 +42,19 @@ const (
 	exitUsage = 2
 )
 
-// commands are the first arguments adhd-core answers to; the app uses them to tell a command line from a launch.
+// commands are the first arguments withdo answers to; the app uses them to tell a command line from a launch.
 var commands = []string{"mcp", "overview", "sync", "guide", "version", "--version", "help", "--help", "-h"}
 
-// IsCommand reports whether arg is one of adhd-core's own commands or flags.
+// IsCommand reports whether arg is one of withdo's own commands or flags.
 func IsCommand(arg string) bool { return slices.Contains(commands, arg) }
 
 // Options inject what only the desktop app can provide: the Keychain-backed sync secrets. The
-// standalone adhd-core passes nothing.
+// standalone withdo passes nothing.
 type Options struct {
 	Secrets syncclient.Secrets
 }
 
-// Main runs adhd-core on the process's environment until it ends or is interrupted, and returns
+// Main runs withdo on the process's environment until it ends or is interrupted, and returns
 // the exit code.
 func Main(args []string, options ...Options) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -109,20 +109,20 @@ func run(ctx context.Context, args []string, d deps) int {
 	}
 	switch args[0] {
 	case "version", "--version":
-		_, _ = fmt.Fprintf(d.stdout, "adhd-core %s\n", mcpserver.Version)
+		_, _ = fmt.Fprintf(d.stdout, "withdo %s\n", mcpserver.Version)
 		return exitOK
 	case "guide":
 		_, _ = io.WriteString(d.stdout, agentsetup.New(d.home).Guide())
 		return exitOK
 	case "mcp", "overview":
 		if err := execute(ctx, args[0], d); err != nil {
-			_, _ = fmt.Fprintf(d.stderr, "adhd-core: %v\n", err)
+			_, _ = fmt.Fprintf(d.stderr, "withdo: %v\n", err)
 			return exitError
 		}
 		return exitOK
 	case "sync":
 		if err := runSync(ctx, args[1:], d); err != nil {
-			_, _ = fmt.Fprintf(d.stderr, "adhd-core: %v\n", err)
+			_, _ = fmt.Fprintf(d.stderr, "withdo: %v\n", err)
 			return exitError
 		}
 		return exitOK
@@ -153,7 +153,7 @@ func execute(ctx context.Context, command string, d deps) error {
 	defer func() { _ = db.Close() }()
 	core := domain.New(db, domain.Options{})
 	if command == "mcp" {
-		_, _ = io.WriteString(d.stderr, "[adhd-todo] MCP server ready on stdio\n")
+		_, _ = io.WriteString(d.stderr, "[withdo] MCP server ready on stdio\n")
 		return d.serve(ctx, mcpserver.New(core, mcpserver.Options{ImagesDir: paths.ImagesDir(filepath.Dir(dbPath))}))
 	}
 	overview, err := core.GetOverview(ctx, domain.OverviewOptions{})

@@ -48,7 +48,7 @@ func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	mac := newAgentRig(t)
 	app.Config.AgentSetup = mac.env
 	mac.has("claude", "codex", "opencode", "code")
-	mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`)
+	mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
 	mac.write(".codex/config.toml", "[mcp_servers.adhd-todo]\ncommand = \"x\"\n")
 	mac.write(".cursor/mcp.json", "{}")
 	// DeepSeek Harness is here by its config folder alone, as in the v14 frame.

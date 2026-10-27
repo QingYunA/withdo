@@ -243,7 +243,7 @@ func (s *Settings) agentList() []data.AgentActivity {
 // and, at the right, what can be done: nothing (the MCP is installed), Install MCP, or, for an
 // agent whose report alone put it here, nothing either.
 func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, st agentsetup.Status, rep agentReports, first bool) {
-	installed := st.Installed || rep.ever
+	installed := st.Installed || (rep.ever && !st.Legacy) // an agent with only the old adhd-todo entry still needs the install
 	sub := s.agentSub(st, rep)
 	if !first {
 		ui.Box(c.Key("rule-agent-"+a.ID)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)

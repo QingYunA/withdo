@@ -118,7 +118,7 @@ func (r *recorder) drain(t *testing.T) {
 
 func testConfig() Config {
 	return Config{
-		ConnectCommand: "claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp",
+		ConnectCommand: "claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp",
 		DataFolder:     "~/Library/Application Support/adhd-todo",
 		Version:        "0.2.0",
 	}

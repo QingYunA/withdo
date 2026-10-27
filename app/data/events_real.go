@@ -18,7 +18,7 @@ func eventOf(r domain.ReportEvent) (Event, bool) {
 	switch {
 	case r.Agent == domain.GitHubAgent:
 		return githubEvent(e, r.Kind)
-	case r.Agent == "" || r.Agent == domain.HousekeepingAgent || r.Status == nil:
+	case r.Agent == "" || r.Agent == domain.HousekeepingAgent || r.Agent == domain.LegacyHousekeepingAgent || r.Status == nil:
 		return Event{}, false
 	case *r.Status == domain.StatusReview:
 		e.Kind, e.Detail = EventHandedBack, r.Summary

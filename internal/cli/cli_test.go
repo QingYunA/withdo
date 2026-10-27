@@ -49,7 +49,7 @@ func TestVersionPrintsTheServersVersion(t *testing.T) {
 		if code := run(context.Background(), []string{arg}, h.d); code != 0 {
 			t.Fatalf("%s: exit %d, stderr %q", arg, code, h.err.String())
 		}
-		if want := "adhd-core " + mcpserver.Version + "\n"; h.out.String() != want {
+		if want := "withdo " + mcpserver.Version + "\n"; h.out.String() != want {
 			t.Errorf("%s printed %q, want %q", arg, h.out.String(), want)
 		}
 	}
@@ -63,7 +63,7 @@ func TestUsageAndHelp(t *testing.T) {
 		stdout string
 		stderr string
 	}{
-		{"no command", nil, 2, "", "Usage: adhd-core"},
+		{"no command", nil, 2, "", "Usage: withdo"},
 		{"unknown command", []string{"bogus"}, 2, "", "Unknown command: bogus"},
 		{"serve is gone", []string{"serve"}, 2, "", "Unknown command: serve"},
 		{"--help", []string{"--help"}, 0, "overview", ""},
@@ -133,7 +133,7 @@ func TestGuidePrintsTheSetupGuideWithTheCorePath(t *testing.T) {
 		t.Fatalf("exit code %d: %s", code, h.err.String())
 	}
 	out := h.out.String()
-	for _, want := range []string{filepath.Join(h.d.home, ".local", "bin", "adhd-core"), `"mcp"`, "get_overview", "report_progress"} {
+	for _, want := range []string{filepath.Join(h.d.home, ".local", "bin", "withdo"), `"mcp"`, "get_overview", "report_progress"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("stdout lacks %q:\n%s", want, out)
 		}
@@ -233,7 +233,7 @@ func TestDatabaseOpenFailureExitsOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := newHarness(t, filepath.Join(blocker, "sub", "x.db"))
-	if code := run(context.Background(), []string{"overview"}, h.d); code != 1 || !strings.HasPrefix(h.err.String(), "adhd-core:") {
+	if code := run(context.Background(), []string{"overview"}, h.d); code != 1 || !strings.HasPrefix(h.err.String(), "withdo:") {
 		t.Errorf("code = %d, stderr = %q", code, h.err.String())
 	}
 }
@@ -242,11 +242,11 @@ func TestDatabaseOpenFailureExitsOne(t *testing.T) {
 // does: spawn it, speak MCP over its stdio, close stdin and expect it to exit.
 func TestBuiltBinaryServesMCPOverStdio(t *testing.T) {
 	testutil.IsolateGit(t)
-	bin := filepath.Join(t.TempDir(), "adhd-core")
+	bin := filepath.Join(t.TempDir(), "withdo")
 	if runtime.GOOS == "windows" {
 		bin += ".exe" // Windows LookPath requires the extension
 	}
-	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/adhd-core").CombinedOutput(); err != nil {
+	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/withdo").CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, out)
 	}
 	dbPath := filepath.Join(t.TempDir(), "stdio.db")

@@ -16,7 +16,7 @@ func TestLinkBundledCoreLinksOnlyFromInsideAnInstalledAppBundle(t *testing.T) {
 		if err := os.MkdirAll(filepath.Dir(exe), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		script := "#!/bin/sh\necho adhd-core 0.5.0\n"
+		script := "#!/bin/sh\necho withdo 0.5.0\n"
 		if err := os.WriteFile(exe, []byte(script), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -31,7 +31,7 @@ func TestLinkBundledCoreLinksOnlyFromInsideAnInstalledAppBundle(t *testing.T) {
 		{"an installed app", bundled, true},
 	}
 	for _, c := range cases {
-		link := filepath.Join(t.TempDir(), "bin", "adhd-core")
+		link := filepath.Join(t.TempDir(), "bin", "withdo")
 		linkBundledCore(c.exe, link)
 		got, err := os.Readlink(link)
 		switch {
@@ -44,6 +44,24 @@ func TestLinkBundledCoreLinksOnlyFromInsideAnInstalledAppBundle(t *testing.T) {
 			if _, err := os.Lstat(link); err == nil {
 				t.Errorf("%s: %s exists", c.name, link)
 			}
+		}
+	}
+}
+
+func TestLinkOwnExecutableKeepsTheLegacyNameLinkedToo(t *testing.T) {
+	root := t.TempDir()
+	bundled := filepath.Join(root, "Withdo.app", "Contents", "MacOS", "Withdo")
+	if err := os.MkdirAll(filepath.Dir(bundled), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(bundled, []byte("#!/bin/sh\necho withdo 0.5.0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(t.TempDir(), "bin", "withdo")
+	linkBundledCores(bundled, link)
+	for _, name := range []string{"withdo", legacyCoreName} {
+		if got, err := os.Readlink(filepath.Join(filepath.Dir(link), name)); err != nil || got != bundled {
+			t.Errorf("%s points at %q (%v), want %q", name, got, err, bundled)
 		}
 	}
 }

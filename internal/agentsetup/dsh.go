@@ -10,17 +10,17 @@ import (
 
 // DeepSeek Harness takes its MCP servers as Cordis patch entries, not JSON. Its patch layers are
 // YAML lists: a machine-wide one at ~/.dsh/cordis.patch.yml that every profile reads after its
-// own, and one in each profile. The home layer is the one adhd-todo edits; the profile ones are
+// own, and one in each profile. The home layer is the one Withdo edits; the profile ones are
 // only read, so an install the user made there still counts as installed. The home layer is always
 // ~/.dsh/cordis.patch.yml: DSH_HOME is not read, so a harness the user pointed elsewhere with it is
 // not found.
 //
 // The server entry follows @deepseek-ai/dsh-mcp-client's own documentation (its README's minimal
 // configuration): one insert of that plugin with serverName, transport, command and args.
-const dshMCPServer = "adhd-todo"
+const dshMCPServer = serverName
 const dshMCPClient = "@deepseek-ai/dsh-mcp-client"
 
-// dshPatchFile is the machine-wide patch layer adhd-todo edits.
+// dshPatchFile is the machine-wide patch layer Withdo edits.
 func (e *Env) dshPatchFile() string { return e.path(".dsh/cordis.patch.yml") }
 
 // dshPatchFiles are every patch layer a server could be declared in: the home one first, then
@@ -40,14 +40,14 @@ func (e *Env) dshPatchFiles() []string {
 	return files
 }
 
-// dshInstalled reports whether any patch layer inserts adhd-todo's MCP client.
-func (e *Env) dshInstalled() bool {
+// dshHasServer reports whether any patch layer inserts the MCP client for a server of that name.
+func (e *Env) dshHasServer(name string) bool {
 	for _, file := range e.dshPatchFiles() {
 		b, err := os.ReadFile(file)
 		if err != nil {
 			continue
 		}
-		if dshPatchHasServer(string(b)) {
+		if dshPatchHasServer(string(b), name) {
 			return true
 		}
 	}
@@ -55,8 +55,8 @@ func (e *Env) dshInstalled() bool {
 }
 
 // dshPatchHasServer reads a patch list without parsing YAML: a commented example does not count,
-// and a line that inserts the client is paired with a serverName of adhd-todo.
-func dshPatchHasServer(text string) bool {
+// and a line that inserts the client is paired with a serverName of name.
+func dshPatchHasServer(text, name string) bool {
 	client, named := false, false
 	for _, line := range strings.Split(text, "\n") {
 		line = strings.TrimSpace(line)
@@ -71,7 +71,7 @@ func dshPatchHasServer(text string) bool {
 			if i := strings.Index(rest, " #"); i >= 0 {
 				rest = rest[:i]
 			}
-			if strings.Trim(strings.TrimSpace(rest), `'"`) == dshMCPServer {
+			if strings.Trim(strings.TrimSpace(rest), `'"`) == name {
 				named = true
 			}
 		}
@@ -80,15 +80,15 @@ func dshPatchHasServer(text string) bool {
 }
 
 // dshSnippet is the patch entry to add to a patch list, as a whole top-level list item. The
-// server runs adhd-core, like every other agent's. failOnStartupError is false on purpose: per the
+// server runs withdo, like every other agent's. failOnStartupError is false on purpose: per the
 // plugin's documentation true makes it reject activation when the server fails to start, while false
-// (its default) degrades to zero tools, and adhd-todo must never stop DeepSeek Harness from starting
-// when adhd-core is missing or broken.
+// (its default) degrades to zero tools, and Withdo must never stop DeepSeek Harness from starting
+// when withdo is missing or broken.
 func (e *Env) dshSnippet() string {
 	command := strings.ReplaceAll(e.core(), "'", "''")
 	return strings.Join([]string{
 		"- insert:",
-		"    - id: adhd-todo-mcp",
+		"    - id: withdo-mcp",
 		"      name: '" + dshMCPClient + "'",
 		"      config:",
 		"        serverName: " + dshMCPServer,
@@ -99,11 +99,12 @@ func (e *Env) dshSnippet() string {
 	}, "\n")
 }
 
-// installYAML adds adhd-todo to the home patch layer by appending one entry. It only ever writes
-// a file that is an empty patch list (or []), or one whose first line is a list item; anything
-// else is handed back as the manual snippet rather than guessed at.
+// installYAML adds withdo to the home patch layer by appending one entry, and takes the old
+// adhd-todo entry out of that layer (dshDropLegacy). It only ever writes a file that is an empty
+// patch list (or []), or one whose first line is a list item; anything else is handed back as the
+// manual snippet rather than guessed at.
 //
-// Install has already returned for an agent that is installed and for a missing adhd-core, so
+// Install has already returned for an agent that is installed and for a missing withdo, so
 // neither is checked again here.
 func (e *Env) installYAML(a Agent) error {
 	file := e.dshPatchFile()
@@ -124,6 +125,7 @@ func (e *Env) installYAML(a Agent) error {
 			return &ManualError{File: file, Snippet: e.dshSnippet()}
 		}
 	}
+	content = dshDropLegacy(content)
 	snippet := e.dshSnippet()
 	if content != "" && !strings.HasSuffix(content, "\n") {
 		content += "\n"
@@ -133,7 +135,7 @@ func (e *Env) installYAML(a Agent) error {
 	}
 	content += snippet + "\n"
 	if exists {
-		if err := writeFile(file+".adhd-todo.bak", old, modeOf(file)); err != nil {
+		if err := writeFile(file+".withdo.bak", old, modeOf(file)); err != nil {
 			return fmt.Errorf("cannot back up %s: %w", file, err)
 		}
 	}
@@ -157,4 +159,49 @@ func firstDSHLine(text string) string {
 		return line
 	}
 	return ""
+}
+
+// dshDropLegacy removes the entries of the old adhd-todo server from a patch list: the top-level
+// list items that insert the MCP client under that serverName. Only an item that inserts that one
+// plugin and nothing else is dropped (the shape the app itself wrote); an item with other
+// inserts in it is the user's and stays.
+func dshDropLegacy(text string) string {
+	var out, item []string
+	flush := func() {
+		switch {
+		case len(item) == 0:
+		case !dshIsLegacyItem(item):
+			out = append(out, item...)
+		default: // the blank lines and comments after the item are not part of it
+			end := len(item)
+			for end > 1 && (strings.TrimSpace(item[end-1]) == "" || strings.HasPrefix(item[end-1], "#")) {
+				end--
+			}
+			out = append(out, item[end:]...)
+		}
+		item = nil
+	}
+	for _, line := range strings.Split(text, "\n") {
+		if strings.HasPrefix(line, "- ") || line == "-" {
+			flush()
+		}
+		if len(item) == 0 && !strings.HasPrefix(line, "- ") && line != "-" {
+			out = append(out, line)
+			continue
+		}
+		item = append(item, line)
+	}
+	flush()
+	return strings.TrimLeft(strings.Join(out, "\n"), "\n")
+}
+
+// dshIsLegacyItem reports whether one top-level list item is only the old adhd-todo MCP client.
+func dshIsLegacyItem(item []string) bool {
+	inserts := 0
+	for _, line := range item {
+		if strings.HasPrefix(strings.TrimLeft(line, " \t"), "- id:") {
+			inserts++
+		}
+	}
+	return inserts == 1 && dshPatchHasServer(strings.Join(item, "\n"), legacyServerName)
 }

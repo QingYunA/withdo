@@ -22,7 +22,7 @@ func TestParentDoneClosesItsSubtasks(t *testing.T) {
 		if d.Task.Status != Done || d.Task.CompletedAt == nil {
 			t.Errorf("subtask %d: status %v, completed %v", id, d.Task.Status, d.Task.CompletedAt)
 		}
-		if len(d.Reports) != 1 || d.Reports[0].Agent != "adhd-todo" || d.Reports[0].Summary != "Closed with its parent task" {
+		if len(d.Reports) != 1 || d.Reports[0].Agent != "withdo" || d.Reports[0].Summary != "Closed with its parent task" {
 			t.Errorf("reports of %d = %+v", id, d.Reports)
 		}
 	}

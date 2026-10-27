@@ -25,7 +25,7 @@ func (c *Client) Sync(ctx context.Context) error {
 	return err
 }
 
-// SyncWithStats is Sync with the counts `adhd-core sync now` prints.
+// SyncWithStats is Sync with the counts `withdo sync now` prints.
 func (c *Client) SyncWithStats(ctx context.Context) (SyncStats, error) {
 	var stats SyncStats
 	if _, err := c.deviceID(ctx); err != nil {

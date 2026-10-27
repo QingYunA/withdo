@@ -1,4 +1,4 @@
-// Command adhd-core is adhd-todo's command line: an MCP server for coding
+// Command withdo is Withdo's command line: an MCP server for coding
 // agents (mcp) and a plain-text report of what they are doing (overview).
 package main
 

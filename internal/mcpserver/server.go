@@ -1,4 +1,4 @@
-// Package mcpserver exposes adhd-todo's core as an MCP server with ten tools.
+// Package mcpserver exposes Withdo's core as an MCP server with ten tools.
 package mcpserver
 
 import (
@@ -17,7 +17,7 @@ import (
 // Instructions is sent to every client at initialize; it tells agents when to
 // call report_progress.
 var Instructions = strings.Join([]string{
-	"adhd-todo tracks what coding agents are doing across repos, branches and pull requests, so the user can see everything in one place.",
+	"Withdo tracks what coding agents are doing across repos, branches and pull requests, so the user can see everything in one place.",
 	"The user watches these reports while you work, so report often. Call report_progress:",
 	"- when you start a task (summary = the goal; status \"doing\"),",
 	"- after each step: you understood the problem, finished a part, ran the tests, changed your plan,",
@@ -27,9 +27,9 @@ var Instructions = strings.Join([]string{
 	"Write summary, next_step and title in the language the user writes to you in (Chinese if they write Chinese), however the code and the repo are written.",
 	"Always pass cwd: your current working directory. The server process may run in a different directory, and in a git worktree cwd decides the branch.",
 	"Calls from the same repo and branch update one task, so keep each report to one or two short sentences. Pass task_id if you have it.",
-	"When the user asks you to do an adhd-todo task by its number (\"do #44\"), read it with get_task and report on it with that task_id.",
+	"When the user asks you to do a Withdo task by its number (\"do #44\"), read it with get_task and report on it with that task_id.",
 	"get_task lists the pictures attached to a task with their file paths; get_task_image shows one by its number.",
-	"When one piece of work covers several adhd-todo tasks (\"do #69 and #70\"), report on each of them with its own task_id, at least when you start and when you finish.",
+	"When one piece of work covers several Withdo tasks (\"do #69 and #70\"), report on each of them with its own task_id, at least when you start and when you finish.",
 	"Please pass title on your first report: a short name for the task. Without it the title is the first sentence of the summary.",
 	"Reports match a task by repo and branch; with no branch (outside git, or a detached HEAD) each report without task_id creates a new task, so pass the task_id of your first report on the rest.",
 	"When you start a subagent, give it your task_id and tell it to pass parent_task_id on its reports, so its work shows under your task.",
@@ -40,7 +40,7 @@ var Instructions = strings.Join([]string{
 
 // Name and Version identify the server to clients.
 const (
-	Name    = "adhd-todo"
+	Name    = "withdo"
 	Version = "0.10.2"
 )
 
