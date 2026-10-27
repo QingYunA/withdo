@@ -44,6 +44,12 @@ func main() {
 	empty := flag.Bool("empty", false, "start with no data at all, to see the empty states (implies -fake)")
 	flag.Parse()
 
+	// An install an old version updated still has the old bundle name; renaming it restarts the app,
+	// which must happen before this process takes the single-instance lock below.
+	if !*fake && !*empty && restartRenamedBundle() {
+		return
+	}
+
 	// A second launch hands over to the running app and ends here, before it opens the database. The
 	// demo modes use a database of their own and may run beside the real one.
 	if !*fake && !*empty && !mygo.App.RequestSingleInstanceLock() {
@@ -113,6 +119,7 @@ func main() {
 	mygo.App.WhenReady(func() {
 		s.setMenu()
 		go linkOwnExecutable(app.Config.AgentSetup.CorePath())
+		go migrateWindowsInstall()
 		s.createMain()
 		if tray = s.newTray(); tray != nil {
 			s.registerShortcut()

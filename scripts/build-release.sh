@@ -33,6 +33,10 @@ trap 'rm -rf "$work"' EXIT
 # which makes the Windows installer, aborts with std::bad_alloc unless the locale is UTF-8.
 mkdir -p app/resources/windows-amd64
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/adhd-core.exe ./cmd/adhd-core
+# "ADHD Todo.exe" is the launcher that stands in for the app's old executable name: the old version's
+# updater swaps the new files into its folder and starts "ADHD Todo.exe" again, as do the shortcuts it
+# made. The launcher starts Withdo.exe next to it (cmd/legacy-launcher).
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -H windowsgui" -o "app/resources/windows-amd64/ADHD Todo.exe" ./cmd/legacy-launcher
 (cd app && LC_ALL=en_US.UTF-8 go tool mygo build -platform darwin/universal,windows/amd64)
 
 # The standalone adhd-core for macOS, for machines without the app: built on its own, unsigned. One
