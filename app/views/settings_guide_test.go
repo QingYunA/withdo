@@ -9,8 +9,8 @@ func TestAnotherAgentRowCopiesTheSetupGuide(t *testing.T) {
 	for _, tc := range []struct {
 		locale, label, line, button, copied string
 	}{
-		{"en", "Another agent", "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself.", "Copy setup guide", "Copied"},
-		{"zh-Hans", "其他 Agent", "不在列表里？复制这份说明发给它，它会自己接上 adhd-todo。", "复制接入说明", "已拷贝"},
+		{"en", "Another agent", "Not in the list? Copy this guide and paste it to the agent: it adds Withdo itself.", "Copy setup guide", "Copied"},
+		{"zh-Hans", "其他 Agent", "不在列表里？复制这份说明发给它，它会自己接上 Withdo。", "复制接入说明", "已拷贝"},
 	} {
 		t.Run(tc.locale, func(t *testing.T) {
 			r := newSettingsRig(t)

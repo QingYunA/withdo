@@ -21,8 +21,8 @@ type handOffCopy struct{ text string }
 // toastFade is how long a toast takes to fade out at the end of its time.
 const toastFade = 200 * time.Millisecond
 
-// copyForAgent is what to say to an agent to have it do the tasks: "Do adhd-todo task #12." or "Do
-// adhd-todo tasks #31, #32 and #33.". It is English on purpose: it is a prompt for an agent, not
+// copyForAgent is what to say to an agent to have it do the tasks: "Do Withdo task #12." or "Do
+// Withdo tasks #31, #32 and #33.". It is English on purpose: it is a prompt for an agent, not
 // the window's own words.
 func copyForAgent(ids []int) string {
 	sorted := slices.Sorted(slices.Values(ids))
@@ -34,9 +34,9 @@ func copyForAgent(ids []int) string {
 	case 0:
 		return ""
 	case 1:
-		return "Do adhd-todo task " + marks[0] + "."
+		return "Do Withdo task " + marks[0] + "."
 	}
-	return "Do adhd-todo tasks " + strings.Join(marks[:len(marks)-1], ", ") + " and " + marks[len(marks)-1] + "."
+	return "Do Withdo tasks " + strings.Join(marks[:len(marks)-1], ", ") + " and " + marks[len(marks)-1] + "."
 }
 
 // toastsView builds the toasts of the window.

@@ -1606,13 +1606,13 @@ func (msgs Messages) LinkNotFound() string {
 	return Catalog.Format(msgs.locale, "linkNotFound", nil)
 }
 
-// ListEmptyBody says "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself."
+// ListEmptyBody says "Coding agents add tasks here through the Withdo MCP server. You can add one yourself."
 // in the language the app shows.
 //
 // Body of an empty project list.
 func ListEmptyBody() string { return In(i18n.Locale()).ListEmptyBody() }
 
-// ListEmptyBody says "Coding agents add tasks here through the adhd-todo MCP server. You can add one yourself."
+// ListEmptyBody says "Coding agents add tasks here through the Withdo MCP server. You can add one yourself."
 // in the language of msgs.
 //
 // Body of an empty project list.
@@ -3364,14 +3364,14 @@ func (msgs Messages) SettingsNotifyMeta() string {
 	return Catalog.Format(msgs.locale, "settingsNotifyMeta", nil)
 }
 
-// SettingsNotifyDenied says "macOS does not allow adhd-todo to notify"
+// SettingsNotifyDenied says "macOS does not allow Withdo to notify"
 // in the language the app shows.
 //
 // Quiet line, in the warning color, when macOS refused the last
 // notification.
 func SettingsNotifyDenied() string { return In(i18n.Locale()).SettingsNotifyDenied() }
 
-// SettingsNotifyDenied says "macOS does not allow adhd-todo to notify"
+// SettingsNotifyDenied says "macOS does not allow Withdo to notify"
 // in the language of msgs.
 //
 // Quiet line, in the warning color, when macOS refused the last
@@ -4380,14 +4380,14 @@ func (msgs Messages) MenuSettings() string {
 	return Catalog.Format(msgs.locale, "menuSettings", nil)
 }
 
-// TrayOpen says "Open ADHD Todo"
+// TrayOpen says "Open Withdo"
 // in the language the app shows.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
 // back; also the link at the right of the footer of the menu bar panel.
 func TrayOpen() string { return In(i18n.Locale()).TrayOpen() }
 
-// TrayOpen says "Open ADHD Todo"
+// TrayOpen says "Open Withdo"
 // in the language of msgs.
 //
 // Item of the menu of the tray icon (Windows) that brings the main window
@@ -4528,13 +4528,13 @@ func (msgs Messages) SettingsAboutLicense() string {
 	return Catalog.Format(msgs.locale, "settingsAboutLicense", nil)
 }
 
-// A11yAboutGitHub says "adhd-todo on GitHub"
+// A11yAboutGitHub says "Withdo on GitHub"
 // in the language the app shows.
 //
 // Accessibility label of the GitHub link in Settings > General > About
 func A11yAboutGitHub() string { return In(i18n.Locale()).A11yAboutGitHub() }
 
-// A11yAboutGitHub says "adhd-todo on GitHub"
+// A11yAboutGitHub says "Withdo on GitHub"
 // in the language of msgs.
 //
 // Accessibility label of the GitHub link in Settings > General > About
@@ -4558,13 +4558,13 @@ func (msgs Messages) SettingsAboutLink() string {
 	return Catalog.Format(msgs.locale, "settingsAboutLink", nil)
 }
 
-// SettingsAboutName says "adhd-todo {version}"
+// SettingsAboutName says "Withdo {version}"
 // in the language the app shows.
 //
 // Name and version row of Settings > General.
 func SettingsAboutName(version string) string { return In(i18n.Locale()).SettingsAboutName(version) }
 
-// SettingsAboutName says "adhd-todo {version}"
+// SettingsAboutName says "Withdo {version}"
 // in the language of msgs.
 //
 // Name and version row of Settings > General.
@@ -4900,13 +4900,13 @@ func (msgs Messages) ViewList() string {
 	return Catalog.Format(msgs.locale, "viewList", nil)
 }
 
-// WindowTitle says "ADHD Todo"
+// WindowTitle says "Withdo"
 // in the language the app shows.
 //
 // Title of the main window.
 func WindowTitle() string { return In(i18n.Locale()).WindowTitle() }
 
-// WindowTitle says "ADHD Todo"
+// WindowTitle says "Withdo"
 // in the language of msgs.
 //
 // Title of the main window.
@@ -5288,14 +5288,14 @@ func (msgs Messages) SettingsAgentsTitle() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsTitle", nil)
 }
 
-// SettingsAgentsBody says "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or…"
+// SettingsAgentsBody says "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or st…"
 // in the language the app shows.
 //
 // One plain line under the title of Settings > Agents: what Install MCP
 // does and does not do.
 func SettingsAgentsBody() string { return In(i18n.Locale()).SettingsAgentsBody() }
 
-// SettingsAgentsBody says "Installing the MCP adds adhd-todo's MCP server to that agent, so it reports its progress here. It does not install or…"
+// SettingsAgentsBody says "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or st…"
 // in the language of msgs.
 //
 // One plain line under the title of Settings > Agents: what Install MCP
@@ -5387,13 +5387,13 @@ func (msgs Messages) SettingsAgentsConnect() string {
 // SettingsAgentInstall says "Install MCP"
 // in the language the app shows.
 //
-// Button that adds adhd-todo's MCP server to an agent.
+// Button that adds Withdo's MCP server to an agent.
 func SettingsAgentInstall() string { return In(i18n.Locale()).SettingsAgentInstall() }
 
 // SettingsAgentInstall says "Install MCP"
 // in the language of msgs.
 //
-// Button that adds adhd-todo's MCP server to an agent.
+// Button that adds Withdo's MCP server to an agent.
 func (msgs Messages) SettingsAgentInstall() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstall", nil)
 }
@@ -5415,14 +5415,14 @@ func (msgs Messages) SettingsAgentInstalling() string {
 // SettingsAgentInstalled says "MCP installed"
 // in the language the app shows.
 //
-// At the right of an agent that already has adhd-todo's MCP server. A check
+// At the right of an agent that already has Withdo's MCP server. A check
 // mark comes before it.
 func SettingsAgentInstalled() string { return In(i18n.Locale()).SettingsAgentInstalled() }
 
 // SettingsAgentInstalled says "MCP installed"
 // in the language of msgs.
 //
-// At the right of an agent that already has adhd-todo's MCP server. A check
+// At the right of an agent that already has Withdo's MCP server. A check
 // mark comes before it.
 func (msgs Messages) SettingsAgentInstalled() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstalled", nil)
@@ -5502,13 +5502,13 @@ func (msgs Messages) SettingsAgentOther() string {
 	return Catalog.Format(msgs.locale, "settingsAgentOther", nil)
 }
 
-// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself."
+// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds Withdo itself."
 // in the language the app shows.
 //
 // Second line of the Another agent row in Settings > Agents.
 func SettingsAgentOtherBody() string { return In(i18n.Locale()).SettingsAgentOtherBody() }
 
-// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds adhd-todo itself."
+// SettingsAgentOtherBody says "Not in the list? Copy this guide and paste it to the agent: it adds Withdo itself."
 // in the language of msgs.
 //
 // Second line of the Another agent row in Settings > Agents.
@@ -5519,30 +5519,30 @@ func (msgs Messages) SettingsAgentOtherBody() string {
 // SettingsCopyGuide says "Copy setup guide"
 // in the language the app shows.
 //
-// Button that copies the guide an agent follows to add adhd-todo's MCP
-// server to itself; also its accessibility label.
+// Button that copies the guide an agent follows to add Withdo's MCP server
+// to itself; also its accessibility label.
 func SettingsCopyGuide() string { return In(i18n.Locale()).SettingsCopyGuide() }
 
 // SettingsCopyGuide says "Copy setup guide"
 // in the language of msgs.
 //
-// Button that copies the guide an agent follows to add adhd-todo's MCP
-// server to itself; also its accessibility label.
+// Button that copies the guide an agent follows to add Withdo's MCP server
+// to itself; also its accessibility label.
 func (msgs Messages) SettingsCopyGuide() string {
 	return Catalog.Format(msgs.locale, "settingsCopyGuide", nil)
 }
 
-// SettingsAgentNoCore says "adhd-core isn't at {path}. Build it first, then try again."
+// SettingsAgentNoCore says "withdo isn't at {path}. Build it first, then try again."
 // in the language the app shows.
 //
-// Why Install MCP did nothing: the adhd-core program the agent would run is
+// Why Install MCP did nothing: the withdo program the agent would run is
 // missing.
 func SettingsAgentNoCore(path string) string { return In(i18n.Locale()).SettingsAgentNoCore(path) }
 
-// SettingsAgentNoCore says "adhd-core isn't at {path}. Build it first, then try again."
+// SettingsAgentNoCore says "withdo isn't at {path}. Build it first, then try again."
 // in the language of msgs.
 //
-// Why Install MCP did nothing: the adhd-core program the agent would run is
+// Why Install MCP did nothing: the withdo program the agent would run is
 // missing.
 func (msgs Messages) SettingsAgentNoCore(path string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentNoCore", map[string]any{"path": path})
@@ -5592,7 +5592,7 @@ func (msgs Messages) SettingsAgentFailed(agent string, said string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentFailed", map[string]any{"agent": agent, "said": said})
 }
 
-// SettingsAgentManual says "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:"
+// SettingsAgentManual says "{file} isn't plain JSON, so Withdo won't rewrite it. Add this to it:"
 // in the language the app shows.
 //
 // Shown under the agents when a config file cannot be edited safely (a JSON
@@ -5600,7 +5600,7 @@ func (msgs Messages) SettingsAgentFailed(agent string, said string) string {
 // add follows in a box.
 func SettingsAgentManual(file string) string { return In(i18n.Locale()).SettingsAgentManual(file) }
 
-// SettingsAgentManual says "{file} isn't plain JSON, so adhd-todo won't rewrite it. Add this to it:"
+// SettingsAgentManual says "{file} isn't plain JSON, so Withdo won't rewrite it. Add this to it:"
 // in the language of msgs.
 //
 // Shown under the agents when a config file cannot be edited safely (a JSON
@@ -7952,16 +7952,16 @@ func (msgs Messages) ListDropToHandMany(count int) string {
 // in the language the app shows.
 //
 // Button of the hand-off toast. It puts a sentence on the clipboard to
-// paste into an agent so it picks up the handed tasks, such as: Do
-// adhd-todo task #12.
+// paste into an agent so it picks up the handed tasks, such as: Do Withdo
+// task #12.
 func HandOffCopy() string { return In(i18n.Locale()).HandOffCopy() }
 
 // HandOffCopy says "Copy for the agent"
 // in the language of msgs.
 //
 // Button of the hand-off toast. It puts a sentence on the clipboard to
-// paste into an agent so it picks up the handed tasks, such as: Do
-// adhd-todo task #12.
+// paste into an agent so it picks up the handed tasks, such as: Do Withdo
+// task #12.
 func (msgs Messages) HandOffCopy() string {
 	return Catalog.Format(msgs.locale, "handOffCopy", nil)
 }
@@ -9712,14 +9712,14 @@ func (msgs Messages) RecentSignedOutTitle() string {
 	return Catalog.Format(msgs.locale, "recentSignedOutTitle", nil)
 }
 
-// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
+// RecentGHBody says "Withdo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
 // in the language the app shows.
 //
 // Body of the Recent changes page when gh is missing or signed out; the
 // command to run follows.
 func RecentGHBody() string { return In(i18n.Locale()).RecentGHBody() }
 
-// RecentGHBody says "adhd-todo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
+// RecentGHBody says "Withdo reads pull requests and issues with the gh on this computer, with no token of its own. Run this in a terminal:"
 // in the language of msgs.
 //
 // Body of the Recent changes page when gh is missing or signed out; the

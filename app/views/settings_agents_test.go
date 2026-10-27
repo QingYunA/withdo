@@ -40,7 +40,7 @@ func emptyMacRig(t *testing.T) *settingsRig {
 
 func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
 	r := agentsRig(t)
-	has(t, r.tt, "Coding agents", "On this computer", "More", "adds adhd-todo's MCP server to that agent")
+	has(t, r.tt, "Coding agents", "On this computer", "More", "adds Withdo's MCP server to that agent")
 	// The counts sit beside their labels: six on this Mac, eight in More.
 	for label, count := range map[string]string{"On this computer": "6", "More": "8"} {
 		head, ok := r.tt.Find(label)
@@ -257,7 +257,7 @@ func TestInstallMCPWithoutTheCoreSaysSo(t *testing.T) {
 	mustNil(t, r.tt.Click("Install the MCP in Gemini CLI"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "adhd-core isn't at ~/.local/bin/adhd-core. Build it first, then try again.")
+	has(t, r.tt, "withdo isn't at ~/.local/bin/adhd-core. Build it first, then try again.")
 	if len(r.mac.commands()) != 0 {
 		t.Errorf("ran %q", r.mac.commands())
 	}

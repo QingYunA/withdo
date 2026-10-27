@@ -98,7 +98,7 @@ func TestChineseBoardAndEmptyProject(t *testing.T) {
 	inChinese(tt2)
 	m2.goTo(nav{screen: screenProject, projectID: p.ID})
 	tt2.Frame()
-	has(t, tt2, "还没有任务。", "编程 Agent 会通过 adhd-todo 的 MCP 服务器把任务添加到这里，你也可以自己添加。")
+	has(t, tt2, "还没有任务。", "编程 Agent 会通过 Withdo 的 MCP 服务把任务添加到这里，你也可以自己添加。")
 }
 
 func TestChineseInspector(t *testing.T) {
@@ -114,7 +114,7 @@ func TestChineseSettingsAndLanguageChoice(t *testing.T) {
 	inChinese(r.tt)
 	r.tt.Frame()
 	has(t, r.tt, "账号", "通用", "Agent", "高级", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
-		"数据文件夹", "在访达中显示", "adhd-todo 0.2.0", "开源，MIT 许可证")
+		"数据文件夹", "在访达中显示", "Withdo 0.2.0", "开源，MIT 许可证")
 	if r.title != "通用" {
 		t.Errorf("title %q", r.title)
 	}

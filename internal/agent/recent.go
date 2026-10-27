@@ -54,7 +54,7 @@ type RecentNote struct {
 	Topic    string
 }
 
-const recentDescribeRules = `You write the lines of the Recent changes page inside adhd-todo, a todo app for a software developer who runs several coding agents in parallel.
+const recentDescribeRules = `You write the lines of the Recent changes page inside Withdo, a todo app for a software developer who runs several coding agents in parallel.
 You are given the pull requests and issues of one repository: each with its number, kind, title, labels and description.
 
 For each one write a sentence saying plainly what it does for the user of the software, not how it is done:
@@ -153,7 +153,7 @@ type RecentLinesIssue struct {
 	Solved   bool
 }
 
-const recentLinesRules = `You write two or three sentences at the head of one project's section on the Recent changes page inside adhd-todo, a todo app for a software developer who runs several coding agents in parallel.
+const recentLinesRules = `You write two or three sentences at the head of one project's section on the Recent changes page inside Withdo, a todo app for a software developer who runs several coding agents in parallel.
 You are given what the repository merged in a period (each with its category), the pull requests still open, and its issues.
 
 - Two or three sentences, plain text: no markdown, no lists, no emoji.
@@ -215,7 +215,7 @@ type RecentExplanation struct {
 	Where string `json:"where"`
 }
 
-const recentExplainRules = `You explain one pull request or issue to the developer who owns the project, inside adhd-todo.
+const recentExplainRules = `You explain one pull request or issue to the developer who owns the project, inside Withdo.
 You are given its title, its description and, for a pull request, the names of the files it changed. You never see the code.
 
 Answer with three short points, each one or two plain sentences with no markdown:

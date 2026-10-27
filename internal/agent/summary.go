@@ -44,7 +44,7 @@ type SummaryOutput struct {
 	Kinds     map[int64]string
 }
 
-const summaryRules = `You write the paragraph of the end-of-day or end-of-week summary inside adhd-todo, a todo app for a software developer who runs several coding agents in parallel.
+const summaryRules = `You write the paragraph of the end-of-day or end-of-week summary inside Withdo, a todo app for a software developer who runs several coding agents in parallel.
 You are given the tasks finished in the period: who finished each one, its project and pull request, and what the last report said. You are also told how many tasks are still open.
 
 The paragraph:

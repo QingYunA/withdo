@@ -1,5 +1,5 @@
 {
-  "name": "ADHD Todo",
+  "name": "Withdo",
   "identifier": "dev.adhdtodo.desktop",
   "version": "0.10.2",
   "out": "build",
@@ -14,7 +14,7 @@
   },
   "macos": {
     "infoPlist": {
-      "NSMicrophoneUsageDescription": "Say a task instead of typing it. Your voice is sent to your ADHD Todo account to turn it into text."
+      "NSMicrophoneUsageDescription": "Say a task instead of typing it. Your voice is sent to your Withdo account to turn it into text."
     }
   }
 }

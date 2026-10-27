@@ -107,7 +107,7 @@ func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	r.tt.Scroll(340, 300, 0, 3000) // the notifications and sound groups made the pane taller than the window
 	r.tt.Frame()
 	has(t, r.tt, "No archived projects. Archive one from its menu in the sidebar.",
-		"Data folder", r.app.Config.DataFolder, "Show in Finder", "adhd-todo 0.2.0", "Open source, MIT license", "GitHub")
+		"Data folder", r.app.Config.DataFolder, "Show in Finder", "Withdo 0.2.0", "Open source, MIT license", "GitHub")
 	hasFold(t, r.tt, "Archived projects")
 	if err := r.tt.Click("Show in Finder"); err != nil {
 		t.Fatal(err)
@@ -115,7 +115,7 @@ func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	if !slices.Equal(r.rec.folders, []string{r.app.Config.DataFolder}) {
 		t.Errorf("revealed %v", r.rec.folders)
 	}
-	if err := r.tt.Click("adhd-todo on GitHub"); err != nil {
+	if err := r.tt.Click("Withdo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
 	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/adhd-todo" {
