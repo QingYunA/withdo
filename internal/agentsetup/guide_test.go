@@ -43,7 +43,7 @@ func TestGuideNamesTheServerAndFillsInTheCorePath(t *testing.T) {
 }
 
 func TestGuideKeepsAWindowsPathWithSpacesWhole(t *testing.T) {
-	core := `C:\Users\me\AppData\Local\Programs\Withdo\withdo.exe`
+	core := `C:\Users\me\AppData\Local\Programs\Withdo\withdo-cli.exe`
 	g := (&Env{Home: `C:\Users\me`, Core: core}).Guide()
 	if !strings.Contains(g, "`"+core+"`") {
 		t.Errorf("the guide lacks the path:\n%s", g)
