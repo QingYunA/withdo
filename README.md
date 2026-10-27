@@ -1,4 +1,4 @@
-# adhd-todo
+# Withdo
 
 A todo app for people juggling many things at once. Coding agents (Claude Code first) report which
 repo, branch and PR they are working on through a local MCP server, so you can see what every
@@ -21,47 +21,48 @@ Install the app once from the DMG of the [latest release](https://github.com/Qin
 Open). Install a later version the same way. Automatic updates are built in but off for now
 (`docs/plans/m10-auto-update.md`).
 
-`adhd-core` is the app itself: on launch the app links `~/.local/bin/adhd-core`, where the MCP
-registration below points, to its own executable, which runs as `adhd-core` under that name, so installing the app brings both. It leaves a build of your own
-(one that is as new as the app's) alone. Coding agents keep running the old `adhd-core` until you
-restart them. Without the app, `adhd-core-<version>-macos-universal.tar.gz` on the release is the
-binary by itself.
+`withdo` is the app itself: on launch the app links `~/.local/bin/withdo`, where the MCP
+registration below points, to its own executable, which runs as `withdo` under that name, so installing the app brings both. It leaves a build of your own
+(one that is as new as the app's) alone. Coding agents keep running the old MCP server until you
+restart them. Without the app, `withdo-cli-<version>-macos-universal.tar.gz` on the release is the
+binary by itself. The product was called ADHD Todo before; the app moves the agent configs of that time
+to `withdo` by itself, and `adhd-core` keeps working as an alias.
 
 ## Build
 
 Requires Go 1.27.1 or newer (macOS for the app).
 
 ```sh
-# the app: app/build/darwin-arm64/ADHD Todo.app and a .dmg
+# the app: app/build/darwin-arm64/Withdo.app and a .dmg
 cd app && go tool mygo build
 
 # the CLI and MCP server
-go build -o ~/.local/bin/adhd-core ./cmd/adhd-core
+go build -o ~/.local/bin/withdo ./cmd/withdo
 ```
 
 `scripts/build-release.sh` makes the release files of both platforms each release ships into
-`app/build/release/`: for macOS the DMG of the universal app (which is `adhd-core` too) and the
-standalone `adhd-core` tarball, plus the signed update archive when updates are on; for Windows x64
-the installer, which carries the console `adhd-core.exe` next to the app. See `docs/plans/m10-auto-update.md`.
+`app/build/release/`: for macOS the DMG of the universal app (which is `withdo` too) and the
+standalone `withdo` tarball, plus the signed update archive when updates are on; for Windows x64
+the installer, which carries the console `withdo.exe` next to the app. See `docs/plans/m10-auto-update.md`.
 
 ## Connect Claude Code
 
 Register the MCP server once (user scope):
 
 ```sh
-claude mcp add --scope user adhd-todo -- ~/.local/bin/adhd-core mcp
+claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp
 ```
 
-On Windows use the command shown in Settings > Agents instead: it names the `adhd-core.exe` in the
+On Windows use the command shown in Settings > Agents instead: it names the `withdo.exe` in the
 install folder.
 
-Other agents can add the server themselves: paste them the output of `adhd-core guide` (or use
+Other agents can add the server themselves: paste them the output of `withdo guide` (or use
 Settings > Agents > Copy setup guide in the app).
 
 Agents then report progress to the app. To see what they are doing from a terminal:
 
 ```sh
-adhd-core overview
+withdo overview
 ```
 
 ## Ask field (built-in assistant)
@@ -77,7 +78,7 @@ optional live check: `ADHD_TODO_LIVE_MODEL=1 go test ./internal/agent -run TestL
 
 The database is `~/Library/Application Support/adhd-todo/adhd-todo.db` on macOS
 (`$XDG_DATA_HOME/adhd-todo/` on Linux, `%APPDATA%\adhd-todo\` on Windows). Set `ADHD_TODO_DB` to use
-another file. The app and `adhd-core` share it; the app notices the other process's writes within
+another file. The app and `withdo` share it; the app notices the other process's writes within
 half a second.
 
 ## Develop
@@ -92,6 +93,6 @@ cd app && go tool mygo dev                       # run the app against the real 
 go run ./app -fake                               # demo data instead of the database (-empty: none)
 ```
 
-Layout: `cmd/adhd-core` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
+Layout: `cmd/withdo` (CLI), `internal/{paths,store,gitctx,domain,mcpserver,watch}` (core), `internal/{agent,providers}` (the built-in assistant),
 `app/` (mygo UI: `data`, `theme`, `views`).
 

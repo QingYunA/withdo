@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Builds the release files of both platforms each release ships, macOS and Windows x64, and gathers
 # the ones to upload into app/build/release with their SHA256SUMS.txt:
-#   macOS:   the DMG of the universal app (which is adhd-core too), the standalone adhd-core tarball,
-#            and the signed update archive, deltas and manifest (adhd-todo-<v>-darwin-universal.tar.gz,
-#            update-darwin-universal.json);
-#   Windows: the NSIS installer of the app, which carries the console adhd-core.exe next to it, and
-#            the signed update archive and manifest (adhd-todo-<v>-windows-amd64.tar.gz,
-#            update-windows-amd64.json).
+#   macOS:   the DMG of the universal app (which is the withdo command too), the standalone withdo
+#            tarball, and the signed update archive, deltas and manifest
+#            (withdo-<v>-darwin-universal.tar.gz, update-darwin-universal.json);
+#   Windows: the NSIS installer of the app, which carries the console withdo.exe next to it (and
+#            adhd-core.exe, the name old agent configs run), and the signed update archive and
+#            manifest (withdo-<v>-windows-amd64.tar.gz, update-windows-amd64.json).
 # It uploads nothing; scripts/publish-release.sh does.
 #   scripts/build-release.sh
 # The update key is the secret half of mygo's key pair (mygo keygen). It stays out of the repository;
@@ -27,34 +27,36 @@ release="$PWD/app/build/release"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# The app is adhd-core too (app/cli.go), so the macOS bundle carries one program. On Windows the
-# app is a GUI program that cannot be an MCP stdio server, so the console adhd-core.exe the agents
-# run is built into app/resources/windows-amd64/, which mygo installs next to the app. makensis,
+# The app is withdo too (app/cli.go), so the macOS bundle carries one program. On Windows the
+# app is a GUI program that cannot be an MCP stdio server, so the console withdo.exe the agents
+# run is built into app/resources/windows-amd64/, which mygo installs next to the app. A copy is
+# named adhd-core.exe, the program the agent configs written before the rename run. makensis,
 # which makes the Windows installer, aborts with std::bad_alloc unless the locale is UTF-8.
 mkdir -p app/resources/windows-amd64
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/adhd-core.exe ./cmd/adhd-core
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o app/resources/windows-amd64/withdo.exe ./cmd/withdo
+cp app/resources/windows-amd64/withdo.exe app/resources/windows-amd64/adhd-core.exe
 (cd app && LC_ALL=en_US.UTF-8 go tool mygo build -platform darwin/universal,windows/amd64)
 
-# The standalone adhd-core for macOS, for machines without the app: built on its own, unsigned. One
+# The standalone withdo for macOS, for machines without the app: built on its own, unsigned. One
 # universal file for both architectures.
 for arch in arm64 amd64; do
-  GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$work/adhd-core-$arch" ./cmd/adhd-core
+  GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$work/withdo-$arch" ./cmd/withdo
 done
 mkdir -p "$work/mac"
-lipo -create -output "$work/mac/adhd-core" "$work/adhd-core-arm64" "$work/adhd-core-amd64"
+lipo -create -output "$work/mac/withdo" "$work/withdo-arm64" "$work/withdo-amd64"
 
 # Everything to upload, under the names the releases give it (GitHub turns spaces into dots).
 rm -rf "$release"
 mkdir -p "$release"
-cp "$mac/ADHD Todo $version.dmg" "$release/ADHD-Todo-$version-macos-universal.dmg"
-tar -czf "$release/adhd-core-$version-macos-universal.tar.gz" -C "$work/mac" adhd-core
-cp "$win/ADHD Todo Setup $version amd64.exe" "$release/ADHD-Todo-Setup-$version-windows-x64.exe"
-for f in "$mac"/adhd-todo-* "$mac"/update-*.json "$win"/adhd-todo-* "$win"/update-*.json; do
+cp "$mac/Withdo $version.dmg" "$release/Withdo-$version-macos-universal.dmg"
+tar -czf "$release/withdo-cli-$version-macos-universal.tar.gz" -C "$work/mac" withdo
+cp "$win/Withdo Setup $version amd64.exe" "$release/Withdo-Setup-$version-windows-x64.exe"
+for f in "$mac"/withdo-* "$mac"/update-*.json "$win"/withdo-* "$win"/update-*.json; do
   if [ -e "$f" ]; then cp "$f" "$release/"; fi
 done
 # Without these an installed app finds no update, so a build that lacks one is no release.
-for f in "adhd-todo-$version-darwin-universal.tar.gz" update-darwin-universal.json \
-         "adhd-todo-$version-windows-amd64.tar.gz" update-windows-amd64.json; do
+for f in "withdo-$version-darwin-universal.tar.gz" update-darwin-universal.json \
+         "withdo-$version-windows-amd64.tar.gz" update-windows-amd64.json; do
   [ -e "$release/$f" ] || { echo "the build made no $f" >&2; exit 1; }
 done
 (cd "$release" && shasum -a 256 * > SHA256SUMS.txt)

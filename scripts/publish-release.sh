@@ -24,9 +24,9 @@ built="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' app/mygo.json)"
 
 release="$PWD/app/build/release"
 apk="adhd-todo-$version.apk"
-for f in "ADHD-Todo-$version-macos-universal.dmg" "adhd-core-$version-macos-universal.tar.gz" \
-         "ADHD-Todo-Setup-$version-windows-x64.exe" "adhd-todo-$version-darwin-universal.tar.gz" \
-         "adhd-todo-$version-windows-amd64.tar.gz" update-darwin-universal.json update-windows-amd64.json \
+for f in "Withdo-$version-macos-universal.dmg" "withdo-cli-$version-macos-universal.tar.gz" \
+         "Withdo-Setup-$version-windows-x64.exe" "withdo-$version-darwin-universal.tar.gz" \
+         "withdo-$version-windows-amd64.tar.gz" update-darwin-universal.json update-windows-amd64.json \
          SHA256SUMS.txt; do
   [ -e "$release/$f" ] || { echo "missing $release/$f: run scripts/build-release.sh" >&2; exit 1; }
 done
@@ -41,7 +41,7 @@ if ! grep -q " $apk\$" "$release/SHA256SUMS.txt"; then
   (cd "$release" && shasum -a 256 "$apk" >> SHA256SUMS.txt)
 fi
 
-# The notes: the changelog section, then the line about agents that keep the old adhd-core.
+# The notes: the changelog section, then the line about agents that keep running the old MCP server.
 notes="$(mktemp)"
 trap 'rm -f "$notes"' EXIT
 awk -v v="$version" '
@@ -50,7 +50,7 @@ awk -v v="$version" '
   on { print }
 ' CHANGELOG.md | sed -e '/./,$!d' > "$notes"
 [ -s "$notes" ] || { echo "CHANGELOG.md has no \"## $version\" section" >&2; exit 1; }
-printf '\n**Restart your coding agents after updating** (Claude Code and the others): an agent keeps running the old `adhd-core` until it is restarted, so it does not see the new tools before.\n' >> "$notes"
+printf '\n**Restart your coding agents after updating** (Claude Code and the others): an agent keeps running the old MCP server until it is restarted, so it does not see the new tools before.\n' >> "$notes"
 
 tag="v$version"
 if gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
@@ -58,9 +58,9 @@ if gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
   [ "$draft" = true ] || { echo "$tag is already published on $REPO" >&2; exit 1; }
   echo "refilling the draft $tag"
   gh release upload "$tag" --repo "$REPO" --clobber "$release"/*
-  gh release edit "$tag" --repo "$REPO" --title "ADHD Todo $tag" --notes-file "$notes"
+  gh release edit "$tag" --repo "$REPO" --title "Withdo $tag" --notes-file "$notes"
 else
-  gh release create "$tag" --repo "$REPO" --draft --title "ADHD Todo $tag" --notes-file "$notes" "$release"/*
+  gh release create "$tag" --repo "$REPO" --draft --title "Withdo $tag" --notes-file "$notes" "$release"/*
 fi
 
 if [ "$publish" = true ]; then

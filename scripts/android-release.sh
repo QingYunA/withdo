@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Builds a signed release APK of the phone app into dist/adhd-todo-<version>.apk.
+# The file keeps the name adhd-todo-<version>.apk after the rename to Withdo: the clients already installed
+# look for exactly that asset in the latest release.
 #   scripts/android-release.sh --init   once: make the release keystore and keep its password in
 #                                       the keychain (back the keystore up: updates need it)
 #   scripts/android-release.sh          build the core, the APK, and check its signature
