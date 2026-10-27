@@ -3,6 +3,20 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.11.0
+
+No database change. Install this version from the DMG or the installer: 0.10.2 and older look for
+updates in a repository that no longer gets them. From this version on, updates come from
+github.com/QingYunA/withdo.
+
+- **ADHD Todo is now Withdo.** Same app, same data, new name and a new pixel icon.
+- Your coding agents are moved to the new MCP server name `withdo` by themselves. If you allowed
+  `mcp__adhd-todo__*` tools in an agent's permissions, allow `mcp__withdo__*` instead. The command
+  line is `withdo` now; `adhd-core` still works.
+- On a Mac, delete the old `ADHD Todo` app after installing Withdo.
+- Home shows your idle agents in a tray with a sleeping robot, and Summary is back in the sidebar.
+- Withdo is open source under the AGPL-3.0: github.com/QingYunA/withdo.
+
 ## 0.10.2
 
 No database change; the app updates itself from 0.10.0.

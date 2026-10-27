@@ -22,7 +22,7 @@ import (
 	"github.com/egoist/mygo/plugins/updater/native"
 )
 
-const version = "0.10.2"
+const version = "0.11.0"
 
 // connectCommand registers the MCP server with Claude Code. core is the withdo path the agents
 // run: shown under ~ outside Windows, where neither PowerShell nor cmd expands it, and there in
