@@ -507,7 +507,10 @@ private fun ServerFooter(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(stringResource(R.string.sync_server), style = type.meta, color = tokens.textTertiary)
+            val official = isOfficialSyncServer(server)
+            if (editing || !official) {
+                Text(stringResource(R.string.sync_server), style = type.meta, color = tokens.textTertiary)
+            }
             if (editing) {
                 BasicTextField(
                     value = draft,
@@ -522,6 +525,18 @@ private fun ServerFooter(
                         .height(36.dp)
                         .background(tokens.bgSubtle, RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 8.dp),
+                    decorationBox = { field ->
+                        if (draft.isEmpty()) {
+                            Text(
+                                stringResource(R.string.sync_server_hint),
+                                style = type.body,
+                                color = tokens.textTertiary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        field()
+                    },
                 )
                 if (saving) {
                     Text(stringResource(R.string.sync_server_saving), style = type.meta, color = tokens.textTertiary)
@@ -529,6 +544,8 @@ private fun ServerFooter(
                     TextLink(stringResource(R.string.sync_change_save), onSave)
                     TextLink(stringResource(R.string.action_cancel), onCancel, color = tokens.textSecondary)
                 }
+            } else if (official) {
+                TextLink(stringResource(R.string.sync_own_server), onStartEdit)
             } else {
                 Text(
                     serverHost(server),
