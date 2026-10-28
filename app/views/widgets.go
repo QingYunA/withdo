@@ -7,7 +7,7 @@ import (
 )
 
 // readmeURL is where "How to connect" goes.
-const readmeURL = "https://github.com/QingYunA/adhd-todo#connect-claude-code"
+const readmeURL = "https://github.com/QingYunA/withdo#connect-claude-code"
 
 // hairline is a one pixel rule across its container.
 func hairline(c *ui.Context, t *theme.Tokens) ui.Element {

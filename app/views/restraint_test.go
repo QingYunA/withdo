@@ -32,7 +32,7 @@ func TestHeaderGainsTheMilestoneFilterOnlyWithMilestones(t *testing.T) {
 	if filter.X+filter.W > list.X {
 		t.Errorf("the filter (right edge %.0f) is not before the view control (%.0f)", filter.X+filter.W, list.X)
 	}
-	hasNot(t, tt, "QingYunA/adhd-todo", "Done 5")
+	hasNot(t, tt, "QingYunA/withdo", "Done 5")
 }
 
 func TestRowsShowAPriorityBadgeOnlyForP0AndP1(t *testing.T) {
@@ -52,7 +52,7 @@ func TestInspectorTopLineHasTheProjectItsRepositoryAndTheNumber(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	m.OpenTask(3)
 	tt.Frame()
-	has(t, tt, "adhd-todo · QingYunA/adhd-todo", " · #3")
+	has(t, tt, "withdo · QingYunA/withdo", " · #3")
 	m.OpenTask(7) // an Inbox task
 	tt.Frame()
 	has(t, tt, "No project", " · #7")

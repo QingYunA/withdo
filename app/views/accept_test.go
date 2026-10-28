@@ -105,7 +105,7 @@ func TestAcceptedRowStaysThroughTheStampThenFoldsAwaySmoothly(t *testing.T) {
 	if got := yOf(t, tt, "Next"); !near(got, last) {
 		t.Errorf("Today jumps %v pt when the animation ends", got-last)
 	}
-	if !above(t, tt, "Done today", "Native UI with mygo") || tt.HasText("PR #12 is ready for your review · adhd-todo") {
+	if !above(t, tt, "Done today", "Native UI with mygo") || tt.HasText("PR #12 is ready for your review · withdo") {
 		t.Errorf("the task did not end up in Done today: %q", tt.Texts())
 	}
 }

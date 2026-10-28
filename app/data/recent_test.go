@@ -28,7 +28,7 @@ func fixture(t *testing.T, name string) []byte {
 func recentDay(day, hour int) time.Time { return time.Date(2026, 10, day, hour, 0, 0, 0, time.UTC) }
 
 func TestParseRecentReadsAMergedPullRequestFromGHsJSON(t *testing.T) {
-	items, err := ParseRecent(RecentMerged, "QingYunA/adhd-todo", fixture(t, "gh-pr-merged.json"), recentDay(1, 0))
+	items, err := ParseRecent(RecentMerged, "QingYunA/withdo", fixture(t, "gh-pr-merged.json"), recentDay(1, 0))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestParseRecentReadsAMergedPullRequestFromGHsJSON(t *testing.T) {
 		t.Fatalf("items %+v, want 41, 36, 35 newest first", items)
 	}
 	pr := items[0]
-	if pr.Kind != RecentMerged || pr.Repo != "QingYunA/adhd-todo" || pr.Author != "QingYunA" || pr.Bot || pr.Draft ||
+	if pr.Kind != RecentMerged || pr.Repo != "QingYunA/withdo" || pr.Author != "QingYunA" || pr.Bot || pr.Draft ||
 		pr.URL != "https://github.com/QingYunA/adhd-todo/pull/41" || pr.Branch != "claude/ledger-count-width" ||
 		!strings.HasPrefix(pr.Title, "fix(summary): give a two-digit ledger count room") || !strings.Contains(pr.Body, "ledgerCount") {
 		t.Errorf("pr %+v", pr)
@@ -123,7 +123,7 @@ func TestFallbackNoteStripsTheConventionalPrefixAndSortsByIt(t *testing.T) {
 func demoSection(t *testing.T, note func(RecentItem) (RecentNote, bool)) RecentSection {
 	t.Helper()
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.Local)
-	ch, err := DemoRecent(now).Fetch(context.Background(), "QingYunA/adhd-todo", RecentSince(now, 7))
+	ch, err := DemoRecent(now).Fetch(context.Background(), "QingYunA/withdo", RecentSince(now, 7))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,9 +207,9 @@ func TestFakeRecentCutsToThePeriodAndFetchReposAsksEach(t *testing.T) {
 	now := time.Date(2026, 10, 14, 14, 30, 0, 0, time.Local)
 	f := DemoRecent(now)
 	f.Fail("bad/repo", &RecentError{Problem: RecentNoAccess, Repo: "bad/repo", Text: "gone"})
-	got := FetchRepos(context.Background(), f, []string{"QingYunA/adhd-todo", "QingYunA/picpocket", "bad/repo"}, RecentSince(now, 3))
-	if n := len(got["QingYunA/adhd-todo"].Changes.Merged); n != 8 {
-		t.Errorf("3 days: %d merged of adhd-todo, want 8 (all but the 4 days old)", n)
+	got := FetchRepos(context.Background(), f, []string{"QingYunA/withdo", "QingYunA/picpocket", "bad/repo"}, RecentSince(now, 3))
+	if n := len(got["QingYunA/withdo"].Changes.Merged); n != 8 {
+		t.Errorf("3 days: %d merged of withdo, want 8 (all but the 4 days old)", n)
 	}
 	if n := len(got["QingYunA/picpocket"].Changes.Merged); n != 1 {
 		t.Errorf("picpocket merged %d in 3 days, want 1", n)
@@ -248,7 +248,7 @@ func (r *ghRunner) Run(_ context.Context, args ...string) (ghpoll.Output, error)
 func TestGHRecentAsksGHForTheThreeListsOfARepository(t *testing.T) {
 	r := &ghRunner{}
 	since := time.Date(2026, 10, 13, 0, 0, 0, 0, time.UTC)
-	ch, err := GHRecent{Runner: r}.Fetch(context.Background(), "QingYunA/adhd-todo", since)
+	ch, err := GHRecent{Runner: r}.Fetch(context.Background(), "QingYunA/withdo", since)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +261,7 @@ func TestGHRecentAsksGHForTheThreeListsOfARepository(t *testing.T) {
 		"pr list --state open --json ",
 		"issue list --state all --search updated:>=2026-10-13 --json ",
 	} {
-		if !strings.HasPrefix(line(i), want) || !strings.Contains(line(i), "--repo QingYunA/adhd-todo --limit 100") {
+		if !strings.HasPrefix(line(i), want) || !strings.Contains(line(i), "--repo QingYunA/withdo --limit 100") {
 			t.Errorf("call %d: %s", i, line(i))
 		}
 	}

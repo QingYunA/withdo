@@ -19,7 +19,7 @@ func projectTester(t *testing.T, project int) (*ui.Tester, *Main, *App) {
 
 func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	tt, _, _ := projectTester(t, 1)
-	for _, want := range []string{"adhd-todo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "Add a task, or ask me anything"} {
+	for _, want := range []string{"withdo", "Blocked", "In review", "Doing", "To do", "Fix tray race on launch", "Add a task, or ask me anything"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -33,7 +33,7 @@ func TestProjectListGroupsInOrderAndHidesEmptyGroups(t *testing.T) {
 	if tt.HasText("Poll gh for PR status") {
 		t.Error("Backlog tasks are drawn before they are shown")
 	}
-	hasNot(t, tt, "QingYunA/adhd-todo") // the repository is in the sidebar menu and the inspector, not the header
+	hasNot(t, tt, "QingYunA/withdo") // the repository is in the sidebar menu and the inspector, not the header
 	if !above(t, tt, "To do", "Done") || !tt.HasText("Spike the mygo shell") {
 		t.Errorf("the Done group follows To do, expanded: %q", tt.Texts())
 	}

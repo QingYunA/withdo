@@ -122,7 +122,7 @@
       "Summary": "Ported the store and migrations",
       "NextStep": "Port the MCP server",
       "CreatedAt": "2026-10-20T08:58:00Z",
-      "Cwd": "/Users/demo/code/adhd-todo/.claude/worktrees/native-ui",
+      "Cwd": "/Users/demo/code/withdo/.claude/worktrees/native-ui",
       "Kind": "",
       "Links": null
     },
@@ -134,7 +134,7 @@
       "Summary": "Opened the migrations against a copy of the real database",
       "NextStep": "Port the store",
       "CreatedAt": "2026-10-20T08:19:00Z",
-      "Cwd": "/Users/demo/code/adhd-todo/.claude/worktrees/native-ui",
+      "Cwd": "/Users/demo/code/withdo/.claude/worktrees/native-ui",
       "Kind": "",
       "Links": null
     },
@@ -146,7 +146,7 @@
       "Summary": "Read the TypeScript domain tests and listed the cases to port",
       "NextStep": "Start with the migrations",
       "CreatedAt": "2026-10-20T06:00:00Z",
-      "Cwd": "/Users/demo/code/adhd-todo/.claude/worktrees/native-ui",
+      "Cwd": "/Users/demo/code/withdo/.claude/worktrees/native-ui",
       "Kind": "",
       "Links": null
     }

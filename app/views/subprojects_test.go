@@ -55,13 +55,13 @@ func TestAProjectsMenuMakesASubproject(t *testing.T) {
 	tt, m, _ := newTesterFor(app, 1100)
 	tt.Frame()
 
-	tt.RightClick("adhd-todo")
+	tt.RightClick("withdo")
 	tt.Frame()
 	if err := tt.ChooseMenuItem(m.say.ManageNewSubproject()); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	has(t, tt, m.say.ManageNewSubprojectTitle(), m.say.ManageSubprojectUnder("adhd-todo"))
+	has(t, tt, m.say.ManageNewSubprojectTitle(), m.say.ManageSubprojectUnder("withdo"))
 
 	tt.Type("Docs")
 	tt.Key(0, ui.KeyEnter)
@@ -78,13 +78,13 @@ func TestAProjectsMenuMakesASubproject(t *testing.T) {
 		t.Fatalf("no Docs project in %+v", app.snap.projects)
 	}
 	if docs.ParentID == nil || *docs.ParentID != 1 {
-		t.Errorf("the sub-project hangs under %v, want adhd-todo (1)", docs.ParentID)
+		t.Errorf("the sub-project hangs under %v, want withdo (1)", docs.ParentID)
 	}
 	if want := (nav{screen: screenProject, projectID: docs.ID}); m.nav != want {
 		t.Errorf("the new sub-project was not opened: %+v", m.nav)
 	}
 
-	parentLabel, _ := tt.Find("adhd-todo")
+	parentLabel, _ := tt.Find("withdo")
 	subLabel, ok := tt.Find("Docs")
 	if !ok {
 		t.Fatalf("no Docs row in %q", tt.Texts())
@@ -128,7 +128,7 @@ func TestASubprojectWhoseProjectIsArchivedReadsAsTopLevel(t *testing.T) {
 	tt.Frame()
 	has(t, tt, "Kitchen")
 	hasNot(t, tt, "Research")
-	top, _ := tt.Find("adhd-todo") // a top-level project of the seed
+	top, _ := tt.Find("withdo") // a top-level project of the seed
 	subRow, ok := tt.Find("Kitchen")
 	if !ok {
 		t.Fatalf("no Kitchen row in %q", tt.Texts())

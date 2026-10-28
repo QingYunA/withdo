@@ -15,7 +15,7 @@ func prApp(t *testing.T) (*App, *data.Real, *recorder) {
 	add := func(id int, title, branch string, number int, state data.PRState, checks data.PRChecks, review data.PRReview, ago time.Duration, summary string) {
 		ts := store.SeedTask(data.Task{
 			ID: id, ProjectID: data.IntPtr(1), Title: title, Status: data.Doing, Source: data.SourceAgent, Branch: branch,
-			PRNumber: number, PRURL: "https://github.com/QingYunA/adhd-todo/pull/" + itoa(number),
+			PRNumber: number, PRURL: "https://github.com/QingYunA/withdo/pull/" + itoa(number),
 			UpdatedAt: fixedNow().Add(-ago),
 		})
 		store.SeedReport(data.Report{TaskID: ts.ID, Agent: "claude-code", Status: data.Doing, Summary: "Pushed " + branch, CreatedAt: fixedNow().Add(-ago - 20*time.Minute)})
@@ -121,7 +121,7 @@ func TestOpenPROnFailingChecksAndChangesOpensThePullRequest(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	want := []string{"https://github.com/QingYunA/adhd-todo/pull/15", "https://github.com/QingYunA/adhd-todo/pull/16"}
+	want := []string{"https://github.com/QingYunA/withdo/pull/15", "https://github.com/QingYunA/withdo/pull/16"}
 	if len(rec.urls) != 2 || rec.urls[0] != want[0] || rec.urls[1] != want[1] {
 		t.Errorf("opened %v, want %v", rec.urls, want)
 	}

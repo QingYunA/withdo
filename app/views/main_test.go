@@ -87,14 +87,14 @@ func TestInspectorOpensThePullRequest(t *testing.T) {
 	if err := tt.Click("Open pull request #12"); err != nil {
 		t.Fatal(err)
 	}
-	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo/pull/12" {
+	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/withdo/pull/12" {
 		t.Errorf("opened %v", rec.urls)
 	}
 }
 
 func TestSidebarListsTodayAgentsCalendarAndProjects(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
-	for _, want := range []string{"Today", "Agents", "Calendar", "Summary", "Projects", "adhd-todo", "answer-me-with-html", "picpocket", "Settings"} {
+	for _, want := range []string{"Today", "Agents", "Calendar", "Summary", "Projects", "withdo", "answer-me-with-html", "picpocket", "Settings"} {
 		if !tt.HasText(want) {
 			t.Errorf("sidebar is missing %q", want)
 		}
@@ -147,7 +147,7 @@ func TestSidebarCountsAndTheBlockedDot(t *testing.T) {
 	if got[idx("Today")+1] != "4" || got[idx("Agents")+1] != "3" || got[idx("Calendar")+1] != "Summary" || got[idx("Summary")+1] != "Projects" {
 		t.Errorf("counts after Today, Agents, Calendar and Summary: %q", got[:10])
 	}
-	if got[idx("adhd-todo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
+	if got[idx("withdo")+1] == "5" || got[idx("answer-me-with-html")+1] != "1" {
 		t.Errorf("project counts: %q", got[:14])
 	}
 }

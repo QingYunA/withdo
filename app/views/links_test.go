@@ -15,7 +15,7 @@ const (
 	pageURL    = "https://example.com/design/draft.html"
 	pageFile   = "file:///Users/demo/reports/crash-report.html"
 	goneFile   = "file:///Users/demo/reports/import-report.html"
-	pullURL    = "https://github.com/QingYunA/adhd-todo/pull/19"
+	pullURL    = "https://github.com/QingYunA/withdo/pull/19"
 	pageHome   = "/Users/demo"
 	pageReport = "Opened the design draft"
 )
@@ -41,7 +41,7 @@ func TestAChipSaysTheTitleThenTheFileNameThenTheHostAndTheEndOfThePath(t *testin
 	for _, c := range []struct{ link, want string }{
 		{"https://example.com/a/b", "Given"},
 		{"file:///Users/demo/reports/crash-report.html", "crash-report.html"},
-		{"https://github.com/QingYunA/adhd-todo/pull/19", "github.com › pull/19"},
+		{"https://github.com/QingYunA/withdo/pull/19", "github.com › pull/19"},
 		{"https://example.com/report.html", "example.com › report.html"},
 		{"https://example.com/docs/report.html", "example.com › docs/report.html"},
 		{"https://example.com", "example.com"},

@@ -130,14 +130,14 @@ func TestCompletionFillsTheGlyphUnlessMotionIsReduced(t *testing.T) {
 
 func TestSidebarRowsAre32PointsAndNamesStayOnOneLine(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
-	for _, name := range []string{"adhd-todo", "answer-me-with-html", "picpocket"} {
+	for _, name := range []string{"withdo", "answer-me-with-html", "picpocket"} {
 		r, ok := tt.Find(name)
 		if !ok || r.H > 20.5 || r.X+r.W > 216 {
 			t.Errorf("%s at %+v: one 20 pt line inside the 216 pt sidebar", name, r)
 		}
 	}
-	a, _ := tt.Find("adhd-todo")
-	b, _ := tt.Find("answer-me-with-html")
+	a, _ := tt.Find("answer-me-with-html")
+	b, _ := tt.Find("picpocket")
 	if d := b.Y - a.Y; d < 31.5 || d > 32.5 {
 		t.Errorf("rows are %v pt apart, want 32", d)
 	}

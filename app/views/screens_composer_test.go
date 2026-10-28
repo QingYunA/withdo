@@ -39,7 +39,7 @@ func fridayP1(store *data.Real, project int, title, say string) func(string) (da
 		}
 		return data.Reply{Text: say, Receipts: []data.Receipt{{
 			ID: 1, TaskID: task.ID, Title: title, Status: data.Todo,
-			Detail: data.Detail{Kind: data.DetailDue, At: due, Priority: "P1", Project: "adhd-todo"},
+			Detail: data.Detail{Kind: data.DetailDue, At: due, Priority: "P1", Project: "withdo"},
 		}}}, nil
 	}
 }
@@ -75,10 +75,10 @@ func TestScreensComposer(t *testing.T) {
 				}
 				mainShot(t, name+sfx, app, a.dark, setup)
 			}
-			text, project, saidAdded := "review PR 12 before standup, it's urgent", "fix the login redirect loop, p1, friday", "Added it to adhd-todo, due Friday, P1."
+			text, project, saidAdded := "review PR 12 before standup, it's urgent", "fix the login redirect loop, p1, friday", "Added it to withdo, due Friday, P1."
 			made := "Fix the login redirect loop"
 			if zh {
-				text, project, saidAdded = "站会前审查 PR 12，很急", "修复登录重定向死循环，p1，周五", "已添加到 adhd-todo，周五截止，P1。"
+				text, project, saidAdded = "站会前审查 PR 12，很急", "修复登录重定向死循环，p1，周五", "已添加到 withdo，周五截止，P1。"
 				made = "修复登录重定向死循环"
 			}
 

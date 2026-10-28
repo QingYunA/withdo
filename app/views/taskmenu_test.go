@@ -82,7 +82,7 @@ func TestTaskMenuMovesToAProjectOrTheInboxFromAFilter(t *testing.T) {
 	tt, m, app := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Move to…")
-	for _, want := range []string{"No project", "adhd-todo", "answer-me-with-html", "picpocket", "Find a project"} {
+	for _, want := range []string{"No project", "withdo", "answer-me-with-html", "picpocket", "Find a project"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -120,8 +120,8 @@ func TestTaskMenuMoveListIsKeyboardNavigable(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	rightClick(t, tt, "Fix tray race on launch")
 	click(t, tt, "Move to…")
-	// Inbox, adhd-todo (the task's own), answer-me-with-html, picpocket: Down, Down, Down, Enter.
-	for i := 0; i < 3; i++ {
+	// Inbox, answer-me-with-html, picpocket, withdo (the task's own): Down, Down, Enter.
+	for i := 0; i < 2; i++ {
 		tt.Key(0, ui.KeyDown)
 	}
 	tt.Key(0, ui.KeyEnter)
@@ -178,7 +178,7 @@ func TestTaskMenuOpensThePullRequestAndAsksAboutTheTask(t *testing.T) {
 	tt.Frame()
 	rightClick(t, tt, "Native UI with mygo")
 	click(t, tt, "Open PR")
-	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo/pull/12" {
+	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/withdo/pull/12" {
 		t.Errorf("opened %v", rec.urls)
 	}
 	rightClick(t, tt, "Fix tray race on launch")
@@ -400,10 +400,10 @@ func TestInspectorMovingATaskDropsItsMilestone(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.OpenTask(5)
 	tt.Frame()
-	if !tt.HasText("Project: adhd-todo · v0.2 native") {
+	if !tt.HasText("Project: withdo · v0.2 native") {
 		t.Fatalf("task 5 has no project and milestone chip: %q", tt.Texts())
 	}
-	click(t, tt, "Project: adhd-todo · v0.2 native")
+	click(t, tt, "Project: withdo · v0.2 native")
 	click(t, tt, "Move to picpocket")
 	if got, _ := app.Task(5); got.MilestoneID != nil {
 		t.Errorf("the milestone came along: %v", *got.MilestoneID)

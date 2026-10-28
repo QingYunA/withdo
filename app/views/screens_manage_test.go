@@ -34,14 +34,14 @@ func TestScreensManageProjects(t *testing.T) {
 				}
 				tt.Type("Garden")
 				_ = tt.Click(m.say.ManageRepoPlaceholder())
-				tt.Type("QingYunA/adhd-todo")
+				tt.Type("QingYunA/withdo")
 				tt.Key(0, ui.KeyEnter)
 				return nil
 			})
 			manageShot(t, "project-menu"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.goTo(nav{screen: screenProject, projectID: 1})
 				tt.Frame()
-				return projectMenuAt(tt, "adhd-todo")
+				return projectMenuAt(tt, "withdo")
 			})
 			manageShot(t, "project-delete"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
 				m.goTo(nav{screen: screenProject, projectID: 1})

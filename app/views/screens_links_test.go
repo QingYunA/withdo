@@ -22,7 +22,7 @@ func linksScreenApp(t *testing.T) (*App, *recorder) {
 		TaskID: 2, Agent: "claude-code", Status: data.Doing, Summary: "Wrote the design notes for the board.",
 		CreatedAt: fixedNow().Add(-90 * time.Minute),
 		Links: []data.Link{
-			{URL: "https://github.com/QingYunA/adhd-todo/pull/12"},
+			{URL: "https://github.com/QingYunA/withdo/pull/12"},
 			{URL: "file:///Users/demo/notes/board-design-notes-for-the-whole-native-ui-rewrite-20261014-123456.html"},
 		},
 	})

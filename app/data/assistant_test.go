@@ -265,7 +265,7 @@ func TestAgentAssistantPassesThePlaceToTheAgent(t *testing.T) {
 		func(context.Context) (*schema.Message, error) { return schema.AssistantMessage("ok", nil), nil },
 		toolCall("update_task", `{"task_id":1,"priority":"P0"}`),
 		func(context.Context) (*schema.Message, error) { return schema.AssistantMessage("ok", nil), nil })
-	p, err := r.CreateProject(NewProject{Name: "adhd-todo"})
+	p, err := r.CreateProject(NewProject{Name: "withdo"})
 	if err != nil {
 		t.Fatal(err)
 	}

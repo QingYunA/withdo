@@ -452,7 +452,7 @@ func TestOpeningALedgerRowShowsThatPersonsTasksAndAClickOpensTheInspector(t *tes
 		t.Fatalf("%v in %q", err, tt.Texts())
 	}
 	tt.Frame()
-	for _, want := range []string{"Native UI with mygo", "PR #12 merged · Board, lists and inspector are in", "adhd-todo", "11:05 AM", "Port the MCP server"} {
+	for _, want := range []string{"Native UI with mygo", "PR #12 merged · Board, lists and inspector are in", "withdo", "11:05 AM", "Port the MCP server"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -665,8 +665,8 @@ func TestExportMarkdownOpensASheetThatCopiesAndSaves(t *testing.T) {
 	md := m.summaryMarkdown(m.summaryFor(app.Now()))
 	for _, want := range []string{
 		"# Daily summary, 2026-10-14\n", "Eight finished. You answered", "\n## You\n- Send the packaging answer\n",
-		"\n## Claude Code\n- ", "- Native UI with mygo (adhd-todo, PR #12): Board, lists and inspector are in",
-		"- Port the MCP server (adhd-todo, PR #14)", "\n## Codex\n", "Still open: ", " in progress",
+		"\n## Claude Code\n- ", "- Native UI with mygo (withdo, PR #12): Board, lists and inspector are in",
+		"- Port the MCP server (withdo, PR #14)", "\n## Codex\n", "Still open: ", " in progress",
 	} {
 		if !strings.Contains(md, want) {
 			t.Errorf("the Markdown lacks %q:\n%s", want, md)
@@ -747,9 +747,9 @@ func TestSummaryInChinese(t *testing.T) {
 		t.Errorf("the model is told to write in %q", got)
 	}
 	md := m.summaryMarkdown(m.summaryFor(app.Now()))
-	for _, want := range []string{"# 2026-10-14 日报", "## 你\n", "（adhd-todo，PR #12）：", "还在做的："} {
-		if want == "（adhd-todo，PR #12）：" {
-			want = "（adhd-todo, PR #12）："
+	for _, want := range []string{"# 2026-10-14 日报", "## 你\n", "（withdo，PR #12）：", "还在做的："} {
+		if want == "（withdo，PR #12）：" {
+			want = "（withdo, PR #12）："
 		}
 		if !strings.Contains(md, want) {
 			t.Errorf("中文 Markdown lacks %q:\n%s", want, md)

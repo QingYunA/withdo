@@ -21,7 +21,7 @@ import (
 func calendarShowcase(t *testing.T) *App {
 	t.Helper()
 	f := demoStore(t, fixedNow, false)
-	proj := f.SeedProject("adhd-todo", "QingYunA/adhd-todo")
+	proj := f.SeedProject("withdo", "QingYunA/withdo")
 	local := func(m time.Month, d, h, min int) *time.Time {
 		at := time.Date(2026, m, d, h, min, 0, 0, time.Local)
 		return &at

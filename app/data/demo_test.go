@@ -31,18 +31,18 @@ func TestOverviewGroupsActiveTasksByAttention(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ov.Groups) != 2 || ov.Groups[0].Project.Name != "adhd-todo" || ov.Groups[1].Project.Name != "answer-me-with-html" {
+	if len(ov.Groups) != 2 || ov.Groups[0].Project.Name != "answer-me-with-html" || ov.Groups[1].Project.Name != "withdo" {
 		t.Fatalf("groups %+v", ov.Groups)
 	}
-	first := ov.Groups[0].Tasks
+	first := ov.Groups[1].Tasks
 	if first[0].Status != Blocked || first[1].Status != Review || first[2].Status != Doing {
 		t.Errorf("order %v %v %v, want blocked, review, doing", first[0].Status, first[1].Status, first[2].Status)
 	}
 	if !first[0].Stale || first[2].Stale {
 		t.Errorf("stale flags: blocked %v, doing %v", first[0].Stale, first[2].Stale)
 	}
-	if g := ov.Groups[1].Tasks[0]; g.Stale || g.LatestReport == nil || g.LatestReport.Summary != "Writing tests for the reply parser" {
-		t.Errorf("second project's task %+v", g)
+	if g := ov.Groups[0].Tasks[0]; g.Stale || g.LatestReport == nil || g.LatestReport.Summary != "Writing tests for the reply parser" {
+		t.Errorf("answer-me-with-html task %+v", g)
 	}
 }
 

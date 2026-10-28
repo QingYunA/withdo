@@ -123,7 +123,7 @@ func TestNewProjectSaysWhatIsWrongWithTheRepositoryAndStaysOpen(t *testing.T) {
 	_ = tt.Click("owner/repo")
 	tt.Type("rocket")
 	tt.Key(0, ui.KeyEnter)
-	if !tt.HasText("Use the form owner/repo, like QingYunA/adhd-todo.") {
+	if !tt.HasText("Use the form owner/repo, like QingYunA/withdo.") {
 		t.Errorf("no word about the repository: %q", tt.Texts())
 	}
 	if len(app.snap.projects) != 3 {
@@ -132,9 +132,9 @@ func TestNewProjectSaysWhatIsWrongWithTheRepositoryAndStaysOpen(t *testing.T) {
 
 	// Fix it to one the seed already uses.
 	tt.Key(ui.Cmd, ui.KeyA)
-	tt.Type("QingYunA/adhd-todo")
+	tt.Type("QingYunA/withdo")
 	tt.Key(0, ui.KeyEnter)
-	if !tt.HasText("“adhd-todo” already uses this repository.") {
+	if !tt.HasText("“withdo” already uses this repository.") {
 		t.Errorf("no word about the taken repository: %q", tt.Texts())
 	}
 	if !tt.HasText("Create") {
@@ -178,11 +178,11 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 	app, _, rec := newTestApp(t)
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()
-	_ = tt.RightClick("adhd-todo")
-	if err := tt.ChooseMenuItem("Open QingYunA/adhd-todo on GitHub"); err != nil {
+	_ = tt.RightClick("withdo")
+	if err := tt.ChooseMenuItem("Open QingYunA/withdo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
-	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo" {
+	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/withdo" {
 		t.Errorf("opened %v", rec.urls)
 	}
 
@@ -259,12 +259,12 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	tt, m, app := newMainTester(t, 1100)
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.Frame()
-	_ = tt.RightClick("adhd-todo")
+	_ = tt.RightClick("withdo")
 	if err := tt.ChooseMenuItem("Delete…"); err != nil {
 		t.Fatal(err)
 	}
 	n := app.taskCount(1)
-	for _, want := range []string{"Delete “adhd-todo”?", "This removes " + itoa(n) + " tasks, their reports and the project's milestones. It can't be undone. To keep the work, archive the project instead.", "Cancel", "Delete"} {
+	for _, want := range []string{"Delete “withdo”?", "This removes " + itoa(n) + " tasks, their reports and the project's milestones. It can't be undone. To keep the work, archive the project instead.", "Cancel", "Delete"} {
 		if !tt.HasText(want) {
 			t.Errorf("confirmation lacks %q in %q", want, tt.Texts())
 		}
@@ -272,33 +272,33 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	if err := tt.Click("Cancel"); err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Contains(projectNames(app), "adhd-todo") {
+	if !slices.Contains(projectNames(app), "withdo") {
 		t.Fatal("Cancel deleted the project")
 	}
 
-	_ = tt.RightClick("adhd-todo")
+	_ = tt.RightClick("withdo")
 	_ = tt.ChooseMenuItem("Delete…")
 	tt.Key(0, ui.KeyEscape)
-	if tt.HasText("Delete “adhd-todo”?") || !slices.Contains(projectNames(app), "adhd-todo") {
+	if tt.HasText("Delete “withdo”?") || !slices.Contains(projectNames(app), "withdo") {
 		t.Fatal("Esc did not cancel")
 	}
 
-	_ = tt.RightClick("adhd-todo")
+	_ = tt.RightClick("withdo")
 	_ = tt.ChooseMenuItem("Delete…")
 	tt.Key(0, ui.KeyEnter) // the default button is Cancel
-	if !slices.Contains(projectNames(app), "adhd-todo") {
+	if !slices.Contains(projectNames(app), "withdo") {
 		t.Fatal("Enter deleted the project: the default button must be Cancel")
 	}
-	if tt.HasText("Delete “adhd-todo”?") {
+	if tt.HasText("Delete “withdo”?") {
 		t.Error("Enter on Cancel left the question open")
 	}
 
-	_ = tt.RightClick("adhd-todo")
+	_ = tt.RightClick("withdo")
 	_ = tt.ChooseMenuItem("Delete…")
 	if err := tt.Click("Delete"); err != nil {
 		t.Fatal(err)
 	}
-	if slices.Contains(projectNames(app), "adhd-todo") || app.taskCount(1) != 0 {
+	if slices.Contains(projectNames(app), "withdo") || app.taskCount(1) != 0 {
 		t.Errorf("project %v, tasks %d", projectNames(app), app.taskCount(1))
 	}
 	if m.nav.screen != screenMine {

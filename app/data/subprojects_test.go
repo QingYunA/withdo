@@ -7,7 +7,7 @@ import (
 
 func TestSubprojects(t *testing.T) {
 	withStore(t, func(t *testing.T, s *Real, clock *time.Time) {
-		root := must[Project](t)(s.CreateProject(NewProject{Name: "adhd-todo"}))
+		root := must[Project](t)(s.CreateProject(NewProject{Name: "withdo"}))
 		app := must[Project](t)(s.CreateProject(NewProject{Name: "App", ParentID: IntPtr(root.ID)}))
 		ui := must[Project](t)(s.CreateProject(NewProject{Name: "UI", ParentID: IntPtr(app.ID)}))
 		if app.ParentID == nil || *app.ParentID != root.ID {

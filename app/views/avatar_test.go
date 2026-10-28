@@ -166,10 +166,10 @@ func TestTheComposerStartsWithTheAssistantsAvatar(t *testing.T) {
 }
 
 func TestAChangeFreeAnswerStartsWithTheAssistantsAvatar(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)})
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in withdo, so I didn't add it again."}, nil)})
 	r.ask("write the release notes")
 	r.answer(t)
-	if !paintedLeftOf(t, r.tt, 1100, "That one is already in adhd-todo, so I didn't add it again.", 24, helperColor) {
+	if !paintedLeftOf(t, r.tt, 1100, "That one is already in withdo, so I didn't add it again.", 24, helperColor) {
 		t.Error("the sentence does not start with the assistant's avatar")
 	}
 }
