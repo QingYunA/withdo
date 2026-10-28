@@ -59,7 +59,9 @@ mkdir -p "$release"
 cp "$mac/Withdo $version.dmg" "$release/Withdo-$version-macos-universal.dmg"
 tar -czf "$release/withdo-cli-$version-macos-universal.tar.gz" -C "$work/mac" withdo
 cp "$win/Withdo Setup $version amd64.exe" "$release/Withdo-Setup-$version-windows-x64.exe"
-for f in "$mac"/withdo-* "$mac"/update-*.json "$win"/withdo-* "$win"/update-*.json; do
+# withdo-<digit> matches the update archives and deltas, not the resources mygo copies beside the
+# app (withdo-cli.exe).
+for f in "$mac"/withdo-[0-9]* "$mac"/update-*.json "$win"/withdo-[0-9]* "$win"/update-*.json; do
   if [ -e "$f" ]; then cp "$f" "$release/"; fi
 done
 # Without these an installed app finds no update, so a build that lacks one is no release.
