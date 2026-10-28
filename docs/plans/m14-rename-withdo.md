@@ -23,7 +23,7 @@ keeps the old name and why, how installed copies move over, and the steps outsid
 | keychain service `adhd-todo`, data folder `adhd-todo/adhd-todo.db`, `ADHD_TODO_DB` | stored model keys, sign-in token and the database |
 | Android `xyz.sriai.adhdtodo` | another id is another app: no update path, data and signing lost |
 | APK asset `adhd-todo-<v>.apk` | Android 0.9–0.10 match that exact name (`UpdateRules.kt`) |
-| `QingYunA/adhd-todo-releases` | every installed app reads its updates from it (`updates.github`, `LATEST_RELEASE_URL`) |
+| `QingYunA/adhd-todo-releases` | apps up to 0.10.2 read their updates from it; from 0.11.0 releases are on `QingYunA/withdo` (see `docs/plans/m10-auto-update.md`) |
 | Go module path `github.com/QingYunA/adhd-todo` | an internal string; renaming the GitHub repo does not need it |
 | `adhd-core` link and `adhd-core.exe` | agent configs written before the rename run them; they are the same program as `withdo` |
 | `adhd-sync`, deploy paths, sample repo names in tests and seed data, history docs | not the product name |

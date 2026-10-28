@@ -42,8 +42,8 @@ nothing in it touches the task data, and keeping it out of the Go core spares a 
 - **mygo's updater, not our own.** `mygo.Use(native.Plugin)` (all of this app's windows are native UI,
   so no webview for the update window) and `updater.MenuItem()` after About. mygo checks the signature
   of every update against the public key in `app/mygo.json` (`updates.publicKey`) and replaces the
-  app. Releases are `v0.x.y` tags on `QingYunA/adhd-todo`, so the default tag prefix and the latest
-  release are right: one release holds the app and `adhd-core`.
+  app. Releases are `v0.x.y` tags on `QingYunA/withdo`, so the default tag prefix and the latest
+  release are right: one release holds the app and the `withdo` command line.
 - **The key.** The secret half of the pair is `~/Library/Application Support/mygo/update-keys/mygo-update.key`.
   It is never in the repository (`mygo-update.key` is in `.gitignore` as a guard); losing it strands
   every installed app. `scripts/build-release.sh` reads it, `MYGO_UPDATE_KEY` names another file.
@@ -83,10 +83,10 @@ nothing in it touches the task data, and keeping it out of the Go core spares a 
    in `android/app/build.gradle.kts`, and raise its `versionCode` by one (`TestVersionsAgree` in
    `app/` fails when they differ); finish the `CHANGELOG.md` section of that version.
 2. `scripts/build-release.sh`: builds macOS and Windows x64, which every release ships, and gathers
-   into `app/build/release/` `ADHD-Todo-<v>-macos-universal.dmg`,
-   `adhd-core-<v>-macos-universal.tar.gz`, `ADHD-Todo-Setup-<v>-windows-x64.exe` (which carries
-   `adhd-core.exe`), the signed update archives and manifests of both platforms, and
-   `SHA256SUMS.txt`.
+   into `app/build/release/` `Withdo-<v>-macos-universal.dmg`,
+   `withdo-cli-<v>-macos-universal.tar.gz`, `Withdo-Setup-<v>-windows-x64.exe` (which carries
+   `withdo-cli.exe` and `adhd-core.exe`), the signed update archives and manifests of both
+   platforms, and `SHA256SUMS.txt`.
 3. `scripts/android-release.sh`: builds `dist/adhd-todo-<v>.apk`, signed with the release keystore
    (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK, found
    at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
