@@ -19,7 +19,7 @@ You need Go (the version in `go.mod`). Android work also needs JDK 17.
 
 ```sh
 git config core.hooksPath .githooks              # once: the static checks run on every commit
-cd app && go tool mygo dev                       # run the app against a development database
+cd app && go tool mygo dev                       # run the app against your real database and agent configs
 go run ./app -fake                               # or with demo data
 ```
 
