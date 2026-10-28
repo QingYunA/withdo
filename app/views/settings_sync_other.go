@@ -27,11 +27,11 @@ func (s *Settings) syncOtherSheet(c *ui.Context, t *theme.Tokens, snap data.Sync
 	known := other.PreviousEmail != ""
 	body := s.say.SettingsSyncOtherBodyUnknown(other.AccountEmail)
 	oldTitle := s.say.SettingsSyncOtherOldAnother()
-	moveBody := s.say.SettingsSyncOtherMoveBodyUnknown(other.AccountEmail)
+	moveBody := syncOtherMoveBodyUnknown(s.say, other.AccountEmail)
 	if known {
 		body = s.say.SettingsSyncOtherBody(other.PreviousEmail, other.AccountEmail)
 		oldTitle = s.say.SettingsSyncOtherOld(other.PreviousEmail)
-		moveBody = s.say.SettingsSyncOtherMoveBody(other.AccountEmail, other.PreviousEmail)
+		moveBody = syncOtherMoveBody(s.say, other.AccountEmail, other.PreviousEmail)
 	}
 	cancelled := false
 	ui.Overlay(c.Key("sync-other-sheet"), func() {
@@ -46,13 +46,13 @@ func (s *Settings) syncOtherSheet(c *ui.Context, t *theme.Tokens, snap data.Sync
 		panel.Children(func() {
 			title := theme.Input
 			title.Weight = 600
-			theme.Text(c, title, t.Text, s.say.SettingsSyncOtherTitle())
+			theme.Text(c, title, t.Text, syncOtherTitle(s.say))
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, body, 0).Margin(6, 0, 0)
-			if syncChoiceCard(c, t, "sync-other-old", oldTitle, s.say.SettingsSyncOtherOldBody(other.AccountEmail),
+			if syncChoiceCard(c, t, "sync-other-old", oldTitle, syncOtherOldBody(s.say, other.AccountEmail),
 				s.syncOtherChoice == syncOtherOld, s.say.SettingsSyncRecommended()) {
 				s.syncOtherChoice = syncOtherOld
 			}
-			if syncChoiceCard(c, t, "sync-other-move", s.say.SettingsSyncOtherMove(other.AccountEmail), moveBody,
+			if syncChoiceCard(c, t, "sync-other-move", syncOtherMoveLabel(s.say, other.AccountEmail), moveBody,
 				s.syncOtherChoice == syncOtherMove, "") {
 				s.syncOtherChoice = syncOtherMove
 			}
@@ -82,10 +82,10 @@ func (s *Settings) syncOtherSheet(c *ui.Context, t *theme.Tokens, snap data.Sync
 // wrong and what to do, with Sign out right there. Nothing retries.
 func (s *Settings) syncWrongAccountRow(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	syncRow(c, t, "this-mac", false, func() {
-		theme.Text(c, theme.Body, t.Text, s.say.SettingsSyncThisMac())
-		theme.Paragraph(c, theme.Meta, t.Blocked(), s.say.SettingsSyncWrongAccount(), 2)
+		theme.Text(c, theme.Body, t.Text, syncThisDevice(s.say))
+		theme.Paragraph(c, theme.Meta, t.Blocked(), syncWrongAccount(s.say), 2)
 		if snap.Pending > 0 {
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncWaiting(itoa(snap.Pending)), 2)
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, syncWaiting(s.say, itoa(snap.Pending)), 2)
 		}
 	}, func() {
 		if settingsButton(c, t, "sync-wrong-signout", s.say.SettingsSyncSignOut(), true).Clicked() {

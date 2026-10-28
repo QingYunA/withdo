@@ -10068,6 +10068,22 @@ func (msgs Messages) SettingsSyncChange() string {
 	return Catalog.Format(msgs.locale, "settingsSyncChange", nil)
 }
 
+// SettingsSyncOwnServer says "Use your own server"
+// in the language the app shows.
+//
+// The link at the foot of the Sync pane, in place of the address, while the
+// app uses the official server. It opens the address field.
+func SettingsSyncOwnServer() string { return In(i18n.Locale()).SettingsSyncOwnServer() }
+
+// SettingsSyncOwnServer says "Use your own server"
+// in the language of msgs.
+//
+// The link at the foot of the Sync pane, in place of the address, while the
+// app uses the official server. It opens the address field.
+func (msgs Messages) SettingsSyncOwnServer() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOwnServer", nil)
+}
+
 // SettingsSyncServerAddress says "Server address"
 // in the language the app shows.
 //
@@ -10080,6 +10096,20 @@ func SettingsSyncServerAddress() string { return In(i18n.Locale()).SettingsSyncS
 // Accessibility label of the server address field and Change link.
 func (msgs Messages) SettingsSyncServerAddress() string {
 	return Catalog.Format(msgs.locale, "settingsSyncServerAddress", nil)
+}
+
+// SettingsSyncServerHint says "Leave empty for the official server"
+// in the language the app shows.
+//
+// The placeholder of the empty server address field.
+func SettingsSyncServerHint() string { return In(i18n.Locale()).SettingsSyncServerHint() }
+
+// SettingsSyncServerHint says "Leave empty for the official server"
+// in the language of msgs.
+//
+// The placeholder of the empty server address field.
+func (msgs Messages) SettingsSyncServerHint() string {
+	return Catalog.Format(msgs.locale, "settingsSyncServerHint", nil)
 }
 
 // SettingsSyncServerInvalid says "Use an https:// address, such as https://todo.example.com."
@@ -10184,6 +10214,20 @@ func (msgs Messages) SettingsSyncThisMac() string {
 	return Catalog.Format(msgs.locale, "settingsSyncThisMac", nil)
 }
 
+// SettingsSyncThisMacWindows says "This PC"
+// in the language the app shows.
+//
+// The row of this Mac in the Sync pane, worded for Windows.
+func SettingsSyncThisMacWindows() string { return In(i18n.Locale()).SettingsSyncThisMacWindows() }
+
+// SettingsSyncThisMacWindows says "This PC"
+// in the language of msgs.
+//
+// The row of this Mac in the Sync pane, worded for Windows.
+func (msgs Messages) SettingsSyncThisMacWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncThisMacWindows", nil)
+}
+
 // SettingsSyncThisMacBadge says "This Mac"
 // in the language the app shows.
 //
@@ -10196,6 +10240,22 @@ func SettingsSyncThisMacBadge() string { return In(i18n.Locale()).SettingsSyncTh
 // The badge on this Mac's row in the device list.
 func (msgs Messages) SettingsSyncThisMacBadge() string {
 	return Catalog.Format(msgs.locale, "settingsSyncThisMacBadge", nil)
+}
+
+// SettingsSyncThisMacBadgeWindows says "This PC"
+// in the language the app shows.
+//
+// The badge on this Mac's row in the device list, worded for Windows.
+func SettingsSyncThisMacBadgeWindows() string {
+	return In(i18n.Locale()).SettingsSyncThisMacBadgeWindows()
+}
+
+// SettingsSyncThisMacBadgeWindows says "This PC"
+// in the language of msgs.
+//
+// The badge on this Mac's row in the device list, worded for Windows.
+func (msgs Messages) SettingsSyncThisMacBadgeWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncThisMacBadgeWindows", nil)
 }
 
 // SettingsSyncSynced says "Synced"
@@ -10266,6 +10326,22 @@ func SettingsSyncUploading() string { return In(i18n.Locale()).SettingsSyncUploa
 // The row of the first device while it seeds the account.
 func (msgs Messages) SettingsSyncUploading() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUploading", nil)
+}
+
+// SettingsSyncUploadingWindows says "Uploading this PC's data"
+// in the language the app shows.
+//
+// The row of the first device while it seeds the account, worded for
+// Windows.
+func SettingsSyncUploadingWindows() string { return In(i18n.Locale()).SettingsSyncUploadingWindows() }
+
+// SettingsSyncUploadingWindows says "Uploading this PC's data"
+// in the language of msgs.
+//
+// The row of the first device while it seeds the account, worded for
+// Windows.
+func (msgs Messages) SettingsSyncUploadingWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUploadingWindows", nil)
 }
 
 // SettingsSyncUploadProgress says "{done} / {total} · other devices wait until it is done"
@@ -10372,6 +10448,22 @@ func (msgs Messages) SettingsSyncWaiting(count string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncWaiting", map[string]any{"count": count})
 }
 
+// SettingsSyncWaitingWindows says "{count} changes wait on this PC and are not lost"
+// in the language the app shows.
+//
+// The second line of a failed sync, worded for Windows.
+func SettingsSyncWaitingWindows(count string) string {
+	return In(i18n.Locale()).SettingsSyncWaitingWindows(count)
+}
+
+// SettingsSyncWaitingWindows says "{count} changes wait on this PC and are not lost"
+// in the language of msgs.
+//
+// The second line of a failed sync, worded for Windows.
+func (msgs Messages) SettingsSyncWaitingWindows(count string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncWaitingWindows", map[string]any{"count": count})
+}
+
 // SettingsSyncOffline says "Offline · changes sync when you are back online ({count} waiting)"
 // in the language the app shows.
 //
@@ -10414,6 +10506,20 @@ func (msgs Messages) SettingsSyncBothTitle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncBothTitle", nil)
 }
 
+// SettingsSyncBothTitleWindows says "This PC and your account both have tasks"
+// in the language the app shows.
+//
+// The title of the both-have-tasks sheet, worded for Windows.
+func SettingsSyncBothTitleWindows() string { return In(i18n.Locale()).SettingsSyncBothTitleWindows() }
+
+// SettingsSyncBothTitleWindows says "This PC and your account both have tasks"
+// in the language of msgs.
+//
+// The title of the both-have-tasks sheet, worded for Windows.
+func (msgs Messages) SettingsSyncBothTitleWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncBothTitleWindows", nil)
+}
+
 // SettingsSyncBothBody says "The account already has data from {devices} devices. This Mac has {tasks} tasks and {projects} projects."
 // in the language the app shows.
 //
@@ -10428,6 +10534,22 @@ func SettingsSyncBothBody(devices string, tasks string, projects string) string 
 // The counts under the both-have-tasks title.
 func (msgs Messages) SettingsSyncBothBody(devices string, tasks string, projects string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncBothBody", map[string]any{"devices": devices, "tasks": tasks, "projects": projects})
+}
+
+// SettingsSyncBothBodyWindows says "The account already has data from {devices} devices. This PC has {tasks} tasks and {projects} projects."
+// in the language the app shows.
+//
+// The counts under the both-have-tasks title, worded for Windows.
+func SettingsSyncBothBodyWindows(devices string, tasks string, projects string) string {
+	return In(i18n.Locale()).SettingsSyncBothBodyWindows(devices, tasks, projects)
+}
+
+// SettingsSyncBothBodyWindows says "The account already has data from {devices} devices. This PC has {tasks} tasks and {projects} projects."
+// in the language of msgs.
+//
+// The counts under the both-have-tasks title, worded for Windows.
+func (msgs Messages) SettingsSyncBothBodyWindows(devices string, tasks string, projects string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncBothBodyWindows", map[string]any{"devices": devices, "tasks": tasks, "projects": projects})
 }
 
 // SettingsSyncMerge says "Merge into the account"
@@ -10472,6 +10594,20 @@ func (msgs Messages) SettingsSyncMergeBody() string {
 	return Catalog.Format(msgs.locale, "settingsSyncMergeBody", nil)
 }
 
+// SettingsSyncMergeBodyWindows says "This PC's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); ag…"
+// in the language the app shows.
+//
+// What merging does to this Mac's tasks, worded for Windows.
+func SettingsSyncMergeBodyWindows() string { return In(i18n.Locale()).SettingsSyncMergeBodyWindows() }
+
+// SettingsSyncMergeBodyWindows says "This PC's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); ag…"
+// in the language of msgs.
+//
+// What merging does to this Mac's tasks, worded for Windows.
+func (msgs Messages) SettingsSyncMergeBodyWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncMergeBodyWindows", nil)
+}
+
 // SettingsSyncUseAccount says "Use the account"
 // in the language the app shows.
 //
@@ -10498,6 +10634,22 @@ func SettingsSyncUseAccountBody() string { return In(i18n.Locale()).SettingsSync
 // What using the account does to this Mac.
 func (msgs Messages) SettingsSyncUseAccountBody() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUseAccountBody", nil)
+}
+
+// SettingsSyncUseAccountBodyWindows says "This PC's data is backed up to the data folder first, then replaced with the account's tasks."
+// in the language the app shows.
+//
+// What using the account does to this Mac, worded for Windows.
+func SettingsSyncUseAccountBodyWindows() string {
+	return In(i18n.Locale()).SettingsSyncUseAccountBodyWindows()
+}
+
+// SettingsSyncUseAccountBodyWindows says "This PC's data is backed up to the data folder first, then replaced with the account's tasks."
+// in the language of msgs.
+//
+// What using the account does to this Mac, worded for Windows.
+func (msgs Messages) SettingsSyncUseAccountBodyWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncUseAccountBodyWindows", nil)
 }
 
 // SettingsSyncCancel says "Cancel"
@@ -11130,6 +11282,20 @@ func (msgs Messages) SettingsSyncLocalNote() string {
 	return Catalog.Format(msgs.locale, "settingsSyncLocalNote", nil)
 }
 
+// SettingsSyncLocalNoteWindows says "Keys and model settings stay on this PC."
+// in the language the app shows.
+//
+// Note under the email step's button, worded for Windows.
+func SettingsSyncLocalNoteWindows() string { return In(i18n.Locale()).SettingsSyncLocalNoteWindows() }
+
+// SettingsSyncLocalNoteWindows says "Keys and model settings stay on this PC."
+// in the language of msgs.
+//
+// Note under the email step's button, worded for Windows.
+func (msgs Messages) SettingsSyncLocalNoteWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncLocalNoteWindows", nil)
+}
+
 // SettingsSyncCodeTitle says "Check your email"
 // in the language the app shows.
 //
@@ -11478,6 +11644,24 @@ func (msgs Messages) SettingsSyncWrongAccount() string {
 	return Catalog.Format(msgs.locale, "settingsSyncWrongAccount", nil)
 }
 
+// SettingsSyncWrongAccountWindows says "This PC is linked to another account. Sign out, then sign in with that account."
+// in the language the app shows.
+//
+// The line of This Mac's row when the signed-in account does not own this
+// Mac's device; Sign out is beside it, worded for Windows.
+func SettingsSyncWrongAccountWindows() string {
+	return In(i18n.Locale()).SettingsSyncWrongAccountWindows()
+}
+
+// SettingsSyncWrongAccountWindows says "This PC is linked to another account. Sign out, then sign in with that account."
+// in the language of msgs.
+//
+// The line of This Mac's row when the signed-in account does not own this
+// Mac's device; Sign out is beside it, worded for Windows.
+func (msgs Messages) SettingsSyncWrongAccountWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncWrongAccountWindows", nil)
+}
+
 // SettingsSyncFailedOther says "something went wrong"
 // in the language the app shows.
 //
@@ -11506,6 +11690,22 @@ func SettingsSyncOtherTitle() string { return In(i18n.Locale()).SettingsSyncOthe
 // does not own this Mac.
 func (msgs Messages) SettingsSyncOtherTitle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncOtherTitle", nil)
+}
+
+// SettingsSyncOtherTitleWindows says "This PC was linked to another account"
+// in the language the app shows.
+//
+// The title of the sheet shown when a sign-in succeeds as an account that
+// does not own this Mac, worded for Windows.
+func SettingsSyncOtherTitleWindows() string { return In(i18n.Locale()).SettingsSyncOtherTitleWindows() }
+
+// SettingsSyncOtherTitleWindows says "This PC was linked to another account"
+// in the language of msgs.
+//
+// The title of the sheet shown when a sign-in succeeds as an account that
+// does not own this Mac, worded for Windows.
+func (msgs Messages) SettingsSyncOtherTitleWindows() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherTitleWindows", nil)
 }
 
 // SettingsSyncOtherBody says "It was synced with {previous}. You just signed in as {account}."
@@ -11592,6 +11792,24 @@ func (msgs Messages) SettingsSyncOtherOldBody(account string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncOtherOldBody", map[string]any{"account": account})
 }
 
+// SettingsSyncOtherOldBodyWindows says "Sign out of {account} and sign in again with the account this PC belongs to."
+// in the language the app shows.
+//
+// What the recommended choice of the other-account sheet does, worded for
+// Windows.
+func SettingsSyncOtherOldBodyWindows(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherOldBodyWindows(account)
+}
+
+// SettingsSyncOtherOldBodyWindows says "Sign out of {account} and sign in again with the account this PC belongs to."
+// in the language of msgs.
+//
+// What the recommended choice of the other-account sheet does, worded for
+// Windows.
+func (msgs Messages) SettingsSyncOtherOldBodyWindows(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherOldBodyWindows", map[string]any{"account": account})
+}
+
 // SettingsSyncOtherMove says "Move this Mac to {account}"
 // in the language the app shows.
 //
@@ -11606,6 +11824,22 @@ func SettingsSyncOtherMove(account string) string {
 // The other choice of the other-account sheet.
 func (msgs Messages) SettingsSyncOtherMove(account string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncOtherMove", map[string]any{"account": account})
+}
+
+// SettingsSyncOtherMoveWindows says "Move this PC to {account}"
+// in the language the app shows.
+//
+// The other choice of the other-account sheet, worded for Windows.
+func SettingsSyncOtherMoveWindows(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMoveWindows(account)
+}
+
+// SettingsSyncOtherMoveWindows says "Move this PC to {account}"
+// in the language of msgs.
+//
+// The other choice of the other-account sheet, worded for Windows.
+func (msgs Messages) SettingsSyncOtherMoveWindows(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveWindows", map[string]any{"account": account})
 }
 
 // SettingsSyncOtherMoveBody says "This Mac's tasks go to {account}. They stay on this Mac; {previous} keeps its own copy."
@@ -11624,6 +11858,24 @@ func (msgs Messages) SettingsSyncOtherMoveBody(account string, previous string) 
 	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBody", map[string]any{"account": account, "previous": previous})
 }
 
+// SettingsSyncOtherMoveBodyWindows says "This PC's tasks go to {account}. They stay on this PC; {previous} keeps its own copy."
+// in the language the app shows.
+//
+// What moving this Mac does, when the old email is known, worded for
+// Windows.
+func SettingsSyncOtherMoveBodyWindows(account string, previous string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMoveBodyWindows(account, previous)
+}
+
+// SettingsSyncOtherMoveBodyWindows says "This PC's tasks go to {account}. They stay on this PC; {previous} keeps its own copy."
+// in the language of msgs.
+//
+// What moving this Mac does, when the old email is known, worded for
+// Windows.
+func (msgs Messages) SettingsSyncOtherMoveBodyWindows(account string, previous string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBodyWindows", map[string]any{"account": account, "previous": previous})
+}
+
 // SettingsSyncOtherMoveBodyUnknown says "This Mac's tasks go to {account}. They stay on this Mac."
 // in the language the app shows.
 //
@@ -11638,6 +11890,24 @@ func SettingsSyncOtherMoveBodyUnknown(account string) string {
 // What moving this Mac does, when the old email is not remembered.
 func (msgs Messages) SettingsSyncOtherMoveBodyUnknown(account string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBodyUnknown", map[string]any{"account": account})
+}
+
+// SettingsSyncOtherMoveBodyUnknownWindows says "This PC's tasks go to {account}. They stay on this PC."
+// in the language the app shows.
+//
+// What moving this Mac does, when the old email is not remembered, worded
+// for Windows.
+func SettingsSyncOtherMoveBodyUnknownWindows(account string) string {
+	return In(i18n.Locale()).SettingsSyncOtherMoveBodyUnknownWindows(account)
+}
+
+// SettingsSyncOtherMoveBodyUnknownWindows says "This PC's tasks go to {account}. They stay on this PC."
+// in the language of msgs.
+//
+// What moving this Mac does, when the old email is not remembered, worded
+// for Windows.
+func (msgs Messages) SettingsSyncOtherMoveBodyUnknownWindows(account string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncOtherMoveBodyUnknownWindows", map[string]any{"account": account})
 }
 
 // SettingsSyncGoogleRow says "Google"

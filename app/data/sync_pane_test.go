@@ -309,3 +309,26 @@ func TestMergeRewritesTaskIDsInTheThreeFiles(t *testing.T) {
 		t.Errorf("missing files: %v", err)
 	}
 }
+
+// The pane hides the official server and shows any other; the address compares without spaces,
+// a trailing slash or case.
+func TestIsOfficialSyncServer(t *testing.T) {
+	cases := []struct {
+		server string
+		want   bool
+	}{
+		{DefaultSyncServer, true},
+		{DefaultSyncServer + "/", true},
+		{"  " + DefaultSyncServer + "/ ", true},
+		{"HTTPS://TODO.SRI-AI.XYZ", true},
+		{"https://todo.example.com", false},
+		{"http://todo.sri-ai.xyz", false},
+		{DefaultSyncServer + "/v1", false},
+		{"", false},
+	}
+	for _, tc := range cases {
+		if got := IsOfficialSyncServer(tc.server); got != tc.want {
+			t.Errorf("IsOfficialSyncServer(%q) = %v, want %v", tc.server, got, tc.want)
+		}
+	}
+}

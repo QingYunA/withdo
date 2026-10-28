@@ -110,7 +110,7 @@ func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService
 		s.submitSyncEmail(svc, busy)
 	}
 	s.syncStatusLine(c, t, snap, busy)
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncLocalNote(), 0).
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, syncLocalNote(s.say), 0).
 		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
 }
 
