@@ -2610,7 +2610,7 @@ this block disagrees with the bullets around it, it wins.
   mygo does not cover Android, so the phone has its own updater, quiet like the desktop's. At most once
   a day, when the app starts or comes back to the front, it asks the latest release of
   `QingYunA/withdo` (no sign-in; a failed answer, such as GitHub's rate limit, says nothing
-  and waits for tomorrow). A newer `v<x.y.z>` with an `adhd-todo-<x.y.z>.apk` shows a **banner** under
+  and waits for tomorrow). A newer `v<x.y.z>` with a `withdo-<x.y.z>.apk` shows a **banner** under
   the Mine header (and the other tabs' header): a `GroupCard` of one 56 dp row, `Version 0.9.0 is
   available` (`有新版本 0.9.0`) in `body`, a `Later` text link (`稍后`) and a `QuietButton` **Update**
   (`更新`). `Later` hides the banner until a newer version. **Update** swaps the row for `Downloading

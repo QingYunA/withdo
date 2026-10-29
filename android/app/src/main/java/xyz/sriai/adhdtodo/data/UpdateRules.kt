@@ -51,7 +51,7 @@ private val releaseJson = Json { ignoreUnknownKeys = true; isLenient = true }
 
 /**
  * The update the GitHub "latest release" answer offers over [current], or null: the tag is not newer,
- * the release has no `adhd-todo-<version>.apk` or no `SHA256SUMS.txt` (the desktop files may be
+ * the release has no `withdo-<version>.apk` or no `SHA256SUMS.txt` (the desktop files may be
  * uploaded first), or the answer is not a release.
  */
 fun pickUpdate(releaseBody: String, current: String): AvailableUpdate? {
@@ -60,7 +60,7 @@ fun pickUpdate(releaseBody: String, current: String): AvailableUpdate? {
     val latest = parseSemver(release.tag) ?: return null
     val now = parseSemver(current) ?: return null
     if (latest <= now) return null
-    val apk = release.assets.firstOrNull { it.name == "adhd-todo-$latest.apk" } ?: return null
+    val apk = release.assets.firstOrNull { it.name == "withdo-$latest.apk" } ?: return null
     val sums = release.assets.firstOrNull { it.name == "SHA256SUMS.txt" } ?: return null
     if (!apk.url.startsWith("https://") || !sums.url.startsWith("https://")) return null
     return AvailableUpdate(latest.toString(), apk.url, sums.url)

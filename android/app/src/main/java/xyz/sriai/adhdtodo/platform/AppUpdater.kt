@@ -156,7 +156,7 @@ class AppUpdater(
 
     /** The APK in the cache, after its size and SHA-256 matched the release's SHA256SUMS.txt; throws otherwise. */
     private fun download(update: AvailableUpdate): File {
-        val name = "adhd-todo-${update.version}.apk"
+        val name = "withdo-${update.version}.apk"
         val expected = sha256For(get(update.sumsUrl), name) ?: error("no checksum for $name")
         val dir = File(context.cacheDir, "updates").also { it.mkdirs() }
         dir.listFiles()?.forEach { it.delete() }

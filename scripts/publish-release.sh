@@ -22,7 +22,10 @@ built="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' app/mygo.json)"
 [ "$built" = "$version" ] || { echo "app/mygo.json is at $built, not $version" >&2; exit 1; }
 
 release="$PWD/app/build/release"
-apk="adhd-todo-$version.apk"
+apk="withdo-$version.apk"
+# Android 0.9–0.11 update only from an asset named adhd-todo-<version>.apk: the same file goes up under
+# that name too, until no such phone is left.
+old_apk="adhd-todo-$version.apk"
 for f in "Withdo-$version-macos-universal.dmg" "withdo-cli-$version-macos-universal.tar.gz" \
          "Withdo-Setup-$version-windows-x64.exe" "withdo-$version-darwin-universal.tar.gz" \
          "withdo-$version-windows-amd64.tar.gz" update-darwin-universal.json update-windows-amd64.json \
@@ -36,9 +39,12 @@ if [ ! -e "$release/$apk" ]; then
   [ -e "dist/$apk" ] || { echo "missing dist/$apk: run scripts/android-release.sh" >&2; exit 1; }
   cp "dist/$apk" "$release/$apk"
 fi
-if ! grep -q " $apk\$" "$release/SHA256SUMS.txt"; then
-  (cd "$release" && shasum -a 256 "$apk" >> SHA256SUMS.txt)
-fi
+[ -e "$release/$old_apk" ] || cp "$release/$apk" "$release/$old_apk"
+for f in "$apk" "$old_apk"; do
+  if ! grep -q " $f\$" "$release/SHA256SUMS.txt"; then
+    (cd "$release" && shasum -a 256 "$f" >> SHA256SUMS.txt)
+  fi
+done
 
 # The notes: the changelog section, then the line about agents that keep running the old MCP server.
 notes="$(mktemp)"

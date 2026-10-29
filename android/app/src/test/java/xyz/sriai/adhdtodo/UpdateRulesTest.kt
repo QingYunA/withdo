@@ -18,13 +18,14 @@ class UpdateRulesTest {
     private fun release(
         tag: String = "v0.9.0",
         apk: Boolean = true,
+        apkName: String = "withdo",
         sums: Boolean = true,
         draft: Boolean = false,
         prerelease: Boolean = false,
     ): String {
         val assets = buildList {
             add("""{"name":"ADHD-Todo-0.9.0-macos-universal.dmg","browser_download_url":"https://example.com/dmg"}""")
-            if (apk) add("""{"name":"adhd-todo-${tag.removePrefix("v")}.apk","browser_download_url":"https://example.com/apk"}""")
+            if (apk) add("""{"name":"$apkName-${tag.removePrefix("v")}.apk","browser_download_url":"https://example.com/apk"}""")
             if (sums) add("""{"name":"SHA256SUMS.txt","browser_download_url":"https://example.com/sums"}""")
         }
         return """{"tag_name":"$tag","draft":$draft,"prerelease":$prerelease,"assets":[${assets.joinToString(",")}],"body":"x"}"""
@@ -51,6 +52,11 @@ class UpdateRulesTest {
         assertEquals("0.9.0", update.version)
         assertEquals("https://example.com/apk", update.apkUrl)
         assertEquals("https://example.com/sums", update.sumsUrl)
+    }
+
+    @Test
+    fun `a release with only the old adhd-todo apk name is no update`() {
+        assertNull(pickUpdate(release(apkName = "adhd-todo"), "0.8.1"))
     }
 
     @Test
