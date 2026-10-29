@@ -31,7 +31,7 @@ updater plugin replaces a running executable on Windows by renaming it away.
 
 The phone updates itself separately (mygo does not cover Android): see the Android section of
 `docs/design/ui-spec.md`. It asks the same repository's latest release through the GitHub API and takes
-`adhd-todo-<v>.apk`, verified against `SHA256SUMS.txt`; it is Kotlin (`android/.../data/UpdateRules.kt`
+`withdo-<v>.apk`, verified against `SHA256SUMS.txt`; it is Kotlin (`android/.../data/UpdateRules.kt`
 for the pure rules, `platform/AppUpdater.kt` for the network and the installer), not `mobile/core`:
 nothing in it touches the task data, and keeping it out of the Go core spares a core rebuild.
 `REQUEST_INSTALL_PACKAGES` is in the manifest, the APK goes through a `FileProvider` over
@@ -87,7 +87,7 @@ nothing in it touches the task data, and keeping it out of the Go core spares a 
    `withdo-cli-<v>-macos-universal.tar.gz`, `Withdo-Setup-<v>-windows-x64.exe` (which carries
    `withdo-cli.exe` and `adhd-core.exe`), the signed update archives and manifests of both
    platforms, and `SHA256SUMS.txt`.
-3. `scripts/android-release.sh`: builds `dist/adhd-todo-<v>.apk`, signed with the release keystore
+3. `scripts/android-release.sh`: builds `dist/withdo-<v>.apk`, signed with the release keystore
    (made once by `--init`; its password is in the keychain; needs JDK 17 and the Android SDK, found
    at `ANDROID_HOME` or else `~/Library/Android/sdk`). Copy the APK into `app/build/release/` after
    step 2 (which empties that folder) and append its line:

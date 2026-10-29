@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Android-5b5bd6?style=flat-square&labelColor=16181d" alt="macOS, Windows, Android">
   <a href="https://github.com/QingYunA/withdo/stargazers"><img src="https://img.shields.io/github/stars/QingYunA/withdo?style=flat-square&labelColor=16181d&color=5b5bd6" alt="Stars"></a>
 </p>
-<p align="center"><a href="https://adhd-todo.sri-ai.xyz/"><b>Website</b></a> · <a href="#download">Download</a> · <a href="#connect-your-agents">Connect your agents</a> · <a href="docs/design/ui-spec.md">Design spec</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
+<p align="center"><a href="https://qingyuna.github.io/withdo/"><b>Website</b></a> · <a href="#download">Download</a> · <a href="#connect-your-agents">Connect your agents</a> · <a href="docs/design/ui-spec.md">Design spec</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
 
 <p align="center">
   <img src="docs/design/screens/mine-light.png" alt="Today: your tasks, with your agents' cards beside them" width="420">
@@ -15,7 +15,7 @@
 
 - **One place for parallel work.** Each agent reports through a local MCP server: what it is doing, where it is stuck, which PR it opened. Today shows those cards beside your own tasks.
 - **Hand a task to an agent.** Drag a task onto the Agents tray: it waits for an agent. Nothing starts by itself; tell your agent the task number ("do #44") and its reports show up on that row.
-- **Type or say it.** The input at the top reads "明天九点提醒我开会" into a task with a reminder. With your own model it also does things like "PR 12 merged, close that task", with an Undo. Voice input needs an account.
+- **Type or say it.** The input at the top reads "remind me to call Sam tomorrow at 9" into a task with a reminder, in English or Chinese. With your own model it also does things like "PR 12 merged, close that task", with an Undo. Voice input needs an account.
 - **Local first.** Your tasks live in a SQLite file on your machine. Signing in adds sync with your other computers and the Android app.
 
 More screens are in [`docs/design/screens/`](docs/design/screens/).
@@ -26,7 +26,7 @@ More screens are in [`docs/design/screens/`](docs/design/screens/).
 | :--- | :--- |
 | **macOS** (Apple silicon and Intel) | `Withdo-<version>-macos-universal.dmg` |
 | **Windows** (x64) | `Withdo-Setup-<version>-windows-x64.exe` |
-| **Android** | `adhd-todo-<version>.apk` |
+| **Android** | `withdo-<version>.apk` |
 
 On a Mac, drag Withdo to Applications. The app is not notarized, so macOS blocks the first launch:
 open it once, then choose Open Anyway in System Settings > Privacy & Security (before macOS 15,
