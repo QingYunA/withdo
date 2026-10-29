@@ -146,7 +146,7 @@ func TestAuthenticatorAcceptsUsersAndRejectsTheRest(t *testing.T) {
 	}
 }
 
-func TestSignInFailuresAndClosedSignUp(t *testing.T) {
+func TestSignInFailuresAndDuplicateImport(t *testing.T) {
 	app := openApp(t)
 	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err != nil {
 		t.Fatal(err)
@@ -155,13 +155,6 @@ func TestSignInFailuresAndClosedSignUp(t *testing.T) {
 
 	if status, _ := signIn(t, base, "users", "ada@example.com", "wrong password"); status != http.StatusBadRequest {
 		t.Fatalf("wrong password = %d, want 400", status)
-	}
-	status, _ := post(t, base+"/api/collections/users/records", map[string]string{
-		"email": "eve@example.com", "password": testPassword, "passwordConfirm": testPassword,
-	})
-	// The create rule fails a plain create with a 400 now that OAuth2 may create users.
-	if status != http.StatusForbidden && status != http.StatusNotFound && status != http.StatusBadRequest {
-		t.Fatalf("sign-up = %d, want it closed", status)
 	}
 	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err == nil {
 		t.Fatal("importing the same email twice should fail")
@@ -177,8 +170,15 @@ func TestMigrationSetsUpUsersCollection(t *testing.T) {
 	if users.ListRule != nil || users.ViewRule != nil || users.UpdateRule != nil || users.DeleteRule != nil {
 		t.Error("the users API rules should be closed")
 	}
-	if users.CreateRule == nil || *users.CreateRule != `@request.context = "oauth2"` {
-		t.Errorf("create rule = %v, want only OAuth2 to create users", users.CreateRule)
+	if users.CreateRule == nil || !strings.HasPrefix(*users.CreateRule, `@request.context = "oauth2" || `) ||
+		!strings.Contains(*users.CreateRule, "@request.body.verified:isset = false") {
+		t.Errorf("create rule = %v, want OAuth2 or a sign-up that does not set verified", users.CreateRule)
+	}
+	if users.Fields.GetByName("lang") == nil {
+		t.Error("the users collection should have a lang field")
+	}
+	if pw, ok := users.Fields.GetByName("password").(*core.PasswordField); !ok || pw.Min != 8 {
+		t.Errorf("password field = %+v, want a minimum of 8", users.Fields.GetByName("password"))
 	}
 	if !users.PasswordAuth.Enabled || !users.OTP.Enabled || !users.OAuth2.Enabled || users.MFA.Enabled {
 		t.Error("password, one-time code and OAuth2 sign-in should be on, with MFA off")
@@ -318,49 +318,6 @@ func authWithOTP(t *testing.T, base, otpID, code string) (int, string) {
 
 var sixDigits = regexp.MustCompile(`^(\d{6}) is your Withdo code$`)
 
-func TestNewEmailGetsAnAccountAndACode(t *testing.T) {
-	app := openApp(t)
-	mails := captureMail(app)
-	base := serve(t, app, pbauth.NewAuthenticator(app))
-
-	status, otpID := requestOTP(t, base, "Grace@Example.com")
-	if status != http.StatusOK || otpID == "" {
-		t.Fatalf("request-otp = %d %q", status, otpID)
-	}
-	m := waitMail(t, mails)
-	match := sixDigits.FindStringSubmatch(m.subject)
-	if match == nil || !strings.EqualFold(m.to, "grace@example.com") || !strings.Contains(m.body, match[1]) {
-		t.Fatalf("mail = %+v", m)
-	}
-	code := match[1]
-
-	users, _ := app.FindCollectionByNameOrId("users")
-	record, err := app.FindAuthRecordByEmail(users, "grace@example.com")
-	if err != nil {
-		t.Fatalf("the user was not created: %v", err)
-	}
-	if record.Verified() || record.GetString("name") != "Grace" {
-		t.Errorf("new user verified=%v name=%q", record.Verified(), record.GetString("name"))
-	}
-
-	// A wrong code fails, the right one signs in and marks the account verified.
-	if status, _ := authWithOTP(t, base, otpID, "000000"); status != http.StatusBadRequest {
-		t.Fatalf("wrong code = %d, want 400", status)
-	}
-	status, token := authWithOTP(t, base, otpID, code)
-	if status != http.StatusOK || token == "" {
-		t.Fatalf("auth-with-otp = %d", status)
-	}
-	subject, err := pbauth.NewAuthenticator(app).Subject(bearer(token))
-	if err != nil || subject != "pb:"+record.Id {
-		t.Fatalf("subject = %q, %v; want pb:%s", subject, err, record.Id)
-	}
-	record, _ = app.FindRecordById(users, record.Id)
-	if !record.Verified() {
-		t.Error("the code sign-in should verify the account")
-	}
-}
-
 func bearer(token string) *http.Request {
 	req := httptest.NewRequest(http.MethodGet, "/v1/x", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -425,6 +382,8 @@ func TestMigrationAddsRateLimits(t *testing.T) {
 		"users:requestOTP":           {60, 3},
 		"users:authWithOTP":          {60, 10},
 		"users:requestPasswordReset": {60, 3},
+		"users:create":               {60, 5},
+		"/api/withdo/reset-password": {60, 10},
 	}
 	for _, rule := range app.Settings().RateLimits.Rules {
 		if w, ok := want[rule.Label]; ok {
@@ -442,6 +401,9 @@ func TestMigrationAddsRateLimits(t *testing.T) {
 func TestRequestOTPIsRateLimited(t *testing.T) {
 	app := openApp(t)
 	mails := captureMail(app)
+	if _, err := pbauth.ImportUser(app, "ada@example.com", "Ada", testPassword); err != nil {
+		t.Fatal(err)
+	}
 	base := serve(t, app, pbauth.NewAuthenticator(app))
 	var limited int
 	for i := 0; i < 6; i++ {
@@ -524,27 +486,5 @@ func TestOAuth2RedirectReachesTheSubscribedClient(t *testing.T) {
 	}
 	if name != "@oauth2" || msg.State != connect.ClientID || msg.Code != "abc" || msg.Error != "" {
 		t.Fatalf("event = %q %+v, want @oauth2 with the state and code", name, msg)
-	}
-}
-
-func TestPlainSignUpStaysClosedAndCodeSignUpStillWorks(t *testing.T) {
-	app := openApp(t)
-	mails := captureMail(app)
-	base := serve(t, app, pbauth.NewAuthenticator(app))
-	status, _ := post(t, base+"/api/collections/users/records", map[string]string{
-		"email": "eve@example.com", "password": testPassword, "passwordConfirm": testPassword,
-	})
-	if status < 400 {
-		t.Fatalf("plain sign-up = %d, want it refused", status)
-	}
-	if total, _ := app.CountRecords("users"); total != 0 {
-		t.Fatalf("users = %d, want 0", total)
-	}
-	if status, body := requestOTP(t, base, "new@example.com"); status != http.StatusOK {
-		t.Fatalf("code request = %d %s, want 200", status, body)
-	}
-	waitMail(t, mails)
-	if total, _ := app.CountRecords("users"); total != 1 {
-		t.Fatalf("users = %d, want the code sign-up's 1", total)
 	}
 }

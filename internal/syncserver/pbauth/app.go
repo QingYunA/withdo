@@ -23,7 +23,15 @@ func Open(dir string) (*pocketbase.PocketBase, error) {
 		DefaultDataDir:  dir,
 		HideStartBanner: true,
 	})
-	app.OnRecordRequestOTPRequest(UsersCollection).BindFunc(createUserOnCodeRequest)
+	app.OnRecordRequestOTPRequest(UsersCollection).BindFunc(findUserByTypedEmail)
+	app.OnRecordCreateRequest(UsersCollection).BindFunc(prepareNewUser)
+	app.OnRecordAuthWithPasswordRequest(UsersCollection).BindFunc(refuseUnverifiedPasswordSignIn)
+	app.OnRecordAuthWithOTPRequest(UsersCollection).BindFunc(verifyOnCode)
+	app.OnMailerRecordOTPSend(UsersCollection).BindFunc(localizeCodeMail)
+	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
+		e.Router.POST(ResetPasswordPath, resetPassword)
+		return e.Next()
+	})
 	if err := app.Bootstrap(); err != nil {
 		return nil, fmt.Errorf("bootstrap PocketBase in %s: %w", dir, err)
 	}

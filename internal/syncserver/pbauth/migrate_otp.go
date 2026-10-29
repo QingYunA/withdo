@@ -24,8 +24,8 @@ func init() {
 	core.AppMigrations.Register(enableCodeSignIn, nil, "1790000200_adhd_users_otp.go")
 }
 
-// enableCodeSignIn turns on the one-time code for the users collection (P2: sign-up and sign-in are
-// one path, an email and the 6-digit code mailed to it), keeps password sign-in, keeps MFA off and
+// enableCodeSignIn turns on the one-time code for the users collection (P2; since v42 the code
+// verifies an email at sign-up and resets a password, see migrate_signup.go), keeps password sign-in, keeps MFA off and
 // limits the three mail-sending or guessable endpoints. PocketBase matches a rule label to
 // "<collection>:<action>" (apis/middlewares_rate_limit.go), the same shape as the password rule.
 func enableCodeSignIn(txApp core.App) error {

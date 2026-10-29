@@ -7,7 +7,7 @@ import (
 // oauth2CreateRule lets only an OAuth2 sign-in create a user through the REST API: PocketBase's
 // auth-with-oauth2 makes the new record by an internal create request whose context is "oauth2",
 // while a plain POST to /api/collections/users/records has the context "default" and is refused.
-// The code sign-in hook saves its users server-side and does not go through this rule.
+// Migration 1790000500 (migrate_signup.go) widens the rule for the password sign-up and keeps this branch.
 const oauth2CreateRule = `@request.context = "oauth2"`
 
 func init() {
