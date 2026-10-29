@@ -1,0 +1,9 @@
+# Daily backup of the sync server (deploy/sync/backup.sh); started by withdo-backup.timer.
+[Unit]
+Description=Back up the Withdo sync server
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/adhd-todo/sync/backup.sh
