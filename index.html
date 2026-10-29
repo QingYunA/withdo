@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Withdo</title><meta name="description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place.">
+<meta property="og:title" content="Withdo"><meta property="og:description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place."><meta property="og:image" content="https://qingyuna.github.io/withdo/app-icon.png"><meta property="og:url" content="https://qingyuna.github.io/withdo/"><meta name="twitter:card" content="summary">
+<link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="app-icon.png"><link rel="stylesheet" href="style.css"></head><body><main>
+<header><img src="icon.png" width="32" height="32" alt=""><a href="./">Withdo</a></header>
+<h1>Your tasks and your agents' work, in one place.</h1>
+<p class="lede">Withdo is a todo app for you and your coding agents. Type or speak a sentence and it turns into tasks with their days and times. Hand a task to Claude Code, Codex or another agent and watch what it is doing from the same place.</p>
+<ul>
+<li>One input: dates, reminders and categories read from what you write.</li>
+<li>Voice input that fills the box, so you can fix a word first.</li>
+<li>A board of what your coding agents (Claude Code, Codex and others) are working on.</li>
+<li>Your tasks sync between your Mac, Windows PC and Android phone.</li>
+<li>Open source under the AGPL-3.0: <a href="https://github.com/QingYunA/withdo">github.com/QingYunA/withdo</a>.</li>
+</ul>
+<h2 id="download">Download</h2>
+<div class="dl">
+<a class="btn" data-os="mac" href="https://github.com/QingYunA/withdo/releases/latest">macOS</a>
+<a class="btn" data-os="win" href="https://github.com/QingYunA/withdo/releases/latest">Windows</a>
+<a class="btn" data-os="android" href="https://github.com/QingYunA/withdo/releases/latest">Android</a>
+</div>
+<p class="note"><span id="ver">Apple silicon and Intel Macs, Windows x64, Android 8 and newer.</span> The app updates itself after that. <a href="https://github.com/QingYunA/withdo/releases/latest">All files</a></p>
+<p class="note">The Mac and Windows apps are not signed yet. On a Mac, open Withdo once, then choose Open Anyway in System Settings &gt; Privacy &amp; Security. On Windows, choose More info &gt; Run anyway.</p>
+<script>
+(function () {
+  var ua = navigator.userAgent, os = /Android/i.test(ua) ? "android" : /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) ? "mac" : "";
+  // Each button: the file of the latest release whose name starts and ends like this. The APK is
+  // withdo-<v>.apk from 0.12.0 and adhd-todo-<v>.apk before.
+  var files = { mac: [["Withdo-", "-macos-universal.dmg"]], win: [["Withdo-Setup-", "-windows-x64.exe"]],
+                android: [["withdo-", ".apk"], ["adhd-todo-", ".apk"]] };
+  document.querySelectorAll(".dl a").forEach(function (a) { if (a.dataset.os === os) a.classList.add("primary"); });
+  fetch("https://api.github.com/repos/QingYunA/withdo/releases/latest").then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rel) {
+      if (!rel || !rel.assets) return;
+      document.querySelectorAll(".dl a").forEach(function (a) {
+        files[a.dataset.os].some(function (f) {
+          var hit = rel.assets.filter(function (x) { return x.name.indexOf(f[0]) === 0 && x.name.slice(-f[1].length) === f[1]; })[0];
+          if (hit) a.href = hit.browser_download_url;
+          return !!hit;
+        });
+      });
+      document.getElementById("ver").textContent = "Version " + rel.tag_name.replace(/^v/, "") + ". Apple silicon and Intel Macs, Windows x64, Android 8 and newer.";
+    }).catch(function () {});
+})();
+</script>
+<footer><a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms</a> · <a href="https://github.com/QingYunA/withdo">Source</a> · Contact: <a href="mailto:sorlia7z@gmail.com">sorlia7z@gmail.com</a></footer>
+</main></body></html>
