@@ -397,7 +397,7 @@ the composer's plus), `IconBar` 24 pt (the Settings toolbar), `IconLarge` 36 pt 
   item: Move to `IconMove`, Remind me `IconClock`, Open PR `IconArrowOut`, Ask `IconSparkle`, the
   reminder presets `IconClock` / `IconCalendar`, No reminder `IconClose`, Custom `IconPlus`, a
   project `IconFolder` in its color (white on the highlighted row), Delete `IconTrash` in
-  `status.blocked` with its text. The native context menus are text only.
+  `status.blocked` with its text. The project and milestone menus are drawn too (below), text only.
 - **Empty states** (Today, Agents, a project, the history, search with no hits): `theme.DuoIcon` at 60 pt
   (you and the assistant side by side, 5 pt a pixel), 14 pt under it a title in `body.strong`, then one
   line in `text.secondary`, all centered, the line wrapping at 480 pt; a link when there is a way
@@ -564,6 +564,8 @@ takes a repository from the sheet if the user gives it one.
   (the title becomes an input; the other pages' titles do nothing). Archive acts at once, with the project's sub-projects (the project is in Settings >
   General > Archived projects, one click from coming back); Delete… asks first (**Delete confirmation**).
   Archiving or deleting the project on screen goes to Today.
+- The menu is drawn in the window (mygo `PopoverMenu`) with the theme's colors, like the Task menu, not
+  the system's; it opens at the pointer, and arrows, Enter and Esc work in it.
 - The repository is not on the project's page: it is in this menu and in the inspector's top line.
 
 ### Mine (home)
@@ -1106,7 +1108,8 @@ inspector's top line), **no `Done 5 · Backlog 2`** (finished tasks are in the l
 milestone menu until the project has a milestone**.
 
 **Milestone filter.** With at least one milestone, quiet `meta` text with a small chevron sits before the
-view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 native ⌄`). Its menu:
+view control: `All milestones ⌄`, or the milestone being filtered by (`v0.2 native ⌄`). Its menu
+(drawn in the window, a mygo `PopoverMenuButton`, not the system's):
 
 1. `All milestones`, a separator, then one item per milestone (checked when it filters the page),
    as before: `v0.2 · due Oct 28`, `v0.1 · closed`;
@@ -1482,7 +1485,7 @@ seconds; Undo puts the task back with its id, fields and reports. (A project kee
 holds many tasks.) The inspector's values open the same pieces alone: Status shows the status strip,
 Priority (an agent's) the priority strip, Category the Category page, Project the `Move to…` list, Remind the presets.
 
-A project's menu is in the Sidebar and stays a system menu.
+A project's menu is in the Sidebar and is drawn the same way (a mygo `PopoverMenu`, in the theme's colors).
 
 ### Selecting several tasks
 

@@ -30,7 +30,7 @@ func (m *Main) milestoneMenu(c *ui.Context, t *theme.Tokens) {
 		btn.Background(t.BgHover)
 		ink = t.Text
 	}
-	btn.Menu(func(mn *ui.Menu) { m.milestoneItems(mn, pid, ms) })
+	btn.PopoverMenuButton(func(mn *ui.Menu) { m.milestoneItems(mn, pid, ms) })
 	btn.Children(func() {
 		theme.Text(c, theme.Meta, ink, label)
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextTertiary)

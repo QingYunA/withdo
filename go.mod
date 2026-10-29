@@ -1,13 +1,13 @@
 module github.com/QingYunA/adhd-todo
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.56.0
 	github.com/cloudwego/eino v0.9.21
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.13
 	github.com/ebitengine/purego v0.11.1
-	github.com/egoist/mygo v0.6.0
+	github.com/egoist/mygo v0.7.3
 	github.com/google/jsonschema-go v0.4.3
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0

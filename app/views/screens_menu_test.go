@@ -29,54 +29,46 @@ func TestScreensMenu(t *testing.T) {
 				m.goTo(nav{screen: screenProject, projectID: 1})
 				tt.Frame()
 			}
-			manageShot(t, "task-menu-hover"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-hover"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				inProject(tt, m)
 				menuAt(tt, "Write the release notes", 120)
 				g, _ := tt.Find(m.say.A11yMenuStatus(statusLabel(m.say, data.Doing)))
 				tt.Move(g.X+g.W/2, g.Y+g.H/2)
 				tt.Frame() // the label above the strip names the choice under the pointer
 				tt.Frame()
-				return nil
 			})
-			manageShot(t, "task-menu-move"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-move"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				inProject(tt, m)
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.MenuMoveTo())
-				return nil
 			})
-			manageShot(t, "task-menu-remind"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-remind"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				inProject(tt, m)
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.MenuRemindMe())
-				return nil
 			})
-			manageShot(t, "task-menu-custom"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-custom"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				inProject(tt, m)
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.MenuRemindMe())
 				tt.Frame()
 				_ = tt.Click(m.say.MenuCustom())
-				return nil
 			})
-			manageShot(t, "task-menu-glyph"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-glyph"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				_ = tt.Click(m.say.A11yStatus(statusLabel(m.say, data.Blocked)))
-				return nil
 			})
-			manageShot(t, "inspector-menu-priority"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "inspector-menu-priority"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.OpenTask(8)
 				tt.Frame()
 				_ = tt.Click(m.say.A11yPriority(priorityLabel(m.say, data.P2)))
-				return nil
 			})
-			manageShot(t, "mine-done-today"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "mine-done-today"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				tt.SetSize(1100, 1000)
-				return nil
 			})
-			manageShot(t, "project-history"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "project-history"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				tt.SetSize(1100, 1000)
 				inProject(tt, m)
 				_ = tt.Click(m.say.ShowAll())
-				return nil
 			})
 		}
 	}

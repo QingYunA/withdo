@@ -56,9 +56,9 @@ lipo -create -output "$work/mac/withdo" "$work/withdo-arm64" "$work/withdo-amd64
 # Everything to upload, under the names the releases give it (GitHub turns spaces into dots).
 rm -rf "$release"
 mkdir -p "$release"
-cp "$mac/Withdo $version.dmg" "$release/Withdo-$version-macos-universal.dmg"
+cp "$mac/withdo-$version.dmg" "$release/Withdo-$version-macos-universal.dmg"
 tar -czf "$release/withdo-cli-$version-macos-universal.tar.gz" -C "$work/mac" withdo
-cp "$win/Withdo Setup $version amd64.exe" "$release/Withdo-Setup-$version-windows-x64.exe"
+cp "$win/withdo-setup-$version-amd64.exe" "$release/Withdo-Setup-$version-windows-x64.exe"
 # withdo-<digit> matches the update archives and deltas, not the resources mygo copies beside the
 # app (withdo-cli.exe).
 for f in "$mac"/withdo-[0-9]* "$mac"/update-*.json "$win"/withdo-[0-9]* "$win"/update-*.json; do
