@@ -67,7 +67,7 @@ func TestScreensRecent(t *testing.T) {
 	}
 }
 
-// The switch of the page in Settings > General, on while gh is signed out: its line says what to run.
+// The switch of the page in Settings > Agents > GitHub, on while gh is signed out: its line says what to run.
 func TestScreensRecentSettings(t *testing.T) {
 	screensTest(t)
 	signedOut := data.GitHubStatus{State: data.GitHubSignedOut, CheckedAt: fixedNow()}
@@ -78,9 +78,8 @@ func TestScreensRecentSettings(t *testing.T) {
 				sfx = "-zh" + sfx
 			}
 			app := settingsApp(t, signedOut)
-			mustNil(t, app.ArchiveProject(3))
 			app.SetRecentChangesOn(true)
-			settingsShot(t, "recent-settings"+sfx+".png", app, a.dark, zh, PaneAdvanced, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 3000) })
+			settingsShot(t, "recent-settings"+sfx+".png", app, a.dark, zh, PaneAgents, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 9000) })
 		}
 	}
 }

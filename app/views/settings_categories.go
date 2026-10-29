@@ -11,14 +11,25 @@ import (
 // deletedNoticeFor is how long the line about a deleted category, with its Undo, stays in the group.
 const deletedNoticeFor = 6 * time.Second
 
-// categoriesState is Settings > General > Categories: the sheet that makes and edits a category (the
-// one the task menu opens in the main window, hosted by a Main of its own), the category whose delete
-// waits for a second click, and the one just deleted with the time it was.
+// categoriesState is Settings > Categories: the sheet that makes and edits a category (the one the
+// task menu opens in the main window, hosted by a Main of its own), the category whose delete waits
+// for a second click, and the one just deleted with the time it was.
 type categoriesState struct {
 	sheet     *Main
 	confirm   int // the category whose delete asks first, 0 for none
 	deleted   data.DeletedCategory
 	deletedAt time.Time
+}
+
+// archivedRows is how many archived projects the pane shows before the list scrolls.
+const archivedRows = 5
+
+// categoriesPane is the categories in their order, and the archived projects under them.
+func (s *Settings) categoriesPane(c *ui.Context, t *theme.Tokens) {
+	paneHeader(c, t, s.say.SettingsCategories(), s.say.SettingsPaneCategoriesLine())
+	s.categoriesGroup(c, t)
+	groupLabel(c, t, s.say.ManageArchivedTitle())
+	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
 }
 
 // categoriesGroup lists the categories in their order, each with its icon in its color, its name and
@@ -30,7 +41,6 @@ func (s *Settings) categoriesGroup(c *ui.Context, t *theme.Tokens) {
 	if !s.cats.deletedAt.IsZero() && s.app.Now().Sub(s.cats.deletedAt) > deletedNoticeFor {
 		s.cats.deletedAt = time.Time{}
 	}
-	groupLabel(c, t, s.say.SettingsCategories())
 	group(c, t, "categories", func() {
 		for i, cat := range cats {
 			s.categoryRow(c, t, cat, i, len(cats))
@@ -136,4 +146,27 @@ func (s *Settings) deletedLine(c *ui.Context, t *theme.Tokens, first bool) {
 			s.cats.deletedAt = time.Time{}
 		}
 	})
+}
+
+// archivedRowsView lists the archived projects with a Restore link each, or says there are none.
+func (s *Settings) archivedRowsView(c *ui.Context, t *theme.Tokens) {
+	archived := s.app.snap.archived
+	if len(archived) == 0 {
+		settingsRow(c, t, "none", s.say.ManageArchivedNone(), "", true, nil)
+		return
+	}
+	rows := func() {
+		for i, p := range archived {
+			settingsRow(c, t, "archived-"+itoa(p.ID), p.Name, p.RepoSlug, i == 0, func() {
+				if settingsLink(c, t, "restore-"+itoa(p.ID), s.say.ManageRestore(), s.say.ManageA11yRestore(p.Name)).Clicked() {
+					_ = s.app.RestoreProject(p.ID)
+				}
+			})
+		}
+	}
+	if len(archived) <= archivedRows {
+		rows()
+		return
+	}
+	ui.Scroll(c.Key("archived")).MaxHeight(archivedRows * theme.SettingsRowMin).Children(rows)
 }

@@ -8,19 +8,20 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// Settings > General > Categories is where categories are made, edited, moved and deleted, now that the
-// sidebar has no rows for them.
+// Settings > Categories is where categories are made, edited, moved and deleted.
 
 func categoriesRig(t *testing.T) (*settingsRig, data.Category) {
 	t.Helper()
 	r := newSettingsRig(t)
 	reading := addCategory(t, r.app, "Reading", "orange")
-	r.tt.SetSize(680, 1400)
+	r.pane(t, "Categories")
+	// The category editor is taller than the window; the tests make room for its buttons.
+	r.tt.SetSize(800, 1400)
 	r.tt.Frame()
 	return r, reading
 }
 
-func TestSettingsGeneralListsTheCategoriesInOrderWithAWayToAddOne(t *testing.T) {
+func TestSettingsCategoriesListInOrderWithAWayToAddOne(t *testing.T) {
 	r, _ := categoriesRig(t)
 	has(t, r.tt, "Categories", "Work", "Life", "Reading", "New category…")
 	if !above(t, r.tt, "Work", "Life") || !above(t, r.tt, "Life", "Reading") || !above(t, r.tt, "Reading", "New category…") {

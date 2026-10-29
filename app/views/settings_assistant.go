@@ -33,6 +33,13 @@ type testResult struct {
 	ok      bool
 }
 
+// modelPane is the user's own model: the provider in use and the others set up, or the grid.
+func (s *Settings) modelPane(c *ui.Context, t *theme.Tokens) {
+	paneHeader(c, t, s.say.SettingsPaneModel(), s.say.SettingsPaneModelLine())
+	groupLabel(c, t, s.say.SettingsOwnModel())
+	s.assistantPane(c, t)
+}
+
 // assistantPane is the provider in use and the others set up, or the grid when none is.
 func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 	if s.app.Models == nil {

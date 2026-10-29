@@ -9,6 +9,12 @@ import (
 // optional label above it, the label and its quiet line at the left of a row and the control at
 // the right.
 
+// paneHeader is the top of every pane: its name, and one line saying what the pane is for.
+func paneHeader(c *ui.Context, t *theme.Tokens, name, line string) {
+	theme.Text(c, theme.SettingsTitle, t.Text, name)
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 0).Margin(4, 0, 16)
+}
+
 // groupLabel is the small title above a group.
 func groupLabel(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 	return theme.Text(c, theme.Section, t.TextSecondary, text).Margin(4, 4, 7)

@@ -3308,18 +3308,20 @@ func (msgs Messages) NotifyCountSeparator() string {
 	return Catalog.Format(msgs.locale, "notifyCountSeparator", nil)
 }
 
-// SettingsNotifications says "Notifications"
+// SettingsNotificationsSound says "Notifications and sound"
 // in the language the app shows.
 //
-// Header of the notifications block in Settings > General.
-func SettingsNotifications() string { return In(i18n.Locale()).SettingsNotifications() }
+// Header of the block in Settings > General with notifications, the
+// reminder and sound effects.
+func SettingsNotificationsSound() string { return In(i18n.Locale()).SettingsNotificationsSound() }
 
-// SettingsNotifications says "Notifications"
+// SettingsNotificationsSound says "Notifications and sound"
 // in the language of msgs.
 //
-// Header of the notifications block in Settings > General.
-func (msgs Messages) SettingsNotifications() string {
-	return Catalog.Format(msgs.locale, "settingsNotifications", nil)
+// Header of the block in Settings > General with notifications, the
+// reminder and sound effects.
+func (msgs Messages) SettingsNotificationsSound() string {
+	return Catalog.Format(msgs.locale, "settingsNotificationsSound", nil)
 }
 
 // SettingsNotifySwitch says "Allow system notifications"
@@ -4003,13 +4005,15 @@ func (msgs Messages) SettingsDataFolder() string {
 // SettingsGeneral says "General"
 // in the language the app shows.
 //
-// Tab of the settings sheet.
+// Pane of the Settings window (and the window's title) for the language,
+// notifications and updates.
 func SettingsGeneral() string { return In(i18n.Locale()).SettingsGeneral() }
 
 // SettingsGeneral says "General"
 // in the language of msgs.
 //
-// Tab of the settings sheet.
+// Pane of the Settings window (and the window's title) for the language,
+// notifications and updates.
 func (msgs Messages) SettingsGeneral() string {
 	return Catalog.Format(msgs.locale, "settingsGeneral", nil)
 }
@@ -4355,13 +4359,13 @@ func (msgs Messages) StatusTodo() string {
 // A11yPane says "{name} settings"
 // in the language the app shows.
 //
-// Accessibility label of a toolbar pane of the Settings window.
+// Accessibility label of a row of the Settings sidebar.
 func A11yPane(name string) string { return In(i18n.Locale()).A11yPane(name) }
 
 // A11yPane says "{name} settings"
 // in the language of msgs.
 //
-// Accessibility label of a toolbar pane of the Settings window.
+// Accessibility label of a row of the Settings sidebar.
 func (msgs Messages) A11yPane(name string) string {
 	return Catalog.Format(msgs.locale, "a11yPane", map[string]any{"name": name})
 }
@@ -4514,16 +4518,16 @@ func (msgs Messages) ModelsTestAgain() string {
 	return Catalog.Format(msgs.locale, "modelsTestAgain", nil)
 }
 
-// SettingsAboutLicense says "Open source, MIT license"
+// SettingsAboutLicense says "Open source, AGPL-3.0"
 // in the language the app shows.
 //
-// Second line of the About row of Settings > General.
+// Second line of the About row of Settings > About.
 func SettingsAboutLicense() string { return In(i18n.Locale()).SettingsAboutLicense() }
 
-// SettingsAboutLicense says "Open source, MIT license"
+// SettingsAboutLicense says "Open source, AGPL-3.0"
 // in the language of msgs.
 //
-// Second line of the About row of Settings > General.
+// Second line of the About row of Settings > About.
 func (msgs Messages) SettingsAboutLicense() string {
 	return Catalog.Format(msgs.locale, "settingsAboutLicense", nil)
 }
@@ -4545,14 +4549,14 @@ func (msgs Messages) A11yAboutGitHub() string {
 // SettingsAboutLink says "GitHub"
 // in the language the app shows.
 //
-// Link of the About row of Settings > General that opens the project on
+// Link of the About row of Settings > About that opens the project on
 // GitHub.
 func SettingsAboutLink() string { return In(i18n.Locale()).SettingsAboutLink() }
 
 // SettingsAboutLink says "GitHub"
 // in the language of msgs.
 //
-// Link of the About row of Settings > General that opens the project on
+// Link of the About row of Settings > About that opens the project on
 // GitHub.
 func (msgs Messages) SettingsAboutLink() string {
 	return Catalog.Format(msgs.locale, "settingsAboutLink", nil)
@@ -4572,20 +4576,32 @@ func (msgs Messages) SettingsAboutName(version string) string {
 	return Catalog.Format(msgs.locale, "settingsAboutName", map[string]any{"version": version})
 }
 
-// SettingsAdvanced says "Advanced"
+// SettingsAboutPrivacy says "Privacy policy"
 // in the language the app shows.
 //
-// Group label in Settings > Assistant for the settings most people leave
-// alone.
-func SettingsAdvanced() string { return In(i18n.Locale()).SettingsAdvanced() }
+// Link in Settings > About to the privacy policy.
+func SettingsAboutPrivacy() string { return In(i18n.Locale()).SettingsAboutPrivacy() }
 
-// SettingsAdvanced says "Advanced"
+// SettingsAboutPrivacy says "Privacy policy"
 // in the language of msgs.
 //
-// Group label in Settings > Assistant for the settings most people leave
-// alone.
-func (msgs Messages) SettingsAdvanced() string {
-	return Catalog.Format(msgs.locale, "settingsAdvanced", nil)
+// Link in Settings > About to the privacy policy.
+func (msgs Messages) SettingsAboutPrivacy() string {
+	return Catalog.Format(msgs.locale, "settingsAboutPrivacy", nil)
+}
+
+// SettingsAboutWebsite says "Website"
+// in the language the app shows.
+//
+// Link in Settings > About to the app's website.
+func SettingsAboutWebsite() string { return In(i18n.Locale()).SettingsAboutWebsite() }
+
+// SettingsAboutWebsite says "Website"
+// in the language of msgs.
+//
+// Link in Settings > About to the app's website.
+func (msgs Messages) SettingsAboutWebsite() string {
+	return Catalog.Format(msgs.locale, "settingsAboutWebsite", nil)
 }
 
 // SettingsGitHubNone says "Following pull requests isn't available here."
@@ -4605,15 +4621,15 @@ func (msgs Messages) SettingsGitHubNone() string {
 // SettingsPaneAgents says "Agents"
 // in the language the app shows.
 //
-// Toolbar pane of the Settings window (and the window's title) about coding
-// agents reporting here.
+// Pane of the Settings window (and the window's title) for the coding
+// agents that report here.
 func SettingsPaneAgents() string { return In(i18n.Locale()).SettingsPaneAgents() }
 
 // SettingsPaneAgents says "Agents"
 // in the language of msgs.
 //
-// Toolbar pane of the Settings window (and the window's title) about coding
-// agents reporting here.
+// Pane of the Settings window (and the window's title) for the coding
+// agents that report here.
 func (msgs Messages) SettingsPaneAgents() string {
 	return Catalog.Format(msgs.locale, "settingsPaneAgents", nil)
 }
@@ -4660,6 +4676,20 @@ func SettingsShowInExplorer() string { return In(i18n.Locale()).SettingsShowInEx
 // Explorer.
 func (msgs Messages) SettingsShowInExplorer() string {
 	return Catalog.Format(msgs.locale, "settingsShowInExplorer", nil)
+}
+
+// SettingsSidebarAbout says "About Withdo"
+// in the language the app shows.
+//
+// The row at the foot of the Settings sidebar that opens the About pane.
+func SettingsSidebarAbout() string { return In(i18n.Locale()).SettingsSidebarAbout() }
+
+// SettingsSidebarAbout says "About Withdo"
+// in the language of msgs.
+//
+// The row at the foot of the Settings sidebar that opens the About pane.
+func (msgs Messages) SettingsSidebarAbout() string {
+	return Catalog.Format(msgs.locale, "settingsSidebarAbout", nil)
 }
 
 // SettingsAssistantNone says "The assistant isn't available here."
@@ -5274,32 +5304,18 @@ func (msgs Messages) SettingsAgentReports(count int) string {
 	return Catalog.Format(msgs.locale, "settingsAgentReports", map[string]any{"count": count})
 }
 
-// SettingsAgentsTitle says "Coding agents"
+// SettingsAgentsBody says "Connected agents report their progress to Withdo. Only the MCP is installed; the agent itself is not."
 // in the language the app shows.
 //
-// Group label above the list of coding agents in Settings > Agents.
-func SettingsAgentsTitle() string { return In(i18n.Locale()).SettingsAgentsTitle() }
-
-// SettingsAgentsTitle says "Coding agents"
-// in the language of msgs.
-//
-// Group label above the list of coding agents in Settings > Agents.
-func (msgs Messages) SettingsAgentsTitle() string {
-	return Catalog.Format(msgs.locale, "settingsAgentsTitle", nil)
-}
-
-// SettingsAgentsBody says "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or st…"
-// in the language the app shows.
-//
-// One plain line under the title of Settings > Agents: what Install MCP
-// does and does not do.
+// The line under the title of Settings > Agents: what connected agents do,
+// and that only the MCP is installed.
 func SettingsAgentsBody() string { return In(i18n.Locale()).SettingsAgentsBody() }
 
-// SettingsAgentsBody says "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or st…"
+// SettingsAgentsBody says "Connected agents report their progress to Withdo. Only the MCP is installed; the agent itself is not."
 // in the language of msgs.
 //
-// One plain line under the title of Settings > Agents: what Install MCP
-// does and does not do.
+// The line under the title of Settings > Agents: what connected agents do,
+// and that only the MCP is installed.
 func (msgs Messages) SettingsAgentsBody() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsBody", nil)
 }
@@ -7458,6 +7474,22 @@ func SettingsUpdates() string { return In(i18n.Locale()).SettingsUpdates() }
 // Label of the updates switch in Settings > General.
 func (msgs Messages) SettingsUpdates() string {
 	return Catalog.Format(msgs.locale, "settingsUpdates", nil)
+}
+
+// SettingsUpdatesData says "Updates and data"
+// in the language the app shows.
+//
+// Header of the block in Settings > General with the update switch and the
+// data folder.
+func SettingsUpdatesData() string { return In(i18n.Locale()).SettingsUpdatesData() }
+
+// SettingsUpdatesData says "Updates and data"
+// in the language of msgs.
+//
+// Header of the block in Settings > General with the update switch and the
+// data folder.
+func (msgs Messages) SettingsUpdatesData() string {
+	return Catalog.Format(msgs.locale, "settingsUpdatesData", nil)
 }
 
 // SettingsUpdatesMeta says "Checked every four hours; you choose when to install"
@@ -9871,13 +9903,15 @@ func (msgs Messages) RecentLinkTip() string {
 // SettingsCategories says "Categories"
 // in the language the app shows.
 //
-// Label of the group of categories in Settings > General.
+// Pane of the Settings window (and the window's title) for the categories
+// and the archived projects.
 func SettingsCategories() string { return In(i18n.Locale()).SettingsCategories() }
 
 // SettingsCategories says "Categories"
 // in the language of msgs.
 //
-// Label of the group of categories in Settings > General.
+// Pane of the Settings window (and the window's title) for the categories
+// and the archived projects.
 func (msgs Messages) SettingsCategories() string {
 	return Catalog.Format(msgs.locale, "settingsCategories", nil)
 }
@@ -9919,35 +9953,125 @@ func (msgs Messages) SettingsCategoryEdit() string {
 // SettingsPaneAccount says "Account"
 // in the language the app shows.
 //
-// Toolbar pane of the Settings window (and the window's title) for the
-// account: signing in, devices and sync.
+// Pane of the Settings window (and the window's title) for the account:
+// signing in, devices and sync.
 func SettingsPaneAccount() string { return In(i18n.Locale()).SettingsPaneAccount() }
 
 // SettingsPaneAccount says "Account"
 // in the language of msgs.
 //
-// Toolbar pane of the Settings window (and the window's title) for the
-// account: signing in, devices and sync.
+// Pane of the Settings window (and the window's title) for the account:
+// signing in, devices and sync.
 func (msgs Messages) SettingsPaneAccount() string {
 	return Catalog.Format(msgs.locale, "settingsPaneAccount", nil)
 }
 
-// SettingsPaneAdvanced says "Advanced"
+// SettingsPaneAccountLine says "Sign in to sync your tasks between your Mac, Windows and Android."
 // in the language the app shows.
 //
-// Toolbar pane of the Settings window (and the window's title) with the
-// user's own model, the Recent changes page, the end-of-day reminder and
-// sound effects.
-func SettingsPaneAdvanced() string { return In(i18n.Locale()).SettingsPaneAdvanced() }
+// One line under the title of Settings > Account: what signing in does.
+func SettingsPaneAccountLine() string { return In(i18n.Locale()).SettingsPaneAccountLine() }
 
-// SettingsPaneAdvanced says "Advanced"
+// SettingsPaneAccountLine says "Sign in to sync your tasks between your Mac, Windows and Android."
 // in the language of msgs.
 //
-// Toolbar pane of the Settings window (and the window's title) with the
-// user's own model, the Recent changes page, the end-of-day reminder and
-// sound effects.
-func (msgs Messages) SettingsPaneAdvanced() string {
-	return Catalog.Format(msgs.locale, "settingsPaneAdvanced", nil)
+// One line under the title of Settings > Account: what signing in does.
+func (msgs Messages) SettingsPaneAccountLine() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAccountLine", nil)
+}
+
+// SettingsPaneAbout says "About"
+// in the language the app shows.
+//
+// Pane of the Settings window (and the window's title) about the app: its
+// version, license and links.
+func SettingsPaneAbout() string { return In(i18n.Locale()).SettingsPaneAbout() }
+
+// SettingsPaneAbout says "About"
+// in the language of msgs.
+//
+// Pane of the Settings window (and the window's title) about the app: its
+// version, license and links.
+func (msgs Messages) SettingsPaneAbout() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAbout", nil)
+}
+
+// SettingsPaneAboutLine says "The app, its version, and where to find it online."
+// in the language the app shows.
+//
+// One line under the title of Settings > About saying what the pane is for.
+func SettingsPaneAboutLine() string { return In(i18n.Locale()).SettingsPaneAboutLine() }
+
+// SettingsPaneAboutLine says "The app, its version, and where to find it online."
+// in the language of msgs.
+//
+// One line under the title of Settings > About saying what the pane is for.
+func (msgs Messages) SettingsPaneAboutLine() string {
+	return Catalog.Format(msgs.locale, "settingsPaneAboutLine", nil)
+}
+
+// SettingsPaneCategoriesLine says "Categories sort the tasks you add. Put them in order and edit them here."
+// in the language the app shows.
+//
+// One line under the title of Settings > Categories saying what the
+// categories are for.
+func SettingsPaneCategoriesLine() string { return In(i18n.Locale()).SettingsPaneCategoriesLine() }
+
+// SettingsPaneCategoriesLine says "Categories sort the tasks you add. Put them in order and edit them here."
+// in the language of msgs.
+//
+// One line under the title of Settings > Categories saying what the
+// categories are for.
+func (msgs Messages) SettingsPaneCategoriesLine() string {
+	return Catalog.Format(msgs.locale, "settingsPaneCategoriesLine", nil)
+}
+
+// SettingsPaneGeneralLine says "Language, notifications and updates."
+// in the language the app shows.
+//
+// One line under the title of Settings > General saying what can be set
+// there.
+func SettingsPaneGeneralLine() string { return In(i18n.Locale()).SettingsPaneGeneralLine() }
+
+// SettingsPaneGeneralLine says "Language, notifications and updates."
+// in the language of msgs.
+//
+// One line under the title of Settings > General saying what can be set
+// there.
+func (msgs Messages) SettingsPaneGeneralLine() string {
+	return Catalog.Format(msgs.locale, "settingsPaneGeneralLine", nil)
+}
+
+// SettingsPaneModel says "Model"
+// in the language the app shows.
+//
+// Pane of the Settings window (and the window's title) for the user's own
+// model.
+func SettingsPaneModel() string { return In(i18n.Locale()).SettingsPaneModel() }
+
+// SettingsPaneModel says "Model"
+// in the language of msgs.
+//
+// Pane of the Settings window (and the window's title) for the user's own
+// model.
+func (msgs Messages) SettingsPaneModel() string {
+	return Catalog.Format(msgs.locale, "settingsPaneModel", nil)
+}
+
+// SettingsPaneModelLine says "Use your own model to change tasks and answer agents from the input. Without one, dates and reminders are read on thi…"
+// in the language the app shows.
+//
+// One line under the title of Settings > Model: what the model is for, and
+// that the app works without one.
+func SettingsPaneModelLine() string { return In(i18n.Locale()).SettingsPaneModelLine() }
+
+// SettingsPaneModelLine says "Use your own model to change tasks and answer agents from the input. Without one, dates and reminders are read on thi…"
+// in the language of msgs.
+//
+// One line under the title of Settings > Model: what the model is for, and
+// that the app works without one.
+func (msgs Messages) SettingsPaneModelLine() string {
+	return Catalog.Format(msgs.locale, "settingsPaneModelLine", nil)
 }
 
 // SettingsOwnModel says "Use your own model"

@@ -45,39 +45,45 @@ func (r *settingsRig) waitModels(t *testing.T, id string) {
 
 func (r *settingsRig) assistant(t *testing.T) {
 	t.Helper()
-	r.pane(t, "Advanced")
+	r.pane(t, "Model")
 }
 
 func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
 	r := newSettingsRig(t)
 	r.setUp(t, "anthropic", "deepseek")
 	w, h := r.s.ContentSize()
-	if w != 680 || h != 520 {
-		t.Fatalf("content size %v x %v, want 680 x 520", w, h)
+	if w != 800 || h != 580 {
+		t.Fatalf("content size %v x %v, want 800 x 580", w, h)
 	}
-	bandBottom := func() float32 { // the labels of the panes: the lowest of the texts of these names
-		var low float32
-		for _, name := range []string{"Account", "General", "Agents", "Advanced"} {
-			if rect, ok := r.tt.Find(name); ok {
-				low = max(low, rect.Y+rect.H)
+	rows := func() map[string]float32 { // the sidebar rows, by the name they open
+		out := map[string]float32{}
+		for _, name := range []string{"Account", "General", "Categories", "Agents", "Model", "About"} {
+			if rect, ok := r.tt.Find(r.s.say.A11yPane(name)); ok {
+				out[name] = rect.Y
 			}
 		}
-		return low
+		return out
 	}
-	toolbar := bandBottom()
-	for _, name := range []string{"Advanced", "Agents", "Account", "General", "Advanced"} {
+	before := rows()
+	for _, name := range []string{"Model", "Agents", "Categories", "About", "Account", "General", "Model"} {
 		r.pane(t, name)
 		if gw, gh := r.s.ContentSize(); gw != w || gh != h {
 			t.Errorf("after %q the content size is %v x %v", name, gw, gh)
 		}
-		if got := bandBottom(); got != toolbar {
-			t.Errorf("after %q the toolbar moved from %v to %v", name, toolbar, got)
+		after := rows()
+		for row, y := range before {
+			if after[row] != y {
+				t.Errorf("after %q the sidebar row %q moved from %v to %v", name, row, y, after[row])
+			}
 		}
 	}
 	mustNil(t, r.tt.Click("Change"))
 	r.tt.Frame()
-	if got := bandBottom(); got != toolbar {
-		t.Errorf("the provider grid moved the toolbar to %v", got)
+	after := rows()
+	for row, y := range before {
+		if after[row] != y {
+			t.Errorf("the provider grid moved the sidebar row %q to %v", row, after[row])
+		}
 	}
 }
 
@@ -309,8 +315,8 @@ func TestCustomAddsTheAddressAndTheProtocol(t *testing.T) {
 	r.tt.Frame()
 	mustNil(t, r.tt.Click("Save and test"))
 	has(t, r.tt, "Choose or type a model.")
-	label, _ := r.tt.Find("Model")
-	r.tt.ClickAt(label.X+200, label.Y+label.H/2) // the empty field beside the label
+	save, _ := r.tt.Find("Save and test")
+	r.tt.ClickAt(save.X-80, save.Y+save.H/2) // the empty model field beside the button
 	r.tt.Type("my-model")
 	r.tt.Key(0, ui.KeyEnter)
 	r.waitSaved(t)
@@ -437,7 +443,7 @@ func TestInChineseTheAssistantPaneSaysItInChinese(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.setUp(t, "anthropic", "deepseek")
-	r.s.Show(PaneAdvanced)
+	r.s.Show(PaneModel)
 	r.tt.Frame()
 	has(t, r.tt, "更换", "用这个")
 	hasFold(t, r.tt, "当前在用")

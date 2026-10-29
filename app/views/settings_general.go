@@ -9,52 +9,33 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// repoURL is the project on GitHub, the About row's link.
-const repoURL = "https://github.com/QingYunA/withdo"
-
-// archivedRows is how many archived projects the pane shows before the list scrolls.
-const archivedRows = 5
-
 // settingsURLNotifications opens the Notifications pane of System Settings.
 const settingsURLNotifications = "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
 
-// generalPane is the language, the notifications, the updates, the categories, the archived projects, and where the data lives.
+// generalPane is the language, the notifications and sounds, and the updates and data.
 func (s *Settings) generalPane(c *ui.Context, t *theme.Tokens) {
+	paneHeader(c, t, s.say.SettingsGeneral(), s.say.SettingsPaneGeneralLine())
 	group(c, t, "language", func() {
 		settingsRow(c, t, "language", s.say.SettingsLanguage(), "", true, func() { s.languageControl(c, t) })
 	})
-	groupLabel(c, t, s.say.SettingsNotifications())
+	groupLabel(c, t, s.say.SettingsNotificationsSound())
 	group(c, t, "notifications", func() {
 		s.notificationsRow(c, t)
+		s.endOfDayRows(c, t)
+		s.soundRow(c, t)
 	})
-	if s.app.Act.CanUpdate() {
-		group(c, t, "updates", func() { s.updatesRow(c, t) })
-	}
-	s.categoriesGroup(c, t)
-	groupLabel(c, t, s.say.ManageArchivedTitle())
-	group(c, t, "archived", func() { s.archivedRowsView(c, t) })
-	group(c, t, "about", func() {
-		settingsRow(c, t, "folder", s.say.SettingsDataFolder(), withTilde(s.app.Config.DataFolder, s.app.Config.Home), true, func() {
+	groupLabel(c, t, s.say.SettingsUpdatesData())
+	group(c, t, "updates", func() {
+		canUpdate := s.app.Act.CanUpdate()
+		if canUpdate {
+			s.updatesRow(c, t)
+		}
+		settingsRow(c, t, "folder", s.say.SettingsDataFolder(), withTilde(s.app.Config.DataFolder, s.app.Config.Home), !canUpdate, func() {
 			if label := showInFolderLabel(s.say); settingsLink(c, t, "show-folder", label, label).Clicked() {
 				s.app.Act.ShowInFinder(s.app.Config.DataFolder)
 			}
 		})
-		settingsRow(c, t, "about", s.say.SettingsAboutName(s.app.Config.Version), s.say.SettingsAboutLicense(), false, func() {
-			if settingsOutLink(c, t, "github", s.say.SettingsAboutLink(), s.say.A11yAboutGitHub()).Clicked() {
-				s.app.Act.OpenURL(repoURL)
-			}
-		})
 	})
-}
-
-// advancedPane is the model the user brings (the Assistant pane that was), then the Recent changes
-// page switch, the end-of-day reminder and the sound effects.
-func (s *Settings) advancedPane(c *ui.Context, t *theme.Tokens) {
-	groupLabel(c, t, s.say.SettingsOwnModel())
-	s.assistantPane(c, t)
-	group(c, t, "pages", func() { s.recentChangesRow(c, t) })
-	group(c, t, "end-of-day", func() { s.endOfDayRows(c, t) })
-	group(c, t, "sound", func() { s.soundRow(c, t) })
 }
 
 // notificationsRow is the switch for every system notification. When macOS refused the last one the
@@ -86,7 +67,7 @@ func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
 // the notifications, the time is dimmed and out of reach.
 func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
 	on := s.app.EndOfDayOn()
-	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), true, func() {
+	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), false, func() {
 		ui.Switch(c.Key("end-of-day-switch"), &on).Label(s.say.SettingsEndOfDaySwitch())
 	})
 	if on != s.app.EndOfDayOn() {
@@ -105,7 +86,7 @@ func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
 // soundRow is the switch for the quiet sounds of the Summary scene.
 func (s *Settings) soundRow(c *ui.Context, t *theme.Tokens) {
 	on := s.app.SoundEffects()
-	settingsRow(c, t, "sound", s.say.SettingsSoundEffects(), s.say.SettingsSoundEffectsMeta(), true, func() {
+	settingsRow(c, t, "sound", s.say.SettingsSoundEffects(), s.say.SettingsSoundEffectsMeta(), false, func() {
 		ui.Switch(c.Key("sound-switch"), &on).Label(s.say.SettingsSoundEffectsSwitch())
 	})
 	if on != s.app.SoundEffects() {
@@ -121,27 +102,6 @@ func (s *Settings) updatesRow(c *ui.Context, t *theme.Tokens) {
 	})
 	if on != s.app.Act.AutomaticUpdates() {
 		s.app.Act.SetAutomaticUpdates(on)
-	}
-}
-
-// recentChangesRow is the switch of the Recent changes page, which is off until the user turns it on.
-// Switched on with gh missing or signed out, its second line says what to run; the switch still turns.
-func (s *Settings) recentChangesRow(c *ui.Context, t *theme.Tokens) {
-	on := s.app.RecentChangesOn()
-	meta, ink := s.say.SettingsRecentChangesMeta(), t.TextSecondary
-	if on && s.app.GitHub != nil {
-		switch s.app.GitHub.Status().State {
-		case data.GitHubMissing:
-			meta, ink = s.say.SettingsRecentNoGH(ghInstallCommand()), t.Stale
-		case data.GitHubSignedOut:
-			meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
-		}
-	}
-	settingsRowInk(c, t, "recent-changes", s.say.SettingsRecentChanges(), meta, ink, true, func() {
-		ui.Switch(c.Key("recent-changes-switch"), &on).Label(s.say.SettingsRecentChangesSwitch())
-	}, nil)
-	if on != s.app.RecentChangesOn() {
-		s.app.SetRecentChangesOn(on)
 	}
 }
 
@@ -191,27 +151,4 @@ func (s *Settings) languageControl(c *ui.Context, t *theme.Tokens) {
 	if tag, ok := popUp(c, t, "language", s.app.Act.Language(), opts); ok {
 		s.app.Act.SetLanguage(tag)
 	}
-}
-
-// archivedRowsView lists the archived projects with a Restore link each, or says there are none.
-func (s *Settings) archivedRowsView(c *ui.Context, t *theme.Tokens) {
-	archived := s.app.snap.archived
-	if len(archived) == 0 {
-		settingsRow(c, t, "none", s.say.ManageArchivedNone(), "", true, nil)
-		return
-	}
-	rows := func() {
-		for i, p := range archived {
-			settingsRow(c, t, "archived-"+itoa(p.ID), p.Name, p.RepoSlug, i == 0, func() {
-				if settingsLink(c, t, "restore-"+itoa(p.ID), s.say.ManageRestore(), s.say.ManageA11yRestore(p.Name)).Clicked() {
-					_ = s.app.RestoreProject(p.ID)
-				}
-			})
-		}
-	}
-	if len(archived) <= archivedRows {
-		rows()
-		return
-	}
-	ui.Scroll(c.Key("archived")).MaxHeight(archivedRows * theme.SettingsRowMin).Children(rows)
 }

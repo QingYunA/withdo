@@ -50,14 +50,11 @@ type manualHint struct {
 
 // agentsPane is the agents adhd-todo can set up, fourteen of them, in two groups: On this Mac,
 // the ones found here (two columns of rows: mark, name, how it stands, and whether the MCP is
-// installed or can be), and More, the rest, with just the name and where to get it. Both groups
-// fit the window before it scrolls; under them, the one command for Claude Code to copy.
+// installed or can be), and More, the rest, with just the name and where to get it. Under them, the
+// one command for Claude Code to copy and the GitHub group.
 func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 	c.After(agentsRefreshEvery)
-	// The title's margins are a little tighter than a group label's: both sections have to fit the
-	// 520 pt window before it scrolls (docs/design/mockups/v14.html).
-	theme.Text(c, theme.Section, t.TextSecondary, s.say.SettingsAgentsTitle()).Margin(0, 4, 4)
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsBody(), 0).Margin(0, 4, 4)
+	paneHeader(c, t, s.say.SettingsPaneAgents(), s.say.SettingsAgentsBody())
 	status, reported := s.scanAgents(), s.reports()
 	local, more := splitAgents(status, reported)
 	s.agentsSectionHead(c, t, "local", s.say.SettingsAgentsLocal(), len(local), 0, 3)
@@ -85,6 +82,8 @@ func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 			})
 		})
 	}
+	groupLabel(c, t, s.say.SettingsGitHub())
+	s.githubPane(c, t)
 }
 
 // splitAgents sorts the catalog into the ones on this Mac and the ones still to get. An agent

@@ -9,7 +9,7 @@ import (
 )
 
 // The Settings window, a pane at a time, in light and dark, English and Chinese (-zh). Every pane
-// is the same size: 680 x 520. Render with
+// is the same size: 800 x 580, with the sidebar beside it. Render with
 //
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensSettings
 
@@ -76,19 +76,15 @@ func TestScreensSettings(t *testing.T) {
 				sfx = "-zh" + sfx
 			}
 			general := settingsApp(t, ready)
-			mustNil(t, general.ArchiveProject(3))
 			settingsShot(t, "settings-general"+sfx+".png", general, a.dark, zh, PaneGeneral, nil)
 
-			// Categories: the list under Updates (scrolled to), and the line after a delete, with Undo.
+			// Categories: the list, and the line after a delete, with Undo.
 			withCats := settingsApp(t, ready)
 			addDemoCategories(t, withCats)
-			settingsShot(t, "settings-categories"+sfx+".png", withCats, a.dark, zh, PaneGeneral, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 200)
-			})
+			settingsShot(t, "settings-categories"+sfx+".png", withCats, a.dark, zh, PaneCategories, nil)
 			deleted := settingsApp(t, ready)
 			addDemoCategories(t, deleted)
-			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneGeneral, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 200)
+			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneCategories, func(r *settingsRig) {
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
 				r.tt.Frame()
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
@@ -96,25 +92,20 @@ func TestScreensSettings(t *testing.T) {
 
 			// macOS refused the last notification: the line warns, a link goes to System Settings.
 			refused := settingsApp(t, ready)
-			mustNil(t, refused.ArchiveProject(3))
 			refused.Act.(*recorder).denied = true
 			settingsShot(t, "settings-general-denied"+sfx+".png", refused, a.dark, zh, PaneGeneral, nil)
 
 			// At rest: the provider in use with the last test, the others under it.
-			settingsShot(t, "settings-advanced"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+			settingsShot(t, "settings-model"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
 				r.s.runTest(currentProviderOf(r.app))
 				r.rec.drain(t)
 			})
-			// Under the model: the Recent changes page, the end-of-day reminder, the sound effects.
-			settingsShot(t, "settings-advanced-more"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 3000)
-			})
 			// Change: a tile picked, its key empty.
-			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "kimi"
 			})
 			// A failed test stays under the form, in plain words.
-			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "openai"
 				r.s.assist.err = "The provider didn't accept the API key."
 				if zh {
@@ -122,13 +113,13 @@ func TestScreensSettings(t *testing.T) {
 				}
 			})
 			// Custom adds the address and the protocol, so it scrolls.
-			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
 				r.s.assist.changing, r.s.assist.pick = true, "custom"
 			})
 			// Nothing set up: the grid shows at once.
 			fresh := settingsApp(t, ready)
 			fresh.Models = newFakeModels(t)
-			settingsShot(t, "settings-advanced-new"+sfx+".png", fresh, a.dark, zh, PaneAdvanced, nil)
+			settingsShot(t, "settings-model-new"+sfx+".png", fresh, a.dark, zh, PaneModel, nil)
 
 			settingsShot(t, "settings-agents"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAgents, nil)
 			// Under the agents: where Review and Answer on a handed-over row go.
@@ -139,6 +130,7 @@ func TestScreensSettings(t *testing.T) {
 				gh := settingsApp(t, s.st)
 				settingsShot(t, "settings-agents-github"+s.name+sfx+".png", gh, a.dark, zh, PaneAgents, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 9000) })
 			}
+			settingsShot(t, "settings-about"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAbout, nil)
 		}
 	}
 }

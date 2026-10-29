@@ -41,7 +41,7 @@ func emptyMacRig(t *testing.T) *settingsRig {
 
 func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
 	r := agentsRig(t)
-	has(t, r.tt, "Coding agents", "On this computer", "More", "adds Withdo's MCP server to that agent")
+	has(t, r.tt, "On this computer", "More", "Only the MCP is installed")
 	// The counts sit beside their labels: six on this Mac, eight in More.
 	for label, count := range map[string]string{"On this computer": "6", "More": "8"} {
 		head, ok := r.tt.Find(label)
@@ -110,14 +110,14 @@ func TestBothSectionsFitTheWindowBeforeItScrolls(t *testing.T) {
 			t.Errorf("%s ends at %v, below the first screen (%v)", n, f.Y+f.H, theme.SettingsHeight)
 		}
 	}
-	// What stays below the fold stays below it, in the same order as before.
+	// The way to open an agent's work and the command to copy fit too; the GitHub group scrolls.
 	for _, n := range []string{"Open agent work in", "Or run this once in a terminal, for Claude Code"} {
 		f, ok := r.tt.Find(n)
 		if !ok {
 			t.Fatalf("no %s", n)
 		}
-		if f.Y < theme.SettingsHeight {
-			t.Errorf("%s starts at %v, on the first screen", n, f.Y)
+		if f.Y+f.H > theme.SettingsHeight {
+			t.Errorf("%s ends at %v, below the first screen (%v)", n, f.Y+f.H, theme.SettingsHeight)
 		}
 	}
 }
@@ -385,8 +385,8 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "编程 Agent", "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载",
-		"也可以在终端里运行一次，给 Claude Code 安装")
+	has(t, r.tt, "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载",
+		"也可以在终端里运行一次，给 Claude Code 安装", "不会安装或启动 Agent 本身")
 	hasNot(t, r.tt, "这台 Mac 上没有")
 	hasFold(t, r.tt, "本机已有")
 }
@@ -438,5 +438,20 @@ func TestAnAgentWithOnlyTheOldEntryOffersTheInstallAndMigrates(t *testing.T) {
 	cmds := r.mac.commands()
 	if len(cmds) != 2 || !slices.Contains(cmds[0], "add") || !slices.Contains(cmds[1], "remove") || !slices.Contains(cmds[1], "adhd-todo") {
 		t.Errorf("ran %q", cmds)
+	}
+}
+
+// The Agents row of the sidebar carries the square while an agent is here without its MCP.
+func TestTheSidebarMarksAnAgentFoundWithoutItsMCP(t *testing.T) {
+	r := newSettingsRig(t)
+	r.mac.has("gemini")
+	r.s.setup.scannedAt = time.Time{}
+	if !r.s.navAgentAlert() {
+		t.Error("no alert with Gemini found and its MCP missing")
+	}
+	r.mac.write(".gemini/settings.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
+	r.s.setup.scannedAt = time.Time{}
+	if r.s.navAgentAlert() {
+		t.Error("an alert with Gemini's MCP installed")
 	}
 }

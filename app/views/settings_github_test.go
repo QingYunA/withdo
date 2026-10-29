@@ -55,7 +55,7 @@ func TestGitHubPaneWhileChecking(t *testing.T) {
 func TestGitHubPaneBeforeTheFirstCheck(t *testing.T) {
 	r, _ := githubPane(t, data.GitHubStatus{Checking: true})
 	has(t, r.tt, "Checking GitHub…")
-	hasNot(t, r.tt, "Check now", "Connected")
+	hasNot(t, r.tt, "Check now", "Connected as", "Connected to GitHub")
 }
 
 func TestGitHubPaneFixTexts(t *testing.T) {

@@ -66,7 +66,7 @@ var (
 	IconFlip      = pixelIcon("flip-horizontal-2")
 )
 
-// The sidebar, the inspector's properties and the Settings toolbar.
+// The sidebar, the inspector's properties and the Settings sidebar.
 var (
 	IconDone     = pixelIcon("checkbox-on")
 	IconBox      = pixelIcon("checkbox")

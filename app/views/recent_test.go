@@ -444,13 +444,13 @@ func TestTheSettingsRowTurnsThePageOnAndKeepsTheChoiceBesideTheOtherPrefs(t *tes
 	prefs := &data.MemoryPrefs{}
 	r := newSettingsRig(t, func(a *App) { a.Prefs = prefs })
 	r.app.SetSoundEffects(false)
-	r.pane(t, "Advanced")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
+	r.tt.Frame()
 	has(t, r.tt, "Recent changes", "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in.")
 	if r.app.RecentChangesOn() {
 		t.Fatal("on by default")
 	}
-	r.tt.Scroll(340, 300, 0, 3000)
-	r.tt.Frame()
 	if err := r.tt.Click("Show the Recent changes page"); err != nil {
 		t.Fatal(err)
 	}
@@ -472,7 +472,9 @@ func TestSwitchedOnWithGHSignedOutTheRowSaysWhatToRun(t *testing.T) {
 		a.GitHub = data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubSignedOut})
 		a.SetRecentChangesOn(true)
 	})
-	r.pane(t, "Advanced")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
+	r.tt.Frame()
 	has(t, r.tt, "gh isn't signed in yet: run gh auth login")
 	if !r.app.RecentChangesOn() {
 		t.Error("the switch does not turn on without gh")

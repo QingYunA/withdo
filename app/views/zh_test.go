@@ -113,8 +113,8 @@ func TestChineseSettingsAndLanguageChoice(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.tt.Frame()
-	has(t, r.tt, "账号", "通用", "Agent", "高级", "语言", "跟随系统", "已归档的项目", "没有已归档的项目。在侧边栏中右键点按项目，可以归档它。",
-		"数据文件夹", "在访达中显示", "Withdo 0.2.0", "开源，MIT 许可证")
+	has(t, r.tt, "账号", "通用", "类别", "Agent", "模型", "关于 Withdo", "语言", "跟随系统",
+		"通知与声音", "更新与数据", "数据文件夹", "在访达中显示")
 	if r.title != "通用" {
 		t.Errorf("title %q", r.title)
 	}
@@ -133,7 +133,7 @@ func TestChineseAssistantPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.setUp(t, "anthropic", "deepseek")
-	r.pane(t, "高级")
+	r.pane(t, "模型")
 	has(t, r.tt, "更换", "用这个", "测试", "还没有测试", "claude-haiku-5-5")
 	hasFold(t, r.tt, "当前在用")
 	hasFold(t, r.tt, "也配好了")
@@ -151,7 +151,7 @@ func TestChineseAgentsPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.pane(t, "Agent")
-	has(t, r.tt, "编程 Agent", "Claude Code", "拷贝")
+	has(t, r.tt, "Claude Code", "拷贝", "不会安装或启动 Agent 本身")
 	hasNot(t, r.tt, "连接 Claude Code")
 }
 

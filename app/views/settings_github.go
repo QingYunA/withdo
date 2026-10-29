@@ -14,28 +14,51 @@ const ghLoginCommand = "gh auth login"
 // ghRefreshEvery redraws the open pane so that "checked 2m ago" keeps up with the clock.
 const ghRefreshEvery = 30 * time.Second
 
-// githubPane is whether pull requests are followed, and when they were last looked at, or how to
-// make it work. With no poller it says so.
+// githubPane is whether pull requests are followed, when they were last looked at, or how to make
+// it work; and the Recent changes page's switch. With no poller it says so.
 func (s *Settings) githubPane(c *ui.Context, t *theme.Tokens) {
 	gh := s.app.GitHub
-	if gh == nil {
-		group(c, t, "github", func() { settingsRow(c, t, "none", s.say.SettingsGitHubNone(), "", true, nil) })
-		return
-	}
-	st := gh.Status()
-	c.After(ghRefreshEvery)
 	group(c, t, "github", func() {
-		ui.Row(c).Shrink(0).MinHeight(theme.SettingsRowMin).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
-			theme.Paragraph(c, theme.Body, t.Text, s.githubLine(st), 0).Grow(1).MinWidth(0)
-			s.checkNowLink(c, t, st)
-		})
-		if command := githubFix(st.State); command != "" {
-			hairline(c, t).Margin(0, 14)
-			ui.Column(c).Shrink(0).Padding(10, 14, 12).Children(func() {
-				commandWell(c, t, command, nil)
+		if gh == nil {
+			settingsRow(c, t, "none", s.say.SettingsGitHubNone(), "", true, nil)
+		} else {
+			st := gh.Status()
+			c.After(ghRefreshEvery)
+			ui.Row(c).Shrink(0).MinHeight(theme.SettingsRowMin).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
+				theme.Paragraph(c, theme.Body, t.Text, s.githubLine(st), 0).Grow(1).MinWidth(0)
+				s.checkNowLink(c, t, st)
 			})
+			if command := githubFix(st.State); command != "" {
+				hairline(c, t).Margin(0, 14)
+				ui.Column(c).Shrink(0).Padding(10, 14, 12).Children(func() {
+					commandWell(c, t, command, nil)
+				})
+			}
 		}
+		s.recentChangesRow(c, t, false)
 	})
+}
+
+// recentChangesRow is the switch of the Recent changes page, which is off until the user turns it
+// on. Switched on with gh missing or signed out, its second line says what to run; the switch still
+// turns.
+func (s *Settings) recentChangesRow(c *ui.Context, t *theme.Tokens, first bool) {
+	on := s.app.RecentChangesOn()
+	meta, ink := s.say.SettingsRecentChangesMeta(), t.TextSecondary
+	if on && s.app.GitHub != nil {
+		switch s.app.GitHub.Status().State {
+		case data.GitHubMissing:
+			meta, ink = s.say.SettingsRecentNoGH(ghInstallCommand()), t.Stale
+		case data.GitHubSignedOut:
+			meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
+		}
+	}
+	settingsRowInk(c, t, "recent-changes", s.say.SettingsRecentChanges(), meta, ink, first, func() {
+		ui.Switch(c.Key("recent-changes-switch"), &on).Label(s.say.SettingsRecentChangesSwitch())
+	}, nil)
+	if on != s.app.RecentChangesOn() {
+		s.app.SetRecentChangesOn(on)
+	}
 }
 
 // githubLine is the sentence for a status.

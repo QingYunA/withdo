@@ -54,8 +54,8 @@ const (
 	syncBarCells    int     = 40
 )
 
-// settingsBandHeight is the toolbar: the title row over the pane icons and their hairline.
-const settingsBandHeight float32 = SettingsTitleBarHeight + 56 + 12
+// settingsBandHeight is the top of the pane: the sidebar layout has no band over it.
+const settingsBandHeight float32 = 0
 
 // syncAttention is how long a failed sync may stay quiet in the main window before the sidebar
 // says something.
@@ -69,7 +69,13 @@ const (
 	SyncChoiceAccount
 )
 
-// syncPane is Settings > Sync: the account and this Mac, the devices, and the server at the foot.
+// paneAccount is the account, the sync state, the devices, and the server at the foot.
+func (s *Settings) paneAccount(c *ui.Context, t *theme.Tokens) {
+	paneHeader(c, t, s.say.SettingsPaneAccount(), s.say.SettingsPaneAccountLine())
+	s.syncPane(c, t)
+}
+
+// syncPane is Settings > Account: the account and this Mac, the devices, and the server at the foot.
 func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 	svc := s.app.Sync
 	if svc == nil {

@@ -44,37 +44,74 @@ func newSettingsRig(t *testing.T, mod ...func(*App)) *settingsRig {
 	return r
 }
 
+// pane opens a pane by its name from the sidebar.
 func (r *settingsRig) pane(t *testing.T, name string) {
 	t.Helper()
-	if err := r.tt.Click(name); err != nil {
+	if err := r.tt.Click(r.s.say.A11yPane(name)); err != nil {
 		t.Fatal(err)
 	}
 	r.tt.Frame()
 }
 
-func TestSettingsToolbarHasFourPanesAndTheTitleIsTheOpenOne(t *testing.T) {
+func TestSettingsSidebarHasEveryPaneAndTheTitleIsTheOpenOne(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "Account", "General", "Agents", "Advanced")
-	hasNot(t, r.tt, "Assistant", "Sync")
+	has(t, r.tt, "Account", "General", "Categories", "Agents", "Model", "About Withdo")
+	hasNot(t, r.tt, "Advanced", "Assistant", "Sync")
 	if r.title != "General" {
 		t.Errorf("title %q, want the open pane's name", r.title)
 	}
 	for _, want := range []struct {
-		click, title string
-		pane         Pane
-	}{{"Advanced", "Advanced", PaneAdvanced}, {"Agents", "Agents", PaneAgents}, {"Account", "Account", PaneAccount}, {"General", "General", PaneGeneral}} {
-		r.pane(t, want.click)
+		name, title string
+		pane        Pane
+	}{
+		{"Model", "Model", PaneModel},
+		{"Agents", "Agents", PaneAgents},
+		{"Categories", "Categories", PaneCategories},
+		{"About", "About", PaneAbout},
+		{"Account", "Account", PaneAccount},
+		{"General", "General", PaneGeneral},
+	} {
+		r.pane(t, want.name)
 		if r.s.pane != want.pane || r.title != want.title {
-			t.Errorf("after %q: pane %v, title %q", want.click, r.s.pane, r.title)
+			t.Errorf("after %q: pane %v, title %q", want.name, r.s.pane, r.title)
 		}
+		has(t, r.tt, want.title)
+	}
+}
+
+// The sidebar moves with Up and Down while it has the keyboard: from the row clicked, through the
+// rows, and back.
+func TestSettingsSidebarArrowsMoveBetweenPanes(t *testing.T) {
+	r := newSettingsRig(t)
+	r.pane(t, "General")
+	for _, want := range []Pane{PaneCategories, PaneAgents, PaneModel, PaneAbout} {
+		r.tt.Key(0, ui.KeyDown)
+		r.tt.Frame()
+		if r.s.pane != want {
+			t.Fatalf("Down went to %v, want %v", r.s.pane, want)
+		}
+	}
+	r.tt.Key(0, ui.KeyDown) // the last row: it stays
+	if r.s.pane != PaneAbout {
+		t.Fatalf("Down from About went to %v", r.s.pane)
+	}
+	for _, want := range []Pane{PaneModel, PaneAgents, PaneCategories, PaneGeneral, PaneAccount} {
+		r.tt.Key(0, ui.KeyUp)
+		r.tt.Frame()
+		if r.s.pane != want {
+			t.Fatalf("Up went to %v, want %v", r.s.pane, want)
+		}
+	}
+	if got := r.title; got != "Account" {
+		t.Errorf("title %q, want Account", got)
 	}
 }
 
 func TestSettingsShowSelectsAPane(t *testing.T) {
 	r := newSettingsRig(t)
-	r.s.Show(PaneAdvanced)
+	r.s.Show(PaneModel)
 	r.tt.Frame()
-	if r.title != "Advanced" {
+	if r.title != "Model" {
 		t.Errorf("title %q", r.title)
 	}
 	has(t, r.tt, "Pick a provider") // nothing is set up: the grid shows
@@ -84,8 +121,6 @@ func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 	r := newSettingsRig(t)
 	r.app.Config.DataFolder = "/Users/mac/Library/Application Support/withdo"
 	r.app.Config.Home = "/Users/mac"
-	r.tt.Frame()
-	r.tt.Scroll(340, 300, 0, 3000) // the data folder is below the notifications and sound groups
 	r.tt.Frame()
 	has(t, r.tt, "~/Library/Application Support/withdo")
 	hasNot(t, r.tt, "/Users/mac/Library/Application Support/withdo")
@@ -100,26 +135,59 @@ func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 	}
 }
 
-func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
+func TestGeneralPaneHasLanguageNotificationsAndTheDataFolder(t *testing.T) {
 	r := newSettingsRig(t)
 	has(t, r.tt, "Language", "System")
-	hasNot(t, r.tt, "Install MCP")
-	r.tt.Scroll(340, 300, 0, 3000) // the notifications and sound groups made the pane taller than the window
-	r.tt.Frame()
-	has(t, r.tt, "No archived projects. Archive one from its menu in the sidebar.",
-		"Data folder", r.app.Config.DataFolder, "Show in Finder", "Withdo 0.2.0", "Open source, MIT license", "GitHub")
-	hasFold(t, r.tt, "Archived projects")
+	hasNot(t, r.tt, "Install MCP", "Archived projects", "Privacy policy")
+	hasFold(t, r.tt, "Notifications and sound")
+	has(t, r.tt, "System notifications", "End-of-day reminder", "Sound effects")
+	hasFold(t, r.tt, "Updates and data")
+	has(t, r.tt, "Data folder", r.app.Config.DataFolder, "Show in Finder")
 	if err := r.tt.Click("Show in Finder"); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(r.rec.folders, []string{r.app.Config.DataFolder}) {
 		t.Errorf("revealed %v", r.rec.folders)
 	}
-	if err := r.tt.Click("Withdo on GitHub"); err != nil {
+}
+
+func TestCategoriesPaneHasTheCategoriesAndTheArchivedProjects(t *testing.T) {
+	r := newSettingsRig(t)
+	r.pane(t, "Categories")
+	has(t, r.tt, "New category…", "Archived projects", "No archived projects. Archive one from its menu in the sidebar.")
+	hasNot(t, r.tt, "Language", "End-of-day reminder")
+	if err := r.app.ArchiveProject(3); err != nil {
 		t.Fatal(err)
 	}
-	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/withdo" {
-		t.Errorf("opened %v", r.rec.urls)
+	r.tt.Frame()
+	name := r.app.snap.archived[0].Name
+	has(t, r.tt, name, "Restore")
+	if err := r.tt.Click("Restore " + name); err != nil {
+		t.Fatal(err)
+	}
+	if len(r.app.snap.archived) != 0 {
+		t.Errorf("still archived: %v", r.app.snap.archived)
+	}
+	r.tt.Frame()
+	has(t, r.tt, "No archived projects. Archive one from its menu in the sidebar.")
+}
+
+func TestAboutPaneSaysAGPLAndLinksToTheApp(t *testing.T) {
+	r := newSettingsRig(t)
+	r.pane(t, "About")
+	has(t, r.tt, "Withdo 0.2.0", "Open source, AGPL-3.0", "GitHub", "Privacy policy", "Website")
+	hasNot(t, r.tt, "MIT")
+	for _, want := range []struct{ click, url string }{
+		{"Withdo on GitHub", repoURL},
+		{"Privacy policy", privacyURL},
+		{"Website", websiteURL},
+	} {
+		if err := r.tt.Click(want.click); err != nil {
+			t.Fatal(err)
+		}
+		if len(r.rec.urls) == 0 || r.rec.urls[len(r.rec.urls)-1] != want.url {
+			t.Errorf("%q opened %v, want %s", want.click, r.rec.urls, want.url)
+		}
 	}
 }
 
@@ -146,26 +214,6 @@ func TestLanguagePopUpChoosesALanguageOrTheSystemOne(t *testing.T) {
 	if r.rec.language != "" {
 		t.Errorf("chose %q after System", r.rec.language)
 	}
-}
-
-func TestArchivedProjectsListWithRestore(t *testing.T) {
-	r := newSettingsRig(t)
-	if err := r.app.ArchiveProject(3); err != nil {
-		t.Fatal(err)
-	}
-	r.tt.Frame()
-	r.tt.Scroll(340, 300, 0, 3000) // the archived projects are below the notifications and sound groups
-	r.tt.Frame()
-	name := r.app.snap.archived[0].Name
-	has(t, r.tt, name, "Restore")
-	if err := r.tt.Click("Restore " + name); err != nil {
-		t.Fatal(err)
-	}
-	if len(r.app.snap.archived) != 0 {
-		t.Errorf("still archived: %v", r.app.snap.archived)
-	}
-	r.tt.Frame()
-	has(t, r.tt, "No archived projects. Archive one from its menu in the sidebar.")
 }
 
 func TestAgentsPaneCopiesTheCommand(t *testing.T) {
@@ -199,15 +247,17 @@ func TestGitHubPaneShowsTheStatusAndChecksNow(t *testing.T) {
 
 func TestSettingsWithoutPollerOrModelsStillHasEveryPane(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.GitHub, a.Models = nil, nil })
-	has(t, r.tt, "Account", "General", "Agents", "Advanced")
+	has(t, r.tt, "Account", "General", "Categories", "Agents", "Model", "About Withdo")
 	r.pane(t, "Agents")
 	r.tt.Scroll(340, 300, 0, 9000)
 	r.tt.Frame()
-	has(t, r.tt, "Following pull requests isn't available here.")
-	r.pane(t, "Advanced")
+	has(t, r.tt, "Following pull requests isn't available here.", "Recent changes")
+	r.pane(t, "Model")
 	has(t, r.tt, "The assistant isn't available here.")
 	r.pane(t, "Account")
 	has(t, r.tt, "Sync isn't available here.")
+	r.pane(t, "About")
+	has(t, r.tt, "Open source, AGPL-3.0")
 }
 
 func modelOf(fm *data.FakeModels, id string) string {
@@ -239,34 +289,16 @@ func hasFold(t *testing.T, tt *ui.Tester, want string) {
 	t.Errorf("no %q (in any case) in %q", want, tt.Texts())
 }
 
-// The top of the window is one band: the pane's name centered in the row of the traffic lights,
-// and the pane icons right under it.
-func TestSettingsTitleAndPanesAreOneBandUnderTheTrafficLights(t *testing.T) {
+// The switches that left Advanced for General, and the ones that stayed behind with the model.
+func TestTheReminderAndSoundMovedToGeneralAndRecentChangesToTheGitHubGroup(t *testing.T) {
 	r := newSettingsRig(t)
-	title, ok := r.tt.Find("General")
-	if !ok {
-		t.Fatalf("no title in %q", r.tt.Texts())
-	}
-	if title.Y+title.H > SettingsTitleBarHeight {
-		t.Errorf("the title ends at %.0f, below the traffic lights' row (%.0f)", title.Y+title.H, SettingsTitleBarHeight)
-	}
-	if mid := title.X + title.W/2; mid < settingsWidth/2-1 || mid > settingsWidth/2+1 {
-		t.Errorf("the title is centered at %.0f, not in the middle of the window (%.0f)", mid, settingsWidth/2)
-	}
-	pane, _ := r.tt.Find("Advanced")
-	if pane.Y < SettingsTitleBarHeight {
-		t.Errorf("the pane icons start at %.0f, in the title's row", pane.Y)
-	}
-}
-
-func TestAdvancedPaneHoldsTheModelAndTheSwitchesGeneralLost(t *testing.T) {
-	r := newSettingsRig(t)
-	r.tt.Scroll(340, 300, 0, 3000)
-	r.tt.Frame()
-	hasNot(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
-	r.pane(t, "Advanced")
+	has(t, r.tt, "End-of-day reminder", "Sound effects")
+	hasNot(t, r.tt, "Recent changes")
+	r.pane(t, "Model")
 	hasFold(t, r.tt, "Use your own model") // a group label is set in the section style
-	r.tt.Scroll(340, 300, 0, 3000)
+	hasNot(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
+	r.pane(t, "Agents")
+	r.tt.Scroll(340, 300, 0, 9000)
 	r.tt.Frame()
-	has(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
+	has(t, r.tt, "Recent changes")
 }

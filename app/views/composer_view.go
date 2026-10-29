@@ -321,7 +321,7 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 		l := link(c, t, m.say.ComposerChipSetUp())
 		cs.setUpHover = l.Hovered()
 		if l.Clicked() {
-			m.openSettings(PaneAdvanced)
+			m.openSettings(PaneModel)
 		}
 	})
 }
