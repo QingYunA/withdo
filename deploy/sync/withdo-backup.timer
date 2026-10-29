@@ -1,0 +1,10 @@
+# Runs withdo-backup.service every day at 03:17 UTC, and at boot if a run was missed.
+[Unit]
+Description=Daily backup of the Withdo sync server
+
+[Timer]
+OnCalendar=*-*-* 03:17:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

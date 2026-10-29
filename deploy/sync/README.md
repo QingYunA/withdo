@@ -18,7 +18,10 @@ challenge itself, and the sync server's SSE stream would be cut by the proxy's t
     ├── sync.compose.yml        adhd-sync + its own Postgres
     ├── pb_data/                PocketBase's data (users, password hashes, its settings), owned by uid 65532
     ├── sync.env                SYNC_DB_PASSWORD and the voice variables below, mode 600
-    └── bin/adhd-sync           static linux/amd64 build
+    ├── bin/adhd-sync           static linux/amd64 build
+    ├── backup.sh               the daily backup (Backups, below)
+    └── backups/                one folder per backup, mode 700, kept 14 days
+/etc/systemd/system/withdo-backup.{service,timer}   run backup.sh every day at 03:17 UTC
 /etc/nginx/sites-available/adhd-todo   nginx-adhd-todo.conf, linked from sites-enabled
 /etc/letsencrypt/live/adhd-todo/       the certificate for todo.sri-ai.xyz; certbot.timer renews it
 ```
@@ -123,6 +126,39 @@ It first copies `bin/adhd-sync` and `sync.compose.yml` to `*.bak-YYYYMMDD-HHMM`,
 `sync.env`. At the end it prints the one-line rollback command (restore both
 backups, `up -d --wait sync`). If the health check fails it prints that command prominently and
 exits 1; it does not roll back by itself.
+
+## Backups
+
+`backup.sh` writes `backups/<UTC date-time>/` every day: `postgres.sql.gz` (the tasks),
+`pocketbase-data.db.gz` (the accounts) and `pocketbase-storage.tar.gz`. It deletes the folders
+older than 14 days (`BACKUP_KEEP_DAYS`). The backups stay on the same disk: they cover a bad deploy
+or a broken database, not a lost host.
+
+Install, or update after a change to these files:
+
+```sh
+scp deploy/sync/backup.sh adhd-srv:/opt/adhd-todo/sync/
+scp deploy/sync/withdo-backup.service deploy/sync/withdo-backup.timer adhd-srv:/etc/systemd/system/
+ssh adhd-srv 'chmod 700 /opt/adhd-todo/sync/backup.sh && systemctl daemon-reload && systemctl enable --now withdo-backup.timer'
+```
+
+`systemctl list-timers withdo-backup.timer` shows the next run; `journalctl -u withdo-backup` the
+last ones. A run by hand: `/opt/adhd-todo/sync/backup.sh`.
+
+Restoring, in `/opt/adhd-todo/sync` with `b=backups/<date-time>`:
+
+1. `docker compose --env-file sync.env -f sync.compose.yml stop sync`
+2. Tasks: drop and recreate the database, then load the dump:
+   `docker compose --env-file sync.env -f sync.compose.yml exec -T postgres psql -U adhd_sync -d postgres -c 'DROP DATABASE adhd_sync' -c 'CREATE DATABASE adhd_sync'`, then
+   `gzip -dc $b/postgres.sql.gz | docker compose --env-file sync.env -f sync.compose.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U adhd_sync -d adhd_sync`.
+3. Accounts: `rm -f pb_data/data.db-wal pb_data/data.db-shm`,
+   `gzip -dc $b/pocketbase-data.db.gz > pb_data/data.db`, and for the files
+   `rm -rf pb_data/storage && tar -xzf $b/pocketbase-storage.tar.gz -C pb_data`; then
+   `chown -R 65532:65532 pb_data`.
+4. `docker compose --env-file sync.env -f sync.compose.yml up -d --wait sync`
+
+Tested on 2026-10-29: the dump loaded into a fresh `postgres:17.10-alpine` with the same row count
+in every table, and the copied `data.db` passed `integrity_check` with the same users.
 
 ## Upgrades
 
