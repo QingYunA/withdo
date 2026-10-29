@@ -62,4 +62,3 @@ func (m *Main) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill 
 	}
 	return btn
 }
-
