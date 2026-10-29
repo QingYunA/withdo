@@ -66,7 +66,7 @@ func (s *Settings) syncLabel(c *ui.Context, t *theme.Tokens, text string) {
 // onEnter.
 func (s *Settings) syncEmailField(c *ui.Context, t *theme.Tokens, busy, bad bool, onEnter func()) {
 	s.syncLabel(c, t, s.say.SettingsSyncEmail())
-	well := fieldWell(c, t, "sync-email", 0, func() {
+	well := fieldWellIn(c, t, "sync-email", 0, t.BgSubtle, t.Border, func() {
 		entered, _ := draftField(c, t, s.syncFields, draftSpec{
 			name: "sync-email", label: s.say.SettingsSyncEmail(),
 			placeholder: s.say.SettingsSyncEmailPlaceholder(), focus: s.syncFocusAccount,
@@ -75,7 +75,7 @@ func (s *Settings) syncEmailField(c *ui.Context, t *theme.Tokens, busy, bad bool
 		if entered {
 			onEnter()
 		}
-	})
+	}, nil)
 	s.syncFocusAccount = false
 	switch {
 	case busy:
@@ -90,7 +90,7 @@ func (s *Settings) syncEmailField(c *ui.Context, t *theme.Tokens, busy, bad bool
 // syncPasswordWell is the password field with its quiet Show at the right end. It keeps its text
 // in s.syncPassword; bad outlines it in status.blocked.
 func (s *Settings) syncPasswordWell(c *ui.Context, t *theme.Tokens, key, label string, busy, bad bool, onEnter func()) {
-	well := fieldWellTrailing(c, t, key, 0, func() {
+	well := fieldWellIn(c, t, key, 0, t.BgSubtle, t.Border, func() {
 		entered, _ := draftField(c, t, s.syncFields, draftSpec{
 			name: key, label: label, secret: !s.syncShowPassword,
 			focusNow: s.syncFocusPassword, disabled: busy,
@@ -224,20 +224,45 @@ func (s *Settings) syncSignUpForm(c *ui.Context, t *theme.Tokens, svc SyncServic
 	s.syncTermsLine(c, t)
 }
 
-// syncTermsLine is the 11.5 pt line under Create account, with the two links to the website.
+// syncTermsLine is the 11.5 pt line under Create account with its two links to the website, as one
+// run of text: it wraps between the pieces, and Chinese takes no spaces between them.
 func (s *Settings) syncTermsLine(c *ui.Context, t *theme.Tokens) {
-	ui.Column(c.Key("sync-terms")).FillWidth().Shrink(0).AlignItems(ui.Center).Margin(10, 0, 0).Children(func() {
-		theme.Paragraph(c, syncTerms, t.TextTertiary, s.say.SettingsSyncTermsLead(), 0).TextAlign(ui.Center)
-		ui.Row(c.Key("sync-terms-links")).Gap(3).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			if syncLink(c, t, syncTerms, "sync-terms-tos", s.say.SettingsSyncTermsOfService(), s.say.SettingsSyncTermsOfService()).Clicked() {
-				s.app.Act.OpenURL(termsURL)
-			}
-			theme.Text(c, syncTerms, t.TextTertiary, s.say.SettingsSyncTermsAnd())
-			if syncLink(c, t, syncTerms, "sync-terms-privacy", s.say.SettingsSyncPrivacyPolicy(), s.say.SettingsSyncPrivacyPolicy()).Clicked() {
-				s.app.Act.OpenURL(privacyURL)
-			}
-		})
+	lead, and := s.say.SettingsSyncTermsLead(), s.say.SettingsSyncTermsAnd()
+	// The gap stands for the spaces of a Latin sentence; Han text has none.
+	var gap float32 = 4
+	if hasHan(lead) {
+		gap = 0
+	}
+	piece := func(key, text string) ui.Element {
+		return theme.Text(c, syncTerms, t.TextTertiary, text)
+	}
+	link := func(key, text string, url string) {
+		btn := ui.ButtonBase(c.Key(key)).Radius(theme.RadiusControl).Shrink(0).Label(text).Cursor(ui.CursorPointer)
+		ink := t.Accent
+		if btn.Hovered() {
+			ink = t.Accent.Mix(t.Text, 0.2)
+		}
+		btn.Children(func() { theme.Text(c, syncTerms, ink, text) })
+		if btn.Clicked() {
+			s.app.Act.OpenURL(url)
+		}
+	}
+	ui.Row(c.Key("sync-terms")).FillWidth().Shrink(0).Wrap().Gap(gap).Justify(ui.Center).Margin(10, 0, 0).Children(func() {
+		piece("lead", lead)
+		link("sync-terms-tos", s.say.SettingsSyncTermsOfService(), termsURL)
+		piece("and", and)
+		link("sync-terms-privacy", s.say.SettingsSyncPrivacyPolicy(), privacyURL)
 	})
+}
+
+// hasHan reports whether text holds a Han character, which takes no spaces around it.
+func hasHan(text string) bool {
+	for _, r := range text {
+		if unicode.Is(unicode.Han, r) {
+			return true
+		}
+	}
+	return false
 }
 
 // syncPasswordHint is "At least 8 characters." under the strength bar, in status.blocked when the

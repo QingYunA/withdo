@@ -178,8 +178,7 @@ Sign in and Sign up, as Todoist and TickTick do it (`docs/design/mockups/v42.htm
 - The code mail follows `lang` (`OnMailerRecordOTPSend`): English is the collection's template,
   `zh-Hans` is `{OTP} 是你的 Withdo 验证码`. A Google account has no `lang` and gets English.
 - Old accounts made by the code path have a password nobody knows; they use Forgot password.
-- Deploy: the new migration runs at start; nothing to configure. The site needs a `terms.html` the
-  Sign up card links to.
+- Deploy: the new migration runs at start; nothing to configure.
 
 ## Owner's to-dos
 

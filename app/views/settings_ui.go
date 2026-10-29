@@ -119,8 +119,14 @@ func fieldWell(c *ui.Context, t *theme.Tokens, key string, width float32, body f
 
 // fieldWellTrailing is fieldWell with something at its right end, such as a password's Show.
 func fieldWellTrailing(c *ui.Context, t *theme.Tokens, key string, width float32, body, trailing func()) ui.Element {
+	return fieldWellIn(c, t, key, width, t.Bg, t.ComposerBorder(), body, trailing)
+}
+
+// fieldWellIn is fieldWellTrailing with the well's own ground and hairline: a field on a white card
+// takes the tinted ground, since the white of the usual well would not show on it.
+func fieldWellIn(c *ui.Context, t *theme.Tokens, key string, width float32, ground, line ui.Color, body, trailing func()) ui.Element {
 	well := ui.Row(c.Key("well-"+key)).Height(28).Shrink(0).Padding(0, 10).Gap(6).AlignItems(ui.Center).
-		Radius(theme.RadiusControl).Background(t.Bg).Border(theme.Hairline, t.ComposerBorder())
+		Radius(theme.RadiusControl).Background(ground).Border(theme.Hairline, line)
 	if width > 0 {
 		well.Width(width)
 	}

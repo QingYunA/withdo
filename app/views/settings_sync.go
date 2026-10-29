@@ -292,7 +292,15 @@ func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevi
 // your own; a custom server shows its host and Change. Both edit the address in place, and an empty
 // address means the official server.
 func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
-	ui.Row(c.Key("sync-footer")).Margin(14, 4, 0).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
+	// Under the signed-out card the line is centered and as quiet as the note above it.
+	signedOut := snap.Phase == data.SyncSignedOut || snap.Phase == data.SyncSigningIn
+	row := ui.Row(c.Key("sync-footer")).Shrink(0).Gap(6).AlignItems(ui.Center)
+	if signedOut {
+		row.FillWidth().Margin(6, 0, 0).Justify(ui.Center)
+	} else {
+		row.Margin(14, 4, 0)
+	}
+	row.Children(func() {
 		official := data.IsOfficialSyncServer(snap.Server)
 		if s.syncEditingServer || !official {
 			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncServer())
@@ -334,7 +342,13 @@ func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, s
 			return
 		}
 		if official {
-			if settingsLink(c, t, "sync-change", s.say.SettingsSyncOwnServer(), s.say.SettingsSyncServerAddress()).Clicked() {
+			var link ui.Element
+			if signedOut {
+				link = syncLink(c, t, syncSmall, "sync-change", s.say.SettingsSyncOwnServer(), s.say.SettingsSyncServerAddress())
+			} else {
+				link = settingsLink(c, t, "sync-change", s.say.SettingsSyncOwnServer(), s.say.SettingsSyncServerAddress())
+			}
+			if link.Clicked() {
 				s.syncEditingServer, s.syncServerDraft, s.syncServerErr = true, "", false
 			}
 			return
