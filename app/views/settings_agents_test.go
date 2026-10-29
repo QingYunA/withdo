@@ -89,7 +89,7 @@ func TestFiveTilesAndBothDisclosuresClosedFitTheWindow(t *testing.T) {
 	r := agentsRig(t)
 	for _, n := range []string{
 		"On this computer", "5", "Claude Code", "opencode", "9 more agents", "Connect by hand",
-		"Open agent work in", "GitHub", "Recent changes", "The latest merged pull requests and issues, by project · gh signed in",
+		"Open agent work in", "GitHub", "Recent changes", "The latest merged pull requests and issues, by project",
 	} {
 		f, ok := r.tt.Find(n)
 		if !ok {

@@ -447,7 +447,7 @@ func TestTheSettingsRowTurnsThePageOnAndKeepsTheChoiceBesideTheOtherPrefs(t *tes
 	r.pane(t, "Agents")
 	r.tt.Scroll(340, 300, 0, 9000)
 	r.tt.Frame()
-	has(t, r.tt, "Recent changes", "The latest merged pull requests and issues, by project · gh signed in")
+	has(t, r.tt, "Recent changes", "The latest merged pull requests and issues, by project")
 	if r.app.RecentChangesOn() {
 		t.Fatal("on by default")
 	}
@@ -467,7 +467,7 @@ func TestTheSettingsRowTurnsThePageOnAndKeepsTheChoiceBesideTheOtherPrefs(t *tes
 	}
 }
 
-func TestSwitchedOnWithGHSignedOutTheRowSaysWhatIsMissing(t *testing.T) {
+func TestSwitchedOnWithGHSignedOutTheRowSaysWhatToRun(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) {
 		a.GitHub = data.NewFakeGitHub(data.GitHubStatus{State: data.GitHubSignedOut})
 		a.SetRecentChangesOn(true)
@@ -475,7 +475,7 @@ func TestSwitchedOnWithGHSignedOutTheRowSaysWhatIsMissing(t *testing.T) {
 	r.pane(t, "Agents")
 	r.tt.Scroll(340, 300, 0, 9000)
 	r.tt.Frame()
-	has(t, r.tt, "gh not signed in", "gh auth login")
+	has(t, r.tt, "gh isn't signed in yet: run gh auth login")
 	if !r.app.RecentChangesOn() {
 		t.Error("the switch does not turn on without gh")
 	}
