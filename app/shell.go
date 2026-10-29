@@ -453,6 +453,12 @@ func (s *shell) AutomaticUpdates() bool { return updater.AutomaticChecks() }
 // SetAutomaticUpdates implements views.Actions.
 func (s *shell) SetAutomaticUpdates(on bool) { updater.SetAutomaticChecks(on) }
 
+// CheckForUpdates implements views.Actions.
+func (s *shell) CheckForUpdates() { updater.CheckForUpdates() }
+
+// LastUpdateCheck implements views.Actions.
+func (s *shell) LastUpdateCheck() time.Time { return updater.LastCheck() }
+
 // newEndOfDay is the end-of-day reminder: it asks the app's choices, counts from the store, and shows
 // through the notifier, so that macOS refusing it is noticed like any other.
 func (s *shell) newEndOfDay() *notify.EndOfDay {

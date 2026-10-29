@@ -15,7 +15,7 @@ import (
 const otherModel = "\x00other"
 
 // gridColumns is how many provider tiles a row of the grid has.
-const gridColumns = 6
+const gridColumns = 4
 
 // maxModelChoices bounds the model pop-up: a gateway can list hundreds, the suggestions and a few
 // more are enough, and Other… types the rest.
@@ -44,15 +44,9 @@ func (s *Settings) draftOf(id string) *draft {
 	return s.assist.drafts[id]
 }
 
-// changePane is the grid of providers and, under it, the fields of the one picked. inUse is the
-// provider in use, setUp whether there is a pane at rest to go back to.
-func (s *Settings) changePane(c *ui.Context, t *theme.Tokens, ps []data.Provider, inUse *data.Provider, setUp bool) {
-	ui.Row(c).Shrink(0).AlignItems(ui.Start).Children(func() {
-		groupLabel(c, t, s.say.SettingsPickProvider()).Grow(1)
-		if setUp && settingsLink(c, t, "done", s.say.SettingsDone(), s.say.SettingsDone()).Margin(2, 0, 0).Clicked() {
-			s.assist.changing, s.assist.pick, s.assist.err = false, "", ""
-		}
-	})
+// providerGrid is the 12 providers in four columns: the logo and name, the green square of one
+// that is set up, and the accent ring on the one in use. The grid is always on the pane.
+func (s *Settings) providerGrid(c *ui.Context, t *theme.Tokens, ps []data.Provider) {
 	for row := 0; row*gridColumns < len(ps); row++ {
 		ui.Row(c.Key("grid-"+itoa(row))).Shrink(0).Gap(8).Margin(0, 0, 8).Children(func() {
 			for _, p := range ps[row*gridColumns : min(len(ps), (row+1)*gridColumns)] {
@@ -60,21 +54,24 @@ func (s *Settings) changePane(c *ui.Context, t *theme.Tokens, ps []data.Provider
 			}
 		})
 	}
-	for _, p := range ps {
-		if p.ID == s.assist.pick {
-			s.providerForm(c, t, p)
-		}
-	}
 }
 
-// tile is one provider of the grid: its logo and name, a green dot when it is set up, and a ring
-// when it is the one picked.
+// tile is one provider of the grid. A set-up provider becomes the one in use and is tested; any
+// other opens its key and model form under the grid. The one already in use opens its form too, so
+// that its key and model can still be changed.
 func (s *Settings) tile(c *ui.Context, t *theme.Tokens, p data.Provider) {
-	name, picked := providerName(s.say, p), s.assist.pick == p.ID
-	btn := ui.ButtonBase(c.Key("tile-" + p.ID)).Grow(1).Basis(0).MinWidth(0).Height(theme.ProviderTileH).Radius(theme.RadiusPanel).
-		Column().AlignItems(ui.Center).Justify(ui.Center).Gap(6).Label(name).Cursor(ui.CursorPointer).Background(t.SettingsGroup())
+	name := providerName(s.say, p)
+	label := s.say.A11yProviderSetUp(name)
 	switch {
-	case picked:
+	case p.Active:
+		label = s.say.A11yProviderChange(name)
+	case p.Configured:
+		label = s.say.A11yUseProvider(name)
+	}
+	btn := ui.ButtonBase(c.Key("tile-"+p.ID)).Grow(1).Basis(0).MinWidth(0).Height(theme.ProviderTileH).Radius(theme.SettingsRadius).
+		Row().AlignItems(ui.Center).Gap(10).Padding(0, 12).Label(label).Tooltip(label).Cursor(ui.CursorPointer).Background(t.SettingsGroup())
+	switch {
+	case p.Active:
 		btn.Shadow(0, 0, 0, 2, t.Accent)
 	case btn.Hovered():
 		btn.Shadow(0, 0, 0, 1, t.Border.Alpha(0.3))
@@ -82,14 +79,28 @@ func (s *Settings) tile(c *ui.Context, t *theme.Tokens, p data.Provider) {
 		btn.Shadow(0, 0, 0, 1, t.Border)
 	}
 	btn.Children(func() {
-		providerLogo(c, t, p.ID, theme.LogoTile)
-		theme.Text(c, theme.Meta, t.Text, name).Ellipsis("…").Margin(0, 4)
+		providerLogo(c, t, p.ID, theme.LogoChip)
+		theme.Text(c, theme.Meta, t.Text, name).Grow(1).MinWidth(0).Ellipsis("…")
 		if p.Configured {
-			theme.Dot(c, t.Status(data.Done), 7).Absolute().Top(6).Right(7)
+			ui.Box(c.Key("tile-set-up-"+p.ID)).Size(6, 6).Absolute().Top(8).Right(8).Background(t.Status(data.Done))
 		}
 	})
-	if btn.Clicked() && !picked {
-		s.assist.changing, s.assist.pick, s.assist.err = true, p.ID, ""
+	if !btn.Clicked() {
+		return
+	}
+	switch {
+	case p.Active:
+		// Already in use: the tile is how its key and model are changed.
+		s.assist.pick, s.assist.err = p.ID, ""
+		s.fetchModels(p, "")
+	case p.Configured:
+		s.assist.pick, s.assist.err = "", ""
+		s.assist.test = testResult{}
+		if s.app.Models.SetActive(p.ID) == nil {
+			s.runTest(p)
+		}
+	default:
+		s.assist.pick, s.assist.err = p.ID, ""
 		s.fetchModels(p, "")
 	}
 }
@@ -184,7 +195,7 @@ func (s *Settings) protocolPick(c *ui.Context, t *theme.Tokens, p data.Provider,
 	if s.anthropicOf(p, d) {
 		sel = 1
 	}
-	if i := segmented(c, t, "protocol", []string{s.say.ModelsProtocolOpenAI(), s.say.ModelsProtocolAnthropic()}, sel); i >= 0 {
+	if i := segmented(c, t, "protocol", s.say.ModelsProtocol(), []string{s.say.ModelsProtocolOpenAI(), s.say.ModelsProtocolAnthropic()}, sel); i >= 0 {
 		d.protocol = i + 1
 	}
 }
@@ -201,7 +212,7 @@ func (s *Settings) modelField(c *ui.Context, t *theme.Tokens, p data.Provider, d
 		opts = append(opts, popOption{otherModel, s.say.ModelsOther()})
 		var v string
 		var ok bool
-		ui.Row(c).Grow(1).MinWidth(0).Children(func() { v, ok = popUpFill(c, t, "model-"+p.ID, current, opts) })
+		ui.Row(c).Grow(1).MinWidth(0).Children(func() { v, ok = popUpFill(c, t, "model-"+p.ID, s.say.A11yChooseModel(), current, opts) })
 		switch {
 		case !ok:
 		case v == otherModel:
@@ -358,5 +369,5 @@ func (s *Settings) finishSave(p data.Provider, took time.Duration, err error) {
 	}
 	s.assist.test = testResult{id: p.ID, ok: true, text: s.say.SettingsConnected(itoa(int(took.Milliseconds())))}
 	delete(s.assist.drafts, p.ID)
-	s.assist.changing, s.assist.pick = false, ""
+	s.assist.pick = ""
 }

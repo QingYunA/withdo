@@ -44,7 +44,8 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 // on this computer as in the v41 Agents frame.
 func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	t.Helper()
-	app, store, _ := newTestApp(t)
+	app, store, rec := newTestApp(t)
+	rec.lastCheck = fixedNow().Add(-2 * time.Minute)
 	mac := newAgentRig(t)
 	app.Config.AgentSetup = mac.env
 	mac.has("claude", "codex", "opencode", "code")
@@ -83,6 +84,10 @@ func TestScreensSettings(t *testing.T) {
 			deleted := settingsApp(t, ready)
 			addDemoCategories(t, deleted)
 			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneCategories, func(r *settingsRig) {
+				if row, ok := r.tt.Find("Health"); ok { // the tools appear on the hovered row
+					r.tt.Move(row.X+row.W/2, row.Y+row.H/2)
+					r.tt.Frame()
+				}
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
 				r.tt.Frame()
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
@@ -98,13 +103,13 @@ func TestScreensSettings(t *testing.T) {
 				r.s.runTest(currentProviderOf(r.app))
 				r.rec.drain(t)
 			})
-			// Change: a tile picked, its key empty.
+			// A tile picked: its key and model form under the grid.
 			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "kimi"
+				r.s.assist.pick = "kimi"
 			})
 			// A failed test stays under the form, in plain words.
 			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "openai"
+				r.s.assist.pick = "openai"
 				r.s.assist.err = "The provider didn't accept the API key."
 				if zh {
 					r.s.assist.err = "服务商不接受这个 API 密钥。"
@@ -112,7 +117,7 @@ func TestScreensSettings(t *testing.T) {
 			})
 			// Custom adds the address and the protocol, so it scrolls.
 			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "custom"
+				r.s.assist.pick = "custom"
 			})
 			// Nothing set up: the grid shows at once.
 			fresh := settingsApp(t, ready)

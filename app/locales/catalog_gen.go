@@ -670,6 +670,62 @@ func (msgs Messages) AgeNow() string {
 	return Catalog.Format(msgs.locale, "ageNow", nil)
 }
 
+// AgeJustNow says "just now"
+// in the language the app shows.
+//
+// How long ago something happened, in words: under a minute.
+func AgeJustNow() string { return In(i18n.Locale()).AgeJustNow() }
+
+// AgeJustNow says "just now"
+// in the language of msgs.
+//
+// How long ago something happened, in words: under a minute.
+func (msgs Messages) AgeJustNow() string {
+	return Catalog.Format(msgs.locale, "ageJustNow", nil)
+}
+
+// AgeMinutesAgo says "{count, plural, one {# minute ago} other {# minutes ago}}"
+// in the language the app shows.
+//
+// How long ago something happened, in words: minutes.
+func AgeMinutesAgo(count int) string { return In(i18n.Locale()).AgeMinutesAgo(count) }
+
+// AgeMinutesAgo says "{count, plural, one {# minute ago} other {# minutes ago}}"
+// in the language of msgs.
+//
+// How long ago something happened, in words: minutes.
+func (msgs Messages) AgeMinutesAgo(count int) string {
+	return Catalog.Format(msgs.locale, "ageMinutesAgo", map[string]any{"count": count})
+}
+
+// AgeHoursAgo says "{count, plural, one {# hour ago} other {# hours ago}}"
+// in the language the app shows.
+//
+// How long ago something happened, in words: hours.
+func AgeHoursAgo(count int) string { return In(i18n.Locale()).AgeHoursAgo(count) }
+
+// AgeHoursAgo says "{count, plural, one {# hour ago} other {# hours ago}}"
+// in the language of msgs.
+//
+// How long ago something happened, in words: hours.
+func (msgs Messages) AgeHoursAgo(count int) string {
+	return Catalog.Format(msgs.locale, "ageHoursAgo", map[string]any{"count": count})
+}
+
+// AgeDaysAgo says "{count, plural, one {# day ago} other {# days ago}}"
+// in the language the app shows.
+//
+// How long ago something happened, in words: days, under a week.
+func AgeDaysAgo(count int) string { return In(i18n.Locale()).AgeDaysAgo(count) }
+
+// AgeDaysAgo says "{count, plural, one {# day ago} other {# days ago}}"
+// in the language of msgs.
+//
+// How long ago something happened, in words: days, under a week.
+func (msgs Messages) AgeDaysAgo(count int) string {
+	return Catalog.Format(msgs.locale, "ageDaysAgo", map[string]any{"count": count})
+}
+
 // AgentSummaryNext says "{summary}; next: {step}"
 // in the language the app shows.
 //
@@ -1562,13 +1618,13 @@ func (msgs Messages) InspectorCloseTip() string {
 	return Catalog.Format(msgs.locale, "inspectorCloseTip", nil)
 }
 
-// LanguageSystem says "System"
+// LanguageSystem says "Follow system"
 // in the language the app shows.
 //
 // Language choice that follows the system's languages.
 func LanguageSystem() string { return In(i18n.Locale()).LanguageSystem() }
 
-// LanguageSystem says "System"
+// LanguageSystem says "Follow system"
 // in the language of msgs.
 //
 // Language choice that follows the system's languages.
@@ -5098,6 +5154,34 @@ func (msgs Messages) SettingsInUse() string {
 	return Catalog.Format(msgs.locale, "settingsInUse", nil)
 }
 
+// SettingsSwitchTo says "Switch to"
+// in the language the app shows.
+//
+// Group label above the grid of model providers in Settings > Model.
+func SettingsSwitchTo() string { return In(i18n.Locale()).SettingsSwitchTo() }
+
+// SettingsSwitchTo says "Switch to"
+// in the language of msgs.
+//
+// Group label above the grid of model providers in Settings > Model.
+func (msgs Messages) SettingsSwitchTo() string {
+	return Catalog.Format(msgs.locale, "settingsSwitchTo", nil)
+}
+
+// SettingsModelNone says "Not set up: dates and reminders are still read on this computer."
+// in the language the app shows.
+//
+// The line in place of the provider card when no model provider is set up.
+func SettingsModelNone() string { return In(i18n.Locale()).SettingsModelNone() }
+
+// SettingsModelNone says "Not set up: dates and reminders are still read on this computer."
+// in the language of msgs.
+//
+// The line in place of the provider card when no model provider is set up.
+func (msgs Messages) SettingsModelNone() string {
+	return Catalog.Format(msgs.locale, "settingsModelNone", nil)
+}
+
 // SettingsAlsoSetUp says "Also set up"
 // in the language the app shows.
 //
@@ -5156,6 +5240,52 @@ func A11yUseProvider(name string) string { return In(i18n.Locale()).A11yUseProvi
 // Accessibility label of the Use link of a provider.
 func (msgs Messages) A11yUseProvider(name string) string {
 	return Catalog.Format(msgs.locale, "a11yUseProvider", map[string]any{"name": name})
+}
+
+// A11yProviderChange says "Change {name}"
+// in the language the app shows.
+//
+// Accessibility label of the tile of the model provider in use; it opens
+// the key and model form.
+func A11yProviderChange(name string) string { return In(i18n.Locale()).A11yProviderChange(name) }
+
+// A11yProviderChange says "Change {name}"
+// in the language of msgs.
+//
+// Accessibility label of the tile of the model provider in use; it opens
+// the key and model form.
+func (msgs Messages) A11yProviderChange(name string) string {
+	return Catalog.Format(msgs.locale, "a11yProviderChange", map[string]any{"name": name})
+}
+
+// A11yProviderSetUp says "Set up {name}"
+// in the language the app shows.
+//
+// Accessibility label of the tile of a model provider that is not set up
+// yet.
+func A11yProviderSetUp(name string) string { return In(i18n.Locale()).A11yProviderSetUp(name) }
+
+// A11yProviderSetUp says "Set up {name}"
+// in the language of msgs.
+//
+// Accessibility label of the tile of a model provider that is not set up
+// yet.
+func (msgs Messages) A11yProviderSetUp(name string) string {
+	return Catalog.Format(msgs.locale, "a11yProviderSetUp", map[string]any{"name": name})
+}
+
+// A11yChooseModel says "Choose a model"
+// in the language the app shows.
+//
+// Accessibility label of the pop-up of a provider's models.
+func A11yChooseModel() string { return In(i18n.Locale()).A11yChooseModel() }
+
+// A11yChooseModel says "Choose a model"
+// in the language of msgs.
+//
+// Accessibility label of the pop-up of a provider's models.
+func (msgs Messages) A11yChooseModel() string {
+	return Catalog.Format(msgs.locale, "a11yChooseModel", nil)
 }
 
 // SettingsPickProvider says "Pick a provider"
@@ -7604,6 +7734,56 @@ func (msgs Messages) SettingsUpdatesSwitch() string {
 	return Catalog.Format(msgs.locale, "settingsUpdatesSwitch", nil)
 }
 
+// SettingsCheckNow says "Check now"
+// in the language the app shows.
+//
+// Link beside the updates switch that opens the update window and checks at
+// once.
+func SettingsCheckNow() string { return In(i18n.Locale()).SettingsCheckNow() }
+
+// SettingsCheckNow says "Check now"
+// in the language of msgs.
+//
+// Link beside the updates switch that opens the update window and checks at
+// once.
+func (msgs Messages) SettingsCheckNow() string {
+	return Catalog.Format(msgs.locale, "settingsCheckNow", nil)
+}
+
+// SettingsUpdatesChecked says "Withdo {version} · checked {age}"
+// in the language the app shows.
+//
+// Quiet line of the updates row: the app's version and when it last
+// checked.
+func SettingsUpdatesChecked(version string, age string) string {
+	return In(i18n.Locale()).SettingsUpdatesChecked(version, age)
+}
+
+// SettingsUpdatesChecked says "Withdo {version} · checked {age}"
+// in the language of msgs.
+//
+// Quiet line of the updates row: the app's version and when it last
+// checked.
+func (msgs Messages) SettingsUpdatesChecked(version string, age string) string {
+	return Catalog.Format(msgs.locale, "settingsUpdatesChecked", map[string]any{"version": version, "age": age})
+}
+
+// SettingsUpdatesNeverChecked says "Withdo {version} · not checked yet"
+// in the language the app shows.
+//
+// Quiet line of the updates row before the app has ever checked.
+func SettingsUpdatesNeverChecked(version string) string {
+	return In(i18n.Locale()).SettingsUpdatesNeverChecked(version)
+}
+
+// SettingsUpdatesNeverChecked says "Withdo {version} · not checked yet"
+// in the language of msgs.
+//
+// Quiet line of the updates row before the app has ever checked.
+func (msgs Messages) SettingsUpdatesNeverChecked(version string) string {
+	return Catalog.Format(msgs.locale, "settingsUpdatesNeverChecked", map[string]any{"version": version})
+}
+
 // NotifyDayDoneTitle says "Day's done"
 // in the language the app shows.
 //
@@ -10036,6 +10216,20 @@ func (msgs Messages) SettingsCategoryEdit() string {
 	return Catalog.Format(msgs.locale, "settingsCategoryEdit", nil)
 }
 
+// SettingsCategoryTasks says "{count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+//
+// Quiet count at the right of a category row, e.g. 12 tasks.
+func SettingsCategoryTasks(count int) string { return In(i18n.Locale()).SettingsCategoryTasks(count) }
+
+// SettingsCategoryTasks says "{count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+//
+// Quiet count at the right of a category row, e.g. 12 tasks.
+func (msgs Messages) SettingsCategoryTasks(count int) string {
+	return Catalog.Format(msgs.locale, "settingsCategoryTasks", map[string]any{"count": count})
+}
+
 // SettingsPaneAccount says "Account"
 // in the language the app shows.
 //
@@ -10394,6 +10588,24 @@ func SettingsSyncSignedInDevices(count string) string {
 // The account row's line with the number of devices.
 func (msgs Messages) SettingsSyncSignedInDevices(count string) string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignedInDevices", map[string]any{"count": count})
+}
+
+// SettingsSyncDevicesCount says "{count, plural, one {# device} other {# devices}}"
+// in the language the app shows.
+//
+// The number of devices after the time in the sync row, e.g. 1 minute ago
+// · 2 devices.
+func SettingsSyncDevicesCount(count int) string {
+	return In(i18n.Locale()).SettingsSyncDevicesCount(count)
+}
+
+// SettingsSyncDevicesCount says "{count, plural, one {# device} other {# devices}}"
+// in the language of msgs.
+//
+// The number of devices after the time in the sync row, e.g. 1 minute ago
+// · 2 devices.
+func (msgs Messages) SettingsSyncDevicesCount(count int) string {
+	return Catalog.Format(msgs.locale, "settingsSyncDevicesCount", map[string]any{"count": count})
 }
 
 // SettingsSyncSignOut says "Sign out"

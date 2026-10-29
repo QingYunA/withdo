@@ -114,7 +114,8 @@ func TestSettingsShowSelectsAPane(t *testing.T) {
 	if r.title != "Model" {
 		t.Errorf("title %q", r.title)
 	}
-	has(t, r.tt, "Pick a provider") // nothing is set up: the grid shows
+	hasFold(t, r.tt, "Switch to") // nothing is set up: the line and the grid show
+	has(t, r.tt, "Not set up: dates and reminders are still read on this computer.")
 }
 
 func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
@@ -137,7 +138,7 @@ func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 
 func TestGeneralPaneHasLanguageNotificationsAndTheDataFolder(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "Language", "System")
+	has(t, r.tt, "Language", "Follow system", "English", "简体中文")
 	hasNot(t, r.tt, "Install MCP", "Archived projects", "Privacy policy")
 	hasFold(t, r.tt, "Notifications and sound")
 	has(t, r.tt, "System notifications", "End-of-day reminder", "Sound effects")
@@ -191,12 +192,9 @@ func TestAboutPaneSaysAGPLAndLinksToTheApp(t *testing.T) {
 	}
 }
 
-func TestLanguagePopUpChoosesALanguageOrTheSystemOne(t *testing.T) {
+func TestLanguageSegmentedControlChoosesALanguageOrTheSystemOne(t *testing.T) {
 	r := newSettingsRig(t)
-	if err := r.tt.Click("System"); err != nil {
-		t.Fatal(err)
-	}
-	has(t, r.tt, "English", "简体中文")
+	has(t, r.tt, "Follow system", "English", "简体中文")
 	if err := r.tt.Click("简体中文"); err != nil {
 		t.Fatal(err)
 	}
@@ -205,14 +203,44 @@ func TestLanguagePopUpChoosesALanguageOrTheSystemOne(t *testing.T) {
 	}
 	r.rec.language = "zh-Hans"
 	r.tt.Frame()
-	if err := r.tt.Click("简体中文"); err != nil { // the pop-up now shows the choice
+	if err := r.tt.Click("English"); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.tt.Click("System"); err != nil {
+	if r.rec.language != "en" {
+		t.Errorf("chose %q", r.rec.language)
+	}
+	if err := r.tt.Click("Follow system"); err != nil {
 		t.Fatal(err)
 	}
 	if r.rec.language != "" {
-		t.Errorf("chose %q after System", r.rec.language)
+		t.Errorf("chose %q after Follow system", r.rec.language)
+	}
+}
+
+// The segmented control is a radio group: Left and Right choose among its parts while it has the
+// keyboard, without a pop-up.
+func TestLanguageSegmentedControlMovesWithTheArrowKeys(t *testing.T) {
+	r := newSettingsRig(t)
+	if err := r.tt.Click("English"); err != nil { // a click gives the control the keyboard
+		t.Fatal(err)
+	}
+	if r.rec.language != "en" {
+		t.Fatalf("the click chose %q", r.rec.language)
+	}
+	r.tt.Key(0, ui.KeyRight)
+	r.tt.Frame()
+	if r.rec.language != "zh-Hans" {
+		t.Errorf("Right chose %q, want 简体中文", r.rec.language)
+	}
+	r.tt.Key(0, ui.KeyLeft)
+	r.tt.Frame()
+	if r.rec.language != "en" {
+		t.Errorf("Left chose %q, want English", r.rec.language)
+	}
+	r.tt.Key(0, ui.KeyLeft)
+	r.tt.Frame()
+	if r.rec.language != "" {
+		t.Errorf("Left again chose %q, want Follow system", r.rec.language)
 	}
 }
 
@@ -296,7 +324,7 @@ func TestTheReminderAndSoundMovedToGeneralAndRecentChangesToTheGitHubGroup(t *te
 	has(t, r.tt, "End-of-day reminder", "Sound effects")
 	hasNot(t, r.tt, "Recent changes")
 	r.pane(t, "Model")
-	hasFold(t, r.tt, "Use your own model") // a group label is set in the section style
+	hasFold(t, r.tt, "Switch to") // a group label is set in the section style
 	hasNot(t, r.tt, "Recent changes", "End-of-day reminder", "Sound effects")
 	r.pane(t, "Agents")
 	r.tt.Scroll(340, 300, 0, 9000)

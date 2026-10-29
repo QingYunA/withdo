@@ -11,18 +11,17 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// assistState is Settings > Assistant. At rest the pane shows the provider in use and the others
-// that are set up; Change opens the grid of providers (settings_providers.go), where one is
-// picked, its key and model are typed, and Save and test makes it the one in use.
+// assistState is Settings > Model. The pane shows the provider in use and, under it, the grid of
+// every provider (settings_providers.go): a set-up one becomes the one in use and is tested, another
+// opens its key and model form under the grid.
 type assistState struct {
-	test     testResult // what the last test said, for one provider
-	changing bool       // the grid is open
-	pick     string     // the provider picked in the grid
-	drafts   map[string]*draft
-	lists    map[string]*modelList
-	fs       fields // the typed fields' keyboard state
-	saving   bool   // Save and test is running
-	err      string // why the last Save and test failed, shown under the form
+	test   testResult // what the last test said, for one provider
+	pick   string     // the provider whose form is open under the grid
+	drafts map[string]*draft
+	lists  map[string]*modelList
+	fs     fields // the typed fields' keyboard state
+	saving bool   // Save and test is running
+	err    string // why the last Save and test failed, shown under the form
 }
 
 // testResult is what the last test said, for one provider.
@@ -33,14 +32,15 @@ type testResult struct {
 	ok      bool
 }
 
-// modelPane is the user's own model: the provider in use and the others set up, or the grid.
+// modelPane is the user's own model: the provider in use, then the grid to switch, and the form of
+// a provider that is not set up yet.
 func (s *Settings) modelPane(c *ui.Context, t *theme.Tokens) {
 	paneHeader(c, t, s.say.SettingsPaneModel(), s.say.SettingsPaneModelLine())
-	groupLabel(c, t, s.say.SettingsOwnModel())
 	s.assistantPane(c, t)
 }
 
-// assistantPane is the provider in use and the others set up, or the grid when none is.
+// assistantPane is the provider in use (or one line saying there is none), the grid of every
+// provider, and the form of the one picked from it.
 func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 	if s.app.Models == nil {
 		group(c, t, "assistant", func() { settingsRow(c, t, "none", s.say.SettingsAssistantNone(), "", true, nil) })
@@ -51,31 +51,24 @@ func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 	}
 	ps := s.app.Models.Providers()
 	var inUse *data.Provider
-	var others []data.Provider
-	for i, p := range ps {
-		switch {
-		case p.Active:
+	for i := range ps {
+		if ps[i].Active {
 			inUse = &ps[i]
-		case p.Configured:
-			others = append(others, p)
+			break
 		}
 	}
-	setUp := inUse != nil || len(others) > 0
-	if s.assist.changing || !setUp {
-		s.changePane(c, t, ps, inUse, setUp)
-		return
-	}
 	if inUse != nil {
-		groupLabel(c, t, s.say.SettingsInUse())
 		s.inUseCard(c, t, *inUse)
+	} else {
+		theme.Paragraph(c, theme.Body, t.TextSecondary, s.say.SettingsModelNone(), 0).Margin(0, 4, 16)
 	}
-	if len(others) > 0 {
-		groupLabel(c, t, s.say.SettingsAlsoSetUp())
-		group(c, t, "also", func() {
-			for i, p := range others {
-				s.alsoRow(c, t, p, i == 0)
-			}
-		})
+	groupLabel(c, t, s.say.SettingsSwitchTo())
+	s.providerGrid(c, t, ps)
+	for _, p := range ps {
+		if p.ID == s.assist.pick {
+			s.providerForm(c, t, p)
+			break
+		}
 	}
 	s.memoryGroup(c, t)
 }
@@ -104,7 +97,7 @@ func (s *Settings) memoryGroup(c *ui.Context, t *theme.Tokens) {
 }
 
 // inUseCard is the provider the assistant uses: its logo, name, model and how the last test went,
-// with Change.
+// with Test.
 func (s *Settings) inUseCard(c *ui.Context, t *theme.Tokens, p data.Provider) {
 	res := s.assist.test
 	if res.id != p.ID {
@@ -120,17 +113,16 @@ func (s *Settings) inUseCard(c *ui.Context, t *theme.Tokens, p data.Provider) {
 					theme.Paragraph(c, theme.Meta, t.Blocked(), res.text, 2)
 				}
 			})
-			if settingsButton(c, t, "change", s.say.SettingsChange(), false).Clicked() {
-				s.assist.changing, s.assist.pick = true, p.ID
-				s.assist.err = ""
-				s.fetchModels(p, "")
+			if settingsButton(c, t, "test", s.say.ModelsTest(), false).Clicked() {
+				s.runTest(p)
 			}
 		})
 	})
 }
 
 // statusLine is the model and how the connection to it is: connected with the time a request
-// took, being tested, not tested, or failed (the words of the failure are under it).
+// took, being tested, or not tested (the Test button on the card, and the words of a failure under
+// the line).
 func (s *Settings) statusLine(c *ui.Context, t *theme.Tokens, p data.Provider, res testResult) {
 	ui.Row(c).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
 		if p.Model != "" {
@@ -144,35 +136,9 @@ func (s *Settings) statusLine(c *ui.Context, t *theme.Tokens, p data.Provider, r
 			statusDot(c, t.Status(data.Done))
 			theme.Text(c, theme.Meta, t.Status(data.Done), res.text)
 		default:
-			if res.text == "" {
-				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsStatusNone())
-			}
-			link := s.say.ModelsTest()
-			if res.text != "" {
-				link = s.say.ModelsTestAgain()
-			}
-			if settingsLink(c, t, "test", link, link).Clicked() {
-				s.runTest(p)
-			}
+			theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.ModelsStatusNone())
 		}
 	})
-}
-
-// alsoRow is a provider that is set up but not in use, with Use.
-func (s *Settings) alsoRow(c *ui.Context, t *theme.Tokens, p data.Provider, first bool) {
-	sub := p.Model
-	if !p.HasKeyField {
-		sub += " · " + providerNote(s.say, p)
-	}
-	settingsRowLead(c, t, "also-"+p.ID, providerName(s.say, p), sub, first, func() {
-		use := s.say.SettingsUse()
-		if settingsLink(c, t, "use-"+p.ID, use, s.say.A11yUseProvider(providerName(s.say, p))).Clicked() {
-			s.assist.test = testResult{}
-			if s.app.Models.SetActive(p.ID) == nil {
-				s.runTest(p)
-			}
-		}
-	}, func() { providerLogo(c, t, p.ID, theme.LogoRow) })
 }
 
 // edit is the provider as it is stored, to which one change is made.

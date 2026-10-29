@@ -63,24 +63,24 @@ func (s *Settings) notificationsRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// endOfDayRows are the end-of-day reminder's switch and the time it comes. With the reminder off, or
-// the notifications, the time is dimmed and out of reach.
+// endOfDayRows are the end-of-day reminder's switch and the time it comes, on one row. With the
+// reminder off, or the notifications, the time is dimmed and out of reach.
 func (s *Settings) endOfDayRows(c *ui.Context, t *theme.Tokens) {
 	on := s.app.EndOfDayOn()
+	active := on && s.app.Notifications()
 	settingsRow(c, t, "end-of-day", s.say.SettingsEndOfDay(), s.say.SettingsEndOfDayMeta(), false, func() {
-		ui.Switch(c.Key("end-of-day-switch"), &on).Label(s.say.SettingsEndOfDaySwitch())
+		ui.Row(c.Key("end-of-day-controls")).Shrink(0).Gap(10).AlignItems(ui.Center).Children(func() {
+			ui.Box(c.Key("end-of-day-time-pop")).Shrink(0).Opacity(dimmed(active)).Disabled(!active).Children(func() {
+				if at, ok := popUp(c, t, "end-of-day-time", s.app.EndOfDayAt(), s.endOfDayTimes()); ok {
+					s.app.SetEndOfDayAt(at)
+				}
+			})
+			ui.Switch(c.Key("end-of-day-switch"), &on).Label(s.say.SettingsEndOfDaySwitch())
+		})
 	})
 	if on != s.app.EndOfDayOn() {
 		s.app.SetEndOfDay(on)
 	}
-	active := on && s.app.Notifications()
-	settingsRowLead(c, t, "end-of-day-time", s.say.SettingsEndOfDayTime(), "", false, func() {
-		ui.Box(c.Key("end-of-day-time-pop")).Shrink(0).Opacity(dimmed(active)).Disabled(!active).Children(func() {
-			if at, ok := popUp(c, t, "end-of-day-time", s.app.EndOfDayAt(), s.endOfDayTimes()); ok {
-				s.app.SetEndOfDayAt(at)
-			}
-		})
-	}, func() { ui.Box(c).Width(14).Shrink(0) }) // indented under the switch
 }
 
 // soundRow is the switch for the quiet sounds of the Summary scene.
@@ -94,11 +94,22 @@ func (s *Settings) soundRow(c *ui.Context, t *theme.Tokens) {
 	}
 }
 
-// updatesRow is the switch for checking for updates in the background; the update plugin keeps it.
+// updatesRow is the switch for checking for updates in the background, and the way to check now.
+// The update plugin keeps both: the switch is its automatic checks, the link opens its window, which
+// asks the server at once. The quiet line says the version and when it last checked.
 func (s *Settings) updatesRow(c *ui.Context, t *theme.Tokens) {
 	on := s.app.Act.AutomaticUpdates()
-	settingsRow(c, t, "updates", s.say.SettingsUpdates(), s.say.SettingsUpdatesMeta(), true, func() {
-		ui.Switch(c.Key("updates-switch"), &on).Label(s.say.SettingsUpdatesSwitch())
+	meta := s.say.SettingsUpdatesNeverChecked(s.app.Config.Version)
+	if at := s.app.Act.LastUpdateCheck(); !at.IsZero() {
+		meta = s.say.SettingsUpdatesChecked(s.app.Config.Version, s.clock.Ago(at, s.app.Now()))
+	}
+	settingsRow(c, t, "updates", s.say.SettingsUpdates(), meta, true, func() {
+		ui.Row(c.Key("updates-controls")).Shrink(0).Gap(12).AlignItems(ui.Center).Children(func() {
+			if label := s.say.SettingsCheckNow(); settingsLink(c, t, "updates-check", label, label).Clicked() {
+				s.app.Act.CheckForUpdates()
+			}
+			ui.Switch(c.Key("updates-switch"), &on).Label(s.say.SettingsUpdatesSwitch())
+		})
 	})
 	if on != s.app.Act.AutomaticUpdates() {
 		s.app.Act.SetAutomaticUpdates(on)
@@ -142,13 +153,24 @@ func (s *Settings) endOfDayTimes() []popOption {
 }
 
 // languageControl chooses the language of the interface: the system's, or one the app is written
-// in, each named in itself.
+// in, each named in itself. It is a segmented control, so one click is all a language takes.
 func (s *Settings) languageControl(c *ui.Context, t *theme.Tokens) {
-	opts := []popOption{{"", s.say.LanguageSystem()}}
-	for _, tag := range s.app.Act.Languages() {
-		opts = append(opts, popOption{tag, i18n.Autonym(tag)})
+	tags := s.app.Act.Languages()
+	labels := []string{s.say.LanguageSystem()}
+	for _, tag := range tags {
+		labels = append(labels, i18n.Autonym(tag))
 	}
-	if tag, ok := popUp(c, t, "language", s.app.Act.Language(), opts); ok {
+	sel := 0
+	for i, tag := range tags {
+		if tag == s.app.Act.Language() {
+			sel = i + 1
+		}
+	}
+	if i := segmented(c, t, "language", s.say.SettingsLanguage(), labels, sel); i >= 0 {
+		tag := ""
+		if i > 0 {
+			tag = tags[i-1]
+		}
 		s.app.Act.SetLanguage(tag)
 	}
 }

@@ -97,6 +97,23 @@ func (k Clock) Age(t, now time.Time) string {
 	return k.format(t.In(now.Location()), "MMMd")
 }
 
+// Ago is how long ago t was, in words: "just now", "2 minutes ago", "3 hours ago", "2 days ago",
+// then a date once it is a week or more.
+func (k Clock) Ago(t, now time.Time) string {
+	d := now.Sub(t)
+	switch {
+	case d < time.Minute:
+		return k.Say.AgeJustNow()
+	case d < time.Hour:
+		return k.Say.AgeMinutesAgo(int(d / time.Minute))
+	case d < 24*time.Hour:
+		return k.Say.AgeHoursAgo(int(d / time.Hour))
+	case d < 7*24*time.Hour:
+		return k.Say.AgeDaysAgo(int(d / (24 * time.Hour)))
+	}
+	return k.format(t.In(now.Location()), "MMMd")
+}
+
 // Span writes a span of hours as "5h" or, from two days, "3d".
 func (k Clock) Span(hours int) string {
 	if hours >= 48 {

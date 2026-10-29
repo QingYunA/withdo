@@ -63,29 +63,3 @@ func (m *Main) glyphButton(c *ui.Context, t *theme.Tokens, task data.Task, fill 
 	return btn
 }
 
-// segmented is a quiet well of labels with the chosen one raised, like the List | Board switch. It
-// returns the index clicked this frame, or -1.
-func segmented(c *ui.Context, t *theme.Tokens, key string, labels []string, selected int) int {
-	clicked := -1
-	ui.Row(c.Key(key)).Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Children(func() {
-		for i, name := range labels {
-			on := i == selected
-			seg := ui.ButtonBase(c.Key(key+"-"+itoa(i))).Padding(3, 10).Radius(5).Label(name).Cursor(ui.CursorPointer)
-			switch {
-			case on:
-				seg.Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))
-			case seg.Hovered():
-				seg.Background(t.BgHover)
-			}
-			ink := t.TextSecondary
-			if on {
-				ink = t.Text
-			}
-			seg.Children(func() { theme.Text(c, theme.Meta, ink, name) })
-			if seg.Clicked() && !on {
-				clicked = i
-			}
-		}
-	})
-	return clicked
-}
