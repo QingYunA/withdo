@@ -3,6 +3,20 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.11.1
+
+No database change; the app updates itself from 0.11.0.
+
+- **A new Settings window.** The panes are in a sidebar: Account, General, Categories, Agents, Model
+  and About. Your agents show as tiles with their pixel avatars, and you connect one with one click.
+  Pick your model from a grid of providers.
+- The project menu in the sidebar and the milestone menus now match the app's look, light and dark,
+  instead of the system's.
+- Dragging the window by its top no longer shakes.
+- Copy and paste shortcuts work even when no text field has the focus.
+- The Account page no longer shows the official sync server's address, and on Windows it calls
+  this computer a PC, not a Mac.
+
 ## 0.11.0
 
 No database change. Install this version from the DMG or the installer: 0.10.2 and older look for
