@@ -40,8 +40,8 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 	shot(t, name, tt.Image(), true, dark)
 }
 
-// settingsApp is the app with DeepSeek in use, Anthropic and Ollama also set up, and a few agents
-// that reported.
+// settingsApp is the app with DeepSeek in use, Anthropic and Ollama also set up, and five agents
+// on this computer as in the v41 Agents frame.
 func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	t.Helper()
 	app, store, _ := newTestApp(t)
@@ -51,8 +51,6 @@ func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
 	mac.write(".codex/config.toml", "[mcp_servers.withdo]\ncommand = \"x\"\n")
 	mac.write(".cursor/mcp.json", "{}")
-	// DeepSeek Harness is here by its config folder alone, as in the v14 frame.
-	mac.write(".dsh/cordis.patch.yml", "[]\n")
 	app.Models = newFakeModels(t)
 	app.GitHub = data.NewFakeGitHub(st)
 	mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))

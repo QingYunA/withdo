@@ -151,8 +151,11 @@ func TestChineseAgentsPane(t *testing.T) {
 	r := newSettingsRig(t)
 	inChinese(r.tt)
 	r.pane(t, "Agent")
-	has(t, r.tt, "Claude Code", "拷贝", "不会安装或启动 Agent 本身")
-	hasNot(t, r.tt, "连接 Claude Code")
+	has(t, r.tt, "Claude Code", "手动接入", "不会安装或启动 Agent 本身")
+	hasNot(t, r.tt, "接入 Claude Code")
+	mustNil(t, r.tt.Click("手动接入"))
+	r.tt.Frame()
+	has(t, r.tt, "拷贝", "复制接入说明")
 }
 
 func TestChineseConversation(t *testing.T) {

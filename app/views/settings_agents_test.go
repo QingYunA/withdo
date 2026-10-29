@@ -14,13 +14,13 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 )
 
-// agentsRig is the Agents pane open, on a Mac with six of the fourteen agents: Claude Code and
-// Codex with the MCP installed, Gemini CLI, Cursor, opencode and VS Code found; DeepSeek Harness
-// and the other seven are only in More.
+// agentsRig is the Agents pane open, on a Mac with five of the fourteen agents: Claude Code and
+// Codex with the MCP installed, Gemini CLI, Cursor and opencode found. DeepSeek Harness and the
+// other eight are only in More.
 func agentsRig(t *testing.T) *settingsRig {
 	t.Helper()
 	r := newSettingsRig(t)
-	r.mac.has("claude", "codex", "gemini", "opencode", "code")
+	r.mac.has("claude", "codex", "gemini", "opencode")
 	r.mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
 	r.mac.write(".codex/config.toml", "[mcp_servers.withdo]\ncommand = \"x\"\n")
 	r.mac.write(".cursor/mcp.json", "{}")
@@ -29,7 +29,7 @@ func agentsRig(t *testing.T) *settingsRig {
 }
 
 // emptyMacRig is the pane on a Mac where nothing was found and nothing ever reported: the seeded
-// fake reports for Claude Code would otherwise put it in On this Mac.
+// fake reports for Claude Code would otherwise put it in On this computer.
 func emptyMacRig(t *testing.T) *settingsRig {
 	t.Helper()
 	r := newSettingsRig(t)
@@ -39,87 +39,68 @@ func emptyMacRig(t *testing.T) *settingsRig {
 	return r
 }
 
-func TestAgentsPaneSplitsOnThisMacAndMoreInCatalogOrder(t *testing.T) {
+func TestAgentsPanePutsFiveTilesInARowAndKeepsCatalogOrder(t *testing.T) {
 	r := agentsRig(t)
-	has(t, r.tt, "On this computer", "More", "Only the MCP is installed")
-	// The counts sit beside their labels: six on this Mac, eight in More.
-	for label, count := range map[string]string{"On this computer": "6", "More": "8"} {
-		head, ok := r.tt.Find(label)
-		if !ok {
-			t.Fatalf("no section label %q", label)
-		}
-		digits, ok := r.tt.Find(count)
-		if !ok {
-			t.Fatalf("no count %q beside %q", count, label)
-		}
-		if got := countText(r.tt, count); got != 1 {
-			t.Errorf("%q is drawn %d times", count, got)
-		}
-		if digits.Y != head.Y {
-			t.Errorf("the count %q is at y %v, the label %q at %v", count, digits.Y, label, head.Y)
-		}
-		if digits.X <= head.X+head.W {
-			t.Errorf("the count %q is not after %q", count, label)
-		}
-	}
-	local := []string{"Claude Code", "Codex", "Gemini CLI", "Cursor", "opencode", "Copilot (VS Code)"}
-	more := []string{"DeepSeek Harness", "Qwen Code", "Kimi CLI", "Windsurf", "Zed", "Amp", "Kiro", "Cline"}
+	has(t, r.tt, "On this computer", "5", "9 more agents", "Connect by hand")
+	local := []string{"Claude Code", "Codex", "Gemini CLI", "Cursor", "opencode"}
 	x, y := map[string]float32{}, map[string]float32{}
-	for _, n := range append(append([]string{}, local...), more...) {
+	for _, n := range local {
 		f, ok := r.tt.Find(n)
 		if !ok {
-			t.Fatalf("no row for %s", n)
+			t.Fatalf("no tile for %s", n)
 		}
 		x[n], y[n] = f.X, f.Y
 	}
-	// On this Mac: two columns, read left to right and then top to bottom, in catalog order.
-	for i := 0; i+1 < len(local); i += 2 {
-		if x[local[i]] >= x[local[i+1]] {
-			t.Errorf("%s (x %v) is not left of %s (x %v)", local[i], x[local[i]], local[i+1], x[local[i+1]])
+	for i := 1; i < len(local); i++ {
+		if x[local[i]] <= x[local[i-1]] {
+			t.Errorf("%s (x %v) is not right of %s (x %v)", local[i], x[local[i]], local[i-1], x[local[i-1]])
+		}
+		if y[local[i]] != y[local[0]] {
+			t.Errorf("%s (y %v) is not on the first tile row (y %v)", local[i], y[local[i]], y[local[0]])
 		}
 	}
-	for i := 2; i < len(local); i++ {
-		if y[local[i]] <= y[local[i-2]] {
-			t.Errorf("%s (y %v) is not under %s (y %v)", local[i], y[local[i]], local[i-2], y[local[i-2]])
-		}
+	// More is closed until its row is clicked; opened, it reads two to a row in catalog order.
+	if got := countText(r.tt, "Get it"); got != 0 {
+		t.Errorf("%d Get it links while More is closed, want 0", got)
 	}
-	// More: the same reading order, two to a row.
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
+	more := []string{"DeepSeek Harness", "Copilot (VS Code)", "Qwen Code", "Kimi CLI", "Windsurf", "Zed", "Amp", "Kiro", "Cline"}
 	for i := 0; i+1 < len(more); i += 2 {
-		if x[more[i]] >= x[more[i+1]] {
-			t.Errorf("%s (x %v) is not left of %s (x %v)", more[i], x[more[i]], more[i+1], x[more[i+1]])
+		a, _ := r.tt.Find(more[i])
+		b, _ := r.tt.Find(more[i+1])
+		if a.X >= b.X {
+			t.Errorf("%s (x %v) is not left of %s (x %v)", more[i], a.X, more[i+1], b.X)
 		}
 	}
 	for i := 2; i < len(more); i++ {
-		if y[more[i]] <= y[more[i-2]] {
-			t.Errorf("%s (y %v) is not under %s (y %v)", more[i], y[more[i]], more[i-2], y[more[i-2]])
+		a, _ := r.tt.Find(more[i])
+		b, _ := r.tt.Find(more[i-2])
+		if a.Y <= b.Y {
+			t.Errorf("%s (y %v) is not under %s (y %v)", more[i], a.Y, more[i-2], b.Y)
 		}
 	}
-	if y[more[0]] <= y[local[len(local)-1]] {
-		t.Errorf("More (y %v) is not under the last row of On this Mac (y %v)", y[more[0]], y[local[len(local)-1]])
+	if got := countText(r.tt, "Get it"); got != 9 {
+		t.Errorf("%d Get it links, want 9", got)
 	}
 }
 
-func TestBothSectionsFitTheWindowBeforeItScrolls(t *testing.T) {
+func TestFiveTilesAndBothDisclosuresClosedFitTheWindow(t *testing.T) {
 	r := agentsRig(t)
-	for _, n := range []string{"On this computer", "6", "More", "8", "Kiro", "Cline"} {
+	for _, n := range []string{
+		"On this computer", "5", "Claude Code", "opencode", "9 more agents", "Connect by hand",
+		"Open agent work in", "GitHub", "Recent changes", "The latest merged pull requests and issues, by project · gh signed in",
+	} {
 		f, ok := r.tt.Find(n)
 		if !ok {
 			t.Fatalf("no %s", n)
 		}
 		if f.Y+f.H > theme.SettingsHeight {
-			t.Errorf("%s ends at %v, below the first screen (%v)", n, f.Y+f.H, theme.SettingsHeight)
+			t.Errorf("%s ends at %v, below the window (%v)", n, f.Y+f.H, theme.SettingsHeight)
 		}
 	}
-	// The way to open an agent's work and the command to copy fit too; the GitHub group scrolls.
-	for _, n := range []string{"Open agent work in", "Or run this once in a terminal, for Claude Code"} {
-		f, ok := r.tt.Find(n)
-		if !ok {
-			t.Fatalf("no %s", n)
-		}
-		if f.Y+f.H > theme.SettingsHeight {
-			t.Errorf("%s ends at %v, below the first screen (%v)", n, f.Y+f.H, theme.SettingsHeight)
-		}
-	}
+	// Both disclosures are closed, so neither the More list nor the command well is drawn.
+	hasNot(t, r.tt, "Get it", "Or run this once in a terminal, for Claude Code", "Copy setup guide")
 }
 
 func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
@@ -129,19 +110,19 @@ func TestAgentsPaneSaysWhereEachAgentStands(t *testing.T) {
 	store.SeedReportAs(1, "codex", "two", fixedNow().Add(-50*time.Minute))
 	r.app.Refresh()
 	r.tt.Frame()
-	has(t, r.tt,
-		"2 reports today", // Codex
-		"Found · gemini", "Found · ~/.cursor", "Found · opencode", "Found · code")
-	hasNot(t, r.tt, "Not on this Mac")
-	// two installed, four to install, eight only in More
-	if got := countText(r.tt, "MCP installed"); got != 2 {
-		t.Errorf("%d agents with the MCP installed, want 2", got)
+	has(t, r.tt, "2 reports today", "Found", "Connected", "Connect")
+	hasNot(t, r.tt, "Found · gemini", "Not on this Mac")
+	// two connected, three to connect, nine only in More
+	if got := countText(r.tt, "Connected"); got != 2 {
+		t.Errorf("%d Connected pills, want 2", got)
 	}
-	if got := countText(r.tt, "Install MCP"); got != 4 {
-		t.Errorf("%d Install MCP buttons, want 4 (Gemini CLI, Cursor, opencode, Copilot)", got)
+	if got := countText(r.tt, "Connect"); got != 3 {
+		t.Errorf("%d Connect buttons, want 3 (Gemini CLI, Cursor, opencode)", got)
 	}
-	if got := countText(r.tt, "Get it"); got != 8 {
-		t.Errorf("%d Get it links, want 8 (the whole of More)", got)
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
+	if got := countText(r.tt, "Get it"); got != 9 {
+		t.Errorf("%d Get it links, want 9", got)
 	}
 }
 
@@ -151,8 +132,8 @@ func TestAnAgentThatReportedHasItsMCPInstalledEvenIfItsConfigIsElsewhere(t *test
 	r.app.Refresh()
 	r.tt.Frame()
 	has(t, r.tt, "No reports today")
-	if got := countText(r.tt, "Install MCP"); got != 3 {
-		t.Errorf("%d Install MCP buttons, want 3", got)
+	if got := countText(r.tt, "Connect"); got != 2 {
+		t.Errorf("%d Connect buttons, want 2", got)
 	}
 }
 
@@ -171,28 +152,31 @@ func TestAnAgentThatOnlyReportedStaysOnThisMac(t *testing.T) {
 	r.app.Store.(*data.Real).SeedReportAs(1, "amp", "one", fixedNow().Add(-time.Hour))
 	r.app.Refresh()
 	r.tt.Frame()
-	has(t, r.tt, "Amp", "MCP installed")
+	has(t, r.tt, "Amp", "Connected", "8 more agents")
 	if got := countText(r.tt, "Amp"); got != 1 {
 		t.Errorf("Amp is drawn %d times, want once (On this Mac, not More)", got)
 	}
-	if got := countText(r.tt, "7"); got != 2 {
-		t.Errorf("%d counts read seven, want 7 on this Mac and 7 in More", got)
-	}
-	if got := countText(r.tt, "Get it"); got != 7 {
-		t.Errorf("%d Get it links, want 7", got)
+	mustNil(t, r.tt.Click("8 more agents"))
+	r.tt.Frame()
+	if got := countText(r.tt, "Get it"); got != 8 {
+		t.Errorf("%d Get it links, want 8", got)
 	}
 }
 
 func TestAnEmptyMacShowsTheEmptyRowAndAllAgentsUnderMore(t *testing.T) {
 	r := emptyMacRig(t)
-	has(t, r.tt, "On this computer", "No agent found on this computer yet", "See how to connect", "More", "14")
-	hasNot(t, r.tt, "Install MCP")
-	if got := countText(r.tt, "Get it"); got != 14 {
-		t.Errorf("%d Get it links, want 14", got)
+	has(t, r.tt, "On this computer", "0", "No agent found on this computer yet", "See how to connect", "14 more agents")
+	if got := countText(r.tt, "Connect"); got != 0 {
+		t.Errorf("%d Connect buttons on an empty Mac, want 0", got)
 	}
 	mustNil(t, r.tt.Click("See how to connect"))
 	if len(r.rec.urls) != 1 || r.rec.urls[0] != repoURL+"#connect-claude-code" {
 		t.Errorf("opened %v", r.rec.urls)
+	}
+	mustNil(t, r.tt.Click("14 more agents"))
+	r.tt.Frame()
+	if got := countText(r.tt, "Get it"); got != 14 {
+		t.Errorf("%d Get it links, want 14", got)
 	}
 }
 
@@ -202,10 +186,13 @@ func TestAnEmptyMacSaysSoInChinese(t *testing.T) {
 	inChinese(r.tt)
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "本机已有", "还没在这台电脑上找到 Agent", "去看看怎么接", "更多", "14", "去下载")
+	has(t, r.tt, "本机已有", "0", "还没在这台电脑上找到 Agent", "去看看怎么接", "还有 14 个 Agent")
+	mustNil(t, r.tt.Click("还有 14 个 Agent"))
+	r.tt.Frame()
+	has(t, r.tt, "去下载")
 }
 
-func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
+func TestConnectRunsTheAgentsCommandThenShowsItConnected(t *testing.T) {
 	r := agentsRig(t)
 	gate := make(chan struct{})
 	r.mac.mu.Lock()
@@ -215,20 +202,20 @@ func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
 		return nil, nil
 	}
 	r.mac.mu.Unlock()
-	if err := r.tt.Click("Install the MCP in Gemini CLI"); err != nil {
+	if err := r.tt.Click("Connect Gemini CLI"); err != nil {
 		t.Fatal(err)
 	}
 	r.tt.Frame()
-	has(t, r.tt, "Installing…")
+	has(t, r.tt, "Connecting…")
 	if len(r.rec.urls) != 0 {
 		t.Errorf("opened %v", r.rec.urls)
 	}
 	close(gate)
 	r.rec.drain(t)
 	r.tt.Frame()
-	hasNot(t, r.tt, "Installing…")
-	if got := countText(r.tt, "MCP installed"); got != 3 {
-		t.Errorf("%d agents with the MCP installed, want 3", got)
+	hasNot(t, r.tt, "Connecting…")
+	if got := countText(r.tt, "Connected"); got != 3 {
+		t.Errorf("%d Connected pills, want 3", got)
 	}
 	cmds := r.mac.commands()
 	if len(cmds) != 1 || cmds[0][0] != "/usr/local/bin/gemini" || !strings.Contains(strings.Join(cmds[0], " "), "mcp add -s user withdo "+filepath.Join(r.mac.home, ".local/bin/withdo")+" mcp") {
@@ -236,26 +223,26 @@ func TestInstallMCPRunsTheAgentsCommandThenShowsItInstalled(t *testing.T) {
 	}
 }
 
-func TestInstallMCPShowsAFailureInTheRow(t *testing.T) {
+func TestConnectShowsAFailureUnderTheTile(t *testing.T) {
 	r := agentsRig(t)
 	r.mac.mu.Lock()
 	r.mac.run = func(string, []string) ([]byte, error) {
 		return []byte("noise\nerror: unknown option '-s'\n"), errors.New("exit status 1")
 	}
 	r.mac.mu.Unlock()
-	mustNil(t, r.tt.Click("Install the MCP in Gemini CLI"))
+	mustNil(t, r.tt.Click("Connect Gemini CLI"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "Gemini CLI said: error: unknown option '-s'", "Install MCP")
-	if got := countText(r.tt, "MCP installed"); got != 2 {
-		t.Errorf("%d agents with the MCP installed, want 2", got)
+	has(t, r.tt, "Gemini CLI said: error: unknown option '-s'", "Connect")
+	if got := countText(r.tt, "Connected"); got != 2 {
+		t.Errorf("%d Connected pills, want 2", got)
 	}
 }
 
-func TestInstallMCPWithoutTheCoreSaysSo(t *testing.T) {
+func TestConnectWithoutTheCoreSaysSo(t *testing.T) {
 	r := agentsRig(t)
 	mustNil(t, os.Remove(filepath.Join(r.mac.home, ".local", "bin", "withdo")))
-	mustNil(t, r.tt.Click("Install the MCP in Gemini CLI"))
+	mustNil(t, r.tt.Click("Connect Gemini CLI"))
 	r.rec.drain(t)
 	r.tt.Frame()
 	has(t, r.tt, "withdo isn't at ~/.local/bin/withdo. Build it first, then try again.")
@@ -264,13 +251,13 @@ func TestInstallMCPWithoutTheCoreSaysSo(t *testing.T) {
 	}
 }
 
-func TestInstallMCPEditsACursorFileAndShowsItInstalled(t *testing.T) {
+func TestConnectEditsACursorFileAndShowsItConnected(t *testing.T) {
 	r := agentsRig(t)
-	mustNil(t, r.tt.Click("Install the MCP in Cursor"))
+	mustNil(t, r.tt.Click("Connect Cursor"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	if got := countText(r.tt, "MCP installed"); got != 3 {
-		t.Errorf("%d agents with the MCP installed, want 3", got)
+	if got := countText(r.tt, "Connected"); got != 3 {
+		t.Errorf("%d Connected pills, want 3", got)
 	}
 	b, err := os.ReadFile(filepath.Join(r.mac.home, ".cursor", "mcp.json"))
 	mustNil(t, err)
@@ -282,16 +269,16 @@ func TestInstallMCPEditsACursorFileAndShowsItInstalled(t *testing.T) {
 	}
 }
 
-// DeepSeek Harness has no JSON config: Install MCP appends a Cordis patch entry, in place.
-func TestInstallMCPAppendsADeepSeekHarnessCordisPatch(t *testing.T) {
+// DeepSeek Harness has no JSON config: Connect appends a Cordis patch entry, in place.
+func TestConnectAppendsADeepSeekHarnessCordisPatch(t *testing.T) {
 	r := newSettingsRig(t)
 	r.mac.write(".dsh/cordis.patch.yml", "# mine\n- id: ui-chat\n  config:\n    transcriptView: standard\n")
 	r.pane(t, "Agents")
-	has(t, r.tt, "DeepSeek Harness", "Found · ~/.dsh")
-	mustNil(t, r.tt.Click("Install the MCP in DeepSeek Harness"))
+	has(t, r.tt, "DeepSeek Harness", "Found")
+	mustNil(t, r.tt.Click("Connect DeepSeek Harness"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "MCP installed")
+	has(t, r.tt, "Connected")
 	b, err := os.ReadFile(filepath.Join(r.mac.home, ".dsh", "cordis.patch.yml"))
 	mustNil(t, err)
 	if !strings.Contains(string(b), "# mine") || !strings.Contains(string(b), "serverName: withdo") {
@@ -308,7 +295,7 @@ func TestADeepSeekPatchThatCannotBeAppendedOffersTheSnippet(t *testing.T) {
 	orig := "some: mapping\n"
 	r.mac.write(".dsh/cordis.patch.yml", orig)
 	r.pane(t, "Agents")
-	mustNil(t, r.tt.Click("Install the MCP in DeepSeek Harness"))
+	mustNil(t, r.tt.Click("Connect DeepSeek Harness"))
 	r.rec.drain(t)
 	r.tt.Frame()
 	has(t, r.tt, "won't rewrite it", "~/.dsh/cordis.patch.yml", "@deepseek-ai/dsh-mcp-client")
@@ -319,7 +306,7 @@ func TestADeepSeekPatchThatCannotBeAppendedOffersTheSnippet(t *testing.T) {
 	}
 }
 
-func TestInstallMCPWritesAMCPJSONForKiroAndCline(t *testing.T) {
+func TestConnectWritesAMCPJSONForKiroAndCline(t *testing.T) {
 	for _, id := range []string{"Kiro", "Cline"} {
 		r := newSettingsRig(t)
 		r.app.Store = demoStore(t, fixedNow, false)
@@ -327,11 +314,11 @@ func TestInstallMCPWritesAMCPJSONForKiroAndCline(t *testing.T) {
 		r.mac.write(".kiro/settings/mcp.json", "{}")
 		r.mac.write("Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json", "{}")
 		r.pane(t, "Agents")
-		mustNil(t, r.tt.Click("Install the MCP in "+id))
+		mustNil(t, r.tt.Click("Connect "+id))
 		r.rec.drain(t)
 		r.tt.Frame()
-		if got := countText(r.tt, "MCP installed"); got != 1 {
-			t.Errorf("%s: %d agents with the MCP installed, want 1", id, got)
+		if got := countText(r.tt, "Connected"); got != 1 {
+			t.Errorf("%s: %d Connected pills, want 1", id, got)
 		}
 	}
 }
@@ -341,7 +328,7 @@ func TestAZedFileWithCommentsIsNotRewrittenAndTheSnippetCanBeCopied(t *testing.T
 	orig := "// my settings\n{\n  \"theme\": \"One\", // dark\n}\n"
 	r.mac.write(".config/zed/settings.json", orig)
 	r.pane(t, "Agents")
-	mustNil(t, r.tt.Click("Install the MCP in Zed"))
+	mustNil(t, r.tt.Click("Connect Zed"))
 	r.rec.drain(t)
 	r.tt.Frame()
 	has(t, r.tt, "won't rewrite it", "~/.config/zed/settings.json", `"context_servers": {`)
@@ -350,19 +337,62 @@ func TestAZedFileWithCommentsIsNotRewrittenAndTheSnippetCanBeCopied(t *testing.T
 	if string(b) != orig {
 		t.Errorf("the file was rewritten: %s", b)
 	}
-	r.tt.Scroll(340, 300, 0, 330) // the snippet's well comes into view
-	r.tt.Frame()
 	mustNil(t, r.tt.Click("Copy command"))
 	if clip := r.tt.Clipboard(); !strings.Contains(clip, `"withdo": {`) || strings.Contains(clip, "claude mcp add") {
 		t.Errorf("clipboard %q", clip)
 	}
 }
 
-func TestGetItOpensTheAgentsSite(t *testing.T) {
+func TestMoreOpensTheAgentsSite(t *testing.T) {
 	r := agentsRig(t)
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
 	mustNil(t, r.tt.Click("Get Zed"))
 	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://zed.dev" {
 		t.Errorf("opened %v", r.rec.urls)
+	}
+}
+
+func TestTheTwoDisclosuresOpenAndCloseInPlace(t *testing.T) {
+	r := agentsRig(t)
+	hasNot(t, r.tt, "Get it", "Or run this once in a terminal, for Claude Code", "Copy setup guide")
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
+	if got := countText(r.tt, "Get it"); got != 9 {
+		t.Errorf("%d Get it links while More is open, want 9", got)
+	}
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
+	hasNot(t, r.tt, "Get it")
+
+	mustNil(t, r.tt.Click("Connect by hand"))
+	r.tt.Frame()
+	has(t, r.tt, "Or run this once in a terminal, for Claude Code", r.app.Config.ConnectCommand, "Copy setup guide")
+	mustNil(t, r.tt.Click("Connect by hand"))
+	r.tt.Frame()
+	hasNot(t, r.tt, "Or run this once in a terminal, for Claude Code", "Copy setup guide")
+}
+
+// A connected avatar rises one sprite pixel for three beats and stands for three, and each tile
+// is two beats behind the one before it. Reduce Motion keeps it standing.
+func TestTheAvatarBobsThreeBeatsUpAndThreeDownTwoBeatsApart(t *testing.T) {
+	base := time.UnixMilli(0)
+	offsets := []float32{theme.AgentBobLift, theme.AgentBobLift, theme.AgentBobLift, 0, 0, 0}
+	for beat, want := range offsets {
+		at := base.Add(time.Duration(beat) * theme.AgentBobStep)
+		if got := theme.AgentBobOffset(at, 0, false); got != want {
+			t.Errorf("beat %d: offset %v, want %v", beat, got, want)
+		}
+		// Tile 1 is two beats behind tile 0.
+		if got, want := theme.AgentBobOffset(at, 1, false), theme.AgentBobOffset(at.Add(2*theme.AgentBobStep), 0, false); got != want {
+			t.Errorf("beat %d: tile 1 offset %v, want tile 0 two beats later (%v)", beat, got, want)
+		}
+	}
+	if got := theme.AgentBobOffset(base.Add(time.Hour), 0, true); got != 0 {
+		t.Errorf("Reduce Motion offset %v, want 0", got)
+	}
+	if got, want := theme.AgentBobNext(base.Add(40*time.Millisecond)), 60*time.Millisecond; got != want {
+		t.Errorf("next beat in %v, want %v", got, want)
 	}
 }
 
@@ -372,8 +402,13 @@ func TestAgentsPaneWithoutAnEnvFindsNothingAndDoesNotPanic(t *testing.T) {
 	r.app.Store = demoStore(t, fixedNow, false)
 	r.app.Refresh()
 	r.pane(t, "Agents")
-	has(t, r.tt, "No agent found on this computer yet", "See how to connect", "Claude Code", "Get it")
-	hasNot(t, r.tt, "Install MCP")
+	has(t, r.tt, "No agent found on this computer yet", "See how to connect", "14 more agents")
+	if got := countText(r.tt, "Connect"); got != 0 {
+		t.Errorf("%d Connect buttons without an Env, want 0", got)
+	}
+	mustNil(t, r.tt.Click("14 more agents"))
+	r.tt.Frame()
+	has(t, r.tt, "Claude Code", "Get it")
 }
 
 func TestAgentsPaneInChinese(t *testing.T) {
@@ -385,10 +420,14 @@ func TestAgentsPaneInChinese(t *testing.T) {
 	r.app.Refresh()
 	r.s.Show(PaneAgents)
 	r.tt.Frame()
-	has(t, r.tt, "本机已有", "3", "更多", "11", "今天汇报 1 次", "找到了 · gemini", "安装 MCP", "MCP 已安装", "去下载",
-		"也可以在终端里运行一次，给 Claude Code 安装", "不会安装或启动 Agent 本身")
-	hasNot(t, r.tt, "这台 Mac 上没有")
-	hasFold(t, r.tt, "本机已有")
+	has(t, r.tt, "本机已有", "3", "还有 11 个 Agent", "今天汇报 1 次", "找到了", "已接入", "接入", "手动接入")
+	hasNot(t, r.tt, "这台 Mac 上没有", "去下载")
+	mustNil(t, r.tt.Click("手动接入"))
+	r.tt.Frame()
+	has(t, r.tt, "也可以在终端里运行一次，给 Claude Code 安装", "复制接入说明")
+	mustNil(t, r.tt.Click("还有 11 个 Agent"))
+	r.tt.Frame()
+	has(t, r.tt, "去下载")
 }
 
 func TestAgentsPaneDrawsInBothAppearances(t *testing.T) {
@@ -396,8 +435,14 @@ func TestAgentsPaneDrawsInBothAppearances(t *testing.T) {
 	for _, dark := range []bool{false, true} {
 		r.tt.SetDark(dark)
 		r.tt.Frame()
-		has(t, r.tt, "Claude Code", "DeepSeek Harness", "MCP installed", "Install MCP", "Get it")
+		has(t, r.tt, "Claude Code", "Connected", "Connect", "9 more agents")
+		if got := countText(r.tt, "Get it"); got != 0 {
+			t.Errorf("dark=%v: %d Get it links while More is closed, want 0", dark, got)
+		}
 	}
+	mustNil(t, r.tt.Click("9 more agents"))
+	r.tt.Frame()
+	has(t, r.tt, "Get it")
 }
 
 func TestEveryAgentOfTheListHasAnAvatarAndAName(t *testing.T) {
@@ -406,19 +451,26 @@ func TestEveryAgentOfTheListHasAnAvatarAndAName(t *testing.T) {
 			t.Errorf("agentName(%q) = %q: a row's name and the name reports go by differ", a.Name, got)
 		}
 	}
+	// A 103 pt tile drops the parenthetical; the catalog's full name stays in More and in the
+	// accessibility label.
+	if got := agentTileName(agentsetup.Agent{Name: "Copilot (VS Code)"}); got != "Copilot" {
+		t.Errorf("tile name %q, want Copilot", got)
+	}
 }
 
 // An agent that only has the pre-rename adhd-todo entry has not got Withdo yet, even though it
-// reported before: it offers the install, which adds withdo and takes the old entry out.
-func TestAnAgentWithOnlyTheOldEntryOffersTheInstallAndMigrates(t *testing.T) {
+// reported before: it offers Connect, which adds withdo and takes the old entry out.
+func TestAnAgentWithOnlyTheOldEntryOffersConnectAndMigrates(t *testing.T) {
 	r := newSettingsRig(t)
 	r.mac.has("claude")
 	r.mac.write(".claude.json", `{"mcpServers":{"adhd-todo":{"command":"x"}}}`)
 	r.app.Store.(*data.Real).SeedReportAs(1, "claude-code", "one", fixedNow().Add(-6*time.Minute))
 	r.app.Refresh()
 	r.pane(t, "Agents")
-	has(t, r.tt, "Claude Code", "Install MCP")
-	hasNot(t, r.tt, "MCP installed")
+	has(t, r.tt, "Claude Code", "Connect")
+	if got := countText(r.tt, "Connected"); got != 0 {
+		t.Errorf("%d Connected pills before the install, want 0", got)
+	}
 
 	r.mac.mu.Lock()
 	r.mac.run = func(_ string, args []string) ([]byte, error) {
@@ -430,11 +482,13 @@ func TestAnAgentWithOnlyTheOldEntryOffersTheInstallAndMigrates(t *testing.T) {
 		return nil, nil
 	}
 	r.mac.mu.Unlock()
-	mustNil(t, r.tt.Click("Install the MCP in Claude Code"))
+	mustNil(t, r.tt.Click("Connect Claude Code"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "MCP installed")
-	hasNot(t, r.tt, "Install MCP")
+	has(t, r.tt, "Connected")
+	if got := countText(r.tt, "Connect"); got != 0 {
+		t.Errorf("%d Connect buttons after the install, want 0", got)
+	}
 	cmds := r.mac.commands()
 	if len(cmds) != 2 || !slices.Contains(cmds[0], "add") || !slices.Contains(cmds[1], "remove") || !slices.Contains(cmds[1], "adhd-todo") {
 		t.Errorf("ran %q", cmds)

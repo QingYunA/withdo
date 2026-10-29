@@ -5336,6 +5336,22 @@ func (msgs Messages) SettingsAgentFound(where string) string {
 	return Catalog.Format(msgs.locale, "settingsAgentFound", map[string]any{"where": where})
 }
 
+// SettingsAgentFoundOnly says "Found"
+// in the language the app shows.
+//
+// The one quiet line of a tile of an agent found on this computer that has
+// not reported yet.
+func SettingsAgentFoundOnly() string { return In(i18n.Locale()).SettingsAgentFoundOnly() }
+
+// SettingsAgentFoundOnly says "Found"
+// in the language of msgs.
+//
+// The one quiet line of a tile of an agent found on this computer that has
+// not reported yet.
+func (msgs Messages) SettingsAgentFoundOnly() string {
+	return Catalog.Format(msgs.locale, "settingsAgentFoundOnly", nil)
+}
+
 // SettingsAgentsLocal says "On this computer"
 // in the language the app shows.
 //
@@ -5366,6 +5382,72 @@ func SettingsAgentsMore() string { return In(i18n.Locale()).SettingsAgentsMore()
 // the count follows it quietly.
 func (msgs Messages) SettingsAgentsMore() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsMore", nil)
+}
+
+// SettingsAgentsMoreCount says "{count, plural, one {# more agent} other {# more agents}}"
+// in the language the app shows.
+//
+// The row under the tiles of Settings > Agents that opens the agents not on
+// this computer; the count is how many there are.
+func SettingsAgentsMoreCount(count int) string {
+	return In(i18n.Locale()).SettingsAgentsMoreCount(count)
+}
+
+// SettingsAgentsMoreCount says "{count, plural, one {# more agent} other {# more agents}}"
+// in the language of msgs.
+//
+// The row under the tiles of Settings > Agents that opens the agents not on
+// this computer; the count is how many there are.
+func (msgs Messages) SettingsAgentsMoreCount(count int) string {
+	return Catalog.Format(msgs.locale, "settingsAgentsMoreCount", map[string]any{"count": count})
+}
+
+// SettingsAgentsMoreMeta says "{names} · not on this computer"
+// in the language the app shows.
+//
+// The quiet line under the row that opens the other agents: the first few
+// names and why they are there.
+func SettingsAgentsMoreMeta(names string) string {
+	return In(i18n.Locale()).SettingsAgentsMoreMeta(names)
+}
+
+// SettingsAgentsMoreMeta says "{names} · not on this computer"
+// in the language of msgs.
+//
+// The quiet line under the row that opens the other agents: the first few
+// names and why they are there.
+func (msgs Messages) SettingsAgentsMoreMeta(names string) string {
+	return Catalog.Format(msgs.locale, "settingsAgentsMoreMeta", map[string]any{"names": names})
+}
+
+// SettingsAgentsManual says "Connect by hand"
+// in the language the app shows.
+//
+// The row under the tiles of Settings > Agents that opens the command and
+// the setup guide.
+func SettingsAgentsManual() string { return In(i18n.Locale()).SettingsAgentsManual() }
+
+// SettingsAgentsManual says "Connect by hand"
+// in the language of msgs.
+//
+// The row under the tiles of Settings > Agents that opens the command and
+// the setup guide.
+func (msgs Messages) SettingsAgentsManual() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsManual", nil)
+}
+
+// SettingsAgentsManualBody says "The command, and a guide for an agent that is not in the list"
+// in the language the app shows.
+//
+// The quiet line under Connect by hand.
+func SettingsAgentsManualBody() string { return In(i18n.Locale()).SettingsAgentsManualBody() }
+
+// SettingsAgentsManualBody says "The command, and a guide for an agent that is not in the list"
+// in the language of msgs.
+//
+// The quiet line under Connect by hand.
+func (msgs Messages) SettingsAgentsManualBody() string {
+	return Catalog.Format(msgs.locale, "settingsAgentsManualBody", nil)
 }
 
 // SettingsAgentsEmpty says "No agent found on this computer yet"
@@ -5400,46 +5482,48 @@ func (msgs Messages) SettingsAgentsConnect() string {
 	return Catalog.Format(msgs.locale, "settingsAgentsConnect", nil)
 }
 
-// SettingsAgentInstall says "Install MCP"
+// SettingsAgentInstall says "Connect"
 // in the language the app shows.
 //
-// Button that adds Withdo's MCP server to an agent.
+// Accent button on a tile of an agent found on this computer; it adds
+// Withdo's MCP server.
 func SettingsAgentInstall() string { return In(i18n.Locale()).SettingsAgentInstall() }
 
-// SettingsAgentInstall says "Install MCP"
+// SettingsAgentInstall says "Connect"
 // in the language of msgs.
 //
-// Button that adds Withdo's MCP server to an agent.
+// Accent button on a tile of an agent found on this computer; it adds
+// Withdo's MCP server.
 func (msgs Messages) SettingsAgentInstall() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstall", nil)
 }
 
-// SettingsAgentInstalling says "Installing…"
+// SettingsAgentInstalling says "Connecting…"
 // in the language the app shows.
 //
-// Shown in place of the Install MCP button while it runs.
+// Shown in place of the Connect button while the agent's MCP install runs.
 func SettingsAgentInstalling() string { return In(i18n.Locale()).SettingsAgentInstalling() }
 
-// SettingsAgentInstalling says "Installing…"
+// SettingsAgentInstalling says "Connecting…"
 // in the language of msgs.
 //
-// Shown in place of the Install MCP button while it runs.
+// Shown in place of the Connect button while the agent's MCP install runs.
 func (msgs Messages) SettingsAgentInstalling() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstalling", nil)
 }
 
-// SettingsAgentInstalled says "MCP installed"
+// SettingsAgentInstalled says "Connected"
 // in the language the app shows.
 //
-// At the right of an agent that already has Withdo's MCP server. A check
-// mark comes before it.
+// The done-green state of a tile whose agent already has Withdo's MCP
+// server.
 func SettingsAgentInstalled() string { return In(i18n.Locale()).SettingsAgentInstalled() }
 
-// SettingsAgentInstalled says "MCP installed"
+// SettingsAgentInstalled says "Connected"
 // in the language of msgs.
 //
-// At the right of an agent that already has Withdo's MCP server. A check
-// mark comes before it.
+// The done-green state of a tile whose agent already has Withdo's MCP
+// server.
 func (msgs Messages) SettingsAgentInstalled() string {
 	return Catalog.Format(msgs.locale, "settingsAgentInstalled", nil)
 }
@@ -5458,16 +5542,16 @@ func (msgs Messages) SettingsAgentGet() string {
 	return Catalog.Format(msgs.locale, "settingsAgentGet", nil)
 }
 
-// A11yInstallMCP says "Install the MCP in {agent}"
+// A11yInstallMCP says "Connect {agent}"
 // in the language the app shows.
 //
-// Accessibility label of the Install MCP button of an agent.
+// Accessibility label of the Connect button of an agent's tile.
 func A11yInstallMCP(agent string) string { return In(i18n.Locale()).A11yInstallMCP(agent) }
 
-// A11yInstallMCP says "Install the MCP in {agent}"
+// A11yInstallMCP says "Connect {agent}"
 // in the language of msgs.
 //
-// Accessibility label of the Install MCP button of an agent.
+// Accessibility label of the Connect button of an agent's tile.
 func (msgs Messages) A11yInstallMCP(agent string) string {
 	return Catalog.Format(msgs.locale, "a11yInstallMCP", map[string]any{"agent": agent})
 }
@@ -9012,16 +9096,18 @@ func (msgs Messages) SettingsRecentChanges() string {
 	return Catalog.Format(msgs.locale, "settingsRecentChanges", nil)
 }
 
-// SettingsRecentChangesMeta says "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in."
+// SettingsRecentChangesMeta says "The latest merged pull requests and issues, by project"
 // in the language the app shows.
 //
-// Second line of the Recent changes switch row in Settings.
+// Second line of the Recent changes switch row in Settings; the state of gh
+// follows it.
 func SettingsRecentChangesMeta() string { return In(i18n.Locale()).SettingsRecentChangesMeta() }
 
-// SettingsRecentChangesMeta says "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in."
+// SettingsRecentChangesMeta says "The latest merged pull requests and issues, by project"
 // in the language of msgs.
 //
-// Second line of the Recent changes switch row in Settings.
+// Second line of the Recent changes switch row in Settings; the state of gh
+// follows it.
 func (msgs Messages) SettingsRecentChangesMeta() string {
 	return Catalog.Format(msgs.locale, "settingsRecentChangesMeta", nil)
 }

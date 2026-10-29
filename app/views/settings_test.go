@@ -219,10 +219,11 @@ func TestLanguagePopUpChoosesALanguageOrTheSystemOne(t *testing.T) {
 func TestAgentsPaneCopiesTheCommand(t *testing.T) {
 	r := newSettingsRig(t)
 	r.pane(t, "Agents")
-	has(t, r.tt, "Or run this once in a terminal, for Claude Code", r.app.Config.ConnectCommand, "Copy")
-	hasNot(t, r.tt, "Connect Claude Code")
-	r.tt.Scroll(340, 300, 0, 3000)
+	has(t, r.tt, "Connect by hand")
+	hasNot(t, r.tt, "Or run this once in a terminal, for Claude Code", "Connect Claude Code")
+	mustNil(t, r.tt.Click("Connect by hand"))
 	r.tt.Frame()
+	has(t, r.tt, "Or run this once in a terminal, for Claude Code", r.app.Config.ConnectCommand, "Copy")
 	if err := r.tt.Click("Copy command"); err != nil {
 		t.Fatal(err)
 	}

@@ -18,7 +18,7 @@ const ghRefreshEvery = 30 * time.Second
 // it work; and the Recent changes page's switch. With no poller it says so.
 func (s *Settings) githubPane(c *ui.Context, t *theme.Tokens) {
 	gh := s.app.GitHub
-	group(c, t, "github", func() {
+	agentsGroup(c, t, "github", func() {
 		if gh == nil {
 			settingsRow(c, t, "none", s.say.SettingsGitHubNone(), "", true, nil)
 		} else {
@@ -44,21 +44,29 @@ func (s *Settings) githubPane(c *ui.Context, t *theme.Tokens) {
 // turns.
 func (s *Settings) recentChangesRow(c *ui.Context, t *theme.Tokens, first bool) {
 	on := s.app.RecentChangesOn()
-	meta, ink := s.say.SettingsRecentChangesMeta(), t.TextSecondary
-	if on && s.app.GitHub != nil {
-		switch s.app.GitHub.Status().State {
-		case data.GitHubMissing:
-			meta, ink = s.say.SettingsRecentNoGH(ghInstallCommand()), t.Stale
-		case data.GitHubSignedOut:
-			meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
-		}
-	}
-	settingsRowInk(c, t, "recent-changes", s.say.SettingsRecentChanges(), meta, ink, first, func() {
+	meta, ink := s.recentChangesMeta(t)
+	agentsSettingsRowInk(c, t, "recent-changes", s.say.SettingsRecentChanges(), meta, ink, first, func() {
 		ui.Switch(c.Key("recent-changes-switch"), &on).Label(s.say.SettingsRecentChangesSwitch())
-	}, nil)
+	})
 	if on != s.app.RecentChangesOn() {
 		s.app.SetRecentChangesOn(on)
 	}
+}
+
+// recentChangesMeta is the quiet line of the Recent changes row. Switched on with gh missing or
+// signed out, it says what to run, in the stale ink; the status row above says the rest.
+func (s *Settings) recentChangesMeta(t *theme.Tokens) (string, ui.Color) {
+	meta, ink := s.say.SettingsRecentChangesMeta(), t.TextSecondary
+	if !s.app.RecentChangesOn() || s.app.GitHub == nil {
+		return meta, ink
+	}
+	switch s.app.GitHub.Status().State {
+	case data.GitHubMissing:
+		meta, ink = s.say.SettingsRecentNoGH(ghInstallCommand()), t.Stale
+	case data.GitHubSignedOut:
+		meta, ink = s.say.SettingsRecentSignedOut(), t.Stale
+	}
+	return meta, ink
 }
 
 // githubLine is the sentence for a status.

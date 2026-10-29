@@ -2186,6 +2186,10 @@
       }
     }
   },
+  "settingsAgentFoundOnly": "Found",
+  "@settingsAgentFoundOnly": {
+    "description": "The one quiet line of a tile of an agent found on this computer that has not reported yet."
+  },
   "settingsAgentsLocal": "On this computer",
   "@settingsAgentsLocal": {
     "description": "Section label above the agents found on this computer in Settings > Agents; the count follows it quietly."
@@ -2193,6 +2197,34 @@
   "settingsAgentsMore": "More",
   "@settingsAgentsMore": {
     "description": "Section label above the agents not on this computer in Settings > Agents; the count follows it quietly."
+  },
+  "settingsAgentsMoreCount": "{count, plural, one {# more agent} other {# more agents}}",
+  "@settingsAgentsMoreCount": {
+    "description": "The row under the tiles of Settings > Agents that opens the agents not on this computer; the count is how many there are.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "9"
+      }
+    }
+  },
+  "settingsAgentsMoreMeta": "{names} · not on this computer",
+  "@settingsAgentsMoreMeta": {
+    "description": "The quiet line under the row that opens the other agents: the first few names and why they are there.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "Gemini CLI, Kimi CLI, Windsurf, Zed…"
+      }
+    }
+  },
+  "settingsAgentsManual": "Connect by hand",
+  "@settingsAgentsManual": {
+    "description": "The row under the tiles of Settings > Agents that opens the command and the setup guide."
+  },
+  "settingsAgentsManualBody": "The command, and a guide for an agent that is not in the list",
+  "@settingsAgentsManualBody": {
+    "description": "The quiet line under Connect by hand."
   },
   "settingsAgentsEmpty": "No agent found on this computer yet",
   "@settingsAgentsEmpty": {
@@ -2202,25 +2234,25 @@
   "@settingsAgentsConnect": {
     "description": "Link in the empty On this computer row; it opens the README's section on connecting an agent."
   },
-  "settingsAgentInstall": "Install MCP",
+  "settingsAgentInstall": "Connect",
   "@settingsAgentInstall": {
-    "description": "Button that adds Withdo's MCP server to an agent."
+    "description": "Accent button on a tile of an agent found on this computer; it adds Withdo's MCP server."
   },
-  "settingsAgentInstalling": "Installing…",
+  "settingsAgentInstalling": "Connecting…",
   "@settingsAgentInstalling": {
-    "description": "Shown in place of the Install MCP button while it runs."
+    "description": "Shown in place of the Connect button while the agent's MCP install runs."
   },
-  "settingsAgentInstalled": "MCP installed",
+  "settingsAgentInstalled": "Connected",
   "@settingsAgentInstalled": {
-    "description": "At the right of an agent that already has Withdo's MCP server. A check mark comes before it."
+    "description": "The done-green state of a tile whose agent already has Withdo's MCP server."
   },
   "settingsAgentGet": "Get it",
   "@settingsAgentGet": {
     "description": "Link to the website of an agent that is not on this computer."
   },
-  "a11yInstallMCP": "Install the MCP in {agent}",
+  "a11yInstallMCP": "Connect {agent}",
   "@a11yInstallMCP": {
-    "description": "Accessibility label of the Install MCP button of an agent.",
+    "description": "Accessibility label of the Connect button of an agent's tile.",
     "placeholders": {
       "agent": {
         "type": "String",
@@ -3643,9 +3675,9 @@
   "@settingsRecentChanges": {
     "description": "Title of the switch row that turns the Recent changes page on."
   },
-  "settingsRecentChangesMeta": "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in.",
+  "settingsRecentChangesMeta": "The latest merged pull requests and issues, by project",
   "@settingsRecentChangesMeta": {
-    "description": "Second line of the Recent changes switch row in Settings."
+    "description": "Second line of the Recent changes switch row in Settings; the state of gh follows it."
   },
   "settingsRecentChangesSwitch": "Show the Recent changes page",
   "@settingsRecentChangesSwitch": {
