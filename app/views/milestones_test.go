@@ -24,7 +24,7 @@ func newMilestoneOf(t *testing.T, tt *ui.Tester, project string) {
 	if err := tt.RightClick(project); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.ChooseMenuItem("New milestone…"); err != nil {
+	if err := chooseItem(tt, "New milestone…"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -34,8 +34,7 @@ func TestMilestoneMenuAppearsWithTheFirstMilestoneAndKeepsNewMilestone(t *testin
 	hasNot(t, tt, "All milestones")
 
 	tt, _, _ = projectTester(t, 1)
-	openMilestoneMenu(t, tt, "All milestones")
-	got := tt.Menu()
+	got := drawnMenu(tt, func() { openMilestoneMenu(t, tt, "All milestones") })
 	for _, want := range []string{"All milestones", "New milestone…", "Edit “v0.2 native”", "Edit “v0.1 spike”"} {
 		if !slices.Contains(got, want) {
 			t.Errorf("menu %q lacks %q", got, want)
@@ -104,7 +103,7 @@ func TestNewMilestoneWithADueDate(t *testing.T) {
 func TestRenameAMilestone(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("Edit “v0.2 native”", "Rename…"); err != nil {
+	if err := chooseItem(tt, "Edit “v0.2 native”", "Rename…"); err != nil {
 		t.Fatal(err)
 	}
 	if !tt.HasText("Rename milestone") {
@@ -124,7 +123,7 @@ func TestRenameAMilestone(t *testing.T) {
 func TestMilestoneDueDateSheetSetsAndClears(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("Edit “v0.2 native”", "Due date…"); err != nil {
+	if err := chooseItem(tt, "Edit “v0.2 native”", "Due date…"); err != nil {
 		t.Fatal(err)
 	}
 	if !tt.HasText("Due date of “v0.2 native”") || tt.HasText("Title") {
@@ -140,7 +139,7 @@ func TestMilestoneDueDateSheetSetsAndClears(t *testing.T) {
 	}
 
 	openMilestoneMenu(t, tt, "All milestones")
-	_ = tt.ChooseMenuItem("Edit “v0.2 native”", "Due date…")
+	_ = chooseItem(tt, "Edit “v0.2 native”", "Due date…")
 	// The value button under Due shows the day; opening it offers Clear.
 	if err := tt.Click("Oct 28"); err != nil {
 		t.Fatal(err)
@@ -159,14 +158,14 @@ func TestMilestoneDueDateSheetSetsAndClears(t *testing.T) {
 func TestCloseAndReopenAMilestone(t *testing.T) {
 	tt, _, app := projectTester(t, 1)
 	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("Edit “v0.2 native”", "Close milestone"); err != nil {
+	if err := chooseItem(tt, "Edit “v0.2 native”", "Close milestone"); err != nil {
 		t.Fatal(err)
 	}
 	if milestonesOf(app, 1)[0].Open {
 		t.Error("not closed")
 	}
 	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("Edit “v0.2 native”", "Reopen milestone"); err != nil {
+	if err := chooseItem(tt, "Edit “v0.2 native”", "Reopen milestone"); err != nil {
 		t.Fatal(err)
 	}
 	if !milestonesOf(app, 1)[0].Open {
@@ -174,7 +173,26 @@ func TestCloseAndReopenAMilestone(t *testing.T) {
 	}
 	// A closed milestone offers Reopen, never Close.
 	openMilestoneMenu(t, tt, "All milestones")
-	if err := tt.ChooseMenuItem("Edit “v0.1 spike”", "Close milestone"); err == nil {
-		t.Error("a closed milestone offers Close")
+	r, _ := tt.Find("Edit “v0.1 spike”")
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	if !tt.HasText("Reopen milestone") || tt.HasText("Close milestone") {
+		t.Errorf("a closed milestone's submenu %q, want Reopen and no Close", tt.Texts())
+	}
+}
+
+// The milestone menu button draws its menu in the window: the system shows none.
+func TestMilestoneMenuButtonOpensADrawnMenu(t *testing.T) {
+	tt, _, _ := projectTester(t, 1)
+	got := drawnMenu(tt, func() { openMilestoneMenu(t, tt, "All milestones") })
+	if tt.Menu() != nil {
+		t.Errorf("the system shows a menu too: %q", tt.Menu())
+	}
+	if !slices.Contains(got, "New milestone…") || !slices.Contains(got, "Edit “v0.2 native”") {
+		t.Errorf("drawn menu %q", got)
+	}
+	tt.Key(0, ui.KeyEscape)
+	if tt.HasText("Edit “v0.2 native”") {
+		t.Error("Esc left the menu open")
 	}
 }

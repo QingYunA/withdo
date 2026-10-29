@@ -271,7 +271,7 @@ func TestMilestoneFilterIsHiddenUntilTheProjectHasAMilestone(t *testing.T) {
 	if err := tt.Click("Milestone: All milestones"); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.ChooseMenuItem("v0.2 native · due Oct 28"); err != nil {
+	if err := chooseItem(tt, "v0.2 native · due Oct 28"); err != nil {
 		t.Fatal(err)
 	}
 	if tt.HasText("Decide on the activation policy") {
