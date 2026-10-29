@@ -78,8 +78,8 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 		"Complete", "CreateTask", "DeleteTask", "Devices", "DoToday", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable", "GoogleLinkCancel",
 		"GoogleLinkFinish", "GoogleLinkStart", "GoogleLinked", "GoogleStart", "LinkMerge", "LinkReplace", "Mine",
 		"MoveToAccount", "NextReminderAt",
-		"Project", "Projects", "RemindPresets", "Reply", "RequestCode",
-		"RequestPasswordReset", "RequestResetCode", "ResendCode", "ResetPassword", "RestoreTask", "Search", "SetListener",
+		"Project", "Projects", "RemindPresets", "Reply",
+		"RequestResetCode", "ResendCode", "ResetPassword", "RestoreTask", "Search", "SetListener",
 		"SignIn", "SignInWithCode", "SignOut", "SignUp", "StartSync", "StopSync", "SyncNow", "SyncSetServer",
 		"SyncStatus", "Task", "UpdateTask",
 	}

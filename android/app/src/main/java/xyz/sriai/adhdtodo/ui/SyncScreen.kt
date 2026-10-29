@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
@@ -79,6 +80,8 @@ data class SyncModel(
     val flow: SignInFlow = SignInFlow(),
     /** The six digits already typed, for the screenshots. */
     val typedCode: String = "",
+    /** The password already typed, for the screenshots. */
+    val typedPassword: String = "",
     /** The server lists a Google provider: the email step shows Continue with Google. */
     val googleAvailable: Boolean = false,
     /** The other_account answer, for the sheet that asks which account this phone belongs to. */
@@ -136,9 +139,14 @@ fun SyncScreen(
         when (model.phase) {
             SyncPhase.SIGNED_OUT, SyncPhase.SIGNING_IN -> SignInFlowCard(
                 flow = model.flow,
-                stage = if (model.flow.sending) SignInStage.SENDING else signInStage,
+                stage = when {
+                    model.flow.creating -> SignInStage.CREATING
+                    model.flow.sending -> SignInStage.SENDING
+                    else -> signInStage
+                },
                 actions = signInActions.copy(onSignInWithPassword = onSignIn),
                 initialCode = model.typedCode,
+                initialPassword = model.typedPassword,
                 googleAvailable = model.googleAvailable,
             )
             SyncPhase.CHOOSE, SyncPhase.OTHER_ACCOUNT -> {
@@ -264,9 +272,20 @@ internal fun SignInField(
     onNext: () -> Unit = {},
     onDone: () -> Unit = {},
     modifier: Modifier = Modifier,
+    /** The ground of the field; a field on a white card takes the tinted one. */
+    ground: Color? = null,
+    /** Outlines the field in status.blocked. */
+    error: Boolean = false,
+    /** Something at the right end, such as a password's Show. */
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
+    val edge = when {
+        error -> tokens.statusBlocked
+        focused -> tokens.accent
+        else -> tokens.border
+    }
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -283,19 +302,22 @@ internal fun SignInField(
             .focusRequester(focus)
             .onFocusChanged { onFocused(it.isFocused) }
             .semantics { this.contentType = contentType }
-            .background(tokens.bg, RoundedCornerShape(10.dp))
+            .background(ground ?: tokens.bg, RoundedCornerShape(10.dp))
             .border(
-                if (focused) 1.dp else Dims.hairline,
-                if (focused) tokens.accent else tokens.border,
+                if (focused || error) 1.dp else Dims.hairline,
+                edge,
                 RoundedCornerShape(10.dp),
             )
-            .padding(horizontal = 14.dp, vertical = 14.dp),
+            .padding(start = 14.dp, end = if (trailing != null) 8.dp else 14.dp, top = 14.dp, bottom = 14.dp),
         decorationBox = { inner ->
-            Box(contentAlignment = Alignment.CenterStart) {
-                if (value.isEmpty()) {
-                    Text(placeholder, style = type.body, color = tokens.textTertiary, maxLines = 1)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (value.isEmpty()) {
+                        Text(placeholder, style = type.body, color = tokens.textTertiary, maxLines = 1)
+                    }
+                    inner()
                 }
-                inner()
+                trailing?.invoke()
             }
         },
     )

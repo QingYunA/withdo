@@ -101,10 +101,20 @@ class CoreApi(private val core: Core_) {
     fun signIn(login: String, password: String, deviceName: String): SignInState =
         PageJson.decodeFromString(core.signIn(login, password, deviceName))
 
-    /** Mails a 6-digit sign-in code to the address; an address with no account gets one. */
-    fun requestCode(email: String) = core.requestCode(email)
+    /**
+     * Makes an account with an email and a password (at least 8 characters) and mails its first
+     * code; codeState then says step "verify". [lang] is the app's language, "en" or "zh-Hans".
+     */
+    fun signUp(email: String, password: String, lang: String) = core.signUp(email, password, lang)
 
-    /** Checks the code and links this phone as signIn does. */
+    /** Mails a 6-digit code for Forgot password; codeState then says step "reset_code". */
+    fun requestResetCode(email: String) = core.requestResetCode(email)
+
+    /** Sets a new password with the reset code and links this phone as signIn does. */
+    fun resetPassword(code: String, password: String, deviceName: String): SignInState =
+        PageJson.decodeFromString(core.resetPassword(code, password, deviceName))
+
+    /** Checks the code of the verify step, which verifies the email, and links this phone as signIn does. */
     fun signInWithCode(code: String, deviceName: String): SignInState =
         PageJson.decodeFromString(core.signInWithCode(code, deviceName))
 
@@ -122,8 +132,6 @@ class CoreApi(private val core: Core_) {
 
     /** Ends the wait of googleFinish. */
     fun googleCancel() = core.googleCancel()
-
-    fun requestPasswordReset(email: String) = core.requestPasswordReset(email)
 
     fun codeState(): CodeState = PageJson.decodeFromString(core.codeState())
 

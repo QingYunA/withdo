@@ -115,18 +115,6 @@ func (c *Core) RequestResetCode(email string) error {
 	return c.sendCode(strings.TrimSpace(email), false, stepResetCode)
 }
 
-// RequestCode is RequestResetCode under its name before v42, when an email with no account got an
-// account and a code. It no longer makes accounts: use SignUp.
-//
-// Deprecated: kept so the earlier Android screens compile; call SignUp or RequestResetCode.
-func (c *Core) RequestCode(email string) error { return c.RequestResetCode(email) }
-
-// RequestPasswordReset is RequestResetCode under its name before v42, when it mailed a link that
-// set the password in a browser.
-//
-// Deprecated: kept so the earlier Android screens compile; call RequestResetCode.
-func (c *Core) RequestPasswordReset(email string) error { return c.RequestResetCode(email) }
-
 // ResendCode mails a new code to the address of the verify or reset step. It is refused (without a
 // request) less than 30 seconds after the last one.
 func (c *Core) ResendCode() error {

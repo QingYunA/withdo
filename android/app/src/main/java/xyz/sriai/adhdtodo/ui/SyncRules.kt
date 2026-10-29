@@ -135,7 +135,7 @@ fun googleLinkFailureText(kind: String): Int? = when (kind.trim()) {
 
 /** The stage the sign-in button says: the server checks the account, then the tasks download. */
 /** GOOGLE is the browser open on Google's consent page, the card waiting for it (M13 P3). */
-enum class SignInStage { SENDING, CHECKING, DOWNLOADING, GOOGLE }
+enum class SignInStage { SENDING, CREATING, CHECKING, DOWNLOADING, GOOGLE }
 
 /**
  * The stage to show, from the raw sign_in_stage. Signing in without a stage yet is checking; not
@@ -145,15 +145,23 @@ fun signInStageOf(signingIn: Boolean, raw: String?): SignInStage? = when {
     !signingIn -> null
     raw == "downloading" -> SignInStage.DOWNLOADING
     raw == "sending" -> SignInStage.SENDING
+    raw == "creating" -> SignInStage.CREATING
     raw == "google" -> SignInStage.GOOGLE
     else -> SignInStage.CHECKING
 }
 
-/** The steps of the emailed-code sign-in. */
-enum class SignInStep { EMAIL, CODE, PASSWORD, RESET_SENT }
+/**
+ * The steps of the signed-out card (v42): the Sign in and Sign up tabs, Verify after a sign-up (or
+ * a sign-in to an account whose email was never verified), and the two steps of Forgot password.
+ */
+enum class SignInStep { SIGN_IN, SIGN_UP, VERIFY, RESET_EMAIL, RESET_CODE }
 
-/** Why a code or password sign-in failed, from CodeState's failure kinds. */
+/** Whether [step] is one of the card's two tabs. */
+fun SignInStep.isTab(): Boolean = this == SignInStep.SIGN_IN || this == SignInStep.SIGN_UP
+
+/** Why a sign-up, sign-in, code or reset failed, from CodeState's failure kinds. */
 enum class CodeFailure {
+    EMAIL_TAKEN, INVALID_EMAIL, WEAK_PASSWORD,
     WRONG_CODE, EXPIRED, TOO_MANY, WRONG_PASSWORD, DEACTIVATED, NETWORK, UNSUPPORTED,
     GOOGLE_CANCELLED, GOOGLE_FAILED, OTHER,
 }
@@ -161,6 +169,9 @@ enum class CodeFailure {
 /** The failure kind of CodeState's "failure" field; blank is no failure. */
 fun codeFailureOf(kind: String?): CodeFailure? = when (kind?.trim()) {
     null, "" -> null
+    "email_taken" -> CodeFailure.EMAIL_TAKEN
+    "invalid_email" -> CodeFailure.INVALID_EMAIL
+    "weak_password" -> CodeFailure.WEAK_PASSWORD
     "wrong_code" -> CodeFailure.WRONG_CODE
     "expired" -> CodeFailure.EXPIRED
     "too_many" -> CodeFailure.TOO_MANY
@@ -175,6 +186,9 @@ fun codeFailureOf(kind: String?): CodeFailure? = when (kind?.trim()) {
 
 /** The localized line of a failure; OTHER has none (the core's own sentence is shown). */
 fun codeFailureText(failure: CodeFailure): Int? = when (failure) {
+    CodeFailure.EMAIL_TAKEN -> R.string.sync_email_taken
+    CodeFailure.INVALID_EMAIL -> R.string.sync_invalid_email
+    CodeFailure.WEAK_PASSWORD -> R.string.sync_password_min
     CodeFailure.WRONG_CODE -> R.string.sync_code_wrong
     CodeFailure.EXPIRED -> R.string.sync_code_expired
     CodeFailure.TOO_MANY -> R.string.sync_too_many_tries
@@ -189,7 +203,7 @@ fun codeFailureText(failure: CodeFailure): Int? = when (failure) {
 
 /** Everything the sign-in card draws between the email and the linked account. */
 data class SignInFlow(
-    val step: SignInStep = SignInStep.EMAIL,
+    val step: SignInStep = SignInStep.SIGN_IN,
     val email: String = "",
     /** Seconds before another code may be asked for, as of when the step was drawn. */
     val resendIn: Int = 0,
@@ -200,6 +214,8 @@ data class SignInFlow(
     val attempt: Int = 0,
     /** True while a code is being mailed. */
     val sending: Boolean = false,
+    /** True while an account is being made. */
+    val creating: Boolean = false,
 )
 
 /** A plausible address: something, an @, a dot after it. The server decides the rest. */
@@ -227,23 +243,84 @@ fun SignInFlow.failed(state: CodeState?, message: String?): SignInFlow = copy(
     attempt = attempt + 1,
     resendIn = state?.resendIn ?: resendIn,
     sending = false,
+    creating = false,
 )
 
 /**
- * The flow once RequestCode answered. A mailed code moves on to the code step; a failure stays on
- * the email step with its sentence.
+ * The flow once SignUp answered. A mailed code moves on to Verify; a failure (a taken email, a
+ * malformed one, a short password) stays on Sign up with its line.
  */
-fun SignInFlow.afterRequest(errorMessage: String?, state: CodeState?): SignInFlow {
-    if (errorMessage == null && state?.step == "code") {
+fun SignInFlow.afterSignUp(errorMessage: String?, state: CodeState?): SignInFlow =
+    afterCodeMailed(errorMessage, state, "verify", SignInStep.VERIFY)
+
+/** The flow once RequestResetCode answered: the code step of Forgot password, or the failure. */
+fun SignInFlow.afterResetRequest(errorMessage: String?, state: CodeState?): SignInFlow =
+    afterCodeMailed(errorMessage, state, "reset_code", SignInStep.RESET_CODE)
+
+private fun SignInFlow.afterCodeMailed(errorMessage: String?, state: CodeState?, kind: String, next: SignInStep): SignInFlow {
+    if (errorMessage == null && state?.step == kind) {
         return copy(
-            step = SignInStep.CODE,
+            step = next,
             email = state.email.ifBlank { email },
             resendIn = state.resendIn,
             failure = null,
             failureText = null,
             attempt = attempt + 1,
             sending = false,
+            creating = false,
         )
     }
     return failed(state, errorMessage)
 }
+
+/**
+ * The flow once SignIn answered {"state":"verify"}: the password was right but the email was never
+ * verified, a code was mailed, and the card shows Verify.
+ */
+fun SignInFlow.afterVerifyAnswer(state: CodeState?): SignInFlow = copy(
+    step = SignInStep.VERIFY,
+    email = state?.email?.ifBlank { null } ?: email,
+    resendIn = state?.resendIn ?: 30,
+    failure = null,
+    failureText = null,
+    attempt = attempt + 1,
+    sending = false,
+    creating = false,
+)
+
+/** The shortest password the server takes. */
+const val PASSWORD_MIN = 8
+
+/** The steps of the strength bar. */
+const val STRENGTH_STEPS = 4
+
+/** Whether [password] is long enough to create an account with. */
+fun passwordLongEnough(password: String): Boolean = password.codePointCount(0, password.length) >= PASSWORD_MIN
+
+/**
+ * 0 for a password under 8 characters, else one step for the length, one more from 12, one for two
+ * kinds of characters (lower case, upper case, digits, the rest) and one for three kinds from 10
+ * characters. The desktop's `passwordStrength` is the same rule.
+ */
+fun passwordStrength(password: String): Int {
+    val n = password.codePointCount(0, password.length)
+    if (n < PASSWORD_MIN) return 0
+    val kinds = listOf(
+        password.any { it.isLowerCase() },
+        password.any { it.isUpperCase() },
+        password.any { it.isDigit() },
+        password.any { !it.isLowerCase() && !it.isUpperCase() && !it.isDigit() },
+    ).count { it }
+    var score = 1
+    if (n >= 12) score++
+    if (kinds >= 2) score++
+    if (kinds >= 3 && n >= 10) score++
+    return score
+}
+
+/** The language of the code mails: the app's, English or Simplified Chinese. */
+fun syncLang(locale: Locale): String = if (locale.language.equals("zh", ignoreCase = true)) "zh-Hans" else "en"
+
+/** The terms and the privacy policy a sign-up agrees to, on the website. */
+const val TERMS_URL = "https://qingyuna.github.io/withdo/terms.html"
+const val PRIVACY_URL = "https://qingyuna.github.io/withdo/privacy.html"

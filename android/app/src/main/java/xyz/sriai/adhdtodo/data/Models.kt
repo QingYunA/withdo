@@ -292,7 +292,8 @@ data class Reminder(
 )
 
 /**
- * SignIn()'s answer: "linked" or "choose". The choose answer carries the counts the
+ * SignIn()'s answer: "linked", "choose", "other_account", or "verify" (the password was right but the
+ * email was never verified; a code was mailed). The choose answer carries the counts the
  * both-have-tasks sheet shows: this phone's tasks and projects and the account's synced devices.
  */
 @Serializable
@@ -308,10 +309,11 @@ data class SignInState(
 )
 
 /**
- * CodeState()'s JSON: where the emailed-code sign-in is. step is "code" once a code was mailed;
+ * CodeState()'s JSON: where the verify and reset steps are. step is "verify" once a sign-up (or a
+ * sign-in to an unverified account) mailed a code, "reset_code" once Forgot password did, else "";
  * resend_in is the seconds before another may be asked for; failure is the kind of the last
- * failed attempt (wrong_code, expired, too_many, wrong_password, deactivated, network,
- * unsupported, other) or "".
+ * failed attempt (email_taken, invalid_email, weak_password, wrong_code, expired, too_many,
+ * wrong_password, deactivated, network, unsupported, other) or "".
  */
 @Serializable
 data class CodeState(
