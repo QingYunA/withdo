@@ -174,10 +174,7 @@ func (s *Settings) syncAccountGroup(c *ui.Context, t *theme.Tokens, svc SyncServ
 }
 
 func (s *Settings) syncAccountRow(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot, first bool) {
-	syncRow(c, t, "account", first, func() {
-		theme.Text(c, theme.Body, t.Text, s.syncAccountName(snap)).Ellipsis("…")
-		theme.Text(c, theme.Meta, t.TextSecondary, s.syncAccountLine(snap))
-	}, func() {
+	settingsRowLead(c, t, "account", s.syncAccountName(snap), s.syncAccountMeta(snap), first, func() {
 		if snap.Phase == data.SyncWrongAccount {
 			// Sign out is in This Mac's row, beside what is wrong.
 			return
@@ -185,6 +182,8 @@ func (s *Settings) syncAccountRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 		if settingsLink(c, t, "sync-signout", s.say.SettingsSyncSignOut(), s.say.SettingsSyncSignOut()).Clicked() {
 			svc.SyncSignOut()
 		}
+	}, func() {
+		theme.AvatarIcon(c, theme.You, 48)
 	})
 }
 
@@ -196,29 +195,32 @@ func (s *Settings) syncThisMacRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 	failed := snap.Phase == data.SyncFailed
 	offline := snap.Phase == data.SyncOffline
 	syncRow(c, t, "this-mac", false, func() {
-		theme.Text(c, theme.Body, t.Text, syncThisDevice(s.say))
 		switch {
 		case failed:
+			theme.Text(c, theme.Body, t.Text, syncThisDevice(s.say))
 			ui.Row(c).Gap(0).AlignItems(ui.Center).Children(func() {
 				theme.Text(c, theme.Meta, t.Blocked(), s.say.SettingsSyncFailed(s.syncFailureText(snap))).Shrink(1).MinWidth(0).Ellipsis("…")
 				theme.Text(c, theme.Meta, t.TextSecondary, " · "+s.syncRetryLine(snap.RetryAt)).Shrink(0)
 			})
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, syncWaiting(s.say, itoa(snap.Pending)), 2)
 		case offline:
+			theme.Text(c, theme.Body, t.Text, syncThisDevice(s.say))
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncOffline(itoa(snap.Pending)), 2)
 		default:
 			at := snap.LastSynced
 			if at.IsZero() {
 				at = s.app.Now()
 			}
-			ago := s.clock.Age(at, s.app.Now())
-			if s.app.Now().Sub(at) < time.Minute {
-				ago = s.say.SettingsSyncJustNow()
-			}
-			ui.Row(c).Gap(0).AlignItems(ui.Center).Children(func() {
-				theme.Text(c, theme.Meta, t.Status(data.Done), s.say.SettingsSyncSynced())
-				theme.Text(c, theme.Meta, t.TextSecondary, " · "+ago)
+			ago := s.clock.Ago(at, s.app.Now())
+			ui.Row(c.Key("sync-synced-line")).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Box(c.Key("sync-synced-dot")).Size(10, 10).Shrink(0).Background(t.Status(data.Done))
+				theme.Text(c, theme.Body, t.Status(data.Done), s.say.SettingsSyncSynced())
 			})
+			meta := ago
+			if n := len(snap.Devices); n > 0 {
+				meta += " · " + s.say.SettingsSyncDevicesCount(n)
+			}
+			theme.Text(c, theme.Meta, t.TextSecondary, meta)
 		}
 	}, func() {
 		switch {
@@ -493,6 +495,15 @@ func (s *Settings) syncAccountName(snap data.SyncSnapshot) string {
 		return snap.AccountEmail
 	}
 	return s.say.SettingsSyncAccount()
+}
+
+// syncAccountMeta is the quiet line of the account row: the email, or who is signed in when the
+// server did not say it.
+func (s *Settings) syncAccountMeta(snap data.SyncSnapshot) string {
+	if snap.AccountEmail != "" {
+		return snap.AccountEmail
+	}
+	return s.syncAccountLine(snap)
 }
 
 func (s *Settings) syncAccountLine(snap data.SyncSnapshot) string {

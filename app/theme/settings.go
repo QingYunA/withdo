@@ -12,7 +12,7 @@ const (
 	SettingsSide    float32 = 196 // the sidebar
 	SettingsSideRow float32 = 34  // a pane row of the sidebar
 	SettingsSidePad float32 = 10  // between the sidebar's edge and a row
-	ProviderTileH   float32 = 76  // a tile of the provider grid
+	ProviderTileH   float32 = 56  // a tile of the provider grid
 	SettingsRowMin  float32 = 44
 	SettingsRadius  float32 = 10 // a group
 	SettingsPad     float32 = 28 // between the pane's edge and a group

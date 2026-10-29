@@ -44,7 +44,7 @@ func (m *Main) recentHeader(c *ui.Context, t *theme.Tokens, secs []recentSec, no
 		if st.days == 30 {
 			sel = 1
 		}
-		if i := segmented(c, t, "recent-days", []string{m.say.RecentDays7(), m.say.RecentDays30()}, sel); i >= 0 {
+		if i := segmented(c, t, "recent-days", m.say.NavRecent(), []string{m.say.RecentDays7(), m.say.RecentDays30()}, sel); i >= 0 {
 			m.recentPickDays([]int{7, 30}[i])
 		}
 		ui.Spacer(c)

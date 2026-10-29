@@ -59,7 +59,7 @@ func (m *Main) summaryHeader(c *ui.Context, t *theme.Tokens, v *summaryView, now
 		if st.week {
 			sel = 1
 		}
-		if i := segmented(c, t, "summary-period", []string{m.say.SummarySegmentDay(), m.say.SummarySegmentWeek()}, sel); i >= 0 {
+		if i := segmented(c, t, "summary-period", m.say.NavSummary(), []string{m.say.SummarySegmentDay(), m.say.SummarySegmentWeek()}, sel); i >= 0 {
 			st.week, st.back = i == 1, 0
 		}
 		m.summaryPaging(c, t, v, now)

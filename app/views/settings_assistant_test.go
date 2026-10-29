@@ -77,7 +77,7 @@ func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
 			}
 		}
 	}
-	mustNil(t, r.tt.Click("Change"))
+	mustNil(t, r.tt.Click("Set up Kimi")) // a tile opens its form under the grid
 	r.tt.Frame()
 	after := rows()
 	for row, y := range before {
@@ -87,19 +87,15 @@ func TestSwitchingPanesNeverChangesTheWindowSize(t *testing.T) {
 	}
 }
 
-func TestAssistantAtRestShowsTheProviderInUseAndTheOthersSetUp(t *testing.T) {
+func TestAssistantAtRestShowsTheProviderInUseAndTheGrid(t *testing.T) {
 	r := newSettingsRig(t)
 	r.setUp(t, "anthropic", "deepseek")
 	mustNil(t, r.fm.Save("ollama", data.ProviderEdit{Model: "qwen3:8b"}))
 	r.assistant(t)
-	hasFold(t, r.tt, "In use")
-	hasFold(t, r.tt, "Also set up")
-	has(t, r.tt, "Anthropic", "claude-haiku-5-5", "Not tested yet", "Test", "Change", "DeepSeek", "deepseek-chat", "Ollama", "Use")
-	hasNot(t, r.tt, "Pick a provider", "OpenAI", "Kimi", "Magpie")
-	// A provider with no key and no use is not "also set up".
-	mustNil(t, r.fm.Save("openai", data.ProviderEdit{Model: "gpt-4.1"}))
-	r.tt.Frame()
-	hasNot(t, r.tt, "OpenAI")
+	hasFold(t, r.tt, "Switch to")
+	has(t, r.tt, "Anthropic", "claude-haiku-5-5", "Not tested yet", "Test", "Switch to",
+		"OpenAI", "DeepSeek", "Kimi", "Ollama", "Magpie", "Custom")
+	hasNot(t, r.tt, "In use", "Also set up", "API key", "Save and test")
 }
 
 func TestTheTestResultShowsOnTheCardAsConnectedOrTheFriendlyError(t *testing.T) {
@@ -121,11 +117,11 @@ func TestTheTestResultShowsOnTheCardAsConnectedOrTheFriendlyError(t *testing.T) 
 	mustNil(t, r.tt.Click("Test"))
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "The provider didn't accept the API key.", "Test again")
-	hasNot(t, r.tt, "Connected · 640 ms")
+	has(t, r.tt, "The provider didn't accept the API key.", "Test")
+	hasNot(t, r.tt, "Test again", "Connected · 640 ms")
 }
 
-func TestUseMakesAnotherProviderTheOneInUseAndTestsIt(t *testing.T) {
+func TestChoosingASetUpProviderMakesItTheOneInUseAndTestsIt(t *testing.T) {
 	r := newSettingsRig(t)
 	r.setUp(t, "anthropic", "deepseek")
 	r.assistant(t)
@@ -133,9 +129,13 @@ func TestUseMakesAnotherProviderTheOneInUseAndTestsIt(t *testing.T) {
 	if activeID(r.fm) != "deepseek" {
 		t.Fatalf("active = %q", activeID(r.fm))
 	}
+	if r.s.assist.pick != "" {
+		t.Errorf("choosing a set-up provider opened the form for %q", r.s.assist.pick)
+	}
 	r.rec.drain(t)
 	r.tt.Frame()
-	has(t, r.tt, "Connected · 640 ms", "deepseek-chat", "Use Anthropic")
+	has(t, r.tt, "Connected · 640 ms", "deepseek-chat")
+	hasNot(t, r.tt, "API key", "Save and test")
 	if r.s.assist.test.id != "deepseek" {
 		t.Errorf("the test belongs to %q", r.s.assist.test.id)
 	}
@@ -155,19 +155,16 @@ func TestTheTestResultBelongsToOneProvider(t *testing.T) {
 	hasNot(t, r.tt, "Connected · 640 ms")
 }
 
-func TestChangeOpensTwelveTilesAndDoneGoesBack(t *testing.T) {
+func TestTheGridAlwaysShowsTwelveProviders(t *testing.T) {
 	r := newSettingsRig(t)
 	r.setUp(t, "anthropic", "deepseek")
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Change"))
-	hasFold(t, r.tt, "Pick a provider")
-	has(t, r.tt, "Anthropic", "OpenAI", "DeepSeek", "Kimi", "智谱 GLM", "通义千问", "Gemini", "OpenRouter", "硅基流动", "Ollama", "Magpie", "Custom", "Done")
-	hasNot(t, r.tt, "In use", "Also set up")
-	// The one in use is picked, so its fields are there to change.
+	has(t, r.tt, "Anthropic", "OpenAI", "DeepSeek", "Kimi", "智谱 GLM", "通义千问",
+		"Gemini", "OpenRouter", "硅基流动", "Ollama", "Magpie", "Custom")
+	hasNot(t, r.tt, "Pick a provider", "Done")
+	// The tile of the one in use opens its form: that is where its key and model are changed.
+	mustNil(t, r.tt.Click("Change Anthropic"))
 	has(t, r.tt, "API key", "Save and test")
-	mustNil(t, r.tt.Click("Done"))
-	hasFold(t, r.tt, "In use")
-	hasNot(t, r.tt, "Pick a provider", "Save and test")
 }
 
 func TestTilesAreInTheOrderOfTheMockup(t *testing.T) {
@@ -181,31 +178,38 @@ func TestTilesAreInTheOrderOfTheMockup(t *testing.T) {
 	if !slices.Equal(ids, want) {
 		t.Errorf("providers %v", ids)
 	}
-	row1, _ := r.tt.Find("Anthropic")
-	row2, _ := r.tt.Find("Gemini")
-	if row2.Y <= row1.Y {
-		t.Errorf("Gemini at %v is not under Anthropic at %v", row2.Y, row1.Y)
+	first, _ := r.tt.Find("Anthropic")
+	kimi, _ := r.tt.Find("Kimi")
+	gemini, _ := r.tt.Find("Gemini")
+	if kimi.Y != first.Y || kimi.X <= first.X {
+		t.Errorf("the first row is not Anthropic, OpenAI, DeepSeek, Kimi: %v and %v", first, kimi)
+	}
+	if gemini.Y <= first.Y {
+		t.Errorf("Gemini at %v is not under Anthropic at %v", gemini.Y, first.Y)
 	}
 }
 
-func TestNothingSetUpShowsTheGridWithoutDone(t *testing.T) {
+func TestNothingSetUpShowsTheOneLineAndTheGrid(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
-	hasFold(t, r.tt, "Pick a provider")
+	has(t, r.tt, "Not set up: dates and reminders are still read on this computer.")
+	hasFold(t, r.tt, "Switch to")
+	has(t, r.tt, "Anthropic", "OpenAI", "DeepSeek", "Kimi", "智谱 GLM", "通义千问", "Gemini", "OpenRouter", "硅基流动", "Ollama", "Magpie", "Custom")
 	hasNot(t, r.tt, "Done", "In use", "API key") // nothing is picked yet
 }
 
 func TestAPickedTileShowsKeyModelAndLinkToGetAKey(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Kimi"))
+	mustNil(t, r.tt.Click("Set up Kimi"))
 	has(t, r.tt, "API key", "Paste your Kimi key", "Get a key", "Model", "kimi-k2-0905-preview", "Save and test")
 	hasNot(t, r.tt, "Base URL", "Protocol")
 	mustNil(t, r.tt.Click("Get a key"))
 	if !slices.Equal(r.rec.urls, []string{"https://platform.moonshot.cn/console/api-keys"}) {
 		t.Errorf("opened %v", r.rec.urls)
 	}
-	mustNil(t, r.tt.Click("kimi-k2-0905-preview"))
+	mustNil(t, r.tt.Click("Choose a model"))
+	r.tt.Frame()
 	has(t, r.tt, "kimi-k2-turbo-preview", "Other…")
 }
 
@@ -213,7 +217,7 @@ func TestMagpieAndOllamaHaveNoKeyField(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
 	for _, name := range []string{"Magpie", "Ollama"} {
-		mustNil(t, r.tt.Click(name))
+		mustNil(t, r.tt.Click("Set up "+name))
 		has(t, r.tt, "Model", "Save and test")
 		hasNot(t, r.tt, "API key", "Get a key")
 	}
@@ -228,8 +232,7 @@ func TestSavingAndTestingAKeyMakesTheProviderTheOneInUse(t *testing.T) {
 	}
 	r.setUp(t, "anthropic")
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Change"))
-	mustNil(t, r.tt.Click("Kimi"))
+	mustNil(t, r.tt.Click("Set up Kimi"))
 	mustNil(t, r.tt.Click("Paste your Kimi key"))
 	r.tt.Type("sk-secret-value")
 	hasNot(t, r.tt, "sk-secret-value") // a secure field
@@ -242,15 +245,15 @@ func TestSavingAndTestingAKeyMakesTheProviderTheOneInUse(t *testing.T) {
 	if got.Model != "kimi-k2-0905-preview" || got.BaseURL != "https://api.moonshot.cn/v1" {
 		t.Errorf("the test was sent %+v", got)
 	}
-	hasFold(t, r.tt, "In use")
-	has(t, r.tt, "Kimi", "Connected · 312 ms", "Use Anthropic")
-	hasNot(t, r.tt, "Pick a provider", "sk-secret-value")
+	hasFold(t, r.tt, "Switch to")
+	has(t, r.tt, "Kimi", "Connected · 312 ms")
+	hasNot(t, r.tt, "sk-secret-value")
 }
 
 func TestEnterInTheKeyFieldSavesAndTests(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
-	mustNil(t, r.tt.Click("DeepSeek"))
+	mustNil(t, r.tt.Click("Set up DeepSeek"))
 	mustNil(t, r.tt.Click("Paste your DeepSeek key"))
 	r.tt.Type("sk-1")
 	r.tt.Key(0, ui.KeyEnter)
@@ -266,12 +269,12 @@ func TestAFailedTestStaysInTheFormInPlainWordsAndKeepsTheKey(t *testing.T) {
 		return 0, errors.New("The provider didn't accept the API key.")
 	}
 	r.assistant(t)
-	mustNil(t, r.tt.Click("OpenAI"))
+	mustNil(t, r.tt.Click("Set up OpenAI"))
 	mustNil(t, r.tt.Click("Paste your OpenAI key"))
 	r.tt.Type("sk-bad")
 	mustNil(t, r.tt.Click("Save and test"))
 	r.waitSaved(t)
-	has(t, r.tt, "The provider didn't accept the API key.", "Save and test", "Pick a provider")
+	has(t, r.tt, "The provider didn't accept the API key.", "Save and test")
 	if activeID(r.fm) == "openai" {
 		t.Error("a provider that failed its test is in use")
 	}
@@ -288,13 +291,13 @@ func TestAFailedTestStaysInTheFormInPlainWordsAndKeepsTheKey(t *testing.T) {
 func TestSaveAndTestAsksForWhatIsMissing(t *testing.T) {
 	r := newSettingsRig(t)
 	r.assistant(t)
-	mustNil(t, r.tt.Click("OpenAI"))
+	mustNil(t, r.tt.Click("Set up OpenAI"))
 	mustNil(t, r.tt.Click("Save and test"))
 	has(t, r.tt, "Needs an API key.")
 	if r.s.assist.saving {
 		t.Error("it tested with no key")
 	}
-	mustNil(t, r.tt.Click("Custom"))
+	mustNil(t, r.tt.Click("Set up Custom"))
 	mustNil(t, r.tt.Click("Save and test"))
 	has(t, r.tt, "Enter the address of the endpoint.")
 }
@@ -307,7 +310,7 @@ func TestCustomAddsTheAddressAndTheProtocol(t *testing.T) {
 		return time.Millisecond, nil
 	}
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Custom"))
+	mustNil(t, r.tt.Click("Set up Custom"))
 	has(t, r.tt, "Base URL", "Protocol", "OpenAI-compatible", "Anthropic API", "API key", "Model")
 	mustNil(t, r.tt.Click("https://…"))
 	r.tt.Type("http://127.0.0.1:9000/v1")
@@ -337,8 +340,9 @@ func TestOtherTurnsTheModelIntoATextFieldThatSaves(t *testing.T) {
 	}
 	r.setUp(t, "anthropic")
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Change"))
-	mustNil(t, r.tt.Click("claude-haiku-5-5"))
+	mustNil(t, r.tt.Click("Change Anthropic")) // the one in use opens its form
+	mustNil(t, r.tt.Click("Choose a model"))
+	r.tt.Frame()
 	mustNil(t, r.tt.Click("Other…"))
 	r.tt.Frame()
 	r.tt.Key(ui.Cmd, ui.KeyA)
@@ -361,13 +365,15 @@ func TestTheModelListIsFetchedForTheStoredKeyAndOffersWhatTheProviderListed(t *t
 	}
 	r.setUp(t, "anthropic", "deepseek")
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Change"))
-	mustNil(t, r.tt.Click("DeepSeek"))
+	mustNil(t, r.tt.Click("Use DeepSeek")) // a set-up provider switches and is tested
+	r.tt.Frame()
+	mustNil(t, r.tt.Click("Change DeepSeek")) // its tile, now in use, opens its form
 	r.waitModels(t, "deepseek")
 	if len(asked) != 1 || asked[0].Key != "" {
 		t.Fatalf("asked %+v, want one request with the stored key", asked)
 	}
-	mustNil(t, r.tt.Click("deepseek-chat"))
+	mustNil(t, r.tt.Click("Choose a model"))
+	r.tt.Frame()
 	has(t, r.tt, "deepseek-reasoner", "Other…")
 	mustNil(t, r.tt.Click("deepseek-reasoner"))
 	if got := r.s.draftOf("deepseek").model; got != "deepseek-reasoner" {
@@ -383,7 +389,7 @@ func TestATypedKeyFetchesTheModelListWhenTheFieldIsLeft(t *testing.T) {
 		return []string{"kimi-k2-0905-preview", "kimi-latest"}, nil
 	}
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Kimi"))
+	mustNil(t, r.tt.Click("Set up Kimi"))
 	if len(asked) != 0 {
 		t.Fatalf("asked %v before there was a key", asked)
 	}
@@ -396,7 +402,8 @@ func TestATypedKeyFetchesTheModelListWhenTheFieldIsLeft(t *testing.T) {
 	if !slices.Equal(asked, []string{"sk-typed"}) {
 		t.Fatalf("asked with keys %v", asked)
 	}
-	mustNil(t, r.tt.Click("kimi-k2-0905-preview"))
+	mustNil(t, r.tt.Click("Choose a model"))
+	r.tt.Frame()
 	has(t, r.tt, "kimi-latest")
 }
 
@@ -405,8 +412,9 @@ func TestAFailedModelListFallsBackToTheSuggestionsWithoutAFuss(t *testing.T) {
 	r.fm.ListFn = func(string, data.ProviderEdit) ([]string, error) { return nil, errors.New("401") }
 	r.setUp(t, "anthropic", "deepseek")
 	r.assistant(t)
-	mustNil(t, r.tt.Click("Change"))
-	mustNil(t, r.tt.Click("DeepSeek"))
+	mustNil(t, r.tt.Click("Use DeepSeek")) // a set-up provider switches and is tested
+	r.tt.Frame()
+	mustNil(t, r.tt.Click("Change DeepSeek")) // its tile, now in use, opens its form
 	r.waitModels(t, "deepseek")
 	has(t, r.tt, "deepseek-chat")
 	if r.s.assist.err != "" {
@@ -445,10 +453,10 @@ func TestInChineseTheAssistantPaneSaysItInChinese(t *testing.T) {
 	r.setUp(t, "anthropic", "deepseek")
 	r.s.Show(PaneModel)
 	r.tt.Frame()
-	has(t, r.tt, "更换", "用这个")
-	hasFold(t, r.tt, "当前在用")
-	mustNil(t, r.tt.Click("更换"))
-	has(t, r.tt, "选一个厂商", "完成", "智谱 GLM", "通义千问", "硅基流动", "自定义", "保存并测试")
+	has(t, r.tt, "换一个", "测试")
+	hasFold(t, r.tt, "换一个")
+	mustNil(t, r.tt.Click("设置 Kimi"))
+	has(t, r.tt, "智谱 GLM", "通义千问", "硅基流动", "自定义", "保存并测试")
 }
 
 func TestAssistantMemoryRowOpensTheFileOrTheFolder(t *testing.T) {

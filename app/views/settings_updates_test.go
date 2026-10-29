@@ -1,12 +1,29 @@
 package views
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestGeneralPaneHasTheAutomaticUpdatesSwitchOnByDefault(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "Software updates", "Checked every four hours; you choose when to install", "Automatically check for updates")
+	has(t, r.tt, "Software updates", "Withdo 0.2.0 · not checked yet", "Check now", "Automatically check for updates")
 	if !r.rec.AutomaticUpdates() {
 		t.Error("updates are not checked until the user says so")
+	}
+}
+
+// The quiet line says when the updater last checked, and the link asks it to check now.
+func TestTheUpdatesRowShowsTheLastCheckAndChecksNow(t *testing.T) {
+	r := newSettingsRig(t)
+	r.rec.lastCheck = fixedNow().Add(-2 * time.Minute)
+	r.tt.Frame()
+	has(t, r.tt, "Withdo 0.2.0 · checked 2 minutes ago")
+	if err := r.tt.Click("Check now"); err != nil {
+		t.Fatal(err)
+	}
+	if r.rec.checks != 1 {
+		t.Errorf("Check now asked the updater %d times", r.rec.checks)
 	}
 }
 

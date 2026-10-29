@@ -344,6 +344,40 @@
   "@ageNow": {
     "description": "How long ago something happened: under a minute."
   },
+  "ageJustNow": "just now",
+  "@ageJustNow": {
+    "description": "How long ago something happened, in words: under a minute."
+  },
+  "ageMinutesAgo": "{count, plural, one {# minute ago} other {# minutes ago}}",
+  "@ageMinutesAgo": {
+    "description": "How long ago something happened, in words: minutes.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "ageHoursAgo": "{count, plural, one {# hour ago} other {# hours ago}}",
+  "@ageHoursAgo": {
+    "description": "How long ago something happened, in words: hours.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "ageDaysAgo": "{count, plural, one {# day ago} other {# days ago}}",
+  "@ageDaysAgo": {
+    "description": "How long ago something happened, in words: days, under a week.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "agentSummaryNext": "{summary}; next: {step}",
   "@agentSummaryNext": {
     "description": "Second line of an agent task: its latest report and what it does next.",
@@ -790,7 +824,7 @@
   "@inspectorCloseTip": {
     "description": "Tooltip of the close button of the inspector."
   },
-  "languageSystem": "System",
+  "languageSystem": "Follow system",
   "@languageSystem": {
     "description": "Language choice that follows the system's languages."
   },
@@ -2092,6 +2126,14 @@
   "@settingsInUse": {
     "description": "Group label above the provider the assistant uses now, in Settings > Assistant."
   },
+  "settingsSwitchTo": "Switch to",
+  "@settingsSwitchTo": {
+    "description": "Group label above the grid of model providers in Settings > Model."
+  },
+  "settingsModelNone": "Not set up: dates and reminders are still read on this computer.",
+  "@settingsModelNone": {
+    "description": "The line in place of the provider card when no model provider is set up."
+  },
   "settingsAlsoSetUp": "Also set up",
   "@settingsAlsoSetUp": {
     "description": "Group label above the other providers that already have a key, in Settings > Assistant."
@@ -2113,6 +2155,30 @@
         "example": "DeepSeek"
       }
     }
+  },
+  "a11yProviderChange": "Change {name}",
+  "@a11yProviderChange": {
+    "description": "Accessibility label of the tile of the model provider in use; it opens the key and model form.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "DeepSeek"
+      }
+    }
+  },
+  "a11yProviderSetUp": "Set up {name}",
+  "@a11yProviderSetUp": {
+    "description": "Accessibility label of the tile of a model provider that is not set up yet.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Kimi"
+      }
+    }
+  },
+  "a11yChooseModel": "Choose a model",
+  "@a11yChooseModel": {
+    "description": "Accessibility label of the pop-up of a provider's models."
   },
   "settingsPickProvider": "Pick a provider",
   "@settingsPickProvider": {
@@ -3081,6 +3147,34 @@
   "@settingsUpdatesSwitch": {
     "description": "Accessibility label of the updates switch."
   },
+  "settingsCheckNow": "Check now",
+  "@settingsCheckNow": {
+    "description": "Link beside the updates switch that opens the update window and checks at once."
+  },
+  "settingsUpdatesChecked": "Withdo {version} · checked {age}",
+  "@settingsUpdatesChecked": {
+    "description": "Quiet line of the updates row: the app's version and when it last checked.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.12.0"
+      },
+      "age": {
+        "type": "String",
+        "example": "2 minutes ago"
+      }
+    }
+  },
+  "settingsUpdatesNeverChecked": "Withdo {version} · not checked yet",
+  "@settingsUpdatesNeverChecked": {
+    "description": "Quiet line of the updates row before the app has ever checked.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.12.0"
+      }
+    }
+  },
   "notifyDayDoneTitle": "Day's done",
   "@notifyDayDoneTitle": {
     "description": "Title of the end-of-day notification."
@@ -4015,6 +4109,16 @@
   "@settingsCategoryEdit": {
     "description": "Link in a category row in Settings > General that opens the category sheet (name, icon, color)."
   },
+  "settingsCategoryTasks": "{count, plural, one {# task} other {# tasks}}",
+  "@settingsCategoryTasks": {
+    "description": "Quiet count at the right of a category row, e.g. 12 tasks.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
   "settingsPaneAccount": "Account",
   "settingsPaneAccountLine": "Sign in to sync your tasks between your Mac, Windows and Android.",
   "@settingsPaneAccountLine": {
@@ -4114,6 +4218,16 @@
       "count": {
         "type": "String",
         "example": "3"
+      }
+    }
+  },
+  "settingsSyncDevicesCount": "{count, plural, one {# device} other {# devices}}",
+  "@settingsSyncDevicesCount": {
+    "description": "The number of devices after the time in the sync row, e.g. 1 minute ago · 2 devices.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
       }
     }
   },

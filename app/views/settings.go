@@ -51,6 +51,9 @@ type Settings struct {
 
 	agents agentsCache
 	cats   categoriesState // Settings > Categories
+	// The app mark in About, decoded once from Config.AppIcon.
+	mark      *ui.Bitmap
+	markTried bool
 
 	// Settings > Account: whether this opening asked for the devices, and the inline Change field.
 	syncAsked         bool

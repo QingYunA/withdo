@@ -48,12 +48,25 @@ func (s *Settings) categoriesGroup(c *ui.Context, t *theme.Tokens) {
 		if !s.cats.deletedAt.IsZero() {
 			s.deletedLine(c, t, len(cats) == 0)
 		}
-		settingsRow(c, t, "category-new", "", "", len(cats) == 0 && s.cats.deletedAt.IsZero(), func() {
-			if label := s.say.CategoryNew(); settingsLink(c, t, "category-new-link", label, label).Clicked() {
-				s.categorySheet().openNewCategory(0)
-			}
-		})
+		s.newCategoryRow(c, t, len(cats) == 0 && s.cats.deletedAt.IsZero())
 	})
+}
+
+// newCategoryRow is the last row of the group: a plus and the words of the sheet that makes one.
+func (s *Settings) newCategoryRow(c *ui.Context, t *theme.Tokens, first bool) {
+	if !first {
+		ui.Box(c.Key("rule-category-new")).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
+	}
+	label := s.say.CategoryNew()
+	btn := ui.ButtonBase(c.Key("category-new")).FillWidth().MinHeight(theme.SettingsRowMin).Shrink(0).
+		Padding(8, 14).Gap(12).Justify(ui.Start).AlignItems(ui.Center).Label(label).Cursor(ui.CursorPointer)
+	btn.Children(func() {
+		ui.Icon(c, theme.IconPlus).Size(theme.IconRow, theme.IconRow).TextColor(t.Accent).Shrink(0)
+		theme.Text(c, theme.Body, t.Accent, label)
+	})
+	if btn.Clicked() {
+		s.categorySheet().openNewCategory(0)
+	}
 }
 
 // categorySheet is the Main that hosts the sheet, made when it is first needed.
@@ -73,7 +86,9 @@ func (s *Settings) categorySheetView(c *ui.Context, t *theme.Tokens) {
 	s.cats.sheet.categorySheet(c, t)
 }
 
-// categoryRow is one category: its icon and name, and at the right the arrows, Edit and Delete.
+// categoryRow is one category: its icon, its name in its color and how many open tasks it has.
+// The arrows, Edit and Delete appear only while the row is hovered, or has the keyboard focus: the
+// list stays quiet until the user points at a row.
 func (s *Settings) categoryRow(c *ui.Context, t *theme.Tokens, cat data.Category, at, n int) {
 	name := categoryTitle(s.say, cat)
 	key := "category-" + itoa(cat.ID)
@@ -91,22 +106,48 @@ func (s *Settings) categoryRow(c *ui.Context, t *theme.Tokens, cat data.Category
 		}, lead)
 		return
 	}
-	settingsRowLead(c, t, key, name, "", at == 0, func() {
-		ui.Row(c.Key(key + "-tools")).Shrink(0).Gap(2).AlignItems(ui.Center).Children(func() {
-			if at > 0 && s.categoryTool(c, t, key+"-up", theme.IconSend, s.say.A11yCategoryUp(name)) {
-				_ = s.app.MoveCategory(cat.ID, at-1)
-			}
-			if at < n-1 && s.categoryTool(c, t, key+"-down", theme.IconArrowDown, s.say.A11yCategoryDown(name)) {
-				_ = s.app.MoveCategory(cat.ID, at+1)
-			}
-			if label := s.say.SettingsCategoryEdit(); settingsLink(c, t, key+"-edit", label, s.say.A11yCategoryEdit(name)).Clicked() {
-				s.categorySheet().openEditCategory(cat)
-			}
-			if cat.Builtin == "" && s.categoryTool(c, t, key+"-trash", theme.IconTrash, s.say.A11yCategoryDelete(name)) {
-				s.cats.confirm = cat.ID
-			}
-		})
-	}, lead)
+	if at > 0 {
+		ui.Box(c.Key("rule-"+key)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
+	}
+	var row ui.Element
+	row = ui.Row(c.Key("row-"+key)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(8, 14).Gap(12).
+		AlignItems(ui.Center).Focusable().FocusRing(false)
+	row.Children(func() {
+		lead()
+		theme.Text(c, theme.Body, t.CategoryInk(cat.Color), name).Grow(1).MinWidth(0).Ellipsis("…")
+		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsCategoryTasks(s.categoryTaskCount(cat.ID))).Shrink(0)
+		if row.Hovered() || row.Focused() || row.FocusWithin() {
+			ui.Row(c.Key(key + "-tools")).Shrink(0).Gap(2).AlignItems(ui.Center).Children(func() {
+				if at > 0 && s.categoryTool(c, t, key+"-up", theme.IconSend, s.say.A11yCategoryUp(name)) {
+					_ = s.app.MoveCategory(cat.ID, at-1)
+				}
+				if at < n-1 && s.categoryTool(c, t, key+"-down", theme.IconArrowDown, s.say.A11yCategoryDown(name)) {
+					_ = s.app.MoveCategory(cat.ID, at+1)
+				}
+				if label := s.say.SettingsCategoryEdit(); settingsLink(c, t, key+"-edit", label, s.say.A11yCategoryEdit(name)).Clicked() {
+					s.categorySheet().openEditCategory(cat)
+				}
+				if cat.Builtin == "" && s.categoryTool(c, t, key+"-trash", theme.IconTrash, s.say.A11yCategoryDelete(name)) {
+					s.cats.confirm = cat.ID
+				}
+			})
+		}
+	})
+}
+
+// categoryTaskCount is how many open tasks count under a category, as the main window counts them:
+// a repository's tasks under Work, and no subtasks.
+func (s *Settings) categoryTaskCount(id int) int {
+	n := 0
+	for _, task := range s.app.snap.tasks {
+		if task.IsSubtask() || task.Status.Terminal() {
+			continue
+		}
+		if s.app.categoryOf(task) == id {
+			n++
+		}
+	}
+	return n
 }
 
 // categoryTool is a 24 pt icon button of a category row; it reports a click.
