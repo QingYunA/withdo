@@ -170,7 +170,7 @@ func (m *Main) projectRow(c *ui.Context, t *theme.Tokens, p data.Project, n int,
 	if depth > 0 {
 		row.Padding(0, sidebarRowPad, 0, sidebarRowPad+subRowIndent*float32(depth))
 	}
-	row.ContextMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
+	row.PopoverMenu(func(mn *ui.Menu) { m.projectMenu(mn, p) })
 	row.Children(func() {
 		ui.Icon(c, theme.IconFolder).Size(theme.IconRow, theme.IconRow).TextColor(theme.ProjectColor(p.Name)).Shrink(0)
 		if renaming {

@@ -57,7 +57,7 @@ func TestAProjectsMenuMakesASubproject(t *testing.T) {
 
 	tt.RightClick("withdo")
 	tt.Frame()
-	if err := tt.ChooseMenuItem(m.say.ManageNewSubproject()); err != nil {
+	if err := chooseItem(tt, m.say.ManageNewSubproject()); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()

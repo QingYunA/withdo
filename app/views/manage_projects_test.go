@@ -166,11 +166,56 @@ func TestEscAndCancelCloseTheNewProjectSheet(t *testing.T) {
 func TestProjectContextMenu(t *testing.T) {
 	tt, _, _ := newMainTester(t, 1100)
 	tt.Frame()
-	if err := tt.RightClick("picpocket"); err != nil {
-		t.Fatal(err)
-	}
-	if got, want := tt.Menu(), []string{"Open QingYunA/picpocket on GitHub", "New milestone…", "New sub-project…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	got := drawnMenu(tt, func() { _ = tt.RightClick("picpocket") })
+	if want := []string{"Open QingYunA/picpocket on GitHub", "New milestone…", "New sub-project…", "Rename", "Archive", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu %q, want %q", got, want)
+	}
+}
+
+// The menu is drawn in the window, in the app's theme: the system shows none.
+func TestProjectContextMenuIsDrawnInTheWindow(t *testing.T) {
+	tt, _, _ := newMainTester(t, 1100)
+	tt.Frame()
+	_ = tt.RightClick("picpocket")
+	tt.Frame()
+	if got := tt.Menu(); got != nil {
+		t.Errorf("the system shows a menu too: %q", got)
+	}
+	for _, item := range []string{"New milestone…", "New sub-project…", "Rename", "Archive", "Delete…"} {
+		if !tt.HasText(item) {
+			t.Errorf("the window shows no item %q: %q", item, tt.Texts())
+		}
+	}
+	tt.Key(0, ui.KeyEscape)
+	if tt.HasText("New sub-project…") {
+		t.Error("Esc left the menu open")
+	}
+}
+
+// The sidebar rows take no focus, so the menu opens by the pointer; once open it has the keys.
+func TestProjectContextMenuWorksFromTheKeyboard(t *testing.T) {
+	tt, _, app := newMainTester(t, 1100)
+	tt.Frame()
+	_ = tt.RightClick("picpocket")
+	tt.Frame()
+	if !tt.HasText("New sub-project…") {
+		t.Fatalf("no menu: %q", tt.Texts())
+	}
+	// Escape closes it.
+	tt.Key(0, ui.KeyEscape)
+	if tt.HasText("New sub-project…") {
+		t.Fatal("Esc left the menu open")
+	}
+	// Down walks the items (GitHub, New milestone, New sub-project, Rename, Archive) and Enter
+	// chooses the fifth.
+	_ = tt.RightClick("picpocket")
+	tt.Frame()
+	for range 5 {
+		tt.Key(0, ui.KeyDown)
+	}
+	tt.Key(0, ui.KeyEnter)
+	if slices.Contains(projectNames(app), "picpocket") {
+		t.Error("Enter on Archive did not archive the project")
 	}
 }
 
@@ -179,7 +224,7 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()
 	_ = tt.RightClick("withdo")
-	if err := tt.ChooseMenuItem("Open QingYunA/withdo on GitHub"); err != nil {
+	if err := chooseItem(tt, "Open QingYunA/withdo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
 	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/withdo" {
@@ -192,8 +237,8 @@ func TestProjectContextMenuOpensTheRepositoryAndLeavesItOutWithoutOne(t *testing
 	plain.Now = fixedNow
 	tt2, _, _ := newTesterFor(plain, 1100)
 	tt2.Frame()
-	_ = tt2.RightClick(p.Name)
-	if got, want := tt2.Menu(), []string{"New milestone…", "New sub-project…", "-", "Rename", "Archive", "-", "Delete…"}; !slices.Equal(got, want) {
+	got := drawnMenu(tt2, func() { _ = tt2.RightClick(p.Name) })
+	if want := []string{"New milestone…", "New sub-project…", "Rename", "Archive", "Delete…"}; !slices.Equal(got, want) {
 		t.Errorf("menu without a repository %q, want %q", got, want)
 	}
 }
@@ -202,7 +247,7 @@ func TestRenameAProjectInTheSidebar(t *testing.T) {
 	tt, _, app := newMainTester(t, 1100)
 	tt.Frame()
 	_ = tt.RightClick("picpocket")
-	if err := tt.ChooseMenuItem("Rename"); err != nil {
+	if err := chooseItem(tt, "Rename"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Key(ui.Cmd, ui.KeyA)
@@ -217,7 +262,7 @@ func TestRenameAProjectInTheSidebar(t *testing.T) {
 
 	// Esc puts the old name back.
 	_ = tt.RightClick("pocket photos")
-	_ = tt.ChooseMenuItem("Rename")
+	_ = chooseItem(tt, "Rename")
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("zzz")
 	tt.Key(0, ui.KeyEscape)
@@ -227,7 +272,7 @@ func TestRenameAProjectInTheSidebar(t *testing.T) {
 
 	// A blank name changes nothing.
 	_ = tt.RightClick("pocket photos")
-	_ = tt.ChooseMenuItem("Rename")
+	_ = chooseItem(tt, "Rename")
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyBackspace)
 	tt.Key(0, ui.KeyEnter)
@@ -241,7 +286,7 @@ func TestArchivingTheOpenProjectGoesToNow(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 3})
 	tt.Frame()
 	_ = tt.RightClick("picpocket")
-	if err := tt.ChooseMenuItem("Archive"); err != nil {
+	if err := chooseItem(tt, "Archive"); err != nil {
 		t.Fatal(err)
 	}
 	if slices.Contains(projectNames(app), "picpocket") {
@@ -260,7 +305,7 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	m.goTo(nav{screen: screenProject, projectID: 1})
 	tt.Frame()
 	_ = tt.RightClick("withdo")
-	if err := tt.ChooseMenuItem("Delete…"); err != nil {
+	if err := chooseItem(tt, "Delete…"); err != nil {
 		t.Fatal(err)
 	}
 	n := app.taskCount(1)
@@ -277,14 +322,14 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	}
 
 	_ = tt.RightClick("withdo")
-	_ = tt.ChooseMenuItem("Delete…")
+	_ = chooseItem(tt, "Delete…")
 	tt.Key(0, ui.KeyEscape)
 	if tt.HasText("Delete “withdo”?") || !slices.Contains(projectNames(app), "withdo") {
 		t.Fatal("Esc did not cancel")
 	}
 
 	_ = tt.RightClick("withdo")
-	_ = tt.ChooseMenuItem("Delete…")
+	_ = chooseItem(tt, "Delete…")
 	tt.Key(0, ui.KeyEnter) // the default button is Cancel
 	if !slices.Contains(projectNames(app), "withdo") {
 		t.Fatal("Enter deleted the project: the default button must be Cancel")
@@ -294,7 +339,7 @@ func TestDeleteAProjectAsksFirstAndNamesTheTasks(t *testing.T) {
 	}
 
 	_ = tt.RightClick("withdo")
-	_ = tt.ChooseMenuItem("Delete…")
+	_ = chooseItem(tt, "Delete…")
 	if err := tt.Click("Delete"); err != nil {
 		t.Fatal(err)
 	}
@@ -311,7 +356,7 @@ func TestDeleteAnEmptyProjectSaysSo(t *testing.T) {
 	tt, _, _ := newTesterFor(app, 1100)
 	tt.Frame()
 	_ = tt.RightClick(p.Name)
-	_ = tt.ChooseMenuItem("Delete…")
+	_ = chooseItem(tt, "Delete…")
 	if !tt.HasText("This removes the project and its milestones. It can't be undone.") {
 		t.Errorf("body: %q", tt.Texts())
 	}

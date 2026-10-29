@@ -28,13 +28,11 @@ func TestScreensSubprojects(t *testing.T) {
 				}
 			}
 			app.Refresh()
-			manageShot(t, "sidebar-subprojects"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "sidebar-subprojects"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.goTo(nav{screen: screenProject, projectID: 1})
-				return nil
 			})
-			manageShot(t, "new-subproject-sheet"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "new-subproject-sheet"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.openNewProject(parent.ID)
-				return nil
 			})
 		}
 	}

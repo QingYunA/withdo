@@ -140,7 +140,7 @@ func (m *Main) milestoneRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			}
 		}
 		btn := valueButton(c, t, "milestone").Label(m.say.A11yMilestone(label))
-		btn.Menu(func(mn *ui.Menu) {
+		btn.PopoverMenuButton(func(mn *ui.Menu) {
 			if mn.Item(m.say.ValueNone()).Checked(task.MilestoneID == nil).Chosen() {
 				_ = m.app.Update(task.ID, data.Patch{MilestoneID: data.IntPtr(0)})
 			}
