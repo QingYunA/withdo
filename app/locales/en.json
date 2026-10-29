@@ -4047,9 +4047,17 @@
   "@settingsSyncChange": {
     "description": "The link that edits the server address."
   },
+  "settingsSyncOwnServer": "Use your own server",
+  "@settingsSyncOwnServer": {
+    "description": "The link at the foot of the Sync pane, in place of the address, while the app uses the official server. It opens the address field."
+  },
   "settingsSyncServerAddress": "Server address",
   "@settingsSyncServerAddress": {
     "description": "Accessibility label of the server address field and Change link."
+  },
+  "settingsSyncServerHint": "Leave empty for the official server",
+  "@settingsSyncServerHint": {
+    "description": "The placeholder of the empty server address field."
   },
   "settingsSyncServerInvalid": "Use an https:// address, such as https://todo.example.com.",
   "@settingsSyncServerInvalid": {
@@ -4082,12 +4090,20 @@
     "description": "The link that signs out and stops the sync runner."
   },
   "settingsSyncThisMac": "This Mac",
+  "settingsSyncThisMacWindows": "This PC",
   "@settingsSyncThisMac": {
     "description": "The row of this Mac in the Sync pane."
   },
+  "@settingsSyncThisMacWindows": {
+    "description": "The row of this Mac in the Sync pane, worded for Windows."
+  },
   "settingsSyncThisMacBadge": "This Mac",
+  "settingsSyncThisMacBadgeWindows": "This PC",
   "@settingsSyncThisMacBadge": {
     "description": "The badge on this Mac's row in the device list."
+  },
+  "@settingsSyncThisMacBadgeWindows": {
+    "description": "The badge on this Mac's row in the device list, worded for Windows."
   },
   "settingsSyncSynced": "Synced",
   "@settingsSyncSynced": {
@@ -4106,8 +4122,12 @@
     "description": "A device that never synced."
   },
   "settingsSyncUploading": "Uploading this Mac's data",
+  "settingsSyncUploadingWindows": "Uploading this PC's data",
   "@settingsSyncUploading": {
     "description": "The row of the first device while it seeds the account."
+  },
+  "@settingsSyncUploadingWindows": {
+    "description": "The row of the first device while it seeds the account, worded for Windows."
   },
   "settingsSyncUploadProgress": "{done} / {total} · other devices wait until it is done",
   "@settingsSyncUploadProgress": {
@@ -4162,8 +4182,18 @@
     }
   },
   "settingsSyncWaiting": "{count} changes wait on this Mac and are not lost",
+  "settingsSyncWaitingWindows": "{count} changes wait on this PC and are not lost",
   "@settingsSyncWaiting": {
     "description": "The second line of a failed sync.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "@settingsSyncWaitingWindows": {
+    "description": "The second line of a failed sync, worded for Windows.",
     "placeholders": {
       "count": {
         "type": "String",
@@ -4186,12 +4216,34 @@
     "description": "The button of a failed sync."
   },
   "settingsSyncBothTitle": "This Mac and your account both have tasks",
+  "settingsSyncBothTitleWindows": "This PC and your account both have tasks",
   "@settingsSyncBothTitle": {
     "description": "The title of the both-have-tasks sheet."
   },
+  "@settingsSyncBothTitleWindows": {
+    "description": "The title of the both-have-tasks sheet, worded for Windows."
+  },
   "settingsSyncBothBody": "The account already has data from {devices} devices. This Mac has {tasks} tasks and {projects} projects.",
+  "settingsSyncBothBodyWindows": "The account already has data from {devices} devices. This PC has {tasks} tasks and {projects} projects.",
   "@settingsSyncBothBody": {
     "description": "The counts under the both-have-tasks title.",
+    "placeholders": {
+      "devices": {
+        "type": "String",
+        "example": "2"
+      },
+      "tasks": {
+        "type": "String",
+        "example": "128"
+      },
+      "projects": {
+        "type": "String",
+        "example": "6"
+      }
+    }
+  },
+  "@settingsSyncBothBodyWindows": {
+    "description": "The counts under the both-have-tasks title, worded for Windows.",
     "placeholders": {
       "devices": {
         "type": "String",
@@ -4216,16 +4268,24 @@
     "description": "The badge on the merge choice."
   },
   "settingsSyncMergeBody": "This Mac's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); agents use the new number the next time they report.",
+  "settingsSyncMergeBodyWindows": "This PC's tasks join the account. They get new numbers from the account's blocks (for example, #45 becomes #2045); agents use the new number the next time they report.",
   "@settingsSyncMergeBody": {
     "description": "What merging does to this Mac's tasks."
+  },
+  "@settingsSyncMergeBodyWindows": {
+    "description": "What merging does to this Mac's tasks, worded for Windows."
   },
   "settingsSyncUseAccount": "Use the account",
   "@settingsSyncUseAccount": {
     "description": "The other choice of the both-have-tasks sheet."
   },
   "settingsSyncUseAccountBody": "This Mac's data is backed up to the data folder first, then replaced with the account's tasks.",
+  "settingsSyncUseAccountBodyWindows": "This PC's data is backed up to the data folder first, then replaced with the account's tasks.",
   "@settingsSyncUseAccountBody": {
     "description": "What using the account does to this Mac."
+  },
+  "@settingsSyncUseAccountBodyWindows": {
+    "description": "What using the account does to this Mac, worded for Windows."
   },
   "settingsSyncCancel": "Cancel",
   "@settingsSyncCancel": {
@@ -4404,8 +4464,12 @@
     "description": "Failure line when the Google sign-in timed out after 5 minutes or was refused."
   },
   "settingsSyncLocalNote": "Keys and model settings stay on this Mac.",
+  "settingsSyncLocalNoteWindows": "Keys and model settings stay on this PC.",
   "@settingsSyncLocalNote": {
     "description": "Note under the email step's button."
+  },
+  "@settingsSyncLocalNoteWindows": {
+    "description": "Note under the email step's button, worded for Windows."
   },
   "settingsSyncCodeTitle": "Check your email",
   "@settingsSyncCodeTitle": {
@@ -4512,16 +4576,24 @@
     "description": "Section of Agents: tasks an agent was given (or filed) that have no project and are not started yet."
   },
   "settingsSyncWrongAccount": "This Mac is linked to another account. Sign out, then sign in with that account.",
+  "settingsSyncWrongAccountWindows": "This PC is linked to another account. Sign out, then sign in with that account.",
   "@settingsSyncWrongAccount": {
     "description": "The line of This Mac's row when the signed-in account does not own this Mac's device; Sign out is beside it."
+  },
+  "@settingsSyncWrongAccountWindows": {
+    "description": "The line of This Mac's row when the signed-in account does not own this Mac's device; Sign out is beside it, worded for Windows."
   },
   "settingsSyncFailedOther": "something went wrong",
   "@settingsSyncFailedOther": {
     "description": "The reason of a failed sync when the cause is not one the pane knows."
   },
   "settingsSyncOtherTitle": "This Mac was linked to another account",
+  "settingsSyncOtherTitleWindows": "This PC was linked to another account",
   "@settingsSyncOtherTitle": {
     "description": "The title of the sheet shown when a sign-in succeeds as an account that does not own this Mac."
+  },
+  "@settingsSyncOtherTitleWindows": {
+    "description": "The title of the sheet shown when a sign-in succeeds as an account that does not own this Mac, worded for Windows."
   },
   "settingsSyncOtherBody": "It was synced with {previous}. You just signed in as {account}.",
   "@settingsSyncOtherBody": {
@@ -4562,6 +4634,7 @@
     "description": "The recommended choice of the other-account sheet when the old email is not remembered."
   },
   "settingsSyncOtherOldBody": "Sign out of {account} and sign in again with the account this Mac belongs to.",
+  "settingsSyncOtherOldBodyWindows": "Sign out of {account} and sign in again with the account this PC belongs to.",
   "@settingsSyncOtherOldBody": {
     "description": "What the recommended choice of the other-account sheet does.",
     "placeholders": {
@@ -4571,7 +4644,17 @@
       }
     }
   },
+  "@settingsSyncOtherOldBodyWindows": {
+    "description": "What the recommended choice of the other-account sheet does, worded for Windows.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
   "settingsSyncOtherMove": "Move this Mac to {account}",
+  "settingsSyncOtherMoveWindows": "Move this PC to {account}",
   "@settingsSyncOtherMove": {
     "description": "The other choice of the other-account sheet.",
     "placeholders": {
@@ -4581,7 +4664,17 @@
       }
     }
   },
+  "@settingsSyncOtherMoveWindows": {
+    "description": "The other choice of the other-account sheet, worded for Windows.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
   "settingsSyncOtherMoveBody": "This Mac's tasks go to {account}. They stay on this Mac; {previous} keeps its own copy.",
+  "settingsSyncOtherMoveBodyWindows": "This PC's tasks go to {account}. They stay on this PC; {previous} keeps its own copy.",
   "@settingsSyncOtherMoveBody": {
     "description": "What moving this Mac does, when the old email is known.",
     "placeholders": {
@@ -4595,9 +4688,32 @@
       }
     }
   },
+  "@settingsSyncOtherMoveBodyWindows": {
+    "description": "What moving this Mac does, when the old email is known, worded for Windows.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      },
+      "previous": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
   "settingsSyncOtherMoveBodyUnknown": "This Mac's tasks go to {account}. They stay on this Mac.",
+  "settingsSyncOtherMoveBodyUnknownWindows": "This PC's tasks go to {account}. They stay on this PC.",
   "@settingsSyncOtherMoveBodyUnknown": {
     "description": "What moving this Mac does, when the old email is not remembered.",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "ada@example.com"
+      }
+    }
+  },
+  "@settingsSyncOtherMoveBodyUnknownWindows": {
+    "description": "What moving this Mac does, when the old email is not remembered, worded for Windows.",
     "placeholders": {
       "account": {
         "type": "String",

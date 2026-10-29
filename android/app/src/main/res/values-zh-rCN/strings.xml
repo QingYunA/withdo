@@ -43,7 +43,7 @@
     <string name="how_to_connect">怎么连接</string>
 
     <string name="connect_title">连接这台手机</string>
-    <string name="connect_body">在 Mac 上打开设置 &gt; 同步，然后链接这台手机。</string>
+    <string name="connect_body">在电脑上打开设置 &gt; 同步，然后链接这台手机。</string>
     <string name="close">关闭</string>
 
     <string name="calendar_placeholder_title">日历稍后就有</string>
@@ -213,6 +213,8 @@
     <string name="sync_continue">继续</string>
     <string name="sync_server">服务器</string>
     <string name="sync_change">更改</string>
+    <string name="sync_own_server">使用自己的服务器</string>
+    <string name="sync_server_hint">留空即使用官方服务器</string>
     <string name="sync_change_save">保存</string>
     <string name="sync_server_saving">保存中…</string>
     <string name="sync_server_invalid">请填 https:// 开头的地址，例如 https://todo.example.com。</string>

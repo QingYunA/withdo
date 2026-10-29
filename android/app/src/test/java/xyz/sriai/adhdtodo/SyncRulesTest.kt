@@ -6,6 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import xyz.sriai.adhdtodo.data.CodeState
 import xyz.sriai.adhdtodo.ui.CodeFailure
+import xyz.sriai.adhdtodo.ui.DEFAULT_SYNC_SERVER
 import xyz.sriai.adhdtodo.ui.SYNC_ATTENTION_MILLIS
 import xyz.sriai.adhdtodo.ui.SignInFlow
 import xyz.sriai.adhdtodo.ui.SignInStep
@@ -20,6 +21,8 @@ import xyz.sriai.adhdtodo.ui.SignInStage
 import xyz.sriai.adhdtodo.ui.deviceUsesLaptop
 import xyz.sriai.adhdtodo.ui.groupThousands
 import xyz.sriai.adhdtodo.ui.isAuthFailure
+import xyz.sriai.adhdtodo.ui.isOfficialSyncServer
+import xyz.sriai.adhdtodo.ui.syncServerToSave
 import xyz.sriai.adhdtodo.ui.syncBarFilled
 import xyz.sriai.adhdtodo.ui.signInStageOf
 import xyz.sriai.adhdtodo.ui.syncCloudBlocked
@@ -156,5 +159,31 @@ class SyncRulesTest {
         val expired = code.failed(CodeState("code", "a@b.co", 30, "expired"), "x")
         assertEquals(CodeFailure.EXPIRED, expired.failure)
         assertEquals(30, expired.resendIn)
+    }
+}
+
+/** The server row: the official address is hidden, any other is shown, and empty means official. */
+class SyncServerRulesTest {
+    @Test
+    fun `the official server compares without spaces, a trailing slash or case`() {
+        assertTrue(isOfficialSyncServer(DEFAULT_SYNC_SERVER))
+        assertTrue(isOfficialSyncServer("$DEFAULT_SYNC_SERVER/"))
+        assertTrue(isOfficialSyncServer("  $DEFAULT_SYNC_SERVER/ "))
+        assertTrue(isOfficialSyncServer("HTTPS://TODO.SRI-AI.XYZ"))
+    }
+
+    @Test
+    fun `any other address is a custom server`() {
+        assertFalse(isOfficialSyncServer("https://todo.example.com"))
+        assertFalse(isOfficialSyncServer("http://todo.sri-ai.xyz"))
+        assertFalse(isOfficialSyncServer("$DEFAULT_SYNC_SERVER/v1"))
+        assertFalse(isOfficialSyncServer(""))
+    }
+
+    @Test
+    fun `an empty field saves the official server`() {
+        assertEquals(DEFAULT_SYNC_SERVER, syncServerToSave(""))
+        assertEquals(DEFAULT_SYNC_SERVER, syncServerToSave("   "))
+        assertEquals("https://todo.example.com", syncServerToSave("  https://todo.example.com "))
     }
 }

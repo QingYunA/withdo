@@ -18,6 +18,12 @@ import (
 // DefaultSyncServer is where a Mac syncs until the user changes it. The pane shows only the host.
 const DefaultSyncServer = "https://todo.sri-ai.xyz"
 
+// IsOfficialSyncServer tells whether server is DefaultSyncServer. Spaces, a trailing slash and the
+// case of the address do not matter. The pane hides the official address and shows a custom one.
+func IsOfficialSyncServer(server string) bool {
+	return strings.EqualFold(strings.TrimRight(strings.TrimSpace(server), "/"), DefaultSyncServer)
+}
+
 // SyncPhase is what Settings > Sync shows.
 type SyncPhase int
 

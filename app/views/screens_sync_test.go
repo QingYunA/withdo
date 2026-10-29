@@ -125,9 +125,9 @@ func TestScreensSettingsSync(t *testing.T) {
 			// The server address while it is being edited.
 			app.Sync = &fakeSync{snap: signedOutCodeSync()}
 			settingsShot(t, "settings-account-change"+sfx+".png", app, a.dark, zh, PaneAccount, func(r *settingsRig) {
-				change := "Change"
+				change := "Use your own server"
 				if zh {
-					change = "更改"
+					change = "使用自己的服务器"
 				}
 				mustNil(t, r.tt.Click(change))
 				r.tt.Frame()

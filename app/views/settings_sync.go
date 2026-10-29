@@ -190,14 +190,14 @@ func (s *Settings) syncThisMacRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 	failed := snap.Phase == data.SyncFailed
 	offline := snap.Phase == data.SyncOffline
 	syncRow(c, t, "this-mac", false, func() {
-		theme.Text(c, theme.Body, t.Text, s.say.SettingsSyncThisMac())
+		theme.Text(c, theme.Body, t.Text, syncThisDevice(s.say))
 		switch {
 		case failed:
 			ui.Row(c).Gap(0).AlignItems(ui.Center).Children(func() {
 				theme.Text(c, theme.Meta, t.Blocked(), s.say.SettingsSyncFailed(s.syncFailureText(snap))).Shrink(1).MinWidth(0).Ellipsis("…")
 				theme.Text(c, theme.Meta, t.TextSecondary, " · "+s.syncRetryLine(snap.RetryAt)).Shrink(0)
 			})
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncWaiting(itoa(snap.Pending)), 2)
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, syncWaiting(s.say, itoa(snap.Pending)), 2)
 		case offline:
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncOffline(itoa(snap.Pending)), 2)
 		default:
@@ -233,7 +233,7 @@ func (s *Settings) syncThisMacRow(c *ui.Context, t *theme.Tokens, svc SyncServic
 // syncUploadingRow is the first device seeding the account: the count and the pixel bar.
 func (s *Settings) syncUploadingRow(c *ui.Context, t *theme.Tokens, snap data.SyncSnapshot) {
 	syncRow(c, t, "uploading", false, func() {
-		theme.Text(c, theme.Body, t.Text, s.say.SettingsSyncUploading())
+		theme.Text(c, theme.Body, t.Text, syncUploading(s.say))
 		theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncUploadProgress(groupThousands(snap.SeedDone), groupThousands(snap.SeedTotal)), 2)
 		syncBar(c, t, "sync-upload", snap.SeedDone, snap.SeedTotal)
 	}, nil)
@@ -267,7 +267,7 @@ func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevi
 		ui.Row(c).Grow(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			theme.Text(c, theme.Body, t.Text, d.Name).Shrink(1).MinWidth(0).Ellipsis("…")
 			if d.This {
-				syncBadge(c, t, s.say.SettingsSyncThisMacBadge())
+				syncBadge(c, t, syncThisDeviceBadge(s.say))
 			}
 		})
 		age := s.say.SettingsSyncNever()
@@ -278,34 +278,54 @@ func (s *Settings) syncDeviceRow(c *ui.Context, t *theme.Tokens, d data.SyncDevi
 	})
 }
 
-// syncFooter is the server line: the host, and Change, which edits it in place.
+// syncFooter is the server line. The official server has no address on screen, only a link to use
+// your own; a custom server shows its host and Change. Both edit the address in place, and an empty
+// address means the official server.
 func (s *Settings) syncFooter(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	ui.Row(c.Key("sync-footer")).Margin(14, 4, 0).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncServer())
+		official := data.IsOfficialSyncServer(snap.Server)
+		if s.syncEditingServer || !official {
+			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncServer())
+		}
 		if s.syncEditingServer {
 			fieldWell(c, t, "sync-server", 330, func() {
-				var field ui.Element
-				field = ui.TextInputBase(c.Key("sync-server"), &s.syncServerDraft)
-				theme.Body.Apply(field).TextColor(t.Text).Label(s.say.SettingsSyncServerAddress()).AutoFocus().
-					OnTextKey(func(k ui.TextKey) bool {
-						switch k.Key {
-						case ui.KeyEnter:
-							server := strings.TrimSpace(s.syncServerDraft)
-							if err := svc.SyncSetServer(server); err != nil {
-								s.syncServerErr = true
+				ui.Box(c.Key("sync-server-box")).MinWidth(0).Children(func() {
+					var field ui.Element
+					field = ui.TextInputBase(c.Key("sync-server"), &s.syncServerDraft)
+					theme.Body.Apply(field).TextColor(t.Text).Label(s.say.SettingsSyncServerAddress()).AutoFocus().
+						OnTextKey(func(k ui.TextKey) bool {
+							switch k.Key {
+							case ui.KeyEnter:
+								server := strings.TrimSpace(s.syncServerDraft)
+								if server == "" {
+									server = data.DefaultSyncServer
+								}
+								if err := svc.SyncSetServer(server); err != nil {
+									s.syncServerErr = true
+									return true
+								}
+								s.syncEditingServer, s.syncServerErr = false, false
+								return true
+							case ui.KeyEscape:
+								s.syncEditingServer, s.syncServerErr = false, false
 								return true
 							}
-							s.syncEditingServer, s.syncServerErr = false, false
-							return true
-						case ui.KeyEscape:
-							s.syncEditingServer, s.syncServerErr = false, false
-							return true
-						}
-						return false
-					})
+							return false
+						})
+					if s.syncServerDraft == "" {
+						theme.Text(c, theme.Body, t.TextSecondary, s.say.SettingsSyncServerHint()).
+							Absolute().Left(0).Top(0).Right(0).Ellipsis("…").PassThrough()
+					}
+				})
 			})
 			if s.syncServerErr {
 				theme.Text(c, theme.Meta, t.Blocked(), s.say.SettingsSyncServerInvalid())
+			}
+			return
+		}
+		if official {
+			if settingsLink(c, t, "sync-change", s.say.SettingsSyncOwnServer(), s.say.SettingsSyncServerAddress()).Clicked() {
+				s.syncEditingServer, s.syncServerDraft, s.syncServerErr = true, "", false
 			}
 			return
 		}
@@ -337,15 +357,15 @@ func (s *Settings) syncSheet(c *ui.Context, t *theme.Tokens, snap data.SyncSnaps
 		panel.Children(func() {
 			title := theme.Input
 			title.Weight = 600
-			theme.Text(c, title, t.Text, s.say.SettingsSyncBothTitle())
+			theme.Text(c, title, t.Text, syncBothTitle(s.say))
 			theme.Paragraph(c, theme.Meta, t.TextSecondary,
-				s.say.SettingsSyncBothBody(itoa(snap.Conflict.AccountDevices), itoa(snap.Conflict.LocalTasks), itoa(snap.Conflict.LocalProjects)), 0).
+				syncBothBody(s.say, itoa(snap.Conflict.AccountDevices), itoa(snap.Conflict.LocalTasks), itoa(snap.Conflict.LocalProjects)), 0).
 				Margin(6, 0, 0)
-			if syncChoiceCard(c, t, "sync-merge", s.say.SettingsSyncMerge(), s.say.SettingsSyncMergeBody(),
+			if syncChoiceCard(c, t, "sync-merge", s.say.SettingsSyncMerge(), syncMergeBody(s.say),
 				s.syncChoice == SyncChoiceMerge, s.say.SettingsSyncRecommended()) {
 				s.syncChoice = SyncChoiceMerge
 			}
-			if syncChoiceCard(c, t, "sync-account-choice", s.say.SettingsSyncUseAccount(), s.say.SettingsSyncUseAccountBody(),
+			if syncChoiceCard(c, t, "sync-account-choice", s.say.SettingsSyncUseAccount(), syncUseAccountBody(s.say),
 				s.syncChoice == SyncChoiceAccount, "") {
 				s.syncChoice = SyncChoiceAccount
 			}

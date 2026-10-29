@@ -43,7 +43,7 @@
     <string name="how_to_connect">How to connect</string>
 
     <string name="connect_title">Connect this phone</string>
-    <string name="connect_body">Open Settings &gt; Sync on your Mac, then link this phone.</string>
+    <string name="connect_body">Open Settings &gt; Sync on your computer, then link this phone.</string>
     <string name="close">Close</string>
 
     <string name="calendar_placeholder_title">Calendar comes later</string>
@@ -213,6 +213,8 @@
     <string name="sync_continue">Continue</string>
     <string name="sync_server">Server</string>
     <string name="sync_change">Change</string>
+    <string name="sync_own_server">Use your own server</string>
+    <string name="sync_server_hint">Leave empty for the official server</string>
     <string name="sync_change_save">Save</string>
     <string name="sync_server_saving">Saving…</string>
     <string name="sync_server_invalid">Use an https:// address, such as https://todo.example.com.</string>

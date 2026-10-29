@@ -10,6 +10,16 @@ const val SYNC_BAR_CELLS = 40
 /** Where a phone syncs until the user changes it; mobile/core reports it before sync.json exists. */
 const val DEFAULT_SYNC_SERVER = "https://todo.sri-ai.xyz"
 
+/**
+ * Whether [server] is [DEFAULT_SYNC_SERVER]. Spaces, a trailing slash and the case of the address
+ * do not matter. The pane hides the official address and shows any other; a blank one is not it.
+ */
+fun isOfficialSyncServer(server: String): Boolean =
+    server.trim().trimEnd('/').equals(DEFAULT_SYNC_SERVER, ignoreCase = true)
+
+/** The address to save for what was typed: an empty field means the official server. */
+fun syncServerToSave(draft: String): String = draft.trim().ifEmpty { DEFAULT_SYNC_SERVER }
+
 /** How long a failed sync may stay quiet before the header's cloud turns red. */
 const val SYNC_ATTENTION_MILLIS = 15 * 60 * 1000L
 

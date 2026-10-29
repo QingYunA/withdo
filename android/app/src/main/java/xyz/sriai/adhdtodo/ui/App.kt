@@ -808,7 +808,7 @@ fun App(
                                 onCancelGoogleLink = { scope.launch(Dispatchers.IO) { api.googleLinkCancel() } },
                                 onStartServerEdit = {
                                     serverEditing = true
-                                    serverDraft = shownStatus.server.ifBlank { DEFAULT_SYNC_SERVER }
+                                    serverDraft = shownStatus.server.takeUnless { isOfficialSyncServer(it) }.orEmpty()
                                     serverError = false
                                 },
                                 onServerDraft = { serverDraft = it; serverError = false },
@@ -818,7 +818,7 @@ fun App(
                                         serverError = false
                                         scope.launch {
                                             val ok = try {
-                                                withContext(Dispatchers.IO) { api.syncSetServer(serverDraft.trim()) }
+                                                withContext(Dispatchers.IO) { api.syncSetServer(syncServerToSave(serverDraft)) }
                                                 true
                                             } catch (e: CancellationException) {
                                                 throw e

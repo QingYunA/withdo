@@ -225,20 +225,23 @@ func TestSyncPaneOfflineHasNoButton(t *testing.T) {
 
 func TestSyncPaneChangeServer(t *testing.T) {
 	r, fs := syncPane(t, signedOutCodeSync())
-	if err := r.tt.Click("Change"); err != nil {
+	// The official server has no address on screen, only the way to use your own.
+	hasNot(t, r.tt, "todo.sri-ai.xyz", "Change")
+	has(t, r.tt, "Use your own server")
+	if err := r.tt.Click("Use your own server"); err != nil {
 		t.Fatal(err)
 	}
 	r.tt.Frame()
-	r.tt.Key(ui.Cmd, ui.KeyA)
+	has(t, r.tt, "Leave empty for the official server")
 	r.tt.Type("https://sync.example.com/")
 	r.tt.Key(0, ui.KeyEnter)
 	r.tt.Frame()
 	if fs.server != "https://sync.example.com/" {
 		t.Errorf("saved %q", fs.server)
 	}
-	if r.tt.HasText("todo.sri-ai.xyz") {
-		t.Error("the footer kept the old server")
-	}
+	// A custom server shows its host and Change.
+	has(t, r.tt, "sync.example.com", "Change")
+	hasNot(t, r.tt, "Use your own server")
 
 	// Esc keeps the old server.
 	if err := r.tt.Click("Change"); err != nil {
@@ -253,6 +256,21 @@ func TestSyncPaneChangeServer(t *testing.T) {
 		t.Errorf("Esc saved %q", fs.server)
 	}
 	has(t, r.tt, "sync.example.com")
+
+	// An empty field is the official server again, and its address goes off the screen.
+	if err := r.tt.Click("Change"); err != nil {
+		t.Fatal(err)
+	}
+	r.tt.Frame()
+	r.tt.Key(ui.Cmd, ui.KeyA)
+	r.tt.Key(0, ui.KeyBackspace)
+	r.tt.Key(0, ui.KeyEnter)
+	r.tt.Frame()
+	if fs.server != data.DefaultSyncServer {
+		t.Errorf("an empty field saved %q, want the official server", fs.server)
+	}
+	has(t, r.tt, "Use your own server")
+	hasNot(t, r.tt, "todo.sri-ai.xyz")
 }
 
 func TestSidebarSyncCloud(t *testing.T) {

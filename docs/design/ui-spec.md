@@ -2379,9 +2379,17 @@ this order: Account, General, Agents, Advanced.
   Polling runs at launch, every 5 minutes, and when the main window comes back to the front if the
   last check is older than a minute; at most 4 `gh` calls at once. With no poller the pane says so.
 - **Account** (M11, the old Sync pane, retitled; reference `docs/design/mockups/v27.html`; signing in `v32.html`): the account and
-  this Mac, in one group, and the server at the foot in `text.tertiary` (`Server todo.sri-ai.xyz ·
-  Change`; Change edits it in place, for people who host their own). Signing in happens in the pane,
-  never through a browser. **Signing up and signing in are one path** (M13 P2, as Linear, Notion and
+  this computer, in one group, and the server at the foot in `text.tertiary`. **The official server
+  has no address on screen** (2026-10-28): the foot is only the link `Use your own server`
+  (`使用自己的服务器`). A custom server shows `Server todo.example.com · Change`. Either link edits the
+  address in place, for people who host their own; the field starts empty for the official server and
+  holds the address for a custom one, with the placeholder `Leave empty for the official server`
+  (`留空即使用官方服务器`). Saving an empty field saves the official server. "Official" is
+  `data.IsOfficialSyncServer`: `https://todo.sri-ai.xyz` without spaces, a trailing slash or case.
+  **The computer is named for the system** (2026-10-28): every Sync-pane line that says `this Mac`
+  (`这台 Mac`) says `this PC` (`这台电脑`) on Windows; the catalog keeps a `...Windows` message beside
+  each, and `app/views/system_words.go` picks it by `systemGOOS`, as for Finder and File Explorer.
+  Signing in happens in the pane, never through a browser. **Signing up and signing in are one path** (M13 P2, as Linear, Notion and
   Slack do it): an email, then a 6-digit code mailed to it; an email with no account gets one at
   that step, with no name asked (the name is the part of the email before `@`). A password is
   optional: `Use a password instead` keeps it for accounts that have one. The phone's Sync screen
@@ -2391,7 +2399,7 @@ this order: Account, General, Agents, Advanced.
     phone and other computers. A new email gets an account here.` (`任务、项目和 Agent 的汇报会同步到手机和其他电脑。第一次用这个邮箱，会顺手建好账号。`),
     then one `fieldWell` 280 pt wide, `you@example.com`, focused when the pane opens, and under it the
     accent button **Continue with email** (`用邮箱继续`, 280 pt), enabled once the field holds an
-    email; Enter presses it. In `text.tertiary` under it: keys and model settings stay on this Mac.
+    email; Enter presses it. In `text.tertiary` under it: keys and model settings stay on this Mac (this PC on Windows).
     Above the field (M13 P3, `v32.html` ①): a 280 pt outlined button **Continue with Google**
     (`用 Google 继续`, Google's four-color `G` mark at 14 pt, the one logo here that is not pixel art,
     as Google's branding rules require), then an `or` (`或`) rule, 12 pt `text.tertiary` between two
@@ -2434,7 +2442,9 @@ this order: Account, General, Agents, Advanced.
     China): from `Withdo <noreply@sri-ai.xyz>`, subject `<code> is your Withdo code`, the code
     in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
     nobody can sign in without the code.`
-  - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same steps on its card (Google
+  - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same server rule (`isOfficialSyncServer`,
+    `syncServerToSave` in `SyncRules.kt`; the hint is `sync_server_hint`), and its link-this-phone dialog
+    says `on your computer`, not Mac. The same steps on its card (Google
     opens in an in-app Custom Tab, falling back to the default browser where none supports Custom
     Tabs; the toolbar takes the `bg` colour; the card waits as on the desktop),
     the cells 44 x 54 dp, the numeric keyboard with `autofillHints` one-time code, and the buttons full
