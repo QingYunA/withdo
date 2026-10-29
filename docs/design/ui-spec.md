@@ -2228,8 +2228,9 @@ for what v41 does not change (the sign-in flows, the provider form, the category
 5. **General**: **Language** as a three-part segmented control (`Follow system` | `English` |
    `简体中文`), not a pop-up. **Notifications and sound** (`通知与声音`): System notifications, the
    end-of-day reminder (its time as a small field beside the switch, no second row), Sound effects.
-   **Updates and data** (`更新与数据`): automatic checks (`meta`: `Withdo 0.12.0 · up to date`, a
-   **Check now** link beside the switch), the data folder with **Show in Finder**.
+   **Updates and data** (`更新与数据`): automatic checks (`meta`: `Withdo 0.12.0 · checked 2 minutes
+   ago`, or `not checked yet`: the updater cannot tell whether the version is the latest; a **Check
+   now** link beside the switch), the data folder with **Show in Finder**.
 6. **Categories** is a pane of its own: the categories group (rows show the icon, the name in the
    category's color and `N tasks`; the arrows and **Edit** appear only on the hovered or focused row),
    **New category…**, then **Archived projects** with Restore.
@@ -2246,8 +2247,10 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    computer`), which opens the More list in place (the compact rows of today, with Get it);
    **Connect by hand** (`手动接入`, `meta`: the command and the setup guide), which opens in place the
    `claude mcp add` well with Copy and **Copy setup guide**; and **Open agent work in** with its
-   pop-up. Then the **GitHub** group: one row, **Recent changes** with its `meta` (adding `gh signed
-   in` or what is missing) and its switch.
+   pop-up. Then the **GitHub** group: the gh status row (account, last check, **Check now**) and
+   **Recent changes** with its switch; switched on with gh missing or signed out, its `meta` says
+   what to run. Tiles keep the catalog order, and a tile shows a short name (`Copilot`) where the
+   full one would not fit; More and the accessible label keep the full name.
 8. **Model** (the old Advanced): the provider in use as one card (36 pt logo, name, `model · ●
    Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
    4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the
