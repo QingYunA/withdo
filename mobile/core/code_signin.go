@@ -12,6 +12,9 @@ import (
 
 // The failure kinds CodeState reports, so the screen can word them without matching error text.
 const (
+	failureEmailTaken    = "email_taken"
+	failureInvalidEmail  = "invalid_email"
+	failureWeakPassword  = "weak_password"
 	failureWrongCode     = "wrong_code"
 	failureCodeExpired   = "expired"
 	failureTooMany       = "too_many"
@@ -22,9 +25,20 @@ const (
 	failureOther         = "other"
 )
 
-// codeSignIn is the code step of the sign-in (M13 P2): the address a code was mailed to, the id of
-// that code and when it was sent, and why the last attempt failed. Core keeps it under mu.
+// The steps CodeState reports once a code was mailed.
+const (
+	// stepVerify is the six cells that verify the email of a new account (after SignUp, or after
+	// SignIn answered {"state":"verify"}).
+	stepVerify = "verify"
+	// stepResetCode is the six cells and the new password of Forgot password.
+	stepResetCode = "reset_code"
+)
+
+// codeSignIn is the code step of the sign-up and of the password reset (v42): the step, the address
+// a code was mailed to, the id of that code and when it was sent, and why the last attempt failed.
+// Core keeps it under mu.
 type codeSignIn struct {
+	step    string
 	email   string
 	otpID   string
 	sentAt  time.Time
@@ -39,23 +53,25 @@ type codeStateJSON struct {
 	Failure      string `json:"failure"`
 }
 
-// CodeState tells the Sync screen where the emailed-code sign-in is:
+// CodeState tells the Sync screen where the verify and reset steps are:
 //
-//	{"step":"code","email":"ada@example.com","resend_in":24,"failure":""}
+//	{"step":"verify","email":"ada@example.com","resend_in":24,"failure":""}
 //
-// step is "code" once RequestCode mailed a code (and until a sign-in finishes), else "". resend_in
-// is the seconds left before ResendCode is allowed, 0 when it is. failure is the kind of the last
-// failed attempt of RequestCode, SignInWithCode, ResendCode or SignIn, cleared by the next
-// attempt: "wrong_code", "expired" (a new code was mailed), "too_many", "wrong_password",
-// "deactivated", "network", "unsupported", "other", or "". The screen re-reads it when the sign-in
-// stage changes (SyncStatus's sign_in_stage goes back to "").
+// step is "verify" once SignUp (or a SignIn that answered "verify") mailed a code, "reset_code" once
+// RequestResetCode did, until a sign-in finishes; else "". resend_in is the seconds left before
+// ResendCode is allowed, 0 when it is. failure is the kind of the last failed attempt of SignUp,
+// RequestResetCode, ResendCode, SignInWithCode, ResetPassword or SignIn, cleared by the next
+// attempt: "email_taken", "invalid_email", "weak_password", "wrong_code", "expired" (a new code was
+// mailed), "too_many", "wrong_password", "deactivated", "network", "unsupported", "other", or "".
+// The screen re-reads it when the sign-in stage changes (SyncStatus's sign_in_stage goes back to
+// "").
 func (c *Core) CodeState() (string, error) {
 	c.mu.Lock()
 	code := c.code
 	c.mu.Unlock()
 	out := codeStateJSON{Email: code.email, Failure: code.failure}
 	if code.otpID != "" {
-		out.Step = "code"
+		out.Step = code.step
 		if left := code.sentAt.Add(data.CodeResendAfter).Sub(c.nowTime()); left > 0 {
 			out.ResendInSecs = int((left + time.Second - 1) / time.Second)
 		}
@@ -63,29 +79,71 @@ func (c *Core) CodeState() (string, error) {
 	return marshal(out)
 }
 
-// RequestCode mails a 6-digit sign-in code to email; an email with no account gets one. The code
-// step starts here: CodeState then reports step "code".
-func (c *Core) RequestCode(email string) error {
-	return c.sendCode(strings.TrimSpace(email), false)
+// SignUp makes an account with an email and a password (at least 8 characters) and mails its first
+// code; CodeState then reports step "verify" and SignInWithCode verifies and signs in. lang is the
+// app's language, "en" or "zh-Hans", the language of the code mails. A taken email fails with
+// failure "email_taken", a malformed one "invalid_email", a short password "weak_password".
+func (c *Core) SignUp(email, password, lang string) error {
+	if c.secrets == nil {
+		return errors.New("this phone has no secure store for the sign-in")
+	}
+	email = strings.TrimSpace(email)
+	c.noteCodeFailure(nil)
+	c.setSignInStage(signInStageCreating)
+	defer c.setSignInStage(signInStageNone)
+	cfg, err := c.signInConfig()
+	if err != nil {
+		return c.codeFailed(err)
+	}
+	source, ok := c.accountSource(cfg).(syncclient.CodeSignIn)
+	if !ok {
+		return c.codeFailed(syncclient.ErrSignInUnsupported)
+	}
+	otpID, err := source.SignUp(context.Background(), cfg.Server, email, password, lang)
+	if err != nil {
+		c.rememberCodeEmail(email)
+		return c.codeFailed(err)
+	}
+	c.codeMailed(email, otpID, stepVerify, false)
+	return nil
 }
 
-// ResendCode mails a new code to the address of the code step. It is refused (without a request)
-// less than 30 seconds after the last one.
+// RequestResetCode mails a 6-digit code for a password reset (Forgot password); CodeState then
+// reports step "reset_code" and ResetPassword finishes it. An email with no account gets the same
+// answer and no mail.
+func (c *Core) RequestResetCode(email string) error {
+	return c.sendCode(strings.TrimSpace(email), false, stepResetCode)
+}
+
+// RequestCode is RequestResetCode under its name before v42, when an email with no account got an
+// account and a code. It no longer makes accounts: use SignUp.
+//
+// Deprecated: kept so the earlier Android screens compile; call SignUp or RequestResetCode.
+func (c *Core) RequestCode(email string) error { return c.RequestResetCode(email) }
+
+// RequestPasswordReset is RequestResetCode under its name before v42, when it mailed a link that
+// set the password in a browser.
+//
+// Deprecated: kept so the earlier Android screens compile; call RequestResetCode.
+func (c *Core) RequestPasswordReset(email string) error { return c.RequestResetCode(email) }
+
+// ResendCode mails a new code to the address of the verify or reset step. It is refused (without a
+// request) less than 30 seconds after the last one.
 func (c *Core) ResendCode() error {
 	c.mu.Lock()
-	email, sentAt := c.code.email, c.code.sentAt
+	step, email, sentAt := c.code.step, c.code.email, c.code.sentAt
 	c.mu.Unlock()
-	if email == "" {
+	if email == "" || step == "" {
 		return errors.New("ask for a code first")
 	}
 	if c.nowTime().Before(sentAt.Add(data.CodeResendAfter)) {
 		return errors.New("wait a moment before asking for another code")
 	}
-	return c.sendCode(email, false)
+	return c.sendCode(email, false, step)
 }
 
-// sendCode is the request behind RequestCode, ResendCode and an expired code's replacement.
-func (c *Core) sendCode(email string, expired bool) error {
+// sendCode is the request behind RequestResetCode, ResendCode and an expired code's replacement.
+func (c *Core) sendCode(email string, expired bool, step string) error {
 	if c.secrets == nil {
 		return errors.New("this phone has no secure store for the sign-in")
 	}
@@ -102,32 +160,69 @@ func (c *Core) sendCode(email string, expired bool) error {
 	}
 	otpID, err := source.RequestCode(context.Background(), cfg.Server, email)
 	if err != nil {
+		c.rememberCodeEmail(email)
 		return c.codeFailed(err)
 	}
+	c.codeMailed(email, otpID, step, expired)
+	return nil
+}
+
+// codeMailed records the code that was just mailed.
+func (c *Core) codeMailed(email, otpID, step string, expired bool) {
 	c.mu.Lock()
-	c.code = codeSignIn{email: email, otpID: otpID, sentAt: c.nowTime()}
+	c.code = codeSignIn{step: step, email: email, otpID: otpID, sentAt: c.nowTime()}
 	if expired {
 		c.code.failure = failureCodeExpired
 	}
 	c.mu.Unlock()
-	return nil
 }
 
-// SignInWithCode checks the code and continues as SignIn does, answering {"state":"linked"} or
-// {"state":"choose"}. A code mailed more than ten minutes ago is not tried: a new one is mailed at
-// once and the call fails with failure "expired".
+// rememberCodeEmail keeps the address of a failed request, for CodeState.
+func (c *Core) rememberCodeEmail(email string) {
+	c.mu.Lock()
+	c.code.email = email
+	c.mu.Unlock()
+}
+
+// SignInWithCode checks the code of the verify step: it verifies the email and continues as SignIn
+// does, answering {"state":"linked"} or {"state":"choose"}. A code mailed more than ten minutes ago
+// is not tried: a new one is mailed at once and the call fails with failure "expired".
 func (c *Core) SignInWithCode(code, deviceName string) (string, error) {
+	return c.finishWithCode(code, deviceName, func(source codeAccountSource, cfg syncclient.Config, otpID string) error {
+		return source.SignInWithCode(context.Background(), cfg.Server, otpID, strings.TrimSpace(code))
+	})
+}
+
+// ResetPassword sets a new password (at least 8 characters) with the code of the reset step and
+// continues as SignIn does, answering {"state":"linked"} or {"state":"choose"}. An old, wrong or
+// unknown code fails as SignInWithCode's does ("expired", "wrong_code"); a short password with
+// failure "weak_password".
+func (c *Core) ResetPassword(code, password, deviceName string) (string, error) {
+	return c.finishWithCode(code, deviceName, func(source codeAccountSource, cfg syncclient.Config, otpID string) error {
+		return source.ResetPassword(context.Background(), cfg.Server, otpID, strings.TrimSpace(code), password)
+	})
+}
+
+// codeAccountSource is the source of a code sign-in: it signs in and takes a code.
+type codeAccountSource interface {
+	syncclient.AccountSource
+	syncclient.CodeSignIn
+}
+
+// finishWithCode is SignInWithCode and ResetPassword: check how old the code is, run check, and
+// link the phone.
+func (c *Core) finishWithCode(code, deviceName string, check func(codeAccountSource, syncclient.Config, string) error) (string, error) {
 	if c.secrets == nil {
 		return "", errors.New("this phone has no secure store for the sign-in")
 	}
 	c.mu.Lock()
-	email, otpID, sentAt := c.code.email, c.code.otpID, c.code.sentAt
+	step, email, otpID, sentAt := c.code.step, c.code.email, c.code.otpID, c.code.sentAt
 	c.mu.Unlock()
 	if otpID == "" {
 		return "", errors.New("ask for a code first")
 	}
 	if c.nowTime().Sub(sentAt) > data.CodeValidFor {
-		if err := c.sendCode(email, true); err != nil {
+		if err := c.sendCode(email, true, step); err != nil {
 			return "", err
 		}
 		return "", errors.New("that code expired; we sent a new one")
@@ -141,14 +236,11 @@ func (c *Core) SignInWithCode(code, deviceName string) (string, error) {
 	if err != nil {
 		return "", c.codeFailed(err)
 	}
-	source, ok := c.accountSource(cfg).(interface {
-		syncclient.AccountSource
-		syncclient.CodeSignIn
-	})
+	source, ok := c.accountSource(cfg).(codeAccountSource)
 	if !ok {
 		return "", c.codeFailed(syncclient.ErrSignInUnsupported)
 	}
-	if err := source.SignInWithCode(context.Background(), cfg.Server, otpID, strings.TrimSpace(code)); err != nil {
+	if err := check(source, cfg, otpID); err != nil {
 		if errors.Is(err, syncclient.ErrInvalidCode) {
 			c.noteCodeFailure(err)
 			return "", errors.New("that code isn't right")
@@ -158,30 +250,16 @@ func (c *Core) SignInWithCode(code, deviceName string) (string, error) {
 	return c.finishSignIn(cfg, source, deviceName)
 }
 
-// RequestPasswordReset mails a link that sets a new password in the browser.
-func (c *Core) RequestPasswordReset(email string) error {
-	if c.secrets == nil {
-		return errors.New("this phone has no secure store for the sign-in")
-	}
-	cfg, err := c.signInConfig()
-	if err != nil {
-		return c.codeFailed(err)
-	}
-	source, ok := c.accountSource(cfg).(syncclient.CodeSignIn)
-	if !ok {
-		return c.codeFailed(syncclient.ErrSignInUnsupported)
-	}
-	if err := source.RequestPasswordReset(context.Background(), cfg.Server, strings.TrimSpace(email)); err != nil {
-		return c.codeFailed(err)
-	}
-	return nil
-}
-
 // codeFailed records why an attempt failed and returns the sentence for it.
 func (c *Core) codeFailed(err error) error {
 	c.noteCodeFailure(err)
-	if errors.Is(err, syncclient.ErrInvalidCode) {
+	switch {
+	case errors.Is(err, syncclient.ErrInvalidEmail):
 		return errors.New("that email address isn't valid")
+	case errors.Is(err, syncclient.ErrEmailTaken):
+		return errors.New("this email already has an account")
+	case errors.Is(err, syncclient.ErrWeakPassword):
+		return errors.New("the password needs at least 8 characters")
 	}
 	return syncError(err)
 }
@@ -208,6 +286,12 @@ func failureKind(err error) string {
 		return ""
 	case errors.Is(err, syncclient.ErrInvalidCode):
 		return failureWrongCode
+	case errors.Is(err, syncclient.ErrEmailTaken):
+		return failureEmailTaken
+	case errors.Is(err, syncclient.ErrInvalidEmail):
+		return failureInvalidEmail
+	case errors.Is(err, syncclient.ErrWeakPassword):
+		return failureWeakPassword
 	case errors.Is(err, syncclient.ErrInvalidCredentials):
 		return failureWrongPassword
 	case errors.Is(err, syncclient.ErrTooManyAttempts):

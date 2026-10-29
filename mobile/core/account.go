@@ -16,6 +16,10 @@ import (
 // answer, "choose", carries the counts the both-have-tasks sheet shows; see signInChoose.
 const signInLinkedJSON = `{"state":"linked"}`
 
+// signInVerifyJSON is SignIn's answer when the password was right but the account's email was never
+// verified: a new code was mailed and CodeState reports step "verify".
+const signInVerifyJSON = `{"state":"verify"}`
+
 // signInChooseJSON is SignIn's "choose" answer. The account's devices are only those that have
 // synced; the device this sign-in just registered has not.
 type signInChooseJSON struct {

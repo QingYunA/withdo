@@ -43,6 +43,9 @@ func newAccountServer(t *testing.T) *accountServer {
 		_, _ = fmt.Fprint(w, body)
 	}
 	mux.HandleFunc("GET /v1/config", func(w http.ResponseWriter, _ *http.Request) { json200(w, `{"auth":"pocketbase"}`) })
+	mux.HandleFunc("POST /api/collections/users/records", func(w http.ResponseWriter, _ *http.Request) {
+		json200(w, `{"id":"rec1","verified":false}`)
+	})
 	mux.HandleFunc("POST /api/collections/users/request-otp", func(w http.ResponseWriter, _ *http.Request) {
 		json200(w, `{"otpId":"otp1"}`)
 	})
@@ -175,8 +178,8 @@ func rememberedForTest(r *Real) string {
 
 func (r *Real) signInWithCodeForTest(t *testing.T, email string) {
 	t.Helper()
-	r.SyncRequestCode(email)
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp(email, "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 	r.SyncSignInWithCode("123456")
 }
 
@@ -205,7 +208,7 @@ func TestSignInOntoAnotherAccountsDeviceAsksFirst(t *testing.T) {
 	// Sign in with the old account instead: signed out, the email card with ada's address.
 	r.SyncUseOldAccount()
 	snap = r.SyncSnapshot()
-	if snap.Phase != SyncSignedOut || snap.SignInStep != SignInStepEmail || snap.SignInEmail != "ada@example.com" ||
+	if snap.Phase != SyncSignedOut || snap.SignInStep != SignInStepSignIn || snap.SignInEmail != "ada@example.com" ||
 		snap.OtherAccount != nil {
 		t.Fatalf("after choosing the old account: phase %v step %q email %q other %+v",
 			snap.Phase, snap.SignInStep, snap.SignInEmail, snap.OtherAccount)
@@ -315,8 +318,8 @@ func googleLinkApp(t *testing.T, linked *bool) (*Real, func(code, errText string
 	})
 	r, _ := codeApp(t, f)
 	// Sign in by code first so the app has a token (the device link fails against this server).
-	r.SyncRequestCode("ada@example.com")
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp("ada@example.com", "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 	close(f.release)
 	r.SyncSignInWithCode("123456")
 	waitSnap(t, r, "the sign-in", func(s SyncSnapshot) bool { return s.AccountEmail == "ada@example.com" && s.Phase != SyncSigningIn })
@@ -372,8 +375,8 @@ func TestGoogleLinkAlreadyUsed(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"items": []map[string]string{}})
 	})
 	r, _ := codeApp(t, f)
-	r.SyncRequestCode("ada@example.com")
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp("ada@example.com", "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 	close(f.release)
 	r.SyncSignInWithCode("123456")
 	waitSnap(t, r, "the sign-in", func(s SyncSnapshot) bool { return s.AccountEmail == "ada@example.com" && s.Phase != SyncSigningIn })

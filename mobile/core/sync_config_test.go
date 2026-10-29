@@ -65,7 +65,7 @@ func TestAnOlderSyncJSONSignsInAgain(t *testing.T) {
 	if secrets.has(syncclient.RefreshTokenKeyFor(phone.dbPath)) {
 		t.Error("SignOut left the old refresh token in the secure store")
 	}
-	if err := phone.RequestCode("ada@example.com"); err != nil {
-		t.Fatalf("RequestCode on an older config: %v", err)
+	if err := phone.RequestResetCode("ada@example.com"); err != nil {
+		t.Fatalf("RequestResetCode on an older config: %v", err)
 	}
 }

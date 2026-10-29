@@ -168,7 +168,7 @@ func phoneStatus(t *testing.T, phone *Core) statusJSON {
 func googleLinkPhone(t *testing.T, f *codeFake) *Core {
 	t.Helper()
 	phone, _ := codePhone(t, f)
-	if err := phone.RequestCode("ada@example.com"); err != nil {
+	if err := phone.SignUp("ada@example.com", "a long password", "en"); err != nil {
 		t.Fatal(err)
 	}
 	_, _ = phone.SignInWithCode("123456", "phone")

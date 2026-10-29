@@ -17,8 +17,8 @@ const (
 	CodeValidFor = 10 * time.Minute
 )
 
-// codeState is the signed-out card's code flow (M13 P2): the screen, the address, the id of the
-// code that was mailed and when. It lives in syncTask, under Real.mu, and is cleared when a
+// codeState is the signed-out card's flow (v42): the screen, the address, the id of the code that
+// was mailed and when. It lives in syncTask, under Real.mu, and is cleared when a
 // sign-in finishes or is cancelled.
 type codeState struct {
 	step     SignInStep
@@ -40,8 +40,8 @@ func (c codeState) cleared() codeState {
 	return codeState{probed: c.probed, probing: c.probing, google: c.google}
 }
 
-// SyncSetSignInStep moves the signed-out card between its screens (to the password screen and back,
-// or back to the email with the address kept). It clears the last failure.
+// SyncSetSignInStep moves the signed-out card between its screens (the Sign in and Sign up tabs,
+// Forgot password and back). It clears the last failure.
 func (r *Real) SyncSetSignInStep(step SignInStep) {
 	r.mu.Lock()
 	if r.sync.signingIn {
@@ -55,75 +55,85 @@ func (r *Real) SyncSetSignInStep(step SignInStep) {
 	r.syncChanged()
 }
 
-// SyncRequestCode mails a 6-digit code to email (the server makes the account if there is none) and
-// moves the card to the code step.
-func (r *Real) SyncRequestCode(email string) {
+// SyncSignUp makes an account with an email and a password and moves the card to Verify: the server
+// mails its first code at once. lang is the app's language ("en" or "zh-Hans"), kept on the account
+// as the language of the code mails. A taken email stays on Sign up as SignInFailureEmailTaken.
+func (r *Real) SyncSignUp(email, password, lang string) {
+	email = strings.TrimSpace(email)
+	if !r.beginCodeWork(SignInStageCreating) {
+		return
+	}
+	r.rememberCodeEmail(email)
+	go r.signUp(email, password, lang)
+}
+
+// SyncRequestResetCode mails a 6-digit code for a password reset (Forgot password) and moves the
+// card to its code step. An email with no account gets the same answer and no mail.
+func (r *Real) SyncRequestResetCode(email string) {
 	email = strings.TrimSpace(email)
 	if !r.beginCodeWork(SignInStageSending) {
 		return
 	}
-	go r.requestCode(email, false)
+	r.rememberCodeEmail(email)
+	go r.requestCode(email, false, SignInStepResetCode)
 }
 
-// SyncResendCode mails a new code to the address of the code step. It does nothing before
-// ResendAt.
+// SyncResendCode mails a new code to the address of the Verify or the reset code step. It does
+// nothing before ResendAt.
 func (r *Real) SyncResendCode() {
 	r.mu.Lock()
-	email := r.sync.code.email
+	email, step := r.sync.code.email, r.sync.code.step
 	early := r.Now().Before(r.sync.code.resendAt)
 	r.mu.Unlock()
-	if email == "" || early || !r.beginCodeWork(SignInStageSending) {
+	if email == "" || early || (step != SignInStepVerify && step != SignInStepResetCode) ||
+		!r.beginCodeWork(SignInStageSending) {
 		return
 	}
-	go r.requestCode(email, false)
+	go r.requestCode(email, false, step)
 }
 
-// SyncSignInWithCode checks the code. A code sent more than ten minutes ago is not tried: a new
-// one is mailed at once and the failure is SignInFailureCodeExpired. On success it continues as the
-// password sign-in does.
+// SyncSignInWithCode checks the code of the Verify step: it verifies the email and signs in. A code
+// sent more than ten minutes ago is not tried: a new one is mailed at once and the failure is
+// SignInFailureCodeExpired. On success it continues as the password sign-in does.
 func (r *Real) SyncSignInWithCode(code string) {
 	code = strings.TrimSpace(code)
-	r.mu.Lock()
-	expired := r.sync.code.otpID != "" && r.Now().Sub(r.sync.code.sentAt) > CodeValidFor
-	email := r.sync.code.email
-	r.mu.Unlock()
-	if expired {
-		if r.beginCodeWork(SignInStageSending) {
-			go r.requestCode(email, true)
-		}
-		return
-	}
-	if !r.beginCodeWork(SignInStageChecking) {
+	if r.resendIfExpired(SignInStepVerify) || !r.beginCodeWork(SignInStageChecking) {
 		return
 	}
 	go r.signInWithCode(code)
 }
 
-// SyncRequestPasswordReset mails a password reset link and moves the card to its "check your
-// email" step.
-func (r *Real) SyncRequestPasswordReset(email string) {
-	email = strings.TrimSpace(email)
-	if !r.beginCodeWork(SignInStageSending) {
+// SyncResetPassword sets a new password with the code of the reset code step and signs in. An old
+// code is replaced as SyncSignInWithCode does.
+func (r *Real) SyncResetPassword(code, password string) {
+	code = strings.TrimSpace(code)
+	if r.resendIfExpired(SignInStepResetCode) || !r.beginCodeWork(SignInStageChecking) {
 		return
 	}
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		cfg, source, err := r.codeSource(ctx)
-		if err == nil {
-			err = source.RequestPasswordReset(ctx, cfg.Server, email)
-		}
-		if err != nil {
-			r.failSignIn(err)
-			return
-		}
-		r.mu.Lock()
-		r.sync.signingIn = false
-		r.sync.signInStage = SignInStageNone
-		r.sync.code.step, r.sync.code.email = SignInStepResetSent, email
-		r.mu.Unlock()
-		r.syncChanged()
-	}()
+	go r.resetPassword(code, password)
+}
+
+// resendIfExpired mails a new code when the one in hand is older than ten minutes, and reports
+// whether it did (or whether another request is already running).
+func (r *Real) resendIfExpired(step SignInStep) bool {
+	r.mu.Lock()
+	expired := r.sync.code.otpID != "" && r.Now().Sub(r.sync.code.sentAt) > CodeValidFor
+	email := r.sync.code.email
+	r.mu.Unlock()
+	if !expired {
+		return false
+	}
+	if r.beginCodeWork(SignInStageSending) {
+		go r.requestCode(email, true, step)
+	}
+	return true
+}
+
+// rememberCodeEmail keeps the address the card is working with, for the steps that follow.
+func (r *Real) rememberCodeEmail(email string) {
+	r.mu.Lock()
+	r.sync.code.email = email
+	r.mu.Unlock()
 }
 
 // beginCodeWork marks a request or check as running; it is false when one already is or sync is
@@ -176,9 +186,25 @@ func (r *Real) codeSource(ctx context.Context) (syncclient.Config, syncclient.Co
 	return cfg, source, nil
 }
 
-// requestCode is SyncRequestCode and SyncResendCode off the UI thread. expired marks a re-send
-// because the code in hand was too old.
-func (r *Real) requestCode(email string, expired bool) {
+// signUp is SyncSignUp off the UI thread.
+func (r *Real) signUp(email, password, lang string) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	cfg, source, err := r.codeSource(ctx)
+	var otpID string
+	if err == nil {
+		otpID, err = source.SignUp(ctx, cfg.Server, email, password, lang)
+	}
+	if err != nil {
+		r.failSignIn(err)
+		return
+	}
+	r.codeMailed(email, otpID, SignInStepVerify, false)
+}
+
+// requestCode mails a code and moves the card to step (Verify, or the reset code step). expired
+// marks a re-send because the code in hand was too old.
+func (r *Real) requestCode(email string, expired bool, step SignInStep) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	cfg, source, err := r.codeSource(ctx)
@@ -190,11 +216,16 @@ func (r *Real) requestCode(email string, expired bool) {
 		r.failSignIn(err)
 		return
 	}
+	r.codeMailed(email, otpID, step, expired)
+}
+
+// codeMailed records the code that was just mailed and shows its step.
+func (r *Real) codeMailed(email, otpID string, step SignInStep, expired bool) {
 	now := r.Now()
 	r.mu.Lock()
 	r.sync.signingIn = false
 	r.sync.signInStage = SignInStageNone
-	r.sync.code.step, r.sync.code.email, r.sync.code.otpID = SignInStepCode, email, otpID
+	r.sync.code.step, r.sync.code.email, r.sync.code.otpID = step, email, otpID
 	r.sync.code.sentAt, r.sync.code.resendAt = now, now.Add(CodeResendAfter)
 	if expired {
 		r.sync.signInFailure = SignInFailureCodeExpired
@@ -216,6 +247,28 @@ func (r *Real) signInWithCode(code string) {
 			err = syncclient.ErrInvalidCode
 		} else {
 			err = source.SignInWithCode(ctx, cfg.Server, otpID, code)
+		}
+	}
+	if err != nil {
+		r.failSignIn(err)
+		return
+	}
+	r.finishSignIn(ctx, cfg.Server, cfg, r.accountSource(cfg))
+}
+
+// resetPassword is SyncResetPassword off the UI thread. The password lives only in this call.
+func (r *Real) resetPassword(code, password string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	r.mu.Lock()
+	otpID := r.sync.code.otpID
+	r.mu.Unlock()
+	cfg, source, err := r.codeSource(ctx)
+	if err == nil {
+		if otpID == "" {
+			err = syncclient.ErrInvalidCode
+		} else {
+			err = source.ResetPassword(ctx, cfg.Server, otpID, code, password)
 		}
 	}
 	if err != nil {

@@ -51,18 +51,21 @@ func NewAccountSource(cfg Config, secrets Secrets, dbPath string) AccountSource 
 	return source
 }
 
-// CodeSignIn is the emailed-code sign-in of a PocketBase server (M13 P2): sign-up and sign-in are
-// one path, an email and then the 6-digit code mailed to it. PocketBaseSource implements it; a
-// caller holding an AccountSource type-asserts for it.
+// CodeSignIn is the sign-up, verification and password reset of a PocketBase server (v42): an
+// account is made with an email and a password, its email is verified with a 6-digit code, and a
+// forgotten password is replaced with a code. PocketBaseSource implements it; a caller holding an
+// AccountSource type-asserts for it.
 type CodeSignIn interface {
-	// RequestCode mails a code to email (creating the account if there is none) and returns the
-	// id SignInWithCode needs.
+	// SignUp makes an unverified account, mails its first code (lang is "en" or "zh-Hans", the
+	// language of the mails) and returns the id of that code.
+	SignUp(ctx context.Context, server, email, password, lang string) (otpID string, err error)
+	// RequestCode mails a code to email and returns the id SignInWithCode and ResetPassword need.
 	RequestCode(ctx context.Context, server, email string) (otpID string, err error)
-	// SignInWithCode checks the code and stores the token. ErrInvalidCode when it is wrong or
-	// expired.
+	// SignInWithCode checks the code, verifies the email and stores the token. ErrInvalidCode when it
+	// is wrong or expired.
 	SignInWithCode(ctx context.Context, server, otpID, code string) error
-	// RequestPasswordReset mails a password reset link.
-	RequestPasswordReset(ctx context.Context, server, email string) error
+	// ResetPassword sets a new password with the code and signs in.
+	ResetPassword(ctx context.Context, server, otpID, code, password string) error
 }
 
 var _ CodeSignIn = (*PocketBaseSource)(nil)

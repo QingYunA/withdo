@@ -57,16 +57,18 @@ type pocketBaseAnswer struct {
 }
 
 // SignIn signs in with an email and password and stores the token. The password is not stored or
-// put into an error.
+// put into an error. A wrong password or an unknown email is ErrInvalidCredentials; the right
+// password of an account whose email is not verified is ErrEmailNotVerified, and the caller asks
+// for a code with RequestCode and verifies with SignInWithCode.
 func (s *PocketBaseSource) SignIn(ctx context.Context, server, loginName, password string) error {
 	if s == nil || s.Secrets == nil {
 		return errors.New("syncclient: PocketBase sign-in needs a secrets store")
 	}
-	base := strings.TrimRight(strings.TrimSpace(server), "/")
-	if base == "" {
-		return errors.New("syncclient: sync server URL is required")
+	base, err := serverBase(server)
+	if err != nil {
+		return err
 	}
-	body, err := json.Marshal(map[string]string{"identity": loginName, "password": password})
+	body, err := json.Marshal(map[string]string{"identity": strings.TrimSpace(loginName), "password": password})
 	if err != nil {
 		return fmt.Errorf("syncclient: encode the sign-in request: %w", err)
 	}
@@ -74,31 +76,51 @@ func (s *PocketBaseSource) SignIn(ctx context.Context, server, loginName, passwo
 	if err != nil {
 		return err
 	}
-	if answer.Token == "" {
-		return errors.New("syncclient: the sign-in answer is missing a token")
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.Server = base
-	return s.storeLocked(answer)
+	return s.keep(base, answer)
 }
 
-// RequestCode asks the server to mail a 6-digit sign-in code to email; an email with no account
-// gets one. It returns the id of the code, which SignInWithCode needs. A malformed email is
-// ErrInvalidCode too, as PocketBase answers 400 for it.
+// SignUp makes an account with an email and a password and mails its first code: the account is not
+// verified, so it cannot sign in until SignInWithCode is given that code. lang is the app's language
+// ("en" or "zh-Hans"), the language of the code mails. It returns the id of the mailed code. A taken
+// email is ErrEmailTaken, a malformed one ErrInvalidEmail, a password under 8 characters
+// ErrWeakPassword.
+func (s *PocketBaseSource) SignUp(ctx context.Context, server, email, password, lang string) (string, error) {
+	if s == nil {
+		return "", errors.New("syncclient: PocketBase sign-in needs a source")
+	}
+	base, err := serverBase(server)
+	if err != nil {
+		return "", err
+	}
+	body, err := json.Marshal(map[string]string{
+		"email": strings.TrimSpace(email), "password": password, "passwordConfirm": password, "lang": lang,
+	})
+	if err != nil {
+		return "", fmt.Errorf("syncclient: encode the sign-up request: %w", err)
+	}
+	if _, err := s.sendWith(ctx, base+"/api/collections/users/records", "", body, signUpError); err != nil {
+		return "", err
+	}
+	return s.RequestCode(ctx, base, email)
+}
+
+// RequestCode asks the server to mail a 6-digit code to email, for the account's verification or a
+// password reset. An email with no account gets the same answer and no mail (the server never says
+// whether an account exists). It returns the id of the code, which SignInWithCode and ResetPassword
+// need. A malformed email is ErrInvalidEmail.
 func (s *PocketBaseSource) RequestCode(ctx context.Context, server, email string) (string, error) {
 	if s == nil {
 		return "", errors.New("syncclient: PocketBase sign-in needs a source")
 	}
-	base := strings.TrimRight(strings.TrimSpace(server), "/")
-	if base == "" {
-		return "", errors.New("syncclient: sync server URL is required")
+	base, err := serverBase(server)
+	if err != nil {
+		return "", err
 	}
 	body, err := json.Marshal(map[string]string{"email": strings.TrimSpace(email)})
 	if err != nil {
 		return "", fmt.Errorf("syncclient: encode the code request: %w", err)
 	}
-	raw, err := s.send(ctx, base+"/api/collections/users/request-otp", "", body, ErrInvalidCode)
+	raw, err := s.send(ctx, base+"/api/collections/users/request-otp", "", body, ErrInvalidEmail)
 	if err != nil {
 		return "", err
 	}
@@ -111,15 +133,15 @@ func (s *PocketBaseSource) RequestCode(ctx context.Context, server, email string
 	return out.OTPID, nil
 }
 
-// SignInWithCode signs in with the code mailed after RequestCode and stores the token as SignIn
-// does. A wrong, used or expired code is ErrInvalidCode.
+// SignInWithCode checks the code mailed after SignUp or RequestCode: it verifies the account's email
+// and signs in, storing the token as SignIn does. A wrong, used or expired code is ErrInvalidCode.
 func (s *PocketBaseSource) SignInWithCode(ctx context.Context, server, otpID, code string) error {
 	if s == nil || s.Secrets == nil {
 		return errors.New("syncclient: PocketBase sign-in needs a secrets store")
 	}
-	base := strings.TrimRight(strings.TrimSpace(server), "/")
-	if base == "" {
-		return errors.New("syncclient: sync server URL is required")
+	base, err := serverBase(server)
+	if err != nil {
+		return err
 	}
 	body, err := json.Marshal(map[string]string{"otpId": otpID, "password": strings.TrimSpace(code)})
 	if err != nil {
@@ -129,6 +151,49 @@ func (s *PocketBaseSource) SignInWithCode(ctx context.Context, server, otpID, co
 	if err != nil {
 		return err
 	}
+	return s.keep(base, answer)
+}
+
+// ResetPassword sets a new password with the code mailed after RequestCode (POST
+// /api/withdo/reset-password), verifies the email and signs in. A wrong, used or expired code, and
+// the code of an email with no account, are all ErrInvalidCode; a password under 8 characters is
+// ErrWeakPassword.
+func (s *PocketBaseSource) ResetPassword(ctx context.Context, server, otpID, code, password string) error {
+	if s == nil || s.Secrets == nil {
+		return errors.New("syncclient: PocketBase sign-in needs a secrets store")
+	}
+	base, err := serverBase(server)
+	if err != nil {
+		return err
+	}
+	body, err := json.Marshal(map[string]string{
+		"otpId": otpID, "code": strings.TrimSpace(code), "password": password, "passwordConfirm": password,
+	})
+	if err != nil {
+		return fmt.Errorf("syncclient: encode the reset request: %w", err)
+	}
+	raw, err := s.sendWith(ctx, base+"/api/withdo/reset-password", "", body, resetError)
+	if err != nil {
+		return err
+	}
+	var answer pocketBaseAnswer
+	if err := json.Unmarshal(raw, &answer); err != nil {
+		return fmt.Errorf("syncclient: decode the reset answer: %w", err)
+	}
+	return s.keep(base, answer)
+}
+
+// serverBase is the server URL without spaces and a trailing slash.
+func serverBase(server string) (string, error) {
+	base := strings.TrimRight(strings.TrimSpace(server), "/")
+	if base == "" {
+		return "", errors.New("syncclient: sync server URL is required")
+	}
+	return base, nil
+}
+
+// keep stores the token of a sign-in answer for the server.
+func (s *PocketBaseSource) keep(base string, answer pocketBaseAnswer) error {
 	if answer.Token == "" {
 		return errors.New("syncclient: the sign-in answer is missing a token")
 	}
@@ -136,24 +201,6 @@ func (s *PocketBaseSource) SignInWithCode(ctx context.Context, server, otpID, co
 	defer s.mu.Unlock()
 	s.Server = base
 	return s.storeLocked(answer)
-}
-
-// RequestPasswordReset asks the server to mail a reset link to email. PocketBase answers the same
-// whether or not the email has an account.
-func (s *PocketBaseSource) RequestPasswordReset(ctx context.Context, server, email string) error {
-	if s == nil {
-		return errors.New("syncclient: PocketBase sign-in needs a source")
-	}
-	base := strings.TrimRight(strings.TrimSpace(server), "/")
-	if base == "" {
-		return errors.New("syncclient: sync server URL is required")
-	}
-	body, err := json.Marshal(map[string]string{"email": strings.TrimSpace(email)})
-	if err != nil {
-		return fmt.Errorf("syncclient: encode the reset request: %w", err)
-	}
-	_, err = s.send(ctx, base+"/api/collections/users/request-password-reset", "", body, ErrInvalidCode)
-	return err
 }
 
 // Token implements TokenSource: the stored token, renewed when it is close to expiring. A refused
@@ -285,8 +332,63 @@ func (s *PocketBaseSource) postAuth(ctx context.Context, url, token string, body
 	return answer, nil
 }
 
-// send is one POST to PocketBase; it returns the body of a 200 or 204. A 5xx is retried.
+// send is one POST to PocketBase; it returns the body of a 200 or 204. A 5xx is retried. A 400 is
+// bad.
 func (s *PocketBaseSource) send(ctx context.Context, url, token string, body []byte, bad error) ([]byte, error) {
+	return s.sendWith(ctx, url, token, body, func(status int, _ pbErrors) error {
+		if status == http.StatusBadRequest {
+			return bad
+		}
+		return nil
+	})
+}
+
+// pbErrors is the `data` of a PocketBase error answer: for each field the code of what is wrong
+// with it, e.g. {"email": {"code": "validation_not_unique"}}.
+type pbErrors map[string]struct {
+	Code string `json:"code"`
+}
+
+// code is the error code of one field, "" when it has none.
+func (e pbErrors) code(field string) string { return e[field].Code }
+
+// errorCodeEmailNotVerified is what pbauth answers (403, data.email.code) for the right password of
+// an account whose email is not verified.
+const errorCodeEmailNotVerified = "email_not_verified"
+
+// statusMapper maps an error status and the answer's field errors to the error to return. nil leaves
+// the status to the default mapping.
+type statusMapper func(status int, errs pbErrors) error
+
+// signUpError maps the answers of POST /api/collections/users/records.
+func signUpError(status int, errs pbErrors) error {
+	if status != http.StatusBadRequest {
+		return nil
+	}
+	switch {
+	case errs.code("email") == "validation_not_unique":
+		return ErrEmailTaken
+	case errs.code("email") != "":
+		return ErrInvalidEmail
+	case errs.code("password") != "":
+		return ErrWeakPassword
+	}
+	return fmt.Errorf("syncclient: the server refused the sign-up (status %d)", status)
+}
+
+// resetError maps the answers of POST /api/withdo/reset-password.
+func resetError(status int, errs pbErrors) error {
+	if status != http.StatusBadRequest {
+		return nil
+	}
+	if errs.code("password") != "" || errs.code("passwordConfirm") != "" {
+		return ErrWeakPassword
+	}
+	return ErrInvalidCode
+}
+
+// sendWith is send with a mapper for the error statuses.
+func (s *PocketBaseSource) sendWith(ctx context.Context, url, token string, body []byte, mapStatus statusMapper) ([]byte, error) {
 	client := s.HTTP
 	if client == nil {
 		client = http.DefaultClient
@@ -315,11 +417,24 @@ func (s *PocketBaseSource) send(ctx context.Context, url, token string, body []b
 		case http.StatusOK, http.StatusNoContent:
 			out = raw
 			return nil
-		case http.StatusBadRequest:
-			return bad
-		case http.StatusUnauthorized:
+		}
+		var errs pbErrors
+		var answer struct {
+			Data pbErrors `json:"data"`
+		}
+		if json.Unmarshal(raw, &answer) == nil {
+			errs = answer.Data
+		}
+		if err := mapStatus(resp.StatusCode, errs); err != nil {
+			return err
+		}
+		switch resp.StatusCode {
+		case http.StatusBadRequest, http.StatusUnauthorized:
 			return ErrInvalidCredentials
 		case http.StatusForbidden:
+			if errs.code("email") == errorCodeEmailNotVerified {
+				return ErrEmailNotVerified
+			}
 			return ErrAccountLocked
 		case http.StatusTooManyRequests:
 			return ErrTooManyAttempts
