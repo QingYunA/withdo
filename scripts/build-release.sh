@@ -60,8 +60,10 @@ cp "$mac/withdo-$version.dmg" "$release/Withdo-$version-macos-universal.dmg"
 tar -czf "$release/withdo-cli-$version-macos-universal.tar.gz" -C "$work/mac" withdo
 cp "$win/withdo-setup-$version-amd64.exe" "$release/Withdo-Setup-$version-windows-x64.exe"
 # withdo-<digit> matches the update archives and deltas, not the resources mygo copies beside the
-# app (withdo-cli.exe).
+# app (withdo-cli.exe). The DMG went up above under its release name; mygo 0.7 names it
+# withdo-<version>.dmg, which the pattern matches too.
 for f in "$mac"/withdo-[0-9]* "$mac"/update-*.json "$win"/withdo-[0-9]* "$win"/update-*.json; do
+  case "$f" in *.dmg) continue ;; esac
   if [ -e "$f" ]; then cp "$f" "$release/"; fi
 done
 # Without these an installed app finds no update, so a build that lacks one is no release.
