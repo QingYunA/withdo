@@ -2197,7 +2197,69 @@ show the switch.
 
 ### Settings
 
-*Being replaced by **Input first (v31)** item 10.*
+**Settings with a sidebar (v41, 2026-10-29)** — `docs/design/mockups/v41.html`. It replaces the toolbar
+panes and the pane contents below wherever they disagree; the bullets after this block still hold
+for what v41 does not change (the sign-in flows, the provider form, the category editor sheet).
+
+1. **Window.** One fixed size, **800 × 580 pt** of content (`theme.SettingsWidth/Height`), not
+   resizable. The title bar is hidden; the traffic lights sit at the top of the sidebar. The window
+   title is the open pane's name (as today, through `OnTitle`).
+2. **Sidebar**, 196 pt wide, the full height, `SettingsToolbar` fill with a 0.5 pt `border` at its
+   right. Its first 38 pt row is empty and drags the window (the traffic lights). Then one row per
+   pane, 34 pt tall, 8 pt corners, 10 pt inside: the pane's 18 pt pixel icon and its name (`body`).
+   The open pane gets the `SettingsTabOn` well, its name in 600 and its icon in `accent`; others have
+   the icon in `text.secondary` and the hover well. Order and icons: **Account** (`账号`, user),
+   **General** (`通用`, sliders), **Categories** (`类别`, folder), **Agents** (`Agent`, robot),
+   **Model** (`模型`, sparkle). At the bottom, 12 pt above the edge: **About Withdo** (`关于 Withdo`,
+   diamond-gem), `meta` size in `text.secondary`, which opens the About pane. The Agents row carries a
+   6 × 6 pt `accent` square at its right while an agent is found on this computer without its MCP
+   (and the pane is not open). Up/Down arrows move between rows when the sidebar has focus.
+3. **Pane header.** Every pane starts with its name (22 / 28, 700) and one `meta` line under it in
+   `text.secondary` saying what the pane is for, then 16 pt to the first group. Panes keep the
+   grouped lists (white or `#2C2C2E` blocks, 10 pt corners, 0.5 pt hairlines, rows of at least
+   44 pt, group labels in `section` style). Pane padding 22 pt top, 28 pt sides. **Every pane fits
+   580 pt without scrolling** in its usual state; a long list (categories, a sign-in flow) may scroll,
+   with a scroll key per pane.
+4. **Account**: one group holds the account (the `you` sprite at 48 pt, the name, the email in `meta`,
+   **Sign out** as a link at the right), the sync state (a 10 pt square in the done green, `Synced` in
+   green, `1 minute ago · 2 devices` in `meta`, **Sync now** at the right) and the Google row. Then
+   **Devices** as today. The server line at the foot as in #162 (no address for the official server).
+   Signed out, the sign-in card is unchanged.
+5. **General**: **Language** as a three-part segmented control (`Follow system` | `English` |
+   `简体中文`), not a pop-up. **Notifications and sound** (`通知与声音`): System notifications, the
+   end-of-day reminder (its time as a small field beside the switch, no second row), Sound effects.
+   **Updates and data** (`更新与数据`): automatic checks (`meta`: `Withdo 0.12.0 · up to date`, a
+   **Check now** link beside the switch), the data folder with **Show in Finder**.
+6. **Categories** is a pane of its own: the categories group (rows show the icon, the name in the
+   category's color and `N tasks`; the arrows and **Edit** appear only on the hovered or focused row),
+   **New category…**, then **Archived projects** with Restore.
+7. **Agents**: header line `Connected agents report their progress to Withdo. Only the MCP is
+   installed; the agent itself is not.` Then **On this computer** with its count, and the agents
+   found as a row of tiles, five per row (8 pt gaps): a tile is a group block, its agent's avatar
+   (`theme.AgentAvatar`) at 48 pt on a 56 pt stage, the name (`meta` 600), one `meta` line
+   (`13 reports today` / `No reports today` / `Found`) and its state: **Connected** (`已接入`, a done
+   green tint), an **Connect** accent button (`接入`), or `Connecting…`. A connected agent's avatar
+   **bobs**: up one sprite pixel (4 pt) and back, on the 100 ms loop beat (3 beats up, 3 down), each
+   tile offset by 2 beats; with Reduce Motion it stands still. Not connected, the avatar is gray at
+   45 % opacity. An install error shows under the tile's line in the blocked red. Under the tiles one
+   group of rows: **N more agents** (`还有 N 个 Agent`, `meta` listing the first names, `not on this
+   computer`), which opens the More list in place (the compact rows of today, with Get it);
+   **Connect by hand** (`手动接入`, `meta`: the command and the setup guide), which opens in place the
+   `claude mcp add` well with Copy and **Copy setup guide**; and **Open agent work in** with its
+   pop-up. Then the **GitHub** group: one row, **Recent changes** with its `meta` (adding `gh signed
+   in` or what is missing) and its switch.
+8. **Model** (the old Advanced): the provider in use as one card (36 pt logo, name, `model · ●
+   Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
+   4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the
+   one in use. Clicking a tile opens the key and model form under the grid (today's form); a set-up
+   provider becomes the one in use at once and is tested. With nothing set up the card is replaced by
+   one line: `Not set up: dates and reminders are still read on this computer.`
+9. **About**: the app mark, `Withdo 0.12.0`, `Open source, AGPL-3.0`, links to GitHub, the privacy
+   policy and the website (https://qingyuna.github.io/withdo/).
+10. **Old pane ids.** `PaneAdvanced` is gone: callers that opened it open **Model**. `Show` accepts
+    the five panes and About.
+
+*Before v41: being replaced by **Input first (v31)** item 10.*
 
 A window of its own (M4c; the in-window sheet is gone). `⌘,` (the app menu's `Settings…` item) and the
 sidebar gear open it; there is one instance, and a second request brings it to the front, on the pane
