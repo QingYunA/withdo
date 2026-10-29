@@ -38,7 +38,7 @@ func (m *Main) mineStatusRow(c *ui.Context, t *theme.Tokens, task data.Task) {
 			}
 		}
 		ui.Row(c).Shrink(1).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
-			if i := segmented(c, t, "inspector-status", labels, sel); i >= 0 {
+			if i := segmented(c, t, "inspector-status", m.say.PropStatus(), labels, sel); i >= 0 {
 				m.app.SetStatus(task, mineStates[i])
 			}
 			if sel < 0 {

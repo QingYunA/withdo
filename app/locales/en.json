@@ -344,6 +344,40 @@
   "@ageNow": {
     "description": "How long ago something happened: under a minute."
   },
+  "ageJustNow": "just now",
+  "@ageJustNow": {
+    "description": "How long ago something happened, in words: under a minute."
+  },
+  "ageMinutesAgo": "{count, plural, one {# minute ago} other {# minutes ago}}",
+  "@ageMinutesAgo": {
+    "description": "How long ago something happened, in words: minutes.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "ageHoursAgo": "{count, plural, one {# hour ago} other {# hours ago}}",
+  "@ageHoursAgo": {
+    "description": "How long ago something happened, in words: hours.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "ageDaysAgo": "{count, plural, one {# day ago} other {# days ago}}",
+  "@ageDaysAgo": {
+    "description": "How long ago something happened, in words: days, under a week.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "agentSummaryNext": "{summary}; next: {step}",
   "@agentSummaryNext": {
     "description": "Second line of an agent task: its latest report and what it does next.",
@@ -790,7 +824,7 @@
   "@inspectorCloseTip": {
     "description": "Tooltip of the close button of the inspector."
   },
-  "languageSystem": "System",
+  "languageSystem": "Follow system",
   "@languageSystem": {
     "description": "Language choice that follows the system's languages."
   },
@@ -1497,12 +1531,12 @@
     }
   },
   "notifyCountSeparator": ", ",
+  "settingsNotificationsSound": "Notifications and sound",
+  "@settingsNotificationsSound": {
+    "description": "Header of the block in Settings > General with notifications, the reminder and sound effects."
+  },
   "@notifyCountSeparator": {
     "description": "Between the parts of the summary notification's body."
-  },
-  "settingsNotifications": "Notifications",
-  "@settingsNotifications": {
-    "description": "Header of the notifications block in Settings > General."
   },
   "settingsNotifySwitch": "Allow system notifications",
   "@settingsNotifySwitch": {
@@ -1710,7 +1744,7 @@
   },
   "settingsGeneral": "General",
   "@settingsGeneral": {
-    "description": "Tab of the settings sheet."
+    "description": "Pane of the Settings window (and the window's title) for the language, notifications and updates."
   },
   "settingsGitHub": "GitHub",
   "@settingsGitHub": {
@@ -1852,7 +1886,7 @@
   },
   "a11yPane": "{name} settings",
   "@a11yPane": {
-    "description": "Accessibility label of a toolbar pane of the Settings window.",
+    "description": "Accessibility label of a row of the Settings sidebar.",
     "placeholders": {
       "name": {
         "type": "String",
@@ -1912,9 +1946,9 @@
   "@modelsTestAgain": {
     "description": "Link of the status row of Settings > Assistant after a test."
   },
-  "settingsAboutLicense": "Open source, MIT license",
+  "settingsAboutLicense": "Open source, AGPL-3.0",
   "@settingsAboutLicense": {
-    "description": "Second line of the About row of Settings > General."
+    "description": "Second line of the About row of Settings > About."
   },
   "a11yAboutGitHub": "Withdo on GitHub",
   "@a11yAboutGitHub": {
@@ -1922,9 +1956,17 @@
   },
   "settingsAboutLink": "GitHub",
   "@settingsAboutLink": {
-    "description": "Link of the About row of Settings > General that opens the project on GitHub."
+    "description": "Link of the About row of Settings > About that opens the project on GitHub."
   },
   "settingsAboutName": "Withdo {version}",
+  "settingsAboutPrivacy": "Privacy policy",
+  "@settingsAboutPrivacy": {
+    "description": "Link in Settings > About to the privacy policy."
+  },
+  "settingsAboutWebsite": "Website",
+  "@settingsAboutWebsite": {
+    "description": "Link in Settings > About to the app's website."
+  },
   "@settingsAboutName": {
     "description": "Name and version row of Settings > General.",
     "placeholders": {
@@ -1934,17 +1976,13 @@
       }
     }
   },
-  "settingsAdvanced": "Advanced",
-  "@settingsAdvanced": {
-    "description": "Group label in Settings > Assistant for the settings most people leave alone."
-  },
   "settingsGitHubNone": "Following pull requests isn't available here.",
   "@settingsGitHubNone": {
     "description": "Line of Settings > GitHub when the app has no pull request poller."
   },
   "settingsPaneAgents": "Agents",
   "@settingsPaneAgents": {
-    "description": "Toolbar pane of the Settings window (and the window's title) about coding agents reporting here."
+    "description": "Pane of the Settings window (and the window's title) for the coding agents that report here."
   },
   "settingsProvider": "Provider",
   "@settingsProvider": {
@@ -1955,6 +1993,10 @@
     "description": "Link in Settings > General that reveals the data folder in Finder."
   },
   "settingsShowInExplorer": "Show in File Explorer",
+  "settingsSidebarAbout": "About Withdo",
+  "@settingsSidebarAbout": {
+    "description": "The row at the foot of the Settings sidebar that opens the About pane."
+  },
   "@settingsShowInExplorer": {
     "description": "Link in Settings > General on Windows that shows the data folder in File Explorer."
   },
@@ -2084,6 +2126,14 @@
   "@settingsInUse": {
     "description": "Group label above the provider the assistant uses now, in Settings > Assistant."
   },
+  "settingsSwitchTo": "Switch to",
+  "@settingsSwitchTo": {
+    "description": "Group label above the grid of model providers in Settings > Model."
+  },
+  "settingsModelNone": "Not set up: dates and reminders are still read on this computer.",
+  "@settingsModelNone": {
+    "description": "The line in place of the provider card when no model provider is set up."
+  },
   "settingsAlsoSetUp": "Also set up",
   "@settingsAlsoSetUp": {
     "description": "Group label above the other providers that already have a key, in Settings > Assistant."
@@ -2105,6 +2155,30 @@
         "example": "DeepSeek"
       }
     }
+  },
+  "a11yProviderChange": "Change {name}",
+  "@a11yProviderChange": {
+    "description": "Accessibility label of the tile of the model provider in use; it opens the key and model form.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "DeepSeek"
+      }
+    }
+  },
+  "a11yProviderSetUp": "Set up {name}",
+  "@a11yProviderSetUp": {
+    "description": "Accessibility label of the tile of a model provider that is not set up yet.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Kimi"
+      }
+    }
+  },
+  "a11yChooseModel": "Choose a model",
+  "@a11yChooseModel": {
+    "description": "Accessibility label of the pop-up of a provider's models."
   },
   "settingsPickProvider": "Pick a provider",
   "@settingsPickProvider": {
@@ -2164,13 +2238,9 @@
       }
     }
   },
-  "settingsAgentsTitle": "Coding agents",
-  "@settingsAgentsTitle": {
-    "description": "Group label above the list of coding agents in Settings > Agents."
-  },
-  "settingsAgentsBody": "Installing the MCP adds Withdo's MCP server to that agent, so it reports its progress here. It does not install or start the agent.",
+  "settingsAgentsBody": "Connected agents report their progress to Withdo. Only the MCP is installed; the agent itself is not.",
   "@settingsAgentsBody": {
-    "description": "One plain line under the title of Settings > Agents: what Install MCP does and does not do."
+    "description": "The line under the title of Settings > Agents: what connected agents do, and that only the MCP is installed."
   },
   "settingsAgentFound": "Found · {where}",
   "@settingsAgentFound": {
@@ -2182,6 +2252,10 @@
       }
     }
   },
+  "settingsAgentFoundOnly": "Found",
+  "@settingsAgentFoundOnly": {
+    "description": "The one quiet line of a tile of an agent found on this computer that has not reported yet."
+  },
   "settingsAgentsLocal": "On this computer",
   "@settingsAgentsLocal": {
     "description": "Section label above the agents found on this computer in Settings > Agents; the count follows it quietly."
@@ -2189,6 +2263,34 @@
   "settingsAgentsMore": "More",
   "@settingsAgentsMore": {
     "description": "Section label above the agents not on this computer in Settings > Agents; the count follows it quietly."
+  },
+  "settingsAgentsMoreCount": "{count, plural, one {# more agent} other {# more agents}}",
+  "@settingsAgentsMoreCount": {
+    "description": "The row under the tiles of Settings > Agents that opens the agents not on this computer; the count is how many there are.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "9"
+      }
+    }
+  },
+  "settingsAgentsMoreMeta": "{names} · not on this computer",
+  "@settingsAgentsMoreMeta": {
+    "description": "The quiet line under the row that opens the other agents: the first few names and why they are there.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "Gemini CLI, Kimi CLI, Windsurf, Zed…"
+      }
+    }
+  },
+  "settingsAgentsManual": "Connect by hand",
+  "@settingsAgentsManual": {
+    "description": "The row under the tiles of Settings > Agents that opens the command and the setup guide."
+  },
+  "settingsAgentsManualBody": "The command, and a guide for an agent that is not in the list",
+  "@settingsAgentsManualBody": {
+    "description": "The quiet line under Connect by hand."
   },
   "settingsAgentsEmpty": "No agent found on this computer yet",
   "@settingsAgentsEmpty": {
@@ -2198,25 +2300,25 @@
   "@settingsAgentsConnect": {
     "description": "Link in the empty On this computer row; it opens the README's section on connecting an agent."
   },
-  "settingsAgentInstall": "Install MCP",
+  "settingsAgentInstall": "Connect",
   "@settingsAgentInstall": {
-    "description": "Button that adds Withdo's MCP server to an agent."
+    "description": "Accent button on a tile of an agent found on this computer; it adds Withdo's MCP server."
   },
-  "settingsAgentInstalling": "Installing…",
+  "settingsAgentInstalling": "Connecting…",
   "@settingsAgentInstalling": {
-    "description": "Shown in place of the Install MCP button while it runs."
+    "description": "Shown in place of the Connect button while the agent's MCP install runs."
   },
-  "settingsAgentInstalled": "MCP installed",
+  "settingsAgentInstalled": "Connected",
   "@settingsAgentInstalled": {
-    "description": "At the right of an agent that already has Withdo's MCP server. A check mark comes before it."
+    "description": "The done-green state of a tile whose agent already has Withdo's MCP server."
   },
   "settingsAgentGet": "Get it",
   "@settingsAgentGet": {
     "description": "Link to the website of an agent that is not on this computer."
   },
-  "a11yInstallMCP": "Install the MCP in {agent}",
+  "a11yInstallMCP": "Connect {agent}",
   "@a11yInstallMCP": {
-    "description": "Accessibility label of the Install MCP button of an agent.",
+    "description": "Accessibility label of the Connect button of an agent's tile.",
     "placeholders": {
       "agent": {
         "type": "String",
@@ -3062,6 +3164,10 @@
     "description": "Accessibility label of the sound effects switch."
   },
   "settingsUpdates": "Software updates",
+  "settingsUpdatesData": "Updates and data",
+  "@settingsUpdatesData": {
+    "description": "Header of the block in Settings > General with the update switch and the data folder."
+  },
   "@settingsUpdates": {
     "description": "Label of the updates switch in Settings > General."
   },
@@ -3072,6 +3178,34 @@
   "settingsUpdatesSwitch": "Automatically check for updates",
   "@settingsUpdatesSwitch": {
     "description": "Accessibility label of the updates switch."
+  },
+  "settingsCheckNow": "Check now",
+  "@settingsCheckNow": {
+    "description": "Link beside the updates switch that opens the update window and checks at once."
+  },
+  "settingsUpdatesChecked": "Withdo {version} · checked {age}",
+  "@settingsUpdatesChecked": {
+    "description": "Quiet line of the updates row: the app's version and when it last checked.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.12.0"
+      },
+      "age": {
+        "type": "String",
+        "example": "2 minutes ago"
+      }
+    }
+  },
+  "settingsUpdatesNeverChecked": "Withdo {version} · not checked yet",
+  "@settingsUpdatesNeverChecked": {
+    "description": "Quiet line of the updates row before the app has ever checked.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.12.0"
+      }
+    }
   },
   "notifyDayDoneTitle": "Day's done",
   "@notifyDayDoneTitle": {
@@ -3635,9 +3769,9 @@
   "@settingsRecentChanges": {
     "description": "Title of the switch row that turns the Recent changes page on."
   },
-  "settingsRecentChangesMeta": "See what each project merged lately, each pull request and issue in a sentence. Needs gh signed in.",
+  "settingsRecentChangesMeta": "The latest merged pull requests and issues, by project",
   "@settingsRecentChangesMeta": {
-    "description": "Second line of the Recent changes switch row in Settings."
+    "description": "Second line of the Recent changes switch row in Settings; the state of gh follows it."
   },
   "settingsRecentChangesSwitch": "Show the Recent changes page",
   "@settingsRecentChangesSwitch": {
@@ -3991,7 +4125,7 @@
   },
   "settingsCategories": "Categories",
   "@settingsCategories": {
-    "description": "Label of the group of categories in Settings > General."
+    "description": "Pane of the Settings window (and the window's title) for the categories and the archived projects."
   },
   "settingsCategoryDeleteAsk": "Delete “{name}”? Its tasks become unsorted.",
   "@settingsCategoryDeleteAsk": {
@@ -4007,13 +4141,47 @@
   "@settingsCategoryEdit": {
     "description": "Link in a category row in Settings > General that opens the category sheet (name, icon, color)."
   },
-  "settingsPaneAccount": "Account",
-  "@settingsPaneAccount": {
-    "description": "Toolbar pane of the Settings window (and the window's title) for the account: signing in, devices and sync."
+  "settingsCategoryTasks": "{count, plural, one {# task} other {# tasks}}",
+  "@settingsCategoryTasks": {
+    "description": "Quiet count at the right of a category row, e.g. 12 tasks.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
   },
-  "settingsPaneAdvanced": "Advanced",
-  "@settingsPaneAdvanced": {
-    "description": "Toolbar pane of the Settings window (and the window's title) with the user's own model, the Recent changes page, the end-of-day reminder and sound effects."
+  "settingsPaneAccount": "Account",
+  "settingsPaneAccountLine": "Sign in to sync your tasks between your Mac, Windows and Android.",
+  "@settingsPaneAccountLine": {
+    "description": "One line under the title of Settings > Account: what signing in does."
+  },
+  "settingsPaneAbout": "About",
+  "@settingsPaneAbout": {
+    "description": "Pane of the Settings window (and the window's title) about the app: its version, license and links."
+  },
+  "settingsPaneAboutLine": "The app, its version, and where to find it online.",
+  "@settingsPaneAboutLine": {
+    "description": "One line under the title of Settings > About saying what the pane is for."
+  },
+  "settingsPaneCategoriesLine": "Categories sort the tasks you add. Put them in order and edit them here.",
+  "@settingsPaneCategoriesLine": {
+    "description": "One line under the title of Settings > Categories saying what the categories are for."
+  },
+  "settingsPaneGeneralLine": "Language, notifications and updates.",
+  "@settingsPaneGeneralLine": {
+    "description": "One line under the title of Settings > General saying what can be set there."
+  },
+  "settingsPaneModel": "Model",
+  "@settingsPaneModel": {
+    "description": "Pane of the Settings window (and the window's title) for the user's own model."
+  },
+  "settingsPaneModelLine": "Use your own model to change tasks and answer agents from the input. Without one, dates and reminders are read on this computer.",
+  "@settingsPaneModelLine": {
+    "description": "One line under the title of Settings > Model: what the model is for, and that the app works without one."
+  },
+  "@settingsPaneAccount": {
+    "description": "Pane of the Settings window (and the window's title) for the account: signing in, devices and sync."
   },
   "settingsOwnModel": "Use your own model",
   "@settingsOwnModel": {
@@ -4082,6 +4250,16 @@
       "count": {
         "type": "String",
         "example": "3"
+      }
+    }
+  },
+  "settingsSyncDevicesCount": "{count, plural, one {# device} other {# devices}}",
+  "@settingsSyncDevicesCount": {
+    "description": "The number of devices after the time in the sync row, e.g. 1 minute ago · 2 devices.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
       }
     }
   },

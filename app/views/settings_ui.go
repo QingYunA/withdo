@@ -9,6 +9,12 @@ import (
 // optional label above it, the label and its quiet line at the left of a row and the control at
 // the right.
 
+// paneHeader is the top of every pane: its name, and one line saying what the pane is for.
+func paneHeader(c *ui.Context, t *theme.Tokens, name, line string) {
+	theme.Text(c, theme.SettingsTitle, t.Text, name)
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 0).Margin(4, 0, 16)
+}
+
 // groupLabel is the small title above a group.
 func groupLabel(c *ui.Context, t *theme.Tokens, text string) ui.Element {
 	return theme.Text(c, theme.Section, t.TextSecondary, text).Margin(4, 4, 7)
@@ -60,22 +66,22 @@ type popOption struct{ value, label string }
 // popUp is a pop-up button: the chosen label and a chevron, opening the options below it. It
 // returns the value chosen this frame, and false when nothing was.
 func popUp(c *ui.Context, t *theme.Tokens, key, current string, opts []popOption) (string, bool) {
-	return popUpIn(c, t, key, current, opts, false)
+	return popUpIn(c, t, key, "", current, opts, false)
 }
 
 // popUpFill is a pop-up as wide as the room it has, the label at the left and the chevron at the
-// right, like a text field.
-func popUpFill(c *ui.Context, t *theme.Tokens, key, current string, opts []popOption) (string, bool) {
-	return popUpIn(c, t, key, current, opts, true)
+// right, like a text field. label is what assistive technology calls it.
+func popUpFill(c *ui.Context, t *theme.Tokens, key, label, current string, opts []popOption) (string, bool) {
+	return popUpIn(c, t, key, label, current, opts, true)
 }
 
-func popUpIn(c *ui.Context, t *theme.Tokens, key, current string, opts []popOption, fill bool) (string, bool) {
+func popUpIn(c *ui.Context, t *theme.Tokens, key, label, current string, opts []popOption, fill bool) (string, bool) {
 	sel := current
 	parts := ui.SelectBase(c.Key("pop-"+key), &sel)
-	label := current
+	shown := current
 	for _, o := range opts {
 		if o.value == current {
-			label = o.label
+			shown = o.label
 		}
 	}
 	parts.Trigger.Padding(3, 10, 3, 12).Gap(8).Radius(theme.RadiusControl).AlignItems(ui.Center).Shrink(0).
@@ -84,7 +90,7 @@ func popUpIn(c *ui.Context, t *theme.Tokens, key, current string, opts []popOpti
 		parts.Trigger.Grow(1).MinWidth(0).Justify(ui.SpaceBetween).Height(28)
 	}
 	parts.Trigger.Children(func() {
-		theme.Text(c, theme.Body, t.Text, label).Ellipsis("…")
+		theme.Text(c, theme.Body, t.Text, shown).Ellipsis("…")
 		ui.Icon(c, theme.IconChevron).Size(12, 12).TextColor(t.TextSecondary)
 	})
 	parts.Popup(func(panel ui.Element) {
@@ -178,3 +184,34 @@ func draftField(c *ui.Context, t *theme.Tokens, fs fields, s draftSpec, buf *str
 
 // statusDot is the small colored dot of a status line.
 func statusDot(c *ui.Context, color ui.Color) ui.Element { return theme.Dot(c, color, 7).Shrink(0) }
+
+// segmented is a quiet well of labels with the chosen one raised, like the List | Board switch. It
+// is a radio group: a click chooses a segment, and Left and Right do too while it has the keyboard.
+// label is what assistive technology calls the control. It returns the index chosen this frame, or
+// -1.
+func segmented(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int) int {
+	sel := selected
+	parts := ui.SegmentedBase(c.Key(key), &sel, len(labels))
+	track := parts.Track.Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Label(label)
+	track.Children(func() {
+		for i, name := range labels {
+			on := i == sel
+			seg := parts.Segment(i).Padding(3, 10).Radius(5).Label(name).Cursor(ui.CursorPointer)
+			switch {
+			case on:
+				seg.Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))
+			case seg.Hovered():
+				seg.Background(t.BgHover)
+			}
+			ink := t.TextSecondary
+			if on {
+				ink = t.Text
+			}
+			seg.Children(func() { theme.Text(c, theme.Meta, ink, name) })
+		}
+	})
+	if sel != selected {
+		return sel
+	}
+	return -1
+}

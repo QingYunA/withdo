@@ -8,12 +8,8 @@ import (
 
 func TestGeneralPaneHasTheEndOfDayReminderOnAt1830ByDefault(t *testing.T) {
 	r := newSettingsRig(t)
-	has(t, r.tt, "System notifications")
-	hasNot(t, r.tt, "End-of-day reminder")
-	r.pane(t, "Advanced")
-	r.tt.Scroll(340, 300, 0, 3000)
-	r.tt.Frame()
-	has(t, r.tt, "End-of-day reminder", "Weekdays: today's summary, and the weekly one on Friday", "Reminder time", "6:30 PM")
+	has(t, r.tt, "System notifications", "End-of-day reminder", "Weekdays: today's summary, and the weekly one on Friday", "6:30 PM")
+	hasNot(t, r.tt, "Reminder time") // the time sits beside the switch, not on a row of its own
 	if !r.app.EndOfDayOn() || r.app.EndOfDayAt() != "18:30" || !r.app.EndOfDayEnabled() {
 		t.Errorf("on %v at %q enabled %v: on at 18:30 until the user says otherwise", r.app.EndOfDayOn(), r.app.EndOfDayAt(), r.app.EndOfDayEnabled())
 	}
@@ -24,9 +20,6 @@ func TestTheEndOfDaySwitchKeepsTheChoiceAndTheOtherPrefs(t *testing.T) {
 	r := newSettingsRig(t, func(a *App) { a.Prefs = prefs })
 	r.app.SetNotifications(false)
 	r.app.SetNotifications(true)
-	r.pane(t, "Advanced")
-	r.tt.Scroll(340, 300, 0, 3000)
-	r.tt.Frame()
 	if err := r.tt.Click("Remind me at the end of the day"); err != nil {
 		t.Fatal(err)
 	}
@@ -101,8 +94,6 @@ func TestTheEndOfDayRowsInChinese(t *testing.T) {
 	r := newSettingsRig(t)
 	r.tt.SetLocale("zh-Hans")
 	r.tt.Frame()
-	r.pane(t, "高级")
-	r.tt.Scroll(340, 300, 0, 3000)
-	r.tt.Frame()
-	has(t, r.tt, "收工提醒", "工作日到点提醒看日报，周五提醒看周报", "提醒时间")
+	has(t, r.tt, "收工提醒", "工作日到点提醒看日报，周五提醒看周报", "18:30")
+	hasNot(t, r.tt, "提醒时间")
 }

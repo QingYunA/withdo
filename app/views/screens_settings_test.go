@@ -9,7 +9,7 @@ import (
 )
 
 // The Settings window, a pane at a time, in light and dark, English and Chinese (-zh). Every pane
-// is the same size: 680 x 520. Render with
+// is the same size: 800 x 580, with the sidebar beside it. Render with
 //
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensSettings
 
@@ -40,19 +40,18 @@ func settingsShot(t *testing.T, name string, app *App, dark, zh bool, pane Pane,
 	shot(t, name, tt.Image(), true, dark)
 }
 
-// settingsApp is the app with DeepSeek in use, Anthropic and Ollama also set up, and a few agents
-// that reported.
+// settingsApp is the app with DeepSeek in use, Anthropic and Ollama also set up, and five agents
+// on this computer as in the v41 Agents frame.
 func settingsApp(t *testing.T, st data.GitHubStatus) *App {
 	t.Helper()
-	app, store, _ := newTestApp(t)
+	app, store, rec := newTestApp(t)
+	rec.lastCheck = fixedNow().Add(-2 * time.Minute)
 	mac := newAgentRig(t)
 	app.Config.AgentSetup = mac.env
 	mac.has("claude", "codex", "opencode", "code")
 	mac.write(".claude.json", `{"mcpServers":{"withdo":{"command":"x"}}}`)
 	mac.write(".codex/config.toml", "[mcp_servers.withdo]\ncommand = \"x\"\n")
 	mac.write(".cursor/mcp.json", "{}")
-	// DeepSeek Harness is here by its config folder alone, as in the v14 frame.
-	mac.write(".dsh/cordis.patch.yml", "[]\n")
 	app.Models = newFakeModels(t)
 	app.GitHub = data.NewFakeGitHub(st)
 	mustNil(t, app.Models.Save("anthropic", data.ProviderEdit{Model: "claude-haiku-5-5", Key: "sk-ant-demo"}))
@@ -76,19 +75,19 @@ func TestScreensSettings(t *testing.T) {
 				sfx = "-zh" + sfx
 			}
 			general := settingsApp(t, ready)
-			mustNil(t, general.ArchiveProject(3))
 			settingsShot(t, "settings-general"+sfx+".png", general, a.dark, zh, PaneGeneral, nil)
 
-			// Categories: the list under Updates (scrolled to), and the line after a delete, with Undo.
+			// Categories: the list, and the line after a delete, with Undo.
 			withCats := settingsApp(t, ready)
 			addDemoCategories(t, withCats)
-			settingsShot(t, "settings-categories"+sfx+".png", withCats, a.dark, zh, PaneGeneral, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 200)
-			})
+			settingsShot(t, "settings-categories"+sfx+".png", withCats, a.dark, zh, PaneCategories, nil)
 			deleted := settingsApp(t, ready)
 			addDemoCategories(t, deleted)
-			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneGeneral, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 200)
+			settingsShot(t, "settings-categories-deleted"+sfx+".png", deleted, a.dark, zh, PaneCategories, func(r *settingsRig) {
+				if row, ok := r.tt.Find("Health"); ok { // the tools appear on the hovered row
+					r.tt.Move(row.X+row.W/2, row.Y+row.H/2)
+					r.tt.Frame()
+				}
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
 				r.tt.Frame()
 				_ = r.tt.Click(r.s.say.A11yCategoryDelete("Health"))
@@ -96,39 +95,34 @@ func TestScreensSettings(t *testing.T) {
 
 			// macOS refused the last notification: the line warns, a link goes to System Settings.
 			refused := settingsApp(t, ready)
-			mustNil(t, refused.ArchiveProject(3))
 			refused.Act.(*recorder).denied = true
 			settingsShot(t, "settings-general-denied"+sfx+".png", refused, a.dark, zh, PaneGeneral, nil)
 
 			// At rest: the provider in use with the last test, the others under it.
-			settingsShot(t, "settings-advanced"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
+			settingsShot(t, "settings-model"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
 				r.s.runTest(currentProviderOf(r.app))
 				r.rec.drain(t)
 			})
-			// Under the model: the Recent changes page, the end-of-day reminder, the sound effects.
-			settingsShot(t, "settings-advanced-more"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
-				r.tt.Scroll(340, 300, 0, 3000)
-			})
-			// Change: a tile picked, its key empty.
-			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "kimi"
+			// A tile picked: its key and model form under the grid.
+			settingsShot(t, "settings-change"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
+				r.s.assist.pick = "kimi"
 			})
 			// A failed test stays under the form, in plain words.
-			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "openai"
+			settingsShot(t, "settings-change-error"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
+				r.s.assist.pick = "openai"
 				r.s.assist.err = "The provider didn't accept the API key."
 				if zh {
 					r.s.assist.err = "服务商不接受这个 API 密钥。"
 				}
 			})
 			// Custom adds the address and the protocol, so it scrolls.
-			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAdvanced, func(r *settingsRig) {
-				r.s.assist.changing, r.s.assist.pick = true, "custom"
+			settingsShot(t, "settings-custom"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneModel, func(r *settingsRig) {
+				r.s.assist.pick = "custom"
 			})
 			// Nothing set up: the grid shows at once.
 			fresh := settingsApp(t, ready)
 			fresh.Models = newFakeModels(t)
-			settingsShot(t, "settings-advanced-new"+sfx+".png", fresh, a.dark, zh, PaneAdvanced, nil)
+			settingsShot(t, "settings-model-new"+sfx+".png", fresh, a.dark, zh, PaneModel, nil)
 
 			settingsShot(t, "settings-agents"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAgents, nil)
 			// Under the agents: where Review and Answer on a handed-over row go.
@@ -139,6 +133,7 @@ func TestScreensSettings(t *testing.T) {
 				gh := settingsApp(t, s.st)
 				settingsShot(t, "settings-agents-github"+s.name+sfx+".png", gh, a.dark, zh, PaneAgents, func(r *settingsRig) { r.tt.Scroll(340, 300, 0, 9000) })
 			}
+			settingsShot(t, "settings-about"+sfx+".png", settingsApp(t, ready), a.dark, zh, PaneAbout, nil)
 		}
 	}
 }

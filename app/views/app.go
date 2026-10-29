@@ -48,6 +48,10 @@ type Actions interface {
 	// that on or off. The update plugin keeps the choice, not the app's prefs.
 	AutomaticUpdates() bool
 	SetAutomaticUpdates(on bool)
+	// CheckForUpdates asks the update plugin to check now, and shows its window with the answer.
+	CheckForUpdates()
+	// LastUpdateCheck is when the app last checked for updates, zero when it never has.
+	LastUpdateCheck() time.Time
 }
 
 // Config is what the Settings window shows.
@@ -58,6 +62,8 @@ type Config struct {
 	AssistantMemory string
 	Home            string // the user's home folder, which the data folder is shown relative to
 	Version         string
+	// AppIcon is the app's mark, the PNG it ships as app/resources/icon.png; nil hides it.
+	AppIcon []byte
 	// AgentSetup finds the coding agents on this Mac and installs the MCP into them; nil finds none.
 	AgentSetup *agentsetup.Env
 }

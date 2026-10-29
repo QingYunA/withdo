@@ -7,31 +7,38 @@ import (
 	"github.com/QingYunA/adhd-todo/app/locales"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/QingYunA/adhd-todo/app/words"
+	"github.com/QingYunA/adhd-todo/internal/agentsetup"
 	"github.com/egoist/mygo/ui"
 )
 
-// Pane is one toolbar pane of the Settings window.
+// Pane is one row of the Settings sidebar.
 type Pane int
 
 const (
-	PaneGeneral Pane = iota
-	PaneAccount
+	PaneAccount Pane = iota
+	PaneGeneral
+	PaneCategories
 	PaneAgents
-	PaneAdvanced
+	PaneModel
+	PaneAbout
 )
-
-// settingsWidth is the window's width.
-const settingsWidth = theme.SettingsWidth
 
 const copiedFor = 1500 * time.Millisecond
 
-// Settings is the content of the Settings window: a toolbar of panes over grouped lists. It has
+// navPanes are the sidebar's rows, top to bottom. About sits at its foot, away from them.
+var navPanes = []Pane{PaneAccount, PaneGeneral, PaneCategories, PaneAgents, PaneModel}
+
+// panes are all the rows the arrow keys walk: the five above, then About.
+var panes = []Pane{PaneAccount, PaneGeneral, PaneCategories, PaneAgents, PaneModel, PaneAbout}
+
+// Settings is the content of the Settings window: a sidebar of panes beside grouped lists. It has
 // the state of its panes; the data comes from the App the main window shares.
 type Settings struct {
 	app       *App
 	say       locales.Messages
 	clock     words.Clock
 	pane      Pane
+	navFocus  *Pane // the row the arrow keys moved to, focused once
 	assist    assistState
 	copied    time.Time
 	copiedKey string // the copy button that was pressed
@@ -43,7 +50,10 @@ type Settings struct {
 	lastTitle string
 
 	agents agentsCache
-	cats   categoriesState // Settings > General > Categories
+	cats   categoriesState // Settings > Categories
+	// The app mark in About, decoded once from Config.AppIcon.
+	mark      *ui.Bitmap
+	markTried bool
 
 	// Settings > Account: whether this opening asked for the devices, and the inline Change field.
 	syncAsked         bool
@@ -78,7 +88,9 @@ func (s *Settings) ContentSize() (width, height float32) {
 }
 
 // NewSettings opens on General.
-func NewSettings(a *App) *Settings { return &Settings{app: a, syncFields: fields{}} }
+func NewSettings(a *App) *Settings {
+	return &Settings{app: a, pane: PaneGeneral, syncFields: fields{}}
+}
 
 // Show opens a pane. Opening Account again asks the server for its devices again.
 func (s *Settings) Show(p Pane) {
@@ -88,6 +100,9 @@ func (s *Settings) Show(p Pane) {
 		s.syncFocusAccount, s.syncFocusPassword = true, false
 		s.syncPassword = ""
 		s.syncCode, s.syncCodeTried, s.syncProbed = "", "", ""
+	}
+	if p == PaneAgents && s.pane != PaneAgents {
+		s.setup.status = nil // look at this computer again as the pane opens
 	}
 	s.pane = p
 }
@@ -99,7 +114,7 @@ func (s *Settings) ClearSyncPassword() {
 	s.syncFocusPassword = false
 }
 
-// openPane switches panes from the toolbar.
+// openPane switches panes from the sidebar.
 func (s *Settings) openPane(p Pane) {
 	if p == PaneAccount && s.pane != PaneAccount {
 		s.syncAsked = false
@@ -109,21 +124,28 @@ func (s *Settings) openPane(p Pane) {
 		s.syncPassword = ""
 	}
 	s.syncEditingServer, s.syncServerErr = false, false
+	if p == PaneAgents && s.pane != PaneAgents {
+		s.setup.status = nil // look at this computer again as the pane opens
+	}
 	s.pane = p
 }
 
-// View builds the window for one frame. The toolbar keeps its height; the pane under it fills the
-// rest and scrolls, and has a key of its own so that its scroll position is its own.
+// View builds the window for one frame: the sidebar down the left, and the open pane beside it.
+// The pane scrolls, and has a key of its own so that its scroll position is its own.
 func (s *Settings) View(c *ui.Context) {
 	t := theme.Resolve(c)
 	s.say, s.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
-	ui.Column(c).Fill().Background(t.SettingsPane()).Children(func() {
-		s.toolbar(c, t)
-		ui.Scroll(c.Key("pane-" + itoa(int(s.pane)))).Grow(1).MinHeight(0).Children(func() {
-			ui.Column(c).Shrink(0).Padding(18, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
+	focus := s.navFocus
+	s.navFocus = nil
+	ui.Row(c).Fill().Background(t.SettingsPane()).Children(func() {
+		s.sidebar(c, t, focus)
+		ui.Column(c.Key("pane")).Grow(1).MinWidth(0).FillHeight().Children(func() {
+			ui.Scroll(c.Key("pane-" + itoa(int(s.pane)))).Grow(1).MinHeight(0).Children(func() {
+				ui.Column(c).Shrink(0).Padding(22, theme.SettingsPad, 6).Children(func() { s.paneBody(c, t) })
+			})
 		})
 	})
-	if s.pane == PaneGeneral {
+	if s.pane == PaneCategories {
 		s.categorySheetView(c, t)
 	}
 	if s.pane == PaneAccount && s.app.Sync != nil {
@@ -141,73 +163,169 @@ func (s *Settings) paneName(p Pane) string {
 	switch p {
 	case PaneAccount:
 		return s.say.SettingsPaneAccount()
+	case PaneCategories:
+		return s.say.SettingsCategories()
 	case PaneAgents:
 		return s.say.SettingsPaneAgents()
-	case PaneAdvanced:
-		return s.say.SettingsPaneAdvanced()
+	case PaneModel:
+		return s.say.SettingsPaneModel()
+	case PaneAbout:
+		return s.say.SettingsPaneAbout()
 	}
 	return s.say.SettingsGeneral()
 }
 
 var paneIcons = map[Pane]*ui.SVG{
-	PaneAccount: theme.IconUser, PaneGeneral: theme.IconGeneral, PaneAgents: theme.IconTerminal, PaneAdvanced: theme.IconStar,
+	PaneAccount: theme.IconUser, PaneGeneral: theme.IconGeneral, PaneCategories: theme.IconFolder,
+	PaneAgents: theme.IconAgent, PaneModel: theme.IconSparkle,
 }
 
-// SettingsTitleBarHeight is the height of the band's title row: tall enough for the traffic
-// lights.
+// SettingsTitleBarHeight is the height of the sidebar's first row: the room of the traffic lights,
+// which drags the window.
 const SettingsTitleBarHeight float32 = 38
 
-// toolbar is one band for the whole top of the window, under and around the traffic lights: the
-// open pane's name centered, the panes below it each as an icon over its name, and a hairline.
-func (s *Settings) toolbar(c *ui.Context, t *theme.Tokens) ui.Element {
-	return ui.Column(c.Key("toolbar")).Shrink(0).Background(t.SettingsToolbar()).Children(func() {
-		ui.Row(c).Height(max(c.TitleBar().Height, SettingsTitleBarHeight)).Shrink(0).Justify(ui.Center).AlignItems(ui.Center).
-			DragWindow().Children(func() {
-			theme.Text(c, theme.Section, t.Text, s.paneName(s.pane))
-		})
-		ui.Row(c).Justify(ui.Center).Gap(4).Padding(0, 0, 12).Children(func() {
-			for _, p := range []Pane{PaneAccount, PaneGeneral, PaneAgents, PaneAdvanced} {
-				s.tab(c, t, p)
+// sidebar is the window's left side: the traffic lights' row, the pane rows, and About at the foot.
+// Up and Down move between the rows while it has the keyboard.
+func (s *Settings) sidebar(c *ui.Context, t *theme.Tokens, focus *Pane) {
+	side := ui.Column(c.Key("sidebar")).Width(theme.SettingsSide).FillHeight().Shrink(0).
+		Background(t.SettingsToolbar()).BorderWidth(0, theme.Hairline, 0, 0).BorderColor(t.Border)
+	side.Children(func() {
+		ui.Row(c.Key("sidebar-drag")).Height(max(c.TitleBar().Height, SettingsTitleBarHeight)).Shrink(0).DragWindow()
+		ui.Column(c.Key("sidebar-panes")).Shrink(0).Gap(2).Padding(0, theme.SettingsSidePad).Children(func() {
+			for _, p := range navPanes {
+				s.paneRow(c, t, p, focus)
 			}
 		})
-		hairline(c, t)
+		ui.Box(c.Key("sidebar-space")).Grow(1)
+		ui.Column(c.Key("sidebar-foot")).Shrink(0).Padding(0, theme.SettingsSidePad, 12).Children(func() {
+			s.aboutRow(c, t, focus)
+		})
 	})
+	switch {
+	case side.Shortcut(0, ui.KeyDown):
+		s.navMove(1)
+	case side.Shortcut(0, ui.KeyUp):
+		s.navMove(-1)
+	}
 }
 
-func (s *Settings) tab(c *ui.Context, t *theme.Tokens, p Pane) {
+// paneRow is one pane of the sidebar: its pixel icon and its name, in the well of the open pane.
+func (s *Settings) paneRow(c *ui.Context, t *theme.Tokens, p Pane, focus *Pane) {
 	on := s.pane == p
 	name := s.paneName(p)
-	btn := ui.ButtonBase(c.Key("pane-"+itoa(int(p)))).Width(theme.SettingsTab).Padding(6, 0).Gap(2).Radius(theme.RadiusCard).
-		Label(s.say.A11yPane(name)).Cursor(ui.CursorPointer).Column().AlignItems(ui.Center)
+	btn := ui.ButtonBase(c.Key("pane-"+itoa(int(p)))).Width(theme.SettingsSide-2*theme.SettingsSidePad).
+		Height(theme.SettingsSideRow).Padding(0, 10).Gap(10).Radius(8).Label(s.say.A11yPane(name)).
+		Cursor(ui.CursorPointer).AlignItems(ui.Center)
 	switch {
 	case on:
 		btn.Background(t.SettingsTabOn())
 	case btn.Hovered():
 		btn.Background(t.BgHover)
 	}
+	if focus != nil && *focus == p {
+		btn.Focus()
+	}
 	btn.Children(func() {
-		ink, label := t.TextSecondary, t.TextSecondary
+		ink, label := t.TextSecondary, t.Text
+		weight := 400
 		if on {
-			ink, label = t.Accent, t.Text
+			ink, weight = t.Accent, 600
 		}
-		ui.Icon(c, paneIcons[p]).Size(theme.IconBar, theme.IconBar).TextColor(ink)
-		theme.Text(c, theme.Meta, label, name)
+		ui.Icon(c, paneIcons[p]).Size(theme.IconRow, theme.IconRow).TextColor(ink).Shrink(0)
+		theme.Text(c, navStyle(theme.Body, weight), label, name).Grow(1).MinWidth(0).Ellipsis("…")
+		if p == PaneAgents && !on && s.navAgentAlert() {
+			ui.Box(c.Key("pane-agent-alert")).Size(6, 6).Shrink(0).Margin(0, 2, 0, 0).Background(t.Accent)
+		}
 	})
 	if btn.Clicked() {
 		s.openPane(p)
 	}
 }
 
+// aboutRow is the quiet row at the foot of the sidebar. It opens the About pane.
+func (s *Settings) aboutRow(c *ui.Context, t *theme.Tokens, focus *Pane) {
+	on := s.pane == PaneAbout
+	name := s.say.SettingsPaneAbout()
+	btn := ui.ButtonBase(c.Key("pane-"+itoa(int(PaneAbout)))).Width(theme.SettingsSide-2*theme.SettingsSidePad).
+		Height(theme.SettingsSideRow).Padding(0, 10).Gap(10).Radius(8).Label(s.say.A11yPane(name)).
+		Cursor(ui.CursorPointer).AlignItems(ui.Center)
+	ink, weight := t.TextSecondary, 400
+	switch {
+	case on:
+		btn.Background(t.SettingsTabOn())
+		ink, weight = t.Text, 600
+	case btn.Hovered():
+		btn.Background(t.BgHover)
+	}
+	if focus != nil && *focus == PaneAbout {
+		btn.Focus()
+	}
+	btn.Children(func() {
+		icon := t.TextSecondary
+		if on {
+			icon = t.Accent
+		}
+		ui.Icon(c, theme.IconDiamond).Size(theme.IconRow, theme.IconRow).TextColor(icon).Shrink(0)
+		theme.Text(c, navStyle(theme.Meta, weight), ink, s.say.SettingsSidebarAbout()).
+			Grow(1).MinWidth(0).Ellipsis("…")
+	})
+	if btn.Clicked() {
+		s.openPane(PaneAbout)
+	}
+}
+
+// navStyle is a text style at another weight, for the open row of the sidebar.
+func navStyle(base theme.Style, weight int) theme.Style {
+	base.Weight = weight
+	return base
+}
+
+// navMove moves the sidebar's focus by dir through the rows, and opens the row it reaches.
+func (s *Settings) navMove(dir int) {
+	at := 0
+	for i, p := range panes {
+		if p == s.pane {
+			at = i
+			break
+		}
+	}
+	next := panes[max(0, min(at+dir, len(panes)-1))]
+	if next != s.pane {
+		s.openPane(next)
+	}
+	s.navFocus = &next
+}
+
+// navAgentAlert reports whether an agent is on this computer without Withdo's MCP: the square the
+// Agents row carries while its pane is closed.
+func (s *Settings) navAgentAlert() bool {
+	status := s.scanAgents()
+	if status == nil {
+		return false
+	}
+	reported := s.reports()
+	for _, a := range agentsetup.Agents {
+		st := status[a.ID]
+		installed := st.Installed || (reported[a.Name].ever && !st.Legacy)
+		if st.Found && !installed {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Settings) paneBody(c *ui.Context, t *theme.Tokens) {
 	switch s.pane {
 	case PaneAccount:
-		s.syncPane(c, t)
+		s.paneAccount(c, t)
+	case PaneCategories:
+		s.categoriesPane(c, t)
 	case PaneAgents:
 		s.agentsPane(c, t)
-		groupLabel(c, t, s.say.SettingsGitHub())
-		s.githubPane(c, t)
-	case PaneAdvanced:
-		s.advancedPane(c, t)
+	case PaneModel:
+		s.modelPane(c, t)
+	case PaneAbout:
+		s.aboutPane(c, t)
 	default:
 		s.generalPane(c, t)
 	}

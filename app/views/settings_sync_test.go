@@ -84,7 +84,8 @@ func syncedSync() data.SyncSnapshot {
 	now := fixedNow()
 	return data.SyncSnapshot{
 		Phase: data.SyncSynced, Server: "https://todo.sri-ai.xyz", Account: "Cyan 云辰",
-		Linked: true, LastSynced: now.Add(-10 * time.Second), ThisDeviceID: "mac",
+		AccountEmail: "ada@example.com", GoogleLink: data.GoogleLinkLinked,
+		Linked: true, LastSynced: now.Add(-time.Minute), ThisDeviceID: "mac",
 		Devices: []data.SyncDevice{
 			{ID: "phone", Name: "Pixel 8", LastSeen: now.Add(-3 * time.Minute)},
 			{ID: "mac", Name: "Cyan 的 MacBook Pro", LastSeen: now.Add(-10 * time.Second), This: true},
@@ -174,8 +175,8 @@ func TestSyncPaneUploadingShowsTheCountAndTheBar(t *testing.T) {
 
 func TestSyncPaneAccountedListsDevicesWithThisMacFirst(t *testing.T) {
 	r, fs := syncPane(t, syncedSync())
-	has(t, r.tt, "Cyan 云辰", "Signed in · 3 devices", "Sign out", "This Mac")
-	has(t, r.tt, "Synced", "just now", "Sync now", "Devices", "Cyan 的 MacBook Pro", "Pixel 8", "公司的 Mac mini")
+	has(t, r.tt, "Cyan 云辰", "ada@example.com", "1 minute ago · 3 devices", "Sign out", "This Mac")
+	has(t, r.tt, "Synced", "Sync now", "Devices", "Cyan 的 MacBook Pro", "Pixel 8", "公司的 Mac mini")
 	if err := r.tt.Click("Sync now"); err != nil {
 		t.Fatal(err)
 	}

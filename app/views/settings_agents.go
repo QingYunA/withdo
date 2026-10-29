@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -15,11 +16,9 @@ import (
 // meanwhile shows up.
 const agentsRefreshEvery = 30 * time.Second
 
-// The sizes of the two kinds of agent row: the mark and the row itself (docs/design/mockups/v14).
+// The compact rows of More: the mark and the row itself.
 const (
-	agentMarkSize     float32 = 24
 	agentMarkSizeMore float32 = 18
-	agentRowSize      float32 = 48
 	agentMoreRowSize  float32 = 31
 	agentsMoreGap     float32 = 18
 )
@@ -34,13 +33,16 @@ type agentsCache struct {
 }
 
 // setupState is what Settings > Agents knows of this Mac: what the last look found, which install
-// is running, why one failed, and the snippet to copy for a config file that cannot be rewritten.
+// is running, why one failed, the snippet to copy for a config file that cannot be rewritten, and
+// which of the pane's two disclosures are open.
 type setupState struct {
 	status    map[string]agentsetup.Status
 	scannedAt time.Time
 	busy      string            // the agent whose install is running
 	failed    map[string]string // agent id -> why its last install failed, in words
 	manual    *manualHint
+	moreOpen  bool // the "N more agents" list is open in place
+	handOpen  bool // Connect by hand is open in place
 }
 
 // manualHint is a config file the app will not rewrite, and what to add to it by hand.
@@ -48,43 +50,66 @@ type manualHint struct {
 	id, file, snippet string
 }
 
-// agentsPane is the agents adhd-todo can set up, fourteen of them, in two groups: On this Mac,
-// the ones found here (two columns of rows: mark, name, how it stands, and whether the MCP is
-// installed or can be), and More, the rest, with just the name and where to get it. Both groups
-// fit the window before it scrolls; under them, the one command for Claude Code to copy.
+// agentsPane is the agents adhd-todo can set up: the ones found here as pixel tiles, then one
+// group of rows for the rest, the command to copy and where an agent's work opens. The GitHub
+// group follows it.
 func (s *Settings) agentsPane(c *ui.Context, t *theme.Tokens) {
 	c.After(agentsRefreshEvery)
-	// The title's margins are a little tighter than a group label's: both sections have to fit the
-	// 520 pt window before it scrolls (docs/design/mockups/v14.html).
-	theme.Text(c, theme.Section, t.TextSecondary, s.say.SettingsAgentsTitle()).Margin(0, 4, 4)
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsBody(), 0).Margin(0, 4, 4)
+	paneHeader(c, t, s.say.SettingsPaneAgents(), s.say.SettingsAgentsBody())
 	status, reported := s.scanAgents(), s.reports()
 	local, more := splitAgents(status, reported)
-	s.agentsSectionHead(c, t, "local", s.say.SettingsAgentsLocal(), len(local), 0, 3)
+	s.agentsSectionHead(c, t, "local", s.say.SettingsAgentsLocal(), len(local))
 	if len(local) == 0 {
 		s.agentsEmptyLocal(c, t)
 	} else {
 		s.agentsLocal(c, t, local, status, reported)
 	}
-	s.agentsSectionHead(c, t, "more", s.say.SettingsAgentsMore(), len(more), 14, 0)
-	s.agentsMore(c, t, more)
+	agentsGroup(c, t, "agent-actions", func() {
+		first := true
+		if len(more) > 0 {
+			first = false
+			s.agentsMoreDisclosure(c, t, more, true)
+		}
+		s.agentsHandDisclosure(c, t, first)
+		settingsRow(c, t, "open-with", s.say.SettingsOpenWith(), s.say.SettingsOpenWithBody(), false, func() { s.openWithControl(c, t) })
+	})
 	if h := s.setup.manual; h != nil {
 		s.manualPanel(c, t, h)
 	}
-	group(c, t, "open-with", func() {
-		settingsRow(c, t, "open-with", s.say.SettingsOpenWith(), s.say.SettingsOpenWithBody(), true, func() { s.openWithControl(c, t) })
-	})
-	ui.Column(c).Shrink(0).Gap(8).Margin(0, 0, 18).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsCommand()).Margin(0, 4)
-		commandWell(c, t, s.app.Config.ConnectCommand, func() { s.copyButton(c, t, "copy", s.app.Config.ConnectCommand) })
-	})
-	if env := s.app.Config.AgentSetup; env != nil {
-		group(c, t, "other-agent", func() {
-			settingsRow(c, t, "other-agent", s.say.SettingsAgentOther(), s.say.SettingsAgentOtherBody(), true, func() {
-				s.copyGuideButton(c, t, "copy-guide", env)
-			})
-		})
+	agentsGroupLabel(c, t, s.say.SettingsGitHub())
+	s.githubPane(c, t)
+}
+
+// agentsGroupLabel is the small title above the GitHub group, tighter than a pane's first label
+// so that the whole pane fits the window.
+func agentsGroupLabel(c *ui.Context, t *theme.Tokens, text string) ui.Element {
+	return theme.Text(c, theme.Section, t.TextSecondary, text).Margin(2, 4, 3)
+}
+
+// agentsGroup is a block of rows with a little less below it than a pane's other groups, so that
+// the whole Agents pane fits the 580 pt window.
+func agentsGroup(c *ui.Context, t *theme.Tokens, key string, rows func()) {
+	ui.Column(c.Key("group-"+key)).Shrink(0).Margin(0, 0, 10).Radius(theme.SettingsRadius).Background(t.SettingsGroup()).
+		Border(1, t.Border.Alpha(0.08)).Children(rows)
+}
+
+// agentsSettingsRowInk is a compact row of the GitHub group: a label and one quiet line, in the
+// stale ink when something is missing.
+func agentsSettingsRowInk(c *ui.Context, t *theme.Tokens, key, label, sub string, subInk ui.Color, first bool, control func()) {
+	if !first {
+		hairline(c, t).Margin(0, 14)
 	}
+	ui.Row(c.Key("row-"+key)).MinHeight(theme.SettingsRowMin).Shrink(0).Padding(4, 14).Gap(12).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+			theme.Text(c, theme.Compact, t.Text, label).Ellipsis("…")
+			if sub != "" {
+				theme.Text(c, theme.Meta, subInk, sub).Ellipsis("…")
+			}
+		})
+		if control != nil {
+			control()
+		}
+	})
 }
 
 // splitAgents sorts the catalog into the ones on this Mac and the ones still to get. An agent
@@ -101,35 +126,15 @@ func splitAgents(status map[string]agentsetup.Status, reported map[string]agentR
 	return local, more
 }
 
-// agentsSectionHead is a group label with its quiet count: "On this Mac 6".
-func (s *Settings) agentsSectionHead(c *ui.Context, t *theme.Tokens, key, label string, count int, above, below float32) {
-	ui.Row(c.Key("agents-head-"+key)).Shrink(0).Gap(6).AlignItems(ui.Center).Margin(above, 4, below).Children(func() {
+// agentsSectionHead is a group label with its quiet count: "On this computer 6".
+func (s *Settings) agentsSectionHead(c *ui.Context, t *theme.Tokens, key, label string, count int) {
+	ui.Row(c.Key("agents-head-"+key)).Shrink(0).Gap(6).AlignItems(ui.Center).Margin(0, 4, 2).Children(func() {
 		theme.Text(c, theme.Section, t.TextSecondary, label)
-		theme.Text(c, theme.Meta, t.TextSecondary, itoa(count))
+		theme.Text(c, theme.Meta, t.TextTertiary, itoa(count))
 	})
 }
 
-// agentsLocal is the two white columns of On this Mac: rows read left to right, then top to
-// bottom, so the odd row of the catalog is in the left column.
-func (s *Settings) agentsLocal(c *ui.Context, t *theme.Tokens, local []agentsetup.Agent, status map[string]agentsetup.Status, reported map[string]agentReports) {
-	ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Start).Children(func() {
-		for col := 0; col < 2; col++ {
-			ui.Column(c.Key("agent-col-"+itoa(col))).Grow(1).Basis(0).MinWidth(0).Radius(theme.SettingsRadius).
-				Background(t.SettingsGroup()).Border(theme.Hairline, t.Border.Alpha(0.08)).Children(func() {
-				first := true
-				for i, a := range local {
-					if i%2 != col {
-						continue
-					}
-					s.agentRow(c, t, a, status[a.ID], reported[a.Name], first)
-					first = false
-				}
-			})
-		}
-	})
-}
-
-// agentsEmptyLocal is the one row On this Mac has when nothing was found and nothing reported:
+// agentsEmptyLocal is the one row On this computer has when nothing was found and nothing reported:
 // what that means, and where to read how to connect an agent. More still lists the catalog.
 func (s *Settings) agentsEmptyLocal(c *ui.Context, t *theme.Tokens) {
 	ui.Column(c.Key("agent-local-empty")).Shrink(0).Radius(theme.SettingsRadius).Background(t.SettingsGroup()).
@@ -143,26 +148,50 @@ func (s *Settings) agentsEmptyLocal(c *ui.Context, t *theme.Tokens) {
 	})
 }
 
-// agentsMore is the one block of More: the catalog's other agents, two to a row, compact,
-// without a status line and without a fold.
-func (s *Settings) agentsMore(c *ui.Context, t *theme.Tokens, more []agentsetup.Agent) {
-	ui.Column(c.Key("agent-more")).Shrink(0).Radius(theme.SettingsRadius).Background(t.SettingsGroup()).
-		Border(1, t.Border.Alpha(0.08)).Children(func() {
-		for i := 0; i < len(more); i += 2 {
-			if i > 0 {
-				ui.Box(c.Key("rule-more-"+itoa(i))).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
-			}
-			ui.Row(c.Key("agent-more-"+itoa(i))).Height(agentMoreRowSize).Shrink(0).Gap(agentsMoreGap).Padding(0, 14).Children(func() {
-				for j := 0; j < 2; j++ {
-					if i+j < len(more) {
-						s.moreRow(c, t, more[i+j])
-					} else {
-						ui.Box(c).Grow(1).Basis(0)
-					}
-				}
-			})
-		}
+// agentsMoreDisclosure is the first row under the tiles: how many agents are only in the catalog,
+// and, opened, the compact list of the catalog in place.
+func (s *Settings) agentsMoreDisclosure(c *ui.Context, t *theme.Tokens, more []agentsetup.Agent, first bool) {
+	sep := ", "
+	if strings.HasPrefix(c.Locale(), "zh") {
+		sep = "、"
+	}
+	s.agentDisclosure(c, t, "more", s.say.SettingsAgentsMoreCount(len(more)), s.say.SettingsAgentsMoreMeta(moreNames(more, 3, sep)), first, &s.setup.moreOpen, func() {
+		s.agentsMore(c, t, more)
 	})
+}
+
+// moreNames lists the first agents of More, an ellipsis saying there are more. It is the quiet
+// line under "N more agents".
+func moreNames(more []agentsetup.Agent, n int, sep string) string {
+	names := make([]string, 0, n)
+	for i, a := range more {
+		if i == n {
+			break
+		}
+		names = append(names, agentTileName(a))
+	}
+	out := strings.Join(names, sep)
+	if len(more) > len(names) {
+		out += "…"
+	}
+	return out
+}
+
+// agentsMore is the compact two-column list of the catalog's other agents, opened in place under
+// its row. Each row has its official mark, its name and the link to get it.
+func (s *Settings) agentsMore(c *ui.Context, t *theme.Tokens, more []agentsetup.Agent) {
+	for i := 0; i < len(more); i += 2 {
+		hairline(c, t).Margin(0, 14)
+		ui.Row(c.Key("agent-more-"+itoa(i))).Height(agentMoreRowSize).Shrink(0).Gap(agentsMoreGap).Padding(0, 14).Children(func() {
+			for j := 0; j < 2; j++ {
+				if i+j < len(more) {
+					s.moreRow(c, t, more[i+j])
+				} else {
+					ui.Box(c).Grow(1).Basis(0)
+				}
+			}
+		})
+	}
 }
 
 // moreRow is one agent of More: its official mark, its name, and the link to get it. It says
@@ -175,6 +204,54 @@ func (s *Settings) moreRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent) {
 			s.app.Act.OpenURL(a.URL)
 		}
 	})
+}
+
+// agentsHandDisclosure is Connect by hand: the command that adds Withdo for Claude Code, its Copy
+// and the setup guide, opened in place.
+func (s *Settings) agentsHandDisclosure(c *ui.Context, t *theme.Tokens, first bool) {
+	s.agentDisclosure(c, t, "hand", s.say.SettingsAgentsManual(), s.say.SettingsAgentsManualBody(), first, &s.setup.handOpen, func() {
+		ui.Column(c.Key("agent-hand-open")).Shrink(0).Padding(0, 14, 12).Gap(8).Children(func() {
+			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentsCommand()).Margin(0, 4)
+			commandWell(c, t, s.app.Config.ConnectCommand, func() {
+				s.copyButton(c, t, "copy-command", s.app.Config.ConnectCommand)
+			})
+			if env := s.app.Config.AgentSetup; env != nil {
+				s.copyGuideButton(c, t, "copy-guide-hand", env)
+			}
+		})
+	})
+}
+
+// agentDisclosure is one row that opens a piece of the pane in place: a label, its quiet line, and
+// a chevron that points right while it is closed. The whole row is the button.
+func (s *Settings) agentDisclosure(c *ui.Context, t *theme.Tokens, key, label, sub string, first bool, open *bool, body func()) {
+	if !first {
+		hairline(c, t).Margin(0, 14)
+	}
+	btn := ui.ButtonBase(c.Key("disclose-"+key)).FillWidth().Shrink(0).MinHeight(theme.SettingsRowMin).
+		Padding(4, 14).Gap(12).AlignItems(ui.Center).Label(label).Cursor(ui.CursorPointer)
+	if btn.Hovered() {
+		btn.Background(t.BgHover)
+	}
+	btn.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+			theme.Text(c, theme.Compact, t.Text, label).Ellipsis("…")
+			if sub != "" {
+				theme.Text(c, theme.Meta, t.TextSecondary, sub).Ellipsis("…")
+			}
+		})
+		icon := theme.IconForward
+		if *open {
+			icon = theme.IconChevron
+		}
+		ui.Icon(c, icon).Size(theme.IconSmall, theme.IconSmall).TextColor(t.TextTertiary).Shrink(0)
+	})
+	if btn.Clicked() {
+		*open = !*open
+	}
+	if *open {
+		body()
+	}
 }
 
 // openWithControl chooses where Review and Answer on a handed-over row take the user.
@@ -239,50 +316,10 @@ func (s *Settings) agentList() []data.AgentActivity {
 	return s.agents.list
 }
 
-// agentRow is one agent of On this Mac: its official mark, its name, one line on how it stands
-// and, at the right, what can be done: nothing (the MCP is installed), Install MCP, or, for an
-// agent whose report alone put it here, nothing either.
-func (s *Settings) agentRow(c *ui.Context, t *theme.Tokens, a agentsetup.Agent, st agentsetup.Status, rep agentReports, first bool) {
-	installed := st.Installed || (rep.ever && !st.Legacy) // an agent with only the old adhd-todo entry still needs the install
-	sub := s.agentSub(st, rep)
-	if !first {
-		ui.Box(c.Key("rule-agent-"+a.ID)).Height(theme.Hairline).Shrink(0).Margin(0, 14).Background(t.Border)
-	}
-	ui.Row(c.Key("agent-"+a.ID)).MinHeight(agentRowSize).Shrink(0).Padding(0, 14).Gap(10).AlignItems(ui.Center).Children(func() {
-		theme.HarnessMark(c, a.ID, agentMarkSize).Shrink(0)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			theme.Text(c, theme.Body, t.Text, a.Name).Ellipsis("…")
-			theme.Text(c, theme.Meta, t.TextSecondary, sub).Ellipsis("…")
-			if why := s.setup.failed[a.ID]; why != "" {
-				theme.Paragraph(c, theme.Meta, t.Blocked(), why, 3)
-			}
-		})
-		switch {
-		case installed:
-			ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, theme.IconCheck).Size(theme.IconSmall, theme.IconSmall).TextColor(t.Status(data.Done))
-				theme.Text(c, theme.Meta, t.Status(data.Done), s.say.SettingsAgentInstalled())
-			})
-		case s.setup.busy == a.ID:
-			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsAgentInstalling()).Shrink(0)
-		case st.Found:
-			if settingsButton(c, t, "install-"+a.ID, s.say.SettingsAgentInstall(), true).Label(s.say.A11yInstallMCP(a.Name)).Clicked() {
-				s.install(a) // inert while another install runs
-			}
-		}
-	})
-}
-
-// agentSub is the line under a name of On this Mac: its reports today, that it reported before,
-// or what was found. Every row here is here because one of those is true.
-func (s *Settings) agentSub(st agentsetup.Status, rep agentReports) string {
-	switch {
-	case rep.today > 0:
-		return s.say.SettingsAgentReports(rep.today)
-	case rep.ever:
-		return s.say.SettingsAgentIdle()
-	}
-	return s.say.SettingsAgentFound(st.Via)
+// agentInstalled is whether the agent's MCP is here: installed, or reported at least once without
+// only the old adhd-todo entry (which still needs the install).
+func agentInstalled(st agentsetup.Status, rep agentReports) bool {
+	return st.Installed || (rep.ever && !st.Legacy)
 }
 
 // install adds the MCP to an agent off the UI thread: its own command can take a while.

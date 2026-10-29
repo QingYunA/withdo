@@ -67,6 +67,7 @@ func main() {
 		AssistantMemory: be.memoryFile,
 		Home:            home,
 		Version:         version,
+		AppIcon:         appIcon,
 		AgentSetup:      setup,
 	})
 	app.Assistant, app.Models, app.GitHub, app.Seen, app.Dismissed = be.assistant, be.models, be.github, be.seen, be.dismissed

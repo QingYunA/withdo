@@ -45,6 +45,8 @@ type recorder struct {
 	denied    bool        // what NotificationsDenied answers
 	noChecks  bool        // SetAutomaticUpdates(false) was called
 	noUpdates bool        // the build cannot update itself
+	checks    int         // CheckForUpdates was called
+	lastCheck time.Time   // what LastUpdateCheck answers
 
 	mu     sync.Mutex
 	posted []func()
@@ -74,6 +76,10 @@ func (r *recorder) NotificationsDenied() bool { return r.denied }
 func (r *recorder) CanUpdate() bool             { return !r.noUpdates }
 func (r *recorder) AutomaticUpdates() bool      { return !r.noChecks }
 func (r *recorder) SetAutomaticUpdates(on bool) { r.noChecks = !on }
+func (r *recorder) CheckForUpdates()            { r.checks++ }
+func (r *recorder) LastUpdateCheck() time.Time {
+	return r.lastCheck
+}
 
 // Post queues fn, as the real shell hands it to the UI thread; drain runs the queue.
 func (r *recorder) Post(fn func()) {
@@ -117,10 +123,13 @@ func (r *recorder) drain(t *testing.T) {
 }
 
 func testConfig() Config {
+	// The app's mark sits beside this package in the repository, as it does beside the binary.
+	icon, _ := os.ReadFile(filepath.Join("..", "resources", "icon.png"))
 	return Config{
 		ConnectCommand: "claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp",
 		DataFolder:     "~/Library/Application Support/withdo",
 		Version:        "0.2.0",
+		AppIcon:        icon,
 	}
 }
 
