@@ -89,7 +89,7 @@ The sync server is in this repository too (`internal/syncserver`, deployed with 
 
 ## Build
 
-Requires Go 1.27.1 or newer (macOS for the app).
+Requires Go 1.27.3 or newer (macOS for the app).
 
 ```sh
 # the app: app/build/darwin-arm64/Withdo.app and a .dmg

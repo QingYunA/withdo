@@ -150,22 +150,20 @@ func TestScreensCategories(t *testing.T) {
 				}
 				return en
 			}
-			manageShot(t, "category-sheet-new"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-sheet-new"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.openNewCategory(0)
 				tt.Frame()
 				tt.Type(typed("Garden", "花园"))
-				return nil
 			})
-			manageShot(t, "category-sheet-search"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-sheet-search"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.openNewCategory(0)
 				tt.Frame()
 				tt.Type(typed("Coffee", "咖啡"))
 				_ = tt.Click(m.say.CategorySearchIcons())
 				tt.Type("cof")
 				_ = tt.Click("coffee")
-				return nil
 			})
-			manageShot(t, "category-editor"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-editor"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.openNewCategory(0)
 				tt.Frame()
 				tt.Type(typed("Coffee", "咖啡"))
@@ -174,27 +172,22 @@ func TestScreensCategories(t *testing.T) {
 				s.icon, s.color, s.picked = cup, "orange", true
 				s.startDraw()
 				s.draw.pen = 'g'
-				return nil
 			})
-			manageShot(t, "category-import"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-import"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				importCoffee(t, tt, m, typed("Coffee", "咖啡"), false)
-				return nil
 			})
-			manageShot(t, "category-import-outline"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-import-outline"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				importCoffee(t, tt, m, typed("Coffee", "咖啡"), true)
-				return nil
 			})
-			manageShot(t, "category-sheet-edit-work"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "category-sheet-edit-work"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				work, _ := app.Category(app.workID())
 				m.openEditCategory(work)
-				return nil
 			})
-			manageShot(t, "task-menu-category"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) *menuSpec {
+			manageShot(t, "task-menu-category"+suffix, app, a.dark, l.tag, func(tt *ui.Tester, m *Main) {
 				m.goTo(nav{screen: screenProject, projectID: 1})
 				tt.Frame()
 				menuAt(tt, "Write the release notes", 120)
 				_ = tt.Click(m.say.PropCategory())
-				return nil
 			})
 		}
 	}
