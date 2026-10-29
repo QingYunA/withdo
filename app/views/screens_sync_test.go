@@ -7,7 +7,7 @@ import (
 	"github.com/QingYunA/adhd-todo/app/data"
 )
 
-// The M11 Sync screens: every state of Settings > Sync and the two sidebar states, in light and
+// The Account screens (M11, v42): every state of Settings > Account and the two sidebar states, in light and
 // dark, English and Chinese (the -zh suffix). Render with
 //
 //	SCREENS_OUT=$PWD/docs/design/screens go test ./app/views -run TestScreensSettingsSync
@@ -18,30 +18,38 @@ func syncScreenStates() []struct {
 	setup func(r *settingsRig)
 } {
 	now := fixedNow()
-	// The signed-out card of a PocketBase server: the email, the code, the password, the reset.
-	email := signedOutCodeSync()
-	email.GoogleAvailable = true
-	googleWaiting := email
+	// The signed-out card of a PocketBase server: Sign in | Sign up, Verify, Forgot password.
+	signIn := signedOutCodeSync()
+	signIn.GoogleAvailable = true
+	email := signIn
+	signInWrong := signIn
+	signInWrong.SignInFailure = data.SignInFailureCredentials
+	signUp := signIn
+	signUp.SignInStep = data.SignInStepSignUp
+	signUpTaken := signUp
+	signUpTaken.SignInFailure = data.SignInFailureEmailTaken
+	googleWaiting := signIn
 	googleWaiting.Phase, googleWaiting.SignInStage = data.SyncSigningIn, data.SignInStageGoogle
-	googleFailed := email
+	googleFailed := signIn
 	googleFailed.SignInFailure = data.SignInFailureGoogleFailed
-	code := email
-	code.SignInStep, code.SignInEmail = data.SignInStepCode, "cyan@example.com"
-	code.ResendAt = now.Add(24 * time.Second)
-	codeChecking := code
-	codeChecking.Phase, codeChecking.SignInStage = data.SyncSigningIn, data.SignInStageChecking
-	codeWrong := code
-	codeWrong.ResendAt = now.Add(-time.Second)
-	codeWrong.SignInFailure = data.SignInFailureWrongCode
-	codeExpired := code
-	codeExpired.SignInFailure = data.SignInFailureCodeExpired
-	tooMany := code
+	verify := signIn
+	verify.SignInStep, verify.SignInEmail = data.SignInStepVerify, "cyan@example.com"
+	verify.ResendAt = now.Add(24 * time.Second)
+	verifyChecking := verify
+	verifyChecking.Phase, verifyChecking.SignInStage = data.SyncSigningIn, data.SignInStageChecking
+	verifyWrong := verify
+	verifyWrong.ResendAt = now.Add(-time.Second)
+	verifyWrong.SignInFailure = data.SignInFailureWrongCode
+	verifyExpired := verify
+	verifyExpired.SignInFailure = data.SignInFailureCodeExpired
+	tooMany := verify
 	tooMany.SignInFailure = data.SignInFailureTooMany
 	tooMany.ResendAt = now.Add(-time.Second)
-	password := code
-	password.SignInStep = data.SignInStepPassword
-	resetSent := code
-	resetSent.SignInStep = data.SignInStepResetSent
+	resetEmail := signIn
+	resetEmail.SignInStep = data.SignInStepResetEmail
+	resetCode := signIn
+	resetCode.SignInStep, resetCode.SignInEmail = data.SignInStepResetCode, "cyan@example.com"
+	resetCode.ResendAt = now.Add(24 * time.Second)
 	both := email
 	both.Phase, both.Linked, both.Account = data.SyncBothHaveTasks, true, "Cyan 云辰"
 	both.Devices = []data.SyncDevice{
@@ -84,17 +92,29 @@ func syncScreenStates() []struct {
 		snap  data.SyncSnapshot
 		setup func(r *settingsRig)
 	}{
-		{"email", email, nil},
-		{"email-filled", email, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
+		{"signin", signIn, nil},
+		{"signin-filled", email, func(r *settingsRig) {
+			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "hunter2hunter2"
+		}},
+		{"signin-wrong", signInWrong, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
+		{"signup", signUp, nil},
+		{"signup-filled", signUp, func(r *settingsRig) {
+			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "correct horse battery"
+		}},
+		{"signup-taken", signUpTaken, func(r *settingsRig) {
+			r.s.syncLogin, r.s.syncPassword = "cyan@example.com", "correct horse battery"
+		}},
 		{"google-waiting", googleWaiting, nil},
 		{"google-failed", googleFailed, nil},
-		{"code", code, func(r *settingsRig) { r.s.syncCode = "48" }},
-		{"code-checking", codeChecking, func(r *settingsRig) { r.s.syncCode, r.s.syncCodeTried = "482913", "482913" }},
-		{"code-wrong", codeWrong, nil},
-		{"code-expired", codeExpired, nil},
-		{"code-too-many", tooMany, nil},
-		{"password", password, nil},
-		{"reset-sent", resetSent, nil},
+		{"verify", verify, func(r *settingsRig) { r.s.syncCode = "48" }},
+		{"verify-checking", verifyChecking, func(r *settingsRig) { r.s.syncCode, r.s.syncCodeTried = "482913", "482913" }},
+		{"verify-wrong", verifyWrong, nil},
+		{"verify-expired", verifyExpired, nil},
+		{"verify-too-many", tooMany, nil},
+		{"reset-email", resetEmail, func(r *settingsRig) { r.s.syncLogin = "cyan@example.com" }},
+		{"reset-code", resetCode, func(r *settingsRig) {
+			r.s.syncCode, r.s.syncCodeTried, r.s.syncPassword = "481207", "481207", "correct horse battery"
+		}},
 		{"both", both, nil},
 		{"uploading", uploading, nil},
 		{"synced", synced, nil},

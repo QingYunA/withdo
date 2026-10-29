@@ -7,119 +7,117 @@ import (
 
 	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 )
 
-// The code step's cells (ui-spec, Settings > Account > Code).
+// The signed-out card (ui-spec, Settings > Account): 340 pt wide, 20 pt of padding, so 300 pt of
+// fields. The code step's cells are 34 x 42 pt, 6 pt apart.
 const (
-	syncCodeLen        = 6
-	syncCodeCellW      = 38
-	syncCodeCellH      = 46
-	syncCodeGap        = 8
-	syncFormWidth      = 280
-	syncCodeDashWidth  = 8
-	syncCodeDashHeight = 2
+	syncCardWidth      float32 = 340
+	syncCardPadX       float32 = 20
+	syncInnerWidth     float32 = syncCardWidth - 2*syncCardPadX
+	syncCodeLen                = 6
+	syncCodeCellW      float32 = 34
+	syncCodeCellH      float32 = 42
+	syncCodeGap        float32 = 6
+	syncCodeDashWidth  float32 = 8
+	syncCodeDashHeight float32 = 2
 )
 
-// syncCodeDigit is a digit of the code: 22 pt mono 600.
-var syncCodeDigit = theme.Style{Size: 22, Line: 28, Weight: 600, Mono: true}
+// syncCodeDigit is a digit of the code: 18 pt mono 600.
+var syncCodeDigit = theme.Style{Size: 18, Line: 24, Weight: 600, Mono: true}
 
-// syncCodeSignInCard is the signed-out card of a PocketBase server: an email, then a 6-digit code
-// mailed to it, with a password as the optional other way.
+// syncLabelText is the 12 pt 500 label above a field, and syncSmall the quiet lines under a card.
+var (
+	syncLabelText = theme.Style{Size: 13, Line: 16, Weight: 500}
+	syncSmall     = theme.Style{Size: 12, Line: 16, Weight: 400}
+	syncTerms     = theme.Style{Size: 11.5, Line: 16, Weight: 400}
+)
+
+// syncLang is the language the code mails are written in: the app's, English or Simplified Chinese.
+func syncLang() string {
+	if strings.HasPrefix(strings.ToLower(i18n.Locale()), "zh") {
+		return "zh-Hans"
+	}
+	return "en"
+}
+
+// syncCodeSignInCard is the signed-out card of a PocketBase server: the Sign in | Sign up tabs, or
+// one of the steps that follow an action (Verify, Forgot password), or the wait for Google.
 func (s *Settings) syncCodeSignInCard(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
-	group(c, t, "sync-hero", func() {
-		ui.Column(c.Key("sync-hero-"+string(snap.SignInStep))).FillWidth().AlignItems(ui.Center).Padding(28, 40, 18).Children(func() {
-			if snap.Phase == data.SyncSigningIn && snap.SignInStage == data.SignInStageGoogle {
+	googleWait := snap.Phase == data.SyncSigningIn && snap.SignInStage == data.SignInStageGoogle
+	// The tabs share one key, so that switching them keeps the keyboard on the switch.
+	key := "tabs"
+	switch {
+	case googleWait:
+		key = "google"
+	case !isTabStep(snap.SignInStep):
+		key = string(snap.SignInStep)
+	}
+	ui.Column(c.Key("sync-auth-"+key)).FillWidth().Shrink(0).AlignItems(ui.Center).Margin(2, 0, 0).Children(func() {
+		s.syncCard(c, t, "card", func() {
+			switch {
+			case googleWait:
 				s.syncGoogleStep(c, t, svc)
-				return
-			}
-			switch snap.SignInStep {
-			case data.SignInStepCode:
-				s.syncCodeStep(c, t, svc, snap)
-			case data.SignInStepPassword:
-				s.syncPasswordStep(c, t, svc, snap)
-			case data.SignInStepResetSent:
-				s.syncResetStep(c, t, svc, snap)
+			case snap.SignInStep == data.SignInStepVerify:
+				s.syncVerifyStep(c, t, svc, snap)
+			case snap.SignInStep == data.SignInStepResetEmail:
+				s.syncResetEmailStep(c, t, svc, snap)
+			case snap.SignInStep == data.SignInStepResetCode:
+				s.syncResetCodeStep(c, t, svc, snap)
 			default:
-				s.syncEmailStep(c, t, svc, snap)
+				s.syncTabs(c, t, svc, snap)
 			}
 		})
+		switch {
+		case googleWait:
+		case snap.SignInStep == data.SignInStepVerify:
+			s.syncNoteCard(c, t, s.say.SettingsSyncVerifyNote())
+		case snap.SignInStep == data.SignInStepSignIn || snap.SignInStep == data.SignInStepSignUp:
+			theme.Paragraph(c, syncSmall, t.TextTertiary, syncLocalNote(s.say), 0).
+				TextAlign(ui.Center).Width(syncCardWidth).Margin(12, 0, 0)
+		}
 	})
 }
 
-// syncHeroHead is the icon and the title every step starts with.
-func (s *Settings) syncHeroHead(c *ui.Context, t *theme.Tokens, icon *ui.SVG, title string) {
-	ui.Icon(c, icon).Size(theme.IconLarge, theme.IconLarge).TextColor(t.Accent)
-	hero := theme.Input
-	hero.Weight = 600
-	theme.Paragraph(c, hero, t.Text, title, 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
+// syncCard is the white 340 pt card the signed-out steps sit in.
+func (s *Settings) syncCard(c *ui.Context, t *theme.Tokens, key string, body func()) {
+	ui.Column(c.Key("sync-"+key)).Width(syncCardWidth).Shrink(0).Padding(16, syncCardPadX, 18).Radius(theme.SettingsRadius).
+		Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(body)
 }
 
-// syncEmailLine is "<lead> <email> · Use a different email": the address in text, the link back to
-// the email step with the address kept.
-func (s *Settings) syncEmailLine(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot, lead string, busy bool) {
-	ui.Row(c.Key("sync-email-line")).Gap(4).AlignItems(ui.Center).Justify(ui.Center).Margin(6, 0, 0).Children(func() {
-		if lead != "" {
-			theme.Text(c, theme.Meta, t.TextSecondary, lead)
-		}
-		theme.Text(c, theme.Meta, t.Text, snap.SignInEmail)
-		theme.Text(c, theme.Meta, t.TextSecondary, "·")
-		link := settingsLink(c, t, "sync-change-email", s.say.SettingsSyncChangeEmail(), s.say.SettingsSyncChangeEmail())
+// syncNoteCard is the quiet card under the verify step.
+func (s *Settings) syncNoteCard(c *ui.Context, t *theme.Tokens, text string) {
+	ui.Column(c.Key("sync-note-card")).Width(syncCardWidth).Shrink(0).Margin(16, 0, 0).Padding(12, 16).Radius(theme.SettingsRadius).
+		Background(t.SettingsGroup()).Border(1, t.Border.Alpha(0.08)).Children(func() {
+		theme.Paragraph(c, syncSmall, t.TextSecondary, text, 0)
+	})
+}
+
+// syncHeroHead is the title every step after the tabs starts with.
+func (s *Settings) syncHeroHead(c *ui.Context, t *theme.Tokens, title string) {
+	hero := theme.Input
+	hero.Weight = 600
+	theme.Paragraph(c, hero, t.Text, title, 0).TextAlign(ui.Center)
+}
+
+// syncChangeEmailLine is the lead line and "Use a different email" under a step's title (the spec puts
+// them on one line with a dot; at 300 pt they do not fit): the link goes to step with the address kept.
+func (s *Settings) syncChangeEmailLine(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot, lead string, step data.SignInStep, busy bool) {
+	if lead != "" {
+		theme.Paragraph(c, theme.Meta, t.TextSecondary, lead, 0).TextAlign(ui.Center).Margin(2, 0, 0)
+	}
+	ui.Row(c.Key("sync-email-line")).Gap(4).AlignItems(ui.Center).Justify(ui.Center).Margin(0, 0, 0).Children(func() {
+		link := syncLink(c, t, theme.Meta, "sync-change-email", s.say.SettingsSyncChangeEmail(), s.say.SettingsSyncChangeEmail())
 		if busy {
 			link.Disabled(true).Opacity(0.45)
 		} else if link.Clicked() {
 			s.syncLogin = snap.SignInEmail
 			s.syncFocusAccount = true
-			svc.SyncSetSignInStep(data.SignInStepEmail)
+			svc.SyncSetSignInStep(step)
 		}
 	})
-}
-
-// syncEmailStep is "Sign in or sign up": one email field and Continue with email.
-func (s *Settings) syncEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
-	busy := snap.Phase == data.SyncSigningIn
-	s.syncHeroHead(c, t, theme.IconUser, s.say.SettingsSyncEmailTitle())
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncEmailBody(), 0).
-		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-	if snap.GoogleAvailable {
-		s.syncGoogleButton(c, t, svc, busy)
-	}
-	ui.Column(c.Key("sync-form")).Width(syncFormWidth).Shrink(0).Margin(16, 0, 0).Children(func() {
-		well := fieldWell(c, t, "sync-email", syncFormWidth, func() {
-			entered, _ := draftField(c, t, s.syncFields, draftSpec{
-				name: "sync-email", label: s.say.SettingsSyncEmail(),
-				placeholder: s.say.SettingsSyncEmailPlaceholder(), focus: s.syncFocusAccount,
-				disabled: busy,
-			}, &s.syncLogin)
-			if entered {
-				s.submitSyncEmail(svc, busy)
-			}
-		})
-		if busy {
-			well.Opacity(0.5)
-		} else if well.FocusWithin() {
-			well.Border(theme.Hairline, t.Accent)
-		}
-	})
-	s.syncFocusAccount = false
-	button := settingsButton(c, t, "sync-continue-email", s.say.SettingsSyncContinueEmail(), true).Width(syncFormWidth).Margin(8, 0, 0)
-	if busy || !looksLikeEmail(s.syncLogin) {
-		button.Disabled(true).Opacity(0.45)
-	}
-	if button.Clicked() {
-		s.submitSyncEmail(svc, busy)
-	}
-	s.syncStatusLine(c, t, snap, busy)
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, syncLocalNote(s.say), 0).
-		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(8, 0, 0)
-}
-
-// submitSyncEmail asks for a code for the typed address.
-func (s *Settings) submitSyncEmail(svc SyncService, busy bool) {
-	if busy || !looksLikeEmail(s.syncLogin) {
-		return
-	}
-	svc.SyncRequestCode(strings.TrimSpace(s.syncLogin))
 }
 
 // looksLikeEmail is the button's rule: something, an @, something with no space in it. The server
@@ -130,16 +128,24 @@ func looksLikeEmail(raw string) bool {
 	return at > 0 && at < len(email)-1 && !strings.ContainsAny(email, " \t")
 }
 
-// syncStatusLine is what sits under the button or the cells: the busy indicator while the
-// server works, else the failure in status.blocked.
-func (s *Settings) syncStatusLine(c *ui.Context, t *theme.Tokens, snap data.SyncSnapshot, busy bool) {
-	switch {
-	case busy:
+// syncStatusLine is what sits under the button or the cells: the busy indicator while the server
+// works, else the failure in status.blocked, unless it is one of skip (a step words those at the
+// field they belong to).
+func (s *Settings) syncStatusLine(c *ui.Context, t *theme.Tokens, snap data.SyncSnapshot, busy bool, skip ...data.SignInFailure) {
+	if busy {
 		s.syncBusyLine(c, t, snap)
-	case snap.SignInFailure != data.SignInFailureNone:
-		theme.Paragraph(c, theme.Meta, t.Blocked(), s.syncCodeFailureText(snap.SignInFailure), 0).
-			TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(10, 0, 0)
+		return
 	}
+	failure := snap.SignInFailure
+	if failure == data.SignInFailureNone {
+		return
+	}
+	for _, other := range skip {
+		if failure == other {
+			return
+		}
+	}
+	theme.Paragraph(c, syncSmall, t.Blocked(), s.syncCodeFailureText(failure), 0).Margin(6, 2, 0)
 }
 
 // syncBusyLine is the pixel busy indicator with what the server is doing.
@@ -148,10 +154,12 @@ func (s *Settings) syncBusyLine(c *ui.Context, t *theme.Tokens, snap data.SyncSn
 	switch snap.SignInStage {
 	case data.SignInStageSending:
 		text = s.say.SettingsSyncSendingCode()
+	case data.SignInStageCreating:
+		text = s.say.SettingsSyncCreatingAccount()
 	case data.SignInStageDownloading:
 		text = s.say.SettingsSyncDownloadingTasks()
 	case data.SignInStageChecking, data.SignInStageNone:
-		if snap.SignInStep == data.SignInStepCode {
+		if snap.SignInStep == data.SignInStepVerify || snap.SignInStep == data.SignInStepResetCode {
 			text = s.say.SettingsSyncCheckingCode()
 		}
 	}
@@ -165,7 +173,7 @@ func (s *Settings) syncBusyLine(c *ui.Context, t *theme.Tokens, snap data.SyncSn
 	})
 }
 
-// syncCodeFailureText words a failure of the code flow or of the password step.
+// syncCodeFailureText words a failure of the sign-in card.
 func (s *Settings) syncCodeFailureText(failure data.SignInFailure) string {
 	switch failure {
 	case data.SignInFailureWrongCode:
@@ -176,6 +184,12 @@ func (s *Settings) syncCodeFailureText(failure data.SignInFailure) string {
 		return s.say.SettingsSyncTooManyTriesMinute()
 	case data.SignInFailureCredentials:
 		return s.say.SettingsSyncWrongEmailPassword()
+	case data.SignInFailureEmailTaken:
+		return s.say.SettingsSyncEmailTaken()
+	case data.SignInFailureInvalidEmail:
+		return s.say.SettingsSyncInvalidEmail()
+	case data.SignInFailureWeakPassword:
+		return s.say.SettingsSyncPasswordMin()
 	case data.SignInFailureGoogleCancelled:
 		return s.say.SettingsSyncGoogleCancelled()
 	case data.SignInFailureGoogleFailed:
@@ -184,11 +198,14 @@ func (s *Settings) syncCodeFailureText(failure data.SignInFailure) string {
 	return s.syncSignInFailureText(failure)
 }
 
-// syncCodeStep is "Check your email": six cells over one real text input.
-func (s *Settings) syncCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+// syncVerifyStep is "Verify your email": six cells over one real text input, the address, and the
+// way back to Sign up.
+func (s *Settings) syncVerifyStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	busy := snap.Phase == data.SyncSigningIn
-	s.syncHeroHead(c, t, theme.IconMail, s.say.SettingsSyncCodeTitle())
-	s.syncEmailLine(c, t, svc, snap, s.say.SettingsSyncCodeSentTo(), busy)
+	s.syncHeroHead(c, t, s.say.SettingsSyncVerifyTitle())
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncVerifySent(snap.SignInEmail), 0).
+		TextAlign(ui.Center).Margin(4, 0, 0)
+	s.syncChangeEmailLine(c, t, svc, snap, s.say.SettingsSyncVerifyAuto(), data.SignInStepSignUp, busy)
 
 	s.syncCode = digitsOnly(s.syncCode, syncCodeLen)
 	if len(s.syncCode) == syncCodeLen && s.syncCode != s.syncCodeTried && !busy {
@@ -197,26 +214,35 @@ func (s *Settings) syncCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService,
 	}
 	s.syncCodeCells(c, t, busy)
 	s.syncFocusCode = false
+	s.syncCodeFooter(c, t, svc, snap, busy)
+}
 
+// syncCodeFooter is what sits under the cells: the busy line or the failure, and the resend
+// countdown and link.
+func (s *Settings) syncCodeFooter(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot, busy bool) {
 	if busy {
 		s.syncBusyLine(c, t, snap)
 		return
 	}
-	if snap.SignInFailure != data.SignInFailureNone {
+	failed := snap.SignInFailure != data.SignInFailureNone
+	if failed {
 		theme.Paragraph(c, theme.Meta, t.Blocked(), s.syncCodeFailureText(snap.SignInFailure), 0).
-			TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(10, 0, 0)
+			TextAlign(ui.Center).Margin(10, 0, 0)
 	}
 	left := snap.ResendAt.Sub(s.app.Now())
-	if left > 0 {
+	switch {
+	case left > 0:
 		c.After(time.Second)
-		if snap.SignInFailure == data.SignInFailureNone {
-			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResendIn(countdown(left))).Margin(10, 0, 0)
+		if !failed {
+			theme.Paragraph(c, syncSmall, t.TextTertiary, s.say.SettingsSyncResendIn(countdown(left)), 0).
+				TextAlign(ui.Center).Margin(10, 0, 0)
 		}
-	} else if settingsLink(c, t, "sync-resend", s.say.SettingsSyncResendCode(), s.say.SettingsSyncResendCode()).Margin(8, 0, 0).Clicked() {
-		svc.SyncResendCode()
-	}
-	if settingsLink(c, t, "sync-use-password", s.say.SettingsSyncUsePassword(), s.say.SettingsSyncUsePassword()).Margin(4, 0, 0).Clicked() {
-		svc.SyncSetSignInStep(data.SignInStepPassword)
+	default:
+		ui.Row(c.Key("sync-resend-row")).Justify(ui.Center).Margin(6, 0, 0).Children(func() {
+			if syncLink(c, t, theme.Meta, "sync-resend", s.say.SettingsSyncResendCode(), s.say.SettingsSyncResendCode()).Clicked() {
+				svc.SyncResendCode()
+			}
+		})
 	}
 }
 
@@ -224,7 +250,7 @@ func (s *Settings) syncCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService,
 // takes the typing, a paste and an input method's text. The first empty cell has the focus ring.
 func (s *Settings) syncCodeCells(c *ui.Context, t *theme.Tokens, busy bool) {
 	digits := []rune(s.syncCode)
-	ui.Row(c.Key("sync-code-cells")).Gap(syncCodeGap).Margin(16, 0, 0).Shrink(0).AlignItems(ui.Center).Children(func() {
+	ui.Row(c.Key("sync-code-cells")).Gap(syncCodeGap).Margin(14, 0, 4).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 		for i := 0; i < syncCodeLen; i++ {
 			if i == 3 {
 				ui.Box(c.Key("sync-code-dash")).Size(syncCodeDashWidth, syncCodeDashHeight).Shrink(0).Background(t.TextTertiary)
@@ -281,141 +307,120 @@ func countdown(left time.Duration) string {
 	return itoa(m) + ":" + string(rune('0'+sec/10)) + string(rune('0'+sec%10))
 }
 
-// syncPasswordStep is "Sign in with a password".
-func (s *Settings) syncPasswordStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+// syncResetEmailStep is Forgot password's first step: the email (kept from Sign in) and Send code.
+func (s *Settings) syncResetEmailStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
 	busy := snap.Phase == data.SyncSigningIn
-	s.syncHeroHead(c, t, theme.IconUser, s.say.SettingsSyncPasswordTitle())
-	s.syncEmailLine(c, t, svc, snap, "", busy)
-	submit := func() {
-		if busy || s.syncPassword == "" {
-			return
+	s.syncHeroHead(c, t, s.say.SettingsSyncResetTitle())
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResetEmailBody(), 0).TextAlign(ui.Center).Margin(4, 0, 4)
+	send := func() {
+		if !busy && looksLikeEmail(s.syncLogin) {
+			svc.SyncRequestResetCode(strings.TrimSpace(s.syncLogin))
 		}
-		svc.SyncSignIn(snap.SignInEmail, s.syncPassword)
 	}
-	ui.Column(c.Key("sync-form")).Width(syncFormWidth).Shrink(0).Margin(16, 0, 0).Children(func() {
-		well := fieldWell(c, t, "sync-password", syncFormWidth, func() {
-			entered, _ := draftField(c, t, s.syncFields, draftSpec{
-				name: "sync-password", label: s.say.SettingsSyncPassword(),
-				placeholder: s.say.SettingsSyncPassword(), secret: true,
-				focus: true, focusNow: s.syncFocusPassword, disabled: busy,
-			}, &s.syncPassword)
-			if entered {
-				submit()
-			}
-		})
-		if busy {
-			well.Opacity(0.5)
-		} else if well.FocusWithin() {
-			well.Border(theme.Hairline, t.Accent)
+	s.syncEmailField(c, t, busy, false, send)
+	button := settingsButton(c, t, "sync-send-code", s.say.SettingsSyncSendCode(), true).FillWidth().Height(32).Margin(14, 0, 0)
+	if busy || !looksLikeEmail(s.syncLogin) {
+		button.Disabled(true).Opacity(0.45)
+	}
+	if button.Clicked() {
+		send()
+	}
+	s.syncStatusLine(c, t, snap, busy)
+	s.syncBackToSignIn(c, t, svc, busy)
+}
+
+// syncResetCodeStep is Forgot password's second step: the six cells, the new password with its
+// bar, and Set and sign in.
+func (s *Settings) syncResetCodeStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
+	busy := snap.Phase == data.SyncSigningIn
+	s.syncHeroHead(c, t, s.say.SettingsSyncResetTitle())
+	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResetSent(snap.SignInEmail), 0).
+		TextAlign(ui.Center).Margin(4, 0, 0)
+	s.syncChangeEmailLine(c, t, svc, snap, "", data.SignInStepResetEmail, busy)
+	s.syncCode = digitsOnly(s.syncCode, syncCodeLen)
+	if len(s.syncCode) == syncCodeLen && s.syncCode != s.syncCodeTried {
+		s.syncCodeTried = s.syncCode
+		s.syncFocusPassword = true // the sixth digit moves on to the new password
+	}
+	s.syncCodeCells(c, t, busy)
+	s.syncFocusCode = false
+
+	ready := func() bool { return len(s.syncCode) == syncCodeLen && passwordLongEnough(s.syncPassword) }
+	submit := func() {
+		if !busy && ready() {
+			svc.SyncResetPassword(s.syncCode, s.syncPassword)
 		}
+	}
+	ui.Column(c.Key("sync-pass-block")).Shrink(0).Children(func() {
+		s.syncLabel(c, t, s.say.SettingsSyncNewPassword())
+		s.syncPasswordWell(c, t, "sync-password", s.say.SettingsSyncNewPassword(), busy,
+			snap.SignInFailure == data.SignInFailureWeakPassword, submit)
+		s.syncStrengthBar(c, t)
+		s.syncPasswordHint(c, t, snap)
 	})
-	s.syncFocusPassword = false
-	button := settingsButton(c, t, "sync-signin", s.say.SettingsSyncSignInShort(), true).Width(syncFormWidth).Margin(8, 0, 0)
-	if busy || s.syncPassword == "" {
+	button := settingsButton(c, t, "sync-reset-done", s.say.SettingsSyncResetDone(), true).FillWidth().Height(32).Margin(14, 0, 0)
+	if busy || !ready() {
 		button.Disabled(true).Opacity(0.45)
 	}
 	if button.Clicked() {
 		submit()
 	}
-	s.syncStatusLine(c, t, snap, busy)
 	if busy {
-		return
-	}
-	ui.Row(c.Key("sync-password-links")).Gap(4).AlignItems(ui.Center).Margin(8, 0, 0).Children(func() {
-		if settingsLink(c, t, "sync-forgot", s.say.SettingsSyncForgotPassword(), s.say.SettingsSyncForgotPassword()).Clicked() {
-			svc.SyncRequestPasswordReset(snap.SignInEmail)
+		s.syncBusyLine(c, t, snap)
+	} else {
+		s.syncStatusLine(c, t, snap, false, data.SignInFailureWeakPassword)
+		left := snap.ResendAt.Sub(s.app.Now())
+		if left > 0 {
+			c.After(time.Second)
+		} else if snap.SignInFailure != data.SignInFailureNone || len(s.syncCode) < syncCodeLen {
+			ui.Row(c.Key("sync-resend-row")).Justify(ui.Center).Margin(6, 0, 0).Children(func() {
+				if syncLink(c, t, theme.Meta, "sync-resend", s.say.SettingsSyncResendCode(), s.say.SettingsSyncResendCode()).Clicked() {
+					svc.SyncResendCode()
+				}
+			})
 		}
-		theme.Text(c, theme.Meta, t.TextSecondary, "·")
-		if settingsLink(c, t, "sync-use-code", s.say.SettingsSyncUseCode(), s.say.SettingsSyncUseCode()).Clicked() {
-			svc.SyncRequestCode(snap.SignInEmail)
+	}
+	s.syncBackToSignIn(c, t, svc, busy)
+}
+
+// syncBackToSignIn is the quiet link under both reset steps.
+func (s *Settings) syncBackToSignIn(c *ui.Context, t *theme.Tokens, svc SyncService, busy bool) {
+	ui.Row(c.Key("sync-back-row")).Justify(ui.Center).Margin(10, 0, 0).Children(func() {
+		link := syncLink(c, t, theme.Meta, "sync-back", s.say.SettingsSyncBackToSignIn(), s.say.SettingsSyncBackToSignIn())
+		if busy {
+			link.Disabled(true).Opacity(0.45)
+		} else if link.Clicked() {
+			svc.SyncSetSignInStep(data.SignInStepSignIn)
 		}
 	})
 }
 
-// syncResetStep is the envelope after a reset link was mailed.
-func (s *Settings) syncResetStep(c *ui.Context, t *theme.Tokens, svc SyncService, snap data.SyncSnapshot) {
-	s.syncHeroHead(c, t, theme.IconMail, s.say.SettingsSyncResetTitle())
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResetBody(snap.SignInEmail), 0).
-		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-	if settingsButton(c, t, "sync-back", s.say.SettingsSyncBackToSignIn(), false).Margin(14, 0, 0).Clicked() {
-		svc.SyncSetSignInStep(data.SignInStepPassword)
-	}
-	ui.Row(c.Key("sync-reset-or")).AlignItems(ui.Center).Margin(10, 0, 0).Children(func() {
-		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResetOrPrefix())
-		if settingsLink(c, t, "sync-use-code", s.say.SettingsSyncUseCode(), s.say.SettingsSyncUseCode()).Clicked() {
-			svc.SyncRequestCode(snap.SignInEmail)
-		}
-		theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncResetOrSuffix())
-	})
+// isTabStep says whether step is one of the card's two tabs.
+func isTabStep(step data.SignInStep) bool {
+	return step == data.SignInStepSignIn || step == data.SignInStepSignUp
 }
 
-// syncNoteStepChange resets what a step keeps when the card moves to another one: the code is
-// emptied and focused on arriving at the code step, the password likewise.
+// syncNoteStepChange resets what a step keeps when the card moves to another one: the code and the
+// password are emptied, and the keyboard goes where the step's work starts.
 func (s *Settings) syncNoteStepChange(snap data.SyncSnapshot) {
 	if snap.SignInStep == s.syncPrevStep {
 		return
 	}
+	between := isTabStep(s.syncPrevStep) && isTabStep(snap.SignInStep)
 	s.syncPrevStep = snap.SignInStep
 	s.syncCode, s.syncCodeTried, s.syncFocusCode = "", "", true
-	s.syncPassword = ""
-	s.syncFocusPassword = snap.SignInStep == data.SignInStepPassword
-	if snap.SignInStep == data.SignInStepEmail {
-		s.syncFocusAccount = true
+	s.syncPassword, s.syncShowPassword = "", false
+	if between {
+		return // the switch keeps the keyboard, so Left and Right go on working
 	}
-}
-
-// syncGoogleLabel is the 13 pt 500 text of the Google button.
-var syncGoogleLabel = theme.Style{Size: 13, Line: 18, Weight: 500}
-
-// syncOrText is the 12 pt "or" between the hairlines.
-var syncOrText = theme.Style{Size: 12, Line: 16, Weight: 400}
-
-// The Google button and the waiting card (ui-spec, Settings > Account > Google).
-const (
-	syncGoogleMark    float32 = 14
-	syncGoogleMarkBig float32 = 36
-	syncGoogleButtonH float32 = 30
-)
-
-// syncGoogleButton is "Continue with Google": a 280 pt outlined button with Google's G, and under
-// it the "or" rule that leads to the email field. The browser is opened through the shell's own
-// OpenURL.
-func (s *Settings) syncGoogleButton(c *ui.Context, t *theme.Tokens, svc SyncService, busy bool) {
-	text := s.say.SettingsSyncContinueGoogle()
-	btn := ui.ButtonBase(c.Key("sync-google")).Width(syncFormWidth).Height(syncGoogleButtonH).Shrink(0).Margin(16, 0, 0).
-		Radius(7).Label(text).Cursor(ui.CursorPointer).Center().
-		Background(t.SettingsGroup()).Border(theme.Hairline, t.Border) // the hairline reads on the white card
-	if btn.Hovered() {
-		btn.Background(t.SettingsGroup().Mix(t.Text, 0.06))
-	}
-	btn.Children(func() {
-		ui.Row(c.Key("sync-google-row")).Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Image(c, theme.IconGoogle).Size(syncGoogleMark, syncGoogleMark).Shrink(0)
-			theme.Text(c, syncGoogleLabel, t.Text, text)
-		})
-	})
-	if busy {
-		btn.Disabled(true).Opacity(0.45)
-	} else if btn.Clicked() {
-		svc.SyncSignInWithGoogle(s.app.Act.OpenURL)
-	}
-	ui.Row(c.Key("sync-or")).Width(syncFormWidth).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(12, 0, 0).Children(func() {
-		ui.Box(c.Key("sync-or-left")).Grow(1).Height(theme.Hairline).Background(t.Border)
-		theme.Text(c, syncOrText, t.TextSecondary, s.say.SettingsSyncOr())
-		ui.Box(c.Key("sync-or-right")).Grow(1).Height(theme.Hairline).Background(t.Border)
-	})
-}
-
-// syncGoogleStep is the card while the browser shows Google's consent page: the G, "Finish in your
-// browser", the line that the window picks the answer up by itself, and Cancel.
-func (s *Settings) syncGoogleStep(c *ui.Context, t *theme.Tokens, svc SyncService) {
-	ui.Image(c, theme.IconGoogle).Size(syncGoogleMarkBig, syncGoogleMarkBig).Shrink(0)
-	hero := theme.Input
-	hero.Weight = 600
-	theme.Paragraph(c, hero, t.Text, s.say.SettingsSyncGoogleTitle(), 0).TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(12, 0, 0)
-	theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncGoogleBody(), 0).
-		TextAlign(ui.Center).MaxWidth(syncHeroMaxBody).Margin(6, 0, 0)
-	if settingsButton(c, t, "sync-google-cancel", s.say.SettingsSyncCancel(), false).Margin(16, 0, 0).Clicked() {
-		svc.SyncCancel()
+	switch snap.SignInStep {
+	case data.SignInStepSignIn, data.SignInStepSignUp:
+		// The email is kept across the tabs: with one in the field the keyboard goes on to the password.
+		s.syncFocusAccount = strings.TrimSpace(s.syncLogin) == ""
+		s.syncFocusPassword = !s.syncFocusAccount
+	case data.SignInStepResetEmail:
+		s.syncFocusAccount, s.syncFocusPassword = true, false
+	default:
+		s.syncFocusPassword = false
 	}
 }

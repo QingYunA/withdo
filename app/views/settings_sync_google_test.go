@@ -12,9 +12,9 @@ func googleSync() data.SyncSnapshot {
 	return snap
 }
 
-func TestSyncEmailStepOffersGoogleAboveTheEmailField(t *testing.T) {
+func TestSyncCardOffersGoogleAboveTheEmailField(t *testing.T) {
 	r, fs := syncPane(t, googleSync())
-	has(t, r.tt, "Continue with Google", "or", "Continue with email")
+	has(t, r.tt, "Continue with Google", "or use your email", "Email", "Password")
 	if err := r.tt.Click("Continue with Google"); err != nil {
 		t.Fatal(err)
 	}
@@ -28,10 +28,10 @@ func TestSyncEmailStepOffersGoogleAboveTheEmailField(t *testing.T) {
 	}
 }
 
-func TestSyncEmailStepHasNoGoogleButtonWithoutAProvider(t *testing.T) {
+func TestSyncCardHasNoGoogleButtonWithoutAProvider(t *testing.T) {
 	r, _ := syncPane(t, signedOutCodeSync())
-	hasNot(t, r.tt, "Continue with Google")
-	has(t, r.tt, "Continue with email")
+	hasNot(t, r.tt, "Continue with Google", "or use your email")
+	has(t, r.tt, "Email", "Password")
 }
 
 func TestSyncGoogleWaitingCardCancels(t *testing.T) {
@@ -40,7 +40,7 @@ func TestSyncGoogleWaitingCardCancels(t *testing.T) {
 	r, fs := syncPane(t, snap)
 	has(t, r.tt, "Finish in your browser",
 		"Choose your Google account there; this window picks it up by itself.", "Cancel")
-	hasNot(t, r.tt, "Continue with email", "Continue with Google")
+	hasNot(t, r.tt, "Email", "Continue with Google")
 	if err := r.tt.Click("Cancel"); err != nil {
 		t.Fatal(err)
 	}

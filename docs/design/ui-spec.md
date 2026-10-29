@@ -2483,8 +2483,11 @@ this order: Account, General, Agents, Advanced.
     `status.blocked`: `This email already has an account. Sign in` (`这个邮箱已经注册过了。去登录`),
     the link picking *Sign in* with the email kept.
   - *Verify*: creating the account mails a 6-digit code at once. `Verify your email` (`验证你的邮箱`),
-    `We sent a 6-digit code to <email>` and `It checks itself once complete · Use a different email`
-    (`我们给 <邮箱> 发了 6 位验证码` / `输完自动验证 · 换一个邮箱`, the link back to *Sign up*). Six
+    `We sent a 6-digit code to <email>`, `It checks itself once complete` and under it the link
+    `Use a different email` (`我们给 <邮箱> 发了 6 位验证码` / `输完自动验证` / `换一个邮箱`, the link back
+    to *Sign up*; the three lines do not fit one 300 pt line, so the dot of v42 is gone). Under the
+    card a quiet card says an account cannot sign in before it is verified and that signing in
+    again lands back here. Six
     34 x 42 pt cells, 6 pt apart, a short `text.tertiary` dash after the third, digits in 18 pt 600;
     the first empty cell has the focus ring of the `fieldWell`. Typing a digit moves on, Backspace
     goes back, `⌘V` of a code fills all six, and the sixth digit sends it (no button). Under them

@@ -25,12 +25,14 @@ type SyncService interface {
 	SyncRetry()
 	SyncSetServer(server string) error
 	SyncRefreshDevices()
-	// The emailed code flow of a PocketBase server (M13 P2).
+	// The sign-up of a PocketBase server (v42): an account with a password, its email verified with a
+	// code, and Forgot password with a code. lang is "en" or "zh-Hans", the language of the mails.
 	SyncCheckServer()
-	SyncRequestCode(email string)
-	SyncResendCode()
+	SyncSignUp(email, password, lang string)
 	SyncSignInWithCode(code string)
-	SyncRequestPasswordReset(email string)
+	SyncRequestResetCode(email string)
+	SyncResetPassword(code, password string)
+	SyncResendCode()
 	SyncSetSignInStep(step data.SignInStep)
 	// SyncSignInWithGoogle starts "Continue with Google" (M13 P3): open is handed Google's URL to
 	// show in the system browser. SyncCancel drops the wait.

@@ -147,6 +147,40 @@ signed in with Zitadel is signed out and signs in again through PocketBase.
   new `nginx-adhd-todo.conf` (no `auth.todo.sri-ai.xyz` block), delete the `auth.todo` DNS record, and
   shrink the certificate to `todo.sri-ai.xyz`.
 
+## v42 (2026-10-29): sign up with a password
+
+The email-and-code path (an account made by the first code request) is replaced by two ways in:
+Sign in and Sign up, as Todoist and TickTick do it (`docs/design/mockups/v42.html`). Server side:
+
+- Migration `1790000500_adhd_users_signup.go`: the users create rule is `@request.context = "oauth2"
+  || (@request.body.id:isset = false && @request.body.verified:isset = false &&
+  @request.body.tokenKey:isset = false)`, so anyone may `POST /api/collections/users/records` with an
+  email and a password (at least 8 characters, the password field's `min`), and no client sets
+  `verified` (PocketBase's record form refuses it too: a `verified: true` body is a 400). A new
+  optional text field `lang` (`en` or `zh-Hans`) keeps the app language. Rate limits `users:create`
+  5 a minute and `/api/withdo/reset-password` 10 a minute, beside the existing ones.
+- `createUserOnCodeRequest` is gone: `request-otp` for an email with no account is PocketBase's own
+  answer (a random `otpId`, no mail). A hook only looks the email up in lower case, which is how
+  accounts are stored (a create lower-cases it and names the user after the part before the `@`).
+- Unverified users get no token from `auth-with-password`: the right password answers 403 with
+  `data.email.code = "email_not_verified"` (a wrong one is the usual 400), and the client then asks
+  for a code (`request-otp`) and shows Verify. `auth-with-otp` works for them and verifies the
+  account; PocketBase would also replace the password with a random one at that moment
+  (pre-hijack protection for the code-only sign-up), which a hook skips because the user chose a
+  password. The reset route below replaces a password an impostor chose.
+- `POST /api/withdo/reset-password` `{otpId, code, password, passwordConfirm}`: checks the OTP like
+  `auth-with-otp` (it exists, belongs to users, is not expired, matches, was mailed to the account's
+  own email; five tries in three minutes per user), sets the password, verifies the email, deletes
+  the user's OTPs and answers with a token and the record. A short password is a 400 with
+  `data.password.code = "validation_min_text_constraint"` (checked first, it says nothing about the
+  account); everything else wrong, and an `otpId` of an email with no account, is the same 400
+  "Invalid or expired OTP".
+- The code mail follows `lang` (`OnMailerRecordOTPSend`): English is the collection's template,
+  `zh-Hans` is `{OTP} 是你的 Withdo 验证码`. A Google account has no `lang` and gets English.
+- Old accounts made by the code path have a password nobody knows; they use Forgot password.
+- Deploy: the new migration runs at start; nothing to configure. The site needs a `terms.html` the
+  Sign up card links to.
+
 ## Owner's to-dos
 
 - P1: nothing beyond approving the deploy.

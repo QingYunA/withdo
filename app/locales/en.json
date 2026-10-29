@@ -4191,7 +4191,7 @@
   "@settingsSyncUnavailable": {
     "description": "Shown in Settings > Sync when the app has no sync service."
   },
-  "settingsSyncEmail": "Email or username",
+  "settingsSyncEmail": "Email",
   "@settingsSyncEmail": {
     "description": "The account field of the signed-out Sync pane."
   },
@@ -4601,29 +4601,13 @@
       }
     }
   },
-  "settingsSyncEmailTitle": "Sign in or sign up",
-  "@settingsSyncEmailTitle": {
-    "description": "Title of the signed-out card's email step."
-  },
-  "settingsSyncEmailBody": "Your tasks, projects and agents' reports sync to your phone and other computers. A new email gets an account here.",
-  "@settingsSyncEmailBody": {
-    "description": "The email step's explanation."
-  },
   "settingsSyncEmailPlaceholder": "you@example.com",
   "@settingsSyncEmailPlaceholder": {
     "description": "Placeholder of the email field."
   },
-  "settingsSyncContinueEmail": "Continue with email",
-  "@settingsSyncContinueEmail": {
-    "description": "The accent button of the email step."
-  },
   "settingsSyncContinueGoogle": "Continue with Google",
   "@settingsSyncContinueGoogle": {
     "description": "The outlined button above the email field; it opens the browser on Google's consent page."
-  },
-  "settingsSyncOr": "or",
-  "@settingsSyncOr": {
-    "description": "The word between the two hairlines under the Google button."
   },
   "settingsSyncGoogleTitle": "Finish in your browser",
   "@settingsSyncGoogleTitle": {
@@ -4649,14 +4633,6 @@
   "@settingsSyncLocalNoteWindows": {
     "description": "Note under the email step's button, worded for Windows."
   },
-  "settingsSyncCodeTitle": "Check your email",
-  "@settingsSyncCodeTitle": {
-    "description": "Title of the code step."
-  },
-  "settingsSyncCodeSentTo": "We sent a 6-digit code to",
-  "@settingsSyncCodeSentTo": {
-    "description": "Before the email address on the code step; the address and the change-email link follow."
-  },
   "settingsSyncChangeEmail": "Use a different email",
   "@settingsSyncChangeEmail": {
     "description": "Link back to the email step with the address kept."
@@ -4679,47 +4655,17 @@
   "@settingsSyncResendCode": {
     "description": "Link that mails a new code."
   },
-  "settingsSyncUsePassword": "Use a password instead",
-  "@settingsSyncUsePassword": {
-    "description": "Link from the code step to the password step."
-  },
-  "settingsSyncPasswordTitle": "Sign in with a password",
-  "@settingsSyncPasswordTitle": {
-    "description": "Title of the password step."
-  },
-  "settingsSyncForgotPassword": "Forgot password",
+  "settingsSyncForgotPassword": "Forgot password?",
   "@settingsSyncForgotPassword": {
-    "description": "Link that mails a password reset link."
+    "description": "Link at the right of the password label; it opens the reset steps."
   },
-  "settingsSyncUseCode": "Use a code instead",
-  "@settingsSyncUseCode": {
-    "description": "Link from the password step back to the code."
-  },
-  "settingsSyncResetTitle": "Reset your password from your email",
+  "settingsSyncResetTitle": "Reset your password",
   "@settingsSyncResetTitle": {
-    "description": "Title after a reset link was mailed."
-  },
-  "settingsSyncResetBody": "We sent a link to {email}. Set a new password in the browser, then come back",
-  "@settingsSyncResetBody": {
-    "description": "Body after a reset link was mailed.",
-    "placeholders": {
-      "email": {
-        "type": "String",
-        "example": "cyan@example.com"
-      }
-    }
+    "description": "Title of both reset steps."
   },
   "settingsSyncBackToSignIn": "Back to sign in",
   "@settingsSyncBackToSignIn": {
     "description": "Button after a reset link was mailed."
-  },
-  "settingsSyncResetOrPrefix": "Or ",
-  "@settingsSyncResetOrPrefix": {
-    "description": "Before the use-a-code link under the reset button."
-  },
-  "settingsSyncResetOrSuffix": "; no password needed.",
-  "@settingsSyncResetOrSuffix": {
-    "description": "After the use-a-code link under the reset button."
   },
   "settingsSyncCheckingCode": "Checking the code…",
   "@settingsSyncCheckingCode": {
@@ -4748,6 +4694,118 @@
   "settingsSyncSignInShort": "Sign in",
   "@settingsSyncSignInShort": {
     "description": "The password step's sign-in button."
+  },
+  "settingsSyncSignUpShort": "Sign up",
+  "@settingsSyncSignUpShort": {
+    "description": "The Sign up tab of the signed-out card, and the link under the Sign in form."
+  },
+  "settingsSyncTabs": "Sign in or sign up",
+  "@settingsSyncTabs": {
+    "description": "Accessible name of the Sign in | Sign up switch."
+  },
+  "settingsSyncOrEmail": "or use your email",
+  "@settingsSyncOrEmail": {
+    "description": "The rule between the Google button and the email fields."
+  },
+  "settingsSyncShowPassword": "Show",
+  "@settingsSyncShowPassword": {
+    "description": "Quiet text at the right end of a password field; it shows the characters."
+  },
+  "settingsSyncHidePassword": "Hide",
+  "@settingsSyncHidePassword": {
+    "description": "The same text while the characters are shown; it hides them again."
+  },
+  "settingsSyncNoAccount": "Don't have an account?",
+  "@settingsSyncNoAccount": {
+    "description": "Under the Sign in button, before the Sign up link."
+  },
+  "settingsSyncCreateAccount": "Create account",
+  "@settingsSyncCreateAccount": {
+    "description": "The accent button of the Sign up tab."
+  },
+  "settingsSyncPasswordMin": "At least 8 characters.",
+  "@settingsSyncPasswordMin": {
+    "description": "Hint under a new password's strength bar; also the line when the server refuses a short password."
+  },
+  "settingsSyncTermsLead": "By creating an account you agree to the",
+  "@settingsSyncTermsLead": {
+    "description": "First part of the line under Create account, before the two links."
+  },
+  "settingsSyncTermsOfService": "Terms of Service",
+  "@settingsSyncTermsOfService": {
+    "description": "Link to the terms on the website."
+  },
+  "settingsSyncTermsAnd": "and",
+  "@settingsSyncTermsAnd": {
+    "description": "Between the two links of the terms line."
+  },
+  "settingsSyncPrivacyPolicy": "Privacy Policy",
+  "@settingsSyncPrivacyPolicy": {
+    "description": "Link to the privacy policy on the website."
+  },
+  "settingsSyncEmailTaken": "This email already has an account.",
+  "@settingsSyncEmailTaken": {
+    "description": "Under the email field of Sign up when the email already has an account; the Sign in link follows."
+  },
+  "settingsSyncGoSignIn": "Sign in",
+  "@settingsSyncGoSignIn": {
+    "description": "The link after the taken-email line; it switches to the Sign in tab with the email kept."
+  },
+  "settingsSyncInvalidEmail": "That doesn't look like an email",
+  "@settingsSyncInvalidEmail": {
+    "description": "Failure line for a malformed email."
+  },
+  "settingsSyncCreatingAccount": "Creating your account…",
+  "@settingsSyncCreatingAccount": {
+    "description": "Busy line while a sign-up runs."
+  },
+  "settingsSyncVerifyTitle": "Verify your email",
+  "@settingsSyncVerifyTitle": {
+    "description": "Title of the verify step."
+  },
+  "settingsSyncVerifySent": "We sent a 6-digit code to {email}",
+  "@settingsSyncVerifySent": {
+    "description": "Line under the verify title.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "cyan@example.com"
+      }
+    }
+  },
+  "settingsSyncVerifyAuto": "It checks itself once complete",
+  "@settingsSyncVerifyAuto": {
+    "description": "Before the Use a different email link on the verify step."
+  },
+  "settingsSyncVerifyNote": "An account can't sign in until its email is verified. If you close this window, sign in with your email and password and you will land back here.",
+  "@settingsSyncVerifyNote": {
+    "description": "Quiet note under the verify card."
+  },
+  "settingsSyncResetEmailBody": "We'll email you a 6-digit code.",
+  "@settingsSyncResetEmailBody": {
+    "description": "Line under the title of Forgot password's email step."
+  },
+  "settingsSyncSendCode": "Send code",
+  "@settingsSyncSendCode": {
+    "description": "The accent button of Forgot password's email step."
+  },
+  "settingsSyncResetSent": "The code went to {email}",
+  "@settingsSyncResetSent": {
+    "description": "Line under the title of Forgot password's code step.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "cyan@example.com"
+      }
+    }
+  },
+  "settingsSyncNewPassword": "New password",
+  "@settingsSyncNewPassword": {
+    "description": "Label of the new password field of a reset."
+  },
+  "settingsSyncResetDone": "Set and sign in",
+  "@settingsSyncResetDone": {
+    "description": "The accent button of a reset's code step."
   },
   "sectionQueued": "Queued",
   "@sectionQueued": {
