@@ -1,46 +1,141 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Withdo</title><meta name="description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place.">
-<meta property="og:title" content="Withdo"><meta property="og:description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place."><meta property="og:image" content="https://qingyuna.github.io/withdo/app-icon.png"><meta property="og:url" content="https://qingyuna.github.io/withdo/"><meta name="twitter:card" content="summary">
-<link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="app-icon.png"><link rel="stylesheet" href="style.css"></head><body><main>
-<header><img src="icon.png" width="32" height="32" alt=""><a href="./">Withdo</a></header>
-<h1>Your tasks and your agents' work, in one place.</h1>
-<p class="lede">Withdo is a todo app for you and your coding agents. Type or speak a sentence and it turns into tasks with their days and times. Hand a task to Claude Code, Codex or another agent and watch what it is doing from the same place.</p>
-<ul>
-<li>One input: dates, reminders and categories read from what you write.</li>
-<li>Voice input that fills the box, so you can fix a word first.</li>
-<li>A board of what your coding agents (Claude Code, Codex and others) are working on.</li>
-<li>Your tasks sync between your Mac, Windows PC and Android phone.</li>
-<li>Open source under the AGPL-3.0: <a href="https://github.com/QingYunA/withdo">github.com/QingYunA/withdo</a>.</li>
-</ul>
-<h2 id="download">Download</h2>
-<div class="dl">
-<a class="btn" data-os="mac" href="https://github.com/QingYunA/withdo/releases/latest">macOS</a>
-<a class="btn" data-os="win" href="https://github.com/QingYunA/withdo/releases/latest">Windows</a>
-<a class="btn" data-os="android" href="https://github.com/QingYunA/withdo/releases/latest">Android</a>
-</div>
-<p class="note"><span id="ver">Apple silicon and Intel Macs, Windows x64, Android 8 and newer.</span> The app updates itself after that. <a href="https://github.com/QingYunA/withdo/releases/latest">All files</a></p>
-<p class="note">The Mac and Windows apps are not signed yet. On a Mac, open Withdo once, then choose Open Anyway in System Settings &gt; Privacy &amp; Security. On Windows, choose More info &gt; Run anyway.</p>
-<script>
-(function () {
-  var ua = navigator.userAgent, os = /Android/i.test(ua) ? "android" : /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) ? "mac" : "";
-  // Each button: the file of the latest release whose name starts and ends like this. The APK is
-  // withdo-<v>.apk from 0.12.0 and adhd-todo-<v>.apk before.
-  var files = { mac: [["Withdo-", "-macos-universal.dmg"]], win: [["Withdo-Setup-", "-windows-x64.exe"]],
-                android: [["withdo-", ".apk"], ["adhd-todo-", ".apk"]] };
-  document.querySelectorAll(".dl a").forEach(function (a) { if (a.dataset.os === os) a.classList.add("primary"); });
-  fetch("https://api.github.com/repos/QingYunA/withdo/releases/latest").then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (rel) {
-      if (!rel || !rel.assets) return;
-      document.querySelectorAll(".dl a").forEach(function (a) {
-        files[a.dataset.os].some(function (f) {
-          var hit = rel.assets.filter(function (x) { return x.name.indexOf(f[0]) === 0 && x.name.slice(-f[1].length) === f[1]; })[0];
-          if (hit) a.href = hit.browser_download_url;
-          return !!hit;
-        });
-      });
-      document.getElementById("ver").textContent = "Version " + rel.tag_name.replace(/^v/, "") + ". Apple silicon and Intel Macs, Windows x64, Android 8 and newer.";
-    }).catch(function () {});
-})();
-</script>
-<footer><a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms</a> · <a href="https://github.com/QingYunA/withdo">Source</a> · Contact: <a href="mailto:sorlia7z@gmail.com">sorlia7z@gmail.com</a></footer>
-</main></body></html>
+<title>Withdo: a todo app for you and your coding agents</title>
+<meta name="description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place. Free and open source, for macOS, Windows and Android.">
+<meta property="og:title" content="Withdo"><meta property="og:description" content="A todo app for you and your coding agents: your tasks, and what Claude Code, Codex and the others are doing, in one place."><meta property="og:image" content="https://qingyuna.github.io/withdo/media/film.jpg"><meta property="og:url" content="https://qingyuna.github.io/withdo/"><meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#111113">
+<link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="app-icon.png">
+<link rel="preload" href="fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add("js")</script>
+</head><body class="home">
+
+<header class="bar">
+  <a class="mark" href="./"><img src="icon.png" width="30" height="30" alt="">Withdo</a>
+  <nav aria-label="Main"><a href="#how">How it works</a><a href="#inside">What's inside</a><a href="https://github.com/QingYunA/withdo">GitHub</a><a href="#get">Download</a></nav>
+</header>
+
+<main>
+<section class="hero" aria-labelledby="h-hero">
+  <svg class="hero-shape" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><rect x="1" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:28"/><rect x="2" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:56"/><rect x="3" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:84"/><rect x="4" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:112"/><rect x="5" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="6" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="7" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="8" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="9" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="10" y="0" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="0" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:28"/><rect x="1" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:56"/><rect x="2" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:84"/><rect x="3" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:112"/><rect x="4" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="5" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="6" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="7" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="8" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="9" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="10" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:308"/><rect x="11" y="1" width="1.02" height="1.02" fill="#5b5bd6" style="--d:336"/><rect x="0" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:56"/><rect x="1" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:84"/><rect x="2" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:112"/><rect x="3" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="4" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="5" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="6" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="7" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="8" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="9" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:308"/><rect x="10" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:336"/><rect x="11" y="2" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="0" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:84"/><rect x="1" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:112"/><rect x="2" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="3" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="4" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="5" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="6" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="7" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="8" y="3" width="1.02" height="1.02" fill="#edeef0" style="--d:528"/><rect x="9" y="3" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="10" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="11" y="3" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="0" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:112"/><rect x="1" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="2" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="3" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="4" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="5" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="6" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="7" y="4" width="1.02" height="1.02" fill="#edeef0" style="--d:528"/><rect x="8" y="4" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="9" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="10" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="11" y="4" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="0" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:140"/><rect x="1" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="2" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="3" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="4" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="5" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="6" y="5" width="1.02" height="1.02" fill="#edeef0" style="--d:528"/><rect x="7" y="5" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="8" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="9" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="10" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="11" y="5" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="0" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:168"/><rect x="1" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="2" y="6" width="1.02" height="1.02" fill="#b1a9ff" style="--d:444"/><rect x="3" y="6" width="1.02" height="1.02" fill="#b1a9ff" style="--d:472"/><rect x="4" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="5" y="6" width="1.02" height="1.02" fill="#edeef0" style="--d:528"/><rect x="6" y="6" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="7" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="8" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="9" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="10" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="11" y="6" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="0" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:196"/><rect x="1" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="2" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="3" y="7" width="1.02" height="1.02" fill="#b1a9ff" style="--d:500"/><rect x="4" y="7" width="1.02" height="1.02" fill="#edeef0" style="--d:528"/><rect x="5" y="7" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="6" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="7" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="8" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="9" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="10" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="11" y="7" width="1.02" height="1.02" fill="#5b5bd6" style="--d:504"/><rect x="0" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:224"/><rect x="1" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="2" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="3" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:308"/><rect x="4" y="8" width="1.02" height="1.02" fill="#edeef0" style="--d:556"/><rect x="5" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="6" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="7" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="8" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="9" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="10" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:504"/><rect x="11" y="8" width="1.02" height="1.02" fill="#5b5bd6" style="--d:532"/><rect x="0" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:252"/><rect x="1" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="2" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:308"/><rect x="3" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:336"/><rect x="4" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="5" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="6" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="7" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="8" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="9" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:504"/><rect x="10" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:532"/><rect x="11" y="9" width="1.02" height="1.02" fill="#5b5bd6" style="--d:560"/><rect x="0" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:280"/><rect x="1" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:308"/><rect x="2" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:336"/><rect x="3" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="4" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="5" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="6" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="7" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="8" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:504"/><rect x="9" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:532"/><rect x="10" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:560"/><rect x="11" y="10" width="1.02" height="1.02" fill="#5b5bd6" style="--d:588"/><rect x="1" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:336"/><rect x="2" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:364"/><rect x="3" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:392"/><rect x="4" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:420"/><rect x="5" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:448"/><rect x="6" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:476"/><rect x="7" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:504"/><rect x="8" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:532"/><rect x="9" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:560"/><rect x="10" y="11" width="1.02" height="1.02" fill="#5b5bd6" style="--d:588"/></svg>
+  <div class="hero-copy">
+    <h1 id="h-hero" data-in>Do it with your&nbsp;agents.</h1>
+    <p data-in style="--i:1">Withdo is a todo app for you and your coding agents. Claude Code, Codex and twelve others report the repo, branch and pull request they work on, right beside your own tasks.</p>
+    <div class="actions" data-in style="--i:2">
+      <a class="btn notch" data-dl="auto" href="https://github.com/QingYunA/withdo/releases/latest">Download</a>
+      <a class="link" href="https://github.com/QingYunA/withdo">Source on GitHub</a>
+    </div>
+    <p class="fine" data-in style="--i:3">Free and open source. macOS, Windows and Android. <a href="#install">How to open the unsigned build</a></p>
+  </div>
+</section>
+
+<section class="show" aria-labelledby="h-show">
+  <div class="plate-wrap">
+    <div class="plate notch shut" id="plate">
+      <video id="film" data-pane="film" src="media/film.mp4" poster="media/film.jpg" muted loop playsinline preload="metadata" aria-label="The Withdo film: four agents ask for you at once, then one board sorts them out"></video>
+      <button class="sound notch" id="sound" type="button" data-pane="film" aria-pressed="false">Sound on</button>
+      <img data-pane="today" src="media/today.webp" width="1400" height="916" alt="Today in Withdo: your tasks, and two agent cards waiting for a reply and a review" loading="lazy" hidden>
+      <img data-pane="agents" src="media/agents.webp" width="1400" height="916" alt="The Agents page: Claude Code's tasks with their branches, three doing, one blocked for three days" loading="lazy" hidden>
+      <img class="phone" data-pane="phone" src="media/phone.webp" width="600" height="1460" alt="Withdo on an Android phone: the same list of tasks" loading="lazy" hidden>
+    </div>
+  </div>
+  <div class="show-text">
+    <div class="tabs" role="tablist" aria-label="What to look at">
+      <button role="tab" id="tab-film" aria-selected="true" aria-controls="plate" data-tab="film">Film</button>
+      <button role="tab" id="tab-today" aria-selected="false" aria-controls="plate" data-tab="today" tabindex="-1">Today</button>
+      <button role="tab" id="tab-agents" aria-selected="false" aria-controls="plate" data-tab="agents" tabindex="-1">Agents</button>
+      <button role="tab" id="tab-phone" aria-selected="false" aria-controls="plate" data-tab="phone" tabindex="-1">Phone</button>
+    </div>
+    <div>
+      <h2 class="title" id="h-show" data-in>See it at work</h2>
+      <p id="pane-text" data-in style="--i:1" aria-live="polite">Twenty-three seconds: four agents, too many questions at once, and the one board that sorts them out.</p>
+    </div>
+    <div class="cells" data-in style="--i:2">
+      <a class="ink notch" data-dl="auto" href="https://github.com/QingYunA/withdo/releases/latest">Download</a>
+      <a class="tone notch" href="https://github.com/QingYunA/withdo">Read the source</a>
+    </div>
+  </div>
+</section>
+
+<section class="day" id="how" aria-labelledby="h-day">
+  <h2 id="h-day" data-in>How a day goes</h2>
+  <div class="stages" data-ui data-in style="--i:1">
+    <div class="st" style="--grow:1"><h3 class="stage notch" style="background:var(--accent-ink)">One click</h3><p>First, open Settings › Agents and click your agent. Withdo adds itself as its MCP server.</p></div>
+    <div class="st" style="--grow:6"><h3 class="stage notch" style="background:var(--doing)">All day, on its own</h3><p>Then the agent reports as it works: the repo, the branch, the step it is on, the pull request it opened.</p></div>
+    <div class="st" style="--grow:1.4"><h3 class="stage notch" style="background:var(--blocked)">One sentence</h3><p>When it is stuck, its card turns red. You answer and it carries on.</p></div>
+    <div class="st" style="--grow:1.8"><h3 class="stage notch" style="background:var(--review)">One look</h3><p>Last, its pull request waits for your review.</p></div>
+  </div>
+</section>
+
+<section class="board" id="inside" aria-labelledby="h-inside">
+  <div class="tile t-head notch"><h2 id="h-inside" data-in>What's inside</h2></div>
+
+  <div class="tile t-live notch" data-ui>
+    <div class="live notch" id="live">
+      <p class="live-head"><img src="media/sprites/bot.png" width="12" height="12" alt=""> Agents <span>3 working</span></p>
+      <div class="card ask" id="codex">
+        <div class="row"><img src="media/sprites/codex.png" width="12" height="12" alt=""><span class="t">Cache the sync answers</span><span class="chip-s blocked notch" id="codex-status">Blocked</span></div>
+        <p class="meta">Codex · withdo · feat/sync-cache</p>
+        <p class="q" id="codex-q">Which database should the cache use?</p>
+        <div class="answers" id="codex-answers"><button class="notch" type="button" data-a="SQLite">SQLite</button><button class="notch" type="button" data-a="Postgres">Postgres</button></div>
+      </div>
+      <div class="card"><div class="row"><img src="media/sprites/claude.png" width="12" height="12" alt=""><span class="t">Port the MCP tools</span><span class="chip-s doing notch">Doing</span></div><p class="meta">Claude Code · withdo · feat/go-core</p></div>
+      <div class="card"><div class="row"><img src="media/sprites/gemini.png" width="12" height="12" alt=""><span class="t">Fix tray race on launch</span><span class="chip-s review notch">Review</span></div><p class="meta">Gemini CLI · PR #12 to review</p></div>
+    </div>
+    <p class="cap"><b>Answer a blocked agent</b><span>Try it: Codex is waiting on you. Your answer goes back to it.</span></p>
+  </div>
+
+  <div class="tile t-input notch">
+    <img class="shot" src="media/close-composer.webp" width="780" height="252" alt="The input box with the sentence: Call the landlord tomorrow at 9, and have Claude fix the login bug" loading="lazy">
+    <p class="cap"><b>Type it or say it</b><span>Dates and reminders are read on your own machine, in English or Chinese.</span></p>
+  </div>
+
+  <div class="tile t-agents notch">
+    <div class="sprites"><img src="media/sprites/claude.png" width="12" height="12" alt="Claude Code"><img src="media/sprites/codex.png" width="12" height="12" alt="Codex"><img src="media/sprites/gemini.png" width="12" height="12" alt="Gemini CLI"><img src="media/sprites/cursor.dark.png" width="12" height="12" alt="Cursor"><img src="media/sprites/copilot.dark.png" width="12" height="12" alt="GitHub Copilot"><img src="media/sprites/opencode.dark.png" width="12" height="12" alt="opencode"></div>
+    <p class="cap"><b>Fourteen agents</b><span>Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf and more.</span></p>
+  </div>
+
+  <div class="tile t-status notch">
+    <img class="shot" src="media/close-blocked.webp" width="520" height="228" alt="A task marked Blocked for three days on the Agents page" loading="lazy">
+    <p class="cap"><b>Stuck shows red</b><span>And how long it has waited.</span></p>
+  </div>
+  <div class="tile t-hand notch">
+    <div class="frag notch" data-ui><span class="num">#44</span></div>
+    <p class="cap"><b>Hand over a task</b><span>Tell your agent "do #44".</span></p>
+  </div>
+
+  <div class="tile t-code notch">
+<pre aria-label="The command that connects Claude Code by hand"><span class="c"># or by hand, for Claude Code:</span>
+claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp</pre>
+    <p class="cap"><b>Connects in one click</b><span>Settings › Agents finds the agents on your computer.</span></p>
+  </div>
+
+  <div class="tile t-sync notch">
+    <img class="shot" src="media/close-phone.webp" width="903" height="396" alt="Withdo on Android, its cloud mark showing the list is synced" loading="lazy">
+    <p class="cap"><b>Syncs when you sign in</b><span>Without an account it stays on your machine.</span></p>
+  </div>
+  <div class="tile t-idle notch">
+    <div class="tray notch" data-ui><img src="media/sprites/bot-asleep.png" width="12" height="12" alt=""><img src="media/sprites/bot-asleep.png" width="12" height="12" alt=""><img src="media/sprites/bot-asleep.png" width="12" height="12" alt=""></div>
+    <p class="cap"><b>Idle agents nap</b><span>In a tray, until there is work.</span></p>
+  </div>
+</section>
+
+<a class="cta" id="get" data-dl="auto" href="https://github.com/QingYunA/withdo/releases/latest">
+  <p data-dlnote>Download Withdo. It is free, and it updates itself.</p>
+  <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 34 34 14M18 14h16v16" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square"/></svg>
+  <span class="word" aria-hidden="true">Get it</span>
+</a>
+</main>
+
+<footer class="close">
+  <svg class="wordmark" viewBox="0 0 42.50 13" role="img" aria-label="Withdo" shape-rendering="crispEdges"><rect x="0.00" y="3" width="7" height="10" fill="#5b5bd6"/><rect x="1.00" y="5" width="1" height="1" fill="#18191b"/><rect x="5.00" y="5" width="1" height="1" fill="#18191b"/><rect x="1.00" y="6" width="1" height="1" fill="#18191b"/><rect x="5.00" y="6" width="1" height="1" fill="#18191b"/><rect x="1.00" y="7" width="1" height="1" fill="#18191b"/><rect x="5.00" y="7" width="1" height="1" fill="#18191b"/><rect x="1.00" y="8" width="1" height="1" fill="#18191b"/><rect x="3.00" y="8" width="1" height="1" fill="#18191b"/><rect x="5.00" y="8" width="1" height="1" fill="#18191b"/><rect x="1.00" y="9" width="1" height="1" fill="#18191b"/><rect x="3.00" y="9" width="1" height="1" fill="#18191b"/><rect x="5.00" y="9" width="1" height="1" fill="#18191b"/><rect x="1.00" y="10" width="1" height="1" fill="#18191b"/><rect x="2.00" y="10" width="1" height="1" fill="#18191b"/><rect x="4.00" y="10" width="1" height="1" fill="#18191b"/><rect x="5.00" y="10" width="1" height="1" fill="#18191b"/><rect x="1.00" y="11" width="1" height="1" fill="#18191b"/><rect x="5.00" y="11" width="1" height="1" fill="#18191b"/><rect x="7.50" y="1" width="5" height="12" fill="#0090ff"/><rect x="8.50" y="5" width="1" height="1" fill="#18191b"/><rect x="9.50" y="5" width="1" height="1" fill="#18191b"/><rect x="10.50" y="5" width="1" height="1" fill="#18191b"/><rect x="9.50" y="6" width="1" height="1" fill="#18191b"/><rect x="9.50" y="7" width="1" height="1" fill="#18191b"/><rect x="9.50" y="8" width="1" height="1" fill="#18191b"/><rect x="9.50" y="9" width="1" height="1" fill="#18191b"/><rect x="9.50" y="10" width="1" height="1" fill="#18191b"/><rect x="8.50" y="11" width="1" height="1" fill="#18191b"/><rect x="9.50" y="11" width="1" height="1" fill="#18191b"/><rect x="10.50" y="11" width="1" height="1" fill="#18191b"/><rect x="13.00" y="2" width="7" height="11" fill="#ffc53d"/><rect x="14.00" y="5" width="1" height="1" fill="#18191b"/><rect x="15.00" y="5" width="1" height="1" fill="#18191b"/><rect x="16.00" y="5" width="1" height="1" fill="#18191b"/><rect x="17.00" y="5" width="1" height="1" fill="#18191b"/><rect x="18.00" y="5" width="1" height="1" fill="#18191b"/><rect x="16.00" y="6" width="1" height="1" fill="#18191b"/><rect x="16.00" y="7" width="1" height="1" fill="#18191b"/><rect x="16.00" y="8" width="1" height="1" fill="#18191b"/><rect x="16.00" y="9" width="1" height="1" fill="#18191b"/><rect x="16.00" y="10" width="1" height="1" fill="#18191b"/><rect x="16.00" y="11" width="1" height="1" fill="#18191b"/><rect x="20.50" y="0" width="7" height="13" fill="#30a46c"/><rect x="21.50" y="5" width="1" height="1" fill="#18191b"/><rect x="25.50" y="5" width="1" height="1" fill="#18191b"/><rect x="21.50" y="6" width="1" height="1" fill="#18191b"/><rect x="25.50" y="6" width="1" height="1" fill="#18191b"/><rect x="21.50" y="7" width="1" height="1" fill="#18191b"/><rect x="25.50" y="7" width="1" height="1" fill="#18191b"/><rect x="21.50" y="8" width="1" height="1" fill="#18191b"/><rect x="22.50" y="8" width="1" height="1" fill="#18191b"/><rect x="23.50" y="8" width="1" height="1" fill="#18191b"/><rect x="24.50" y="8" width="1" height="1" fill="#18191b"/><rect x="25.50" y="8" width="1" height="1" fill="#18191b"/><rect x="21.50" y="9" width="1" height="1" fill="#18191b"/><rect x="25.50" y="9" width="1" height="1" fill="#18191b"/><rect x="21.50" y="10" width="1" height="1" fill="#18191b"/><rect x="25.50" y="10" width="1" height="1" fill="#18191b"/><rect x="21.50" y="11" width="1" height="1" fill="#18191b"/><rect x="25.50" y="11" width="1" height="1" fill="#18191b"/><rect x="28.00" y="3" width="7" height="10" fill="#e5484d"/><rect x="29.00" y="5" width="1" height="1" fill="#18191b"/><rect x="30.00" y="5" width="1" height="1" fill="#18191b"/><rect x="31.00" y="5" width="1" height="1" fill="#18191b"/><rect x="32.00" y="5" width="1" height="1" fill="#18191b"/><rect x="29.00" y="6" width="1" height="1" fill="#18191b"/><rect x="33.00" y="6" width="1" height="1" fill="#18191b"/><rect x="29.00" y="7" width="1" height="1" fill="#18191b"/><rect x="33.00" y="7" width="1" height="1" fill="#18191b"/><rect x="29.00" y="8" width="1" height="1" fill="#18191b"/><rect x="33.00" y="8" width="1" height="1" fill="#18191b"/><rect x="29.00" y="9" width="1" height="1" fill="#18191b"/><rect x="33.00" y="9" width="1" height="1" fill="#18191b"/><rect x="29.00" y="10" width="1" height="1" fill="#18191b"/><rect x="33.00" y="10" width="1" height="1" fill="#18191b"/><rect x="29.00" y="11" width="1" height="1" fill="#18191b"/><rect x="30.00" y="11" width="1" height="1" fill="#18191b"/><rect x="31.00" y="11" width="1" height="1" fill="#18191b"/><rect x="32.00" y="11" width="1" height="1" fill="#18191b"/><rect x="35.50" y="1" width="7" height="12" fill="#b1a9ff"/><rect x="37.50" y="5" width="1" height="1" fill="#18191b"/><rect x="38.50" y="5" width="1" height="1" fill="#18191b"/><rect x="39.50" y="5" width="1" height="1" fill="#18191b"/><rect x="36.50" y="6" width="1" height="1" fill="#18191b"/><rect x="40.50" y="6" width="1" height="1" fill="#18191b"/><rect x="36.50" y="7" width="1" height="1" fill="#18191b"/><rect x="40.50" y="7" width="1" height="1" fill="#18191b"/><rect x="36.50" y="8" width="1" height="1" fill="#18191b"/><rect x="40.50" y="8" width="1" height="1" fill="#18191b"/><rect x="36.50" y="9" width="1" height="1" fill="#18191b"/><rect x="40.50" y="9" width="1" height="1" fill="#18191b"/><rect x="36.50" y="10" width="1" height="1" fill="#18191b"/><rect x="40.50" y="10" width="1" height="1" fill="#18191b"/><rect x="37.50" y="11" width="1" height="1" fill="#18191b"/><rect x="38.50" y="11" width="1" height="1" fill="#18191b"/><rect x="39.50" y="11" width="1" height="1" fill="#18191b"/></svg>
+  <div class="cols">
+    <div><b>Download</b><ul><li><a data-dl="mac" href="https://github.com/QingYunA/withdo/releases/latest">macOS</a></li><li><a data-dl="win" href="https://github.com/QingYunA/withdo/releases/latest">Windows</a></li><li><a data-dl="android" href="https://github.com/QingYunA/withdo/releases/latest">Android</a></li><li><a href="https://github.com/QingYunA/withdo/releases">Release notes</a></li></ul></div>
+    <div><b>Project</b><ul><li><a href="https://github.com/QingYunA/withdo">Source</a></li><li><a href="https://github.com/QingYunA/withdo#connect-your-agents">Connect your agents</a></li><li><a href="https://github.com/QingYunA/withdo/blob/main/CONTRIBUTING.md">Contributing</a></li><li><a href="https://github.com/QingYunA/withdo/blob/main/LICENSE">AGPL-3.0</a></li></ul></div>
+    <div><b>About</b><ul><li><a href="privacy.html">Privacy policy</a></li><li><a href="terms.html">Terms</a></li><li><a href="mailto:sorlia7z@gmail.com">sorlia7z@gmail.com</a></li></ul></div>
+    <div class="install" id="install"><b>Opening the first time</b><p>The Mac and Windows builds are not signed yet. On a Mac, open Withdo once, then choose Open Anyway in System Settings › Privacy &amp; Security. On Windows, choose More info, then Run anyway. Updates after that install by themselves.</p></div>
+  </div>
+  <div class="last"><span id="ver">Withdo · open source under the AGPL-3.0</span><a class="btn notch" href="#h-hero">Back to top</a></div>
+</footer>
+
+<script src="site.js" defer></script>
+</body></html>
