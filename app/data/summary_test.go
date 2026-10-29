@@ -38,7 +38,7 @@ func (l *ledger) build(p Period) Summary {
 	for i := range snap.Tasks {
 		snap.Tasks[i].ProjectID = IntPtr(1)
 	}
-	snap.Projects = []Project{{ID: 1, Name: "adhd-todo"}}
+	snap.Projects = []Project{{ID: 1, Name: "withdo"}}
 	return BuildSummary(SummaryInput{
 		Now: friday, Period: p, Snapshot: snap,
 		Agent: func(name string) string {
@@ -169,7 +169,7 @@ func TestAMergedPullRequestCountsForThePullRequestsAgentAndIsStarred(t *testing.
 		t.Errorf("merged %d (%d, %d)", s.Merged(), s.People[0].Merged, s.People[1].Merged)
 	}
 	claude := s.People[1].Tasks[0]
-	if !claude.Merged || claude.Said != "Ready for review" || claude.Project != "adhd-todo" {
+	if !claude.Merged || claude.Said != "Ready for review" || claude.Project != "withdo" {
 		t.Errorf("%+v", claude)
 	}
 }

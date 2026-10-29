@@ -484,7 +484,7 @@
     "placeholders": {
       "project": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -816,7 +816,7 @@
     "placeholders": {
       "name": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -826,7 +826,7 @@
     "placeholders": {
       "name": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -878,7 +878,7 @@
     "placeholders": {
       "name": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -1108,7 +1108,7 @@
   "@manageRepoHelp": {
     "description": "Help line under the repository field of the new project sheet."
   },
-  "manageRepoInvalid": "Use the form owner/repo, like QingYunA/adhd-todo.",
+  "manageRepoInvalid": "Use the form owner/repo, like QingYunA/withdo.",
   "@manageRepoInvalid": {
     "description": "Shown under the repository field when what was typed is not a repository name."
   },
@@ -1122,7 +1122,7 @@
     "placeholders": {
       "project": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -1190,7 +1190,7 @@
     "placeholders": {
       "project": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -2038,7 +2038,7 @@
     "placeholders": {
       "repo": {
         "type": "String",
-        "example": "QingYunA/adhd-todo"
+        "example": "QingYunA/withdo"
       }
     }
   },
@@ -2979,7 +2979,7 @@
     "placeholders": {
       "detail": {
         "type": "String",
-        "example": "adhd-todo, PR #12"
+        "example": "withdo, PR #12"
       }
     }
   },
@@ -3171,7 +3171,7 @@
       },
       "where": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -3619,7 +3619,7 @@
     "placeholders": {
       "scope": {
         "type": "String",
-        "example": "adhd-todo"
+        "example": "withdo"
       }
     }
   },
@@ -3963,7 +3963,7 @@
     "placeholders": {
       "repo": {
         "type": "String",
-        "example": "QingYunA/adhd-todo"
+        "example": "QingYunA/withdo"
       }
     }
   },

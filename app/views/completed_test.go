@@ -50,8 +50,8 @@ func TestShowAllOfAProjectOpensItsOwnHistoryAndGoesBackToIt(t *testing.T) {
 			t.Errorf("task %q of another project is in this project's history", task.Title)
 		}
 	}
-	has(t, tt, "Back to adhd-todo")
-	click(t, tt, "Back to adhd-todo")
+	has(t, tt, "Back to withdo")
+	click(t, tt, "Back to withdo")
 	if want := (nav{screen: screenProject, projectID: 1}); m.nav != want {
 		t.Errorf("back went to %+v", m.nav)
 	}

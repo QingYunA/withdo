@@ -31,9 +31,9 @@ func TestSearchResultsAreGroupedByProjectAcrossEveryStatus(t *testing.T) {
 	tt, m, _ := newMainTester(t, 1100)
 	tt.Frame()
 	searchFor(t, tt, "the")
-	// Matches in three places: the done "Spike the mygo shell" and "Map worktrees..." of adhd-todo,
+	// Matches in three places: the done "Spike the mygo shell" and "Map worktrees..." of withdo,
 	// the open "Cover the reply parser edge cases" of answer-me-with-html and the Inbox's "Renew..." none.
-	for _, want := range []string{"Search", "Spike the mygo shell", "Cover the reply parser edge cases", "adhd-todo", "answer-me-with-html"} {
+	for _, want := range []string{"Search", "Spike the mygo shell", "Cover the reply parser edge cases", "withdo", "answer-me-with-html"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}

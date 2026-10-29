@@ -34,7 +34,7 @@ func TestReviewWithoutAPullRequestOpensTheSettingAndFallsBackToTheProjectFolder(
 	tt, _, _ := newTesterFor(app, 1100)
 
 	click(t, tt, "Open Tidy the docs")
-	if want := (openCall{OpenAgentApp, "Codex", "~/Code/adhd-todo"}); len(rec.opens) != 1 || rec.opens[0] != want {
+	if want := (openCall{OpenAgentApp, "Codex", "~/Code/withdo"}); len(rec.opens) != 1 || rec.opens[0] != want {
 		t.Fatalf("opened %v, want %v: no report named a folder, so the project's", rec.opens, want)
 	}
 

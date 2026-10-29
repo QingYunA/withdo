@@ -43,7 +43,7 @@ func TestScreensRecent(t *testing.T) {
 				recentShot(t, "recent"+name+sfx+".png", zh, app, rec, a.dark, setup)
 			}
 			// the unfolded item is PR 14, which task 20 holds
-			unfold := func(tt *ui.Tester, m *Main) { m.recent.open["https://github.com/QingYunA/adhd-todo/pull/14"] = true }
+			unfold := func(tt *ui.Tester, m *Main) { m.recent.open["https://github.com/QingYunA/withdo/pull/14"] = true }
 			app, _, _, _, rec := recentApp(t, true)
 			shot("", app, rec, nil)
 			app, _, _, _, rec = recentApp(t, true)

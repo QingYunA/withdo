@@ -119,7 +119,7 @@ func (r *recorder) drain(t *testing.T) {
 func testConfig() Config {
 	return Config{
 		ConnectCommand: "claude mcp add --scope user withdo -- ~/.local/bin/withdo mcp",
-		DataFolder:     "~/Library/Application Support/adhd-todo",
+		DataFolder:     "~/Library/Application Support/withdo",
 		Version:        "0.2.0",
 	}
 }

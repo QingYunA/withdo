@@ -93,7 +93,7 @@ func TestScreensAssistReplyAndReceipt(t *testing.T) {
 func TestScreensAssistSentenceAndSeveral(t *testing.T) {
 	screensTest(t)
 	for _, a := range appearances() {
-		sentence := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)}
+		sentence := &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in withdo, so I didn't add it again."}, nil)}
 		app, _, rec := assistApp(t, sentence)
 		mainShot(t, "mine-reply-sentence-"+a.suffix+".png", app, a.dark, sendAnd(t, rec, "write the release notes", true))
 

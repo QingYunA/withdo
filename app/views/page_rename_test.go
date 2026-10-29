@@ -41,7 +41,7 @@ func TestDoubleClickingTheProjectTitleRenamesItInPlace(t *testing.T) {
 	}
 	tt.Type("-x")
 	tt.Key(0, ui.KeyEnter)
-	if p, _ := app.Project(1); p.Name != "adhd-todo-x" {
+	if p, _ := app.Project(1); p.Name != "withdo-x" {
 		t.Errorf("name %q", p.Name)
 	}
 	if m.manage.rename.id != 0 {
@@ -54,7 +54,7 @@ func TestEscapeKeepsTheProjectNameWhenRenamingFromTheTitle(t *testing.T) {
 	doubleClickTitle(t, tt)
 	tt.Type("zzz")
 	tt.Key(0, ui.KeyEscape)
-	if p, _ := app.Project(1); p.Name != "adhd-todo" || m.manage.rename.id != 0 {
+	if p, _ := app.Project(1); p.Name != "withdo" || m.manage.rename.id != 0 {
 		t.Errorf("name %q, rename %+v", p.Name, m.manage.rename)
 	}
 }

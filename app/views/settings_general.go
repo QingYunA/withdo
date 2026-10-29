@@ -10,7 +10,7 @@ import (
 )
 
 // repoURL is the project on GitHub, the About row's link.
-const repoURL = "https://github.com/QingYunA/adhd-todo"
+const repoURL = "https://github.com/QingYunA/withdo"
 
 // archivedRows is how many archived projects the pane shows before the list scrolls.
 const archivedRows = 5

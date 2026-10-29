@@ -149,7 +149,7 @@
   "manageRename": "重命名",
   "manageRenameLabel": "项目名称",
   "manageRepoHelp": "来自这个仓库的 Agent 汇报会归入此项目。",
-  "manageRepoInvalid": "请按 owner/repo 的格式填写，例如 QingYunA/adhd-todo。",
+  "manageRepoInvalid": "请按 owner/repo 的格式填写，例如 QingYunA/withdo。",
   "manageRepoPlaceholder": "owner/repo",
   "manageRepoTaken": "“{project}”已在使用这个仓库。",
   "manageRestore": "恢复",

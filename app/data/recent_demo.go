@@ -28,9 +28,9 @@ func DemoRecent(now time.Time) *FakeRecent {
 		return it
 	}
 	const me = "QingYunA"
-	bot := mk("QingYunA/adhd-todo", RecentOpen, 40, "chore(mcp): bump the MCP server to 0.5", "", "cursor-agent", ago(20*time.Minute), "go.mod")
+	bot := mk("QingYunA/withdo", RecentOpen, 40, "chore(mcp): bump the MCP server to 0.5", "", "cursor-agent", ago(20*time.Minute), "go.mod")
 	bot.Bot = true
-	const repo = "QingYunA/adhd-todo"
+	const repo = "QingYunA/withdo"
 	solved := mk(repo, RecentIssue, 56, "Summary ledger shows an ellipsis for the total", "The total is cut to an ellipsis when it has two digits.", me, ago(3*day))
 	solved.ClosedAt, solved.UpdatedAt, solved.FixedBy = ago(2*h), ago(2*h), 41
 	f.Set(RepoChanges{

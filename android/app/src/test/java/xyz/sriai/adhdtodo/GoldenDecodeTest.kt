@@ -60,7 +60,7 @@ class GoldenDecodeTest {
                 }
                 "project-1.golden.json" -> {
                     val page = PageJson.decodeFromString<ProjectPage>(text)
-                    assertEquals("adhd-todo", page.project.name)
+                    assertEquals("withdo", page.project.name)
                     assertTrue(page.tasks.isNotEmpty())
                     assertEquals("claude-code", page.agents["1"])
                 }
@@ -76,7 +76,7 @@ class GoldenDecodeTest {
                 "projects.golden.json" -> {
                     val projects = PageJson.decodeFromString<List<Project>>(text)
                     assertEquals(3, projects.size)
-                    assertEquals("adhd-todo", projects[0].name)
+                    assertEquals("answer-me-with-html", projects[0].name)
                 }
                 "search.golden.json" -> {
                     val tasks = PageJson.decodeFromString<List<Task>>(text)

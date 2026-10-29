@@ -172,9 +172,9 @@ func TestEachKindOfReceiptReadsAsOneLine(t *testing.T) {
 		tail string
 	}{
 		{"added with nothing", data.Receipt{ID: 1, TaskID: 5, Title: "A", Detail: data.Detail{Kind: data.DetailAdded}}, "Added", ""},
-		{"added in a project", data.Receipt{ID: 2, TaskID: 5, Title: "B", Detail: data.Detail{Kind: data.DetailAdded, Project: "adhd-todo"}}, "Added", "· adhd-todo"},
+		{"added in a project", data.Receipt{ID: 2, TaskID: 5, Title: "B", Detail: data.Detail{Kind: data.DetailAdded, Project: "withdo"}}, "Added", "· withdo"},
 		{"done", data.Receipt{ID: 3, TaskID: 5, Title: "C", Detail: data.Detail{Kind: data.DetailDone}}, "Marked done", ""},
-		{"moved", data.Receipt{ID: 4, TaskID: 5, Title: "D", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}}}, "", "· Moved to adhd-todo"},
+		{"moved", data.Receipt{ID: 4, TaskID: 5, Title: "D", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "withdo"}}}}, "", "· Moved to withdo"},
 		{"reminder cleared", data.Receipt{ID: 5, TaskID: 5, Title: "E", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeReminder}}}}, "", "· Reminder cleared"},
 		{"rescheduled", data.Receipt{ID: 6, TaskID: 5, Title: "F", Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeDue, At: now.Add(26 * time.Hour)}}}}, "", "· Tomorrow 4:30 PM · due"},
 		{"remembered", data.Receipt{ID: 7, Title: "Fitness is Life", Detail: data.Detail{Kind: data.DetailRemembered}}, "Remembered", ""},
@@ -206,14 +206,14 @@ func TestAReceiptNamesTheProjectOnlyWhenItIsNotThePageItWasTypedOn(t *testing.T)
 	r.ask("x")
 	r.answer(t)
 	has(t, r.tt, "· picpocket")
-	here := data.Reply{Receipts: []data.Receipt{{ID: 2, TaskID: 5, Title: "Here", Detail: data.Detail{Kind: data.DetailAdded, Project: "adhd-todo"}}}}
+	here := data.Reply{Receipts: []data.Receipt{{ID: 2, TaskID: 5, Title: "Here", Detail: data.Detail{Kind: data.DetailAdded, Project: "withdo"}}}}
 	r2 := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(here, nil)})
 	r2.m.goTo(nav{screen: screenProject, projectID: 1})
 	r2.tt.Frame()
 	r2.ask("x")
 	r2.answer(t)
 	has(t, r2.tt, "Here")
-	hasNot(t, r2.tt, "· adhd-todo")
+	hasNot(t, r2.tt, "· withdo")
 }
 
 func TestReceiptRowOpensTheTask(t *testing.T) {
@@ -233,14 +233,14 @@ func TestReceiptRowOpensTheTask(t *testing.T) {
 }
 
 func TestAChangeFreeTurnIsOneGreyLineWithTheSentence(t *testing.T) {
-	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in adhd-todo, so I didn't add it again."}, nil)})
+	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "That one is already in withdo, so I didn't add it again."}, nil)})
 	r.ask("write the release notes")
 	r.answer(t)
-	has(t, r.tt, "That one is already in adhd-todo, so I didn't add it again.")
+	has(t, r.tt, "That one is already in withdo, so I didn't add it again.")
 	hasNot(t, r.tt, "Undo", "write the release notes")
 	r.now = r.now.Add(7 * time.Second)
 	r.tt.Frame()
-	hasNot(t, r.tt, "That one is already in adhd-todo, so I didn't add it again.")
+	hasNot(t, r.tt, "That one is already in withdo, so I didn't add it again.")
 }
 
 func TestTheLineStaysSixSecondsFadesThenGoes(t *testing.T) {

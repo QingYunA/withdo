@@ -2524,14 +2524,14 @@ func (msgs Messages) ManageRepoHelp() string {
 	return Catalog.Format(msgs.locale, "manageRepoHelp", nil)
 }
 
-// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/adhd-todo."
+// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/withdo."
 // in the language the app shows.
 //
 // Shown under the repository field when what was typed is not a repository
 // name.
 func ManageRepoInvalid() string { return In(i18n.Locale()).ManageRepoInvalid() }
 
-// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/adhd-todo."
+// ManageRepoInvalid says "Use the form owner/repo, like QingYunA/withdo."
 // in the language of msgs.
 //
 // Shown under the repository field when what was typed is not a repository

@@ -61,7 +61,7 @@ func TestSwitchedOnTheRowSitsUnderCalendarAndCmd4OpensThePage(t *testing.T) {
 func TestEachProjectIsASectionWithItsGroupsInOrderAndTheOneChangedLastFirst(t *testing.T) {
 	r := newRecentRig(t, true)
 	r.open(t)
-	r.has(t, "adhd-todo", "QingYunA/adhd-todo", "10 merged · 2 open · 2 issues", "picpocket", "QingYunA/picpocket", "2 merged",
+	r.has(t, "withdo", "QingYunA/withdo", "10 merged · 2 open · 2 issues", "picpocket", "QingYunA/picpocket", "2 merged",
 		"These 7 days · written by the assistant", "Rewrite", "New", "Fixed", "Open", "Issues",
 		"3 more: docs, version, screenshots", "The MCP server runs on the Go core", "Two-digit ledger totals fit",
 		"The MCP server moves to 0.5", "Solved · fixed by #41 · today · #56", "New · you · yesterday · #58")
@@ -70,7 +70,7 @@ func TestEachProjectIsASectionWithItsGroupsInOrderAndTheOneChangedLastFirst(t *t
 		!above(t, r.tt, "3 more: docs, version, screenshots", "Open") || !above(t, r.tt, "Open", "Issues") {
 		t.Errorf("groups out of order: %q", r.tt.Texts())
 	}
-	if !above(t, r.tt, "QingYunA/adhd-todo", "QingYunA/picpocket") {
+	if !above(t, r.tt, "QingYunA/withdo", "QingYunA/picpocket") {
 		t.Error("the project changed last is not first")
 	}
 	r.has(t, "Claude Code · today · #14", "You · yesterday · #34", "cursor-agent · open for 20 minutes · #40", "You · open for 2 hours · #39")
@@ -112,7 +112,7 @@ func TestTheAssistantWritesEachItemOnceAndTheLinesOncePerProjectAndPeriod(t *tes
 	r := newRecentRig(t, true)
 	r.open(t)
 	asked := askedNumbers(r.asst.RecentDescribed())
-	if len(asked["QingYunA/adhd-todo"]) != 14 || len(asked["QingYunA/picpocket"]) != 2 || len(asked) != 2 {
+	if len(asked["QingYunA/withdo"]) != 14 || len(asked["QingYunA/picpocket"]) != 2 || len(asked) != 2 {
 		t.Errorf("asked about %v: every item of the two projects shown, once", asked)
 	}
 	for _, req := range r.asst.RecentDescribed() {
@@ -142,7 +142,7 @@ func TestAnItemUpdatedSinceIsWrittenAgainAndOnlyThat(t *testing.T) {
 	r := newRecentRig(t, true)
 	r.open(t)
 	before := len(r.asst.RecentDescribed())
-	ch, _ := r.read.Fetch(t.Context(), "QingYunA/adhd-todo", time.Time{})
+	ch, _ := r.read.Fetch(t.Context(), "QingYunA/withdo", time.Time{})
 	ch.Merged[0].UpdatedAt = ch.Merged[0].UpdatedAt.Add(time.Minute) // #14, whose description changed
 	ch.Merged[0].Title = "feat(mcp): port the MCP server, now with tests"
 	r.read.Set(ch)
@@ -158,9 +158,9 @@ func TestTheRepositoryPopUpListsEachRepositoryWithItsCountAndFilters(t *testing.
 	r := newRecentRig(t, true)
 	r.open(t)
 	r.click(t, "Repository: All repositories")
-	r.has(t, "14", "0") // adhd-todo, and answer-me-with-html with nothing
+	r.has(t, "14", "0") // withdo, and answer-me-with-html with nothing
 	opts := r.m.repoOptions(r.m.recentSections())
-	want := []repoOption{{"", "All repositories", -1}, {"QingYunA/adhd-todo", "adhd-todo", 14}, {"QingYunA/answer-me-with-html", "answer-me-with-html", 0}, {"QingYunA/picpocket", "picpocket", 2}}
+	want := []repoOption{{"", "All repositories", -1}, {"QingYunA/answer-me-with-html", "answer-me-with-html", 0}, {"QingYunA/picpocket", "picpocket", 2}, {"QingYunA/withdo", "withdo", 14}}
 	if !slices.Equal(opts, want) {
 		t.Errorf("options %v, want %v", opts, want)
 	}
@@ -172,11 +172,11 @@ func TestTheRepositoryPopUpListsEachRepositoryWithItsCountAndFilters(t *testing.
 		t.Fatalf("picked %q", r.m.recent.repo)
 	}
 	r.has(t, "Nothing changed in the last 7 days")
-	r.lacks(t, "QingYunA/adhd-todo", "Rewrite")
+	r.lacks(t, "QingYunA/withdo", "Rewrite")
 	r.m.recentPick("QingYunA/picpocket")
 	r.tt.Frame()
 	r.has(t, "QingYunA/picpocket", "2 merged")
-	r.lacks(t, "QingYunA/adhd-todo", "Two-digit ledger totals fit")
+	r.lacks(t, "QingYunA/withdo", "Two-digit ledger totals fit")
 	stored, _ := r.app.Prefs.LoadPrefs()
 	if stored.RecentRepo != "QingYunA/picpocket" {
 		t.Errorf("the choice is not kept: %+v", stored)
@@ -189,7 +189,7 @@ func TestAProjectNamePicksItsRepositoryAndTheChoiceSurvivesANewWindow(t *testing
 	r.tt.Scroll(700, 400, 0, 3000) // the section is under the fold
 	r.tt.Frame()
 	r.click(t, "Show only QingYunA/picpocket")
-	if r.tt.HasText("QingYunA/adhd-todo") || !r.tt.HasText("QingYunA/picpocket") {
+	if r.tt.HasText("QingYunA/withdo") || !r.tt.HasText("QingYunA/picpocket") {
 		t.Errorf("a click on the name did not pick it: %q", r.tt.Texts())
 	}
 	m := NewMain(r.app)
@@ -237,7 +237,7 @@ func TestUnfoldingAnItemAsksForItsExplanationOnceAndKeepsIt(t *testing.T) {
 		t.Errorf("asked %+v, want one request for PR 14", got)
 	}
 	r.click(t, "Open on GitHub")
-	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/adhd-todo/pull/14" {
+	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/withdo/pull/14" {
 		t.Errorf("opened %v", r.rec.urls)
 	}
 	r.click(t, "Task #20")
@@ -352,7 +352,7 @@ func TestNothingInThePeriodSaysSoAndGHMissingOrSignedOutSaysWhatToRun(t *testing
 		})
 		r.open(t)
 		r.has(t, c.title, c.command, "Copy")
-		r.lacks(t, "adhd-todo"+"QingYunA/adhd-todo")
+		r.lacks(t, "withdo"+"QingYunA/withdo")
 	}
 }
 
@@ -437,7 +437,7 @@ func TestAProjectPageLinksToTheRecentChangesOfItsRepository(t *testing.T) {
 func TestARepositoryThatIsNoLongerAProjectsFallsBackToAll(t *testing.T) {
 	r := newRecentRig(t, true, func(r *recentRig) { r.app.setRecentChoice("gone/repo", 7) })
 	r.open(t)
-	r.has(t, "QingYunA/adhd-todo", "QingYunA/picpocket")
+	r.has(t, "QingYunA/withdo", "QingYunA/picpocket")
 }
 
 func TestTheSettingsRowTurnsThePageOnAndKeepsTheChoiceBesideTheOtherPrefs(t *testing.T) {

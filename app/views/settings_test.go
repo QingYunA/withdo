@@ -82,17 +82,17 @@ func TestSettingsShowSelectsAPane(t *testing.T) {
 
 func TestDataFolderIsShownRelativeToHomeButRevealedInFull(t *testing.T) {
 	r := newSettingsRig(t)
-	r.app.Config.DataFolder = "/Users/mac/Library/Application Support/adhd-todo"
+	r.app.Config.DataFolder = "/Users/mac/Library/Application Support/withdo"
 	r.app.Config.Home = "/Users/mac"
 	r.tt.Frame()
 	r.tt.Scroll(340, 300, 0, 3000) // the data folder is below the notifications and sound groups
 	r.tt.Frame()
-	has(t, r.tt, "~/Library/Application Support/adhd-todo")
-	hasNot(t, r.tt, "/Users/mac/Library/Application Support/adhd-todo")
+	has(t, r.tt, "~/Library/Application Support/withdo")
+	hasNot(t, r.tt, "/Users/mac/Library/Application Support/withdo")
 	if err := r.tt.Click("Show in Finder"); err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Equal(r.rec.folders, []string{"/Users/mac/Library/Application Support/adhd-todo"}) {
+	if !slices.Equal(r.rec.folders, []string{"/Users/mac/Library/Application Support/withdo"}) {
 		t.Errorf("revealed %v", r.rec.folders)
 	}
 	if got := withTilde("/Users/macro/x", "/Users/mac"); got != "/Users/macro/x" {
@@ -118,7 +118,7 @@ func TestGeneralPaneHasLanguageArchivedDataFolderAndAbout(t *testing.T) {
 	if err := r.tt.Click("Withdo on GitHub"); err != nil {
 		t.Fatal(err)
 	}
-	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/adhd-todo" {
+	if len(r.rec.urls) != 1 || r.rec.urls[0] != "https://github.com/QingYunA/withdo" {
 		t.Errorf("opened %v", r.rec.urls)
 	}
 }

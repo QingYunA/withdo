@@ -149,7 +149,7 @@ func TestWithoutAModelTheTextBecomesAPlainTaskInThePlace(t *testing.T) {
 	}{
 		{"now goes to the inbox", nav{}, nil, "Added to No date"},
 		{"inbox", nav{}, nil, "Added to No date"},
-		{"project", nav{screen: screenProject, projectID: 1}, data.IntPtr(1), "Added to adhd-todo"},
+		{"project", nav{screen: screenProject, projectID: 1}, data.IntPtr(1), "Added to withdo"},
 	}
 	for _, tc := range tests {
 		for _, assistant := range []data.Assistant{&data.FakeAssistant{Ready: false}, nil} {
@@ -222,7 +222,7 @@ func TestThePlaceholderIsShortAndTheTitleNamesThePlace(t *testing.T) {
 	r.m.goTo(nav{screen: screenProject, projectID: 1})
 	r.tt.Frame()
 	has(t, r.tt, "Add a task, or ask me anything")
-	hasNot(t, r.tt, "# adhd-todo", "What's next in adhd-todo?") // no chip, no project in the placeholder
+	hasNot(t, r.tt, "# withdo", "What's next in withdo?") // no chip, no project in the placeholder
 	r.m.OpenTask(5)
 	r.tt.Frame()
 	has(t, r.tt, "Change anything about this task")

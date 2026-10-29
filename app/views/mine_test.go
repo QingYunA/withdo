@@ -79,8 +79,8 @@ func TestFromYourAgentsOrderIsBlockedThenReview(t *testing.T) {
 		t.Errorf("order wrong in %q", tt.Texts())
 	}
 	for _, want := range []string{
-		"Waiting for your reply: “Needs a decision on the activation policy”, adhd-todo",
-		"PR #12 to review, adhd-todo",
+		"Waiting for your reply: “Needs a decision on the activation policy”, withdo",
+		"PR #12 to review, withdo",
 		"Reply", "Open PR",
 	} {
 		if !tt.HasText(want) {
@@ -132,7 +132,7 @@ func TestHandedOverOpenPRCallsOpenURL(t *testing.T) {
 	if err := tt.Click("Open pull request #12"); err != nil {
 		t.Fatal(err)
 	}
-	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/adhd-todo/pull/12" {
+	if len(rec.urls) != 1 || rec.urls[0] != "https://github.com/QingYunA/withdo/pull/12" {
 		t.Errorf("opened %v", rec.urls)
 	}
 	if m.openID != 0 {

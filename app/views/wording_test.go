@@ -17,7 +17,7 @@ func TestUpdateReceiptsReadLikeCreates(t *testing.T) {
 	}{
 		{"reminder", []data.Change{{Kind: data.ChangeReminder, At: at}}, "Tomorrow 9:00 AM · reminder"},
 		{"due and priority", []data.Change{{Kind: data.ChangeDue, At: at}, {Kind: data.ChangePriority, Value: "P1"}}, "Tomorrow 9:00 AM · due · P1"},
-		{"project", []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}}, "Moved to adhd-todo"},
+		{"project", []data.Change{{Kind: data.ChangeProject, Value: "withdo"}}, "Moved to withdo"},
 		{"inbox", []data.Change{{Kind: data.ChangeProject}}, "Moved to Today"},
 		{"category", []data.Change{{Kind: data.ChangeCategory, Value: "life"}}, "Category: Life"},
 		{"category cleared", []data.Change{{Kind: data.ChangeCategory}}, "Category cleared"},
@@ -43,12 +43,12 @@ func TestUpdateReceiptsReadLikeCreates(t *testing.T) {
 func TestUpdateReceiptsInChinese(t *testing.T) {
 	r := newAssistRig(t, &data.FakeAssistant{Ready: true, Script: scripted(data.Reply{Text: "好了。", Receipts: []data.Receipt{{
 		ID: 1, TaskID: 5, Title: "Write the release notes", Status: data.Todo,
-		Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "adhd-todo"}, {Kind: data.ChangeStatus, Value: "doing"}}},
+		Detail: data.Detail{Kind: data.DetailUpdated, Changes: []data.Change{{Kind: data.ChangeProject, Value: "withdo"}, {Kind: data.ChangeStatus, Value: "doing"}}},
 	}}}, nil)})
 	inChinese(r.tt)
 	r.ask("改一下")
 	r.answer(t)
-	has(t, r.tt, "移到adhd-todo · 设为进行中")
+	has(t, r.tt, "移到withdo · 设为进行中")
 	hasNot(t, r.tt, "已更新")
 }
 

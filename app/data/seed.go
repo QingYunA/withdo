@@ -26,7 +26,7 @@ func (r *Real) seed(now time.Time) (err error) {
 		name, slug, path string
 		created, updated time.Time
 	}{
-		{"adhd-todo", "QingYunA/adhd-todo", "~/Code/adhd-todo", ago(30 * day), ago(time.Hour)},
+		{"withdo", "QingYunA/withdo", "~/Code/withdo", ago(30 * day), ago(time.Hour)},
 		{"answer-me-with-html", "QingYunA/answer-me-with-html", "~/Code/answer-me-with-html", ago(20 * day), ago(14 * time.Minute)},
 		{"picpocket", "QingYunA/picpocket", "~/Code/picpocket", ago(90 * day), ago(5 * day)},
 	} {
@@ -87,7 +87,7 @@ func (r *Real) seedTasks(now time.Time) {
 		t.Branch = branch
 		if pr > 0 {
 			t.PRNumber = pr
-			t.PRURL = fmt.Sprintf("https://github.com/QingYunA/adhd-todo/pull/%d", pr)
+			t.PRURL = fmt.Sprintf("https://github.com/QingYunA/withdo/pull/%d", pr)
 		}
 		return t
 	}
@@ -157,11 +157,11 @@ func (r *Real) seedReports(now time.Time) {
 	// Where the agents work: the worktree of each task they reported from. Tasks 10 to 12 left none.
 	worktree := func(name string) string { return "/Users/demo/code/" + name }
 	cwds := map[int]string{
-		1: worktree("adhd-todo/.claude/worktrees/native-ui"), 2: worktree("answer-me-with-html"),
+		1: worktree("withdo/.claude/worktrees/native-ui"), 2: worktree("answer-me-with-html"),
 		3: worktree("picpocket/.claude/worktrees/tray-race"), 15: worktree("answer-me-with-html/.claude/worktrees/issue-218"),
-		20: worktree("adhd-todo/.claude/worktrees/mcp-port"), 22: worktree("adhd-todo/.claude/worktrees/store"),
-		23: worktree("adhd-todo/.claude/worktrees/mcp-tools"), 24: worktree("adhd-todo/.claude/worktrees/watcher"),
-		25: worktree("adhd-todo/.claude/worktrees/mcp-tests"),
+		20: worktree("withdo/.claude/worktrees/mcp-port"), 22: worktree("withdo/.claude/worktrees/store"),
+		23: worktree("withdo/.claude/worktrees/mcp-tools"), 24: worktree("withdo/.claude/worktrees/watcher"),
+		25: worktree("withdo/.claude/worktrees/mcp-tests"),
 	}
 	for _, x := range []Report{
 		rep(1, "claude-code", Doing, 2*time.Minute, "Ported the store and migrations", "Port the MCP server"),
