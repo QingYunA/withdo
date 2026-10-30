@@ -19,7 +19,8 @@ type fakeSync struct {
 	setErr                                                                 error
 	checks, resends, googles                                               int
 	open                                                                   func(string)
-	requestedCodes, codes, resets                                          []string
+	requestedCodes, codes, signUps, resetCodes                             []string
+	langs                                                                  []string
 	useOld, moves, googleRefreshes, googleLinks, googleLinkCancels         int
 }
 
@@ -29,8 +30,15 @@ func (f *fakeSync) SyncSignIn(login, password string) {
 	f.login, f.password = login, password
 }
 func (f *fakeSync) SyncCheckServer() { f.checks++ }
-func (f *fakeSync) SyncRequestCode(email string) {
+func (f *fakeSync) SyncRequestResetCode(email string) {
 	f.requestedCodes = append(f.requestedCodes, email)
+}
+func (f *fakeSync) SyncSignUp(email, password, lang string) {
+	f.signUps = append(f.signUps, email+"|"+password)
+	f.langs = append(f.langs, lang)
+}
+func (f *fakeSync) SyncResetPassword(code, password string) {
+	f.resetCodes = append(f.resetCodes, code+"|"+password)
 }
 func (f *fakeSync) SyncResendCode() { f.resends++ }
 func (f *fakeSync) SyncSignInWithGoogle(open func(url string)) {
@@ -39,9 +47,6 @@ func (f *fakeSync) SyncSignInWithGoogle(open func(url string)) {
 }
 func (f *fakeSync) SyncSignInWithCode(code string) {
 	f.codes = append(f.codes, code)
-}
-func (f *fakeSync) SyncRequestPasswordReset(email string) {
-	f.resets = append(f.resets, email)
 }
 func (f *fakeSync) SyncSetSignInStep(step data.SignInStep) { f.snap.SignInStep = step }
 func (f *fakeSync) SyncMerge()                             { f.merges++ }

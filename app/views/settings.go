@@ -69,6 +69,7 @@ type Settings struct {
 	syncFields        fields
 	syncLogin         string
 	syncPassword      string
+	syncShowPassword  bool
 	syncFocusAccount  bool
 	syncFocusPassword bool
 	syncPrevPhase     data.SyncPhase

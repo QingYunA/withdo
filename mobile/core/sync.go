@@ -88,7 +88,9 @@ func (c *Core) SyncSetServer(server string) error {
 // this database as a device named deviceName when it is not linked yet. It returns
 // {"state":"linked"} once the phone is linked, or {"state":"choose"} when both the phone and the
 // account have tasks; the tokens stay stored, so LinkMerge or LinkReplace finishes without a
-// second sign-in. Signing in an already linked phone returns {"state":"linked"}. With no PocketBase
+// second sign-in. An account whose email was never verified answers {"state":"verify"} after mailing
+// it a code (CodeState step "verify"; SignInWithCode finishes). Signing in an already linked phone
+// returns {"state":"linked"}. With no PocketBase
 // sign-in in sync.json it first reads the server's /v1/config through SyncSetServer.
 func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	if c.secrets == nil {
@@ -105,6 +107,14 @@ func (c *Core) SignIn(loginName, password, deviceName string) (string, error) {
 	}
 	source := c.accountSource(cfg)
 	if err := source.SignIn(context.Background(), cfg.Server, loginName, password); err != nil {
+		if errors.Is(err, syncclient.ErrEmailNotVerified) {
+			// The right password of an account whose email was never verified: mail a new code and
+			// let the screen show its verify step.
+			if err := c.sendCode(strings.TrimSpace(loginName), false, stepVerify); err != nil {
+				return "", err
+			}
+			return signInVerifyJSON, nil
+		}
 		c.noteCodeFailure(err)
 		return "", syncError(err)
 	}
@@ -372,6 +382,7 @@ func (c *Core) SyncStatus() string {
 // The stages of a sign-in, as SyncStatus reports them.
 const (
 	signInStageSending     = "sending"
+	signInStageCreating    = "creating"
 	signInStageChecking    = "checking"
 	signInStageDownloading = "downloading"
 	signInStageGoogle      = "google"

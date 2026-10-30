@@ -16,8 +16,10 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
-// codeServer is a sync server with a PocketBase's three code routes. request-otp hands out
-// otp<N>; auth-with-otp accepts only 123456 for the latest id.
+// codeServer is a sync server with the PocketBase routes of the sign-up. users create refuses the
+// email taken@example.com (as PocketBase's unique check does) and makes any other; request-otp hands
+// out otp<N>; auth-with-otp and the reset route accept only 123456 for the latest id;
+// auth-with-password says unverified@example.com is not verified.
 type codeServer struct {
 	*httptest.Server
 	mux      *http.ServeMux
@@ -26,7 +28,8 @@ type codeServer struct {
 	checks   int
 	resets   int
 	emails   []string
-	status   int // when not 0, request-otp answers it
+	signUps  []string // email|password|lang of every sign-up
+	status   int      // when not 0, request-otp answers it
 	// foreignID makes auth-with-oauth2 answer another record, as PocketBase does for a Google
 	// identity another account owns.
 	foreignID  string
@@ -74,17 +77,48 @@ func newCodeServer(t *testing.T) *codeServer {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
-			"record": map[string]any{"id": "rec1", "email": "ada@example.com", "name": "ada"},
-		})
+		f.writeToken(w)
 	})
-	mux.HandleFunc("POST /api/collections/users/request-password-reset", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("POST /api/collections/users/records", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Email, Password, PasswordConfirm, Lang string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.signUps = append(f.signUps, body.Email+"|"+body.Password+"|"+body.Lang)
+		if body.Email == "taken@example.com" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"status":400,"data":{"email":{"code":"validation_not_unique","message":"x"}}}`))
+			return
+		}
+		_, _ = fmt.Fprintf(w, `{"id":"rec2","email":%q,"verified":false}`, body.Email)
+	})
+	mux.HandleFunc("POST /api/collections/users/auth-with-password", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Identity, Password string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if body.Identity == "unverified@example.com" && body.Password == "a long password" {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(`{"status":403,"data":{"email":{"code":"email_not_verified","message":"x"}}}`))
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+	})
+	mux.HandleFunc("POST /api/withdo/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ OTPID, Code, Password, PasswordConfirm string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		f.mu.Lock()
+		defer f.mu.Unlock()
 		f.resets++
-		f.mu.Unlock()
-		w.WriteHeader(http.StatusNoContent)
+		if len(body.Password) < 8 {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"status":400,"data":{"password":{"code":"validation_min_text_constraint","message":"x"}}}`))
+			return
+		}
+		if body.OTPID != fmt.Sprintf("otp%d", f.requests) || body.Code != "123456" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"status":400,"message":"Invalid or expired OTP.","data":{}}`))
+			return
+		}
+		f.writeToken(w)
 	})
 	mux.HandleFunc("POST /v1/devices", func(w http.ResponseWriter, _ *http.Request) {
 		f.devicesHit <- struct{}{}
@@ -95,6 +129,15 @@ func newCodeServer(t *testing.T) *codeServer {
 	f.Server = httptest.NewServer(mux)
 	t.Cleanup(f.Close)
 	return f
+}
+
+// writeToken answers a sign-in with a token and the record of ada@example.com.
+func (f *codeServer) writeToken(w http.ResponseWriter) {
+	payload, _ := json.Marshal(map[string]any{"exp": time.Now().Add(7 * 24 * time.Hour).Unix(), "id": "rec1"})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"token":  "e30." + base64.RawURLEncoding.EncodeToString(payload) + ".sig",
+		"record": map[string]any{"id": "rec1", "email": "ada@example.com", "name": "ada"},
+	})
 }
 
 func (f *codeServer) counts() (requests, checks, resets int) {
@@ -140,21 +183,31 @@ func waitSnap(t *testing.T, r *Real, what string, ok func(SyncSnapshot) bool) Sy
 	}
 }
 
-func atCodeStep(s SyncSnapshot) bool {
-	return s.Phase == SyncSignedOut && s.SignInStep == SignInStepCode
+func atVerifyStep(s SyncSnapshot) bool {
+	return s.Phase == SyncSignedOut && s.SignInStep == SignInStepVerify
 }
 
-func TestRequestCodeMovesToTheCodeStepAndResendWaits(t *testing.T) {
+func atResetCodeStep(s SyncSnapshot) bool {
+	return s.Phase == SyncSignedOut && s.SignInStep == SignInStepResetCode
+}
+
+func TestSignUpMovesToVerifyAndResendWaits(t *testing.T) {
 	f := newCodeServer(t)
 	r, advance := codeApp(t, f)
 
-	r.SyncRequestCode(" ada@example.com ")
-	snap := waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp(" ada@example.com ", "a long password", "zh-Hans")
+	snap := waitSnap(t, r, "the verify step", atVerifyStep)
 	if snap.SignInEmail != "ada@example.com" || !snap.ResendAt.Equal(time.Date(2026, 10, 22, 9, 0, 30, 0, time.UTC)) {
 		t.Fatalf("email %q, resend at %v", snap.SignInEmail, snap.ResendAt)
 	}
 	if snap.SignInFailure != SignInFailureNone || snap.SignInStage != SignInStageNone {
 		t.Fatalf("failure %q stage %q", snap.SignInFailure, snap.SignInStage)
+	}
+	f.mu.Lock()
+	signUps := append([]string(nil), f.signUps...)
+	f.mu.Unlock()
+	if len(signUps) != 1 || signUps[0] != "ada@example.com|a long password|zh-Hans" {
+		t.Fatalf("sign-ups %v", signUps)
 	}
 
 	r.SyncResendCode() // too early
@@ -167,22 +220,63 @@ func TestRequestCodeMovesToTheCodeStepAndResendWaits(t *testing.T) {
 	advance(2 * time.Second)
 	r.SyncResendCode()
 	waitSnap(t, r, "the resend", func(s SyncSnapshot) bool {
-		return atCodeStep(s) && s.ResendAt.After(snap.ResendAt)
+		return atVerifyStep(s) && s.ResendAt.After(snap.ResendAt)
 	})
 	if requests, _, _ := f.counts(); requests != 2 {
 		t.Fatalf("requests = %d, want 2", requests)
 	}
+	f.mu.Lock()
+	n := len(f.signUps)
+	f.mu.Unlock()
+	if n != 1 {
+		t.Fatalf("a resend signed up again (%d sign-ups)", n)
+	}
 }
 
-func TestWrongCodeKeepsTheCodeStep(t *testing.T) {
+func TestSignUpWithATakenEmailStaysOnSignUp(t *testing.T) {
 	f := newCodeServer(t)
 	r, _ := codeApp(t, f)
-	r.SyncRequestCode("ada@example.com")
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSetSignInStep(SignInStepSignUp)
+	r.SyncSignUp("taken@example.com", "a long password", "en")
+	snap := waitSnap(t, r, "the failure", func(s SyncSnapshot) bool { return s.SignInFailure != "" })
+	if snap.SignInFailure != SignInFailureEmailTaken || snap.SignInStep != SignInStepSignUp || snap.Phase != SyncSignedOut ||
+		snap.SignInEmail != "taken@example.com" {
+		t.Fatalf("failure %q step %q phase %v email %q", snap.SignInFailure, snap.SignInStep, snap.Phase, snap.SignInEmail)
+	}
+	if requests, _, _ := f.counts(); requests != 0 {
+		t.Fatalf("a code was requested for a taken email (%d)", requests)
+	}
+}
+
+func TestSigningInToAnUnverifiedAccountShowsVerify(t *testing.T) {
+	f := newCodeServer(t)
+	r, _ := codeApp(t, f)
+	r.SyncSignIn("unverified@example.com", "a long password")
+	snap := waitSnap(t, r, "the verify step", atVerifyStep)
+	if snap.SignInEmail != "unverified@example.com" || snap.SignInFailure != SignInFailureNone {
+		t.Fatalf("email %q failure %q", snap.SignInEmail, snap.SignInFailure)
+	}
+	if requests, _, _ := f.counts(); requests != 1 {
+		t.Fatalf("code requests = %d, want the one mailed after the refused sign-in", requests)
+	}
+	// A wrong password is only a failure on the sign-in tab.
+	r.SyncSetSignInStep(SignInStepSignIn)
+	r.SyncSignIn("unverified@example.com", "wrong password")
+	snap = waitSnap(t, r, "the failure", func(s SyncSnapshot) bool { return s.SignInFailure != "" })
+	if snap.SignInFailure != SignInFailureCredentials || snap.SignInStep != SignInStepSignIn {
+		t.Fatalf("failure %q step %q", snap.SignInFailure, snap.SignInStep)
+	}
+}
+
+func TestWrongCodeKeepsTheVerifyStep(t *testing.T) {
+	f := newCodeServer(t)
+	r, _ := codeApp(t, f)
+	r.SyncSignUp("ada@example.com", "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 
 	r.SyncSignInWithCode("000000")
 	snap := waitSnap(t, r, "the failure", func(s SyncSnapshot) bool { return s.SignInFailure != "" })
-	if snap.SignInFailure != SignInFailureWrongCode || snap.SignInStep != SignInStepCode || snap.Phase != SyncSignedOut {
+	if snap.SignInFailure != SignInFailureWrongCode || snap.SignInStep != SignInStepVerify || snap.Phase != SyncSignedOut {
 		t.Fatalf("failure %q step %q phase %v", snap.SignInFailure, snap.SignInStep, snap.Phase)
 	}
 }
@@ -190,13 +284,13 @@ func TestWrongCodeKeepsTheCodeStep(t *testing.T) {
 func TestAnOldCodeIsReplacedAtOnce(t *testing.T) {
 	f := newCodeServer(t)
 	r, advance := codeApp(t, f)
-	r.SyncRequestCode("ada@example.com")
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp("ada@example.com", "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 
 	advance(10*time.Minute + time.Second)
 	r.SyncSignInWithCode("123456")
 	snap := waitSnap(t, r, "the new code", func(s SyncSnapshot) bool { return s.SignInFailure == SignInFailureCodeExpired })
-	if snap.SignInStep != SignInStepCode || !snap.ResendAt.After(time.Date(2026, 10, 22, 9, 10, 0, 0, time.UTC)) {
+	if snap.SignInStep != SignInStepVerify || !snap.ResendAt.After(time.Date(2026, 10, 22, 9, 10, 0, 0, time.UTC)) {
 		t.Fatalf("step %q, resend at %v", snap.SignInStep, snap.ResendAt)
 	}
 	if requests, checks, _ := f.counts(); requests != 2 || checks != 0 {
@@ -207,8 +301,8 @@ func TestAnOldCodeIsReplacedAtOnce(t *testing.T) {
 func TestRightCodeLinksLikeAPasswordSignIn(t *testing.T) {
 	f := newCodeServer(t)
 	r, _ := codeApp(t, f)
-	r.SyncRequestCode("ada@example.com")
-	waitSnap(t, r, "the code step", atCodeStep)
+	r.SyncSignUp("ada@example.com", "a long password", "en")
+	waitSnap(t, r, "the verify step", atVerifyStep)
 
 	f.holdCheck = make(chan struct{})
 	r.SyncSignInWithCode("123456")
@@ -228,24 +322,47 @@ func TestRightCodeLinksLikeAPasswordSignIn(t *testing.T) {
 	waitSnap(t, r, "the sign-in to end", func(s SyncSnapshot) bool { return s.Phase != SyncSigningIn })
 }
 
-func TestPasswordResetAndStepChanges(t *testing.T) {
+func TestForgotPasswordResetsInTheApp(t *testing.T) {
 	f := newCodeServer(t)
 	r, _ := codeApp(t, f)
-	r.SyncSetSignInStep(SignInStepPassword)
-	if snap := r.SyncSnapshot(); snap.SignInStep != SignInStepPassword {
+	r.SyncSetSignInStep(SignInStepResetEmail)
+	if snap := r.SyncSnapshot(); snap.SignInStep != SignInStepResetEmail {
 		t.Fatalf("step = %q", snap.SignInStep)
 	}
-	r.SyncRequestPasswordReset("ada@example.com")
-	snap := waitSnap(t, r, "the reset step", func(s SyncSnapshot) bool { return s.SignInStep == SignInStepResetSent })
+	r.SyncRequestResetCode(" ada@example.com ")
+	snap := waitSnap(t, r, "the reset code step", atResetCodeStep)
 	if snap.SignInEmail != "ada@example.com" || snap.Phase != SyncSignedOut {
 		t.Fatalf("email %q phase %v", snap.SignInEmail, snap.Phase)
 	}
-	if _, _, resets := f.counts(); resets != 1 {
-		t.Fatalf("resets = %d", resets)
+	if requests, _, _ := f.counts(); requests != 1 {
+		t.Fatalf("requests = %d", requests)
 	}
-	r.SyncSetSignInStep(SignInStepEmail)
-	if snap := r.SyncSnapshot(); snap.SignInStep != SignInStepEmail || snap.SignInEmail != "ada@example.com" {
-		t.Fatalf("step %q email %q; going back keeps the address", snap.SignInStep, snap.SignInEmail)
+	f.mu.Lock()
+	n := len(f.signUps)
+	f.mu.Unlock()
+	if n != 0 {
+		t.Fatal("a reset made an account")
+	}
+
+	// A wrong code stays on the step; a short password is its own failure; a right pair signs in.
+	r.SyncResetPassword("000000", "a new password")
+	snap = waitSnap(t, r, "the wrong code", func(s SyncSnapshot) bool { return s.SignInFailure != "" })
+	if snap.SignInFailure != SignInFailureWrongCode || snap.SignInStep != SignInStepResetCode {
+		t.Fatalf("failure %q step %q", snap.SignInFailure, snap.SignInStep)
+	}
+	r.SyncResetPassword("123456", "short")
+	waitSnap(t, r, "the weak password", func(s SyncSnapshot) bool { return s.SignInFailure == SignInFailureWeakPassword })
+	close(f.release)
+	r.SyncResetPassword("123456", "a new password")
+	waitSnap(t, r, "the sign-in", func(s SyncSnapshot) bool { return s.AccountEmail == "ada@example.com" && s.Phase != SyncSigningIn })
+	if _, _, resets := f.counts(); resets != 3 {
+		t.Fatalf("reset calls = %d, want 3", resets)
+	}
+
+	// Going back keeps the address.
+	r.SyncSetSignInStep(SignInStepSignIn)
+	if snap := r.SyncSnapshot(); snap.SignInStep != SignInStepSignIn {
+		t.Fatalf("step %q", snap.SignInStep)
 	}
 }
 
@@ -255,9 +372,9 @@ func TestCodeRequestFailureKinds(t *testing.T) {
 	f.mu.Lock()
 	f.status = http.StatusTooManyRequests
 	f.mu.Unlock()
-	r.SyncRequestCode("ada@example.com")
+	r.SyncSignUp("ada@example.com", "a long password", "en")
 	snap := waitSnap(t, r, "the failure", func(s SyncSnapshot) bool { return s.SignInFailure != "" })
-	if snap.SignInFailure != SignInFailureTooMany || snap.SignInStep != SignInStepEmail {
+	if snap.SignInFailure != SignInFailureTooMany || snap.SignInStep != SignInStepSignIn {
 		t.Fatalf("failure %q step %q", snap.SignInFailure, snap.SignInStep)
 	}
 }

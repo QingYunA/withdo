@@ -10,7 +10,14 @@ import xyz.sriai.adhdtodo.ui.DEFAULT_SYNC_SERVER
 import xyz.sriai.adhdtodo.ui.SYNC_ATTENTION_MILLIS
 import xyz.sriai.adhdtodo.ui.SignInFlow
 import xyz.sriai.adhdtodo.ui.SignInStep
-import xyz.sriai.adhdtodo.ui.afterRequest
+import xyz.sriai.adhdtodo.ui.afterResetRequest
+import xyz.sriai.adhdtodo.ui.afterSignUp
+import xyz.sriai.adhdtodo.ui.afterVerifyAnswer
+import xyz.sriai.adhdtodo.ui.isTab
+import xyz.sriai.adhdtodo.ui.passwordLongEnough
+import xyz.sriai.adhdtodo.ui.passwordStrength
+import xyz.sriai.adhdtodo.ui.syncLang
+import java.util.Locale
 import xyz.sriai.adhdtodo.ui.codeDigits
 import xyz.sriai.adhdtodo.ui.codeFailureOf
 import xyz.sriai.adhdtodo.ui.codeFailureText
@@ -130,35 +137,101 @@ class SyncRulesTest {
         assertEquals(null, codeFailureOf(""))
         assertEquals(CodeFailure.WRONG_CODE, codeFailureOf("wrong_code"))
         assertEquals(CodeFailure.EXPIRED, codeFailureOf("expired"))
+        assertEquals(CodeFailure.EMAIL_TAKEN, codeFailureOf("email_taken"))
+        assertEquals(CodeFailure.INVALID_EMAIL, codeFailureOf("invalid_email"))
+        assertEquals(CodeFailure.WEAK_PASSWORD, codeFailureOf("weak_password"))
         assertEquals(CodeFailure.OTHER, codeFailureOf("surprise"))
+        assertEquals(R.string.sync_email_taken, codeFailureText(CodeFailure.EMAIL_TAKEN))
+        assertEquals(R.string.sync_invalid_email, codeFailureText(CodeFailure.INVALID_EMAIL))
+        assertEquals(R.string.sync_password_min, codeFailureText(CodeFailure.WEAK_PASSWORD))
     }
 
     @Test
-    fun `a mailed code moves to the code step and a failure stays on the email step`() {
-        val sent = SignInFlow(email = "a@b.co").afterRequest(null, CodeState("code", "a@b.co", 30, ""))
-        assertEquals(SignInStep.CODE, sent.step)
+    fun `a sign-up moves to verify and a failure stays on sign up`() {
+        val up = SignInFlow(step = SignInStep.SIGN_UP, email = "a@b.co")
+        val sent = up.copy(creating = true).afterSignUp(null, CodeState("verify", "a@b.co", 30, ""))
+        assertEquals(SignInStep.VERIFY, sent.step)
         assertEquals(30, sent.resendIn)
         assertEquals(null, sent.failure)
+        assertFalse(sent.creating)
 
-        val unsupported = SignInFlow(email = "a@b.co").afterRequest("nope", CodeState("", "", 0, "unsupported"))
-        assertEquals(SignInStep.EMAIL, unsupported.step)
-        assertEquals(CodeFailure.UNSUPPORTED, unsupported.failure)
+        val taken = up.afterSignUp("this email already has an account", CodeState("", "a@b.co", 0, "email_taken"))
+        assertEquals(SignInStep.SIGN_UP, taken.step)
+        assertEquals(CodeFailure.EMAIL_TAKEN, taken.failure)
 
-        val network = SignInFlow(email = "a@b.co").afterRequest("down", CodeState("", "", 0, "network"))
-        assertEquals(SignInStep.EMAIL, network.step)
+        // A code that the core did not report as the verify step is not a success.
+        val odd = up.afterSignUp(null, CodeState("reset_code", "a@b.co", 30, ""))
+        assertEquals(SignInStep.SIGN_UP, odd.step)
+    }
+
+    @Test
+    fun `forgot password moves to the reset code step`() {
+        val flow = SignInFlow(step = SignInStep.RESET_EMAIL, email = "a@b.co")
+        val sent = flow.afterResetRequest(null, CodeState("reset_code", "a@b.co", 30, ""))
+        assertEquals(SignInStep.RESET_CODE, sent.step)
+        val network = flow.afterResetRequest("down", CodeState("", "", 0, "network"))
+        assertEquals(SignInStep.RESET_EMAIL, network.step)
         assertEquals(CodeFailure.NETWORK, network.failure)
     }
 
     @Test
+    fun `a sign-in to an unverified account shows verify`() {
+        val flow = SignInFlow(step = SignInStep.SIGN_IN, email = "a@b.co", attempt = 1)
+            .afterVerifyAnswer(CodeState("verify", "a@b.co", 30, ""))
+        assertEquals(SignInStep.VERIFY, flow.step)
+        assertEquals(30, flow.resendIn)
+        assertEquals(2, flow.attempt)
+        // Without a readable state the countdown starts over and the address stays.
+        val blind = SignInFlow(email = "a@b.co").afterVerifyAnswer(null)
+        assertEquals(SignInStep.VERIFY, blind.step)
+        assertEquals("a@b.co", blind.email)
+        assertEquals(30, blind.resendIn)
+    }
+
+    @Test
     fun `a wrong code empties the cells and an expired one restarts the countdown`() {
-        val code = SignInFlow(step = SignInStep.CODE, email = "a@b.co", attempt = 2)
-        val wrong = code.failed(CodeState("code", "a@b.co", 10, "wrong_code"), "that code isn't right")
+        val code = SignInFlow(step = SignInStep.VERIFY, email = "a@b.co", attempt = 2)
+        val wrong = code.failed(CodeState("verify", "a@b.co", 10, "wrong_code"), "that code isn't right")
         assertEquals(CodeFailure.WRONG_CODE, wrong.failure)
         assertEquals(3, wrong.attempt)
-        assertEquals(SignInStep.CODE, wrong.step)
-        val expired = code.failed(CodeState("code", "a@b.co", 30, "expired"), "x")
+        assertEquals(SignInStep.VERIFY, wrong.step)
+        val expired = code.failed(CodeState("verify", "a@b.co", 30, "expired"), "x")
         assertEquals(CodeFailure.EXPIRED, expired.failure)
         assertEquals(30, expired.resendIn)
+    }
+
+    @Test
+    fun `only the two tabs are tabs`() {
+        assertTrue(SignInStep.SIGN_IN.isTab())
+        assertTrue(SignInStep.SIGN_UP.isTab())
+        assertFalse(SignInStep.VERIFY.isTab())
+        assertFalse(SignInStep.RESET_EMAIL.isTab())
+        assertFalse(SignInStep.RESET_CODE.isTab())
+    }
+
+    @Test
+    fun `a password needs eight characters and the bar has four steps`() {
+        assertFalse(passwordLongEnough("short"))
+        assertTrue(passwordLongEnough("12345678"))
+        assertTrue(passwordLongEnough("短短短短短短短短"))
+        assertEquals(0, passwordStrength(""))
+        assertEquals(0, passwordStrength("short"))
+        assertEquals(1, passwordStrength("lowercas"))
+        assertEquals(1, passwordStrength("12345678"))
+        assertEquals(1, passwordStrength("短短短短短短短短"))
+        assertEquals(2, passwordStrength("alllowercase"))
+        assertEquals(2, passwordStrength("abcdefgh1"))
+        assertEquals(3, passwordStrength("Lowercase1"))
+        assertEquals(3, passwordStrength("correct horse battery"))
+        assertEquals(4, passwordStrength("Correct-Horse-9"))
+    }
+
+    @Test
+    fun `the code mails follow the language of the app`() {
+        assertEquals("zh-Hans", syncLang(Locale.SIMPLIFIED_CHINESE))
+        assertEquals("zh-Hans", syncLang(Locale.forLanguageTag("zh-Hant-TW")))
+        assertEquals("en", syncLang(Locale.US))
+        assertEquals("en", syncLang(Locale.GERMANY))
     }
 }
 

@@ -114,13 +114,27 @@ const wellWidth float32 = 230
 // fieldWell is the quiet outlined box a settings text field sits in.
 // A width of 0 leaves the width to the row it sits in.
 func fieldWell(c *ui.Context, t *theme.Tokens, key string, width float32, body func()) ui.Element {
-	well := ui.Row(c.Key("well-"+key)).Height(28).Shrink(0).Padding(0, 10).AlignItems(ui.Center).
-		Radius(theme.RadiusControl).Background(t.Bg).Border(theme.Hairline, t.ComposerBorder())
+	return fieldWellTrailing(c, t, key, width, body, nil)
+}
+
+// fieldWellTrailing is fieldWell with something at its right end, such as a password's Show.
+func fieldWellTrailing(c *ui.Context, t *theme.Tokens, key string, width float32, body, trailing func()) ui.Element {
+	return fieldWellIn(c, t, key, width, t.Bg, t.ComposerBorder(), body, trailing)
+}
+
+// fieldWellIn is fieldWellTrailing with the well's own ground and hairline: a field on a white card
+// takes the tinted ground, since the white of the usual well would not show on it.
+func fieldWellIn(c *ui.Context, t *theme.Tokens, key string, width float32, ground, line ui.Color, body, trailing func()) ui.Element {
+	well := ui.Row(c.Key("well-"+key)).Height(28).Shrink(0).Padding(0, 10).Gap(6).AlignItems(ui.Center).
+		Radius(theme.RadiusControl).Background(ground).Border(theme.Hairline, line)
 	if width > 0 {
 		well.Width(width)
 	}
 	return well.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Children(body)
+		if trailing != nil {
+			trailing()
+		}
 	})
 }
 
@@ -190,13 +204,29 @@ func statusDot(c *ui.Context, color ui.Color) ui.Element { return theme.Dot(c, c
 // label is what assistive technology calls the control. It returns the index chosen this frame, or
 // -1.
 func segmented(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int) int {
+	return segmentedIn(c, t, key, label, labels, selected, false)
+}
+
+// segmentedFill is segmented as wide as the room it has, the segments sharing it equally with their
+// labels centered.
+func segmentedFill(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int) int {
+	return segmentedIn(c, t, key, label, labels, selected, true)
+}
+
+func segmentedIn(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int, fill bool) int {
 	sel := selected
 	parts := ui.SegmentedBase(c.Key(key), &sel, len(labels))
 	track := parts.Track.Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Label(label)
+	if fill {
+		track.FillWidth()
+	}
 	track.Children(func() {
 		for i, name := range labels {
 			on := i == sel
 			seg := parts.Segment(i).Padding(3, 10).Radius(5).Label(name).Cursor(ui.CursorPointer)
+			if fill {
+				seg.Grow(1).Basis(0).Center()
+			}
 			switch {
 			case on:
 				seg.Background(t.Bg).Shadow(0, 1, 2, 0, t.Shadow.Alpha(0.35))

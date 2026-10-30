@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.filter
@@ -56,6 +58,10 @@ import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectPage
 import xyz.sriai.adhdtodo.data.SyncStatus
+import xyz.sriai.adhdtodo.ui.CodeFailure
+import xyz.sriai.adhdtodo.ui.SignInActions
+import xyz.sriai.adhdtodo.ui.SignInFlow
+import xyz.sriai.adhdtodo.ui.SignInStep
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.testing.FixedTime
 import xyz.sriai.adhdtodo.testing.Golden
@@ -276,7 +282,7 @@ class InteractionTest {
         )
         compose.waitForIdle()
         compose.onNodeWithText("Finish in your browser").assertExists()
-        compose.onNodeWithText("Continue with email").assertDoesNotExist()
+        compose.onNodeWithText("Email").assertDoesNotExist()
         compose.clickText("Cancel")
         assertEquals(1, cancelled)
     }
@@ -291,8 +297,160 @@ class InteractionTest {
             ),
         )
         compose.setThemedContent { Sync(model) }
-        compose.onNodeWithText("Continue with email").assertExists()
+        compose.onNodeWithText("Email").assertExists()
         compose.onNodeWithText("Continue with Google").assertDoesNotExist()
+    }
+
+    /** The signed-out card over a model the actions move on, as the app does. */
+    private fun signedOut(
+        step: SignInStep = SignInStep.SIGN_IN,
+        failure: CodeFailure? = null,
+        email: String = "",
+        calls: MutableList<String> = mutableListOf(),
+    ): Pair<MutableState<SyncModel>, SignInActions> {
+        val model = mutableStateOf(
+            SyncModel(
+                SyncPhase.SIGNED_OUT,
+                SyncStatus(server = DEFAULT_SYNC_SERVER),
+                flow = SignInFlow(step = step, email = email, failure = failure, resendIn = 24),
+            ),
+        )
+        val actions = SignInActions(
+            onSignInWithPassword = { e, p -> calls += "signin:$e:$p" },
+            onSignUp = { e, p -> calls += "signup:$e:$p" },
+            onSubmitCode = { calls += "code:$it" },
+            onSendResetCode = { calls += "sendreset:$it" },
+            onResetPassword = { c, p -> calls += "reset:$c:$p" },
+            onOpenUrl = { calls += "open:$it" },
+            onStep = { next ->
+                calls += "step:$next"
+                model.value = model.value.copy(flow = model.value.flow.copy(step = next, failure = null))
+            },
+        )
+        return model to actions
+    }
+
+    @Test
+    fun `the tabs switch and keep the typed email`() {
+        val (model, actions) = signedOut()
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("Forgot password?").assertExists()
+        compose.onNodeWithText("Create account").assertDoesNotExist()
+        compose.fields()[0].performTextInput("cyan@example.com")
+        compose.onAllNodesWithText("Sign up").onFirst().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Create account").assertExists()
+        compose.onNodeWithText("At least 8 characters.").assertExists()
+        compose.onNodeWithText("Forgot password?").assertDoesNotExist()
+        compose.fields()[0].assertTextContains("cyan@example.com")
+        compose.onAllNodesWithText("Sign in").onFirst().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Forgot password?").assertExists()
+        compose.fields()[0].assertTextContains("cyan@example.com")
+    }
+
+    @Test
+    fun `sign in sends the email and the password`() {
+        val calls = mutableListOf<String>()
+        val (model, actions) = signedOut(calls = calls)
+        // The Sync screen takes the sign-in of the card from onSignIn, as the app wires it.
+        compose.setThemedContent { Sync(model, onSignIn = { e, p -> calls += "signin:$e:$p" }, signInActions = actions) }
+        compose.fields()[0].performTextInput("cyan@example.com")
+        compose.fields()[1].performTextInput("hunter22")
+        compose.onAllNodesWithText("Sign in").onLast().performClick()
+        assertEquals(listOf("signin:cyan@example.com:hunter22"), calls)
+    }
+
+    @Test
+    fun `sign up needs an email and eight characters`() {
+        val calls = mutableListOf<String>()
+        val (model, actions) = signedOut(step = SignInStep.SIGN_UP, calls = calls)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.clickableText("Create account").assertIsNotEnabled()
+        compose.fields()[0].performTextInput("cyan@example.com")
+        compose.fields()[1].performTextInput("short")
+        compose.clickableText("Create account").assertIsNotEnabled()
+        compose.fields()[1].performTextInput("er pass")
+        compose.clickableText("Create account").assertIsEnabled().performClick()
+        assertEquals(listOf("signup:cyan@example.com:shorter pass"), calls)
+    }
+
+    @Test
+    fun `a taken email says so and its link picks sign in`() {
+        val calls = mutableListOf<String>()
+        val (model, actions) = signedOut(step = SignInStep.SIGN_UP, failure = CodeFailure.EMAIL_TAKEN, email = "cyan@example.com", calls = calls)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("This email already has an account.").assertExists()
+        compose.onAllNodesWithText("Sign in").onLast().performClick()
+        assertEquals(listOf("step:SIGN_IN"), calls)
+        compose.waitForIdle()
+        compose.onNodeWithText("Forgot password?").assertExists()
+    }
+
+    @Test
+    fun `a wrong password is worded under its field`() {
+        val (wrong, wrongActions) = signedOut(failure = CodeFailure.WRONG_PASSWORD, email = "cyan@example.com")
+        compose.setThemedContent { Sync(wrong, signInActions = wrongActions) }
+        compose.onNodeWithText("Wrong email or password").assertExists()
+    }
+
+    @Test
+    fun `a malformed email is worded under its field`() {
+        val (bad, badActions) = signedOut(step = SignInStep.SIGN_UP, failure = CodeFailure.INVALID_EMAIL)
+        compose.setThemedContent { Sync(bad, signInActions = badActions) }
+        compose.onNodeWithText("That doesn’t look like an email").assertExists()
+    }
+
+    @Test
+    fun `show reveals the password and hide covers it again`() {
+        val (model, actions) = signedOut(step = SignInStep.SIGN_UP)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("Show").performClick()
+        compose.onNodeWithText("Hide").assertExists()
+        compose.onNodeWithText("Hide").performClick()
+        compose.onNodeWithText("Show").assertExists()
+    }
+
+    @Test
+    fun `forgot password goes to its steps and sends the code and the new password`() {
+        val calls = mutableListOf<String>()
+        val (model, actions) = signedOut(email = "cyan@example.com", calls = calls)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("Forgot password?").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Reset your password").assertExists()
+        compose.fields()[0].assertTextContains("cyan@example.com")
+        compose.clickableText("Send code").performClick()
+        assertEquals(listOf("step:RESET_EMAIL", "sendreset:cyan@example.com"), calls)
+
+        model.value = model.value.copy(flow = SignInFlow(step = SignInStep.RESET_CODE, email = "cyan@example.com", resendIn = 24))
+        compose.waitForIdle()
+        compose.onNodeWithText("The code went to cyan@example.com", substring = true).assertExists()
+        compose.clickableText("Set and sign in").assertIsNotEnabled()
+        compose.fields()[0].performTextInput("482913")
+        compose.fields()[1].performTextInput("a new password")
+        compose.clickableText("Set and sign in").assertIsEnabled().performClick()
+        assertEquals("reset:482913:a new password", calls.last())
+    }
+
+    @Test
+    fun `the sixth digit of the verify step sends the code`() {
+        val calls = mutableListOf<String>()
+        val (model, actions) = signedOut(step = SignInStep.VERIFY, email = "cyan@example.com", calls = calls)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("Verify your email").assertExists()
+        compose.onNodeWithText("It checks itself once complete").assertExists()
+        compose.fields()[0].performTextInput("48291")
+        assertEquals(emptyList<String>(), calls)
+        compose.fields()[0].performTextInput("3")
+        assertEquals(listOf("code:482913"), calls)
+    }
+
+    @Test
+    fun `the terms line has the two links`() {
+        val (model, actions) = signedOut(step = SignInStep.SIGN_UP)
+        compose.setThemedContent { Sync(model, signInActions = actions) }
+        compose.onNodeWithText("By creating an account you agree to the", substring = true).assertExists()
     }
 
     @Test

@@ -10384,13 +10384,13 @@ func (msgs Messages) SettingsSyncUnavailable() string {
 	return Catalog.Format(msgs.locale, "settingsSyncUnavailable", nil)
 }
 
-// SettingsSyncEmail says "Email or username"
+// SettingsSyncEmail says "Email"
 // in the language the app shows.
 //
 // The account field of the signed-out Sync pane.
 func SettingsSyncEmail() string { return In(i18n.Locale()).SettingsSyncEmail() }
 
-// SettingsSyncEmail says "Email or username"
+// SettingsSyncEmail says "Email"
 // in the language of msgs.
 //
 // The account field of the signed-out Sync pane.
@@ -11546,34 +11546,6 @@ func (msgs Messages) BulkNotImportantToast(count int) string {
 	return Catalog.Format(msgs.locale, "bulkNotImportantToast", map[string]any{"count": count})
 }
 
-// SettingsSyncEmailTitle says "Sign in or sign up"
-// in the language the app shows.
-//
-// Title of the signed-out card's email step.
-func SettingsSyncEmailTitle() string { return In(i18n.Locale()).SettingsSyncEmailTitle() }
-
-// SettingsSyncEmailTitle says "Sign in or sign up"
-// in the language of msgs.
-//
-// Title of the signed-out card's email step.
-func (msgs Messages) SettingsSyncEmailTitle() string {
-	return Catalog.Format(msgs.locale, "settingsSyncEmailTitle", nil)
-}
-
-// SettingsSyncEmailBody says "Your tasks, projects and agents' reports sync to your phone and other computers. A new email gets an account here."
-// in the language the app shows.
-//
-// The email step's explanation.
-func SettingsSyncEmailBody() string { return In(i18n.Locale()).SettingsSyncEmailBody() }
-
-// SettingsSyncEmailBody says "Your tasks, projects and agents' reports sync to your phone and other computers. A new email gets an account here."
-// in the language of msgs.
-//
-// The email step's explanation.
-func (msgs Messages) SettingsSyncEmailBody() string {
-	return Catalog.Format(msgs.locale, "settingsSyncEmailBody", nil)
-}
-
 // SettingsSyncEmailPlaceholder says "you@example.com"
 // in the language the app shows.
 //
@@ -11586,20 +11558,6 @@ func SettingsSyncEmailPlaceholder() string { return In(i18n.Locale()).SettingsSy
 // Placeholder of the email field.
 func (msgs Messages) SettingsSyncEmailPlaceholder() string {
 	return Catalog.Format(msgs.locale, "settingsSyncEmailPlaceholder", nil)
-}
-
-// SettingsSyncContinueEmail says "Continue with email"
-// in the language the app shows.
-//
-// The accent button of the email step.
-func SettingsSyncContinueEmail() string { return In(i18n.Locale()).SettingsSyncContinueEmail() }
-
-// SettingsSyncContinueEmail says "Continue with email"
-// in the language of msgs.
-//
-// The accent button of the email step.
-func (msgs Messages) SettingsSyncContinueEmail() string {
-	return Catalog.Format(msgs.locale, "settingsSyncContinueEmail", nil)
 }
 
 // SettingsSyncContinueGoogle says "Continue with Google"
@@ -11616,20 +11574,6 @@ func SettingsSyncContinueGoogle() string { return In(i18n.Locale()).SettingsSync
 // Google's consent page.
 func (msgs Messages) SettingsSyncContinueGoogle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncContinueGoogle", nil)
-}
-
-// SettingsSyncOr says "or"
-// in the language the app shows.
-//
-// The word between the two hairlines under the Google button.
-func SettingsSyncOr() string { return In(i18n.Locale()).SettingsSyncOr() }
-
-// SettingsSyncOr says "or"
-// in the language of msgs.
-//
-// The word between the two hairlines under the Google button.
-func (msgs Messages) SettingsSyncOr() string {
-	return Catalog.Format(msgs.locale, "settingsSyncOr", nil)
 }
 
 // SettingsSyncGoogleTitle says "Finish in your browser"
@@ -11718,36 +11662,6 @@ func (msgs Messages) SettingsSyncLocalNoteWindows() string {
 	return Catalog.Format(msgs.locale, "settingsSyncLocalNoteWindows", nil)
 }
 
-// SettingsSyncCodeTitle says "Check your email"
-// in the language the app shows.
-//
-// Title of the code step.
-func SettingsSyncCodeTitle() string { return In(i18n.Locale()).SettingsSyncCodeTitle() }
-
-// SettingsSyncCodeTitle says "Check your email"
-// in the language of msgs.
-//
-// Title of the code step.
-func (msgs Messages) SettingsSyncCodeTitle() string {
-	return Catalog.Format(msgs.locale, "settingsSyncCodeTitle", nil)
-}
-
-// SettingsSyncCodeSentTo says "We sent a 6-digit code to"
-// in the language the app shows.
-//
-// Before the email address on the code step; the address and the
-// change-email link follow.
-func SettingsSyncCodeSentTo() string { return In(i18n.Locale()).SettingsSyncCodeSentTo() }
-
-// SettingsSyncCodeSentTo says "We sent a 6-digit code to"
-// in the language of msgs.
-//
-// Before the email address on the code step; the address and the
-// change-email link follow.
-func (msgs Messages) SettingsSyncCodeSentTo() string {
-	return Catalog.Format(msgs.locale, "settingsSyncCodeSentTo", nil)
-}
-
 // SettingsSyncChangeEmail says "Use a different email"
 // in the language the app shows.
 //
@@ -11804,90 +11718,32 @@ func (msgs Messages) SettingsSyncResendCode() string {
 	return Catalog.Format(msgs.locale, "settingsSyncResendCode", nil)
 }
 
-// SettingsSyncUsePassword says "Use a password instead"
+// SettingsSyncForgotPassword says "Forgot password?"
 // in the language the app shows.
 //
-// Link from the code step to the password step.
-func SettingsSyncUsePassword() string { return In(i18n.Locale()).SettingsSyncUsePassword() }
-
-// SettingsSyncUsePassword says "Use a password instead"
-// in the language of msgs.
-//
-// Link from the code step to the password step.
-func (msgs Messages) SettingsSyncUsePassword() string {
-	return Catalog.Format(msgs.locale, "settingsSyncUsePassword", nil)
-}
-
-// SettingsSyncPasswordTitle says "Sign in with a password"
-// in the language the app shows.
-//
-// Title of the password step.
-func SettingsSyncPasswordTitle() string { return In(i18n.Locale()).SettingsSyncPasswordTitle() }
-
-// SettingsSyncPasswordTitle says "Sign in with a password"
-// in the language of msgs.
-//
-// Title of the password step.
-func (msgs Messages) SettingsSyncPasswordTitle() string {
-	return Catalog.Format(msgs.locale, "settingsSyncPasswordTitle", nil)
-}
-
-// SettingsSyncForgotPassword says "Forgot password"
-// in the language the app shows.
-//
-// Link that mails a password reset link.
+// Link at the right of the password label; it opens the reset steps.
 func SettingsSyncForgotPassword() string { return In(i18n.Locale()).SettingsSyncForgotPassword() }
 
-// SettingsSyncForgotPassword says "Forgot password"
+// SettingsSyncForgotPassword says "Forgot password?"
 // in the language of msgs.
 //
-// Link that mails a password reset link.
+// Link at the right of the password label; it opens the reset steps.
 func (msgs Messages) SettingsSyncForgotPassword() string {
 	return Catalog.Format(msgs.locale, "settingsSyncForgotPassword", nil)
 }
 
-// SettingsSyncUseCode says "Use a code instead"
+// SettingsSyncResetTitle says "Reset your password"
 // in the language the app shows.
 //
-// Link from the password step back to the code.
-func SettingsSyncUseCode() string { return In(i18n.Locale()).SettingsSyncUseCode() }
-
-// SettingsSyncUseCode says "Use a code instead"
-// in the language of msgs.
-//
-// Link from the password step back to the code.
-func (msgs Messages) SettingsSyncUseCode() string {
-	return Catalog.Format(msgs.locale, "settingsSyncUseCode", nil)
-}
-
-// SettingsSyncResetTitle says "Reset your password from your email"
-// in the language the app shows.
-//
-// Title after a reset link was mailed.
+// Title of both reset steps.
 func SettingsSyncResetTitle() string { return In(i18n.Locale()).SettingsSyncResetTitle() }
 
-// SettingsSyncResetTitle says "Reset your password from your email"
+// SettingsSyncResetTitle says "Reset your password"
 // in the language of msgs.
 //
-// Title after a reset link was mailed.
+// Title of both reset steps.
 func (msgs Messages) SettingsSyncResetTitle() string {
 	return Catalog.Format(msgs.locale, "settingsSyncResetTitle", nil)
-}
-
-// SettingsSyncResetBody says "We sent a link to {email}. Set a new password in the browser, then come back"
-// in the language the app shows.
-//
-// Body after a reset link was mailed.
-func SettingsSyncResetBody(email string) string {
-	return In(i18n.Locale()).SettingsSyncResetBody(email)
-}
-
-// SettingsSyncResetBody says "We sent a link to {email}. Set a new password in the browser, then come back"
-// in the language of msgs.
-//
-// Body after a reset link was mailed.
-func (msgs Messages) SettingsSyncResetBody(email string) string {
-	return Catalog.Format(msgs.locale, "settingsSyncResetBody", map[string]any{"email": email})
 }
 
 // SettingsSyncBackToSignIn says "Back to sign in"
@@ -11902,34 +11758,6 @@ func SettingsSyncBackToSignIn() string { return In(i18n.Locale()).SettingsSyncBa
 // Button after a reset link was mailed.
 func (msgs Messages) SettingsSyncBackToSignIn() string {
 	return Catalog.Format(msgs.locale, "settingsSyncBackToSignIn", nil)
-}
-
-// SettingsSyncResetOrPrefix says "Or "
-// in the language the app shows.
-//
-// Before the use-a-code link under the reset button.
-func SettingsSyncResetOrPrefix() string { return In(i18n.Locale()).SettingsSyncResetOrPrefix() }
-
-// SettingsSyncResetOrPrefix says "Or "
-// in the language of msgs.
-//
-// Before the use-a-code link under the reset button.
-func (msgs Messages) SettingsSyncResetOrPrefix() string {
-	return Catalog.Format(msgs.locale, "settingsSyncResetOrPrefix", nil)
-}
-
-// SettingsSyncResetOrSuffix says "; no password needed."
-// in the language the app shows.
-//
-// After the use-a-code link under the reset button.
-func SettingsSyncResetOrSuffix() string { return In(i18n.Locale()).SettingsSyncResetOrSuffix() }
-
-// SettingsSyncResetOrSuffix says "; no password needed."
-// in the language of msgs.
-//
-// After the use-a-code link under the reset button.
-func (msgs Messages) SettingsSyncResetOrSuffix() string {
-	return Catalog.Format(msgs.locale, "settingsSyncResetOrSuffix", nil)
 }
 
 // SettingsSyncCheckingCode says "Checking the code…"
@@ -12032,6 +11860,368 @@ func SettingsSyncSignInShort() string { return In(i18n.Locale()).SettingsSyncSig
 // The password step's sign-in button.
 func (msgs Messages) SettingsSyncSignInShort() string {
 	return Catalog.Format(msgs.locale, "settingsSyncSignInShort", nil)
+}
+
+// SettingsSyncSignUpShort says "Sign up"
+// in the language the app shows.
+//
+// The Sign up tab of the signed-out card, and the link under the Sign in
+// form.
+func SettingsSyncSignUpShort() string { return In(i18n.Locale()).SettingsSyncSignUpShort() }
+
+// SettingsSyncSignUpShort says "Sign up"
+// in the language of msgs.
+//
+// The Sign up tab of the signed-out card, and the link under the Sign in
+// form.
+func (msgs Messages) SettingsSyncSignUpShort() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSignUpShort", nil)
+}
+
+// SettingsSyncTabs says "Sign in or sign up"
+// in the language the app shows.
+//
+// Accessible name of the Sign in | Sign up switch.
+func SettingsSyncTabs() string { return In(i18n.Locale()).SettingsSyncTabs() }
+
+// SettingsSyncTabs says "Sign in or sign up"
+// in the language of msgs.
+//
+// Accessible name of the Sign in | Sign up switch.
+func (msgs Messages) SettingsSyncTabs() string {
+	return Catalog.Format(msgs.locale, "settingsSyncTabs", nil)
+}
+
+// SettingsSyncOrEmail says "or use your email"
+// in the language the app shows.
+//
+// The rule between the Google button and the email fields.
+func SettingsSyncOrEmail() string { return In(i18n.Locale()).SettingsSyncOrEmail() }
+
+// SettingsSyncOrEmail says "or use your email"
+// in the language of msgs.
+//
+// The rule between the Google button and the email fields.
+func (msgs Messages) SettingsSyncOrEmail() string {
+	return Catalog.Format(msgs.locale, "settingsSyncOrEmail", nil)
+}
+
+// SettingsSyncShowPassword says "Show"
+// in the language the app shows.
+//
+// Quiet text at the right end of a password field; it shows the characters.
+func SettingsSyncShowPassword() string { return In(i18n.Locale()).SettingsSyncShowPassword() }
+
+// SettingsSyncShowPassword says "Show"
+// in the language of msgs.
+//
+// Quiet text at the right end of a password field; it shows the characters.
+func (msgs Messages) SettingsSyncShowPassword() string {
+	return Catalog.Format(msgs.locale, "settingsSyncShowPassword", nil)
+}
+
+// SettingsSyncHidePassword says "Hide"
+// in the language the app shows.
+//
+// The same text while the characters are shown; it hides them again.
+func SettingsSyncHidePassword() string { return In(i18n.Locale()).SettingsSyncHidePassword() }
+
+// SettingsSyncHidePassword says "Hide"
+// in the language of msgs.
+//
+// The same text while the characters are shown; it hides them again.
+func (msgs Messages) SettingsSyncHidePassword() string {
+	return Catalog.Format(msgs.locale, "settingsSyncHidePassword", nil)
+}
+
+// SettingsSyncNoAccount says "Don't have an account?"
+// in the language the app shows.
+//
+// Under the Sign in button, before the Sign up link.
+func SettingsSyncNoAccount() string { return In(i18n.Locale()).SettingsSyncNoAccount() }
+
+// SettingsSyncNoAccount says "Don't have an account?"
+// in the language of msgs.
+//
+// Under the Sign in button, before the Sign up link.
+func (msgs Messages) SettingsSyncNoAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncNoAccount", nil)
+}
+
+// SettingsSyncCreateAccount says "Create account"
+// in the language the app shows.
+//
+// The accent button of the Sign up tab.
+func SettingsSyncCreateAccount() string { return In(i18n.Locale()).SettingsSyncCreateAccount() }
+
+// SettingsSyncCreateAccount says "Create account"
+// in the language of msgs.
+//
+// The accent button of the Sign up tab.
+func (msgs Messages) SettingsSyncCreateAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncCreateAccount", nil)
+}
+
+// SettingsSyncPasswordMin says "At least 8 characters."
+// in the language the app shows.
+//
+// Hint under a new password's strength bar; also the line when the server
+// refuses a short password.
+func SettingsSyncPasswordMin() string { return In(i18n.Locale()).SettingsSyncPasswordMin() }
+
+// SettingsSyncPasswordMin says "At least 8 characters."
+// in the language of msgs.
+//
+// Hint under a new password's strength bar; also the line when the server
+// refuses a short password.
+func (msgs Messages) SettingsSyncPasswordMin() string {
+	return Catalog.Format(msgs.locale, "settingsSyncPasswordMin", nil)
+}
+
+// SettingsSyncTermsLead says "By creating an account you agree to the"
+// in the language the app shows.
+//
+// First part of the line under Create account, before the two links.
+func SettingsSyncTermsLead() string { return In(i18n.Locale()).SettingsSyncTermsLead() }
+
+// SettingsSyncTermsLead says "By creating an account you agree to the"
+// in the language of msgs.
+//
+// First part of the line under Create account, before the two links.
+func (msgs Messages) SettingsSyncTermsLead() string {
+	return Catalog.Format(msgs.locale, "settingsSyncTermsLead", nil)
+}
+
+// SettingsSyncTermsOfService says "Terms of Service"
+// in the language the app shows.
+//
+// Link to the terms on the website.
+func SettingsSyncTermsOfService() string { return In(i18n.Locale()).SettingsSyncTermsOfService() }
+
+// SettingsSyncTermsOfService says "Terms of Service"
+// in the language of msgs.
+//
+// Link to the terms on the website.
+func (msgs Messages) SettingsSyncTermsOfService() string {
+	return Catalog.Format(msgs.locale, "settingsSyncTermsOfService", nil)
+}
+
+// SettingsSyncTermsAnd says "and"
+// in the language the app shows.
+//
+// Between the two links of the terms line.
+func SettingsSyncTermsAnd() string { return In(i18n.Locale()).SettingsSyncTermsAnd() }
+
+// SettingsSyncTermsAnd says "and"
+// in the language of msgs.
+//
+// Between the two links of the terms line.
+func (msgs Messages) SettingsSyncTermsAnd() string {
+	return Catalog.Format(msgs.locale, "settingsSyncTermsAnd", nil)
+}
+
+// SettingsSyncPrivacyPolicy says "Privacy Policy"
+// in the language the app shows.
+//
+// Link to the privacy policy on the website.
+func SettingsSyncPrivacyPolicy() string { return In(i18n.Locale()).SettingsSyncPrivacyPolicy() }
+
+// SettingsSyncPrivacyPolicy says "Privacy Policy"
+// in the language of msgs.
+//
+// Link to the privacy policy on the website.
+func (msgs Messages) SettingsSyncPrivacyPolicy() string {
+	return Catalog.Format(msgs.locale, "settingsSyncPrivacyPolicy", nil)
+}
+
+// SettingsSyncEmailTaken says "This email already has an account."
+// in the language the app shows.
+//
+// Under the email field of Sign up when the email already has an account;
+// the Sign in link follows.
+func SettingsSyncEmailTaken() string { return In(i18n.Locale()).SettingsSyncEmailTaken() }
+
+// SettingsSyncEmailTaken says "This email already has an account."
+// in the language of msgs.
+//
+// Under the email field of Sign up when the email already has an account;
+// the Sign in link follows.
+func (msgs Messages) SettingsSyncEmailTaken() string {
+	return Catalog.Format(msgs.locale, "settingsSyncEmailTaken", nil)
+}
+
+// SettingsSyncGoSignIn says "Sign in"
+// in the language the app shows.
+//
+// The link after the taken-email line; it switches to the Sign in tab with
+// the email kept.
+func SettingsSyncGoSignIn() string { return In(i18n.Locale()).SettingsSyncGoSignIn() }
+
+// SettingsSyncGoSignIn says "Sign in"
+// in the language of msgs.
+//
+// The link after the taken-email line; it switches to the Sign in tab with
+// the email kept.
+func (msgs Messages) SettingsSyncGoSignIn() string {
+	return Catalog.Format(msgs.locale, "settingsSyncGoSignIn", nil)
+}
+
+// SettingsSyncInvalidEmail says "That doesn't look like an email"
+// in the language the app shows.
+//
+// Failure line for a malformed email.
+func SettingsSyncInvalidEmail() string { return In(i18n.Locale()).SettingsSyncInvalidEmail() }
+
+// SettingsSyncInvalidEmail says "That doesn't look like an email"
+// in the language of msgs.
+//
+// Failure line for a malformed email.
+func (msgs Messages) SettingsSyncInvalidEmail() string {
+	return Catalog.Format(msgs.locale, "settingsSyncInvalidEmail", nil)
+}
+
+// SettingsSyncCreatingAccount says "Creating your account…"
+// in the language the app shows.
+//
+// Busy line while a sign-up runs.
+func SettingsSyncCreatingAccount() string { return In(i18n.Locale()).SettingsSyncCreatingAccount() }
+
+// SettingsSyncCreatingAccount says "Creating your account…"
+// in the language of msgs.
+//
+// Busy line while a sign-up runs.
+func (msgs Messages) SettingsSyncCreatingAccount() string {
+	return Catalog.Format(msgs.locale, "settingsSyncCreatingAccount", nil)
+}
+
+// SettingsSyncVerifyTitle says "Verify your email"
+// in the language the app shows.
+//
+// Title of the verify step.
+func SettingsSyncVerifyTitle() string { return In(i18n.Locale()).SettingsSyncVerifyTitle() }
+
+// SettingsSyncVerifyTitle says "Verify your email"
+// in the language of msgs.
+//
+// Title of the verify step.
+func (msgs Messages) SettingsSyncVerifyTitle() string {
+	return Catalog.Format(msgs.locale, "settingsSyncVerifyTitle", nil)
+}
+
+// SettingsSyncVerifySent says "We sent a 6-digit code to {email}"
+// in the language the app shows.
+//
+// Line under the verify title.
+func SettingsSyncVerifySent(email string) string {
+	return In(i18n.Locale()).SettingsSyncVerifySent(email)
+}
+
+// SettingsSyncVerifySent says "We sent a 6-digit code to {email}"
+// in the language of msgs.
+//
+// Line under the verify title.
+func (msgs Messages) SettingsSyncVerifySent(email string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncVerifySent", map[string]any{"email": email})
+}
+
+// SettingsSyncVerifyAuto says "It checks itself once complete"
+// in the language the app shows.
+//
+// Before the Use a different email link on the verify step.
+func SettingsSyncVerifyAuto() string { return In(i18n.Locale()).SettingsSyncVerifyAuto() }
+
+// SettingsSyncVerifyAuto says "It checks itself once complete"
+// in the language of msgs.
+//
+// Before the Use a different email link on the verify step.
+func (msgs Messages) SettingsSyncVerifyAuto() string {
+	return Catalog.Format(msgs.locale, "settingsSyncVerifyAuto", nil)
+}
+
+// SettingsSyncVerifyNote says "An account can't sign in until its email is verified. If you close this window, sign in with your email and password …"
+// in the language the app shows.
+//
+// Quiet note under the verify card.
+func SettingsSyncVerifyNote() string { return In(i18n.Locale()).SettingsSyncVerifyNote() }
+
+// SettingsSyncVerifyNote says "An account can't sign in until its email is verified. If you close this window, sign in with your email and password …"
+// in the language of msgs.
+//
+// Quiet note under the verify card.
+func (msgs Messages) SettingsSyncVerifyNote() string {
+	return Catalog.Format(msgs.locale, "settingsSyncVerifyNote", nil)
+}
+
+// SettingsSyncResetEmailBody says "We'll email you a 6-digit code."
+// in the language the app shows.
+//
+// Line under the title of Forgot password's email step.
+func SettingsSyncResetEmailBody() string { return In(i18n.Locale()).SettingsSyncResetEmailBody() }
+
+// SettingsSyncResetEmailBody says "We'll email you a 6-digit code."
+// in the language of msgs.
+//
+// Line under the title of Forgot password's email step.
+func (msgs Messages) SettingsSyncResetEmailBody() string {
+	return Catalog.Format(msgs.locale, "settingsSyncResetEmailBody", nil)
+}
+
+// SettingsSyncSendCode says "Send code"
+// in the language the app shows.
+//
+// The accent button of Forgot password's email step.
+func SettingsSyncSendCode() string { return In(i18n.Locale()).SettingsSyncSendCode() }
+
+// SettingsSyncSendCode says "Send code"
+// in the language of msgs.
+//
+// The accent button of Forgot password's email step.
+func (msgs Messages) SettingsSyncSendCode() string {
+	return Catalog.Format(msgs.locale, "settingsSyncSendCode", nil)
+}
+
+// SettingsSyncResetSent says "The code went to {email}"
+// in the language the app shows.
+//
+// Line under the title of Forgot password's code step.
+func SettingsSyncResetSent(email string) string {
+	return In(i18n.Locale()).SettingsSyncResetSent(email)
+}
+
+// SettingsSyncResetSent says "The code went to {email}"
+// in the language of msgs.
+//
+// Line under the title of Forgot password's code step.
+func (msgs Messages) SettingsSyncResetSent(email string) string {
+	return Catalog.Format(msgs.locale, "settingsSyncResetSent", map[string]any{"email": email})
+}
+
+// SettingsSyncNewPassword says "New password"
+// in the language the app shows.
+//
+// Label of the new password field of a reset.
+func SettingsSyncNewPassword() string { return In(i18n.Locale()).SettingsSyncNewPassword() }
+
+// SettingsSyncNewPassword says "New password"
+// in the language of msgs.
+//
+// Label of the new password field of a reset.
+func (msgs Messages) SettingsSyncNewPassword() string {
+	return Catalog.Format(msgs.locale, "settingsSyncNewPassword", nil)
+}
+
+// SettingsSyncResetDone says "Set and sign in"
+// in the language the app shows.
+//
+// The accent button of a reset's code step.
+func SettingsSyncResetDone() string { return In(i18n.Locale()).SettingsSyncResetDone() }
+
+// SettingsSyncResetDone says "Set and sign in"
+// in the language of msgs.
+//
+// The accent button of a reset's code step.
+func (msgs Messages) SettingsSyncResetDone() string {
+	return Catalog.Format(msgs.locale, "settingsSyncResetDone", nil)
 }
 
 // SectionQueued says "Queued"

@@ -2457,59 +2457,78 @@ this order: Account, General, Agents, Advanced.
   **The computer is named for the system** (2026-10-28): every Sync-pane line that says `this Mac`
   (`这台 Mac`) says `this PC` (`这台电脑`) on Windows; the catalog keeps a `...Windows` message beside
   each, and `app/views/system_words.go` picks it by `systemGOOS`, as for Finder and File Explorer.
-  Signing in happens in the pane, never through a browser. **Signing up and signing in are one path** (M13 P2, as Linear, Notion and
-  Slack do it): an email, then a 6-digit code mailed to it; an email with no account gets one at
-  that step, with no name asked (the name is the part of the email before `@`). A password is
-  optional: `Use a password instead` keeps it for accounts that have one. The phone's Sync screen
-  has the same steps (below).
-  - *Signed out*: one centered card: the 36 pt pixel person in `accent`, `Sign in or sign up`
-    (`登录或注册`, 17 pt 600), one `meta` line, `Your tasks, projects and agents' reports sync to your
-    phone and other computers. A new email gets an account here.` (`任务、项目和 Agent 的汇报会同步到手机和其他电脑。第一次用这个邮箱，会顺手建好账号。`),
-    then one `fieldWell` 280 pt wide, `you@example.com`, focused when the pane opens, and under it the
-    accent button **Continue with email** (`用邮箱继续`, 280 pt), enabled once the field holds an
-    email; Enter presses it. In `text.tertiary` under it: keys and model settings stay on this Mac (this PC on Windows).
-    Above the field (M13 P3, `v32.html` ①): a 280 pt outlined button **Continue with Google**
-    (`用 Google 继续`, Google's four-color `G` mark at 14 pt, the one logo here that is not pixel art,
-    as Google's branding rules require), then an `or` (`或`) rule, 12 pt `text.tertiary` between two
-    hairlines.
+  Signing in happens in the pane, never through a browser except for Google. **Sign up and sign in
+  are two ways in, and signing up sets a password** (v42, 2026-10-29, `docs/design/mockups/v42.html`;
+  replaces the one email-and-code path of v32, as Todoist and TickTick do it). An email is verified
+  with a 6-digit code before the account can be used; no name is asked (the name is the part of the
+  email before `@`, changed later in the pane). The phone's Sync screen has the same steps (below).
+  - *Signed out*: one card 340 pt wide, centered under the pane header. At its top a segmented
+    control `Sign in | Sign up` (`登录 | 注册`, the `segmented` helper of v41, full width); *Sign in*
+    is picked when the pane opens. Under it the 32 pt outlined **Continue with Google** (`用 Google 继续`,
+    Google's four-color `G` at 14 pt, the one logo here that is not pixel art, as Google's branding
+    rules require), then an `or use your email` (`或用邮箱`) rule, 12 pt `text.tertiary` between two
+    hairlines. Each field has a 12 pt `text.secondary` label above it. In `text.tertiary` under the
+    card: keys and model settings stay on this Mac (this PC on Windows).
+  - *Sign in*: `Email` (`邮箱`) and `Password` (`密码`, masked, with a quiet `Show` / `显示` at its
+    right end), the link `Forgot password?` (`忘记密码？`) at the right of the password's label, the
+    full-width accent button **Sign in** (`登录`, enabled once both fields hold something; Enter
+    presses it), and under it `Don't have an account? Sign up` (`还没有账号？注册`), the link picking
+    *Sign up* with the email kept.
+  - *Sign up*: `Email` and `Password` (at least 8 characters), under the password a four-step bar in
+    the done green (length and the kinds of characters) and `At least 8 characters.`
+    (`至少 8 位。`), the accent button **Create account** (`创建账号`, enabled once the email looks
+    like one and the password is long enough), and in 11.5 pt `text.tertiary`: `By creating an
+    account you agree to the Terms of Service and the Privacy Policy` (`创建账号即表示你同意服务条款和隐私政策`,
+    both links to the website). An email that already has an account says so under the field in
+    `status.blocked`: `This email already has an account. Sign in` (`这个邮箱已经注册过了。去登录`),
+    the link picking *Sign in* with the email kept.
+  - *Verify*: creating the account mails a 6-digit code at once. `Verify your email` (`验证你的邮箱`),
+    `We sent a 6-digit code to <email>`, `It checks itself once complete` and under it the link
+    `Use a different email` (`我们给 <邮箱> 发了 6 位验证码` / `输完自动验证` / `换一个邮箱`, the link back
+    to *Sign up*; the three lines do not fit one 300 pt line, so the dot of v42 is gone). Under the
+    card a quiet card says an account cannot sign in before it is verified and that signing in
+    again lands back here. Six
+    34 x 42 pt cells, 6 pt apart, a short `text.tertiary` dash after the third, digits in 18 pt 600;
+    the first empty cell has the focus ring of the `fieldWell`. Typing a digit moves on, Backspace
+    goes back, `⌘V` of a code fills all six, and the sixth digit sends it (no button). Under them
+    `Didn't get it? Resend in 0:24` (`没收到？0:24 后可以重发`), counting down from 30 s, then the
+    link `Resend code` (`重新发送`). The right code verifies the email and signs in. An account that
+    is not verified cannot sign in: signing in to it with the right password mails a new code and
+    shows *Verify*.
+  - *Forgot password*: the link opens `Reset your password` (`重设密码`) with the email (kept from
+    *Sign in*) and **Send code** (`发送验证码`); then the six cells, `New password` (`新密码`) with
+    its bar, and **Set and sign in** (`设好并登录`), and the link `Back to sign in` (`返回登录`). It
+    all happens in the pane; there is no reset page in a browser any more. An email with no account
+    is answered the same way (no code arrives), so the step never says whether an account exists.
+    Accounts made by the code path of v32 have a password nobody knows; they set one here.
   - *Google*: the button opens the system browser on Google's consent page and the card shows the
     Google mark, `Finish in your browser` (`在浏览器里完成登录`), `Choose your Google account there;
     this window picks it up by itself.` (`在那里选好 Google 账号，这里会自动继续。`), and a **Cancel**
     (`取消`) button that drops the wait and returns to *Signed out*. Once the browser is done the
     pane goes on as any sign-in (*Signing in*, then *Synced* or the both-have-tasks sheet). The
     browser tab ends on the server's own "you can close this window" page. A Google account whose
-    email already has an account signs in to that account. Failures: `Google sign-in was cancelled`
-    (`Google 登录已取消`), `Google sign-in didn't finish; try again` (`Google 登录没有完成，再试一次`)
-    after 5 minutes or a refusal, and the network sentence.
-  - *Code*: the 36 pt pixel envelope in `accent`, `Check your email` (`查收邮件`), `We sent a 6-digit
-    code to <email> · Use a different email` (`6 位验证码已发到 <邮箱> · 换一个邮箱`, the address in
-    `text`, the link back to *Signed out* with the email kept). Six 38 x 46 pt cells, 8 pt apart, a
-    short `text.tertiary` dash after the third, digits in 22 pt mono 600; the first empty cell has
-    the focus ring of the `fieldWell`. Typing a digit moves on, Backspace goes back, `⌘V` of a code
-    fills all six, and the sixth digit sends it (no button). Under them `Didn't get it? Resend in
-    0:24` (`没收到？0:24 后可以重发`), counting down from 30 s, then the link `Resend code`
-    (`重新发送`); then the link `Use a password instead` (`改用密码登录`).
-  - *Password*: the person, `Sign in with a password` (`用密码登录`), the email with `Use a different
-    email`, one masked `fieldWell` `Password` (`密码`), the accent button **Sign in** (`登录`), and
-    the links `Forgot password` (`忘记密码`) · `Use a code instead` (`改用验证码`). Forgot password
-    mails a reset link and shows the envelope, `Reset your password from your email`
-    (`去邮箱重设密码`), `We sent a link to <email>. Set a new password in the browser, then come back`
-    and a **Back to sign in** button; the link opens PocketBase's own page on the server.
-  - *Signing in*: the cells (or the fields) and the buttons disabled, and under them the pixel busy
-    indicator with `Checking the code…` (`正在验证…`) or `Checking your account…` (`正在验证账号…`), then
-    `Downloading your tasks…` (`正在下载任务…`) while the device links and pulls.
-  - *Sign-in failed*: one `meta` line in `status.blocked` under the cells or the button. A wrong code:
-    `That code isn't right` (`验证码不对，再看一眼邮件`), the cells emptied and the first focused, the
-    link `Resend code` under it. A code older than 10 minutes: a new one is mailed at once and the line
-    says `That code expired; we sent a new one` (`验证码过期了，已经发了一个新的`), the countdown starting
-    again. Too many tries (codes or passwords): `Too many tries; wait a minute` (`试得太频繁了，等一分钟`).
-    A wrong password: `Wrong email or password` (`邮箱或密码不对`; the password emptied and focused).
-    `This account is deactivated; ask the admin` and a network failure's sentence as before. The
-    email is never said to have, or not have, an account.
-  - *The code email* (PocketBase's OTP template, English only, the product being for people outside
-    China): from `Withdo <noreply@sri-ai.xyz>`, subject `<code> is your Withdo code`, the code
-    in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can ignore this email;
-    nobody can sign in without the code.`
+    email already has an account signs in to that account; a new one gets an account, verified,
+    from either tab. Failures: `Google sign-in was cancelled` (`Google 登录已取消`), `Google sign-in
+    didn't finish; try again` (`Google 登录没有完成，再试一次`) after 5 minutes or a refusal, and the
+    network sentence.
+  - *Signing in*: the fields and the buttons disabled, and under them the pixel busy indicator with
+    `Checking your account…` (`正在验证账号…`), `Creating your account…` (`正在创建账号…`) or
+    `Checking the code…` (`正在验证…`), then `Downloading your tasks…` (`正在下载任务…`) while the
+    device links and pulls.
+  - *Failed*: one `meta` line in `status.blocked` under the field or the cells. A wrong password:
+    `Wrong email or password` (`邮箱或密码不对`), the password emptied and focused, **Sign in**
+    disabled until it holds something again. A wrong code: `That code isn't right`
+    (`验证码不对，再看一眼邮件`), the cells emptied and the first focused. A code older than 10
+    minutes: a new one is mailed at once and the line says `That code expired; we sent a new one`
+    (`验证码过期了，已经发了一个新的`). Too many tries: `Too many tries; wait a minute`
+    (`试得太频繁了，等一分钟`). A malformed email: `That doesn't look like an email`
+    (`邮箱格式不对`). `This account is deactivated; ask the admin` and a network failure's sentence as
+    before.
+  - *The emails* (PocketBase's OTP template): from `Withdo <noreply@...>`, subject `<code> is your
+    Withdo code`, the code in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can
+    ignore this email; nobody can sign in without the code.` They are written in the language the
+    app was in when the account was made (English, or Simplified Chinese: `<code> 是你的 Withdo
+    验证码`, `10 分钟内有效。如果不是你在操作，忽略这封邮件即可；没有验证码谁也登录不了。`).
   - *The phone* (Sync screen, `docs/design/screens/android/sync-*`): the same server rule (`isOfficialSyncServer`,
     `syncServerToSave` in `SyncRules.kt`; the hint is `sync_server_hint`), and its link-this-phone dialog
     says `on your computer`, not Mac. The same steps on its card (Google

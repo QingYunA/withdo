@@ -646,6 +646,13 @@ fun App(
                                                 flow = SignInFlow()
                                                 startSync()
                                             }
+                                            "verify" -> {
+                                                // The password was right but the email never verified: a code was mailed.
+                                                val state = withContext(Dispatchers.IO) {
+                                                    runCatching { api.codeState() }.getOrNull()
+                                                }
+                                                flow = flow.afterVerifyAnswer(state)
+                                            }
                                             null -> if (failure == null) {
                                                 syncMessage = resources.getString(R.string.sync_sign_in_failed)
                                             }
@@ -669,19 +676,36 @@ fun App(
                                     runSignIn { api.signIn(login, password, Build.MODEL) }
                                 },
                                 signInActions = SignInActions(
-                                    onRequestCode = { email ->
-                                        if (!signingIn && !flow.sending) {
-                                            flow = flow.copy(email = email, failure = null, failureText = null, sending = true)
+                                    onSignUp = { email, password ->
+                                        if (!signingIn && !flow.creating && !flow.sending) {
+                                            flow = flow.copy(email = email, failure = null, failureText = null, creating = true)
                                             scope.launch {
                                                 val error = withContext(Dispatchers.IO) {
-                                                    runCatching { api.requestCode(email) }.exceptionOrNull()
+                                                    runCatching { api.signUp(email, password, syncLang(java.util.Locale.getDefault())) }
+                                                        .exceptionOrNull()
                                                 }
                                                 if (error is CancellationException) throw error
                                                 val state = withContext(Dispatchers.IO) {
                                                     runCatching { api.codeState() }.getOrNull()
                                                 }
-                                                if (error != null) Log.w("adhd-todo", "request code failed", error)
-                                                flow = flow.afterRequest(error?.let { it.message ?: "" }, state)
+                                                if (error != null) Log.w("adhd-todo", "sign up failed", error)
+                                                flow = flow.afterSignUp(error?.let { it.message ?: "" }, state)
+                                            }
+                                        }
+                                    },
+                                    onSendResetCode = { email ->
+                                        if (!signingIn && !flow.creating && !flow.sending) {
+                                            flow = flow.copy(email = email, failure = null, failureText = null, sending = true)
+                                            scope.launch {
+                                                val error = withContext(Dispatchers.IO) {
+                                                    runCatching { api.requestResetCode(email) }.exceptionOrNull()
+                                                }
+                                                if (error is CancellationException) throw error
+                                                val state = withContext(Dispatchers.IO) {
+                                                    runCatching { api.codeState() }.getOrNull()
+                                                }
+                                                if (error != null) Log.w("adhd-todo", "request reset code failed", error)
+                                                flow = flow.afterResetRequest(error?.let { it.message ?: "" }, state)
                                             }
                                         }
                                     },
@@ -707,22 +731,10 @@ fun App(
                                             }
                                         }
                                     },
-                                    onForgotPassword = { email ->
-                                        scope.launch {
-                                            val error = withContext(Dispatchers.IO) {
-                                                runCatching { api.requestPasswordReset(email) }.exceptionOrNull()
-                                            }
-                                            if (error is CancellationException) throw error
-                                            val state = withContext(Dispatchers.IO) {
-                                                runCatching { api.codeState() }.getOrNull()
-                                            }
-                                            flow = if (error == null) {
-                                                flow.copy(step = SignInStep.RESET_SENT, failure = null, failureText = null)
-                                            } else {
-                                                flow.failed(state, error.message)
-                                            }
-                                        }
+                                    onResetPassword = { code, password ->
+                                        runSignIn { api.resetPassword(code, password, Build.MODEL) }
                                     },
+                                    onOpenUrl = { url -> openCustomTab(url) },
                                     onStep = { step ->
                                         flow = flow.copy(step = step, failure = null, failureText = null, attempt = flow.attempt + 1)
                                     },

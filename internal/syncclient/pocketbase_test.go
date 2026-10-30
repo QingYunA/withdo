@@ -33,6 +33,7 @@ type fakePocketBase struct {
 	status      int // when not 0, every request answers this status
 	issued      int
 	valid       map[string]bool
+	lastSignUp  string
 }
 
 func newFakePocketBase(t *testing.T) *fakePocketBase {
@@ -341,11 +342,33 @@ func TestAnOlderSyncJSONWithAnIssuerLoadsSignedOut(t *testing.T) {
 	}
 }
 
-// fakeCodeServer answers the three code routes: request-otp hands out an id, auth-with-otp accepts
-// only the code 123456 for that id, request-password-reset answers 204. A non-zero status makes
-// every one of them answer it.
+// fakeCodeServer answers the routes of the sign-up: users create (an email that is taken or
+// malformed, or a short password, answers PocketBase's 400 with the field's code), request-otp hands
+// out an id, auth-with-otp and the reset route accept only the code 123456 for that id. A non-zero
+// status makes request-otp, auth-with-otp and the reset route answer it.
 func fakeCodeServer(t *testing.T, f *fakePocketBase, status int) {
 	t.Helper()
+	fieldError := func(w http.ResponseWriter, field, code string) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = fmt.Fprintf(w, `{"status":400,"message":"Failed to create record.","data":{%q:{"code":%q,"message":"x"}}}`, field, code)
+	}
+	f.mux.HandleFunc("POST /api/collections/users/records", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Email, Password, PasswordConfirm, Lang string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		f.mu.Lock()
+		f.lastSignUp = body.Email + "|" + body.Password + "|" + body.PasswordConfirm + "|" + body.Lang
+		f.mu.Unlock()
+		switch {
+		case body.Email == f.email:
+			fieldError(w, "email", "validation_not_unique")
+		case !strings.Contains(body.Email, "@"):
+			fieldError(w, "email", "validation_is_email")
+		case len(body.Password) < 8:
+			fieldError(w, "password", "validation_min_text_constraint")
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"rec2","email":"`+body.Email+`","verified":false}`)
+		}
+	})
 	f.mux.HandleFunc("POST /api/collections/users/request-otp", func(w http.ResponseWriter, r *http.Request) {
 		var body struct{ Email string }
 		_ = json.NewDecoder(r.Body).Decode(&body)
@@ -354,7 +377,7 @@ func fakeCodeServer(t *testing.T, f *fakePocketBase, status int) {
 			return
 		}
 		if !strings.Contains(body.Email, "@") {
-			w.WriteHeader(http.StatusBadRequest)
+			fieldError(w, "email", "validation_is_email")
 			return
 		}
 		_, _ = fmt.Fprint(w, `{"otpId":"otp1"}`)
@@ -377,16 +400,29 @@ func fakeCodeServer(t *testing.T, f *fakePocketBase, status int) {
 		defer f.mu.Unlock()
 		f.answer(w, f.mint())
 	})
-	f.mux.HandleFunc("POST /api/collections/users/request-password-reset", func(w http.ResponseWriter, r *http.Request) {
+	f.mux.HandleFunc("POST /api/withdo/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ OTPID, Code, Password, PasswordConfirm string }
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		if status != 0 {
 			w.WriteHeader(status)
 			return
 		}
-		w.WriteHeader(http.StatusNoContent)
+		if len(body.Password) < 8 {
+			fieldError(w, "password", "validation_min_text_constraint")
+			return
+		}
+		if body.OTPID != "otp1" || body.Code != "123456" || body.Password != body.PasswordConfirm {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprint(w, `{"status":400,"message":"Invalid or expired OTP.","data":{}}`)
+			return
+		}
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.answer(w, f.mint())
 	})
 }
 
-func TestPocketBaseCodeSignIn(t *testing.T) {
+func TestPocketBaseSignUpAndVerify(t *testing.T) {
 	ctx := context.Background()
 	pb := newFakePocketBase(t)
 	fakeCodeServer(t, pb, 0)
@@ -394,9 +430,18 @@ func TestPocketBaseCodeSignIn(t *testing.T) {
 	source := syncclient.NewPocketBaseSource(pb.URL, secrets)
 	var _ syncclient.CodeSignIn = source
 
-	otpID, err := source.RequestCode(ctx, pb.URL, " ada@example.com ")
+	otpID, err := source.SignUp(ctx, pb.URL, " grace@example.com ", "a long password", "zh-Hans")
 	if err != nil || otpID != "otp1" {
-		t.Fatalf("RequestCode = %q, %v", otpID, err)
+		t.Fatalf("SignUp = %q, %v", otpID, err)
+	}
+	pb.mu.Lock()
+	sent := pb.lastSignUp
+	pb.mu.Unlock()
+	if sent != "grace@example.com|a long password|a long password|zh-Hans" {
+		t.Fatalf("the sign-up body = %q", sent)
+	}
+	if len(secrets.values) != 0 {
+		t.Fatalf("a sign-up stored %v before the code", secrets.values)
 	}
 	if err := source.SignInWithCode(ctx, pb.URL, otpID, "000000"); !errors.Is(err, syncclient.ErrInvalidCode) {
 		t.Fatalf("wrong code = %v, want ErrInvalidCode", err)
@@ -413,11 +458,73 @@ func TestPocketBaseCodeSignIn(t *testing.T) {
 	if account, ok := source.Account(); !ok || account.Email != "ada@example.com" {
 		t.Fatalf("Account = %+v, %v", account, ok)
 	}
-	if err := source.RequestPasswordReset(ctx, pb.URL, "ada@example.com"); err != nil {
-		t.Fatalf("RequestPasswordReset: %v", err)
+}
+
+func TestPocketBaseSignUpErrors(t *testing.T) {
+	ctx := context.Background()
+	pb := newFakePocketBase(t)
+	fakeCodeServer(t, pb, 0)
+	source := syncclient.NewPocketBaseSource(pb.URL, newFakeSecrets())
+	for _, tt := range []struct {
+		email, password string
+		want            error
+	}{
+		{"ada@example.com", "a long password", syncclient.ErrEmailTaken},
+		{"nope", "a long password", syncclient.ErrInvalidEmail},
+		{"grace@example.com", "short", syncclient.ErrWeakPassword},
+	} {
+		if _, err := source.SignUp(ctx, pb.URL, tt.email, tt.password, "en"); !errors.Is(err, tt.want) {
+			t.Errorf("SignUp(%q, %q) = %v, want %v", tt.email, tt.password, err, tt.want)
+		}
 	}
-	if _, err := source.RequestCode(ctx, pb.URL, "nope"); !errors.Is(err, syncclient.ErrInvalidCode) {
-		t.Fatalf("bad email = %v, want ErrInvalidCode", err)
+}
+
+func TestPocketBaseRequestCodeMalformedEmail(t *testing.T) {
+	pb := newFakePocketBase(t)
+	fakeCodeServer(t, pb, 0)
+	source := syncclient.NewPocketBaseSource(pb.URL, newFakeSecrets())
+	if _, err := source.RequestCode(context.Background(), pb.URL, "nope"); !errors.Is(err, syncclient.ErrInvalidEmail) {
+		t.Fatalf("bad email = %v, want ErrInvalidEmail (and not ErrInvalidCode)", err)
+	}
+}
+
+func TestPocketBaseUnverifiedSignIn(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = fmt.Fprint(w, `{"status":403,"message":"The email is not verified.","data":{"email":{"code":"email_not_verified","message":"x"}}}`)
+	}))
+	t.Cleanup(srv.Close)
+	source := syncclient.NewPocketBaseSource(srv.URL, newFakeSecrets())
+	err := source.SignIn(context.Background(), srv.URL, "ada@example.com", "correct horse")
+	if !errors.Is(err, syncclient.ErrEmailNotVerified) || errors.Is(err, syncclient.ErrAccountLocked) {
+		t.Fatalf("unverified sign-in = %v, want ErrEmailNotVerified", err)
+	}
+}
+
+func TestPocketBaseResetPassword(t *testing.T) {
+	ctx := context.Background()
+	pb := newFakePocketBase(t)
+	fakeCodeServer(t, pb, 0)
+	secrets := newFakeSecrets()
+	source := syncclient.NewPocketBaseSource(pb.URL, secrets)
+
+	if err := source.ResetPassword(ctx, pb.URL, "otp1", "000000", "a long password"); !errors.Is(err, syncclient.ErrInvalidCode) {
+		t.Fatalf("wrong code = %v, want ErrInvalidCode", err)
+	}
+	if err := source.ResetPassword(ctx, pb.URL, "ghost", "123456", "a long password"); !errors.Is(err, syncclient.ErrInvalidCode) {
+		t.Fatalf("unknown otp = %v, want ErrInvalidCode", err)
+	}
+	if err := source.ResetPassword(ctx, pb.URL, "otp1", "123456", "short"); !errors.Is(err, syncclient.ErrWeakPassword) {
+		t.Fatalf("short password = %v, want ErrWeakPassword", err)
+	}
+	if len(secrets.values) != 0 {
+		t.Fatalf("a refused reset stored %v", secrets.values)
+	}
+	if err := source.ResetPassword(ctx, pb.URL, "otp1", "123456", "a long password"); err != nil {
+		t.Fatalf("ResetPassword: %v", err)
+	}
+	if token, err := source.Token(ctx); err != nil || token == "" {
+		t.Fatalf("Token = %q, %v", token, err)
 	}
 }
 
@@ -440,8 +547,8 @@ func TestPocketBaseCodeSignInFailures(t *testing.T) {
 		if err := source.SignInWithCode(ctx, pb.URL, "otp1", "123456"); !errors.Is(err, tt.want) {
 			t.Errorf("SignInWithCode %d = %v, want %v", tt.status, err, tt.want)
 		}
-		if err := source.RequestPasswordReset(ctx, pb.URL, "ada@example.com"); !errors.Is(err, tt.want) {
-			t.Errorf("RequestPasswordReset %d = %v, want %v", tt.status, err, tt.want)
+		if err := source.ResetPassword(ctx, pb.URL, "otp1", "123456", "a long password"); !errors.Is(err, tt.want) {
+			t.Errorf("ResetPassword %d = %v, want %v", tt.status, err, tt.want)
 		}
 	}
 }

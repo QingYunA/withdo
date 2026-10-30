@@ -74,20 +74,27 @@ const (
 	SignInStageDownloading SignInStage = "downloading"
 	// SignInStageSending is the email being sent its code.
 	SignInStageSending SignInStage = "sending"
+	// SignInStageCreating is the account being made.
+	SignInStageCreating SignInStage = "creating"
 	// SignInStageGoogle is the system browser open on Google's consent page, the app waiting.
 	SignInStageGoogle SignInStage = "google"
 )
 
-// SignInStep is which screen of the signed-out card the Account pane shows (M13 P2).
+// SignInStep is which screen of the signed-out card the Account pane shows (v42).
 type SignInStep string
 
-// The steps. SignInStepEmail is the default; the code step follows SyncRequestCode, the password
-// step is the user's choice, and the reset step follows SyncRequestPasswordReset.
+// The steps. SignInStepSignIn is the default; the two tabs of the card are Sign in and Sign up, and
+// the other three follow an action: Verify follows a sign-up (or a sign-in to an account whose
+// email is not verified), the reset steps follow Forgot password.
 const (
-	SignInStepEmail     SignInStep = ""
-	SignInStepCode      SignInStep = "code"
-	SignInStepPassword  SignInStep = "password"
-	SignInStepResetSent SignInStep = "resetSent"
+	SignInStepSignIn SignInStep = ""
+	SignInStepSignUp SignInStep = "signUp"
+	// SignInStepVerify is the six cells that verify an email after a sign-up.
+	SignInStepVerify SignInStep = "verify"
+	// SignInStepResetEmail is Forgot password: the email, and Send code.
+	SignInStepResetEmail SignInStep = "resetEmail"
+	// SignInStepResetCode is the six cells and the new password of a reset.
+	SignInStepResetCode SignInStep = "resetCode"
 )
 
 // SignInFailure is why the last in-app sign-in failed, so Settings can word it in the user's
@@ -103,6 +110,12 @@ const (
 	SignInFailureUnsupported SignInFailure = "unsupported"
 	SignInFailureNetwork     SignInFailure = "network"
 	SignInFailureOther       SignInFailure = "other"
+	// SignInFailureEmailTaken is a sign-up with an email that already has an account.
+	SignInFailureEmailTaken SignInFailure = "emailTaken"
+	// SignInFailureInvalidEmail is an email the server says is malformed.
+	SignInFailureInvalidEmail SignInFailure = "invalidEmail"
+	// SignInFailureWeakPassword is a new password the server refused as too short.
+	SignInFailureWeakPassword SignInFailure = "weakPassword"
 	// SignInFailureWrongCode is a code that was not right.
 	SignInFailureWrongCode SignInFailure = "wrongCode"
 	// SignInFailureCodeExpired is a code older than ten minutes: a new one was mailed at once.
@@ -141,8 +154,8 @@ type SyncSnapshot struct {
 	Devices       []SyncDevice
 	ThisDeviceID  string
 	Conflict      *SyncConflict
-	// SignInStep, SignInEmail and ResendAt are the signed-out card's code flow: the screen, the
-	// address being signed in, and when Resend code is allowed again (zero outside the code step).
+	// SignInStep, SignInEmail and ResendAt are the signed-out card's flow: the screen, the address
+	// being verified or reset, and when Resend code is allowed again (zero outside the code steps).
 	SignInStep  SignInStep
 	SignInEmail string
 	ResendAt    time.Time
@@ -309,6 +322,12 @@ func signInFailureKind(err error) SignInFailure {
 		return SignInFailureCredentials
 	case errors.Is(err, syncclient.ErrInvalidCode):
 		return SignInFailureWrongCode
+	case errors.Is(err, syncclient.ErrEmailTaken):
+		return SignInFailureEmailTaken
+	case errors.Is(err, syncclient.ErrInvalidEmail):
+		return SignInFailureInvalidEmail
+	case errors.Is(err, syncclient.ErrWeakPassword):
+		return SignInFailureWeakPassword
 	case errors.Is(err, syncclient.ErrGoogleCancelled):
 		return SignInFailureGoogleCancelled
 	case errors.Is(err, syncclient.ErrGoogleFailed):

@@ -62,7 +62,7 @@ func (r *Real) SyncUseOldAccount() {
 	}
 	r.SyncCancel()
 	r.mu.Lock()
-	r.sync.code.step, r.sync.code.email = SignInStepEmail, other.PreviousEmail
+	r.sync.code.step, r.sync.code.email = SignInStepSignIn, other.PreviousEmail
 	r.mu.Unlock()
 	r.syncChanged()
 }

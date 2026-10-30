@@ -127,11 +127,16 @@ class AndroidScreensTest(private val case: ScreenCase) {
         SYNC_UPDATE_AVAILABLE,
         SYNC_SIGNING_IN_CHECKING,
         SYNC_SIGNING_IN_DOWNLOADING,
-        SYNC_SIGNIN_EMAIL,
+        SYNC_SIGNIN,
+        SYNC_SIGNIN_WRONG,
+        SYNC_SIGNUP,
+        SYNC_SIGNUP_FILLED,
+        SYNC_SIGNUP_TAKEN,
         SYNC_SIGNIN_GOOGLE_WAITING,
-        SYNC_SIGNIN_CODE,
-        SYNC_SIGNIN_WRONG_CODE,
-        SYNC_SIGNIN_PASSWORD,
+        SYNC_VERIFY,
+        SYNC_VERIFY_WRONG,
+        SYNC_RESET_EMAIL,
+        SYNC_RESET_CODE,
         SYNC_SIGNED_IN,
         SYNC_UPLOADING,
         SYNC_FAILED,
@@ -147,8 +152,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
 
     companion object {
         private val frozen = setOf(
-            Screen.SYNC_SIGNIN_EMAIL, Screen.SYNC_SIGNIN_GOOGLE_WAITING, Screen.SYNC_SIGNIN_CODE, Screen.SYNC_SIGNIN_WRONG_CODE,
-            Screen.SYNC_SIGNIN_PASSWORD, Screen.SYNC_SIGNING_IN_CHECKING, Screen.SYNC_SIGNING_IN_DOWNLOADING,
+            Screen.SYNC_SIGNIN, Screen.SYNC_SIGNIN_WRONG, Screen.SYNC_SIGNUP, Screen.SYNC_SIGNUP_FILLED,
+            Screen.SYNC_SIGNUP_TAKEN, Screen.SYNC_SIGNIN_GOOGLE_WAITING, Screen.SYNC_VERIFY, Screen.SYNC_VERIFY_WRONG,
+            Screen.SYNC_RESET_EMAIL, Screen.SYNC_RESET_CODE, Screen.SYNC_SIGNING_IN_CHECKING, Screen.SYNC_SIGNING_IN_DOWNLOADING,
         )
         private val sheets = setOf(Screen.SYNC_CHOOSE, Screen.SYNC_OTHER_ACCOUNT, Screen.TASK_MENU, Screen.TASK_MENU_MOVE, Screen.TASK_MENU_REMIND)
 
@@ -169,11 +175,16 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "sync-update-available" to Screen.SYNC_UPDATE_AVAILABLE,
                 "sync-signing-in-checking" to Screen.SYNC_SIGNING_IN_CHECKING,
                 "sync-signing-in-downloading" to Screen.SYNC_SIGNING_IN_DOWNLOADING,
-                "sync-signin-email" to Screen.SYNC_SIGNIN_EMAIL,
+                "sync-signin" to Screen.SYNC_SIGNIN,
+                "sync-signin-wrong" to Screen.SYNC_SIGNIN_WRONG,
+                "sync-signup" to Screen.SYNC_SIGNUP,
+                "sync-signup-filled" to Screen.SYNC_SIGNUP_FILLED,
+                "sync-signup-taken" to Screen.SYNC_SIGNUP_TAKEN,
                 "sync-signin-google-waiting" to Screen.SYNC_SIGNIN_GOOGLE_WAITING,
-                "sync-signin-code" to Screen.SYNC_SIGNIN_CODE,
-                "sync-signin-wrong-code" to Screen.SYNC_SIGNIN_WRONG_CODE,
-                "sync-signin-password" to Screen.SYNC_SIGNIN_PASSWORD,
+                "sync-verify" to Screen.SYNC_VERIFY,
+                "sync-verify-wrong" to Screen.SYNC_VERIFY_WRONG,
+                "sync-reset-email" to Screen.SYNC_RESET_EMAIL,
+                "sync-reset-code" to Screen.SYNC_RESET_CODE,
                 "sync-signed-in" to Screen.SYNC_SIGNED_IN,
                 "sync-uploading" to Screen.SYNC_UPLOADING,
                 "sync-failed" to Screen.SYNC_FAILED,
@@ -187,8 +198,9 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "task-menu-remind" to Screen.TASK_MENU_REMIND,
             )
             val chinese = setOf(
-                "mine", "mine-no-date", "task", "sync-signed-out", "sync-signin-email", "sync-signin-google-waiting", "sync-signin-code",
-                "sync-signin-wrong-code", "sync-signin-password", "task-menu", "task-menu-remind",
+                "mine", "mine-no-date", "task", "sync-signed-out", "sync-signin", "sync-signin-wrong", "sync-signup",
+                "sync-signup-filled", "sync-signup-taken", "sync-signin-google-waiting", "sync-verify", "sync-verify-wrong",
+                "sync-reset-email", "sync-reset-code", "task-menu", "task-menu-remind",
                 "sync-wrong-account", "sync-other-account", "sync-google-link", "sync-google-linked",
                 "update-banner", "sync-update-available")
             return screens.flatMap { (name, screen) ->
@@ -403,11 +415,16 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
         }
 
         AndroidScreensTest.Screen.SYNC_UPDATE_AVAILABLE,
-        AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL,
+        AndroidScreensTest.Screen.SYNC_SIGNIN,
+        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG,
+        AndroidScreensTest.Screen.SYNC_SIGNUP,
+        AndroidScreensTest.Screen.SYNC_SIGNUP_FILLED,
+        AndroidScreensTest.Screen.SYNC_SIGNUP_TAKEN,
         AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING,
-        AndroidScreensTest.Screen.SYNC_SIGNIN_CODE,
-        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE,
-        AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD,
+        AndroidScreensTest.Screen.SYNC_VERIFY,
+        AndroidScreensTest.Screen.SYNC_VERIFY_WRONG,
+        AndroidScreensTest.Screen.SYNC_RESET_EMAIL,
+        AndroidScreensTest.Screen.SYNC_RESET_CODE,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING,
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_DOWNLOADING,
         AndroidScreensTest.Screen.SYNC_SIGNED_IN,
@@ -535,10 +552,41 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
         signedIn = true,
     )
     return when (screen) {
-        AndroidScreensTest.Screen.SYNC_SIGNIN_EMAIL -> SyncModel(
+        AndroidScreensTest.Screen.SYNC_SIGNIN -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
             flow = SignInFlow(email = "cyan@example.com"),
+            googleAvailable = true,
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(email = "cyan@example.com", failure = CodeFailure.WRONG_PASSWORD, attempt = 1),
+            googleAvailable = true,
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNUP -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.SIGN_UP),
+            googleAvailable = true,
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNUP_FILLED -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.SIGN_UP, email = "cyan@example.com"),
+            typedPassword = "correct horse battery",
+            googleAvailable = true,
+        )
+        AndroidScreensTest.Screen.SYNC_SIGNUP_TAKEN -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(
+                step = SignInStep.SIGN_UP,
+                email = "cyan@example.com",
+                failure = CodeFailure.EMAIL_TAKEN,
+                attempt = 1,
+            ),
+            typedPassword = "correct horse battery",
             googleAvailable = true,
         )
         AndroidScreensTest.Screen.SYNC_SIGNIN_GOOGLE_WAITING -> SyncModel(
@@ -547,37 +595,44 @@ private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {
             flow = SignInFlow(email = "cyan@example.com"),
             googleAvailable = true,
         )
-        AndroidScreensTest.Screen.SYNC_SIGNIN_CODE -> SyncModel(
+        AndroidScreensTest.Screen.SYNC_VERIFY -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
-            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com", resendIn = 24),
+            flow = SignInFlow(step = SignInStep.VERIFY, email = "cyan@example.com", resendIn = 24),
             typedCode = "48",
         )
-        AndroidScreensTest.Screen.SYNC_SIGNIN_WRONG_CODE -> SyncModel(
+        AndroidScreensTest.Screen.SYNC_VERIFY_WRONG -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
             flow = SignInFlow(
-                step = SignInStep.CODE,
+                step = SignInStep.VERIFY,
                 email = "cyan@example.com",
                 failure = CodeFailure.WRONG_CODE,
                 attempt = 1,
             ),
         )
-        AndroidScreensTest.Screen.SYNC_SIGNIN_PASSWORD -> SyncModel(
+        AndroidScreensTest.Screen.SYNC_RESET_EMAIL -> SyncModel(
             SyncPhase.SIGNED_OUT,
             SyncStatus(server = DEFAULT_SYNC_SERVER),
-            flow = SignInFlow(step = SignInStep.PASSWORD, email = "cyan@example.com"),
+            flow = SignInFlow(step = SignInStep.RESET_EMAIL, email = "cyan@example.com"),
+        )
+        AndroidScreensTest.Screen.SYNC_RESET_CODE -> SyncModel(
+            SyncPhase.SIGNED_OUT,
+            SyncStatus(server = DEFAULT_SYNC_SERVER),
+            flow = SignInFlow(step = SignInStep.RESET_CODE, email = "cyan@example.com", resendIn = 24),
+            typedCode = "481207",
+            typedPassword = "correct horse battery",
         )
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_CHECKING -> SyncModel(
             SyncPhase.SIGNING_IN,
             SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "checking"),
-            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com"),
+            flow = SignInFlow(step = SignInStep.VERIFY, email = "cyan@example.com"),
             typedCode = "482913",
         )
         AndroidScreensTest.Screen.SYNC_SIGNING_IN_DOWNLOADING -> SyncModel(
             SyncPhase.SIGNING_IN,
             SyncStatus(server = DEFAULT_SYNC_SERVER, signedIn = true, signInStage = "downloading"),
-            flow = SignInFlow(step = SignInStep.CODE, email = "cyan@example.com"),
+            flow = SignInFlow(step = SignInStep.VERIFY, email = "cyan@example.com"),
             typedCode = "482913",
         )
         AndroidScreensTest.Screen.SYNC_UPDATE_AVAILABLE,

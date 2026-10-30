@@ -34,6 +34,7 @@ func (r *Real) SyncSignIn(loginName, password string) {
 	r.sync.status.LastError = ""
 	r.sync.failedSince = time.Time{}
 	r.sync.signInFailure = SignInFailureNone
+	r.sync.code.email = strings.TrimSpace(loginName)
 	server := r.sync.server
 	r.mu.Unlock()
 	r.syncChanged()
@@ -57,6 +58,13 @@ func (r *Real) signIn(server, loginName, password string) {
 	}
 	tokens := r.accountSource(cfg)
 	if err := tokens.SignIn(ctx, server, loginName, password); err != nil {
+		if errors.Is(err, syncclient.ErrEmailNotVerified) {
+			// The right password of an account whose email was never verified (the sign-up was left
+			// at the code): mail a new code and show Verify.
+			r.setSignInStage(SignInStageSending)
+			r.requestCode(strings.TrimSpace(loginName), false, SignInStepVerify)
+			return
+		}
 		r.failSignIn(err)
 		return
 	}

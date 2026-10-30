@@ -4,37 +4,42 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-// createUserOnCodeRequest makes sign-up and sign-in one path: PocketBase mails no code to an email
-// without an account, so the first request for one creates the user (random password, not verified,
-// named after the part before the @) and then lets the request go on. The code sign-in marks it
-// verified. The email was validated before this hook runs.
-func createUserOnCodeRequest(e *core.RecordCreateOTPRequestEvent) error {
-	if e.Record == nil && e.Collection.Name == UsersCollection {
+// Languages the code mails come in. The app sends one of them as `lang` when it signs a user up.
+const (
+	langEnglish = "en"
+	langChinese = "zh-Hans"
+)
+
+// prepareNewUser runs on every create request of the users collection (a sign-up from the app, or
+// the record Google's OAuth2 sign-in makes): the email is stored in lower case, the way the old
+// code path stored it, and a user with no name is named after the part before the @. The client
+// never asks for a name; it is changed later in the Account pane.
+func prepareNewUser(e *core.RecordRequestEvent) error {
+	if email := strings.ToLower(strings.TrimSpace(e.Record.Email())); email != "" {
+		e.Record.SetEmail(email)
+		if strings.TrimSpace(e.Record.GetString("name")) == "" {
+			e.Record.Set("name", strings.SplitN(email, "@", 2)[0])
+		}
+	}
+	return e.Next()
+}
+
+// findUserByTypedEmail looks the email up in lower case, which is how accounts are stored:
+// PocketBase's own lookup is case sensitive, so "Ada@Example.com" would find nothing, and a request
+// for a code would be answered with the dummy otpId and no mail.
+func findUserByTypedEmail(e *core.RecordCreateOTPRequestEvent) error {
+	if e.Record == nil {
 		var form struct {
 			Email string `form:"email" json:"email"`
 		}
-		if err := e.BindBody(&form); err != nil {
-			return e.BadRequestError("An error occurred while loading the submitted data.", err)
+		if err := e.BindBody(&form); err == nil {
+			email := strings.ToLower(strings.TrimSpace(form.Email))
+			if existing, err := e.App.FindAuthRecordByEmail(e.Collection, email); err == nil {
+				e.Record = existing
+			}
 		}
-		typed := strings.TrimSpace(form.Email)
-		email := strings.ToLower(typed)
-		// PocketBase looked the email up as typed; accounts are stored in lower case.
-		if existing, err := e.App.FindAuthRecordByEmail(e.Collection, email); err == nil {
-			e.Record = existing
-			return e.Next()
-		}
-		record := core.NewRecord(e.Collection)
-		record.SetEmail(email)
-		record.SetVerified(false)
-		record.SetPassword(security.RandomString(32))
-		record.Set("name", strings.SplitN(typed, "@", 2)[0])
-		if err := e.App.Save(record); err != nil {
-			return err
-		}
-		e.Record = record
 	}
 	return e.Next()
 }

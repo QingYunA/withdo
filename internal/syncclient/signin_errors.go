@@ -11,8 +11,17 @@ var (
 	ErrAccountLocked = errors.New("syncclient: the account is locked or disabled")
 	// ErrTooManyAttempts says the server rate-limited the sign-in.
 	ErrTooManyAttempts = errors.New("syncclient: too many sign-in attempts")
-	// ErrInvalidCode says the emailed sign-in code was wrong, used, expired, or the email malformed.
-	ErrInvalidCode = errors.New("syncclient: invalid or expired sign-in code")
+	// ErrInvalidCode says the emailed code was wrong, used or expired.
+	ErrInvalidCode = errors.New("syncclient: invalid or expired code")
+	// ErrInvalidEmail says the email address is malformed.
+	ErrInvalidEmail = errors.New("syncclient: invalid email address")
+	// ErrEmailTaken says a sign-up used an email that already has an account.
+	ErrEmailTaken = errors.New("syncclient: the email already has an account")
+	// ErrEmailNotVerified says the password was right but the account's email has not been
+	// verified with a code yet.
+	ErrEmailNotVerified = errors.New("syncclient: the email is not verified")
+	// ErrWeakPassword says the new password is shorter than the server's minimum (8).
+	ErrWeakPassword = errors.New("syncclient: the password is too short")
 	// ErrSignInUnsupported says the sync server does not offer an in-app sign-in (its /v1/config
 	// does not name "pocketbase").
 	ErrSignInUnsupported = errors.New("syncclient: the sync server does not support in-app sign-in")
