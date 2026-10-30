@@ -3,6 +3,19 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.12.0
+
+No database change on your computer; the app updates itself from 0.11.0.
+
+- **Sign up and sign in are now two separate ways in.** Signing up asks for your email and a
+  password, then a 6-digit code from your email to verify it. Signing in is your email and
+  password.
+- **Forgot your password?** Reset it right in the app with a code from your email; no browser page.
+- **Signed up with a code before?** Your account has no password you know yet: choose Sign in, then
+  Forgot password, and set one. Google sign-in works as before.
+- Code emails now come in the app's language (English or Simplified Chinese).
+- Android gets the same Sign in, Sign up and Forgot password steps.
+
 ## 0.11.1
 
 No database change; the app updates itself from 0.11.0.
