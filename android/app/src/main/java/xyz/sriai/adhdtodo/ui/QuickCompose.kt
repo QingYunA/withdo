@@ -144,15 +144,18 @@ fun rememberQuickParse(api: CoreApi, text: String, enabled: Boolean): QuickParse
     return result?.takeIf { it.first == text }?.second
 }
 
-/** Stores every draft of [parse] as a task of the user's, in [projectId] or the Inbox, and returns their ids. */
-fun createQuickDrafts(api: CoreApi, parse: QuickParse, projectId: Long?): List<Long> =
+/**
+ * Stores every draft of [parse] as a task of the user's, in [projectId] or the Inbox, and returns their ids.
+ * A draft with no category read from its text gets [categoryId] (the chip narrowing Today), if any.
+ */
+fun createQuickDrafts(api: CoreApi, parse: QuickParse, projectId: Long?, categoryId: Long? = null): List<Long> =
     parse.drafts.map { draft ->
         api.createTask(
             title = draft.title,
             projectId = projectId,
             remindAt = draft.remindAt.ifBlank { null },
             dueAt = draft.dueAt.ifBlank { null },
-            categoryId = draft.categoryId.takeIf { it > 0 },
+            categoryId = draft.categoryId.takeIf { it > 0 } ?: categoryId,
             priority = if (draft.important) "P1" else null,
         )
     }

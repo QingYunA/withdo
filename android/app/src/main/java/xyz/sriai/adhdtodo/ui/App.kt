@@ -492,12 +492,14 @@ fun App(
         val title = draft.trim()
         val projectId = if (route.startsWith("project:")) route.substringAfter(':').toLongOrNull() else null
         val quick = activeQuick
+        // A task typed while a chip narrows Today gets that category (the desktop's rule).
+        val typedCat = activeCat.takeIf { it > 0 && route == "home" && tab == Tab.MINE }
         if (title.isNotEmpty() && !sending) {
             sending = true
             scope.launch {
                 val madeAll = try {
                     withContext(Dispatchers.IO) {
-                        if (quick != null) createQuickDrafts(api, quick, projectId) else listOf(api.createTask(title, projectId))
+                        if (quick != null) createQuickDrafts(api, quick, projectId, typedCat) else listOf(api.createTask(title, projectId, categoryId = typedCat))
                     }
                 } catch (e: CancellationException) {
                     throw e
@@ -1255,7 +1257,11 @@ fun App(
             projects = data.projects,
             presets = data.presets,
             milestones = data.milestones,
-            showSelect = route == "home" || route.startsWith("project:"),
+            // A board has no checkboxes, so its cards offer no Select (v43: select is the list's).
+            showSelect = route == "home" || (
+                route.startsWith("project:") &&
+                    ProjectViewPrefs.get(context, route.substringAfter(':').toLongOrNull() ?: 0L) == ProjectView.List
+                ),
             onSelect = { selection = setOf(data.task.id) },
             initialPage = menuPage,
             onDismiss = { menuData = null },

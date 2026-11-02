@@ -146,7 +146,7 @@ fun CategoriesScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        PixelSwatch(tokens.categoryColor(row.category.color))
+                        PixelSwatch(tokens.categoryColor(row.category.color), size = 12.dp)
                         Column(Modifier.weight(1f)) {
                             Text(
                                 categoryTitle(row.category),
