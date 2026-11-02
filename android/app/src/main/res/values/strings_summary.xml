@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Summary (v43): words copied from the desktop's locales (navSummary, summary*). -->
+    <string name="summary_title">Summary</string>
+    <string name="summary_see">See summary ›</string>
+    <string name="summary_share">Share</string>
+    <string name="summary_segment_day">Today</string>
+    <string name="summary_segment_week">This week</string>
+    <string name="summary_previous">Previous</string>
+    <string name="summary_next">Next</string>
+    <string name="summary_written">%1$s · written by the assistant</string>
+    <string name="summary_scene_a11y">The shipping scene. Tap it to play it again.</string>
+    <string name="summary_empty_today">Nothing finished yet today</string>
+    <string name="summary_empty_day">Nothing was finished that day</string>
+    <string name="summary_empty_week">Nothing finished yet this week</string>
+    <string name="summary_empty_past_week">Nothing was finished that week</string>
+    <string name="summary_shipped_today">Shipped today</string>
+    <string name="summary_shipped_day">Shipped that day</string>
+    <string name="summary_shipped_week">Shipped this week</string>
+    <string name="summary_shipped_past_week">Shipped that week</string>
+    <string name="summary_row_merged">PR #%1$s merged</string>
+    <plurals name="summary_merged">
+        <item quantity="one">%1$d PR merged</item>
+        <item quantity="other">%1$d PRs merged</item>
+    </plurals>
+    <plurals name="summary_unit">
+        <item quantity="one">task</item>
+        <item quantity="other">tasks</item>
+    </plurals>
+    <plurals name="summary_row_a11y">
+        <item quantity="one">%1$s, %2$d task</item>
+        <item quantity="other">%1$s, %2$d tasks</item>
+    </plurals>
+</resources>

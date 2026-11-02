@@ -66,6 +66,7 @@ fun MineScreen(
     noDateOpen: Boolean = false,
     onToggleNoDate: () -> Unit = {},
     highlightId: Long = 0,
+    onSummary: (() -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -149,6 +150,7 @@ fun MineScreen(
                     more = page.moreDone,
                     words = words,
                     onViewAll = onViewAll,
+                    onSummary = onSummary,
                     onOpenTask = onOpenTask,
                     onLongPress = onLongPress,
                 )
@@ -494,6 +496,7 @@ private fun DoneTodaySection(
     more: Int,
     words: Words,
     onViewAll: (() -> Unit)?,
+    onSummary: (() -> Unit)?,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit,
 ) {
@@ -503,17 +506,22 @@ private fun DoneTodaySection(
         stringResource(R.string.section_done_today),
         items.size + more,
         start = TextInset,
-        end = onViewAll?.let { open -> {
-            Text(
-                stringResource(R.string.view_all),
-                style = type.meta,
-                color = tokens.accentInk,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable(onClick = open)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            )
-        } },
+        end = if (onSummary == null && onViewAll == null) null else ({
+            Row {
+                for ((label, open) in listOf(R.string.summary_see to onSummary, R.string.view_all to onViewAll)) {
+                    if (open == null) continue
+                    Text(
+                        stringResource(label),
+                        style = type.meta,
+                        color = tokens.accentInk,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(onClick = open)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
+        }),
     )
     for (item in items) {
         LongPressRow(

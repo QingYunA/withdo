@@ -479,7 +479,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
 
 /** The shell App draws around a page, without the core-backed routing. */
 @Composable
-private fun TestFrame(
+internal fun TestFrame(
     title: String,
     tab: Tab,
     count: Int = 0,

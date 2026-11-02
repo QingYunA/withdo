@@ -124,6 +124,7 @@ fun App(
     var connect by remember { mutableStateOf(false) }
     var menuData by remember { mutableStateOf<TaskMenuData?>(null) }
     var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
+    val summary = remember { SummaryHolder() }
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
@@ -358,6 +359,8 @@ fun App(
         }
     }
 
+    SummaryLoader(summary, api, route == "summary", revision, tick)
+
     // The action is the trailing lambda; name onError when passing it, since both are lambdas of
     // no arguments and swapping them still compiles.
     fun perform(onError: (() -> Unit)? = null, action: suspend () -> Unit) {
@@ -566,6 +569,8 @@ fun App(
                 if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
             } else if (route == "sync") {
                 BackBar(title = stringResource(R.string.sync_title), onBack = { pop() })
+            } else if (route == "summary") {
+                BackBar(title = title, onBack = { pop() })
             } else if (route.startsWith("project:")) {
                 BackBar(
                     title = stringResource(R.string.title_projects),
@@ -851,6 +856,12 @@ fun App(
                             )
                         }
                     }
+                    route == "summary" -> SummaryScreen(
+                        holder = summary,
+                        words = words,
+                        onOpenTask = { id -> push(taskRoute(id, 0)) },
+                        onShare = { scope.launch { shareSummary(context, api, summary.week, summary.back) } },
+                    )
                     route.startsWith("project:") -> ProjectScreen(
                         page = projectPage,
                         words = words,
@@ -886,6 +897,7 @@ fun App(
                             onHowToConnect = { connect = true },
                             // The phone has no Summary; the Agents tab lists what agents finished today.
                             onViewAll = null,
+                            onSummary = { summary.open(); push("summary") },
                             onLongPress = { id -> openTaskMenu(id) },
                             categories = categories,
                             noDateOpen = noDateOpen,
@@ -933,7 +945,7 @@ fun App(
                 )
             }
         }
-        if (route == "home" || route.startsWith("project:")) {
+        if (route == "home" || route == "summary" || route.startsWith("project:")) {
             BottomNav(
                 tab = if (route.startsWith("project:")) Tab.PROJECTS else tab,
                 count = mine?.fromAgents?.size ?: 0,
@@ -1029,7 +1041,7 @@ private fun taskRoute(id: Long, projectId: Long): String =
     if (projectId > 0) "task:$id:$projectId" else "task:$id:0"
 
 internal fun normalizeRoute(raw: String): String = when {
-    raw == "home" || raw == "sync" -> raw
+    raw == "home" || raw == "sync" || raw == "summary" -> raw
     raw.startsWith("project:") -> raw
     raw.startsWith("task:") -> {
         val id = raw.substringAfter(':').substringBefore(':').toLongOrNull() ?: return ""
