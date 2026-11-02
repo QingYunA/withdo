@@ -24,6 +24,10 @@ class Words(
     private val timeSource: () -> Instant = Instant::now,
     private val zone: ZoneId = ZoneId.systemDefault(),
 ) {
+    /** The swipes of a task as of this clock (v43 P2): see [rowSwipes]. */
+    fun swipes(source: String, status: String, dueAt: String?): RowSwipes? =
+        rowSwipes(source, status, dueAt, timeSource().atZone(zone).toLocalDate(), zone)
+
     private val locale: Locale = runCatching { res.configuration.locales[0] }.getOrDefault(Locale.getDefault())
 
     private val monthDay = DateTimeFormatter.ofPattern(if (chinese) "M月d日" else "MMM d", locale)

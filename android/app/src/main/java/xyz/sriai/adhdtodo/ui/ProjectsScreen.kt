@@ -185,6 +185,7 @@ fun ProjectScreen(
     onShowAllCompleted: ((agents: Boolean) -> Unit)? = null,
     actions: ProjectActions = ProjectActions(),
     initialView: ProjectView? = null,
+    onSwipe: (Task, SwipeAction) -> Unit = { _, _ -> },
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -271,7 +272,7 @@ fun ProjectScreen(
                 StatusGroupHeader(status, tasks.size, words)
                 Column {
                     for (task in tasks) {
-                        ProjectTaskRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask, onLongPress)
+                        ProjectTaskRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask, onLongPress, onSwipe)
                     }
                 }
             }
@@ -445,9 +446,15 @@ private fun ProjectTaskRow(
     words: Words,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit,
+    onSwipe: (Task, SwipeAction) -> Unit,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
+    SwipeRow(
+        swipes = words.swipes(task.source, task.status, task.dueAt),
+        onSwipe = { onSwipe(task, it) },
+        shape = LocalSelection.current.rowClip(),
+    ) {
     LongPressRow(
         onClick = { onOpenTask(task.id) },
         onLongPress = { onLongPress(task.id) },
@@ -474,6 +481,7 @@ private fun ProjectTaskRow(
         }
         Spacer(Modifier.width(2.dp))
         }
+    }
     }
 }
 

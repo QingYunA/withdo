@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="swipe_done">完成</string>
+    <string name="swipe_today">今天做</string>
+    <string name="swipe_tomorrow">明天做</string>
+    <string name="toast_completed">已完成“%1$s”</string>
+    <string name="toast_moved_to_tomorrow">已移到明天</string>
+    <string name="pull_syncing">正在同步…</string>
+    <string name="share_title">添加到 Withdo</string>
+    <string name="share_project">项目</string>
+    <string name="share_when">什么时候</string>
+    <string name="share_add">添加</string>
+    <string name="share_added">已添加到 Withdo</string>
+    <string name="share_failed">没能添加，请再试一次。</string>
+    <string name="share_label">添加到 Withdo</string>
+</resources>
