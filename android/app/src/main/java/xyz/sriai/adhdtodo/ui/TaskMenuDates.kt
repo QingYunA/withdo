@@ -81,6 +81,17 @@ fun dueOptions(today: LocalDate): List<DueOption> {
     }
 }
 
+/** A ready-made day's name: Today, Tomorrow, This Friday, Next Monday. */
+@Composable
+fun dueKindLabel(kind: DueKind): String = stringResource(
+    when (kind) {
+        DueKind.Today -> R.string.due_today
+        DueKind.Tomorrow -> R.string.menu_tomorrow
+        DueKind.Friday -> R.string.menu_this_friday
+        DueKind.Monday -> R.string.menu_next_monday
+    },
+)
+
 /** A deadline given as a bare day is the end of the working day, as the desktop's defaultDueHour. */
 val DefaultDueTime: LocalTime = LocalTime.of(18, 0)
 
@@ -143,12 +154,7 @@ internal fun DuePage(
     PageHeader(stringResource(R.string.menu_due_title), onBack)
     for (option in dueOptions(today)) {
         MenuRow(
-            label = when (option.kind) {
-                DueKind.Today -> stringResource(R.string.due_today)
-                DueKind.Tomorrow -> stringResource(R.string.menu_tomorrow)
-                DueKind.Friday -> stringResource(R.string.menu_this_friday)
-                DueKind.Monday -> stringResource(R.string.menu_next_monday)
-            },
+            label = dueKindLabel(option.kind),
             hint = dueRowDate(option.date, locale),
             selected = option.date == current,
             trailing = if (option.date == current) {

@@ -11,9 +11,12 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,11 +27,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -153,10 +158,14 @@ fun SwipeRow(
                 },
             ),
     ) {
-        if (shown > 0f) {
-            SwipeLayer(swipes.right, tokens.statusDone, Alignment.CenterStart, Modifier.matchParentSize())
-        } else if (shown < 0f) {
-            SwipeLayer(swipes.left, tokens.accent, Alignment.CenterEnd, Modifier.matchParentSize())
+        // The layer covers only what the row uncovers, so no color shows at the clip's far corners.
+        val uncovered = with(LocalDensity.current) { abs(shown).toDp() }
+        Box(Modifier.matchParentSize()) {
+            if (shown > 0f) {
+                SwipeLayer(swipes.right, tokens.statusDone, Alignment.CenterStart, Modifier.align(Alignment.CenterStart).fillMaxHeight().width(uncovered))
+            } else if (shown < 0f) {
+                SwipeLayer(swipes.left, tokens.accent, Alignment.CenterEnd, Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(uncovered))
+            }
         }
         Box(
             Modifier
@@ -179,8 +188,10 @@ private fun SwipeLayer(action: SwipeAction?, color: Color, alignment: Alignment,
             SwipeAction.Tomorrow -> R.string.swipe_tomorrow
         },
     )
-    Box(modifier.background(color).padding(horizontal = 16.dp), contentAlignment = alignment) {
+    Box(modifier.clipToBounds().background(color).padding(horizontal = 16.dp), contentAlignment = alignment) {
+        // The words keep their width and are cut by the layer's edge while it is narrow.
         Row(
+            modifier = Modifier.wrapContentWidth(align = if (alignment == Alignment.CenterStart) Alignment.Start else Alignment.End, unbounded = true),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
