@@ -43,6 +43,7 @@ import xyz.sriai.adhdtodo.ui.shareDraft
 import xyz.sriai.adhdtodo.ui.shareWhen
 import xyz.sriai.adhdtodo.ui.theme.AdhdTheme
 import xyz.sriai.adhdtodo.ui.theme.Appearance
+import xyz.sriai.adhdtodo.widget.Widgets
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -115,7 +116,8 @@ private fun ShareRoute(
     onDone: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val resources = LocalContext.current.resources
+    val context = LocalContext.current
+    val resources = context.resources
     val words = remember(LocalConfiguration.current) { Words(resources) }
     val scope = rememberCoroutineScope()
     var form by remember {
@@ -146,7 +148,13 @@ private fun ShareRoute(
                     Log.w("adhd-todo", "share failed", e)
                     false
                 }
-                if (ok) onDone(R.string.share_added) else form = form.copy(adding = false)
+                if (ok) {
+                    // This core has no listener, so the widgets are told here.
+                    Widgets.refresh(context)
+                    onDone(R.string.share_added)
+                } else {
+                    form = form.copy(adding = false)
+                }
             }
         },
         onDismiss = onDismiss,
