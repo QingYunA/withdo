@@ -52,6 +52,12 @@ android {
         // The pictures have one home in the repo: no copies under android/.
         getByName("main").assets.directories.add("../../app/theme/sprites/avatars")
         getByName("main").assets.directories.add("../../app/theme/pixel-icons")
+        // The Summary scene: scenes/, actors/, goods/ and props/ keep their folders under assets/.
+        getByName("main").assets.directories.add("../../app/theme/sprites")
+    }
+    // Two assets folders carry a README.md; neither belongs in the app.
+    androidResources {
+        ignoreAssetsPatterns += "!README.md"
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true

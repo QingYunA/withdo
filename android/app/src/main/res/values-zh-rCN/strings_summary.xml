@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Summary (v43): words copied from the desktop's locales (navSummary, summary*). -->
+    <string name="summary_title">总结</string>
+    <string name="summary_see">看总结 ›</string>
+    <string name="summary_share">分享</string>
+    <string name="summary_segment_day">今天</string>
+    <string name="summary_segment_week">本周</string>
+    <string name="summary_previous">上一个</string>
+    <string name="summary_next">下一个</string>
+    <string name="summary_written">%1$s · 助手写的</string>
+    <string name="summary_scene_a11y">出货场景。点一下可以重播。</string>
+    <string name="summary_empty_today">今天还没有做完的事</string>
+    <string name="summary_empty_day">这天没有做完的事</string>
+    <string name="summary_empty_week">本周还没有做完的事</string>
+    <string name="summary_empty_past_week">这周没有做完的事</string>
+    <string name="summary_shipped_today">今天出货</string>
+    <string name="summary_shipped_day">这天出货</string>
+    <string name="summary_shipped_week">本周出货</string>
+    <string name="summary_shipped_past_week">这周出货</string>
+    <string name="summary_row_merged">PR #%1$s 已合并</string>
+    <plurals name="summary_merged">
+        <item quantity="other">合并 %1$d 个 PR</item>
+    </plurals>
+    <plurals name="summary_unit">
+        <item quantity="other">件</item>
+    </plurals>
+    <plurals name="summary_row_a11y">
+        <item quantity="other">%1$s，%2$d 件</item>
+    </plurals>
+</resources>
