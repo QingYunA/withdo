@@ -65,13 +65,14 @@ class CoreApi(private val core: Core_) {
         dueAt: String? = null,
         categoryId: Long? = null,
         priority: String? = null,
+        parentId: Long? = null,
     ): Long =
         PageJson.decodeFromString<Task>(
             core.createTask(
                 PageJson.encodeToString(
                     NewTask(
                         title = title, projectId = projectId, remindAt = remindAt, dueAt = dueAt,
-                        categoryId = categoryId, priority = priority,
+                        categoryId = categoryId, priority = priority, parentId = parentId,
                     ),
                 ),
             ),

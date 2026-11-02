@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The task page: Milestone, Due, Notes and the subtask row -->
+    <string name="property_milestone">Milestone</string>
+    <string name="property_due">Due</string>
+    <string name="section_notes">Notes</string>
+    <string name="notes_hint">Add notes…</string>
+    <string name="add_subtask">Add subtask</string>
+
+    <!-- The task menu's Due and Milestone pages -->
+    <string name="menu_due_title">Due</string>
+    <string name="menu_this_friday">This Friday</string>
+    <string name="menu_no_due">No due date</string>
+    <string name="menu_pick_date">Pick a date…</string>
+    <string name="menu_milestone_title">Milestone</string>
+    <string name="menu_new_milestone">New milestone…</string>
+    <string name="milestone_name_hint">Milestone name</string>
+    <string name="milestone_create">Create</string>
+    <string name="milestone_with_due">%1$s · due %2$s</string>
+
+    <!-- The composer reads dates -->
+    <string name="quick_reminder">%1$s reminder</string>
+    <string name="quick_due">due %1$s</string>
+    <string name="quick_important">important</string>
+    <string name="quick_join">", "</string>
+    <plurals name="quick_many">
+        <item quantity="one">%1$d task</item>
+        <item quantity="other">%1$d tasks</item>
+    </plurals>
+    <string name="quick_added">Added · %1$s</string>
+    <plurals name="quick_added_many">
+        <item quantity="one">Added %1$d task</item>
+        <item quantity="other">Added %1$d tasks</item>
+    </plurals>
+
+    <!-- Select mode -->
+    <string name="menu_select">Select</string>
+    <plurals name="select_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="select_all">Select all</string>
+    <string name="bulk_done">Done</string>
+    <string name="bulk_do_today">Do today</string>
+    <string name="bulk_move">Move to…</string>
+    <string name="bulk_priority">Priority</string>
+    <string name="bulk_delete">Delete</string>
+    <string name="bulk_checkbox_on">Selected</string>
+    <string name="bulk_checkbox_off">Not selected</string>
+    <plurals name="bulk_marked_done">
+        <item quantity="one">Marked %1$d task done</item>
+        <item quantity="other">Marked %1$d tasks done</item>
+    </plurals>
+    <plurals name="bulk_moved_today">
+        <item quantity="one">Moved %1$d task to today</item>
+        <item quantity="other">Moved %1$d tasks to today</item>
+    </plurals>
+    <string name="bulk_nothing_to_move">Nothing to move to today</string>
+    <plurals name="bulk_moved_to">
+        <item quantity="one">Moved %1$d task to %2$s</item>
+        <item quantity="other">Moved %1$d tasks to %2$s</item>
+    </plurals>
+    <plurals name="bulk_priority_set">
+        <item quantity="one">Set %1$d task to %2$s</item>
+        <item quantity="other">Set %1$d tasks to %2$s</item>
+    </plurals>
+    <plurals name="bulk_deleted">
+        <item quantity="one">Deleted %1$d task</item>
+        <item quantity="other">Deleted %1$d tasks</item>
+    </plurals>
+    <string name="bulk_failed">Couldn’t change the tasks</string>
+</resources>

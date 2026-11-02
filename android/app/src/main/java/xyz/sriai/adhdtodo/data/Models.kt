@@ -247,6 +247,8 @@ data class NewTask(
     @SerialName("due_at") val dueAt: String? = null,
     @SerialName("category_id") val categoryId: Long? = null,
     @SerialName("priority") val priority: String? = null,
+    /** Makes the task a subtask of this one. */
+    @SerialName("parent_id") val parentId: Long? = null,
 )
 
 /** The shape UpdateTask takes. An absent key is left alone. */

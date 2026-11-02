@@ -182,8 +182,9 @@ class InteractionTest {
         compose.setThemedContent {
             TaskWithComposer(draft, onSend = { sent = draft.value })
         }
-        compose.onNode(hasSetTextAction()).performTextInput("Looks good")
-        compose.onNode(hasSetTextAction()).performImeAction()
+        // The page has its Notes field too; the composer is the last one.
+        compose.onAllNodes(hasSetTextAction()).onLast().performTextInput("Looks good")
+        compose.onAllNodes(hasSetTextAction()).onLast().performImeAction()
         compose.runOnIdle { assertEquals("Looks good", sent) }
     }
 

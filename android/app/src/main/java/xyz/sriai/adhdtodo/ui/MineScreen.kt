@@ -68,6 +68,7 @@ fun MineScreen(
     highlightId: Long = 0,
     onShowAll: (() -> Unit)? = null,
 ) {
+    if (page != null) ReportSelectable(mineOrder(page, noDateOpen))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 8.dp),
@@ -418,17 +419,19 @@ private fun TaskRow(
         animationSpec = tween(250),
         label = "new-row",
     )
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(fill.value)) {
+    Box(Modifier.fillMaxWidth().clip(LocalSelection.current.rowClip()).background(fill.value)) {
         LongPressRow(
             onClick = { onOpenTask(item.id) },
             onLongPress = { onLongPress(item.id) },
+            taskId = item.id,
         ) { row ->
             Row(
                 modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                StatusGlyph(
+                RowGlyph(
+                    taskId = item.id,
                     status = item.status,
                     onClick = {
                         if (item.source == "user" && item.status != "done" && item.status != "cancelled") {
@@ -522,13 +525,14 @@ private fun DoneTodaySection(
         LongPressRow(
             onClick = { onOpenTask(item.id) },
             onLongPress = { onLongPress(item.id) },
+            taskId = item.id,
         ) { row ->
             Row(
                 modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                StatusGlyph(status = "done")
+                RowGlyph(taskId = item.id, status = "done")
                 Text(
                     item.title,
                     style = type.body,

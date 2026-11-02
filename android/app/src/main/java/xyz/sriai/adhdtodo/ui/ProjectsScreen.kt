@@ -216,6 +216,12 @@ fun ProjectScreen(
         ProjectViewPrefs.set(context, page.project.id, next)
     }
 
+    ReportSelectable(
+        sectionIds(
+            projectStatusOrder.flatMap { status -> active.filter { it.status == status }.map { it.id } },
+            if (completedOpen) done.map { it.id } else emptyList(),
+        ),
+    )
     if (view == ProjectView.Board) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.padding(horizontal = Dims.pagePadding).padding(top = 2.dp)) {
@@ -445,13 +451,14 @@ private fun ProjectTaskRow(
     LongPressRow(
         onClick = { onOpenTask(task.id) },
         onLongPress = { onLongPress(task.id) },
+        taskId = task.id,
     ) { row ->
         Row(
             modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-        Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
+        RowAvatar(task.id, rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
             style = type.bodyStrong,
@@ -483,13 +490,14 @@ private fun DoneProjectRow(
     LongPressRow(
         onClick = { onOpenTask(task.id) },
         onLongPress = { onLongPress(task.id) },
+        taskId = task.id,
     ) { row ->
         Row(
             modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-        Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
+        RowAvatar(task.id, rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
             style = type.body,

@@ -49,6 +49,7 @@ fun AgentsScreen(
     onLongPress: (Long) -> Unit = {},
     onShowAll: (() -> Unit)? = null,
 ) {
+    if (page != null) ReportSelectable(agentsOrder(page))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = Dims.pagePadding, end = Dims.pagePadding, bottom = 8.dp),
@@ -119,6 +120,7 @@ private fun WorkingRow(
     LongPressRow(
         onClick = { onOpenTask(row.id) },
         onLongPress = { onLongPress(row.id) },
+        taskId = row.id,
     ) { outer ->
         Column(modifier = outer) {
         Row(
@@ -126,7 +128,7 @@ private fun WorkingRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            Avatar(words.avatar(agent), size = Dims.avatar)
+            RowAvatar(row.id, words.avatar(agent), size = Dims.avatar)
             Column(Modifier.weight(1f)) {
                 Text(
                     row.title,
@@ -246,13 +248,14 @@ private fun DoneRow(
     LongPressRow(
         onClick = { onOpenTask(row.id) },
         onLongPress = { onLongPress(row.id) },
+        taskId = row.id,
     ) { outer ->
         Row(
             modifier = outer.height(Dims.rowHeight),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-        Avatar(if (agent.isEmpty()) "bot" else words.avatar(agent), size = Dims.avatar)
+        RowAvatar(row.id, if (agent.isEmpty()) "bot" else words.avatar(agent), size = Dims.avatar)
         Text(
             row.title,
             style = type.body,

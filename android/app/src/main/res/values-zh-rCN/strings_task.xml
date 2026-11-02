@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The task page: Milestone, Due, Notes and the subtask row -->
+    <string name="property_milestone">里程碑</string>
+    <string name="property_due">截止</string>
+    <string name="section_notes">备注</string>
+    <string name="notes_hint">添加备注…</string>
+    <string name="add_subtask">添加子任务</string>
+
+    <!-- The task menu's Due and Milestone pages -->
+    <string name="menu_due_title">截止</string>
+    <string name="menu_this_friday">本周五</string>
+    <string name="menu_no_due">没有截止日期</string>
+    <string name="menu_pick_date">选个日期…</string>
+    <string name="menu_milestone_title">里程碑</string>
+    <string name="menu_new_milestone">新建里程碑…</string>
+    <string name="milestone_name_hint">里程碑名称</string>
+    <string name="milestone_create">新建</string>
+    <string name="milestone_with_due">%1$s · 截止%2$s</string>
+
+    <!-- The composer reads dates -->
+    <string name="quick_reminder">%1$s 提醒你</string>
+    <string name="quick_due">%1$s 截止</string>
+    <string name="quick_important">重要</string>
+    <string name="quick_join">，</string>
+    <plurals name="quick_many">
+        <item quantity="other">%1$d 件任务</item>
+    </plurals>
+    <string name="quick_added">已添加 · %1$s</string>
+    <plurals name="quick_added_many">
+        <item quantity="other">已添加 %1$d 件任务</item>
+    </plurals>
+
+    <!-- Select mode -->
+    <string name="menu_select">多选</string>
+    <plurals name="select_count">
+        <item quantity="other">已选 %1$d 件</item>
+    </plurals>
+    <string name="select_all">全选</string>
+    <string name="bulk_done">完成</string>
+    <string name="bulk_do_today">今天做</string>
+    <string name="bulk_move">移到…</string>
+    <string name="bulk_priority">优先级</string>
+    <string name="bulk_delete">删除</string>
+    <string name="bulk_checkbox_on">已选</string>
+    <string name="bulk_checkbox_off">未选</string>
+    <plurals name="bulk_marked_done">
+        <item quantity="other">已完成 %1$d 件任务</item>
+    </plurals>
+    <plurals name="bulk_moved_today">
+        <item quantity="other">已移到今天：%1$d 件</item>
+    </plurals>
+    <string name="bulk_nothing_to_move">没有可移到今天的任务</string>
+    <plurals name="bulk_moved_to">
+        <item quantity="other">已移到%2$s：%1$d 件</item>
+    </plurals>
+    <plurals name="bulk_priority_set">
+        <item quantity="other">已设为 %2$s：%1$d 件</item>
+    </plurals>
+    <plurals name="bulk_deleted">
+        <item quantity="other">已删除 %1$d 件任务</item>
+    </plurals>
+    <string name="bulk_failed">没能改动这些任务</string>
+</resources>

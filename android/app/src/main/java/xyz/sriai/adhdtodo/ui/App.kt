@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +51,7 @@ import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.Item
 import xyz.sriai.adhdtodo.data.MinePage
+import xyz.sriai.adhdtodo.data.Milestone
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectEntry
@@ -131,6 +133,12 @@ fun App(
     var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
     var catFilter by remember { mutableStateOf(0L) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    var taskMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
+    // Select mode (v43): who is ticked (null: off), the rows the page draws, and the bar's two pickers.
+    var selection by remember { mutableStateOf<Set<Long>?>(null) }
+    var selectOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
+    var bulkSheet by remember { mutableStateOf<String?>(null) }
+    var bulkProjects by remember { mutableStateOf<List<Project>>(emptyList()) }
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
@@ -201,6 +209,7 @@ fun App(
                         categories = api.categories(),
                         projects = api.projects(),
                         presets = api.remindPresets(),
+                        milestones = task.task.projectId?.let { api.project(it).milestones }.orEmpty(),
                     )
                 }
             } catch (e: CancellationException) {
@@ -245,6 +254,9 @@ fun App(
     }
 
     BackHandler(enabled = stack.size > 1) { pop() }
+    // The system back leaves select mode first; so does moving to another page.
+    BackHandler(enabled = selection != null) { selection = null }
+    LaunchedEffect(route, tabName) { selection = null }
 
     LaunchedEffect(noticeId) {
         if (notice != null) {
@@ -363,6 +375,11 @@ fun App(
                     taskPage = loaded.first
                     projects = loaded.second
                     categories = loaded.third
+                    taskMilestones = withContext(Dispatchers.IO) {
+                        loaded.first.task.projectId
+                            ?.let { runCatching { api.project(it).milestones }.getOrNull() }
+                            .orEmpty()
+                    }
                 }
             }
             route == ROUTE_SETTINGS || route == ROUTE_CATEGORIES -> {
@@ -464,36 +481,47 @@ fun App(
         }
     }
 
+    // What the parser read out of the text (v43); tapping the preview line ignores it for this text.
+    val quickParse = rememberQuickParse(api, draft, enabled = !route.startsWith("task:"))
+    var ignoredQuick by remember { mutableStateOf<String?>(null) }
+    val activeQuick = quickParse?.takeIf { it.readAny() && ignoredQuick != draft }
+
     val submit: () -> Unit = {
         val title = draft.trim()
         val projectId = if (route.startsWith("project:")) route.substringAfter(':').toLongOrNull() else null
+        val quick = activeQuick
         if (title.isNotEmpty() && !sending) {
             sending = true
             scope.launch {
-                val made = try {
-                    withContext(Dispatchers.IO) { api.createTask(title, projectId) }
+                val madeAll = try {
+                    withContext(Dispatchers.IO) {
+                        if (quick != null) createQuickDrafts(api, quick, projectId) else listOf(api.createTask(title, projectId))
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
                     null
                 }
+                val made = madeAll?.firstOrNull()
                 sending = false
                 if (made != null) {
                     draft = ""
                     // An undated add opens the No date fold, where the new row shows for 2 s.
-                    if (projectId == null) {
+                    if (projectId == null && quick == null) {
                         noDateOpen = true
                         highlightId = made
                     }
                     showNotice(
-                        if (projectId != null) {
+                        if (quick != null) {
+                            quickReceipt(resources, words, quick)
+                        } else if (projectId != null) {
                             resources.getString(R.string.added_to_project, projectPage?.project?.name.orEmpty())
                         } else {
                             resources.getString(R.string.added_to_inbox)
                         },
                         undo = {
                             highlightId = 0L
-                            perform { api.deleteTask(made) }
+                            perform { madeAll.orEmpty().forEach { api.deleteTask(it) } }
                             notice = null
                             noticeUndo = null
                         },
@@ -502,6 +530,29 @@ fun App(
                 } else {
                     showNotice(resources.getString(R.string.add_failed))
                 }
+            }
+        }
+    }
+
+    fun runBulk(action: BulkAction) {
+        val ids = selection.orEmpty().toList()
+        if (ids.isEmpty()) return
+        scope.launch {
+            val outcome = try {
+                withContext(Dispatchers.IO) { runBulkAction(api, action, ids, resources, words) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("adhd-todo", "bulk action failed", e)
+                null
+            }
+            selection = null
+            if (outcome == null) {
+                showNotice(resources.getString(R.string.bulk_failed))
+            } else {
+                val undo = outcome.undo
+                if (undo != null) toast = UndoToast(outcome.message) { perform { undo() } } else showNotice(outcome.message)
+                tick++
             }
         }
     }
@@ -637,9 +688,24 @@ fun App(
         else -> stringResource(R.string.composer_placeholder_inbox)
     }
 
+    val selectionUi = selection?.let { ticked ->
+        SelectionUi(
+            ids = ticked,
+            order = selectOrder,
+            toggle = { id -> selection = ticked.toggled(id) },
+            report = { selectOrder = it },
+        )
+    }
+    CompositionLocalProvider(LocalSelection provides selectionUi) {
     Column(Modifier.fillMaxSize().background(tokens.bg)) {
         Column(Modifier.weight(1f).statusBarsPadding().imePadding()) {
-            if (route == "search") {
+            if (selection != null) {
+                SelectHeader(
+                    count = selection.orEmpty().size,
+                    onSelectAll = { selection = selectOrder.filter { it != 0L }.toSet() },
+                    onDone = { selection = null },
+                )
+            } else if (route == "search") {
                 // The page draws its own field and Cancel.
             } else if (route == "home") {
                 PageHeader(
@@ -1040,6 +1106,17 @@ fun App(
                             val id = route.substringAfter(':').substringBefore(':').toLongOrNull()
                             if (id != null) openTaskMenu(id, page)
                         },
+                        milestones = taskMilestones,
+                        onSaveNotes = { notes ->
+                            val id = route.substringAfter(':').substringBefore(':').toLongOrNull()
+                            if (id != null) perform { api.updateTask(id, TaskPatch(notes = notes)) }
+                        },
+                        onAddSubtask = { title ->
+                            val parent = taskPage?.task
+                            if (parent != null) {
+                                perform { api.createTask(title, projectId = parent.projectId, parentId = parent.id) }
+                            }
+                        },
                     )
                     else -> when (tab) {
                         Tab.MINE -> MineScreen(
@@ -1093,7 +1170,7 @@ fun App(
                 UndoBar(message = current.message, onUndo = { toast = null; current.undo() })
             }
 
-            if (composerVisible) {
+            if (composerVisible && selection == null) {
                 val placeholder = composerPlaceholder
                 Composer(
                     value = draft,
@@ -1103,10 +1180,34 @@ fun App(
                     onValueChange = { draft = it },
                     onSend = if (route.startsWith("task:")) sendReply else submit,
                     onUndo = noticeUndo,
+                    highlights = quickHighlights(activeQuick, draft.length),
+                    preview = quickPreview(
+                        resources, words, activeQuick,
+                        if (route.startsWith("project:")) {
+                            projectPage?.project?.name.orEmpty()
+                        } else {
+                            resources.getString(R.string.title_inbox)
+                        },
+                    ),
+                    onIgnorePreview = { ignoredQuick = draft },
                 )
             }
         }
-        if (route == "home" || route.startsWith("project:") || completedScope != null || isSettingsRoute(route)) {
+        if (selection != null) {
+            BulkBar(
+                enabled = selection.orEmpty().isNotEmpty(),
+                onDone = { runBulk(BulkAction.Done) },
+                onDoToday = { runBulk(BulkAction.DoToday) },
+                onMove = {
+                    scope.launch {
+                        bulkProjects = withContext(Dispatchers.IO) { runCatching { api.projects() }.getOrDefault(emptyList()) }
+                        bulkSheet = "move"
+                    }
+                },
+                onPriority = { bulkSheet = "priority" },
+                onDelete = { runBulk(BulkAction.Delete) },
+            )
+        } else if (route == "home" || route.startsWith("project:") || completedScope != null || isSettingsRoute(route)) {
             BottomNav(
                 tab = if (route.startsWith("project:") || (completedScope?.projectId ?: 0L) > 0L || isSettingsRoute(route)) Tab.PROJECTS else tab,
                 count = mine?.fromAgents?.size ?: 0,
@@ -1117,6 +1218,22 @@ fun App(
             )
         }
     }
+    }
+
+    if (bulkSheet == "move") {
+        BulkMoveSheet(
+            projects = bulkProjects,
+            onPick = { id, name -> bulkSheet = null; runBulk(BulkAction.MoveTo(id, name)) },
+            onDismiss = { bulkSheet = null },
+        )
+    }
+    if (bulkSheet == "priority") {
+        BulkPrioritySheet(
+            words = words,
+            onPick = { priority -> bulkSheet = null; runBulk(BulkAction.SetPriority(priority)) },
+            onDismiss = { bulkSheet = null },
+        )
+    }
 
     menuData?.let { data ->
         TaskMenuSheet(
@@ -1126,8 +1243,29 @@ fun App(
             categories = data.categories,
             projects = data.projects,
             presets = data.presets,
+            milestones = data.milestones,
+            showSelect = route == "home" || route.startsWith("project:"),
+            onSelect = { selection = setOf(data.task.id) },
             initialPage = menuPage,
             onDismiss = { menuData = null },
+            onDue = { day ->
+                val patch = if (day == null) {
+                    TaskPatch(clearDueAt = true)
+                } else {
+                    TaskPatch(dueAt = dueStamp(day, data.task.dueAt, ZoneId.systemDefault()))
+                }
+                perform { api.updateTask(data.task.id, patch) }
+            },
+            onMilestone = { id -> perform { api.updateTask(data.task.id, TaskPatch(milestoneId = id)) } },
+            onNewMilestone = { name ->
+                val projectId = data.task.projectId
+                if (projectId != null) {
+                    perform {
+                        val made = api.createMilestone(projectId, name)
+                        api.updateTask(data.task.id, TaskPatch(milestoneId = made.id))
+                    }
+                }
+            },
             onDoToday = {
                 val id = data.task.id
                 scope.launch {
@@ -1206,6 +1344,7 @@ private data class TaskMenuData(
     val categories: List<Category>,
     val projects: List<Project>,
     val presets: List<RemindPreset>,
+    val milestones: List<Milestone> = emptyList(),
 )
 
 /** The stack entry of a task: its id and the project it came from (0 for Mine and Agents). */

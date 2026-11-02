@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Category
+import xyz.sriai.adhdtodo.data.Milestone
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.Report
 import xyz.sriai.adhdtodo.data.Task
@@ -54,6 +56,9 @@ fun TaskScreen(
     onOpenTask: (Long) -> Unit,
     categories: List<Category> = emptyList(),
     onOpenMenu: (TaskMenuPage) -> Unit = {},
+    milestones: List<Milestone> = emptyList(),
+    onSaveNotes: (String) -> Unit = {},
+    onAddSubtask: (String) -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -64,6 +69,8 @@ fun TaskScreen(
     val agent = page.latestAgent.ifEmpty { if (task.source == "agent") "agent" else "user" }
     val fromLabel = if (agent == "user") stringResource(R.string.done_by_you) else words.agent(agent)
     val fromAvatar = if (agent == "user") "you" else words.avatar(agent)
+    val locale = LocalLocale.current.platformLocale
+    val milestone = milestones.firstOrNull { it.id == task.milestoneId }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -111,6 +118,23 @@ fun TaskScreen(
                     )
                 }
             }
+            if (project != null && milestones.isNotEmpty()) {
+                PropertyRow("diamond-gem", onClick = { onOpenMenu(TaskMenuPage.Milestone) }) {
+                    Text(
+                        milestone?.title ?: stringResource(R.string.menu_none),
+                        style = type.body,
+                        color = if (milestone == null) tokens.textTertiary else tokens.text,
+                    )
+                }
+            }
+            PropertyRow("calendar", onClick = { onOpenMenu(TaskMenuPage.Due) }) {
+                val due = dueValue(task, words, locale)
+                Text(
+                    due.ifEmpty { stringResource(R.string.menu_none) },
+                    style = type.body,
+                    color = if (due.isEmpty()) tokens.textTertiary else tokens.text,
+                )
+            }
             PropertyRow("clock", onClick = { onOpenMenu(TaskMenuPage.Remind) }) {
                 val remind = task.remindAt?.takeIf { it.isNotBlank() }
                 Text(
@@ -139,12 +163,15 @@ fun TaskScreen(
                 }
             }
         }
-        if (page.subtasks.isNotEmpty()) {
-            item(key = "subtasks") {
-                SectionHeader(stringResource(R.string.section_subtasks), page.subtasks.size)
-                Column {
-                    for (sub in page.subtasks) SubtaskRow(sub, words, onOpenTask)
-                }
+        item(key = "notes") {
+            SectionHeader(stringResource(R.string.section_notes))
+            NotesField(task, onSaveNotes)
+        }
+        item(key = "subtasks") {
+            SectionHeader(stringResource(R.string.section_subtasks), page.subtasks.size.takeIf { it > 0 })
+            Column {
+                for (sub in page.subtasks) SubtaskRow(sub, words, onOpenTask)
+                AddSubtaskRow(onAddSubtask)
             }
         }
         if (page.reports.isNotEmpty()) {
@@ -189,6 +216,8 @@ private fun PropertyRow(
                         "flag" -> R.string.property_priority
                         "folder" -> R.string.property_project
                         "bulletlist" -> R.string.property_category
+                        "diamond-gem" -> R.string.property_milestone
+                        "calendar" -> R.string.property_due
                         "clock" -> R.string.property_remind
                         "git-branch" -> R.string.property_branch
                         else -> R.string.property_pr
