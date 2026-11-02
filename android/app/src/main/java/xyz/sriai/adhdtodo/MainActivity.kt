@@ -47,6 +47,11 @@ import xyz.sriai.adhdtodo.ui.theme.LocalTokens
  * next remind_at, set here and by ReminderReceiver after each claim.
  */
 class MainActivity : ComponentActivity(), Listener {
+    companion object {
+        /** Opens Today with the composer focused: the widgets' + and Note something. */
+        const val EXTRA_COMPOSE = "xyz.sriai.adhdtodo.COMPOSE"
+    }
+
     private var core: Core_? = null
     private val revision = mutableIntStateOf(0)
     private val status = mutableStateOf("")
@@ -114,10 +119,14 @@ class MainActivity : ComponentActivity(), Listener {
         if (BuildConfig.DEBUG) demoSyncState.value = intent.getStringExtra("sync_state")
     }
 
-    /** The route a launch asked for: a task notification's task_id, else a debug route extra. */
+    /**
+     * The route a launch asked for: a task notification's (or a widget's) task_id, a widget's
+     * compose, else a debug route extra.
+     */
     private fun routeFrom(intent: Intent): String? {
         val taskID = intent.getLongExtra(Reminders.EXTRA_TASK_ID, 0)
         if (taskID > 0) return "task:$taskID:0"
+        if (intent.getBooleanExtra(EXTRA_COMPOSE, false)) return xyz.sriai.adhdtodo.ui.ROUTE_COMPOSE
         if (!BuildConfig.DEBUG) return null
         return intent.getStringExtra("route")
     }

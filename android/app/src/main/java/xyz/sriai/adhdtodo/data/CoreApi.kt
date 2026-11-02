@@ -201,6 +201,9 @@ class CoreApi(private val core: Core_) {
 
     fun reply(id: Long, text: String) = core.reply(id, text)
 
+    /** Keeps a page on a task, as the share sheet does with the link it was given; [title] may be empty. */
+    fun addLink(id: Long, url: String, title: String) = core.addLink(id, url, title)
+
     fun account(): Account = PageJson.decodeFromString(core.account())
 
     fun devices(): List<Device> = PageJson.decodeFromString(core.devices())

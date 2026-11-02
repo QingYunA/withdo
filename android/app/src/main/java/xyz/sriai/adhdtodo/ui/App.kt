@@ -134,6 +134,7 @@ fun App(
     var catFilter by remember { mutableStateOf(0L) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var taskMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
+    var composeFocus by remember { mutableIntStateOf(0) }
     // Select mode (v43): who is ticked (null: off), the rows the page draws, and the bar's two pickers.
     var selection by remember { mutableStateOf<Set<Long>?>(null) }
     var selectOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
@@ -283,7 +284,12 @@ fun App(
     LaunchedEffect(initialRoute) {
         if (initialRoute.isNullOrBlank()) return@LaunchedEffect
         val next = normalizeRoute(initialRoute)
-        if (next.startsWith("tab:")) {
+        if (next == ROUTE_COMPOSE) {
+            // A widget's + or Note something: Today, with the composer focused.
+            tabName = Tab.MINE.name
+            stack = listOf("home")
+            composeFocus++
+        } else if (next.startsWith("tab:")) {
             // route=projects opens the Projects tab, not Mine with the projects route on top.
             tabName = runCatching { Tab.valueOf(next.removePrefix("tab:").uppercase()) }
                 .getOrDefault(Tab.MINE).name
@@ -1203,6 +1209,7 @@ fun App(
                         },
                     ),
                     onIgnorePreview = { ignoredQuick = draft },
+                    focusRequest = composeFocus,
                 )
             }
         }
@@ -1368,7 +1375,11 @@ private data class TaskMenuData(
 private fun taskRoute(id: Long, projectId: Long): String =
     if (projectId > 0) "task:$id:$projectId" else "task:$id:0"
 
+/** The launch route of a widget's + and of Note something: Today with the composer focused. */
+const val ROUTE_COMPOSE = "compose"
+
 internal fun normalizeRoute(raw: String): String = when {
+    raw == ROUTE_COMPOSE -> raw
     raw == "home" || raw == "sync" || raw == "summary" || isSettingsRoute(raw) -> raw
     raw.startsWith("project:") -> raw
     raw.startsWith("task:") -> {

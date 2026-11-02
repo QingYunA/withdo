@@ -164,6 +164,13 @@ func (c *Core) addReport(ctx context.Context, q store.Querier, in AddReportInput
 // itself is left alone: its status, its timestamps and a hand-off waiting for an agent stay as they
 // were. The report syncs like any other report.
 func (c *Core) AddReply(ctx context.Context, taskID int64, text string) (*Report, error) {
+	return c.AddReplyWithLinks(ctx, taskID, text, nil)
+}
+
+// AddReplyWithLinks is AddReply with pages attached, as the phone's share sheet stores the link it
+// was given: the inspector lists them as the task's pages. Links CleanLinks cannot keep are left
+// out; the reply is still filed.
+func (c *Core) AddReplyWithLinks(ctx context.Context, taskID int64, text string, links []ReportLink) (*Report, error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		return nil, invalid("text", "must not be empty")
@@ -177,7 +184,8 @@ func (c *Core) AddReply(ctx context.Context, taskID int64, text string) (*Report
 		if task == nil {
 			return notFound("task_id", "task", taskID)
 		}
-		out, err = c.addReply(ctx, q, taskID, text)
+		kept, _ := CleanLinks(links)
+		out, err = c.addReply(ctx, q, taskID, text, kept)
 		return err
 	})
 	if err != nil {
@@ -188,8 +196,8 @@ func (c *Core) AddReply(ctx context.Context, taskID int64, text string) (*Report
 
 // addReply inserts the reply report inside the caller's transaction. It deliberately does not use
 // addReport: filing a report clears a hand-off, but the user answering a task did not take it.
-func (c *Core) addReply(ctx context.Context, q store.Querier, taskID int64, text string) (*Report, error) {
-	links, err := encodeLinks(nil)
+func (c *Core) addReply(ctx context.Context, q store.Querier, taskID int64, text string, pages []ReportLink) (*Report, error) {
+	links, err := encodeLinks(pages)
 	if err != nil {
 		return nil, err
 	}

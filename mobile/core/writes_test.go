@@ -274,3 +274,31 @@ func mineItem(t *testing.T, c *Core, id int) data.Item {
 	t.Fatalf("task %d is not in Mine: %+v", id, mine)
 	return data.Item{}
 }
+
+// TestAddLinkFilesTheUsersReplyWithThePage: the share sheet's link reaches the task's pages.
+func TestAddLinkFilesTheUsersReplyWithThePage(t *testing.T) {
+	phone, err := open(demoDatabase(t, demoNow), nil, func() time.Time { return demoNow })
+	if err != nil {
+		t.Fatalf("open the phone core: %v", err)
+	}
+	defer func() { _ = phone.Close() }()
+
+	const url = "https://github.com/QingYunA/withdo/issues/219"
+	if err := phone.AddLink(3, url, "Android: swipe to complete a task"); err != nil {
+		t.Fatalf("AddLink: %v", err)
+	}
+	reports, err := phone.dom.ListReports(context.Background(), 3)
+	if err != nil {
+		t.Fatalf("list reports: %v", err)
+	}
+	last := reports[len(reports)-1]
+	if last.Agent != domain.ReplyAgent || last.Summary != url {
+		t.Errorf("newest report = agent %q summary %q, want the user's reply %q", last.Agent, last.Summary, url)
+	}
+	if len(last.Links) != 1 || last.Links[0].URL != url || last.Links[0].Title != "Android: swipe to complete a task" {
+		t.Errorf("links = %+v", last.Links)
+	}
+	if err := phone.AddLink(3, "not a link", ""); err != nil {
+		t.Fatalf("AddLink of a bad link: %v", err)
+	}
+}
