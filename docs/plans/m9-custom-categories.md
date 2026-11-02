@@ -43,7 +43,7 @@ those two plus multi-color icons.
 
 - `internal/pixmap`: `Bitmap [12]uint16` with hex, grid and SVG forms and `FromRectSVG` for the library
   conversion; `internal/pixmap/cmd/pxicons` and `scripts/category-icons.sh` generate
-  `app/theme/category_icons_gen.go` from the pinned pixelarticons 2.4.2 and the curated list.
+  `app/categoryicons/data_gen.go` from the pinned pixelarticons 2.4.2 and the curated list.
 - `internal/domain/categories.go`: `ListCategories`, `CreateCategory`, `UpdateCategory`, `MoveCategory`,
   `DeleteCategory` (returns the tasks it unsorted), `RestoreCategory` (the Undo: same id and place, and only
   tasks that are still unsorted come back), `ResolveCategory` (a name in any case; Work and Life also
