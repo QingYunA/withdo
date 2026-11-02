@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Category
+import xyz.sriai.adhdtodo.data.Milestone
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.RemindPreset
 import xyz.sriai.adhdtodo.data.Task
@@ -74,7 +75,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 
 /** The main page of the sheet and its three subpages. */
-enum class TaskMenuPage { Main, Category, Move, Remind }
+enum class TaskMenuPage { Main, Category, Move, Remind, Due, Milestone }
 
 /** The seven statuses, in the desktop menu's order. */
 private val menuStatuses = listOf("backlog", "todo", "doing", "blocked", "review", "done", "cancelled")
@@ -94,6 +95,9 @@ fun TaskMenuSheet(
     categories: List<Category> = emptyList(),
     projects: List<Project> = emptyList(),
     presets: List<RemindPreset> = emptyList(),
+    milestones: List<Milestone> = emptyList(),
+    showSelect: Boolean = false,
+    today: LocalDate = LocalDate.now(),
     initialPage: TaskMenuPage = TaskMenuPage.Main,
     onDismiss: () -> Unit,
     onStatus: (String) -> Unit = {},
@@ -104,6 +108,10 @@ fun TaskMenuSheet(
     onDoToday: () -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
     onDelete: () -> Unit = {},
+    onDue: (LocalDate?) -> Unit = {},
+    onMilestone: (Long) -> Unit = {},
+    onNewMilestone: (String) -> Unit = {},
+    onSelect: () -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     ModalBottomSheet(
@@ -129,6 +137,9 @@ fun TaskMenuSheet(
             categories = categories,
             projects = projects,
             presets = presets,
+            milestones = milestones,
+            showSelect = showSelect,
+            today = today,
             initialPage = initialPage,
             onDismiss = onDismiss,
             onStatus = onStatus,
@@ -139,6 +150,10 @@ fun TaskMenuSheet(
             onDoToday = onDoToday,
             onOpenUrl = onOpenUrl,
             onDelete = onDelete,
+            onDue = onDue,
+            onMilestone = onMilestone,
+            onNewMilestone = onNewMilestone,
+            onSelect = onSelect,
         )
     }
 }
@@ -151,6 +166,9 @@ private fun TaskMenuBody(
     categories: List<Category>,
     projects: List<Project>,
     presets: List<RemindPreset>,
+    milestones: List<Milestone>,
+    showSelect: Boolean,
+    today: LocalDate,
     initialPage: TaskMenuPage,
     onDismiss: () -> Unit,
     onStatus: (String) -> Unit,
@@ -161,6 +179,10 @@ private fun TaskMenuBody(
     onDoToday: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: () -> Unit,
+    onDue: (LocalDate?) -> Unit,
+    onMilestone: (Long) -> Unit,
+    onNewMilestone: (String) -> Unit,
+    onSelect: () -> Unit,
 ) {
     var page by remember { mutableStateOf(initialPage) }
     // Back goes from a page to the main page, then closes the sheet. The handler also covers the
@@ -200,6 +222,8 @@ private fun TaskMenuBody(
                 onCategory = { page = TaskMenuPage.Category },
                 onMove = { page = TaskMenuPage.Move },
                 onRemind = { page = TaskMenuPage.Remind },
+                showSelect = showSelect,
+                onSelect = { choose { onSelect() } },
                 onDoToday = { choose { onDoToday() } },
                 onOpenUrl = { url -> choose { onOpenUrl(url) } },
                 onDelete = { choose { onDelete() } },
@@ -225,6 +249,19 @@ private fun TaskMenuBody(
                 onBack = { page = TaskMenuPage.Main },
                 onPick = { at -> choose { onRemind(at) } },
             )
+            TaskMenuPage.Due -> DuePage(
+                task = task,
+                today = today,
+                onBack = { page = TaskMenuPage.Main },
+                onPick = { day -> choose { onDue(day) } },
+            )
+            TaskMenuPage.Milestone -> MilestonePage(
+                task = task,
+                milestones = milestones,
+                onBack = { page = TaskMenuPage.Main },
+                onPick = { id -> choose { onMilestone(id) } },
+                onCreate = { name -> choose { onNewMilestone(name) } },
+            )
         }
     }
 }
@@ -241,6 +278,8 @@ private fun MainPage(
     onCategory: () -> Unit,
     onMove: () -> Unit,
     onRemind: () -> Unit,
+    showSelect: Boolean,
+    onSelect: () -> Unit,
     onDoToday: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: () -> Unit,
@@ -355,6 +394,13 @@ private fun MainPage(
         chevron = true,
         onClick = onRemind,
     )
+    if (showSelect) {
+        MenuRow(
+            icon = "checkbox-on",
+            label = stringResource(R.string.menu_select),
+            onClick = onSelect,
+        )
+    }
     if (task.prNumber > 0 && task.prUrl.isNotEmpty()) {
         MenuRow(
             icon = "external-link",
@@ -570,7 +616,7 @@ private fun RemindPage(
 }
 
 @Composable
-private fun PageHeader(title: String, onBack: () -> Unit) {
+internal fun PageHeader(title: String, onBack: () -> Unit) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val back = stringResource(R.string.menu_back)
@@ -670,7 +716,7 @@ private fun MenuLabel(label: String, value: String, top: androidx.compose.ui.uni
 }
 
 @Composable
-private fun MenuRule() {
+internal fun MenuRule() {
     Box(
         Modifier
             .fillMaxWidth()
@@ -685,7 +731,7 @@ private fun MenuRule() {
  * or a check. The chosen row of a page takes bg.hover; Delete is the one red row.
  */
 @Composable
-private fun MenuRow(
+internal fun MenuRow(
     label: String,
     icon: String? = null,
     hint: String? = null,

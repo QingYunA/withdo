@@ -132,6 +132,12 @@ fun ProjectScreen(
     val mineActive = mine.count { it.status != "done" && it.status != "cancelled" }
     val agentsActive = agentTasks.count { it.status != "done" && it.status != "cancelled" }
 
+    ReportSelectable(
+        sectionIds(
+            projectStatusOrder.flatMap { status -> active.filter { it.status == status }.map { it.id } },
+            if (completedOpen) done.map { it.id } else emptyList(),
+        ),
+    )
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = Dims.pagePadding, end = Dims.pagePadding, bottom = 8.dp),
@@ -322,13 +328,14 @@ private fun ProjectTaskRow(
     LongPressRow(
         onClick = { onOpenTask(task.id) },
         onLongPress = { onLongPress(task.id) },
+        taskId = task.id,
     ) { row ->
         Row(
             modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-        Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
+        RowAvatar(task.id, rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
             style = type.bodyStrong,
@@ -360,13 +367,14 @@ private fun DoneProjectRow(
     LongPressRow(
         onClick = { onOpenTask(task.id) },
         onLongPress = { onLongPress(task.id) },
+        taskId = task.id,
     ) { row ->
         Row(
             modifier = row.height(Dims.rowHeight).padding(start = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-        Avatar(rowAvatar(task, agent, words), size = Dims.avatar)
+        RowAvatar(task.id, rowAvatar(task, agent, words), size = Dims.avatar)
         Text(
             task.title,
             style = type.body,
