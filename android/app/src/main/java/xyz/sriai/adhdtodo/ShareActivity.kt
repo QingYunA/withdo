@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -115,7 +116,7 @@ private fun ShareRoute(
     onDismiss: () -> Unit,
 ) {
     val resources = LocalContext.current.resources
-    val words = remember(resources.configuration) { Words(resources) }
+    val words = remember(LocalConfiguration.current) { Words(resources) }
     val scope = rememberCoroutineScope()
     var form by remember {
         mutableStateOf(ShareForm(TextFieldValue(draft.title, TextRange(0, draft.title.length)), draft.url))
