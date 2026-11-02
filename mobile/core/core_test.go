@@ -74,14 +74,19 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	}
 	sort.Strings(methods)
 	want := []string{
-		"Accept", "Account", "Agents", "Categories", "ClaimDueReminders", "Close", "CodeState",
-		"Complete", "CreateTask", "DeleteTask", "Devices", "DoToday", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable", "GoogleLinkCancel",
-		"GoogleLinkFinish", "GoogleLinkStart", "GoogleLinked", "GoogleStart", "LinkMerge", "LinkReplace", "Mine",
-		"MoveToAccount", "NextReminderAt",
-		"Project", "Projects", "RemindPresets", "Reply",
-		"RequestResetCode", "ResendCode", "ResetPassword", "RestoreTask", "Search", "SetListener",
-		"SignIn", "SignInWithCode", "SignOut", "SignUp", "StartSync", "StopSync", "SyncNow", "SyncSetServer",
-		"SyncStatus", "Task", "UpdateTask",
+		"Accept", "Account", "Agents", "ArchiveProject", "ArchivedProjects", "Categories",
+		"CategoriesWithCounts", "CategoryIcons", "ClaimDueReminders", "Close", "CodeState", "Complete",
+		"Completed", "CreateCategory", "CreateMilestone", "CreateProject", "CreateTask",
+		"DeleteCategory", "DeleteProject", "DeleteTask", "DeleteTasks", "Devices", "DoToday",
+		"DoTodayMany", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable",
+		"GoogleLinkCancel", "GoogleLinkFinish", "GoogleLinkStart", "GoogleLinked", "GoogleStart",
+		"LinkMerge", "LinkReplace", "Mine", "MoveCategory", "MoveToAccount", "NextReminderAt",
+		"ParseQuick", "Project", "ProjectList", "Projects", "RemindPresets", "RenameProject", "Reply",
+		"RequestResetCode", "ResendCode", "ResetPassword", "RestoreCategory", "RestoreTask",
+		"RestoreTaskStates", "RestoreTasks", "Search", "SetListener", "SignIn", "SignInWithCode",
+		"SignOut", "SignUp", "StartSync", "StopSync", "Summary", "SummaryMarkdown", "SyncNow",
+		"SyncSetServer", "SyncStatus", "Task", "UnarchiveProject", "UpdateCategory", "UpdateMilestone",
+		"UpdateTask", "UpdateTasks",
 	}
 	if !reflect.DeepEqual(methods, want) {
 		t.Errorf("Core methods = %v\nwant %v", methods, want)

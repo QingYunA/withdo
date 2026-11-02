@@ -1,0 +1,71 @@
+{
+  "week": false,
+  "back": 0,
+  "from": "2026-10-20",
+  "to": "2026-10-20",
+  "over": false,
+  "total": 2,
+  "merged": 0,
+  "ledger": [
+    {
+      "agent": "",
+      "name": "you",
+      "you": true,
+      "count": 1,
+      "merged": 0,
+      "tasks": [
+        {
+          "id": 21,
+          "title": "Send the packaging answer",
+          "project": "",
+          "at": "2026-10-20T06:00:00Z",
+          "kind": "mail",
+          "merged": false,
+          "pr_number": 0,
+          "said": ""
+        }
+      ]
+    },
+    {
+      "agent": "Claude Code",
+      "name": "Claude Code",
+      "you": false,
+      "count": 1,
+      "merged": 0,
+      "tasks": [
+        {
+          "id": 20,
+          "title": "Port the MCP server",
+          "project": "withdo",
+          "at": "2026-10-20T08:20:00Z",
+          "kind": "flask",
+          "merged": false,
+          "pr_number": 14,
+          "said": "Eight tools ported with their tests"
+        }
+      ]
+    }
+  ],
+  "open": {
+    "in_progress": 3,
+    "in_review": 1,
+    "blocked": 1
+  },
+  "paragraph": "",
+  "goods": [
+    {
+      "actor": 0,
+      "kind": "mail",
+      "starred": false,
+      "day": 0,
+      "task_id": 21
+    },
+    {
+      "actor": 1,
+      "kind": "flask",
+      "starred": false,
+      "day": 0,
+      "task_id": 20
+    }
+  ]
+}

@@ -14,10 +14,12 @@ import (
 // createTaskJSON is the composer's input for CreateTask. Every key is optional but title.
 //
 //	{"title":"...","project_id":1,"parent_id":0,"status":"todo",
-//	 "priority":"P2","category_id":0,"due_at":"2026-12-01T09:00:00+08:00"}
+//	 "priority":"P2","category_id":0,"due_at":"2026-12-01T09:00:00+08:00",
+//	 "remind_at":"2026-12-01T09:00:00+08:00"}
 //
 // An absent or zero project_id and parent_id mean none; an absent or zero category_id means
-// unsorted. due_at is ISO 8601, as internal/domain.ParseTimestamp accepts.
+// unsorted. due_at and remind_at are ISO 8601, as internal/domain.ParseTimestamp accepts; empty
+// means none.
 type createTaskJSON struct {
 	Title      string `json:"title"`
 	ProjectID  *int64 `json:"project_id"`
@@ -26,6 +28,7 @@ type createTaskJSON struct {
 	Priority   string `json:"priority"`
 	CategoryID *int64 `json:"category_id"`
 	DueAt      string `json:"due_at"`
+	RemindAt   string `json:"remind_at"`
 }
 
 // CreateTask makes a plain task of the user's, in a project or the Inbox, and returns the created
@@ -41,10 +44,14 @@ func (c *Core) CreateTask(inputJSON string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	remind, err := optionalTime(in.RemindAt)
+	if err != nil {
+		return "", err
+	}
 	task, err := c.real.CreateTask(data.CreateTaskInput{
 		Title: in.Title, Source: data.SourceUser, Status: data.Status(in.Status),
 		Priority: data.Priority(in.Priority), ProjectID: intPointer(in.ProjectID),
-		ParentID: intPointer(in.ParentID), Category: intValue(in.CategoryID), DueAt: due,
+		ParentID: intPointer(in.ParentID), Category: intValue(in.CategoryID), DueAt: due, RemindAt: remind,
 	})
 	if err != nil {
 		return "", shortError(err)
@@ -79,7 +86,11 @@ func (o *optional[T]) UnmarshalJSON(raw []byte) error {
 // Inbox, as the desktop's data.Patch does.
 //
 //	{"title":"...","notes":"...","status":"doing","priority":"P1",
-//	 "due_at":"2026-12-01T09:00:00+08:00","remind_at":null,"category":0,"project_id":2}
+//	 "due_at":"2026-12-01T09:00:00+08:00","remind_at":null,"category":0,"project_id":2,
+//	 "milestone_id":3}
+//
+// milestone_id null or 0 takes the task out of its milestone; a project_id in the same patch
+// moves the task first, so "project_id":2,"milestone_id":3 moves it into a milestone of project 2.
 type updateTaskJSON struct {
 	Title     *string          `json:"title"`
 	Notes     optional[string] `json:"notes"`
@@ -89,11 +100,13 @@ type updateTaskJSON struct {
 	RemindAt  optional[string] `json:"remind_at"`
 	Category  optional[int64]  `json:"category"`
 	ProjectID optional[int64]  `json:"project_id"`
+	// MilestoneID null or 0 takes the task out of its milestone.
+	MilestoneID optional[int64] `json:"milestone_id"`
 }
 
-// UpdateTask applies a patch to a task: title, notes, status, priority, due, remind, category and
-// project. A null or empty due_at or remind_at clears it; an empty notes clears the notes; 0
-// category unsorts the task and 0 project_id moves it to the Inbox. It returns only an error; read
+// UpdateTask applies a patch to a task: title, notes, status, priority, due, remind, category,
+// project and milestone. A null or empty due_at or remind_at clears it; an empty notes clears the
+// notes; 0 category unsorts the task and 0 project_id moves it to the Inbox. It returns only an error; read
 // the task again with Task(id).
 func (c *Core) UpdateTask(id int64, patchJSON string) error {
 	var in updateTaskJSON
@@ -134,6 +147,10 @@ func (c *Core) UpdateTask(id int64, patchJSON string) error {
 	if in.ProjectID.Set {
 		project := intValue(in.ProjectID.Value)
 		patch.ProjectID = &project
+	}
+	if in.MilestoneID.Set {
+		milestone := intValue(in.MilestoneID.Value)
+		patch.MilestoneID = &milestone
 	}
 	if _, err := c.real.UpdateTask(int(id), patch); err != nil {
 		return shortError(err)
@@ -222,10 +239,22 @@ func (c *Core) DoToday(id int64) (string, error) {
 		return "", errors.New("the task was not found")
 	}
 	now := c.nowTime()
-	if task.Source != data.SourceUser || task.Status.Terminal() ||
-		(task.DueAt != nil && data.DaysFrom(*task.DueAt, now) == 0) {
+	if !canDoToday(*task, now) {
 		return "", errors.New("this task cannot be moved to today")
 	}
+	return c.moveToToday(*task, now)
+}
+
+// canDoToday says whether the task menu offers Do today: a task of mine that is not finished and is
+// not due today already.
+func canDoToday(task data.Task, now time.Time) bool {
+	return task.Source == data.SourceUser && !task.Status.Terminal() &&
+		(task.DueAt == nil || data.DaysFrom(*task.DueAt, now) != 0)
+}
+
+// moveToToday sets the due date of the task to today, keeping its time of day, and returns the old
+// due date (RFC 3339, "" for none).
+func (c *Core) moveToToday(task data.Task, now time.Time) (string, error) {
 	hour, minute := defaultDueHour, 0
 	before := ""
 	if task.DueAt != nil {
@@ -235,7 +264,7 @@ func (c *Core) DoToday(id int64) (string, error) {
 	}
 	y, mo, d := now.Date()
 	due := time.Date(y, mo, d, hour, minute, 0, 0, now.Location())
-	if _, err := c.real.UpdateTask(int(id), data.Patch{DueAt: data.TimePtr(due)}); err != nil {
+	if _, err := c.real.UpdateTask(task.ID, data.Patch{DueAt: data.TimePtr(due)}); err != nil {
 		return "", shortError(err)
 	}
 	return before, nil
