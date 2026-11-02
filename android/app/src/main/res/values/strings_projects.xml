@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Projects tab and the project sheet (v43), words of the desktop's manage* strings -->
+    <string name="projects_archived">Archived</string>
+    <string name="manage_new_project">New project</string>
+    <string name="manage_project_name">Project name</string>
+    <string name="manage_create">Create</string>
+    <string name="manage_save">Save</string>
+    <string name="manage_rename_item">Rename…</string>
+    <string name="manage_rename_title">Rename project</string>
+    <string name="manage_new_subproject">New sub-project…</string>
+    <string name="manage_new_subproject_title">New sub-project</string>
+    <string name="manage_subproject_under">Under %1$s</string>
+    <string name="manage_open_github">Open on GitHub</string>
+    <string name="manage_archive">Archive</string>
+    <string name="manage_unarchive">Unarchive</string>
+    <string name="manage_delete">Delete…</string>
+    <string name="manage_delete_confirm">Delete</string>
+    <string name="manage_delete_project_title">Delete “%1$s”?</string>
+    <string name="manage_delete_project_empty">This removes the project and its milestones. It can’t be undone.</string>
+    <plurals name="manage_delete_project_body">
+        <item quantity="one">This removes %1$d task, their reports and the project’s milestones. It can’t be undone. To keep the work, archive the project instead.</item>
+        <item quantity="other">This removes %1$d tasks, their reports and the project’s milestones. It can’t be undone. To keep the work, archive the project instead.</item>
+    </plurals>
+    <plurals name="project_tasks">
+        <item quantity="one">%1$d task</item>
+        <item quantity="other">%1$d tasks</item>
+    </plurals>
+
+    <!-- Board and milestones -->
+    <string name="project_view_list">List view</string>
+    <string name="project_view_board">Board view</string>
+    <string name="board_empty">Nothing yet</string>
+    <string name="board_empty_review">Nothing to review</string>
+    <string name="board_show_all">Show all %1$d</string>
+    <string name="milestone_all">All milestones</string>
+    <string name="milestone_new">New milestone…</string>
+    <string name="milestone_new_title">New milestone</string>
+    <string name="milestone_rename_title">Rename milestone</string>
+    <string name="milestone_placeholder">Milestone name</string>
+    <string name="milestone_due">%1$s · due %2$s</string>
+    <string name="milestone_closed">%1$s · closed</string>
+    <string name="milestone_edit">Edit “%1$s”</string>
+    <string name="manage_rename_ellipsis">Rename…</string>
+    <string name="milestone_due_ellipsis">Due date…</string>
+    <string name="milestone_due_row">Due date</string>
+    <string name="milestone_no_due">None</string>
+    <string name="milestone_clear_due">No due date</string>
+    <string name="milestone_close">Close milestone</string>
+    <string name="milestone_reopen">Reopen milestone</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_sign_in">Sign in</string>
+    <string name="settings_synced">Synced · %1$s</string>
+    <string name="settings_syncing">Syncing…</string>
+    <string name="settings_offline">Offline</string>
+    <string name="settings_sync_failed">Not syncing</string>
+    <plurals name="settings_devices">
+        <item quantity="one">%1$d device</item>
+        <item quantity="other">%1$d devices</item>
+    </plurals>
+    <string name="settings_general">General</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_system">System</string>
+    <string name="settings_light">Light</string>
+    <string name="settings_dark">Dark</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_line">Reminders and the end-of-day reminder</string>
+    <string name="settings_organize">Organize</string>
+    <string name="settings_categories">Categories</string>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d category</item>
+        <item quantity="other">%1$d categories</item>
+    </plurals>
+    <string name="settings_about">About</string>
+    <string name="settings_about_name">Withdo %1$s</string>
+    <string name="settings_check_now">Check now</string>
+    <string name="settings_up_to_date">Up to date</string>
+    <string name="settings_links">Website, privacy policy, GitHub</string>
+    <string name="settings_website">Website</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_github">GitHub</string>
+
+    <!-- Settings > Notifications -->
+    <string name="settings_reminders">Reminders</string>
+    <string name="settings_reminders_line">Notify me when a reminder comes due</string>
+    <string name="settings_notify_denied">Android does not allow Withdo to notify</string>
+    <string name="settings_open_system">Open system settings</string>
+    <string name="settings_end_of_day">End-of-day reminder</string>
+    <string name="settings_end_of_day_switch">Remind me at the end of the day</string>
+    <string name="settings_end_of_day_line">Weekdays: today’s summary, and the weekly one on Friday</string>
+    <string name="settings_end_of_day_time">Reminder time</string>
+    <string name="notification_channel_end_of_day">End-of-day reminder</string>
+    <string name="notify_day_done_title">Day’s done</string>
+    <string name="notify_week_done_title">Day’s done</string>
+    <string name="notify_day_done_body">%1$d finished today. See today’s shipping?</string>
+    <string name="notify_day_done_body_prs">%1$d finished today, %2$d merged. See today’s shipping?</string>
+    <string name="notify_week_done_body">This week: %1$d finished. The weekly summary is ready.</string>
+    <string name="notify_day_nothing_body">That’s it for today. See you tomorrow.</string>
+
+    <!-- Settings > Categories -->
+    <string name="categories_line">Categories sort the tasks you add. Long-press a row to put it in order.</string>
+    <string name="category_new">New category…</string>
+    <string name="category_sheet_new">New category</string>
+    <string name="category_sheet_edit">Edit category</string>
+    <string name="category_field_name">Name</string>
+    <string name="category_field_icon">Icon</string>
+    <string name="category_field_color">Color</string>
+    <string name="category_search_icons">Search icons</string>
+    <string name="category_no_icon_match">No icon matches</string>
+    <string name="category_builtin_keeps_name">Work and Life keep their names.</string>
+    <string name="category_delete">Delete category</string>
+    <string name="category_delete_ask_title">Delete “%1$s”?</string>
+    <string name="category_delete_ask_body">Its tasks become unsorted.</string>
+    <string name="category_deleted_empty">Deleted “%1$s”</string>
+    <plurals name="category_deleted">
+        <item quantity="one">Deleted “%1$s” · %2$d task unsorted</item>
+        <item quantity="other">Deleted “%1$s” · %2$d tasks unsorted</item>
+    </plurals>
+    <plurals name="settings_category_tasks">
+        <item quantity="one">%1$d task</item>
+        <item quantity="other">%1$d tasks</item>
+    </plurals>
+    <string name="a11y_category_color">Color: %1$s</string>
+    <string name="category_color_indigo">Indigo</string>
+    <string name="category_color_yellow">Yellow</string>
+    <string name="category_color_green">Green</string>
+    <string name="category_color_red">Red</string>
+    <string name="category_color_blue">Blue</string>
+    <string name="category_color_pink">Pink</string>
+    <string name="category_color_teal">Teal</string>
+    <string name="category_color_orange">Orange</string>
+    <string name="category_group_work">Work</string>
+    <string name="category_group_study">Study</string>
+    <string name="category_group_health">Health</string>
+    <string name="category_group_money">Money</string>
+    <string name="category_group_home">Home</string>
+    <string name="category_group_hobby">Hobby</string>
+    <string name="category_group_travel">Travel</string>
+    <string name="category_group_people">People</string>
+</resources>

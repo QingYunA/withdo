@@ -23,6 +23,8 @@ class ReminderReceiver : BroadcastReceiver() {
                         intent.action == Intent.ACTION_BOOT_COMPLETED ||
                         intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
                     if (claim) Reminders.claimAndPost(app, core)
+                    if (intent.action == EndOfDay.ACTION) EndOfDay.post(app, core)
+                    EndOfDay.schedule(app)
                     Reminders.schedule(app, core)
                 } finally {
                     runCatching { core.close() }

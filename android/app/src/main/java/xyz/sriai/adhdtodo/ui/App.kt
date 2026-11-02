@@ -61,6 +61,7 @@ import xyz.sriai.adhdtodo.data.Task
 import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.TaskPage
 import xyz.sriai.adhdtodo.data.UpdateUi
+import xyz.sriai.adhdtodo.platform.Reminders
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
@@ -105,6 +106,10 @@ fun App(
     var agentsInfo by remember { mutableStateOf<Map<Long, AgentInfo>>(emptyMap()) }
     var projectEntries by remember { mutableStateOf<List<ProjectEntry>?>(null) }
     var projectPage by remember { mutableStateOf<ProjectPage?>(null) }
+    var archivedProjects by remember { mutableStateOf<List<ProjectEntry>>(emptyList()) }
+    var settingsData by remember { mutableStateOf(SettingsData()) }
+    var newProject by remember { mutableStateOf(false) }
+    var newCategoryFor by remember { mutableStateOf<Long?>(null) }
     var taskPage by remember { mutableStateOf<TaskPage?>(null) }
     var projects by remember { mutableStateOf<List<Project>>(emptyList()) }
     var categories by remember { mutableStateOf<List<Category>>(emptyList()) }
@@ -314,13 +319,20 @@ fun App(
                 }
                 Tab.PROJECTS -> {
                     val loaded = try {
-                        withContext(Dispatchers.IO) { api.projectEntries() }
+                        withContext(Dispatchers.IO) {
+                            api.projectEntries() to archivedEntries(api.archivedProjects()) { id ->
+                                runCatching { api.project(id).tasks.size }.getOrDefault(0)
+                            }
+                        }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
                         null
                     }
-                    if (loaded != null) projectEntries = loaded
+                    if (loaded != null) {
+                        projectEntries = loaded.first
+                        archivedProjects = loaded.second
+                    }
                 }
                 Tab.CALENDAR -> Unit
             }
@@ -351,6 +363,21 @@ fun App(
                     taskPage = loaded.first
                     projects = loaded.second
                     categories = loaded.third
+                }
+            }
+            route == ROUTE_SETTINGS || route == ROUTE_CATEGORIES -> {
+                val loaded = try {
+                    withContext(Dispatchers.IO) { loadSettingsData(api) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+                if (loaded != null) {
+                    settingsData = loaded
+                    account = loaded.account
+                    devices = loaded.devices
+                    loaded.status?.let { liveStatus = it }
                 }
             }
             route == "sync" -> {
@@ -408,6 +435,28 @@ fun App(
             }
         }
     }
+
+    val projectActions = ProjectActions(
+        createProject = { name, parentId ->
+            val made = withContext(Dispatchers.IO) { api.createProject(name, parentId) }
+            tick++
+            push("project:${made.id}")
+        },
+        renameProject = { id, name -> withContext(Dispatchers.IO) { api.renameProject(id, name) }; tick++ },
+        archiveProject = { id -> withContext(Dispatchers.IO) { api.archiveProject(id) }; tick++ },
+        unarchiveProject = { id -> withContext(Dispatchers.IO) { api.unarchiveProject(id) }; tick++ },
+        deleteProject = { id -> withContext(Dispatchers.IO) { api.deleteProject(id) }; tick++ },
+        createMilestone = { id, title, due -> withContext(Dispatchers.IO) { api.createMilestone(id, title, due) }; tick++ },
+        updateMilestone = { id, patch -> withContext(Dispatchers.IO) { api.updateMilestone(id, patch) }; tick++ },
+    )
+    val categoryActions = CategoryActions(
+        create = { input -> withContext(Dispatchers.IO) { api.createCategory(input) }.also { tick++ } },
+        update = { id, input -> withContext(Dispatchers.IO) { api.updateCategory(id, input) }.also { tick++ } },
+        delete = { id -> withContext(Dispatchers.IO) { api.deleteCategory(id) }.also { tick++ } },
+        restore = { snapshot -> withContext(Dispatchers.IO) { api.restoreCategory(snapshot) }; tick++ },
+        move = { id, index -> withContext(Dispatchers.IO) { api.moveCategory(id, index.toLong()) }; tick++ },
+        icons = { query -> withContext(Dispatchers.IO) { api.categoryIcons(query) } },
+    )
 
     fun startSync() {
         scope.launch {
@@ -600,6 +649,12 @@ fun App(
                     onSync = { openSync() },
                     start = if (onToday) 28.dp else Dims.pagePadding,
                     onSearch = { searchQuery = ""; push("search") },
+                    actions = {
+                        if (tab == Tab.PROJECTS) {
+                            HeaderIconButton("plus", stringResource(R.string.manage_new_project), { newProject = true })
+                            HeaderIconButton("gear", stringResource(R.string.settings_title), { push(ROUTE_SETTINGS) })
+                        }
+                    },
                 )
                 if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
                 if (onToday && chips.isNotEmpty()) {
@@ -616,6 +671,11 @@ fun App(
                 )
             } else if (route == "sync") {
                 BackBar(title = stringResource(R.string.sync_title), onBack = { pop() })
+            } else if (isSettingsRoute(route)) {
+                BackBar(
+                    title = stringResource(if (route == ROUTE_SETTINGS) R.string.title_projects else R.string.settings_title),
+                    onBack = { pop() },
+                )
             } else if (route.startsWith("project:")) {
                 BackBar(
                     title = stringResource(R.string.title_projects),
@@ -935,6 +995,25 @@ fun App(
                         onLongPress = { id -> openTaskMenu(id) },
                         onReopen = { id -> perform { api.updateTask(id, TaskPatch(status = "todo")) } },
                     )
+                    route == ROUTE_SETTINGS -> SettingsRoute(
+                        data = settingsData,
+                        status = shownStatus,
+                        update = update,
+                        onOpenSync = { openSync() },
+                        onNotifications = { push(ROUTE_NOTIFICATIONS) },
+                        onCategories = { push(ROUTE_CATEGORIES) },
+                        onCheckUpdate = onCheckUpdate,
+                        onUpdate = onUpdate,
+                        onOpenUrl = openUrl,
+                    )
+                    route == ROUTE_NOTIFICATIONS -> NotificationSettingsRoute(
+                        onChanged = { scope.launch(Dispatchers.IO) { runCatching { Reminders.schedule(context, core) } } },
+                    )
+                    route == ROUTE_CATEGORIES -> CategoriesScreen(
+                        categories = settingsData.categories,
+                        actions = categoryActions,
+                        onChanged = { tick++ },
+                    )
                     route.startsWith("project:") -> ProjectScreen(
                         page = projectPage,
                         words = words,
@@ -944,6 +1023,7 @@ fun App(
                             val id = route.substringAfter(':').toLongOrNull() ?: 0
                             push(completedRoute(CompletedScope(projectId = id, agents = agentsOnly)))
                         },
+                        actions = projectActions,
                     )
                     route.startsWith("task:") -> TaskScreen(
                         page = taskPage,
@@ -1001,6 +1081,9 @@ fun App(
                             entries = projectEntries,
                             onOpenProject = { id -> push("project:$id") },
                             onHowToConnect = { connect = true },
+                            archived = archivedProjects,
+                            actions = projectActions,
+                            onOpenUrl = openUrl,
                         )
                     }
                 }
@@ -1023,9 +1106,9 @@ fun App(
                 )
             }
         }
-        if (route == "home" || route.startsWith("project:") || completedScope != null) {
+        if (route == "home" || route.startsWith("project:") || completedScope != null || isSettingsRoute(route)) {
             BottomNav(
-                tab = if (route.startsWith("project:") || (completedScope?.projectId ?: 0L) > 0L) Tab.PROJECTS else tab,
+                tab = if (route.startsWith("project:") || (completedScope?.projectId ?: 0L) > 0L || isSettingsRoute(route)) Tab.PROJECTS else tab,
                 count = mine?.fromAgents?.size ?: 0,
                 onSelect = {
                     tabName = it.name
@@ -1085,6 +1168,17 @@ fun App(
             },
             onOpenUrl = openUrl,
             onDelete = { deleteTask(data.task) },
+            onNewCategory = { newCategoryFor = data.task.id },
+        )
+    }
+
+    if (newProject) NewProjectSheet(projectActions, onDismiss = { newProject = false })
+    newCategoryFor?.let { taskId ->
+        CategorySheet(
+            category = null,
+            actions = categoryActions,
+            onDismiss = { newCategoryFor = null },
+            onSaved = { made -> perform { api.updateTask(taskId, TaskPatch(category = made.id)) } },
         )
     }
 
@@ -1119,7 +1213,7 @@ private fun taskRoute(id: Long, projectId: Long): String =
     if (projectId > 0) "task:$id:$projectId" else "task:$id:0"
 
 internal fun normalizeRoute(raw: String): String = when {
-    raw == "home" || raw == "sync" -> raw
+    raw == "home" || raw == "sync" || isSettingsRoute(raw) -> raw
     raw.startsWith("project:") -> raw
     raw.startsWith("task:") -> {
         val id = raw.substringAfter(':').substringBefore(':').toLongOrNull() ?: return ""
