@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home-screen widgets (v43): names in the picker, then the words drawn on them. -->
+    <string name="widget_today_label">Today</string>
+    <string name="widget_today_description">Your tasks for today. Tap the circle to finish one, + to write a new one.</string>
+    <string name="widget_agents_label">Agents waiting</string>
+    <string name="widget_agents_description">The first agent task that waits for you, with a way to reply.</string>
+    <string name="widget_note_label">Note something</string>
+    <string name="widget_note_description">Opens the box to write a task.</string>
+    <string name="widget_agent">Agent</string>
+    <string name="widget_today_empty">Nothing for today</string>
+    <string name="widget_agents_empty">No agent is waiting for you</string>
+    <string name="widget_note">Note something</string>
+    <string name="widget_add_task">Add a task</string>
+    <string name="widget_complete_task">Finish %1$s</string>
+</resources>

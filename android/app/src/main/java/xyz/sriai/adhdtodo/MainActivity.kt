@@ -159,6 +159,7 @@ class MainActivity : ComponentActivity(), Listener {
     override fun onChange() {
         runOnUiThread { revision.intValue++ }
         scheduleReminders()
+        xyz.sriai.adhdtodo.widget.Widgets.refresh(applicationContext)
     }
 
     override fun onStatus(statusJSON: String?) {

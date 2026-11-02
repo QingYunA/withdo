@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 桌面小组件（v43）：选择器里的名字，以及画在上面的字。 -->
+    <string name="widget_today_label">今天</string>
+    <string name="widget_today_description">今天要做的事。点圆圈直接完成，点 + 记一件新的。</string>
+    <string name="widget_agents_label">等你回复的 Agent</string>
+    <string name="widget_agents_description">第一件在等你的 Agent 任务，可以直接回复。</string>
+    <string name="widget_note_label">记一件事</string>
+    <string name="widget_note_description">点开就是输入框。</string>
+    <string name="widget_agent">Agent</string>
+    <string name="widget_today_empty">今天没有安排</string>
+    <string name="widget_agents_empty">没有 Agent 在等你</string>
+    <string name="widget_note">记一件事</string>
+    <string name="widget_add_task">新建任务</string>
+    <string name="widget_complete_task">完成：%1$s</string>
+</resources>
