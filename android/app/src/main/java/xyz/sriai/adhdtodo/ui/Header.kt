@@ -3,6 +3,7 @@ package xyz.sriai.adhdtodo.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,7 @@ fun PageHeader(
     syncBlocked: Boolean,
     onSync: () -> Unit,
     start: Dp = Dims.pagePadding,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -48,6 +50,7 @@ fun PageHeader(
                 modifier = Modifier.padding(start = 10.dp).weight(1f),
             )
         }
+        actions()
         SyncCloud(blocked = syncBlocked, onSync = onSync)
     }
 }

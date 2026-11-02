@@ -250,7 +250,8 @@ val LocalAppType = staticCompositionLocalOf { AppType }
 
 @Composable
 fun AdhdTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+    val dark = Appearance.dark(isSystemInDarkTheme())
+    AppearanceBars(dark)
     val tokens = if (dark) DarkTokens else LightTokens
     val scheme = if (dark) {
         darkColorScheme(

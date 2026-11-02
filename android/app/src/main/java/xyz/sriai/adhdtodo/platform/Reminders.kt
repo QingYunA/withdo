@@ -24,6 +24,14 @@ object Reminders {
     const val ACTION_CLAIM = "xyz.sriai.adhdtodo.CLAIM_REMINDERS"
     const val EXTRA_TASK_ID = "task_id"
 
+    /** Settings > General > Notifications > Reminders: off leaves due reminders unclaimed, so they come when it is back on. */
+    fun enabled(context: Context): Boolean =
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("reminders_on", true)
+
+    fun setEnabled(context: Context, on: Boolean) {
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit().putBoolean("reminders_on", on).apply()
+    }
+
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -42,7 +50,7 @@ object Reminders {
         val manager = context.getSystemService(AlarmManager::class.java) ?: return
         val at = runCatching { core.nextReminderAt() }.getOrDefault(0)
         val pending = alarmIntent(context)
-        if (at <= 0) {
+        if (at <= 0 || !enabled(context)) {
             manager.cancel(pending)
             return
         }
@@ -51,6 +59,7 @@ object Reminders {
 
     /** Claims the due reminders and posts one notification each; returns the claimed count. */
     fun claimAndPost(context: Context, core: Core_): Int {
+        if (!enabled(context)) return 0
         val reminders = runCatching {
             PageJson.decodeFromString<List<Reminder>>(core.claimDueReminders())
         }.getOrDefault(emptyList())

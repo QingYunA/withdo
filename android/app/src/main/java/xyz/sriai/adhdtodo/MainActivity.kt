@@ -57,8 +57,13 @@ class MainActivity : ComponentActivity(), Listener {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(xyz.sriai.adhdtodo.platform.AppLanguage.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        xyz.sriai.adhdtodo.ui.theme.Appearance.init(this)
         enableEdgeToEdge()
         Reminders.ensureChannel(this)
         initialRoute.value = routeFrom(intent)
@@ -158,6 +163,7 @@ class MainActivity : ComponentActivity(), Listener {
             val at = withContext(Dispatchers.IO) {
                 runCatching {
                     Reminders.schedule(this@MainActivity, opened)
+                    xyz.sriai.adhdtodo.platform.EndOfDay.schedule(this@MainActivity)
                     opened.nextReminderAt()
                 }.getOrDefault(0)
             }

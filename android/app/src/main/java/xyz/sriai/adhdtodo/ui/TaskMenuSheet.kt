@@ -104,6 +104,7 @@ fun TaskMenuSheet(
     onDoToday: () -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
     onDelete: () -> Unit = {},
+    onNewCategory: () -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     ModalBottomSheet(
@@ -139,6 +140,7 @@ fun TaskMenuSheet(
             onDoToday = onDoToday,
             onOpenUrl = onOpenUrl,
             onDelete = onDelete,
+            onNewCategory = onNewCategory,
         )
     }
 }
@@ -161,6 +163,7 @@ private fun TaskMenuBody(
     onDoToday: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: () -> Unit,
+    onNewCategory: () -> Unit,
 ) {
     var page by remember { mutableStateOf(initialPage) }
     // Back goes from a page to the main page, then closes the sheet. The handler also covers the
@@ -210,6 +213,7 @@ private fun TaskMenuBody(
                 words = words,
                 onBack = { page = TaskMenuPage.Main },
                 onPick = { id -> choose { onCategory(id) } },
+                onNew = { choose { onNewCategory() } },
             )
             TaskMenuPage.Move -> MovePage(
                 task = task,
@@ -379,6 +383,7 @@ private fun CategoryPage(
     words: Words,
     onBack: () -> Unit,
     onPick: (Int) -> Unit,
+    onNew: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
     PageHeader(stringResource(R.string.property_category), onBack)
@@ -412,6 +417,7 @@ private fun CategoryPage(
         },
         onClick = { onPick(0) },
     )
+    NewCategoryRow(onNew)
 }
 
 @Composable
