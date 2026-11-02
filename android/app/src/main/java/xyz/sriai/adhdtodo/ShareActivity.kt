@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.lifecycleScope
@@ -117,7 +118,7 @@ private fun ShareRoute(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
-    val resources = context.resources
+    val resources = LocalResources.current
     val words = remember(LocalConfiguration.current) { Words(resources) }
     val scope = rememberCoroutineScope()
     var form by remember {

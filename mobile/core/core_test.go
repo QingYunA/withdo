@@ -74,7 +74,7 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	}
 	sort.Strings(methods)
 	want := []string{
-		"Accept", "Account", "Agents", "ArchiveProject", "ArchivedProjects", "Categories",
+		"Accept", "Account", "AddLink", "Agents", "ArchiveProject", "ArchivedProjects", "Categories",
 		"CategoriesWithCounts", "CategoryIcons", "ClaimDueReminders", "Close", "CodeState", "Complete",
 		"Completed", "CreateCategory", "CreateMilestone", "CreateProject", "CreateTask",
 		"DeleteCategory", "DeleteProject", "DeleteTask", "DeleteTasks", "Devices", "DoToday",
