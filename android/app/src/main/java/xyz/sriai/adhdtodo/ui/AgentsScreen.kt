@@ -47,6 +47,7 @@ fun AgentsScreen(
     onOpenTask: (Long) -> Unit,
     onHowToConnect: () -> Unit,
     onLongPress: (Long) -> Unit = {},
+    onShowAll: (() -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -82,6 +83,7 @@ fun AgentsScreen(
                         DoneRow(row, agents[row.id], words, onOpenTask, onLongPress)
                     }
                 }
+                if (onShowAll != null) TextLink(stringResource(R.string.show_all), start = 0.dp, onClick = onShowAll)
             }
         }
     }

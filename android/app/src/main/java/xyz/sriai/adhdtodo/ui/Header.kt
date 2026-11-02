@@ -26,6 +26,7 @@ fun PageHeader(
     syncBlocked: Boolean,
     onSync: () -> Unit,
     start: Dp = Dims.pagePadding,
+    onSearch: (() -> Unit)? = null,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -48,6 +49,7 @@ fun PageHeader(
                 modifier = Modifier.padding(start = 10.dp).weight(1f),
             )
         }
+        if (onSearch != null) SearchButton(onSearch)
         SyncCloud(blocked = syncBlocked, onSync = onSync)
     }
 }

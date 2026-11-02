@@ -116,6 +116,7 @@ fun ProjectScreen(
     words: Words,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit = {},
+    onShowAllCompleted: ((agents: Boolean) -> Unit)? = null,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -213,6 +214,9 @@ fun ProjectScreen(
                     Column {
                         for (task in done) {
                             DoneProjectRow(task, page.agents[task.id.toString()].orEmpty(), words, onOpenTask, onLongPress)
+                        }
+                        if (onShowAllCompleted != null) {
+                            TextLink(stringResource(R.string.show_all), start = 26.dp, onClick = { onShowAllCompleted(agents) })
                         }
                     }
                 }

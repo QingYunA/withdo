@@ -124,6 +124,8 @@ fun App(
     var connect by remember { mutableStateOf(false) }
     var menuData by remember { mutableStateOf<TaskMenuData?>(null) }
     var menuPage by remember { mutableStateOf(TaskMenuPage.Main) }
+    var catFilter by remember { mutableStateOf(0L) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     var signingIn by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf(false) }
@@ -141,6 +143,22 @@ fun App(
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
+    // Today's category chips and the page narrowed to the chosen one (v43).
+    val repoProjects = remember(projects) { repoProjectIds(projects) }
+    val workId = remember(categories) { workCategoryId(categories) }
+    val chips = remember(mine, categories, repoProjects, workId) {
+        mine?.let { todayChips(it, categories, repoProjects, workId) }.orEmpty()
+    }
+    val activeCat = if (chips.any { it.id == catFilter }) catFilter else 0L
+    val shownMine = remember(mine, activeCat, repoProjects, workId) {
+        mine?.let { filterMine(it, activeCat, repoProjects, workId) }
+    }
+    // A row stops naming the category it is filtered by.
+    val rowCategories = remember(categories, activeCat) { categories.filterNot { it.id == activeCat } }
+    val completedScope = parseCompletedRoute(route)
+    val completedProject = completedScope?.projectId?.takeIf { it > 0 }?.let { id ->
+        projects.firstOrNull { it.id == id }?.name ?: projectPage?.project?.takeIf { it.id == id }?.name
+    }.orEmpty()
     val status = remember(syncStatusJson) {
         runCatching { PageJson.decodeFromString<SyncStatus>(syncStatusJson) }.getOrDefault(SyncStatus())
     }
@@ -358,6 +376,23 @@ fun App(
         }
     }
 
+    // Leaving Today for another tab clears the category chip; it is not kept.
+    LaunchedEffect(tab) { if (tab != Tab.MINE) catFilter = 0L }
+
+    // The chips and a Completed page's back bar need the projects (repositories, names).
+    LaunchedEffect(route, tab, revision, tick) {
+        if ((route == "home" && tab == Tab.MINE) || route.startsWith(CompletedPrefix)) {
+            val loaded = try {
+                withContext(Dispatchers.IO) { api.projects() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (loaded != null) projects = loaded
+        }
+    }
+
     // The action is the trailing lambda; name onError when passing it, since both are lambdas of
     // no arguments and swapping them still compiles.
     fun perform(onError: (() -> Unit)? = null, action: suspend () -> Unit) {
@@ -555,15 +590,30 @@ fun App(
 
     Column(Modifier.fillMaxSize().background(tokens.bg)) {
         Column(Modifier.weight(1f).statusBarsPadding().imePadding()) {
-            if (route == "home") {
+            if (route == "search") {
+                // The page draws its own field and Cancel.
+            } else if (route == "home") {
                 PageHeader(
                     title = title,
                     subtitle = subtitle,
                     syncBlocked = blocked,
                     onSync = { openSync() },
                     start = if (onToday) 28.dp else Dims.pagePadding,
+                    onSearch = { searchQuery = ""; push("search") },
                 )
                 if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
+                if (onToday && chips.isNotEmpty()) {
+                    CategoryChips(chips = chips, selected = activeCat, words = words, onSelect = { catFilter = it })
+                }
+            } else if (completedScope != null) {
+                BackBar(
+                    title = when {
+                        completedScope.projectId > 0 -> completedProject
+                        completedScope.agents -> stringResource(R.string.title_agents)
+                        else -> stringResource(R.string.title_mine)
+                    },
+                    onBack = { pop() },
+                )
             } else if (route == "sync") {
                 BackBar(title = stringResource(R.string.sync_title), onBack = { pop() })
             } else if (route.startsWith("project:")) {
@@ -851,11 +901,49 @@ fun App(
                             )
                         }
                     }
+                    route == "search" -> SearchRoute(
+                        api = api,
+                        words = words,
+                        revision = revision,
+                        tick = tick,
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onCancel = { pop() },
+                        onOpenTask = { id -> push(taskRoute(id, 0)) },
+                        onLongPress = { id -> openTaskMenu(id) },
+                        onToggle = { task ->
+                            when {
+                                task.status == "done" || task.status == "cancelled" ->
+                                    perform { api.updateTask(task.id, TaskPatch(status = "todo")) }
+                                task.source == "user" -> perform { api.complete(task.id) }
+                                else -> push(taskRoute(task.id, 0))
+                            }
+                        },
+                    )
+                    completedScope != null -> CompletedRoute(
+                        api = api,
+                        scope = completedScope,
+                        scopeName = when {
+                            completedScope.projectId > 0 -> completedProject
+                            completedScope.agents -> stringResource(R.string.title_agents)
+                            else -> ""
+                        },
+                        words = words,
+                        revision = revision,
+                        tick = tick,
+                        onOpenTask = { id -> push(taskRoute(id, 0)) },
+                        onLongPress = { id -> openTaskMenu(id) },
+                        onReopen = { id -> perform { api.updateTask(id, TaskPatch(status = "todo")) } },
+                    )
                     route.startsWith("project:") -> ProjectScreen(
                         page = projectPage,
                         words = words,
                         onOpenTask = { id -> push(taskRoute(id, route.substringAfter(':').toLongOrNull() ?: 0)) },
                         onLongPress = { id -> openTaskMenu(id) },
+                        onShowAllCompleted = { agentsOnly ->
+                            val id = route.substringAfter(':').toLongOrNull() ?: 0
+                            push(completedRoute(CompletedScope(projectId = id, agents = agentsOnly)))
+                        },
                     )
                     route.startsWith("task:") -> TaskScreen(
                         page = taskPage,
@@ -875,7 +963,7 @@ fun App(
                     )
                     else -> when (tab) {
                         Tab.MINE -> MineScreen(
-                            page = mine,
+                            page = shownMine,
                             agents = mineAgents,
                             words = words,
                             onAccept = { id -> perform { api.accept(id) } },
@@ -887,10 +975,11 @@ fun App(
                             // The phone has no Summary; the Agents tab lists what agents finished today.
                             onViewAll = null,
                             onLongPress = { id -> openTaskMenu(id) },
-                            categories = categories,
+                            categories = rowCategories,
                             noDateOpen = noDateOpen,
                             onToggleNoDate = { noDateOpen = !noDateOpen },
                             highlightId = highlightId,
+                            onShowAll = { push(completedRoute(CompletedScope())) },
                         )
                         Tab.AGENTS -> AgentsScreen(
                             page = agents,
@@ -899,6 +988,7 @@ fun App(
                             onOpenTask = { id -> push(taskRoute(id, 0)) },
                             onHowToConnect = { connect = true },
                             onLongPress = { id -> openTaskMenu(id) },
+                            onShowAll = { push(completedRoute(CompletedScope(agents = true))) },
                         )
                         Tab.CALENDAR -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             PlaceholderScreen(
@@ -933,9 +1023,9 @@ fun App(
                 )
             }
         }
-        if (route == "home" || route.startsWith("project:")) {
+        if (route == "home" || route.startsWith("project:") || completedScope != null) {
             BottomNav(
-                tab = if (route.startsWith("project:")) Tab.PROJECTS else tab,
+                tab = if (route.startsWith("project:") || (completedScope?.projectId ?: 0L) > 0L) Tab.PROJECTS else tab,
                 count = mine?.fromAgents?.size ?: 0,
                 onSelect = {
                     tabName = it.name

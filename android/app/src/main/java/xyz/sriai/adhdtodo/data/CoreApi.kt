@@ -112,6 +112,9 @@ class CoreApi(private val core: Core_) {
     fun completed(projectId: Long = 0, agents: Boolean = false, limit: Long = 0): CompletedPage =
         PageJson.decodeFromString(core.completed(projectId, agents, limit))
 
+    /** The desktop's search: tasks matching every word of [query], newest first, any status; blank is empty. */
+    fun search(query: String): List<Task> = PageJson.decodeFromString(core.search(query))
+
     /** The Summary page of a day or week; [back] counts periods back from this one (weeks start on Monday). */
     fun summary(week: Boolean, back: Long = 0): SummaryPage = PageJson.decodeFromString(core.summary(week, back))
 

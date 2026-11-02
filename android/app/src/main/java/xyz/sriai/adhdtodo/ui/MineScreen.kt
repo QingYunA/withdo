@@ -66,6 +66,7 @@ fun MineScreen(
     noDateOpen: Boolean = false,
     onToggleNoDate: () -> Unit = {},
     highlightId: Long = 0,
+    onShowAll: (() -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -149,6 +150,7 @@ fun MineScreen(
                     more = page.moreDone,
                     words = words,
                     onViewAll = onViewAll,
+                    onShowAll = onShowAll,
                     onOpenTask = onOpenTask,
                     onLongPress = onLongPress,
                 )
@@ -494,6 +496,7 @@ private fun DoneTodaySection(
     more: Int,
     words: Words,
     onViewAll: (() -> Unit)?,
+    onShowAll: (() -> Unit)?,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit,
 ) {
@@ -554,6 +557,7 @@ private fun DoneTodaySection(
             }
         }
     }
+    if (onShowAll != null) TextLink(stringResource(R.string.show_all), start = TextInset, onClick = onShowAll)
 }
 
 /** The one short line under an agent's title: why the card is in the tray. */
