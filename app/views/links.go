@@ -3,7 +3,6 @@ package views
 import (
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -42,23 +41,7 @@ func linkFile(l data.Link) (string, bool) {
 
 // linkLabel is what a chip says: the title the agent gave, else the file's name, else the host and
 // the end of the path ("github.com › pull/19").
-func linkLabel(l data.Link) string {
-	if l.Title != "" {
-		return l.Title
-	}
-	if p, ok := linkFile(l); ok {
-		return path.Base(p)
-	}
-	u, err := url.Parse(l.URL)
-	if err != nil || u.Host == "" {
-		return l.URL
-	}
-	segs := strings.Split(strings.Trim(u.Path, "/"), "/")
-	if segs[0] == "" {
-		return u.Host
-	}
-	return u.Host + " › " + strings.Join(segs[max(0, len(segs)-2):], "/")
-}
+func linkLabel(l data.Link) string { return l.Label() }
 
 // linkAddress is the full address a chip's tip shows: a file under the home folder as "~/…".
 func (m *Main) linkAddress(l data.Link) string {

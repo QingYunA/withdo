@@ -8,8 +8,44 @@ import (
 	"unicode/utf8"
 )
 
-// scan is the text of one task while its recognized words are cut out of it one by one.
-type scan struct{ s string }
+// scan is the text of one task while its recognized words are cut out of it one by one. pos keeps,
+// for each byte of s, where it stood in the text given to Parse (-1 for a space cut put in), so the
+// words that were read can be pointed at in what was typed; spans collects them.
+type scan struct {
+	s     string
+	pos   []int
+	spans []Span
+}
+
+// newScan scans s, which starts at byte base of the text given to Parse.
+func newScan(s string, base int) *scan {
+	pos := make([]int, len(s))
+	for i := range pos {
+		pos[i] = base + i
+	}
+	return &scan{s: s, pos: pos}
+}
+
+// mark notes that the bytes s[a:b], which are about to go, were read: as the runs of the typed
+// text they came from.
+func (sc *scan) mark(a, b int) {
+	start, end := -1, -1
+	for _, p := range sc.pos[a:b] {
+		switch {
+		case p < 0:
+		case start >= 0 && p == end:
+			end++
+		default:
+			if start >= 0 {
+				sc.spans = append(sc.spans, Span{start, end})
+			}
+			start, end = p, p+1
+		}
+	}
+	if start >= 0 {
+		sc.spans = append(sc.spans, Span{start, end})
+	}
+}
 
 // find is the first match of re that ok accepts (any, when ok is nil), as submatch indexes.
 func (sc *scan) find(re *regexp.Regexp, ok func(m []int) bool) []int {
@@ -41,7 +77,13 @@ func (sc *scan) cut(a, b int) {
 	if unicode.Is(unicode.Han, l) && unicode.Is(unicode.Han, r) {
 		glue = ""
 	}
+	sc.mark(a, b)
 	sc.s = sc.s[:a] + glue + sc.s[b:]
+	pos := append([]int(nil), sc.pos[:a]...)
+	if glue != "" {
+		pos = append(pos, -1)
+	}
+	sc.pos = append(pos, sc.pos[b:]...)
 }
 
 var (
