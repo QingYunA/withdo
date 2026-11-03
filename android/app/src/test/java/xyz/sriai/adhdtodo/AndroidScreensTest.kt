@@ -56,7 +56,6 @@ import xyz.sriai.adhdtodo.ui.Composer
 import xyz.sriai.adhdtodo.ui.DEFAULT_SYNC_SERVER
 import xyz.sriai.adhdtodo.ui.MineScreen
 import xyz.sriai.adhdtodo.ui.PageHeader
-import xyz.sriai.adhdtodo.ui.PlaceholderScreen
 import xyz.sriai.adhdtodo.ui.ProjectScreen
 import xyz.sriai.adhdtodo.ui.ProjectsScreen
 import xyz.sriai.adhdtodo.ui.CodeFailure
@@ -121,7 +120,6 @@ class AndroidScreensTest(private val case: ScreenCase) {
         PROJECT,
         TASK,
         MINE_EMPTY,
-        CALENDAR,
         UPDATE_BANNER,
         UPDATE_BANNER_DOWNLOADING,
         SYNC_UPDATE_AVAILABLE,
@@ -169,7 +167,6 @@ class AndroidScreensTest(private val case: ScreenCase) {
                 "project" to Screen.PROJECT,
                 "task" to Screen.TASK,
                 "mine-empty" to Screen.MINE_EMPTY,
-                "calendar" to Screen.CALENDAR,
                 "update-banner" to Screen.UPDATE_BANNER,
                 "update-banner-downloading" to Screen.UPDATE_BANNER_DOWNLOADING,
                 "sync-update-available" to Screen.SYNC_UPDATE_AVAILABLE,
@@ -363,21 +360,6 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
                 onHowToConnect = {},
                 onViewAll = null,
             )
-        }
-
-        AndroidScreensTest.Screen.CALENDAR -> TestFrame(
-            title = stringResource(R.string.title_calendar),
-            tab = Tab.CALENDAR,
-            count = mine.fromAgents.size,
-            composer = stringResource(R.string.composer_placeholder_inbox),
-        ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                PlaceholderScreen(
-                    icon = "calendar",
-                    title = stringResource(R.string.calendar_placeholder_title),
-                    body = stringResource(R.string.calendar_placeholder_body),
-                )
-            }
         }
 
         AndroidScreensTest.Screen.UPDATE_BANNER,

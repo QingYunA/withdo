@@ -21,6 +21,10 @@ class CoreApi(private val core: Core_) {
 
     fun categories(): List<Category> = PageJson.decodeFromString(core.categories())
 
+    /** The Calendar tab's month grid; [weekStart] is the first weekday, 0 Sunday to 6 Saturday. */
+    fun calendar(year: Int, month: Int, weekStart: Int): CalendarPage =
+        PageJson.decodeFromString(core.calendar(year.toLong(), month.toLong(), weekStart.toLong()))
+
     /** The task menu's ready-made reminders for now, in the order the menu shows them. */
     fun remindPresets(): List<RemindPreset> = PageJson.decodeFromString(core.remindPresets())
 

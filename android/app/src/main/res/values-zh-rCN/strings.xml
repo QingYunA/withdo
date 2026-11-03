@@ -46,8 +46,6 @@
     <string name="connect_body">在电脑上打开设置 &gt; 同步，然后链接这台手机。</string>
     <string name="close">关闭</string>
 
-    <string name="calendar_placeholder_title">日历稍后就有</string>
-    <string name="calendar_placeholder_body">月视图会在下一次 Android 更新里出现</string>
     <string name="projects_placeholder_title">项目页下一步就来</string>
     <string name="projects_placeholder_body">项目列表和任务会在下一步加入</string>
 

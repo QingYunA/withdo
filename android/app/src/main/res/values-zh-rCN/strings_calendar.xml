@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calendar tab (v44): the month header, the selected day and the composer under it. -->
+    <string name="calendar_previous">上个月</string>
+    <string name="calendar_next">下个月</string>
+    <string name="calendar_today">今天</string>
+    <string name="calendar_add_to">加到 %1$s</string>
+    <string name="calendar_added">已加到 %1$s</string>
+    <string name="calendar_milestone_due">%1$s 截止</string>
+    <string name="calendar_day_empty">这天没有安排</string>
+</resources>

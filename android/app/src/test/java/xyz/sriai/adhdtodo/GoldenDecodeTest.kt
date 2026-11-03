@@ -6,6 +6,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import xyz.sriai.adhdtodo.data.Account
+import xyz.sriai.adhdtodo.data.CalendarPage
 import xyz.sriai.adhdtodo.data.AgentsPage
 import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.CategoryCount
@@ -41,7 +42,7 @@ class GoldenDecodeTest {
     fun `every golden file decodes`() {
         val dir = repoFile("mobile/core/testdata")
         val files = dir.listFiles { file -> file.name.endsWith(".golden.json") }.orEmpty().sortedBy { it.name }
-        assertEquals("golden files", 18, files.size)
+        assertEquals("golden files", 19, files.size)
         for (file in files) {
             val text = file.readText()
             when (file.name) {
@@ -195,6 +196,19 @@ class GoldenDecodeTest {
                     assertEquals("work", rows[0].category.builtin)
                     assertEquals(12, rows[0].open)
                     assertEquals(12, rows[0].category.icon.size)
+                }
+                "calendar.golden.json" -> {
+                    val page = PageJson.decodeFromString<CalendarPage>(text)
+                    assertEquals(2026, page.year)
+                    assertEquals(10, page.month)
+                    assertEquals(5, page.weeks)
+                    assertEquals(35, page.days.size)
+                    assertEquals("2026-09-28", page.days.first().date)
+                    assertFalse(page.days.first().inMonth)
+                    val items = page.days.flatMap { it.items }
+                    assertEquals(setOf("due", "reminder", "done"), items.map { it.kind }.toSet())
+                    assertTrue(items.all { it.task != null && it.milestone == null })
+                    assertTrue(items.all { it.at.isNotEmpty() })
                 }
                 else -> error("a golden file with no data class: ${file.name}")
             }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calendar tab (v44): the month header, the selected day and the composer under it. -->
+    <string name="calendar_previous">Previous month</string>
+    <string name="calendar_next">Next month</string>
+    <string name="calendar_today">Today</string>
+    <!-- The composer's placeholder under the Calendar; %1$s is the selected day, e.g. Nov 3. -->
+    <string name="calendar_add_to">Add to %1$s</string>
+    <!-- The receipt after adding a task under a day; %1$s is that day, e.g. Nov 3. -->
+    <string name="calendar_added">Added to %1$s</string>
+    <!-- A milestone chip under the grid; %1$s is the milestone's name. -->
+    <string name="calendar_milestone_due">%1$s due</string>
+    <string name="calendar_day_empty">Nothing on this day</string>
+</resources>

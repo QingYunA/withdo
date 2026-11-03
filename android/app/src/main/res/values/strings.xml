@@ -46,8 +46,6 @@
     <string name="connect_body">Open Settings &gt; Sync on your computer, then link this phone.</string>
     <string name="close">Close</string>
 
-    <string name="calendar_placeholder_title">Calendar comes later</string>
-    <string name="calendar_placeholder_body">The month view arrives with the next Android update.</string>
     <string name="projects_placeholder_title">Projects come next</string>
     <string name="projects_placeholder_body">The project list and its tasks arrive in the next update.</string>
 

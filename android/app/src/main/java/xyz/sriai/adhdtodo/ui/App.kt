@@ -26,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,6 +36,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,6 +52,7 @@ import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentInfo
 import xyz.sriai.adhdtodo.data.AgentsPage
+import xyz.sriai.adhdtodo.data.CalendarPage
 import xyz.sriai.adhdtodo.data.Category
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
@@ -72,6 +75,8 @@ import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -105,6 +110,10 @@ fun App(
     var stack by rememberSaveable(stateSaver = routeSaver) { mutableStateOf(listOf("home")) }
     var tabName by rememberSaveable { mutableStateOf(Tab.MINE.name) }
     var tick by remember { mutableIntStateOf(0) }
+    // The Calendar tab: the month shown, the selected day (both kept while on other tabs) and the page read for the month.
+    var calMonthKey by rememberSaveable { mutableIntStateOf(YearMonth.now().key()) }
+    var calDayEpoch by rememberSaveable { mutableLongStateOf(LocalDate.now().toEpochDay()) }
+    var calendarPage by remember { mutableStateOf<CalendarPage?>(null) }
 
     var mine by remember { mutableStateOf<MinePage?>(null) }
     var mineAgents by remember { mutableStateOf<Map<Long, AgentInfo>>(emptyMap()) }
@@ -162,6 +171,11 @@ fun App(
 
     val route = stack.last()
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.MINE)
+    val locale = LocalConfiguration.current.locales[0]
+    val calMonth = monthOfKey(calMonthKey)
+    val calDay = LocalDate.ofEpochDay(calDayEpoch)
+    val calWeekStart = remember(locale) { systemWeekStart(locale) }
+    val onCalendar = route == "home" && tab == Tab.CALENDAR
     // Today's category chips and the page narrowed to the chosen one (v43).
     val repoProjects = remember(projects) { repoProjectIds(projects) }
     val workId = remember(categories) { workCategoryId(categories) }
@@ -304,7 +318,7 @@ fun App(
         onInitialRouteConsumed()
     }
 
-    LaunchedEffect(route, revision, tick, tab) {
+    LaunchedEffect(route, revision, tick, tab, calMonthKey, calWeekStart) {
         when {
             route == "home" -> when (tab) {
                 Tab.MINE -> {
@@ -357,7 +371,22 @@ fun App(
                         archivedProjects = loaded.second
                     }
                 }
-                Tab.CALENDAR -> Unit
+                Tab.CALENDAR -> {
+                    val loaded = try {
+                        withContext(Dispatchers.IO) {
+                            api.calendar(calMonth.year, calMonth.monthValue, coreWeekStart(calWeekStart)) to
+                                runCatching { api.categories() }.getOrNull()
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                    if (loaded != null) {
+                        calendarPage = loaded.first
+                        loaded.second?.let { categories = it }
+                    }
+                }
             }
             route.startsWith("project:") -> {
                 val id = route.substringAfter(':').toLongOrNull() ?: return@LaunchedEffect
@@ -487,6 +516,17 @@ fun App(
         icons = { query -> withContext(Dispatchers.IO) { api.categoryIcons(query) } },
     )
 
+    fun shiftCalendar(by: Int) {
+        val (month, day) = shiftMonth(calMonth, calDay, by)
+        calMonthKey = month.key()
+        calDayEpoch = day.toEpochDay()
+    }
+
+    fun calendarToday() {
+        calMonthKey = YearMonth.now().key()
+        calDayEpoch = LocalDate.now().toEpochDay()
+    }
+
     fun startSync() {
         scope.launch {
             runCatching { withContext(Dispatchers.IO) { api.startSync() } }
@@ -504,12 +544,18 @@ fun App(
         val quick = activeQuick
         // A task typed while a chip narrows Today gets that category (the desktop's rule).
         val typedCat = activeCat.takeIf { it > 0 && route == "home" && tab == Tab.MINE }
+        // Under the Calendar a task is due on the selected day, at 18:00 unless its text says otherwise (v44).
+        val dayDue = if (onCalendar) calendarDue(calDay, ZoneId.systemDefault()) else null
         if (title.isNotEmpty() && !sending) {
             sending = true
             scope.launch {
                 val madeAll = try {
                     withContext(Dispatchers.IO) {
-                        if (quick != null) createQuickDrafts(api, quick, projectId, typedCat) else listOf(api.createTask(title, projectId, categoryId = typedCat))
+                        if (quick != null) {
+                            createQuickDrafts(api, quick, projectId, typedCat, dayDue)
+                        } else {
+                            listOf(api.createTask(title, projectId, dueAt = dayDue, categoryId = typedCat))
+                        }
                     }
                 } catch (e: CancellationException) {
                     throw e
@@ -521,13 +567,17 @@ fun App(
                 if (made != null) {
                     draft = ""
                     // An undated add opens the No date fold, where the new row shows for 2 s.
-                    if (projectId == null && quick == null) {
+                    if (onCalendar) {
+                        highlightId = made
+                    } else if (projectId == null && quick == null) {
                         noDateOpen = true
                         highlightId = made
                     }
                     showNotice(
-                        if (quick != null) {
+                        if (quick != null && (!onCalendar || quickReadsDate(quick))) {
                             quickReceipt(resources, words, quick)
+                        } else if (onCalendar) {
+                            resources.getString(R.string.calendar_added, calendarShortDay(calDay, locale))
                         } else if (projectId != null) {
                             resources.getString(R.string.added_to_project, projectPage?.project?.name.orEmpty())
                         } else {
@@ -747,6 +797,7 @@ fun App(
             R.string.composer_add_to_project,
             projectPage?.project?.name.orEmpty(),
         )
+        tab == Tab.CALENDAR -> resources.getString(R.string.calendar_add_to, calendarShortDay(calDay, locale))
         tab == Tab.MINE -> stringResource(R.string.composer_placeholder_mine)
         tab == Tab.AGENTS -> stringResource(R.string.composer_placeholder_agents)
         else -> stringResource(R.string.composer_placeholder_inbox)
@@ -772,20 +823,31 @@ fun App(
             } else if (route == "search") {
                 // The page draws its own field and Cancel.
             } else if (route == "home") {
-                PageHeader(
-                    title = title,
-                    subtitle = subtitle,
-                    syncBlocked = blocked,
-                    onSync = { openSync() },
-                    start = if (onToday) 28.dp else Dims.pagePadding,
-                    onSearch = { searchQuery = ""; push("search") },
-                    actions = {
-                        if (tab == Tab.PROJECTS) {
-                            HeaderIconButton("plus", stringResource(R.string.manage_new_project), { newProject = true })
-                            HeaderIconButton("gear", stringResource(R.string.settings_title), { push(ROUTE_SETTINGS) })
-                        }
-                    },
-                )
+                if (tab == Tab.CALENDAR) {
+                    CalendarHeader(
+                        title = calendarTitle(calMonth, locale),
+                        syncBlocked = blocked,
+                        onSync = { openSync() },
+                        onPrevious = { shiftCalendar(-1) },
+                        onToday = { calendarToday() },
+                        onNext = { shiftCalendar(1) },
+                    )
+                } else {
+                    PageHeader(
+                        title = title,
+                        subtitle = subtitle,
+                        syncBlocked = blocked,
+                        onSync = { openSync() },
+                        start = if (onToday) 28.dp else Dims.pagePadding,
+                        onSearch = { searchQuery = ""; push("search") },
+                        actions = {
+                            if (tab == Tab.PROJECTS) {
+                                HeaderIconButton("plus", stringResource(R.string.manage_new_project), { newProject = true })
+                                HeaderIconButton("gear", stringResource(R.string.settings_title), { push(ROUTE_SETTINGS) })
+                            }
+                        },
+                    )
+                }
                 if (update.bannerShown) UpdateBanner(update, onUpdate = onUpdate, onDismiss = onDismissUpdate)
                 if (onToday && chips.isNotEmpty()) {
                     CategoryChips(chips = chips, selected = activeCat, words = words, onSelect = { catFilter = it })
@@ -1228,13 +1290,21 @@ fun App(
                             onLongPress = { id -> openTaskMenu(id) },
                             onShowAll = { push(completedRoute(CompletedScope(agents = true))) },
                         )
-                        Tab.CALENDAR -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                            PlaceholderScreen(
-                                icon = "calendar",
-                                title = stringResource(R.string.calendar_placeholder_title),
-                                body = stringResource(R.string.calendar_placeholder_body),
-                            )
-                        }
+                        Tab.CALENDAR -> CalendarScreen(
+                            page = calendarPage,
+                            month = calMonth,
+                            selected = calDay,
+                            today = LocalDate.now(),
+                            weekStart = calWeekStart,
+                            words = words,
+                            categories = categories,
+                            onSelect = { calDayEpoch = it.toEpochDay() },
+                            onShift = { shiftCalendar(it) },
+                            onOpenTask = { id -> push(taskRoute(id, 0)) },
+                            onLongPress = { id -> openTaskMenu(id) },
+                            onComplete = { id -> perform { api.complete(id) } },
+                            highlightId = highlightId,
+                        )
                         Tab.PROJECTS -> ProjectsScreen(
                             entries = projectEntries,
                             onOpenProject = { id -> push("project:$id") },
