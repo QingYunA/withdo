@@ -168,9 +168,18 @@ func (l *llm) refund(subject, turn string) int {
 	return l.left(subject)
 }
 
-// llmError answers {"error": code, "code": code}: the shape of the other /v1 errors that carry a
-// machine-readable code.
+// llmError answers a refusal of the chat route in the shape OpenAI clients parse, with the
+// machine-readable code at the top as well: {"error":{"message":code,"type":"withdo","code":code},
+// "code":code}. A client library that finds a string in "error" reports an empty message.
 func llmError(w http.ResponseWriter, status int, code string) {
+	writeJSON(w, status, map[string]any{
+		"error": map[string]string{"message": code, "type": "withdo", "code": code},
+		"code":  code,
+	})
+}
+
+// plainError is the quota route's refusal, in the shape of the other /v1 errors.
+func plainError(w http.ResponseWriter, status int, code string) {
 	writeJSON(w, status, map[string]string{"error": code, "code": code})
 }
 
@@ -200,7 +209,7 @@ func (l *llm) quota(w http.ResponseWriter, r *http.Request) {
 	limit, left := l.opts.DailyTurns, l.left(subject)
 	l.mu.Unlock()
 	if !on {
-		llmError(w, http.StatusServiceUnavailable, CodeLLMDisabled)
+		plainError(w, http.StatusServiceUnavailable, CodeLLMDisabled)
 		return
 	}
 	w.Header().Set(HeaderLLMTurnsLeft, strconv.Itoa(left))
@@ -230,12 +239,12 @@ func (l *llm) chat(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &tooLarge) {
 			status = http.StatusRequestEntityTooLarge
 		}
-		writeJSON(w, status, map[string]string{"error": "bad_request"})
+		llmError(w, status, "bad_request")
 		return
 	}
 	payload, err := withModel(body, opts.Model)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad_request"})
+		llmError(w, http.StatusBadRequest, "bad_request")
 		return
 	}
 	turn, ok, left := l.take(subject, strings.TrimSpace(r.Header.Get(HeaderLLMTurn)))

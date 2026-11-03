@@ -79,11 +79,20 @@ func llmChat(l *llm, token, turn, body string) *httptest.ResponseRecorder {
 
 func llmCode(t *testing.T, w *httptest.ResponseRecorder) string {
 	t.Helper()
-	var out map[string]string
+	var out struct {
+		Code  string `json:"code"`
+		Error struct {
+			Message string `json:"message"`
+			Code    string `json:"code"`
+		} `json:"error"`
+	}
 	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
 		t.Fatalf("body %q: %v", w.Body.String(), err)
 	}
-	return out["code"]
+	if out.Error.Code != out.Code || out.Error.Message == "" {
+		t.Fatalf("body %q is not the OpenAI error shape", w.Body.String())
+	}
+	return out.Code
 }
 
 const chatBody = `{"model":"gpt-whatever","messages":[{"role":"user","content":"明天九点给房东打电话"}],"temperature":0.2}`
