@@ -3,6 +3,24 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.13.0
+
+No database change; the app updates itself from 0.12.0 and 0.12.1.
+
+- **The official model.** Sign in and the input understands what you write: it adds and changes
+  tasks, answers questions about your work and asks when something is unclear, with Undo for every
+  change. Each account has a free daily allowance; Settings > Model shows what is left. Your own
+  provider and key still work and take over when you choose one.
+- Signed out or past the allowance, the input still reads dates and reminders on your device and
+  says what it could not do.
+- **Android catches up with the desktop**: search, category chips on Today, Completed, the Summary
+  with its shipping scene, milestones, due dates, notes and subtasks on the task page, select mode,
+  projects and subprojects, a board, Settings (language, appearance, notifications) and categories.
+- **Android, the phone's own**: swipe a row to complete it or do it today, pull a list to sync,
+  share a page or text into Withdo, and three home-screen widgets.
+- **Android Calendar**: the month at a glance, the selected day's tasks under it.
+- Android now reads "tomorrow at 9", Today and the calendar in your time zone (they followed UTC).
+
 ## 0.12.1
 
 No database change; the app updates itself from 0.11.0 and 0.12.0.

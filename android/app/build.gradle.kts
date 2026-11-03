@@ -13,8 +13,8 @@ android {
         applicationId = "xyz.sriai.adhdtodo"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
-        versionName = "0.12.1"
+        versionCode = 20
+        versionName = "0.13.0"
     }
     // Release signing comes from the environment (scripts/android-release.sh reads the passwords
     // from the keychain); the keystore lives outside the repo. Without it a release build is
