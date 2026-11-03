@@ -136,28 +136,6 @@ fun EmptyState(
     }
 }
 
-/** Calendar and Projects are placeholders in A2a; they say what comes and when. */
-@Composable
-fun PlaceholderScreen(icon: String, title: String, body: String) {
-    val tokens = LocalTokens.current
-    val type = LocalAppType.current
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 72.dp, start = 20.dp, end = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        PixelIcon(icon, size = 36.dp, tint = tokens.textTertiary)
-        Text(title, style = type.bodyStrong, color = tokens.text, textAlign = TextAlign.Center)
-        Text(
-            body,
-            style = type.body,
-            color = tokens.textSecondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 480.dp),
-        )
-    }
-}
-
 @Composable
 fun HowToConnectDialog(onDismiss: () -> Unit) {
     val tokens = LocalTokens.current
