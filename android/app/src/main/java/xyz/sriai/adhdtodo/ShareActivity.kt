@@ -23,13 +23,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import xyz.sriai.adhdtodo.core.Core
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.QuickParse
 import xyz.sriai.adhdtodo.platform.AppLanguage
-import xyz.sriai.adhdtodo.platform.KeystoreSecrets
+import xyz.sriai.adhdtodo.platform.CoreOpen
 import xyz.sriai.adhdtodo.ui.ShareDraft
 import xyz.sriai.adhdtodo.ui.ShareForm
 import xyz.sriai.adhdtodo.ui.ShareSheet
@@ -71,7 +70,7 @@ class ShareActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             val opened = withContext(Dispatchers.IO) {
-                runCatching { Core.open(filesDir.absolutePath, KeystoreSecrets(this@ShareActivity)) }.getOrNull()
+                runCatching { CoreOpen.open(this@ShareActivity) }.getOrNull()
             }
             if (opened == null) {
                 done(R.string.share_failed)

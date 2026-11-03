@@ -3,7 +3,6 @@ package xyz.sriai.adhdtodo.platform
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import xyz.sriai.adhdtodo.core.Core
 
 /**
  * The alarm and boot receiver: it claims the reminders that came due, posts them, and sets the
@@ -17,7 +16,7 @@ class ReminderReceiver : BroadcastReceiver() {
         Thread {
             try {
                 Reminders.ensureChannel(app)
-                val core = Core.open(app.filesDir.absolutePath, KeystoreSecrets(app))
+                val core = CoreOpen.open(app)
                 try {
                     val claim = intent.action == Reminders.ACTION_CLAIM ||
                         intent.action == Intent.ACTION_BOOT_COMPLETED ||

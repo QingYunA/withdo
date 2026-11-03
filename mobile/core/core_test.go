@@ -63,6 +63,9 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	if typ := reflect.TypeOf(SeedDemo); !bindableSignature(typ, bindable) {
 		t.Errorf("SeedDemo is not bindable: %s", typ)
 	}
+	if typ := reflect.TypeOf(SetZone); !bindableSignature(typ, bindable) {
+		t.Errorf("SetZone is not bindable: %s", typ)
+	}
 	coreType := reflect.TypeOf((*Core)(nil))
 	var methods []string
 	for i := 0; i < coreType.NumMethod(); i++ {

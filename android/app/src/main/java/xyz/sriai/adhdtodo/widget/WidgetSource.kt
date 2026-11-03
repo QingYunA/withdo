@@ -4,11 +4,10 @@ import android.content.Context
 import android.content.res.Resources
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xyz.sriai.adhdtodo.core.Core
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.platform.AppLanguage
-import xyz.sriai.adhdtodo.platform.KeystoreSecrets
+import xyz.sriai.adhdtodo.platform.CoreOpen
 import xyz.sriai.adhdtodo.ui.Words
 
 /**
@@ -45,7 +44,7 @@ internal object WidgetSource {
     private suspend fun <T> withApi(context: Context, block: (CoreApi) -> T): T? = withContext(Dispatchers.IO) {
         runCatching {
             val app = context.applicationContext
-            val core = Core.open(app.filesDir.absolutePath, KeystoreSecrets(app))
+            val core = CoreOpen.open(app)
             try {
                 block(CoreApi(core))
             } finally {
