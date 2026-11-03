@@ -105,6 +105,9 @@ func (s *Settings) Show(p Pane) {
 	if p == PaneAgents && s.pane != PaneAgents {
 		s.setup.status = nil // look at this computer again as the pane opens
 	}
+	if p == PaneModel && s.pane != PaneModel {
+		s.assist.asked = false // ask for the day's turns again as the pane opens
+	}
 	s.pane = p
 }
 
@@ -127,6 +130,9 @@ func (s *Settings) openPane(p Pane) {
 	s.syncEditingServer, s.syncServerErr = false, false
 	if p == PaneAgents && s.pane != PaneAgents {
 		s.setup.status = nil // look at this computer again as the pane opens
+	}
+	if p == PaneModel && s.pane != PaneModel {
+		s.assist.asked = false // ask for the day's turns again as the pane opens
 	}
 	s.pane = p
 }

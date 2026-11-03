@@ -62,6 +62,8 @@ type Real struct {
 	sync      syncTask
 	// syncNotify asks the shell to redraw after a sync status change; set by the app.
 	syncNotify func()
+	// llm is what the official model's card and rule read (official.go).
+	llm officialTask
 
 	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
 	// collection in between. sweep is the pending collection after a detach or a delete.

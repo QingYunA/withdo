@@ -22,6 +22,10 @@ const (
 	KindUnknownModel
 	KindRateLimited
 	KindNoImages // the model does not take pictures
+	// The official model's own refusals (see Official).
+	KindOfficialQuota     // today's turns are used up
+	KindOfficialSignedOut // no session, or the server refused it
+	KindOfficialOff       // the server has no official model
 )
 
 // address matches a URL in an error's text, so the digits of its port or path are not read as a
@@ -40,6 +44,12 @@ func Classify(err error) Kind {
 		return KindNotConfigured
 	case errors.Is(err, ErrNoKey):
 		return KindNoKey
+	case errors.Is(err, ErrOfficialQuota) || strings.Contains(low, "llm_quota"):
+		return KindOfficialQuota
+	case errors.Is(err, ErrOfficialSignedOut) || strings.Contains(low, "llm_unauthenticated"):
+		return KindOfficialSignedOut
+	case errors.Is(err, ErrOfficialOff) || strings.Contains(low, "llm_disabled"):
+		return KindOfficialOff
 	case errors.Is(err, context.Canceled):
 		return KindCancelled
 	case errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &netErr) && netErr.Timeout()) || strings.Contains(low, "timeout"):
@@ -83,6 +93,12 @@ func Friendly(err error) string {
 		return "The provider doesn't know this model or address."
 	case KindNoImages:
 		return "This model cannot read images."
+	case KindOfficialQuota:
+		return "Today's limit of the official model is reached. It comes back at midnight UTC."
+	case KindOfficialSignedOut:
+		return "Sign in to use the official model."
+	case KindOfficialOff:
+		return "This server does not offer the official model."
 	case KindRateLimited:
 		return "The provider is busy or out of quota. Try again in a moment."
 	}

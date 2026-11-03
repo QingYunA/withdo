@@ -2267,6 +2267,11 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    one in use. Clicking a tile opens the key and model form under the grid (today's form); a set-up
    provider becomes the one in use at once and is tested. With nothing set up the card is replaced by
    one line: `Not set up: dates and reminders are still read on this computer.`
+   Built (M15): screens `settings-model-official-*`, `settings-model-official-signed-out-*`,
+   `settings-model-own-with-official-*`, `project-composer-official-*` (the chip), and the quiet lines
+   `mine-composer-official-signed-out-*` / `-used-up-*`. A server that does not offer the model shows none of this.
+   The official row under a provider of one's own says only the turns left; Test reads the quota
+   (it proves the session and the route without spending a turn); the chip's popover lists `Withdo` first.
 9. **About**: the app mark, `Withdo 0.12.0`, `Open source, AGPL-3.0`, links to GitHub, the privacy
    policy and the website (https://withdo.si/).
 10. **Old pane ids.** `PaneAdvanced` is gone: callers that opened it open **Model**. `Show` accepts

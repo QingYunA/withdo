@@ -90,9 +90,12 @@ func openReal(path string) (*backend, error) {
 		log.Printf("model settings: %v", err) // the app still runs, with no model connected
 	}
 	loc := agent.LocalZone()
+	assistant := &data.AgentAssistant{Provider: mgr, Official: r, Images: r}
 	ag := agent.New(agent.Config{
-		Core: r.Core(), Model: mgr.Model, Memory: agent.NewMemory(filepath.Join(dir, memoryFile)), Now: func() time.Time { return time.Now().In(loc) },
+		// The model of each turn: the user's own provider when one is in use, else the official one.
+		Core: r.Core(), Model: assistant.Selector().Model, Memory: agent.NewMemory(filepath.Join(dir, memoryFile)), Now: func() time.Time { return time.Now().In(loc) },
 	})
+	assistant.Agent = ag
 	poller := ghpoll.New(ghpoll.Config{Runner: ghRunner, Store: r.Core(), Housekeeping: closeFinishedSubtasks(r.Core())})
 	return &backend{
 		store:       r,
@@ -100,8 +103,8 @@ func openReal(path string) (*backend, error) {
 		memoryFile:  filepath.Join(dir, memoryFile),
 		start:       func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
 		close:       func() error { poller.Stop(); return r.Close() },
-		assistant:   &data.AgentAssistant{Agent: ag, Provider: mgr, Images: r},
-		models:      &data.ProviderSettings{Provider: mgr},
+		assistant:   assistant,
+		models:      &data.ProviderSettings{Provider: mgr, OfficialFrom: r},
 		github:      data.PollerGitHub{Poller: poller},
 		seen:        data.FileSeen{Path: filepath.Join(dir, seenFile)},
 		dismissed:   data.FileSeen{Path: filepath.Join(dir, dismissedFile)},

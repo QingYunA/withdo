@@ -18,10 +18,31 @@ const (
 	modelLogo     float32 = theme.LogoChip
 )
 
-// providerMark is the logo of a provider at size points, a one-color mark in the text color. It is
-// the one place the composer draws a logo, so it takes one line to change.
+// officialID is the id of the official model among the providers of the chip and its popover. It
+// is no preset: the row is made by officialProvider.
+const officialID = "withdo-official"
+
+// officialProvider is the official model as a row of the chip's list.
+func officialProvider(inUse bool) data.Provider {
+	return data.Provider{ID: officialID, Name: data.OfficialName, Active: inUse, Configured: true}
+}
+
+// providerMark is the logo of a provider at size points, a one-color mark in the text color; the
+// official model's is the assistant's sprite. It is the one place the composer draws a logo, so it
+// takes one line to change.
 func providerMark(c *ui.Context, t *theme.Tokens, p data.Provider, size float32) ui.Element {
+	if p.ID == officialID {
+		return theme.AvatarIcon(c.Key("official-mark"), theme.Assistant, size)
+	}
 	return theme.ProviderLogo(c, p.ID, size, t.Text)
+}
+
+// officialPhase is the state of the official model, hidden where there is no model setting.
+func (m *Main) officialPhase() data.OfficialPhase {
+	if m.app.Models == nil {
+		return data.OfficialHidden
+	}
+	return m.app.Models.Official().Phase
 }
 
 // modelsReady are the providers that are set up, in Settings' order, and the one in use among them.
@@ -29,6 +50,12 @@ func providerMark(c *ui.Context, t *theme.Tokens, p data.Provider, size float32)
 func (m *Main) modelsReady() (all []data.Provider, active data.Provider, ok bool) {
 	if m.app.Models == nil || !m.assistReady() {
 		return nil, data.Provider{}, false
+	}
+	// The official model heads the list while it can answer; it is the model in use while no provider
+	// of one's own is.
+	if off := m.app.Models.Official(); off.Phase == data.OfficialReady {
+		active, ok = officialProvider(off.InUse), off.InUse
+		all = append(all, officialProvider(off.InUse))
 	}
 	for _, p := range m.app.Models.Providers() {
 		if p.Configured {
@@ -131,7 +158,11 @@ func (m *Main) modelRow(c *ui.Context, t *theme.Tokens, s surface, p data.Provid
 		}
 	})
 	if row.Clicked() {
-		if !p.Active {
+		switch {
+		case p.Active:
+		case p.ID == officialID:
+			_ = m.app.Models.UseOfficial()
+		default:
 			_ = m.app.Models.SetActive(p.ID)
 		}
 		cs.modelOpen = false

@@ -114,9 +114,11 @@ type DevicesResponse struct {
 
 // ConfigResponse is GET /v1/config: the public values a client needs to sign in. Auth is the
 // account system to sign in with, "pocketbase"; it is empty on a server that only knows
-// development tokens.
+// development tokens. LLM says the server offers the official model (POST /v1/llm/chat/completions):
+// a client does not offer it when false, or when the field is missing (an older server).
 type ConfigResponse struct {
 	Auth string `json:"auth,omitempty"`
+	LLM  bool   `json:"llm"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.

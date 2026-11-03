@@ -96,6 +96,21 @@ func run(ctx context.Context, args []string) error {
 		APIKey: os.Getenv("MIMO_API_KEY"), BaseURL: os.Getenv("MIMO_BASE_URL"), DailyLimit: voiceLimit,
 	})
 
+	// The official model: the upstream's key comes from the environment, never from a flag or a file in
+	// the repository. Without it POST /v1/llm/chat/completions answers 503 llm_disabled and
+	// GET /v1/config says "llm": false.
+	llmTurns := 0
+	if raw := os.Getenv("LLM_DAILY_TURNS"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n <= 0 {
+			return errors.New("LLM_DAILY_TURNS must be a positive number")
+		}
+		llmTurns = n
+	}
+	server.EnableLLM(syncserver.LLMOptions{
+		APIKey: os.Getenv("LLM_API_KEY"), BaseURL: os.Getenv("LLM_BASE_URL"), Model: os.Getenv("LLM_MODEL"), DailyTurns: llmTurns,
+	})
+
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", *addr, err)
