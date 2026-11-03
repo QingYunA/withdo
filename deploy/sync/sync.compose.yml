@@ -1,4 +1,4 @@
-# The adhd-todo sync server and its own Postgres, behind the host's nginx for todo.sri-ai.xyz.
+# The adhd-todo sync server and its own Postgres, behind the host's nginx for api.withdo.si (through a Cloudflare Tunnel) and todo.sri-ai.xyz (legacy).
 #   docker compose --env-file sync.env -f sync.compose.yml up -d
 # PocketBase accounts live in ./pb_data next to this file: mkdir pb_data && chown 65532:65532 pb_data.
 # bin/adhd-sync is a static linux/amd64 build: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/adhd-sync

@@ -12,7 +12,7 @@ const (
 <p>你的验证码：</p>
 <p style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;font-weight:600;letter-spacing:8px;margin:16px 0">` + core.EmailPlaceholderOTP + `</p>
 <p>10 分钟内有效。如果不是你在操作，忽略这封邮件即可；没有验证码谁也登录不了。</p>
-<p style="color:#6e6e73">&mdash; ` + appName + ` &middot; todo.sri-ai.xyz</p>
+<p style="color:#6e6e73">&mdash; ` + appName + ` &middot; withdo.si</p>
 </div>`
 )
 

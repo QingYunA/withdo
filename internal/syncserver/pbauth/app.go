@@ -28,6 +28,7 @@ func Open(dir string) (*pocketbase.PocketBase, error) {
 	app.OnRecordAuthWithPasswordRequest(UsersCollection).BindFunc(refuseUnverifiedPasswordSignIn)
 	app.OnRecordAuthWithOTPRequest(UsersCollection).BindFunc(verifyOnCode)
 	app.OnMailerRecordOTPSend(UsersCollection).BindFunc(localizeCodeMail)
+	app.OnRealtimeConnectRequest().BindFunc(keepRealtimeAlive)
 	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		e.Router.POST(ResetPasswordPath, resetPassword)
 		return e.Next()

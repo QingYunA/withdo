@@ -205,7 +205,7 @@ the Sync screen has no phone mockup and follows the rules below (v27's groups in
   - the footer `Server todo.sri-ai.xyz · Change`, Change edits the address in place.
   The header cloud turns `status.blocked` when the sync status is failed for 15 minutes or signed
   out after having been linked, as on the desktop.
-- **Server settings**: the phone's default server is `https://todo.sri-ai.xyz`. Changing it calls a
+- **Server settings**: the phone's default server is `https://api.withdo.si` (2026-11-03; it was `https://todo.sri-ai.xyz`). Changing it calls a
   new `SyncSetServer(server string) error` in `mobile/core` that fetches `GET /v1/config`
   (`syncclient.FetchConfig`, https only) and writes `sync.json` with the issuer, client id and
   scopes; signing in calls it first when `sync.json` has no issuer.

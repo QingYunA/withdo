@@ -82,13 +82,13 @@ func (f *fakeSync) SyncSetServer(server string) error {
 
 // signedOutCodeSync is the signed-out card of a PocketBase server: the email step.
 func signedOutCodeSync() data.SyncSnapshot {
-	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://todo.sri-ai.xyz"}
+	return data.SyncSnapshot{Phase: data.SyncSignedOut, Server: "https://api.withdo.si"}
 }
 
 func syncedSync() data.SyncSnapshot {
 	now := fixedNow()
 	return data.SyncSnapshot{
-		Phase: data.SyncSynced, Server: "https://todo.sri-ai.xyz", Account: "Cyan 云辰",
+		Phase: data.SyncSynced, Server: "https://api.withdo.si", Account: "Cyan 云辰",
 		AccountEmail: "ada@example.com", GoogleLink: data.GoogleLinkLinked,
 		Linked: true, LastSynced: now.Add(-time.Minute), ThisDeviceID: "mac",
 		Devices: []data.SyncDevice{
@@ -232,7 +232,7 @@ func TestSyncPaneOfflineHasNoButton(t *testing.T) {
 func TestSyncPaneChangeServer(t *testing.T) {
 	r, fs := syncPane(t, signedOutCodeSync())
 	// The official server has no address on screen, only the way to use your own.
-	hasNot(t, r.tt, "todo.sri-ai.xyz", "Change")
+	hasNot(t, r.tt, "api.withdo.si", "Change")
 	has(t, r.tt, "Use your own server")
 	if err := r.tt.Click("Use your own server"); err != nil {
 		t.Fatal(err)
@@ -276,7 +276,7 @@ func TestSyncPaneChangeServer(t *testing.T) {
 		t.Errorf("an empty field saved %q, want the official server", fs.server)
 	}
 	has(t, r.tt, "Use your own server")
-	hasNot(t, r.tt, "todo.sri-ai.xyz")
+	hasNot(t, r.tt, "api.withdo.si")
 }
 
 func TestSidebarSyncCloud(t *testing.T) {

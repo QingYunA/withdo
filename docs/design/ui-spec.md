@@ -2261,7 +2261,7 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    provider becomes the one in use at once and is tested. With nothing set up the card is replaced by
    one line: `Not set up: dates and reminders are still read on this computer.`
 9. **About**: the app mark, `Withdo 0.12.0`, `Open source, AGPL-3.0`, links to GitHub, the privacy
-   policy and the website (https://qingyuna.github.io/withdo/).
+   policy and the website (https://withdo.si/).
 10. **Old pane ids.** `PaneAdvanced` is gone: callers that opened it open **Model**. `Show` accepts
     the five panes and About.
 
@@ -2453,7 +2453,7 @@ this order: Account, General, Agents, Advanced.
   address in place, for people who host their own; the field starts empty for the official server and
   holds the address for a custom one, with the placeholder `Leave empty for the official server`
   (`留空即使用官方服务器`). Saving an empty field saves the official server. "Official" is
-  `data.IsOfficialSyncServer`: `https://todo.sri-ai.xyz` without spaces, a trailing slash or case.
+  `data.IsOfficialSyncServer`: `https://api.withdo.si` or the legacy `https://todo.sri-ai.xyz` without spaces, a trailing slash or case (2026-11-03: the official server is `api.withdo.si`; a saved `sync.json` that names the legacy address is rewritten to the new one when it is loaded, keeping everything else).
   **The computer is named for the system** (2026-10-28): every Sync-pane line that says `this Mac`
   (`这台 Mac`) says `this PC` (`这台电脑`) on Windows; the catalog keeps a `...Windows` message beside
   each, and `app/views/system_words.go` picks it by `systemGOOS`, as for Finder and File Explorer.
@@ -2524,7 +2524,7 @@ this order: Account, General, Agents, Advanced.
     (`试得太频繁了，等一分钟`). A malformed email: `That doesn't look like an email`
     (`邮箱格式不对`). `This account is deactivated; ask the admin` and a network failure's sentence as
     before.
-  - *The emails* (PocketBase's OTP template): from `Withdo <noreply@...>`, subject `<code> is your
+  - *The emails* (PocketBase's OTP template): from `Withdo <noreply@withdo.si>` (once the domain is verified in Resend; `noreply@sri-ai.xyz` until then), subject `<code> is your
     Withdo code`, the code in 34 px mono, `It works for 10 minutes. If you didn't ask for it, you can
     ignore this email; nobody can sign in without the code.` They are written in the language the
     app was in when the account was made (English, or Simplified Chinese: `<code> 是你的 Withdo

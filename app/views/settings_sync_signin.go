@@ -11,7 +11,7 @@ import (
 )
 
 // The terms and the privacy policy a sign-up agrees to, on the website.
-const termsURL = "https://qingyuna.github.io/withdo/terms.html"
+const termsURL = "https://withdo.si/terms.html"
 
 // syncPasswordMin is the shortest password the server takes; the strength bar has four steps.
 const (

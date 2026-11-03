@@ -5,10 +5,12 @@ Everything here is added beside them; nothing else on the host is changed.
 
 | Name | What | Upstream |
 |---|---|---|
-| `todo.sri-ai.xyz` | `adhd-sync` (this repo's `cmd/adhd-sync`), with PocketBase embedded as the account system (M13) | `127.0.0.1:18080` |
+| `api.withdo.si` | `adhd-sync` (this repo's `cmd/adhd-sync`), with PocketBase embedded as the account system (M13), through a Cloudflare Tunnel (below) | `127.0.0.1:18080` |
+| `todo.sri-ai.xyz` | the same server under its legacy name, served directly by nginx until old clients have updated | `127.0.0.1:18080` |
 
-The DNS record is an A record, **DNS only** (not proxied by Cloudflare): certbot answers the HTTP
-challenge itself, and the sync server's SSE stream would be cut by the proxy's timeout.
+`api.withdo.si` is the official address since 2026-11-03. The legacy name's DNS record is an A
+record, **DNS only** (not proxied by Cloudflare): certbot answers the HTTP challenge itself. Its
+sections below ("From scratch", the certificate) describe that legacy path.
 
 ## Layout on the host
 
@@ -22,11 +24,72 @@ challenge itself, and the sync server's SSE stream would be cut by the proxy's t
     ├── backup.sh               the daily backup (Backups, below)
     └── backups/                one folder per backup, mode 700, kept 14 days
 /etc/systemd/system/withdo-backup.{service,timer}   run backup.sh every day at 03:17 UTC
-/etc/nginx/sites-available/adhd-todo   nginx-adhd-todo.conf, linked from sites-enabled
+/etc/nginx/sites-available/adhd-todo   nginx-adhd-todo.conf (legacy name), linked from sites-enabled
+/etc/nginx/sites-available/api-withdo  nginx-api-withdo.conf (127.0.0.1:8088, for cloudflared), linked from sites-enabled
+(cloudflared itself is installed by `cloudflared service install`; its config lives at Cloudflare)
 /etc/letsencrypt/live/adhd-todo/       the certificate for todo.sri-ai.xyz; certbot.timer renews it
 ```
 
-## From scratch
+## api.withdo.si through a Cloudflare Tunnel
+
+`api.withdo.si` is a proxied Cloudflare record that points at a **remotely managed** tunnel
+(`withdo`): its ingress is kept at Cloudflare, not in a file on the host. `cloudflared` on the host
+dials out to Cloudflare and hands every request to nginx on `127.0.0.1:8088`
+(`nginx-api-withdo.conf`), which proxies to `adhd-sync` on `127.0.0.1:18080` as for the legacy name.
+Cloudflare terminates TLS, so there is no certificate to renew on the host for this name. The
+`withdo.si` zone must be on the Cloudflare account that owns the tunnel. Steps 1 to 3 run on the
+owner's Mac with the `cf` CLI, signed in to that account; the rest on the host.
+
+1. **Create the tunnel** (config kept at Cloudflare):
+   `cf tunnels create --name withdo --config-src cloudflare`. Note the tunnel id it prints.
+2. **Set the ingress** with `cf tunnels config update` (see `cf tunnels config update --help` for how
+   it takes the configuration): `api.withdo.si` goes to `http://127.0.0.1:8088`, and the last rule
+   is `http_status:404`, so anything else that reaches the tunnel gets a 404:
+   ```json
+   {"ingress": [
+     {"hostname": "api.withdo.si", "service": "http://127.0.0.1:8088"},
+     {"service": "http_status:404"}
+   ]}
+   ```
+3. **Route the name**: a proxied CNAME record `api.withdo.si` -> `<tunnel id>.cfargotunnel.com`,
+   made with `cf dns records create` (type CNAME, proxied on).
+4. **nginx on the host**: copy `deploy/sync/nginx-api-withdo.conf` to
+   `/etc/nginx/sites-available/api-withdo`, link it from `sites-enabled`, then `nginx -t` and
+   `systemctl reload nginx`. Check the listener: `curl -s http://127.0.0.1:8088/healthz` is `ok`.
+5. **Install cloudflared** from Cloudflare's apt repository (Debian 12):
+   ```sh
+   sudo mkdir -p --mode=0755 /usr/share/keyrings
+   curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+   echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+   sudo apt-get update && sudo apt-get install cloudflared
+   ```
+6. **Run it as a service** with the tunnel's token. The token is a secret: pipe it from `cf tunnels
+   token get` to the host over ssh, so it is never printed, written to a file in the repo or put in
+   shell history. For example, from the Mac (replace `<tunnel>` with the tunnel's id or name as the
+   `cf` command takes it):
+   `cf tunnels token get <tunnel> | ssh adhd-srv 'read -r token && sudo cloudflared service install "$token"'`.
+   That writes and starts the `cloudflared` systemd unit. `systemctl status cloudflared` should say
+   active and the tunnel shows as healthy at Cloudflare.
+7. **PocketBase** (admin UI, over the SSH tunnel below > Settings > Application): set the app URL to `https://api.withdo.si`.
+   Once `withdo.si` is verified in Resend (DKIM and the other records Resend gives, added in
+   Cloudflare), set the sender to `Withdo <noreply@withdo.si>` (Settings > Mail) and use a send-only
+   key for that domain. The English code-mail template stored in PocketBase still ends with
+   `todo.sri-ai.xyz`; change its footer to `withdo.si` in the same place (Collections > users >
+   Options > Mail templates > OTP).
+8. **Google sign-in** (Google Cloud console, the OAuth client): add
+   `https://api.withdo.si/api/oauth2-redirect` as an authorized redirect URI (keep the old
+   `https://todo.sri-ai.xyz/api/oauth2-redirect` while old clients exist) and `withdo.si` as an
+   authorized domain on the consent screen.
+
+The legacy name keeps being served directly by nginx (`nginx-adhd-todo.conf`) until old clients have
+updated; new clients migrate a saved `todo.sri-ai.xyz` to `api.withdo.si` when they start. Then its
+DNS record, its nginx file and its certificate can go.
+
+Visitor addresses: `nginx-api-withdo.conf` takes the address from `CF-Connecting-IP`, trusted only
+from loopback (`set_real_ip_from 127.0.0.1`), so `X-Real-IP`, and PocketBase's per-address rate
+limit, count the visitor and not `127.0.0.1`. The check is in "Checks" below.
+
+## From scratch (the legacy name, todo.sri-ai.xyz)
 
 1. **DNS**: an A record for `todo.sri-ai.xyz` to the host, DNS only.
 2. **Certificate**: install the port-80 server block of `nginx-adhd-todo.conf` alone, `nginx -t`,
@@ -37,7 +100,7 @@ challenge itself, and the sync server's SSE stream would be cut by the proxy's t
    `sync/bin/`, write `sync.env`, create `sync/pb_data` (see below) and
    `docker compose --env-file sync.env -f sync.compose.yml up -d --wait`.
 
-Clients use `server https://todo.sri-ai.xyz`; `GET /v1/config` answers `{"auth":"pocketbase"}` and
+Old clients use `server https://todo.sri-ai.xyz`, new ones `https://api.withdo.si`; `GET /v1/config` answers `{"auth":"pocketbase"}` and
 they sign in through PocketBase's routes.
 
 ## PocketBase accounts (M13)
@@ -52,18 +115,27 @@ the static tokens of `-tokens`. The log has one line the first time each subject
   `mkdir -p /opt/adhd-todo/sync/pb_data && chown 65532:65532 /opt/adhd-todo/sync/pb_data` (the
   container runs as distroless `nonroot`). `deploy.sh` copies it to `pb_data.bak-STAMP` before each
   deploy; back it up with the Postgres dump too, as it holds every password hash.
-- **nginx** proxies all of PocketBase: the users' sign-in, and the admin UI at
-  `https://todo.sri-ai.xyz/_/` with the API it calls (public since 2026-10-22). It sets `X-Real-IP`
-  from the connection on every location, so a client cannot choose the address the rate limits count.
+- **nginx** proxies PocketBase's user sign-in and realtime stream. On `api.withdo.si` the **admin is
+  not public**: `/_/` and `/api/collections/_superusers/` answer 404. Reach the admin UI over an SSH
+  tunnel to the server's own port: `ssh -N -L 18080:127.0.0.1:18080 adhd-srv`, then open
+  `http://localhost:18080/_/`. Only the legacy `https://todo.sri-ai.xyz` block (`nginx-adhd-todo.conf`)
+  still serves the admin UI publicly (decided 2026-10-22), until that name is retired. Both files set
+  `X-Real-IP` from the connection on every location (behind the tunnel: from `CF-Connecting-IP`), so a
+  client cannot choose the address the rate limits count.
+- **Realtime pings.** `/api/realtime` sends nothing after `PB_CONNECT` until an event is subscribed,
+  and Cloudflare closes an idle stream after about 100 s, while the Google sign-in waits on it for up
+  to 5 minutes. `pbauth/realtime.go` sends a `PB_PING` event every 30 s on every realtime stream;
+  clients ignore events they did not subscribe to.
 - **Password guessing** is limited to 10 user sign-ins and 5 superuser sign-ins a minute per client address (PocketBase's rate limit,
   counting by the `X-Real-IP` nginx sets).
 - **Mail** goes out through Resend's SMTP (`smtp.resend.com:465`, TLS, user `resend`, the password a
-  send-only API key for `sri-ai.xyz`), from `Withdo <noreply@sri-ai.xyz>`. It is set in
+  send-only API key for `sri-ai.xyz`), from `Withdo <noreply@sri-ai.xyz>` until `withdo.si` is verified
+  in Resend, then from `Withdo <noreply@withdo.si>` (step 7 above). It is set in
   PocketBase's settings (admin UI > Settings > Mail), not in this repo; the rename migration
   (`pbauth/migrate_withdo.go`) turns a sender name of `ADHD Todo` into `Withdo`. The key is also in the owner's
   keychain as `adhd-todo-resend-smtp`. The domain's DKIM, the `send` and `rsend` CNAMEs and DMARC are
   Cloudflare records Resend gave (2026-10-22); no MX, so Resend does not receive mail for the domain.
-  The app URL in the same settings is `https://todo.sri-ai.xyz`, for the links in the emails.
+  The app URL in the same settings is `https://api.withdo.si`, for the links in the emails.
 - **Superusers need two steps** (MFA, since 2026-10-22): the password, then an 8-digit code mailed to
   them. If mail stops working, reset a superuser from the server with `pb-superuser` below; MFA is
   turned off in the `_superusers` collection's options.
@@ -107,8 +179,17 @@ never in the repository.
 
 ## Checks
 
-- `curl https://todo.sri-ai.xyz/v1/config` is `{"auth":"pocketbase"}`.
-- `curl https://todo.sri-ai.xyz/healthz` is `ok`; `POST /v1/devices` without a token is 401.
+- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase"}`.
+- `curl https://api.withdo.si/healthz` is `ok`; `POST /v1/devices` without a token is 401.
+- `/v1/events` stays open: `curl -N -H "Authorization: Bearer $TOKEN" https://api.withdo.si/v1/events`
+  prints a `: keepalive` line every 15 s and is still connected after more than 2 minutes.
+- The visitor's address reaches PocketBase: `tail -f` nginx's access log with `$remote_addr` (the
+  default format) while requesting from outside shows your address, not `127.0.0.1`.
+- The admin is closed on the new name: `curl -s -o /dev/null -w '%{http_code}' https://api.withdo.si/_/` and
+  `.../api/collections/_superusers/auth-with-password` (POST) are 404.
+- A `GET /api/realtime` stream shows `PB_CONNECT` and then `PB_PING` every 30 s, and is still open
+  after more than 2 minutes.
+- The legacy name still answers the same three on `https://todo.sri-ai.xyz` until its record goes.
 - `POST /v1/transcribe` without a token is 401; with a token and no key configured it is 503.
 
 ## Updating the server
