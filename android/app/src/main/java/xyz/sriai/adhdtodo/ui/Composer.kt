@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +28,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import xyz.sriai.adhdtodo.R
@@ -55,6 +58,9 @@ fun Composer(
     onUndo: (() -> Unit)? = null,
     onImage: (() -> Unit)? = null,
     onVoice: (() -> Unit)? = null,
+    highlights: List<IntRange> = emptyList(),
+    preview: QuickPreview? = null,
+    onIgnorePreview: () -> Unit = {},
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -65,7 +71,9 @@ fun Composer(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 10.dp),
     ) {
-        if (notice != null) {
+        if (preview != null) {
+            QuickPreviewLine(preview, onIgnorePreview)
+        } else if (notice != null) {
             Row(
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -106,6 +114,16 @@ fun Composer(
                     textStyle = type.input.copy(color = tokens.text),
                     cursorBrush = SolidColor(tokens.accent),
                     singleLine = true,
+                    visualTransformation = remember(highlights, tokens) {
+                        if (highlights.isEmpty()) {
+                            VisualTransformation.None
+                        } else {
+                            HighlightTransformation(
+                                highlights,
+                                SpanStyle(background = tokens.quickWash, color = tokens.accentInk),
+                            )
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(
                         onSend = { if (hasText && !sending) onSend() },
@@ -151,6 +169,29 @@ fun Composer(
                 }
             }
         }
+    }
+}
+
+/**
+ * What Send will store, in the receipts' place: the bell and the accent words, then the project in
+ * secondary. A tap ignores the reading for this text.
+ */
+@Composable
+private fun QuickPreviewLine(preview: QuickPreview, onIgnore: () -> Unit) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    Row(
+        modifier = Modifier
+            .padding(start = 4.dp, bottom = 4.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onIgnore)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        PixelIcon("bell", size = 16.dp, tint = tokens.accentInk)
+        Text(preview.phrase, style = type.meta, color = tokens.accentInk, maxLines = 1)
+        Text("· ${preview.where}", style = type.meta, color = tokens.textSecondary, maxLines = 1)
     }
 }
 

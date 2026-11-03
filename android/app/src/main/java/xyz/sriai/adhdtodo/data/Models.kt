@@ -238,11 +238,17 @@ data class TaskPage(
 /** The newest report's agent and links of a From your agents row, loaded with Task(id). */
 data class AgentInfo(val agent: String, val links: List<Link>)
 
-/** The shape CreateTask takes; every field but title is optional. */
+/** The shape CreateTask takes; every field but title is optional. Times are RFC 3339. */
 @Serializable
 data class NewTask(
     @SerialName("title") val title: String,
     @SerialName("project_id") val projectId: Long? = null,
+    @SerialName("remind_at") val remindAt: String? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("category_id") val categoryId: Long? = null,
+    @SerialName("priority") val priority: String? = null,
+    /** Makes the task a subtask of this one. */
+    @SerialName("parent_id") val parentId: Long? = null,
 )
 
 /** The shape UpdateTask takes. An absent key is left alone. */
@@ -256,6 +262,8 @@ data class TaskPatch(
     @SerialName("remind_at") val remindAt: String? = null,
     @SerialName("category") val category: Long? = null,
     @SerialName("project_id") val projectId: Long? = null,
+    /** The task's milestone; 0 takes it out of its milestone. */
+    @SerialName("milestone_id") val milestoneId: Long? = null,
     /** True writes `"due_at": null`, which the core reads as clear: the Undo of a first due date. */
     @Transient val clearDueAt: Boolean = false,
     /**

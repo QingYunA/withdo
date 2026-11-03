@@ -725,7 +725,7 @@ func TestTheOpenPartsAreTheOnesThatHaveSomething(t *testing.T) {
 		{InProgress: 1, InReview: 1, Blocked: 1}: "1 in progress, 1 in review, 1 blocked",
 		{}:                                       "",
 	} {
-		if got := m.openParts(open); got != want {
+		if got := data.OpenParts(m.say, open); got != want {
 			t.Errorf("%+v: %q, want %q", open, got, want)
 		}
 	}

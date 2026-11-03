@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate app/theme/category_icons_gen.go from the pixelarticons release and
+# Regenerate app/categoryicons/data_gen.go from the pixelarticons release and
 # docs/design/category-icons.txt (the curated list, with Chinese keywords).
 #   scripts/category-icons.sh [max-error]
 # max-error (default 16) is the most wrong cells of 576 an icon may have after it is reduced to
@@ -24,4 +24,4 @@ go run ./internal/pixmap/cmd/pxicons \
   -max-error "${1:-16}" \
   -source "pixelarticons $version" \
   -o "$work/gen.go"
-gofmt "$work/gen.go" > app/theme/category_icons_gen.go
+gofmt "$work/gen.go" > app/categoryicons/data_gen.go

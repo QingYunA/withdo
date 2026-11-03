@@ -1,7 +1,6 @@
 package views
 
 import (
-	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -105,87 +104,14 @@ func exportFileName(p data.Period) string {
 
 // summaryMarkdown is the Markdown of the period on screen.
 func (m *Main) summaryMarkdown(v *summaryView) string {
-	var b strings.Builder
-	title := m.say.SummaryMdDay(v.period.FirstDate())
-	if v.period.Week {
-		title = m.say.SummaryMdWeek(v.period.FirstDate(), v.period.Day(6).Format("2006-01-02"))
+	paragraph := ""
+	if para := m.paragraphOf(v.period); para.stored != nil {
+		paragraph = para.stored.Paragraph
 	}
-	b.WriteString("# " + title + "\n")
-	if para := m.paragraphOf(v.period); para.stored != nil && strings.TrimSpace(para.stored.Paragraph) != "" {
-		b.WriteString("\n" + strings.TrimSpace(para.stored.Paragraph) + "\n")
-	}
-	for _, p := range v.sum.People {
-		name := m.say.DoneByYou()
-		if !p.You() {
-			name = agentName(p.Agent)
-		}
-		b.WriteString("\n## " + name + "\n")
-		for _, task := range p.Tasks {
-			b.WriteString("- " + m.markdownTask(task) + "\n")
-		}
-	}
-	if open := m.openParts(v.sum.Open); open != "" {
-		b.WriteString("\n" + m.say.SummaryMdOpen(open) + "\n")
-	}
-	return b.String()
-}
-
-// markdownTask is a line of the export: `title (project, PR #12): what the agent last said`.
-func (m *Main) markdownTask(task data.SummaryTask) string {
-	var detail []string
-	if task.Project != "" {
-		detail = append(detail, task.Project)
-	}
-	if task.PRNumber > 0 {
-		detail = append(detail, "PR #"+itoa(task.PRNumber))
-	}
-	line := task.Title
-	if len(detail) > 0 {
-		line += m.say.SummaryMdParen(strings.Join(detail, ", "))
-	}
-	if task.Said != "" {
-		line += m.say.SummaryMdSaid(task.Said)
-	}
-	for _, l := range m.taskLinks(task.ID) {
-		line += " " + markdownLink(l)
-	}
-	return line
+	return v.sum.Markdown(m.say, paragraph, m.taskLinks)
 }
 
 // taskLinks are the pages the reports of a task attached, oldest report first, each address once.
 func (m *Main) taskLinks(id int) []data.Link {
-	reports := m.app.snap.details[id].Reports // newest first
-	var out []data.Link
-	seen := map[string]bool{}
-	for i := len(reports) - 1; i >= 0; i-- {
-		for _, l := range reports[i].Links {
-			if !seen[l.URL] {
-				seen[l.URL] = true
-				out = append(out, l)
-			}
-		}
-	}
-	return out
-}
-
-// markdownLink is a page as `[title](url)`, with what would end either part escaped.
-func markdownLink(l data.Link) string {
-	title := strings.NewReplacer("[", "\\[", "]", "\\]").Replace(linkLabel(l))
-	addr := strings.NewReplacer(" ", "%20", "(", "%28", ")", "%29").Replace(l.URL)
-	return "[" + title + "](" + addr + ")"
-}
-
-// openParts says what is still open as "3 in progress, 1 blocked", or "" when nothing is.
-func (m *Main) openParts(o data.SummaryOpen) string {
-	var parts []string
-	if o.InProgress > 0 {
-		parts = append(parts, m.say.SummaryOpenProgress(o.InProgress))
-	}
-	if o.InReview > 0 {
-		parts = append(parts, m.say.SummaryOpenReview(o.InReview))
-	}
-	if o.Blocked > 0 {
-		parts = append(parts, m.say.SummaryOpenBlocked(o.Blocked))
-	}
-	return strings.Join(parts, m.say.NotifyCountSeparator())
+	return data.TaskLinks(m.app.snap.details[id].Reports)
 }

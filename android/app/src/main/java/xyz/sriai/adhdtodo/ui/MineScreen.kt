@@ -66,7 +66,10 @@ fun MineScreen(
     noDateOpen: Boolean = false,
     onToggleNoDate: () -> Unit = {},
     highlightId: Long = 0,
+    onShowAll: (() -> Unit)? = null,
+    onSummary: (() -> Unit)? = null,
 ) {
+    if (page != null) ReportSelectable(mineOrder(page, noDateOpen))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 8.dp),
@@ -149,6 +152,8 @@ fun MineScreen(
                     more = page.moreDone,
                     words = words,
                     onViewAll = onViewAll,
+                    onShowAll = onShowAll,
+                    onSummary = onSummary,
                     onOpenTask = onOpenTask,
                     onLongPress = onLongPress,
                 )
@@ -416,17 +421,19 @@ private fun TaskRow(
         animationSpec = tween(250),
         label = "new-row",
     )
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(fill.value)) {
+    Box(Modifier.fillMaxWidth().clip(LocalSelection.current.rowClip()).background(fill.value)) {
         LongPressRow(
             onClick = { onOpenTask(item.id) },
             onLongPress = { onLongPress(item.id) },
+            taskId = item.id,
         ) { row ->
             Row(
                 modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                StatusGlyph(
+                RowGlyph(
+                    taskId = item.id,
                     status = item.status,
                     onClick = {
                         if (item.source == "user" && item.status != "done" && item.status != "cancelled") {
@@ -494,6 +501,8 @@ private fun DoneTodaySection(
     more: Int,
     words: Words,
     onViewAll: (() -> Unit)?,
+    onShowAll: (() -> Unit)?,
+    onSummary: (() -> Unit)?,
     onOpenTask: (Long) -> Unit,
     onLongPress: (Long) -> Unit,
 ) {
@@ -503,29 +512,35 @@ private fun DoneTodaySection(
         stringResource(R.string.section_done_today),
         items.size + more,
         start = TextInset,
-        end = onViewAll?.let { open -> {
-            Text(
-                stringResource(R.string.view_all),
-                style = type.meta,
-                color = tokens.accentInk,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable(onClick = open)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            )
-        } },
+        end = if (onSummary == null && onViewAll == null) null else ({
+            Row {
+                for ((label, open) in listOf(R.string.summary_see to onSummary, R.string.view_all to onViewAll)) {
+                    if (open == null) continue
+                    Text(
+                        stringResource(label),
+                        style = type.meta,
+                        color = tokens.accentInk,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(onClick = open)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
+        }),
     )
     for (item in items) {
         LongPressRow(
             onClick = { onOpenTask(item.id) },
             onLongPress = { onLongPress(item.id) },
+            taskId = item.id,
         ) { row ->
             Row(
                 modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                StatusGlyph(status = "done")
+                RowGlyph(taskId = item.id, status = "done")
                 Text(
                     item.title,
                     style = type.body,
@@ -554,6 +569,7 @@ private fun DoneTodaySection(
             }
         }
     }
+    if (onShowAll != null) TextLink(stringResource(R.string.show_all), start = TextInset, onClick = onShowAll)
 }
 
 /** The one short line under an agent's title: why the card is in the tray. */

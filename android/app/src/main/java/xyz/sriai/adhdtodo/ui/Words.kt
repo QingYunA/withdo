@@ -96,6 +96,18 @@ class Words(
         }
     }
 
+    /** A Completed day header: Today, Yesterday, then a date (`Oct 12`; `Oct 12, 2025` in another year). */
+    fun dayLabel(day: String, now: ZonedDateTime = timeSource().atZone(zone)): String {
+        val date = runCatching { LocalDate.parse(day) }.getOrNull() ?: return day
+        val today = now.toLocalDate()
+        return when {
+            date == today -> res.getString(R.string.completed_today)
+            date == today.minusDays(1) -> res.getString(R.string.completed_yesterday)
+            date.year != today.year -> DateTimeFormatter.ofPattern(if (chinese) "yyyy年M月d日" else "MMM d, yyyy", locale).format(date)
+            else -> monthDay.format(date)
+        }
+    }
+
     fun timeOfDay(value: String?): String {
         val then = instant(value)?.atZone(zone) ?: return ""
         return clock.format(then)

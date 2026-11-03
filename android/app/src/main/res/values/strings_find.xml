@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Search (v43): the header button, the full-screen page and its states. -->
+    <string name="search_button">Search</string>
+    <string name="search_placeholder">Search</string>
+    <string name="search_clear">Clear search</string>
+    <plurals name="search_count">
+        <item quantity="one">%1$d result for “%2$s”</item>
+        <item quantity="other">%1$d results for “%2$s”</item>
+    </plurals>
+    <string name="search_more">Showing the first %1$d. Narrow the search to see the rest.</string>
+    <string name="search_none">No tasks match “%1$s”</string>
+    <string name="search_none_body">Search looks in titles, notes, branches and pull request numbers, in every project.</string>
+    <string name="search_no_project">No project</string>
+
+    <!-- Category chips of Today. -->
+    <string name="chips_all">All</string>
+    <string name="chips_show_only">Show only %1$s</string>
+
+    <!-- Completed (v43). -->
+    <string name="show_all">Show all</string>
+    <string name="completed_title">Completed</string>
+    <string name="completed_subtitle">Done and cancelled, newest first</string>
+    <string name="completed_subtitle_in">Done and cancelled in %1$s, newest first</string>
+    <string name="completed_empty_title">Nothing finished yet</string>
+    <string name="completed_empty_body">Tasks you mark done or cancel collect here, newest first.</string>
+    <string name="completed_older">Show older</string>
+    <string name="completed_today">Today</string>
+    <string name="completed_yesterday">Yesterday</string>
+    <string name="completed_reopen">Reopen</string>
+</resources>

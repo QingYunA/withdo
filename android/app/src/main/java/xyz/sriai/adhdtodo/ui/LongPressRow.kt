@@ -31,11 +31,17 @@ fun LongPressRow(
     onClick: () -> Unit,
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
+    taskId: Long = 0,
     content: @Composable (Modifier) -> Unit,
 ) {
     val tokens = LocalTokens.current
     var pressed by remember { mutableStateOf(false) }
-    val gesture = Modifier.pointerInput(onClick, onLongPress) {
+    // In select mode a row that knows its task ticks it, on a tap or a long press alike.
+    val selection = LocalSelection.current
+    val picking = selection?.takeIf { taskId != 0L }
+    val tap: () -> Unit = if (picking != null) ({ picking.toggle(taskId) }) else onClick
+    val hold: () -> Unit = if (picking != null) tap else onLongPress
+    val gesture = Modifier.pointerInput(tap, hold) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
             if (down.isConsumed) return@awaitEachGesture
@@ -86,9 +92,9 @@ fun LongPressRow(
                     } finally {
                         pressed = false
                     }
-                    if (!moved && !cancelled) onLongPress()
+                    if (!moved && !cancelled) hold()
                 }
-                PressResult.Tap -> onClick()
+                PressResult.Tap -> tap()
                 else -> Unit
             }
         }
@@ -96,11 +102,18 @@ fun LongPressRow(
     content(
         modifier
             .fillMaxWidth()
-            .then(if (pressed) Modifier.background(tokens.bgSelected) else Modifier)
+            .then(
+                when {
+                    pressed -> Modifier.background(tokens.bgSelected)
+                    selection != null && selection.isSelected(taskId) ->
+                        Modifier.background(tokens.bgSelected, selection.shape(taskId))
+                    else -> Modifier
+                },
+            )
             .then(gesture)
             .semantics(mergeDescendants = false) {
-                onClick { onClick(); true }
-                onLongClick { onLongPress(); true }
+                onClick { tap(); true }
+                onLongClick { hold(); true }
             },
     )
 }

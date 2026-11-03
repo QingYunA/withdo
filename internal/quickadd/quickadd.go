@@ -7,6 +7,7 @@ package quickadd
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -26,7 +27,13 @@ type Draft struct {
 	RemindAt  *time.Time
 	Category  string // a name from the list given to Parse, as spelled there; "" for none
 	Important bool
+	// Spans are the words that were read, as byte ranges of the text given to Parse, in order and
+	// not touching: a screen can mark them in what was typed. Empty when nothing was read.
+	Spans []Span
 }
+
+// Span is a byte range of a text: Start is in the range, End is not.
+type Span struct{ Start, End int }
 
 // separators are the explicit marks between two tasks. A bare "and" is not one: "salt and pepper"
 // is one thing, and neither is a line break, which the composer keeps inside one title.
@@ -38,29 +45,30 @@ var separators = regexp.MustCompile(`(?i)[;；]+|[，,]\s*还有|[，,]?\s*然�
 func Parse(text string, now time.Time, categories []string) []Draft {
 	var out []Draft
 	last := 0
-	cut := func(part string) {
-		if d, ok := parseOne(part, now, categories); ok {
+	cut := func(part string, base int) {
+		if d, ok := parseOne(part, base, now, categories); ok {
 			out = append(out, d)
 		}
 	}
 	for _, m := range separators.FindAllStringIndex(text, -1) {
-		cut(text[last:m[0]])
+		cut(text[last:m[0]], last)
 		last = m[1]
 	}
-	cut(text[last:])
+	cut(text[last:], last)
 	return out
 }
 
 var remindWords = regexp.MustCompile(`(?i)\bremind me(?:\s+to)?\b|提醒我`)
 
-// parseOne reads one task. A part that holds nothing but recognized words keeps its own text as the
-// title and sets no field: it is better to add what was typed than an empty task.
-func parseOne(part string, now time.Time, categories []string) (Draft, bool) {
+// parseOne reads one task; part starts at byte base of the text. A part that holds nothing but
+// recognized words keeps its own text as the title and sets no field: it is better to add what was
+// typed than an empty task.
+func parseOne(part string, base int, now time.Time, categories []string) (Draft, bool) {
 	orig := strings.TrimSpace(part)
 	if orig == "" {
 		return Draft{}, false
 	}
-	sc := &scan{s: orig}
+	sc := newScan(orig, base+len(part)-len(strings.TrimLeftFunc(part, unicode.IsSpace)))
 	var d Draft
 	d.Category = sc.category(categories)
 	remind := false
@@ -83,7 +91,27 @@ func parseOne(part string, now time.Time, categories []string) (Draft, bool) {
 	if d.Title == "" {
 		return Draft{Title: orig}, true
 	}
+	rest := len(title)
+	for rest < len(sc.s) && sc.s[rest] == ' ' {
+		rest++
+	}
+	sc.mark(rest, len(sc.s)) // the "!" or "重要" taken off the end
+	d.Spans = mergeSpans(sc.spans)
 	return d, true
+}
+
+// mergeSpans puts spans in order and joins those that overlap or touch.
+func mergeSpans(spans []Span) []Span {
+	sort.Slice(spans, func(i, j int) bool { return spans[i].Start < spans[j].Start })
+	var out []Span
+	for _, sp := range spans {
+		if n := len(out); n > 0 && sp.Start <= out[n-1].End {
+			out[n-1].End = max(out[n-1].End, sp.End)
+			continue
+		}
+		out = append(out, sp)
+	}
+	return out
 }
 
 // moment is the instant the words name. A day with no time is the end of the day for a deadline

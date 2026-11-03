@@ -1,0 +1,26 @@
+{
+  "drafts": [
+    {
+      "title": "交房租",
+      "remind_at": "2026-10-21T09:00:00Z",
+      "due_at": "",
+      "category_id": 2,
+      "category": "生活",
+      "important": true,
+      "ranges": [
+        [
+          0,
+          7
+        ],
+        [
+          11,
+          14
+        ],
+        [
+          15,
+          16
+        ]
+      ]
+    }
+  ]
+}

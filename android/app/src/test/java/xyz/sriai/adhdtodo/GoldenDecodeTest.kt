@@ -8,13 +8,24 @@ import org.junit.Test
 import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.AgentsPage
 import xyz.sriai.adhdtodo.data.Category
+import xyz.sriai.adhdtodo.data.CategoryCount
+import xyz.sriai.adhdtodo.data.CompletedPage
+import xyz.sriai.adhdtodo.data.BulkPatch
+import xyz.sriai.adhdtodo.data.CategoryInput
 import xyz.sriai.adhdtodo.data.Device
+import xyz.sriai.adhdtodo.data.IconLibrary
+import xyz.sriai.adhdtodo.data.MilestonePatch
+import xyz.sriai.adhdtodo.data.NewTask
+import xyz.sriai.adhdtodo.data.TaskPatch
 import xyz.sriai.adhdtodo.data.MinePage
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.Project
 import xyz.sriai.adhdtodo.data.ProjectPage
+import xyz.sriai.adhdtodo.data.ProjectRow
+import xyz.sriai.adhdtodo.data.QuickParse
 import xyz.sriai.adhdtodo.data.Reminder
 import xyz.sriai.adhdtodo.data.SignInState
+import xyz.sriai.adhdtodo.data.SummaryPage
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.Task
 import xyz.sriai.adhdtodo.data.TaskPage
@@ -30,7 +41,7 @@ class GoldenDecodeTest {
     fun `every golden file decodes`() {
         val dir = repoFile("mobile/core/testdata")
         val files = dir.listFiles { file -> file.name.endsWith(".golden.json") }.orEmpty().sortedBy { it.name }
-        assertEquals("golden files", 12, files.size)
+        assertEquals("golden files", 18, files.size)
         for (file in files) {
             val text = file.readText()
             when (file.name) {
@@ -126,6 +137,65 @@ class GoldenDecodeTest {
                     assertEquals(6, answer.localProjects)
                     assertEquals(2, answer.accountDevices)
                 }
+                "completed.golden.json" -> {
+                    val page = PageJson.decodeFromString<CompletedPage>(text)
+                    assertFalse(page.more)
+                    assertEquals("2026-10-20", page.days[0].day)
+                    val agent = page.days[0].tasks.first { it.id == 20L }
+                    assertEquals("claude-code", agent.by)
+                    assertEquals("Claude Code", agent.byName)
+                    assertEquals("withdo", agent.project)
+                    assertEquals("PR #14 merged", agent.summary)
+                    val mine = page.days[0].tasks.first { it.id == 21L }
+                    assertEquals("", mine.by)
+                    assertEquals("you", mine.byName)
+                    assertNotNull(mine.completedAt)
+                }
+                "summary-day.golden.json", "summary-week.golden.json" -> {
+                    val page = PageJson.decodeFromString<SummaryPage>(text)
+                    assertEquals(file.name == "summary-week.golden.json", page.week)
+                    assertTrue(page.total > 0)
+                    assertEquals(page.total, page.ledger.sumOf { it.count })
+                    assertEquals(page.total, page.goods.size)
+                    assertTrue(page.ledger[0].you)
+                    assertEquals("you", page.ledger[0].name)
+                    assertEquals("Claude Code", page.ledger[1].agent)
+                    assertEquals(14, page.ledger[1].tasks[0].prNumber)
+                    assertEquals("", page.paragraph)
+                    assertEquals(3, page.open.inProgress)
+                    if (page.week) {
+                        assertEquals("2026-10-19", page.from)
+                        assertEquals("2026-10-25", page.to)
+                        assertEquals(1, page.goods.last().day)
+                    }
+                }
+                "quick.golden.json" -> {
+                    val draft = PageJson.decodeFromString<QuickParse>(text).first!!
+                    assertEquals("交房租", draft.title)
+                    assertEquals("2026-10-21T09:00:00Z", draft.remindAt)
+                    assertEquals("", draft.dueAt)
+                    assertEquals(2L, draft.categoryId)
+                    assertTrue(draft.important)
+                    assertTrue(draft.read)
+                    assertEquals(listOf(listOf(0, 7), listOf(11, 14), listOf(15, 16)), draft.ranges)
+                }
+                "project-list.golden.json" -> {
+                    val rows = PageJson.decodeFromString<List<ProjectRow>>(text)
+                    assertEquals(3, rows.size)
+                    val withdo = rows.first { it.project.name == "withdo" }
+                    assertEquals(6, withdo.open)
+                    assertEquals(17, withdo.total)
+                    assertTrue(withdo.blocked)
+                    assertEquals(0, withdo.depth)
+                    assertFalse(rows.first { it.project.name == "picpocket" }.blocked)
+                }
+                "categories-counts.golden.json" -> {
+                    val rows = PageJson.decodeFromString<List<CategoryCount>>(text)
+                    assertEquals(2, rows.size)
+                    assertEquals("work", rows[0].category.builtin)
+                    assertEquals(12, rows[0].open)
+                    assertEquals(12, rows[0].category.icon.size)
+                }
                 else -> error("a golden file with no data class: ${file.name}")
             }
         }
@@ -161,6 +231,42 @@ class GoldenDecodeTest {
         val json = """{"state":"idle","pending":0,"server":"https://api.withdo.si","linked":false,"signed_in":true,"sign_in_stage":"downloading"}"""
         val status = PageJson.decodeFromString<SyncStatus>(json)
         assertEquals("downloading", status.signInStage)
+    }
+
+    @Test
+    fun `the inputs of the organizing calls carry the Go keys`() {
+        val task = PageJson.encodeToString(
+            NewTask(title = "x", remindAt = "2026-10-21T09:00:00Z", categoryId = 2, priority = "P1"),
+        )
+        assertEquals("""{"title":"x","remind_at":"2026-10-21T09:00:00Z","category_id":2,"priority":"P1"}""", task)
+        assertEquals("""{"milestone_id":0}""", PageJson.encodeToString(TaskPatch(milestoneId = 0)))
+        assertEquals(
+            """{"status":"done","project_id":0}""",
+            PageJson.encodeToString(BulkPatch(status = "done", projectId = 0)),
+        )
+        assertEquals(
+            """{"title":"v0.14","closed":true}""",
+            PageJson.encodeToString(MilestonePatch(title = "v0.14", closed = true)),
+        )
+        assertEquals(
+            """{"name":"Health","icon":"heart"}""",
+            PageJson.encodeToString(CategoryInput(name = "Health", icon = "heart")),
+        )
+    }
+
+    @Test
+    fun `the icon library and a draft that read nothing decode`() {
+        val library = PageJson.decodeFromString<IconLibrary>(
+            """{"groups":[{"name":"Work","icons":[{"name":"briefcase","keywords":"工作","icon":[[0,35],[35,0]]}]},{"name":"","icons":[]}]}""",
+        )
+        assertEquals("briefcase", library.groups[0].icons[0].name)
+        assertEquals(listOf(35, 0), library.groups[0].icons[0].icon[1])
+        assertTrue(library.groups[1].icons.isEmpty())
+        val plain = PageJson.decodeFromString<QuickParse>(
+            """{"drafts":[{"title":"buy milk","remind_at":"","due_at":"","category_id":0,"category":"","important":false,"ranges":[]}]}""",
+        ).first!!
+        assertFalse(plain.read)
+        assertEquals(null, PageJson.decodeFromString<QuickParse>("""{"drafts":[]}""").first)
     }
 
     @Test

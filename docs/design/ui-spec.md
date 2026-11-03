@@ -2709,6 +2709,109 @@ this block disagrees with the bullets around it, it wins.
   same offer as its own group above the Server footer, always shown: `App updates`, the version or
   the state below it, and `Check now` (`立即检查`) or `Update`.
 
+**v43 (2026-11-02), reference `docs/design/mockups/v43.html`: the phone catches up with the desktop.**
+The phone is the same product: every way of organizing that the desktop has, the phone has too, with
+the desktop's rules unless a line here says otherwise. What only makes sense on a computer stays
+there: `Open in…`, Settings > Agents and Model, handing a task to an agent, keys. Where this block
+disagrees with the bullets above it, it wins. P1 is the organizing below; P2 is the phone's own
+gestures and surfaces (last group). Pictures and the assistant's Summary paragraph wait for
+`images`, `task_images` and `summaries` to sync (S3); until then the phone leaves those parts out.
+
+- **Search.** Every tab's header has a 40 dp `search` button left of the cloud. It opens a full-screen
+  page: a 44 dp field (radius 12, `bg.hover`, magnifier, the clear `x`) focused with the keyboard up
+  and `Cancel` / `取消` in accent at its right. Results follow the desktop's **Search** (every
+  project, done and cancelled too, grouped by project, `No project` last, 100 at most), under the
+  quiet count line `找到 4 条与“login”相关的结果`. Scrolling the results drops the keyboard; a row
+  opens the task; the system back or `Cancel` returns to the tab.
+- **Category chips (Today).** When Today's open tasks have two or more categories, a row of 32 dp
+  chips sits under the date: `All` / `全部`, then each category (its 12 dp swatch and name), scrolling
+  sideways when it overflows. The chosen chip is on `bg.selected`; the others have a 0.5 dp edge.
+  A chip narrows the page as the desktop's filter bar does (same builder, counts and `Show all`), and
+  rows stop showing the category it names. `All` clears it; leaving Today clears it; it is not kept.
+- **Completed.** The `Show all` / `查看全部` at the end of Today's and Agents' `Done today` and of a
+  project's Done group opens the desktop's **Completed** as a pushed page: the back bar names where it
+  came from, title `Completed` / `已完成`, the scope's quiet subtitle, day groups, and rows with the
+  glyph (a button that reopens), title, project, and at the right who finished it (14 dp avatar) and
+  the time. 100 at a time, `Show older` / `显示更早的` at the end.
+- **Summary.** As on the desktop, Today's `Done today` header ends with `See summary ›` / `看总结 ›`,
+  and `Show all` at the end of the section still opens Completed. The page is
+  pushed with the bottom bar kept: back bar, title `Summary` / `总结` and a `share` button at the
+  right (the system share sheet with the Markdown export, replacing `Export Markdown`), then the
+  `Today | This week` segment and `‹ date ›` on one line. The scene runs edge to edge, 160 dp tall,
+  cropped equally on both sides around the bin; it plays as on the desktop. The assistant's bubble
+  shows only when a summary row has synced; the ledger is always there.
+- **The task page** gains the inspector's missing rows, in the desktop's order: Status, From,
+  Priority, Category, Project, **Milestone** (only when the project has one), **Due**, Remind, Branch.
+  Every row with a `›` opens the task menu sheet at its page. Due lists `Today`, `Tomorrow`, `This
+  Friday` / `本周五`, `Next Monday`, each with its date at the right, a hairline, `No due date` /
+  `没有截止日期` and `Pick a date…` / `选个日期…` (Material's date picker). Milestone lists the
+  project's open milestones (`v0.13 · 截止11月14日`), `None`, and `New milestone…`. Under the rows:
+  **Images** (S3: tiles 104 x 78 dp, three a row, a dashed `+` tile that opens the photo picker),
+  **Notes** (`Add notes…` when empty; a tap edits in place, saved when the field loses focus),
+  **Subtasks** with an `Add subtask` / `添加子任务` row at the end (a tap turns it into a field; Enter
+  adds and keeps the field open), then Activity.
+- **The composer reads dates without a model.** The desktop's rule parser (`internal/quickadd`) runs
+  on the phone. While typing, the words it read (`明天 9 点`) take an `iris 4` wash in the text, and
+  above the box, where receipts go, an accent line says what will be stored: the `bell` icon and
+  `明天 上午 9:00 提醒你`, then `· 收件箱` (or the project) in `text.secondary`. Tapping the line
+  stores the text as typed instead. Send stores the task with that remind time and the words removed
+  from its title, and the receipt says so.
+- **Select.** The task menu sheet gains `Select` / `多选` (the `checkbox-on` icon) under `Remind me…`.
+  It closes the sheet and enters select mode on that page with that task ticked: the header reads
+  `已选 2 件` with `Select all` / `全选` and `Done` / `完成` in accent; each glyph becomes a pixel
+  checkbox; selected rows join into one `bg.selected` block. The composer and the bottom bar give way
+  to a bulk bar (`bg.sidebar`, top hairline): `Done`, `Do today`, `Move to…`, `Priority`, `Delete`
+  (blocked red), each a 20 dp icon over a 12 sp label. Delete does not ask; the snackbar's Undo puts
+  them all back. The system back leaves select mode.
+- **Projects tab.** Header: `Projects` / `项目`, then `plus` (new project: a sheet with a name field and
+  `Create`) and `gear` (Settings). Rows are 52 dp: the colored folder, the name, the open count or the
+  red unseen dot; subprojects 28 dp in under their parent; `No project` (the tray) after the
+  projects; `Archived 2` folds at the end. A **long press** on a project row opens its sheet: the
+  name and `QingYunA/withdo · 6 个任务` in `meta`, then `Rename…`, `New subproject…`, `New
+  milestone…`, `Open on GitHub` (only with a repository), a hairline, `Archive` (`Unarchive` in the
+  fold) and `Delete…` in blocked red, which asks with the desktop's words before it deletes.
+- **Board.** A project's title row ends with the `List | Board` control (two 40 x 32 dp cells in a
+  `bg.hover` well, the chosen one raised). Under the title, the milestone filter as quiet `meta`
+  text with a chevron (`全部里程碑 ⌄`, only when the project has a milestone; it opens a sheet with the
+  desktop's items), and at the right one 6 dp square per lane, the visible lane's in `text.secondary`.
+  Lanes are 300 dp wide, 12 dp apart, and snap; the next lane shows at the right edge. Cards follow
+  the desktop's cards (title, author avatar, pills, age or due at the right); Done cards sit on
+  `bg.hover` with the title in `text.secondary`. A tap opens the task; a long press opens the task
+  menu; dragging cards between lanes is P2.
+- **Settings.** The gear opens a pushed page `Settings` / `设置` of grouped cards (the Sync screen's
+  `GroupCard`), in four groups: the account (avatar, email, `已同步 · 3 台设备`, `›` opens the Sync
+  screen; `Sign in` when signed out); **General**: `Language` (System, English, 简体中文),
+  `Appearance` / `外观` (System, Light, Dark), `Notifications` / `通知` (reminders, the end-of-day
+  reminder and its time); **Organize** / `整理`: `Categories` / `类别` with the count; **About**: the
+  version with `Check now` / `现在检查` (the updater's check moves here from the Sync screen) and a
+  row that opens the website, privacy policy and GitHub. The cloud still opens the Sync screen.
+- **Categories.** `Settings > Categories` lists them in order (swatch, name, `12 个任务`, `›`), a
+  long press drags to reorder, and the last row `New category…` / `新建类别…` in accent. A row opens
+  the category sheet: name (Work and Life keep theirs), the color strip, and the icon library with
+  its search. Drawing and importing an icon stay on the desktop. Delete is in blocked red at the
+  sheet's end and asks with the desktop's words. The task menu's Category page now ends with `New
+  category…`.
+
+**P2, the phone's own (v43).**
+
+- **Swipe a row.** Right swipe completes (`status.done` green under the row, a white check and
+  `完成`); left swipe is Do today (`iris 9`, `今天做` and the calendar icon), or `明天做` for a task
+  already today. Past half the row's width the action runs on release with a light haptic and the
+  Undo snackbar; short of it the row springs back. An agent's task only swipes right. Rows in select
+  mode do not swipe.
+- **Pull to sync.** Pulling any list down past 64 dp syncs now: the pixel cloud and `正在同步…` sit in
+  the gap until it ends. Signed out, the list only springs back.
+- **Share into Withdo.** Withdo takes text and links from the system share sheet. A sheet over the
+  other app: the assistant avatar and `添加到 Withdo`, a field holding the shared text or the page's
+  title (selected, keyboard up), the link as a chip under it (stored as a link on the task), `Project`
+  and `When` rows (`没定时间` by default; the composer's parser reads a date in the text), and a 48 dp
+  accent `Add` / `添加`. Adding returns to the other app with a toast `已添加到 Withdo`.
+- **Home-screen widgets**, three, drawn with Glance in the app's tokens (light and dark follow the
+  system): **Today** (4 x 2: you, `今天 3`, a round `+` that opens the composer; up to three rows whose
+  glyph completes the task), **Agents waiting** (2 x 2: the first card that waits for you, its age,
+  and `Reply`), and **Note something** / `记一件事` (2 x 2: the assistant avatar; opens the composer
+  focused).
+
 ## Writing
 
 - UI copy comes in English and Simplified Chinese. English is the source; the system language picks

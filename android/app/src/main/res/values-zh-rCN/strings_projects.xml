@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Projects tab and the project sheet (v43), words of the desktop's manage* strings -->
+    <string name="projects_archived">已归档</string>
+    <string name="manage_new_project">新建项目</string>
+    <string name="manage_project_name">项目名称</string>
+    <string name="manage_create">创建</string>
+    <string name="manage_save">保存</string>
+    <string name="manage_rename_item">重命名…</string>
+    <string name="manage_rename_title">重命名项目</string>
+    <string name="manage_new_subproject">新建子项目…</string>
+    <string name="manage_new_subproject_title">新建子项目</string>
+    <string name="manage_subproject_under">在 %1$s 下</string>
+    <string name="manage_open_github">在 GitHub 打开</string>
+    <string name="manage_archive">归档</string>
+    <string name="manage_unarchive">取消归档</string>
+    <string name="manage_delete">删除…</string>
+    <string name="manage_delete_confirm">删除</string>
+    <string name="manage_delete_project_title">删除“%1$s”？</string>
+    <string name="manage_delete_project_empty">这会删除项目及其里程碑，且无法撤销。</string>
+    <plurals name="manage_delete_project_body">
+        <item quantity="other">这会删除%1$d个任务、它们的汇报和项目的里程碑，且无法撤销。想保留这些内容的话，请改为归档项目。</item>
+    </plurals>
+    <plurals name="project_tasks">
+        <item quantity="other">%1$d 个任务</item>
+    </plurals>
+
+    <!-- Board and milestones -->
+    <string name="project_view_list">列表视图</string>
+    <string name="project_view_board">看板视图</string>
+    <string name="board_empty">还没有</string>
+    <string name="board_empty_review">没有要审查的</string>
+    <string name="board_show_all">显示全部 %1$d 个</string>
+    <string name="milestone_all">全部里程碑</string>
+    <string name="milestone_new">新建里程碑…</string>
+    <string name="milestone_new_title">新建里程碑</string>
+    <string name="milestone_rename_title">重命名里程碑</string>
+    <string name="milestone_placeholder">里程碑名称</string>
+    <string name="milestone_due">%1$s · 截止%2$s</string>
+    <string name="milestone_closed">%1$s · 已关闭</string>
+    <string name="milestone_edit">编辑“%1$s”</string>
+    <string name="manage_rename_ellipsis">重命名…</string>
+    <string name="milestone_due_ellipsis">截止日期…</string>
+    <string name="milestone_due_row">截止日期</string>
+    <string name="milestone_no_due">无</string>
+    <string name="milestone_clear_due">没有截止日期</string>
+    <string name="milestone_close">关闭里程碑</string>
+    <string name="milestone_reopen">重新打开里程碑</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_account">账号</string>
+    <string name="settings_sign_in">登录</string>
+    <string name="settings_synced">已同步 · %1$s</string>
+    <string name="settings_syncing">正在同步…</string>
+    <string name="settings_offline">离线</string>
+    <string name="settings_sync_failed">没有在同步</string>
+    <plurals name="settings_devices">
+        <item quantity="other">%1$d 台设备</item>
+    </plurals>
+    <string name="settings_general">通用</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_system">跟随系统</string>
+    <string name="settings_light">浅色</string>
+    <string name="settings_dark">深色</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_notifications_line">提醒到点、收工提醒</string>
+    <string name="settings_organize">整理</string>
+    <string name="settings_categories">类别</string>
+    <plurals name="settings_category_count">
+        <item quantity="other">%1$d 个</item>
+    </plurals>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_name">Withdo %1$s</string>
+    <string name="settings_check_now">现在检查</string>
+    <string name="settings_up_to_date">已是最新</string>
+    <string name="settings_links">网站、隐私政策、GitHub</string>
+    <string name="settings_website">网站</string>
+    <string name="settings_privacy">隐私政策</string>
+    <string name="settings_github">GitHub</string>
+
+    <!-- Settings > Notifications -->
+    <string name="settings_reminders">提醒</string>
+    <string name="settings_reminders_line">提醒到点时通知我</string>
+    <string name="settings_notify_denied">Android 不允许 Withdo 发通知，开关不起作用</string>
+    <string name="settings_open_system">打开系统设置</string>
+    <string name="settings_end_of_day">收工提醒</string>
+    <string name="settings_end_of_day_switch">收工时提醒我</string>
+    <string name="settings_end_of_day_line">工作日到点提醒看日报，周五提醒看周报</string>
+    <string name="settings_end_of_day_time">提醒时间</string>
+    <string name="notification_channel_end_of_day">收工提醒</string>
+    <string name="notify_day_done_title">收工了</string>
+    <string name="notify_week_done_title">收工了，这周辛苦</string>
+    <string name="notify_day_done_body">今天做完 %1$d 件。来看看今天的出货单？</string>
+    <string name="notify_day_done_body_prs">今天做完 %1$d 件，合并了 %2$d 个 PR。来看看今天的出货单？</string>
+    <string name="notify_week_done_body">这周做完 %1$d 件。周报写好了，来看看？</string>
+    <string name="notify_day_nothing_body">今天先到这里，明天见。</string>
+
+    <!-- Settings > Categories -->
+    <string name="categories_line">输入框会按类别归任务。长按拖动排序。</string>
+    <string name="category_new">新建类别…</string>
+    <string name="category_sheet_new">新建类别</string>
+    <string name="category_sheet_edit">编辑类别</string>
+    <string name="category_field_name">名称</string>
+    <string name="category_field_icon">图标</string>
+    <string name="category_field_color">颜色</string>
+    <string name="category_search_icons">搜索图标</string>
+    <string name="category_no_icon_match">没有匹配的图标</string>
+    <string name="category_builtin_keeps_name">工作和生活不能改名。</string>
+    <string name="category_delete">删除类别</string>
+    <string name="category_delete_ask_title">删除“%1$s”？</string>
+    <string name="category_delete_ask_body">它的任务会变为未分类。</string>
+    <string name="category_deleted_empty">已删除“%1$s”</string>
+    <plurals name="category_deleted">
+        <item quantity="other">已删除“%1$s” · %2$d 个任务变为未分类</item>
+    </plurals>
+    <plurals name="settings_category_tasks">
+        <item quantity="other">%1$d 个任务</item>
+    </plurals>
+    <string name="a11y_category_color">颜色：%1$s</string>
+    <string name="category_color_indigo">靛蓝</string>
+    <string name="category_color_yellow">黄色</string>
+    <string name="category_color_green">绿色</string>
+    <string name="category_color_red">红色</string>
+    <string name="category_color_blue">蓝色</string>
+    <string name="category_color_pink">粉色</string>
+    <string name="category_color_teal">青色</string>
+    <string name="category_color_orange">橙色</string>
+    <string name="category_group_work">工作</string>
+    <string name="category_group_study">学习</string>
+    <string name="category_group_health">健康</string>
+    <string name="category_group_money">理财</string>
+    <string name="category_group_home">家居</string>
+    <string name="category_group_hobby">爱好</string>
+    <string name="category_group_travel">出行</string>
+    <string name="category_group_people">人物</string>
+</resources>

@@ -479,7 +479,7 @@ private fun Screen(screen: AndroidScreensTest.Screen) {
 
 /** The shell App draws around a page, without the core-backed routing. */
 @Composable
-private fun TestFrame(
+internal fun TestFrame(
     title: String,
     tab: Tab,
     count: Int = 0,
@@ -522,7 +522,7 @@ private fun TestFrame(
     }
 }
 
-private fun mineAgents(page: MinePage): Map<Long, AgentInfo> =
+internal fun mineAgents(page: MinePage): Map<Long, AgentInfo> =
     page.fromAgents.associate { item ->
         val links = if (item.prUrl.isNotEmpty()) listOf(Link(item.prUrl, "PR #${item.prNumber}")) else emptyList()
         item.id to AgentInfo("claude-code", links)
@@ -537,7 +537,7 @@ private fun openTasks(projectId: Long, page: ProjectPage): Int =
         }
     }
 
-private fun agentInfo(page: AgentsPage): Map<Long, AgentInfo> =
+internal fun agentInfo(page: AgentsPage): Map<Long, AgentInfo> =
     (page.working + page.done).associate { it.id to AgentInfo("claude-code", emptyList()) }
 
 private fun syncModel(screen: AndroidScreensTest.Screen): SyncModel {

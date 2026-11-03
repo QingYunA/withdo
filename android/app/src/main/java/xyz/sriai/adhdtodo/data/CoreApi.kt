@@ -44,20 +44,38 @@ class CoreApi(private val core: Core_) {
 
     fun agentInfo(mine: MinePage): Map<Long, AgentInfo> = info(mine.fromAgents.map { it.id })
 
-    /** The project list with its open-task count, read one project page at a time. */
-    fun projectEntries(): List<ProjectEntry> = projects().map { project ->
-        val open = runCatching {
-            project(project.id).tasks.count { task ->
-                task.parentId == null && task.status != "done" && task.status != "cancelled"
-            }
-        }.getOrDefault(0)
-        ProjectEntry(project = project, open = open)
-    }
+    /**
+     * The Projects tab's rows in one call: the projects in the sidebar's order (sub-projects follow
+     * their parent, [ProjectEntry.depth] says how far in), each with its open-task count and the
+     * red dot.
+     */
+    fun projectEntries(): List<ProjectEntry> =
+        PageJson.decodeFromString<List<ProjectRow>>(core.projectList()).map {
+            ProjectEntry(project = it.project, open = it.open, total = it.total, blocked = it.blocked, depth = it.depth)
+        }
 
-    /** Makes a plain task and returns its id, which the receipt's Undo deletes. */
-    fun createTask(title: String, projectId: Long? = null): Long =
+    /**
+     * Makes a plain task and returns its id, which the receipt's Undo deletes. [remindAt] and [dueAt]
+     * are RFC 3339 (what [parseQuick] read); [priority] "P1" is the composer's star.
+     */
+    fun createTask(
+        title: String,
+        projectId: Long? = null,
+        remindAt: String? = null,
+        dueAt: String? = null,
+        categoryId: Long? = null,
+        priority: String? = null,
+        parentId: Long? = null,
+    ): Long =
         PageJson.decodeFromString<Task>(
-            core.createTask(PageJson.encodeToString(NewTask(title = title, projectId = projectId))),
+            core.createTask(
+                PageJson.encodeToString(
+                    NewTask(
+                        title = title, projectId = projectId, remindAt = remindAt, dueAt = dueAt,
+                        categoryId = categoryId, priority = priority, parentId = parentId,
+                    ),
+                ),
+            ),
         ).id
 
     /**
@@ -85,6 +103,97 @@ class CoreApi(private val core: Core_) {
 
     /** Puts back what DeleteTask removed. */
     fun restoreTask(snapshot: String) = core.restoreTask(snapshot)
+
+    // ---- Completed and Summary --------------------------------------------------------------
+
+    /**
+     * The desktop's Completed page: done and cancelled tasks, newest first, in day groups, each with
+     * who finished it. [projectId] 0 is everything; [agents] keeps what agents wrote; [limit] 0 is 100.
+     */
+    fun completed(projectId: Long = 0, agents: Boolean = false, limit: Long = 0): CompletedPage =
+        PageJson.decodeFromString(core.completed(projectId, agents, limit))
+
+    /** The desktop's search: tasks matching every word of [query], newest first, any status; blank is empty. */
+    fun search(query: String): List<Task> = PageJson.decodeFromString(core.search(query))
+
+    /** The Summary page of a day or week; [back] counts periods back from this one (weeks start on Monday). */
+    fun summary(week: Boolean, back: Long = 0): SummaryPage = PageJson.decodeFromString(core.summary(week, back))
+
+    /** The Markdown the share button sends, in [lang] ("en" or "zh-Hans"). */
+    fun summaryMarkdown(week: Boolean, back: Long, lang: String): String = core.summaryMarkdown(week, back, lang)
+
+    /** Reads the composer's text without a model; cheap enough to call on every change. */
+    fun parseQuick(text: String): QuickParse = PageJson.decodeFromString(core.parseQuick(text))
+
+    // ---- Select: bulk edits and their Undo --------------------------------------------------
+
+    /** Applies [patch] to every task as one change and returns the Undo token for [restoreTaskStates]. */
+    fun updateTasks(ids: List<Long>, patch: BulkPatch): String =
+        core.updateTasks(PageJson.encodeToString(ids), PageJson.encodeToString(patch))
+
+    /** Undo of [updateTasks]. */
+    fun restoreTaskStates(undo: String) = core.restoreTaskStates(undo)
+
+    /** Deletes every task as one change and returns the snapshots [restoreTasks] takes, unchanged. */
+    fun deleteTasks(ids: List<Long>): String = core.deleteTasks(PageJson.encodeToString(ids))
+
+    /** Undo of [deleteTasks]. */
+    fun restoreTasks(snapshots: String) = core.restoreTasks(snapshots)
+
+    /** Do today for every task of mine that is not finished or due today; returns those it moved. */
+    fun doTodayMany(ids: List<Long>): List<MovedToday> =
+        PageJson.decodeFromString(core.doTodayMany(PageJson.encodeToString(ids)))
+
+    /** Undo of [doTodayMany]: every moved task gets its old due date back. */
+    fun restoreDues(moved: List<MovedToday>) = moved.forEach { restoreDue(it.id, it.before) }
+
+    // ---- Projects and milestones ------------------------------------------------------------
+
+    fun archivedProjects(): List<Project> = PageJson.decodeFromString(core.archivedProjects())
+
+    /** Makes a project, a sub-project of [parentId] unless that is 0. */
+    fun createProject(name: String, parentId: Long = 0): Project =
+        PageJson.decodeFromString(core.createProject(name, parentId))
+
+    fun renameProject(id: Long, name: String) = core.renameProject(id, name)
+
+    fun archiveProject(id: Long) = core.archiveProject(id)
+
+    fun unarchiveProject(id: Long) = core.unarchiveProject(id)
+
+    /** Deletes a project with its tasks and milestones for good; the counts say what went. */
+    fun deleteProject(id: Long): RemovedCounts = PageJson.decodeFromString(core.deleteProject(id))
+
+    /** Adds an open milestone; [dueAt] is ISO 8601, "" for none. */
+    fun createMilestone(projectId: Long, title: String, dueAt: String = ""): Milestone =
+        PageJson.decodeFromString(core.createMilestone(projectId, title, dueAt))
+
+    fun updateMilestone(id: Long, patch: MilestonePatch): Milestone {
+        val fields = PageJson.encodeToJsonElement(patch).jsonObject
+        val cleared = if (patch.clearDueAt) mapOf("due_at" to JsonNull) else emptyMap()
+        return PageJson.decodeFromString(core.updateMilestone(id, JsonObject(fields + cleared).toString()))
+    }
+
+    // ---- Categories -------------------------------------------------------------------------
+
+    fun categoriesWithCounts(): List<CategoryCount> = PageJson.decodeFromString(core.categoriesWithCounts())
+
+    fun createCategory(input: CategoryInput): Category =
+        PageJson.decodeFromString(core.createCategory(PageJson.encodeToString(input)))
+
+    fun updateCategory(id: Long, input: CategoryInput): Category =
+        PageJson.decodeFromString(core.updateCategory(id, PageJson.encodeToString(input)))
+
+    /** Deletes a category (its tasks become unsorted) and returns the snapshot [restoreCategory] takes. */
+    fun deleteCategory(id: Long): String = core.deleteCategory(id)
+
+    fun restoreCategory(snapshot: String) = core.restoreCategory(snapshot)
+
+    /** Puts a category at [index] (0-based) in the list. */
+    fun moveCategory(id: Long, index: Long) = core.moveCategory(id, index)
+
+    /** The icon library: the curated groups for a blank [query], else one unnamed group of matches. */
+    fun categoryIcons(query: String = ""): IconLibrary = PageJson.decodeFromString(core.categoryIcons(query))
 
     fun accept(id: Long) = core.accept(id)
 
@@ -172,5 +281,14 @@ class CoreApi(private val core: Core_) {
     fun nextReminderAt(): Long = core.nextReminderAt()
 }
 
-/** One row of the project list: the project and its count of open, top-level tasks. */
-data class ProjectEntry(val project: Project, val open: Int)
+/**
+ * One row of the project list: the project, its count of open top-level tasks, how many tasks it
+ * has in all (what Delete would remove), whether one is blocked (the red dot) and how far in it sits.
+ */
+data class ProjectEntry(
+    val project: Project,
+    val open: Int,
+    val total: Int = 0,
+    val blocked: Boolean = false,
+    val depth: Int = 0,
+)
