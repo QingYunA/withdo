@@ -186,3 +186,21 @@ Sign in and Sign up, as Todoist and TickTick do it (`docs/design/mockups/v42.htm
 - P2: done (Resend, 2026-10-22).
 - P3: a Google Cloud OAuth client, and a yes to the browser on desktop.
 - After P1: `drop schema adhd_todo;` in Supabase picpocket, if wanted.
+
+## 2026-11-03: the official server is `api.withdo.si`
+
+The official server is now `https://api.withdo.si`, reached through a Cloudflare Tunnel (named
+remotely managed tunnel `withdo`, `cloudflared` on the host, nginx on `127.0.0.1:8088`; steps in
+`deploy/sync/README.md`), and the website is `https://withdo.si/`. `todo.sri-ai.xyz` stays as a
+legacy name, served directly as before, until old clients have updated.
+
+- Same backend, same accounts, same devices. Clients treat both names as official
+  (`data.IsOfficialSyncServer`, `isOfficialSyncServer`), and `syncclient.LoadConfigAt` rewrites a
+  `sync.json` that names the legacy server to the new one, keeping the account, `auth` and token
+  (the token and the device id are keyed by database, not by server).
+- PocketBase's app URL becomes `https://api.withdo.si`; the Google OAuth client needs
+  `https://api.withdo.si/api/oauth2-redirect` as an authorized redirect URI (keep the old one while
+  old clients exist) and `withdo.si` as an authorized domain; the mail sender becomes
+  `Withdo <noreply@withdo.si>` once the domain is verified in Resend. The English code-mail template
+  stored in PocketBase still has `todo.sri-ai.xyz` in its footer until it is edited in the admin
+  UI (new databases get `withdo.si` from `migrate_otp.go`).

@@ -8,14 +8,21 @@ import java.util.Locale
 const val SYNC_BAR_CELLS = 40
 
 /** Where a phone syncs until the user changes it; mobile/core reports it before sync.json exists. */
-const val DEFAULT_SYNC_SERVER = "https://todo.sri-ai.xyz"
+const val DEFAULT_SYNC_SERVER = "https://api.withdo.si"
+
+/** The official server's earlier name: still official, and a saved sync.json that names it is moved to the new one. */
+const val LEGACY_SYNC_SERVER = "https://todo.sri-ai.xyz"
 
 /**
- * Whether [server] is [DEFAULT_SYNC_SERVER]. Spaces, a trailing slash and the case of the address
- * do not matter. The pane hides the official address and shows any other; a blank one is not it.
+ * Whether [server] is [DEFAULT_SYNC_SERVER] or [LEGACY_SYNC_SERVER]. Spaces, a trailing slash and
+ * the case of the address do not matter. The pane hides the official address and shows any other;
+ * a blank one is not it.
  */
-fun isOfficialSyncServer(server: String): Boolean =
-    server.trim().trimEnd('/').equals(DEFAULT_SYNC_SERVER, ignoreCase = true)
+fun isOfficialSyncServer(server: String): Boolean {
+    val address = server.trim().trimEnd('/')
+    return address.equals(DEFAULT_SYNC_SERVER, ignoreCase = true) ||
+        address.equals(LEGACY_SYNC_SERVER, ignoreCase = true)
+}
 
 /** The address to save for what was typed: an empty field means the official server. */
 fun syncServerToSave(draft: String): String = draft.trim().ifEmpty { DEFAULT_SYNC_SERVER }
@@ -322,5 +329,5 @@ fun passwordStrength(password: String): Int {
 fun syncLang(locale: Locale): String = if (locale.language.equals("zh", ignoreCase = true)) "zh-Hans" else "en"
 
 /** The terms and the privacy policy a sign-up agrees to, on the website. */
-const val TERMS_URL = "https://qingyuna.github.io/withdo/terms.html"
-const val PRIVACY_URL = "https://qingyuna.github.io/withdo/privacy.html"
+const val TERMS_URL = "https://withdo.si/terms.html"
+const val PRIVACY_URL = "https://withdo.si/privacy.html"

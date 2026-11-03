@@ -17,7 +17,7 @@ const codeBody = `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial
 <p>Your sign-in code:</p>
 <p style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;font-weight:600;letter-spacing:8px;margin:16px 0">` + core.EmailPlaceholderOTP + `</p>
 <p>It works for 10 minutes. If you didn't ask for it, you can ignore this email; nobody can sign in without the code.</p>
-<p style="color:#6e6e73">&mdash; ` + appName + ` &middot; todo.sri-ai.xyz</p>
+<p style="color:#6e6e73">&mdash; ` + appName + ` &middot; withdo.si</p>
 </div>`
 
 func init() {

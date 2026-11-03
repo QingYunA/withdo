@@ -358,7 +358,7 @@ func (c *Core) StopSync() error {
 // SyncStatus returns the Runner's status as JSON, the sync settings the screens need, and the
 // first upload's size:
 //
-//	{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":true,"signed_in":true}
+//	{"state":"idle","pending":0,"server":"https://api.withdo.si","linked":true,"signed_in":true}
 //
 // state is idle, syncing, offline, error, seeding or signed out; last_synced, last_error,
 // retry_at, failed_since and seed_total are left out when empty. linked says this database has a

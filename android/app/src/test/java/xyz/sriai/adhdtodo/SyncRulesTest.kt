@@ -7,6 +7,7 @@ import org.junit.Test
 import xyz.sriai.adhdtodo.data.CodeState
 import xyz.sriai.adhdtodo.ui.CodeFailure
 import xyz.sriai.adhdtodo.ui.DEFAULT_SYNC_SERVER
+import xyz.sriai.adhdtodo.ui.LEGACY_SYNC_SERVER
 import xyz.sriai.adhdtodo.ui.SYNC_ATTENTION_MILLIS
 import xyz.sriai.adhdtodo.ui.SignInFlow
 import xyz.sriai.adhdtodo.ui.SignInStep
@@ -242,12 +243,15 @@ class SyncServerRulesTest {
         assertTrue(isOfficialSyncServer(DEFAULT_SYNC_SERVER))
         assertTrue(isOfficialSyncServer("$DEFAULT_SYNC_SERVER/"))
         assertTrue(isOfficialSyncServer("  $DEFAULT_SYNC_SERVER/ "))
-        assertTrue(isOfficialSyncServer("HTTPS://TODO.SRI-AI.XYZ"))
+        assertTrue(isOfficialSyncServer("HTTPS://API.WITHDO.SI"))
+        assertTrue(isOfficialSyncServer(LEGACY_SYNC_SERVER))
+        assertTrue(isOfficialSyncServer("HTTPS://TODO.SRI-AI.XYZ/"))
     }
 
     @Test
     fun `any other address is a custom server`() {
         assertFalse(isOfficialSyncServer("https://todo.example.com"))
+        assertFalse(isOfficialSyncServer("http://api.withdo.si"))
         assertFalse(isOfficialSyncServer("http://todo.sri-ai.xyz"))
         assertFalse(isOfficialSyncServer("$DEFAULT_SYNC_SERVER/v1"))
         assertFalse(isOfficialSyncServer(""))

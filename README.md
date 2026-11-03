@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Android-5b5bd6?style=flat-square&labelColor=16181d" alt="macOS, Windows, Android">
   <a href="https://github.com/QingYunA/withdo/stargazers"><img src="https://img.shields.io/github/stars/QingYunA/withdo?style=flat-square&labelColor=16181d&color=5b5bd6" alt="Stars"></a>
 </p>
-<p align="center"><a href="https://qingyuna.github.io/withdo/"><b>Website</b></a> · <a href="#download">Download</a> · <a href="#connect-your-agents">Connect your agents</a> · <a href="docs/design/ui-spec.md">Design spec</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
+<p align="center"><a href="https://withdo.si/"><b>Website</b></a> · <a href="#download">Download</a> · <a href="#connect-your-agents">Connect your agents</a> · <a href="docs/design/ui-spec.md">Design spec</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
 
 <p align="center">
   <img src="docs/design/screens/mine-light.png" alt="Today: your tasks, with your agents' cards beside them" width="420">

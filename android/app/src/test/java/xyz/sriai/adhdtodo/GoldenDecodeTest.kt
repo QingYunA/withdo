@@ -133,13 +133,13 @@ class GoldenDecodeTest {
 
     @Test
     fun `the sync status decodes the settings the screen reads`() {
-        val json = """{"state":"error","last_error":"the server did not answer","pending":3,"retry_at":"2026-10-20T09:02:00Z","failed_since":"2026-10-20T08:40:00Z","seed_total":3512,"server":"https://todo.sri-ai.xyz","linked":true,"signed_in":true}"""
+        val json = """{"state":"error","last_error":"the server did not answer","pending":3,"retry_at":"2026-10-20T09:02:00Z","failed_since":"2026-10-20T08:40:00Z","seed_total":3512,"server":"https://api.withdo.si","linked":true,"signed_in":true}"""
         val status = PageJson.decodeFromString<SyncStatus>(json)
         assertEquals("error", status.state)
         assertEquals(3L, status.pending)
         assertEquals(3512L, status.seedTotal)
         assertEquals(3509L, status.seedDone)
-        assertEquals("https://todo.sri-ai.xyz", status.server)
+        assertEquals("https://api.withdo.si", status.server)
         assertTrue(status.linked)
         assertTrue(status.signedIn)
         assertNotNull(status.retryAt)
@@ -148,17 +148,17 @@ class GoldenDecodeTest {
 
     @Test
     fun `a signed-out status decodes for the sign-in card`() {
-        val json = """{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":false,"signed_in":false}"""
+        val json = """{"state":"idle","pending":0,"server":"https://api.withdo.si","linked":false,"signed_in":false}"""
         val status = PageJson.decodeFromString<SyncStatus>(json)
         assertEquals("idle", status.state)
-        assertEquals("https://todo.sri-ai.xyz", status.server)
+        assertEquals("https://api.withdo.si", status.server)
         assertFalse(status.linked)
         assertFalse(status.signedIn)
     }
 
     @Test
     fun `a signing-in status carries the stage`() {
-        val json = """{"state":"idle","pending":0,"server":"https://todo.sri-ai.xyz","linked":false,"signed_in":true,"sign_in_stage":"downloading"}"""
+        val json = """{"state":"idle","pending":0,"server":"https://api.withdo.si","linked":false,"signed_in":true,"sign_in_stage":"downloading"}"""
         val status = PageJson.decodeFromString<SyncStatus>(json)
         assertEquals("downloading", status.signInStage)
     }

@@ -35,7 +35,8 @@ func LoadConfig(dbPath string) (cfg Config, found bool, err error) {
 	return LoadConfigAt(ConfigPath(dbPath))
 }
 
-// LoadConfigAt reads the sync.json at path. found is false when it does not exist.
+// LoadConfigAt reads the sync.json at path. found is false when it does not exist. A config that
+// names LegacyServer is rewritten to OfficialServer on disk (see migrateLegacyServer).
 func LoadConfigAt(path string) (cfg Config, found bool, err error) {
 	raw, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
@@ -52,6 +53,7 @@ func LoadConfigAt(path string) (cfg Config, found bool, err error) {
 		return Config{}, false, fmt.Errorf("read %s: server is empty", path)
 	}
 	cfg.Token = strings.TrimSpace(cfg.Token)
+	migrateLegacyServer(path, &cfg)
 	// A file written by an earlier version names an "issuer" and has neither a token nor
 	// "auth". The server's accounts are PocketBase's now, so it becomes a PocketBase config that
 	// is signed out: the old sign-in cannot be used, and its Account is not shown.
@@ -62,6 +64,19 @@ func LoadConfigAt(path string) (cfg Config, found bool, err error) {
 		cfg.Auth, cfg.Account = AuthPocketBase, nil
 	}
 	return cfg, true, nil
+}
+
+// migrateLegacyServer moves a config from the official server's old name to its new one and saves
+// it. Everything else in the file stays (the device id lives in the database, the token in the
+// keychain keyed by database, neither by server), because the backend is the same. The desktop app,
+// the CLI and the phone core all read through LoadConfigAt, so each migrates on its first load. A
+// failed save is not an error: the config in memory is already right and the next load retries.
+func migrateLegacyServer(path string, cfg *Config) {
+	if !IsLegacyServer(cfg.Server) {
+		return
+	}
+	cfg.Server = OfficialServer
+	_ = SaveConfigAt(path, *cfg)
 }
 
 // SaveConfig writes sync.json next to dbPath with mode 0600.

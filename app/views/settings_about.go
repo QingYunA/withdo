@@ -8,8 +8,8 @@ import (
 // The app's places on the web: its source, its privacy policy and its site.
 const (
 	repoURL    = "https://github.com/QingYunA/withdo"
-	privacyURL = "https://qingyuna.github.io/withdo/privacy.html"
-	websiteURL = "https://qingyuna.github.io/withdo/"
+	privacyURL = "https://withdo.si/privacy.html"
+	websiteURL = "https://withdo.si/"
 )
 
 // aboutPane is the app, its version, its license, and its links, under its own mark.
