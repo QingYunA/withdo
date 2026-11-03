@@ -204,3 +204,9 @@ legacy name, served directly as before, until old clients have updated.
   `Withdo <noreply@withdo.si>` once the domain is verified in Resend. The English code-mail template
   stored in PocketBase still has `todo.sri-ai.xyz` in its footer until it is edited in the admin
   UI (new databases get `withdo.si` from `migrate_otp.go`).
+- The admin is not public on `api.withdo.si`: nginx answers 404 for `/_/` and
+  `/api/collections/_superusers/`, and the admin UI is reached over
+  `ssh -N -L 18080:127.0.0.1:18080 adhd-srv` and `http://localhost:18080/_/`. The legacy
+  `todo.sri-ai.xyz` block keeps it public until that name is retired.
+- Cloudflare closes a stream idle for about 100 s, so `/api/realtime` (the Google sign-in waits on it)
+  gets a `PB_PING` event every 30 s from `internal/syncserver/pbauth/realtime.go`.

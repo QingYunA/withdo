@@ -70,7 +70,7 @@ owner's Mac with the `cf` CLI, signed in to that account; the rest on the host.
    `cf tunnels token get <tunnel> | ssh adhd-srv 'read -r token && sudo cloudflared service install "$token"'`.
    That writes and starts the `cloudflared` systemd unit. `systemctl status cloudflared` should say
    active and the tunnel shows as healthy at Cloudflare.
-7. **PocketBase** (admin UI > Settings > Application): set the app URL to `https://api.withdo.si`.
+7. **PocketBase** (admin UI, over the SSH tunnel below > Settings > Application): set the app URL to `https://api.withdo.si`.
    Once `withdo.si` is verified in Resend (DKIM and the other records Resend gives, added in
    Cloudflare), set the sender to `Withdo <noreply@withdo.si>` (Settings > Mail) and use a send-only
    key for that domain. The English code-mail template stored in PocketBase still ends with
@@ -115,10 +115,17 @@ the static tokens of `-tokens`. The log has one line the first time each subject
   `mkdir -p /opt/adhd-todo/sync/pb_data && chown 65532:65532 /opt/adhd-todo/sync/pb_data` (the
   container runs as distroless `nonroot`). `deploy.sh` copies it to `pb_data.bak-STAMP` before each
   deploy; back it up with the Postgres dump too, as it holds every password hash.
-- **nginx** proxies all of PocketBase: the users' sign-in, and the admin UI at
-  `https://api.withdo.si/_/` (and `https://todo.sri-ai.xyz/_/` while that name lives) with the API it
-  calls (public since 2026-10-22). It sets `X-Real-IP` from the connection on every location (behind
-  the tunnel: from `CF-Connecting-IP`), so a client cannot choose the address the rate limits count.
+- **nginx** proxies PocketBase's user sign-in and realtime stream. On `api.withdo.si` the **admin is
+  not public**: `/_/` and `/api/collections/_superusers/` answer 404. Reach the admin UI over an SSH
+  tunnel to the server's own port: `ssh -N -L 18080:127.0.0.1:18080 adhd-srv`, then open
+  `http://localhost:18080/_/`. Only the legacy `https://todo.sri-ai.xyz` block (`nginx-adhd-todo.conf`)
+  still serves the admin UI publicly (decided 2026-10-22), until that name is retired. Both files set
+  `X-Real-IP` from the connection on every location (behind the tunnel: from `CF-Connecting-IP`), so a
+  client cannot choose the address the rate limits count.
+- **Realtime pings.** `/api/realtime` sends nothing after `PB_CONNECT` until an event is subscribed,
+  and Cloudflare closes an idle stream after about 100 s, while the Google sign-in waits on it for up
+  to 5 minutes. `pbauth/realtime.go` sends a `PB_PING` event every 30 s on every realtime stream;
+  clients ignore events they did not subscribe to.
 - **Password guessing** is limited to 10 user sign-ins and 5 superuser sign-ins a minute per client address (PocketBase's rate limit,
   counting by the `X-Real-IP` nginx sets).
 - **Mail** goes out through Resend's SMTP (`smtp.resend.com:465`, TLS, user `resend`, the password a
@@ -178,6 +185,10 @@ never in the repository.
   prints a `: keepalive` line every 15 s and is still connected after more than 2 minutes.
 - The visitor's address reaches PocketBase: `tail -f` nginx's access log with `$remote_addr` (the
   default format) while requesting from outside shows your address, not `127.0.0.1`.
+- The admin is closed on the new name: `curl -s -o /dev/null -w '%{http_code}' https://api.withdo.si/_/` and
+  `.../api/collections/_superusers/auth-with-password` (POST) are 404.
+- A `GET /api/realtime` stream shows `PB_CONNECT` and then `PB_PING` every 30 s, and is still open
+  after more than 2 minutes.
 - The legacy name still answers the same three on `https://todo.sri-ai.xyz` until its record goes.
 - `POST /v1/transcribe` without a token is 401; with a token and no key configured it is 503.
 
