@@ -3,6 +3,16 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.12.1
+
+No database change; the app updates itself from 0.11.0 and 0.12.0.
+
+- **Withdo has its own address: withdo.si.** Sync, sign-in and voice now go to api.withdo.si. Your
+  app switches to it by itself; you stay signed in and your devices stay linked.
+- The website, privacy policy and terms are at withdo.si.
+- Sign-in emails come from noreply@withdo.si.
+- Signing in with Google no longer gives up when you take a while in the browser.
+
 ## 0.12.0
 
 No database change on your computer; the app updates itself from 0.11.0.
