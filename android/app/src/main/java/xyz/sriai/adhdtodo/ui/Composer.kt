@@ -18,11 +18,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -61,10 +64,16 @@ fun Composer(
     highlights: List<IntRange> = emptyList(),
     preview: QuickPreview? = null,
     onIgnorePreview: () -> Unit = {},
+    focusRequest: Int = 0,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val shape = RoundedCornerShape(20.dp)
+    // A widget's + or Note something opens the app with the box focused and the keyboard up.
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(focusRequest) {
+        if (focusRequest > 0) runCatching { focus.requestFocus() }
+    }
     val hasText = value.isNotBlank()
     Column(
         modifier = Modifier
@@ -129,7 +138,7 @@ fun Composer(
                         onSend = { if (hasText && !sending) onSend() },
                         onDone = { if (hasText && !sending) onSend() },
                     ),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(focus),
                     decorationBox = { inner ->
                         Box(Modifier.heightIn(min = 25.dp), contentAlignment = Alignment.CenterStart) {
                             if (value.isEmpty()) {

@@ -40,6 +40,15 @@ import xyz.sriai.adhdtodo.ui.theme.PixelIcon
 import xyz.sriai.adhdtodo.ui.theme.StarGlyph
 import xyz.sriai.adhdtodo.ui.theme.StatusGlyph
 
+/** What a row of mine does on a tap, a long press, its glyph and a swipe; [swipePreview] is for screenshots. */
+private class RowActions(
+    val onComplete: (Long) -> Unit,
+    val onOpenTask: (Long) -> Unit,
+    val onLongPress: (Long) -> Unit,
+    val onSwipe: (Item, SwipeAction) -> Unit,
+    val swipePreview: Map<Long, Float>,
+)
+
 /** The inset of a list's text from its container: titles, headers and glyphs share this edge. */
 private val TextInset = 12.dp
 
@@ -68,7 +77,10 @@ fun MineScreen(
     highlightId: Long = 0,
     onShowAll: (() -> Unit)? = null,
     onSummary: (() -> Unit)? = null,
+    onSwipe: (Item, SwipeAction) -> Unit = { _, _ -> },
+    swipePreview: Map<Long, Float> = emptyMap(),
 ) {
+    val rows = RowActions(onComplete, onOpenTask, onLongPress, onSwipe, swipePreview)
     if (page != null) ReportSelectable(mineOrder(page, noDateOpen))
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -109,9 +121,7 @@ fun MineScreen(
                     categories = categories,
                     words = words,
                     highlightId = highlightId,
-                    onComplete = onComplete,
-                    onOpenTask = onOpenTask,
-                    onLongPress = onLongPress,
+                    rows = rows,
                 )
             }
         }
@@ -123,9 +133,7 @@ fun MineScreen(
                     categories = categories,
                     words = words,
                     highlightId = highlightId,
-                    onComplete = onComplete,
-                    onOpenTask = onOpenTask,
-                    onLongPress = onLongPress,
+                    rows = rows,
                 )
             }
         }
@@ -139,9 +147,7 @@ fun MineScreen(
                     words = words,
                     highlightId = highlightId,
                     onToggle = onToggleNoDate,
-                    onComplete = onComplete,
-                    onOpenTask = onOpenTask,
-                    onLongPress = onLongPress,
+                    rows = rows,
                 )
             }
         }
@@ -347,13 +353,11 @@ private fun MineSection(
     categories: List<Category>,
     words: Words,
     highlightId: Long,
-    onComplete: (Long) -> Unit,
-    onOpenTask: (Long) -> Unit,
-    onLongPress: (Long) -> Unit,
+    rows: RowActions,
 ) {
     SectionHeader(title, items.size, start = TextInset)
     for (item in items) {
-        TaskRow(item, categories, words, highlightId, onComplete, onOpenTask, onLongPress)
+        TaskRow(item, categories, words, highlightId, rows)
     }
 }
 
@@ -367,9 +371,7 @@ private fun NoDateFold(
     words: Words,
     highlightId: Long,
     onToggle: () -> Unit,
-    onComplete: (Long) -> Unit,
-    onOpenTask: (Long) -> Unit,
-    onLongPress: (Long) -> Unit,
+    rows: RowActions,
 ) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
@@ -389,7 +391,7 @@ private fun NoDateFold(
     }
     if (open) {
         for (item in items) {
-            TaskRow(item, categories, words, highlightId, onComplete, onOpenTask, onLongPress)
+            TaskRow(item, categories, words, highlightId, rows)
         }
     }
 }
@@ -405,10 +407,11 @@ private fun TaskRow(
     categories: List<Category>,
     words: Words,
     highlightId: Long,
-    onComplete: (Long) -> Unit,
-    onOpenTask: (Long) -> Unit,
-    onLongPress: (Long) -> Unit,
+    rows: RowActions,
 ) {
+    val onComplete = rows.onComplete
+    val onOpenTask = rows.onOpenTask
+    val onLongPress = rows.onLongPress
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val category = if (item.source == "user" && item.categoryId != 0) {
@@ -421,69 +424,77 @@ private fun TaskRow(
         animationSpec = tween(250),
         label = "new-row",
     )
-    Box(Modifier.fillMaxWidth().clip(LocalSelection.current.rowClip()).background(fill.value)) {
-        LongPressRow(
-            onClick = { onOpenTask(item.id) },
-            onLongPress = { onLongPress(item.id) },
-            taskId = item.id,
-        ) { row ->
-            Row(
-                modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                RowGlyph(
-                    taskId = item.id,
-                    status = item.status,
-                    onClick = {
-                        if (item.source == "user" && item.status != "done" && item.status != "cancelled") {
-                            onComplete(item.id)
-                        } else {
-                            onOpenTask(item.id)
-                        }
-                    },
-                )
+    val shape = LocalSelection.current.rowClip()
+    SwipeRow(
+        swipes = words.swipes(item.source, item.status, item.dueAt),
+        onSwipe = { rows.onSwipe(item, it) },
+        shape = shape,
+        preview = rows.swipePreview[item.id] ?: 0f,
+    ) {
+        Box(Modifier.fillMaxWidth().clip(shape).background(fill.value)) {
+            LongPressRow(
+                onClick = { onOpenTask(item.id) },
+                onLongPress = { onLongPress(item.id) },
+                taskId = item.id,
+            ) { row ->
                 Row(
-                    modifier = Modifier.weight(1f),
+                    modifier = row.height(Dims.rowHeight).padding(horizontal = TextInset),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        item.title,
-                        style = type.bodyStrong,
-                        color = tokens.text,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
+                    RowGlyph(
+                        taskId = item.id,
+                        status = item.status,
+                        onClick = {
+                            if (item.source == "user" && item.status != "done" && item.status != "cancelled") {
+                                onComplete(item.id)
+                            } else {
+                                onOpenTask(item.id)
+                            }
+                        },
                     )
-                    if (category != null) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Text(
-                            words.categoryName(category),
-                            style = type.meta.copy(fontWeight = FontWeight.Medium),
-                            color = tokens.categoryInk(category.color),
-                            maxLines = 1,
-                        )
-                    }
-                    if (item.project.isNotEmpty()) {
-                        Text(
-                            item.project,
-                            style = type.meta,
-                            color = tokens.textSecondary,
+                            item.title,
+                            style = type.bodyStrong,
+                            color = tokens.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 96.dp),
+                            modifier = Modifier.weight(1f, fill = false),
                         )
+                        if (category != null) {
+                            Text(
+                                words.categoryName(category),
+                                style = type.meta.copy(fontWeight = FontWeight.Medium),
+                                color = tokens.categoryInk(category.color),
+                                maxLines = 1,
+                            )
+                        }
+                        if (item.project.isNotEmpty()) {
+                            Text(
+                                item.project,
+                                style = type.meta,
+                                color = tokens.textSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.widthIn(max = 96.dp),
+                            )
+                        }
                     }
-                }
-                val due = words.due(item)
-                val starred = item.source == "user" && (item.priority == "P0" || item.priority == "P1")
-                if (due.isNotEmpty() || starred) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (starred) StarGlyph(size = 12.dp, tint = tokens.statusReview)
-                        if (due.isNotEmpty()) Text(due, style = type.meta, color = tokens.textSecondary, maxLines = 1)
+                    val due = words.due(item)
+                    val starred = item.source == "user" && (item.priority == "P0" || item.priority == "P1")
+                    if (due.isNotEmpty() || starred) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (starred) StarGlyph(size = 12.dp, tint = tokens.statusReview)
+                            if (due.isNotEmpty()) Text(due, style = type.meta, color = tokens.textSecondary, maxLines = 1)
+                        }
                     }
                 }
             }

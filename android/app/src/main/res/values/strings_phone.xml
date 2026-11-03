@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Swipe a row (v43 P2) -->
+    <string name="swipe_done">Done</string>
+    <string name="swipe_today">Do today</string>
+    <string name="swipe_tomorrow">Do tomorrow</string>
+    <string name="toast_completed">Completed “%1$s”</string>
+    <string name="toast_moved_to_tomorrow">Moved to tomorrow</string>
+    <!-- Pull to sync -->
+    <string name="pull_syncing">Syncing…</string>
+    <!-- Share into Withdo -->
+    <string name="share_title">Add to Withdo</string>
+    <string name="share_project">Project</string>
+    <string name="share_when">When</string>
+    <string name="share_add">Add</string>
+    <string name="share_added">Added to Withdo</string>
+    <string name="share_failed">Couldn’t add it. Try again.</string>
+    <string name="share_label">Add to Withdo</string>
+</resources>

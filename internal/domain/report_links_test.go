@@ -124,3 +124,18 @@ func TestRestoreTaskPutsTheReportLinksBack(t *testing.T) {
 	eq(t, "links", len(got[0].Links), 1)
 	eq(t, "title", got[0].Links[0].Title, "A")
 }
+
+func TestAddReplyWithLinksKeepsTheGoodLinks(t *testing.T) {
+	c, _ := newCore(t)
+	r := progress(t, c, domain.ProgressInput{Summary: "one", Cwd: widgetsRepo(t, "feat/login")})
+	reply := must[*domain.Report](t)(c.AddReplyWithLinks(ctx, r.Task.ID, "https://github.com/QingYunA/withdo/issues/219", []domain.ReportLink{
+		{URL: " https://github.com/QingYunA/withdo/issues/219 ", Title: "Swipe to complete"}, {URL: "ftp://example.com/x"},
+	}))
+	eq(t, "agent", reply.Agent, domain.ReplyAgent)
+	eq(t, "kind", reply.Kind, domain.KindReply)
+	eq(t, "links", len(reply.Links), 1)
+	eq(t, "url", reply.Links[0].URL, "https://github.com/QingYunA/withdo/issues/219")
+	eq(t, "title", reply.Links[0].Title, "Swipe to complete")
+	got := must[[]domain.Report](t)(c.ListReports(ctx, r.Task.ID))
+	eq(t, "stored links", len(got[len(got)-1].Links), 1)
+}

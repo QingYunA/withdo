@@ -29,6 +29,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -39,8 +41,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import xyz.sriai.adhdtodo.BuildConfig
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
@@ -134,6 +138,7 @@ fun App(
     var catFilter by remember { mutableStateOf(0L) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var taskMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
+    var composeFocus by remember { mutableIntStateOf(0) }
     // Select mode (v43): who is ticked (null: off), the rows the page draws, and the bar's two pickers.
     var selection by remember { mutableStateOf<Set<Long>?>(null) }
     var selectOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
@@ -283,7 +288,12 @@ fun App(
     LaunchedEffect(initialRoute) {
         if (initialRoute.isNullOrBlank()) return@LaunchedEffect
         val next = normalizeRoute(initialRoute)
-        if (next.startsWith("tab:")) {
+        if (next == ROUTE_COMPOSE) {
+            // A widget's + or Note something: Today, with the composer focused.
+            tabName = Tab.MINE.name
+            stack = listOf("home")
+            composeFocus++
+        } else if (next.startsWith("tab:")) {
             // route=projects opens the Projects tab, not Mine with the projects route on top.
             tabName = runCatching { Tab.valueOf(next.removePrefix("tab:").uppercase()) }
                 .getOrDefault(Tab.MINE).name
@@ -561,6 +571,26 @@ fun App(
         }
     }
 
+    fun swipe(task: SwipedTask, action: SwipeAction) {
+        scope.launch {
+            val zone = ZoneId.systemDefault()
+            val outcome = try {
+                withContext(Dispatchers.IO) {
+                    runSwipe(api, resources, task, action, java.time.LocalDate.now(zone), zone)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("adhd-todo", "swipe failed", e)
+                null
+            }
+            if (outcome != null) {
+                toast = UndoToast(outcome.message) { perform { outcome.undo() } }
+                tick++
+            }
+        }
+    }
+
     val sendReply: () -> Unit = {
         val text = draft.trim()
         val id = route.substringAfter(':').substringBefore(':').toLongOrNull()
@@ -646,6 +676,36 @@ fun App(
     fun openSync() {
         if (route != "sync") push("sync")
     }
+
+    // Pull to sync (v43 P2): the gap stays open while the runner reports syncing, at least 800 ms.
+    var pullSyncing by remember { mutableStateOf(false) }
+    val syncState = rememberUpdatedState(shownStatus.state)
+    fun pullSync() {
+        if (pullSyncing) return
+        pullSyncing = true
+        scope.launch {
+            val started = System.currentTimeMillis()
+            val failed = try {
+                withContext(Dispatchers.IO) { api.syncNow() }
+                false
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("adhd-todo", "pull to sync failed", e)
+                true
+            }
+            if (!failed) {
+                // The runner takes the nudge a moment later; wait for it to start, then to end.
+                withTimeoutOrNull(1500) { snapshotFlow { syncState.value }.first { it == "syncing" } }
+                withTimeoutOrNull(15000) { snapshotFlow { syncState.value }.first { it != "syncing" } }
+            }
+            delay((800 - (System.currentTimeMillis() - started)).coerceAtLeast(0))
+            pullSyncing = false
+            if (failed) showNotice(resources.getString(R.string.sync_now_failed))
+            tick++
+        }
+    }
+    val pullRoute = route == "home" || route.startsWith("project:") || completedScope != null
 
     val onToday = route == "home" && tab == Tab.MINE
     val title = when {
@@ -764,7 +824,13 @@ fun App(
                 )
             }
 
-            Box(Modifier.weight(1f)) {
+            PullToSync(
+                enabled = pullRoute && selection == null && pullSyncs(shownStatus),
+                syncing = pullSyncing,
+                onSync = { pullSync() },
+                modifier = Modifier.weight(1f),
+            ) {
+            Box(Modifier.fillMaxSize()) {
                 when {
                     route == "sync" -> {
                         val model = fake ?: SyncModel(
@@ -1102,6 +1168,7 @@ fun App(
                             push(completedRoute(CompletedScope(projectId = id, agents = agentsOnly)))
                         },
                         actions = projectActions,
+                        onSwipe = { task, action -> swipe(SwipedTask(task.id, task.title, task.dueAt), action) },
                     )
                     route.startsWith("task:") -> TaskScreen(
                         page = taskPage,
@@ -1150,6 +1217,7 @@ fun App(
                             onToggleNoDate = { noDateOpen = !noDateOpen },
                             highlightId = highlightId,
                             onShowAll = { push(completedRoute(CompletedScope())) },
+                            onSwipe = { item, action -> swipe(SwipedTask(item.id, item.title, item.dueAt), action) },
                         )
                         Tab.AGENTS -> AgentsScreen(
                             page = agents,
@@ -1178,6 +1246,7 @@ fun App(
                     }
                 }
             }
+            }
 
             toast?.let { current ->
                 UndoBar(message = current.message, onUndo = { toast = null; current.undo() })
@@ -1203,6 +1272,7 @@ fun App(
                         },
                     ),
                     onIgnorePreview = { ignoredQuick = draft },
+                    focusRequest = composeFocus,
                 )
             }
         }
@@ -1368,7 +1438,11 @@ private data class TaskMenuData(
 private fun taskRoute(id: Long, projectId: Long): String =
     if (projectId > 0) "task:$id:$projectId" else "task:$id:0"
 
+/** The launch route of a widget's + and of Note something: Today with the composer focused. */
+const val ROUTE_COMPOSE = "compose"
+
 internal fun normalizeRoute(raw: String): String = when {
+    raw == ROUTE_COMPOSE -> raw
     raw == "home" || raw == "sync" || raw == "summary" || isSettingsRoute(raw) -> raw
     raw.startsWith("project:") -> raw
     raw.startsWith("task:") -> {

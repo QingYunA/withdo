@@ -215,6 +215,17 @@ func (c *Core) Reply(id int64, text string) error {
 	return nil
 }
 
+// AddLink attaches a page to a task as the user's reply, the way the phone's share sheet keeps the
+// link it was given: the reply's text is the address, and the desktop lists the page with the
+// task's other pages. title may be empty.
+func (c *Core) AddLink(id int64, url, title string) error {
+	link := domain.ReportLink{URL: url, Title: title}
+	if _, err := c.dom.AddReplyWithLinks(context.Background(), id, url, []domain.ReportLink{link}); err != nil {
+		return shortError(err)
+	}
+	return nil
+}
+
 // defaultDueHour is the time of day a deadline given as a bare day gets, as in app/views.
 const defaultDueHour = 18
 

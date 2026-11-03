@@ -2811,6 +2811,15 @@ gestures and surfaces (last group). Pictures and the assistant's Summary paragra
   glyph completes the task), **Agents waiting** (2 x 2: the first card that waits for you, its age,
   and `Reply`), and **Note something** / `记一件事` (2 x 2: the assistant avatar; opens the composer
   focused).
+- **As built (P2).** Rows swipe on Today (Today, Next, No date) and in a project's list; the Agents
+  tab's cards, with their subtask rail, and board cards do not. The layer under a sliding row covers
+  only what the row uncovers. The pull's gap opens under the page header, which does not scroll;
+  the cloud bobs one pixel in 300 ms steps while the runner reports `syncing` (at least 800 ms).
+  A shared link is stored as the user's reply carrying the page (the desktop lists it with the
+  task's pages); the When page lists what the title reads as, `No date` and the task menu's Due
+  days. The share sheet and the widgets open their own short-lived core, as the reminder receiver
+  does; a share does not sync by itself, the app's runner sends it on its next start. Widget cards
+  are shape drawables with night variants, since Glance's corner radius needs Android 12.
 
 ## Writing
 
