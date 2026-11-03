@@ -18,6 +18,11 @@ services:
       MIMO_API_KEY: ${MIMO_API_KEY:-}
       MIMO_BASE_URL: ${MIMO_BASE_URL:-}
       VOICE_DAILY_LIMIT: ${VOICE_DAILY_LIMIT:-}
+      # The official model (POST /v1/llm/chat/completions). Set in sync.env; an empty LLM_API_KEY turns it off.
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_DAILY_TURNS: ${LLM_DAILY_TURNS:-}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       # PocketBase's data (its users and passwords); a host directory owned by uid 65532.

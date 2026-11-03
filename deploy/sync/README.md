@@ -100,7 +100,7 @@ limit, count the visitor and not `127.0.0.1`. The check is in "Checks" below.
    `sync/bin/`, write `sync.env`, create `sync/pb_data` (see below) and
    `docker compose --env-file sync.env -f sync.compose.yml up -d --wait`.
 
-Old clients use `server https://todo.sri-ai.xyz`, new ones `https://api.withdo.si`; `GET /v1/config` answers `{"auth":"pocketbase"}` and
+Old clients use `server https://todo.sri-ai.xyz`, new ones `https://api.withdo.si`; `GET /v1/config` answers `{"auth":"pocketbase","llm":true}` and
 they sign in through PocketBase's routes.
 
 ## PocketBase accounts (M13)
@@ -177,9 +177,37 @@ Answers: 401 `unauthenticated`, 413 `audio_too_large` / `audio_too_long`, 415 `u
 never include the key or the recognizer's body. Put the key only in `sync.env` on the host (mode 600),
 never in the repository.
 
+## The official model
+
+`POST /v1/llm/chat/completions` is the model the app's input uses for anyone signed in (M15). It is
+an OpenAI-compatible chat completions request, forwarded to the upstream with the server's key; the
+server sets `model` to its own and returns the answer (streamed or not) unchanged. The app never
+holds the key. Environment variables, passed through from `sync.env` by `sync.compose.yml`:
+
+| Variable | Meaning |
+|---|---|
+| `LLM_API_KEY` | The upstream's key. Empty or unset turns the official model off: the route answers `503 llm_disabled` and `GET /v1/config` says `"llm": false`, so apps do not offer it. |
+| `LLM_BASE_URL` | The upstream's API root; default `https://api.deepseek.com` (the route is `<root>/chat/completions`). |
+| `LLM_MODEL` | The upstream model, whatever the app names; default `deepseek-chat`. |
+| `LLM_DAILY_TURNS` | Turns per account per UTC day; default 100. |
+
+A turn is one thing the user sent, however many model calls it takes: the app sends
+`X-Withdo-Turn: <uuid>` on every request of one turn, and the server counts distinct ids per account
+per day. A request without the header is a turn of its own. A turn may make at most 12 requests, and
+an account at most `LLM_DAILY_TURNS × 12` a day. Past the quota: `429 {"code":"llm_quota"}` with
+`Retry-After`. Every answer carries `X-Withdo-Turns-Left`; `GET /v1/llm/quota` returns
+`{"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z"}`. Counts are in memory, so a restart
+resets them. A request is given back when the upstream is unreachable, refuses the server's key
+(502 `llm_upstream`) or is busy (429 `llm_busy`, not the account's quota).
+
+The request body is at most 1 MiB and the upstream gets 90 s. Requests and replies are never
+logged; the log line has the account, the turns left and the status. Put the key only in
+`sync.env` on the host (mode 600), never in the repository. Streamed replies need nginx's
+`proxy_buffering off` on `/v1/llm/` (see `nginx-api-withdo.conf`).
+
 ## Checks
 
-- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase"}`.
+- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase","llm":true}` (`false` while `LLM_API_KEY` is empty).
 - `curl https://api.withdo.si/healthz` is `ok`; `POST /v1/devices` without a token is 401.
 - `/v1/events` stays open: `curl -N -H "Authorization: Bearer $TOKEN" https://api.withdo.si/v1/events`
   prints a `: keepalive` line every 15 s and is still connected after more than 2 minutes.
