@@ -93,6 +93,12 @@ func problemText(say locales.Messages, err error) string {
 		return say.ProblemRateLimited()
 	case data.ProblemBusy:
 		return say.ProblemBusy()
+	case data.ProblemOfficialQuota:
+		return say.ProblemOfficialQuota()
+	case data.ProblemOfficialSignedOut:
+		return say.ProblemOfficialSignedOut()
+	case data.ProblemOfficialOff:
+		return say.ProblemOfficialOff()
 	}
 	return err.Error()
 }

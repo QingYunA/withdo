@@ -847,5 +847,22 @@
   "composerPlaceholderHome": "明天 9 点给房东打电话，再让 Claude 修一下登录的 bug",
   "doneTodayViewAll": "看总结",
   "actionDoToday": "今天做",
-  "toastMovedToToday": "已移到今天"
+  "toastMovedToToday": "已移到今天",
+  "settingsOfficialName": "Withdo 官方模型",
+  "settingsOfficialProvided": "随账号提供",
+  "settingsOfficialAvailable": "可用",
+  "settingsOfficialLeft": "今天还剩 {count} 次",
+  "settingsOfficialUsedUp": "今天的额度用完了",
+  "settingsOfficialBack": "明天恢复",
+  "settingsOfficialSignedOut": "登录后就能用，每天有免费额度",
+  "settingsOfficialSignIn": "登录",
+  "settingsOfficialUseThis": "改用这个",
+  "settingsUseOwn": "用自己的模型",
+  "settingsPaneModelLineOfficial": "输入框用它改任务、回 Agent、回答问题。登录就有官方模型；也可以换成你自己的。",
+  "composerOfficialSignedOut": "没登录时只在本机读日期。",
+  "composerOfficialSignIn": "登录",
+  "composerOfficialUsedUp": "今天的官方额度用完了：日期和提醒在本机读出。明天恢复。",
+  "problemOfficialQuota": "今天的官方额度用完了，明天恢复。",
+  "problemOfficialSignedOut": "登录已失效，重新登录后就能用。",
+  "problemOfficialOff": "这个服务器没有提供官方模型。"
 }

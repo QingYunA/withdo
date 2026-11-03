@@ -152,6 +152,9 @@ type FakeModels struct {
 	TestFn func(id string, e ProviderEdit) (time.Duration, error)
 	// ListFn answers the model list; nil has no list, so the suggestions stand in.
 	ListFn func(id string, e ProviderEdit) ([]string, error)
+	// Info is the official card; the zero value offers nothing. InUse follows the provider file:
+	// the official model is in use while no provider of one's own is.
+	Info OfficialInfo
 }
 
 var _ ModelSettings = (*FakeModels)(nil)
@@ -171,3 +174,21 @@ func (f *FakeModels) ListModels(_ context.Context, id string, e ProviderEdit) ([
 	}
 	return f.ListFn(id, e)
 }
+
+// Official implements ModelSettings.
+func (f *FakeModels) Official() OfficialInfo {
+	info := f.Info
+	if info.Phase == OfficialHidden && info.Left == 0 {
+		info.Left = -1
+	}
+	info.InUse = (info.Phase == OfficialReady || info.Phase == OfficialUsedUp) && f.Provider.Config().Active == ""
+	return info
+}
+
+// TestOfficial implements ModelSettings: it works in 120 ms.
+func (f *FakeModels) TestOfficial(context.Context) (time.Duration, error) {
+	return 120 * time.Millisecond, nil
+}
+
+// RefreshOfficial implements ModelSettings.
+func (f *FakeModels) RefreshOfficial() {}

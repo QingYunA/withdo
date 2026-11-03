@@ -16,18 +16,34 @@ type AgentAssistant struct {
 	Provider *providers.Manager
 	// Images keeps the pictures of a turn with the tasks it created or changed; nil keeps none.
 	Images Images
+	// Official is where the official model comes from (the sync session); nil has none, so only
+	// the provider of one's own can answer.
+	Official OfficialSource
 }
 
 var _ Assistant = (*AgentAssistant)(nil)
 
+// Selector is the rule for which model answers: the user's own provider when one is in use,
+// else the official model, else none. Pass its Model to the agent as its ModelFunc.
+func (a *AgentAssistant) Selector() providers.Selector {
+	sel := providers.Selector{Own: a.Provider}
+	if a.Official != nil {
+		sel.Official = a.Official.OfficialModel
+	}
+	return sel
+}
+
 // Configured implements Assistant.
-func (a *AgentAssistant) Configured() bool { return a.Provider.Configured() }
+func (a *AgentAssistant) Configured() bool { return a.Selector().Configured() }
 
 // Ask implements Assistant. The error is already in plain words.
 func (a *AgentAssistant) Ask(ctx context.Context, text string, place Place, pictures ...Attachment) (Reply, error) {
 	images := make([]agent.Image, len(pictures))
 	for i, p := range pictures {
 		images[i] = agent.Image{MIME: p.MIME, Data: p.Data}
+	}
+	if a.Official != nil {
+		defer a.Official.RefreshOfficial() // the turn used one: the card and the rule read the new count
 	}
 	res, err := a.Agent.Ask(ctx, text, agent.Scope{Kind: agent.ScopeKind(place.Kind), ProjectID: int64(place.ProjectID), TaskID: int64(place.TaskID), Day: place.Day, CategoryID: int64(place.Category)}, images...)
 	out := Reply{Text: res.Reply}
@@ -103,6 +119,10 @@ var problemKinds = map[providers.Kind]Problem{
 	providers.KindUnknownModel:  ProblemUnknownModel,
 	providers.KindRateLimited:   ProblemRateLimited,
 	providers.KindNoImages:      ProblemNoImages,
+
+	providers.KindOfficialQuota:     ProblemOfficialQuota,
+	providers.KindOfficialSignedOut: ProblemOfficialSignedOut,
+	providers.KindOfficialOff:       ProblemOfficialOff,
 }
 
 // Undo implements Assistant.
@@ -144,14 +164,23 @@ func (a *AgentAssistant) Summarize(ctx context.Context, req SummaryRequest) (Sum
 
 // modelName is the model the next request would use, as the provider file says.
 func (a *AgentAssistant) modelName() string {
+	if a.Selector().Source() == providers.SourceOfficial {
+		return OfficialName
+	}
 	cfg := a.Provider.Config()
 	r, _ := cfg.Resolve(cfg.Active)
 	return r.Model
 }
 
+// OfficialName is how the official model is named where a model's name shows: the composer's
+// chip, a summary's footer.
+const OfficialName = "Withdo"
+
 // ProviderSettings is the ModelSettings backed by the provider file and the keychain.
 type ProviderSettings struct {
 	Provider *providers.Manager
+	// OfficialFrom is the official model's state; nil has none.
+	OfficialFrom OfficialSource
 
 	mu    sync.Mutex
 	saved map[string]bool // key presence, read from the keychain once per provider
@@ -229,4 +258,39 @@ func (p *ProviderSettings) Test(ctx context.Context, id string, e ProviderEdit) 
 // ListModels implements ModelSettings.
 func (p *ProviderSettings) ListModels(ctx context.Context, id string, e ProviderEdit) ([]string, error) {
 	return p.Provider.Models(ctx, id, entryOf(e), e.Key)
+}
+
+// Official implements ModelSettings.
+func (p *ProviderSettings) Official() OfficialInfo {
+	if p.OfficialFrom == nil {
+		return OfficialInfo{Left: -1}
+	}
+	info := p.OfficialFrom.OfficialInfo()
+	sel := providers.Selector{Own: p.Provider, Official: p.OfficialFrom.OfficialModel}
+	info.InUse = sel.Source() == providers.SourceOfficial
+	return info
+}
+
+// UseOfficial implements ModelSettings.
+func (p *ProviderSettings) UseOfficial() error {
+	return p.Provider.Save(p.Provider.Config().WithoutActive())
+}
+
+// TestOfficial implements ModelSettings.
+func (p *ProviderSettings) TestOfficial(ctx context.Context) (time.Duration, error) {
+	if p.OfficialFrom == nil {
+		return 0, providers.ErrOfficialOff
+	}
+	d, err := p.OfficialFrom.TestOfficial(ctx)
+	if err != nil {
+		return 0, problemFor(err)
+	}
+	return d, nil
+}
+
+// RefreshOfficial implements ModelSettings.
+func (p *ProviderSettings) RefreshOfficial() {
+	if p.OfficialFrom != nil {
+		p.OfficialFrom.RefreshOfficial()
+	}
 }

@@ -162,6 +162,16 @@ type ModelSettings interface {
 	// ListModels asks the provider which models it offers, with the stored key unless e has one.
 	// A failure is not shown to the user: the preset's suggestions stand in.
 	ListModels(ctx context.Context, id string, e ProviderEdit) ([]string, error)
+	// Official is the official model's card: signed in or out, turns left today, and whether it is
+	// the model in use.
+	Official() OfficialInfo
+	// UseOfficial makes the official model the one in use: no provider of one's own is chosen.
+	// The providers' settings and keys stay.
+	UseOfficial() error
+	// TestOfficial checks the session and the server without spending a turn.
+	TestOfficial(ctx context.Context) (time.Duration, error)
+	// RefreshOfficial asks the server for today's turns again, soon (Settings opening).
+	RefreshOfficial()
 }
 
 // Problem says why a request to the model failed, so the views can word it in the user's
@@ -180,6 +190,12 @@ const (
 	ProblemRateLimited
 	ProblemBusy     // a second request while one runs
 	ProblemNoImages // pictures were sent to a model that cannot read them
+	// ProblemOfficialQuota is today's turns with the official model used up.
+	ProblemOfficialQuota
+	// ProblemOfficialSignedOut is the official model asked with no session, or the server refusing it.
+	ProblemOfficialSignedOut
+	// ProblemOfficialOff is a server with no official model.
+	ProblemOfficialOff
 )
 
 // ProblemError is a failure the views word themselves. Error is the English text; Err is the
