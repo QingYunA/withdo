@@ -11,7 +11,7 @@ import xyz.sriai.adhdtodo.core.Core_
  * touch SQLite or the network, so the screens call these from Dispatchers.IO, never on the UI
  * thread.
  */
-class CoreApi(private val core: Core_) {
+class CoreApi(private val core: Core_) : AssistantBackend {
 
     fun mine(): MinePage = PageJson.decodeFromString(core.mine())
 
@@ -20,6 +20,10 @@ class CoreApi(private val core: Core_) {
     fun projects(): List<Project> = PageJson.decodeFromString(core.projects())
 
     fun categories(): List<Category> = PageJson.decodeFromString(core.categories())
+
+    /** The Calendar tab's month grid; [weekStart] is the first weekday, 0 Sunday to 6 Saturday. */
+    fun calendar(year: Int, month: Int, weekStart: Int): CalendarPage =
+        PageJson.decodeFromString(core.calendar(year.toLong(), month.toLong(), weekStart.toLong()))
 
     /** The task menu's ready-made reminders for now, in the order the menu shows them. */
     fun remindPresets(): List<RemindPreset> = PageJson.decodeFromString(core.remindPresets())
@@ -124,6 +128,20 @@ class CoreApi(private val core: Core_) {
 
     /** Reads the composer's text without a model; cheap enough to call on every change. */
     fun parseQuick(text: String): QuickParse = PageJson.decodeFromString(core.parseQuick(text))
+
+    // ---- The assistant (v44) ----------------------------------------------------------------
+
+    override fun modelState(): ModelState = PageJson.decodeFromString(core.modelState())
+
+    /** Gives the official model [text] typed in [place]; blocks until it has answered. */
+    override fun ask(text: String, place: AssistantPlace): AssistantReply =
+        PageJson.decodeFromString(core.ask(text, PageJson.encodeToString(place)))
+
+    /** Reverts the change a receipt of [ask] describes. */
+    override fun undo(receiptId: Long) = core.undo(receiptId)
+
+    /** Cancels the [ask] in flight. */
+    override fun stop() = core.stopAsk()
 
     // ---- Select: bulk edits and their Undo --------------------------------------------------
 

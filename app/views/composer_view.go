@@ -307,7 +307,9 @@ func (m *Main) notice(c *ui.Context, t *theme.Tokens) {
 }
 
 // setUpLine is the one extra line of a composer with no model behind it: while the field is
-// focused and empty, a quiet way to Settings > Assistant. Enter adds a plain task meanwhile.
+// focused and empty, a quiet way to Settings > Model, or, where the official model would answer,
+// the reason it does not (signed out, with Sign in; the day's allowance used up). Enter adds a plain
+// task meanwhile.
 func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 	cs := &m.cmp[surfacePage]
 	if m.app.Assistant == nil || m.assistReady() || cs.buf != "" || !(cs.ref.Focused(c) || cs.setUpHover) {
@@ -317,11 +319,28 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 	// A press on the line takes the focus from the field: the line stays while the pointer is on it,
 	// so the click is not lost.
 	top, left := m.lineEdge()
-	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).AlignItems(ui.Center).Children(func() {
-		l := link(c, t, m.say.ComposerChipSetUp())
+	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).Gap(5).AlignItems(ui.Center).Children(func() {
+		var text, linkText string
+		pane := PaneModel
+		switch m.officialPhase() {
+		case data.OfficialSignedOut: // the official model would answer after signing in
+			text, linkText, pane = m.say.ComposerOfficialSignedOut(), m.say.ComposerOfficialSignIn(), PaneAccount
+		case data.OfficialUsedUp:
+			text = m.say.ComposerOfficialUsedUp()
+		default:
+			linkText = m.say.ComposerChipSetUp()
+		}
+		if text != "" {
+			theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
+		}
+		cs.setUpHover = false
+		if linkText == "" {
+			return
+		}
+		l := link(c, t, linkText).Shrink(0)
 		cs.setUpHover = l.Hovered()
 		if l.Clicked() {
-			m.openSettings(PaneModel)
+			m.openSettings(pane)
 		}
 	})
 }

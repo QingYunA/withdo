@@ -12727,3 +12727,257 @@ func ToastMovedToToday() string { return In(i18n.Locale()).ToastMovedToToday() }
 func (msgs Messages) ToastMovedToToday() string {
 	return Catalog.Format(msgs.locale, "toastMovedToToday", nil)
 }
+
+// SettingsOfficialName says "Withdo model"
+// in the language the app shows.
+//
+// Name of the official model in Settings > Model: the model that comes with
+// the account.
+func SettingsOfficialName() string { return In(i18n.Locale()).SettingsOfficialName() }
+
+// SettingsOfficialName says "Withdo model"
+// in the language of msgs.
+//
+// Name of the official model in Settings > Model: the model that comes with
+// the account.
+func (msgs Messages) SettingsOfficialName() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialName", nil)
+}
+
+// SettingsOfficialProvided says "Included with your account"
+// in the language the app shows.
+//
+// First part of the official model's status line.
+func SettingsOfficialProvided() string { return In(i18n.Locale()).SettingsOfficialProvided() }
+
+// SettingsOfficialProvided says "Included with your account"
+// in the language of msgs.
+//
+// First part of the official model's status line.
+func (msgs Messages) SettingsOfficialProvided() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialProvided", nil)
+}
+
+// SettingsOfficialAvailable says "Available"
+// in the language the app shows.
+//
+// Official model status next to a green square: signed in, and turns are
+// left.
+func SettingsOfficialAvailable() string { return In(i18n.Locale()).SettingsOfficialAvailable() }
+
+// SettingsOfficialAvailable says "Available"
+// in the language of msgs.
+//
+// Official model status next to a green square: signed in, and turns are
+// left.
+func (msgs Messages) SettingsOfficialAvailable() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialAvailable", nil)
+}
+
+// SettingsOfficialLeft says "{count} left today"
+// in the language the app shows.
+//
+// Turns of the official model left today.
+func SettingsOfficialLeft(count string) string { return In(i18n.Locale()).SettingsOfficialLeft(count) }
+
+// SettingsOfficialLeft says "{count} left today"
+// in the language of msgs.
+//
+// Turns of the official model left today.
+func (msgs Messages) SettingsOfficialLeft(count string) string {
+	return Catalog.Format(msgs.locale, "settingsOfficialLeft", map[string]any{"count": count})
+}
+
+// SettingsOfficialUsedUp says "Used up for today"
+// in the language the app shows.
+//
+// Official model status when today's turns are all used.
+func SettingsOfficialUsedUp() string { return In(i18n.Locale()).SettingsOfficialUsedUp() }
+
+// SettingsOfficialUsedUp says "Used up for today"
+// in the language of msgs.
+//
+// Official model status when today's turns are all used.
+func (msgs Messages) SettingsOfficialUsedUp() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialUsedUp", nil)
+}
+
+// SettingsOfficialBack says "Back tomorrow"
+// in the language the app shows.
+//
+// Said after the official model's allowance is used up: it starts again
+// tomorrow.
+func SettingsOfficialBack() string { return In(i18n.Locale()).SettingsOfficialBack() }
+
+// SettingsOfficialBack says "Back tomorrow"
+// in the language of msgs.
+//
+// Said after the official model's allowance is used up: it starts again
+// tomorrow.
+func (msgs Messages) SettingsOfficialBack() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialBack", nil)
+}
+
+// SettingsOfficialSignedOut says "Sign in to use it. There is a free allowance every day."
+// in the language the app shows.
+//
+// Line of the official model's card when nobody is signed in.
+func SettingsOfficialSignedOut() string { return In(i18n.Locale()).SettingsOfficialSignedOut() }
+
+// SettingsOfficialSignedOut says "Sign in to use it. There is a free allowance every day."
+// in the language of msgs.
+//
+// Line of the official model's card when nobody is signed in.
+func (msgs Messages) SettingsOfficialSignedOut() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialSignedOut", nil)
+}
+
+// SettingsOfficialSignIn says "Sign in"
+// in the language the app shows.
+//
+// Button of the official model's card when signed out: opens the Account
+// pane.
+func SettingsOfficialSignIn() string { return In(i18n.Locale()).SettingsOfficialSignIn() }
+
+// SettingsOfficialSignIn says "Sign in"
+// in the language of msgs.
+//
+// Button of the official model's card when signed out: opens the Account
+// pane.
+func (msgs Messages) SettingsOfficialSignIn() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialSignIn", nil)
+}
+
+// SettingsOfficialUseThis says "Use this"
+// in the language the app shows.
+//
+// Button of the official model's row while a model of one's own is in use:
+// switch to the official one.
+func SettingsOfficialUseThis() string { return In(i18n.Locale()).SettingsOfficialUseThis() }
+
+// SettingsOfficialUseThis says "Use this"
+// in the language of msgs.
+//
+// Button of the official model's row while a model of one's own is in use:
+// switch to the official one.
+func (msgs Messages) SettingsOfficialUseThis() string {
+	return Catalog.Format(msgs.locale, "settingsOfficialUseThis", nil)
+}
+
+// SettingsUseOwn says "Use your own model"
+// in the language the app shows.
+//
+// Label above the provider tiles when the official model is offered.
+func SettingsUseOwn() string { return In(i18n.Locale()).SettingsUseOwn() }
+
+// SettingsUseOwn says "Use your own model"
+// in the language of msgs.
+//
+// Label above the provider tiles when the official model is offered.
+func (msgs Messages) SettingsUseOwn() string {
+	return Catalog.Format(msgs.locale, "settingsUseOwn", nil)
+}
+
+// SettingsPaneModelLineOfficial says "The input uses it to change tasks, answer agents and answer questions. Sign in for the official model, or use your own."
+// in the language the app shows.
+//
+// Line under the title of Settings > Model when the official model is
+// offered.
+func SettingsPaneModelLineOfficial() string { return In(i18n.Locale()).SettingsPaneModelLineOfficial() }
+
+// SettingsPaneModelLineOfficial says "The input uses it to change tasks, answer agents and answer questions. Sign in for the official model, or use your own."
+// in the language of msgs.
+//
+// Line under the title of Settings > Model when the official model is
+// offered.
+func (msgs Messages) SettingsPaneModelLineOfficial() string {
+	return Catalog.Format(msgs.locale, "settingsPaneModelLineOfficial", nil)
+}
+
+// ComposerOfficialSignedOut says "Signed out, the input only reads dates on this computer."
+// in the language the app shows.
+//
+// Quiet line under the input when nobody is signed in and the official
+// model would answer.
+func ComposerOfficialSignedOut() string { return In(i18n.Locale()).ComposerOfficialSignedOut() }
+
+// ComposerOfficialSignedOut says "Signed out, the input only reads dates on this computer."
+// in the language of msgs.
+//
+// Quiet line under the input when nobody is signed in and the official
+// model would answer.
+func (msgs Messages) ComposerOfficialSignedOut() string {
+	return Catalog.Format(msgs.locale, "composerOfficialSignedOut", nil)
+}
+
+// ComposerOfficialSignIn says "Sign in"
+// in the language the app shows.
+//
+// Link after the quiet line under the input: opens the Account pane.
+func ComposerOfficialSignIn() string { return In(i18n.Locale()).ComposerOfficialSignIn() }
+
+// ComposerOfficialSignIn says "Sign in"
+// in the language of msgs.
+//
+// Link after the quiet line under the input: opens the Account pane.
+func (msgs Messages) ComposerOfficialSignIn() string {
+	return Catalog.Format(msgs.locale, "composerOfficialSignIn", nil)
+}
+
+// ComposerOfficialUsedUp says "Today's allowance of the Withdo model is used up: dates and reminders are read on this computer. Back tomorrow."
+// in the language the app shows.
+//
+// Quiet line under the input when the official model's turns for today are
+// used up.
+func ComposerOfficialUsedUp() string { return In(i18n.Locale()).ComposerOfficialUsedUp() }
+
+// ComposerOfficialUsedUp says "Today's allowance of the Withdo model is used up: dates and reminders are read on this computer. Back tomorrow."
+// in the language of msgs.
+//
+// Quiet line under the input when the official model's turns for today are
+// used up.
+func (msgs Messages) ComposerOfficialUsedUp() string {
+	return Catalog.Format(msgs.locale, "composerOfficialUsedUp", nil)
+}
+
+// ProblemOfficialQuota says "Today's allowance of the Withdo model is used up. It comes back tomorrow."
+// in the language the app shows.
+//
+// Assistant error: the official model's daily turns are used up.
+func ProblemOfficialQuota() string { return In(i18n.Locale()).ProblemOfficialQuota() }
+
+// ProblemOfficialQuota says "Today's allowance of the Withdo model is used up. It comes back tomorrow."
+// in the language of msgs.
+//
+// Assistant error: the official model's daily turns are used up.
+func (msgs Messages) ProblemOfficialQuota() string {
+	return Catalog.Format(msgs.locale, "problemOfficialQuota", nil)
+}
+
+// ProblemOfficialSignedOut says "Sign in again to use the Withdo model."
+// in the language the app shows.
+//
+// Assistant error: the official model was asked with no valid session.
+func ProblemOfficialSignedOut() string { return In(i18n.Locale()).ProblemOfficialSignedOut() }
+
+// ProblemOfficialSignedOut says "Sign in again to use the Withdo model."
+// in the language of msgs.
+//
+// Assistant error: the official model was asked with no valid session.
+func (msgs Messages) ProblemOfficialSignedOut() string {
+	return Catalog.Format(msgs.locale, "problemOfficialSignedOut", nil)
+}
+
+// ProblemOfficialOff says "This server does not offer the Withdo model."
+// in the language the app shows.
+//
+// Assistant error: the sync server has no official model.
+func ProblemOfficialOff() string { return In(i18n.Locale()).ProblemOfficialOff() }
+
+// ProblemOfficialOff says "This server does not offer the Withdo model."
+// in the language of msgs.
+//
+// Assistant error: the sync server has no official model.
+func (msgs Messages) ProblemOfficialOff() string {
+	return Catalog.Format(msgs.locale, "problemOfficialOff", nil)
+}

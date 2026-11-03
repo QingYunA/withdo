@@ -2254,12 +2254,24 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    **Recent changes** with its switch; switched on with gh missing or signed out, its `meta` says
    what to run. Tiles keep the catalog order, and a tile shows a short name (`Copilot`) where the
    full one would not fit; More and the accessible label keep the full name.
-8. **Model** (the old Advanced): the provider in use as one card (36 pt logo, name, `model · ●
+8. **Model** (the old Advanced; v44 adds the official model): signed in to a server that offers it, the
+   first card is **Withdo 官方模型** (the 36 pt assistant sprite, `随账号提供 · ● 可用 · 今天还剩 86 次`,
+   a 4 pt quota bar in the done green, **Test**); the label becomes **Use your own model** /
+   `用自己的模型` over the provider tiles, none ringed. Choosing a provider makes it the one in use and
+   the official model becomes a one-row group under it with **Use this** / `改用这个`. Signed out,
+   the official card reads `登录后就能用，每天有免费额度` with an accent **Sign in** that opens Account.
+   The composer's model chip shows the assistant sprite and `Withdo` for the official model.
+   Before v44: the provider in use as one card (36 pt logo, name, `model · ●
    Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
    4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the
    one in use. Clicking a tile opens the key and model form under the grid (today's form); a set-up
    provider becomes the one in use at once and is tested. With nothing set up the card is replaced by
    one line: `Not set up: dates and reminders are still read on this computer.`
+   Built (M15): screens `settings-model-official-*`, `settings-model-official-signed-out-*`,
+   `settings-model-own-with-official-*`, `project-composer-official-*` (the chip), and the quiet lines
+   `mine-composer-official-signed-out-*` / `-used-up-*`. A server that does not offer the model shows none of this.
+   The official row under a provider of one's own says only the turns left; Test reads the quota
+   (it proves the session and the route without spending a turn); the chip's popover lists `Withdo` first.
 9. **About**: the app mark, `Withdo 0.12.0`, `Open source, AGPL-3.0`, links to GitHub, the privacy
    policy and the website (https://withdo.si/).
 10. **Old pane ids.** `PaneAdvanced` is gone: callers that opened it open **Model**. `Show` accepts
@@ -2820,6 +2832,37 @@ gestures and surfaces (last group). Pictures and the assistant's Summary paragra
   days. The share sheet and the widgets open their own short-lived core, as the reminder receiver
   does; a share does not sync by itself, the app's runner sends it on its next start. Widget cards
   are shape drawables with night variants, since Glance's corner radius needs Android 12.
+
+**v44 (2026-11-03), reference `docs/design/mockups/v44.html`: the phone's calendar and its assistant.**
+
+- **Calendar tab** (replaces the placeholder). Header: the month in `title` (`2026年11月`, `November
+  2026`), then a `‹ Today ›` segment (40 x 32 dp cells in a `bg.hover` well, Today raised) and the
+  cloud. A horizontal swipe on the grid pages months too. Weekday letters in `meta`
+  `text.tertiary`, weeks starting on the system's first weekday. The grid is a 0.5 dp hairline card,
+  cells 52 dp tall, weekends on `bg.sidebar`, other months' days in `text.tertiary`. A cell holds its
+  day number (today in an `iris 9` pill with white text; the selected day ringed 2 dp in `accent` at
+  60 %) and at most three 5 dp square dots: open in `slate 10`, overdue in `status.blocked`, finished
+  in `slate 7`, a milestone in `accent`; the desktop's day rules choose and order what counts
+  (`data.BuildCalendar`). A tap selects the day. Under the grid, the selected day: `11月3日 周二`
+  and the count, then its milestones as accent chips with the flag, then its rows (Today's rows;
+  reminders show the bell and the time, an overdue time in `status.blocked`, finished rows struck
+  through). The composer's placeholder is `加到 11月3日` / `Add to Nov 3`, and what is typed there
+  is due that day (18:00 unless the text says a time).
+- **The composer answers** when a model is there (the official one or none on the phone). Sending
+  keeps the text and shows, above the box, a pixel spinner and `正在想…` / `Thinking…`; the send
+  button becomes stop (a white square on `slate 12`). The answer is a card above the box (`bg.sidebar`,
+  radius 16, 0.5 dp edge): the assistant avatar and its summary line (`已添加 1 件，交给 Claude Code
+  1 件`) with `撤销` in accent, then one line per change with what it read (`明天 9:00`, `withdo ·
+  交给 Claude Code`). A question shows its text and the options as 36 dp pills, the first tinted;
+  a tap answers. A plain answer is the paragraph alone. New rows get the `iris 3` wash for 2 s. The
+  card closes on the next send or a tap outside.
+- **Under the box**, the model chip `Withdo 官方 ⌄` (24 dp, `bg.hover`) while the official model
+  answers. Signed out, or past the day's quota, there is no chip: the local rules add the task and
+  one quiet line under the card says what was not done (`今天的官方额度用完了：日期和提醒在本机读出，
+  “让 Claude 修 bug”没有交出去。明天 0 点恢复。`, or `没登录时只在本机读日期。登录后，输入框就能交任务给
+  Agent、回答问题。` with `登录` in accent). Never a dialog.
+- **Settings** gains an **Assistant** / `助手` group under the account: `Withdo 官方模型` with
+  `● 可用 · 今天还剩 86 次`, or `登录后就能用` signed out, or `今天的额度用完了` past the quota.
 
 ## Writing
 

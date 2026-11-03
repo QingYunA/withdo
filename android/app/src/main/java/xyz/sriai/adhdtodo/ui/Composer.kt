@@ -59,6 +59,14 @@ fun Composer(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onUndo: (() -> Unit)? = null,
+    /** Pressing Send while the model thinks stops the turn; null leaves Send as it is. */
+    onStop: (() -> Unit)? = null,
+    /** The assistant's card (with its quiet line) above the box; it takes the place of [notice]. */
+    above: (@Composable () -> Unit)? = null,
+    /** `Thinking…` above the box. */
+    thinking: Boolean = false,
+    /** The model chip under the text. */
+    chip: (@Composable () -> Unit)? = null,
     onImage: (() -> Unit)? = null,
     onVoice: (() -> Unit)? = null,
     highlights: List<IntRange> = emptyList(),
@@ -80,9 +88,11 @@ fun Composer(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 10.dp),
     ) {
+        above?.invoke()
+        if (thinking) ThinkingLine()
         if (preview != null) {
             QuickPreviewLine(preview, onIgnorePreview)
-        } else if (notice != null) {
+        } else if (notice != null && above == null) {
             Row(
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -155,8 +165,11 @@ fun Composer(
                     },
                 )
                 if (onImage == null && onVoice == null) {
-                    SendButton(hasText) { if (hasText && !sending) onSend() }
+                    if (sending && onStop != null) StopButton(onStop) else SendButton(hasText) { if (hasText && !sending) onSend() }
                 }
+            }
+            if (chip != null) {
+                Box(Modifier.padding(start = 48.dp, bottom = 8.dp)) { chip() }
             }
             if (onImage != null || onVoice != null) {
                 Row(
@@ -174,7 +187,7 @@ fun Composer(
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    SendButton(hasText) { if (hasText && !sending) onSend() }
+                    if (sending && onStop != null) StopButton(onStop) else SendButton(hasText) { if (hasText && !sending) onSend() }
                 }
             }
         }
@@ -214,6 +227,15 @@ private fun SendButton(hasText: Boolean, onClick: () -> Unit) {
         onClick = onClick,
     ) {
         PixelIcon("arrow-up", size = 24.dp, tint = if (hasText) tokens.onAccent else tokens.textTertiary)
+    }
+}
+
+/** Send while the model thinks: a white square on slate 12; a tap stops the turn. */
+@Composable
+private fun StopButton(onClick: () -> Unit) {
+    val tokens = LocalTokens.current
+    ControlButton(label = stringResource(R.string.assistant_stop), fill = tokens.text, onClick = onClick) {
+        Box(Modifier.size(14.dp).background(tokens.bg))
     }
 }
 

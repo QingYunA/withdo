@@ -75,6 +75,17 @@ func (c Config) WithActive(id string) Config {
 	return next
 }
 
+// WithoutActive returns a copy of the config with no preset active: the user's own provider is not
+// in use, and the official model answers where it is offered. Every entry stays, so choosing a
+// provider again finds its settings.
+func (c Config) WithoutActive() Config {
+	next := Config{Providers: make(map[string]Entry, len(c.Providers))}
+	for k, v := range c.Providers {
+		next.Providers[k] = v
+	}
+	return next
+}
+
 // Store reads and writes the provider file.
 type Store struct {
 	path string

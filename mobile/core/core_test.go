@@ -63,6 +63,9 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	if typ := reflect.TypeOf(SeedDemo); !bindableSignature(typ, bindable) {
 		t.Errorf("SeedDemo is not bindable: %s", typ)
 	}
+	if typ := reflect.TypeOf(SetZone); !bindableSignature(typ, bindable) {
+		t.Errorf("SetZone is not bindable: %s", typ)
+	}
 	coreType := reflect.TypeOf((*Core)(nil))
 	var methods []string
 	for i := 0; i < coreType.NumMethod(); i++ {
@@ -74,18 +77,18 @@ func TestTheExportedAPIIsBindable(t *testing.T) {
 	}
 	sort.Strings(methods)
 	want := []string{
-		"Accept", "Account", "AddLink", "Agents", "ArchiveProject", "ArchivedProjects", "Categories",
-		"CategoriesWithCounts", "CategoryIcons", "ClaimDueReminders", "Close", "CodeState", "Complete",
+		"Accept", "Account", "AddLink", "Agents", "ArchiveProject", "ArchivedProjects", "Ask", "Calendar",
+		"Categories", "CategoriesWithCounts", "CategoryIcons", "ClaimDueReminders", "Close", "CodeState", "Complete",
 		"Completed", "CreateCategory", "CreateMilestone", "CreateProject", "CreateTask",
 		"DeleteCategory", "DeleteProject", "DeleteTask", "DeleteTasks", "Devices", "DoToday",
 		"DoTodayMany", "GoogleAvailable", "GoogleCancel", "GoogleFinish", "GoogleLinkAvailable",
 		"GoogleLinkCancel", "GoogleLinkFinish", "GoogleLinkStart", "GoogleLinked", "GoogleStart",
-		"LinkMerge", "LinkReplace", "Mine", "MoveCategory", "MoveToAccount", "NextReminderAt",
+		"LinkMerge", "LinkReplace", "Mine", "ModelState", "MoveCategory", "MoveToAccount", "NextReminderAt",
 		"ParseQuick", "Project", "ProjectList", "Projects", "RemindPresets", "RenameProject", "Reply",
-		"RequestResetCode", "ResendCode", "ResetPassword", "RestoreCategory", "RestoreTask",
+		"RequestResetCode", "ResendCode", "Reset", "ResetPassword", "RestoreCategory", "RestoreTask",
 		"RestoreTaskStates", "RestoreTasks", "Search", "SetListener", "SignIn", "SignInWithCode",
-		"SignOut", "SignUp", "StartSync", "StopSync", "Summary", "SummaryMarkdown", "SyncNow",
-		"SyncSetServer", "SyncStatus", "Task", "UnarchiveProject", "UpdateCategory", "UpdateMilestone",
+		"SignOut", "SignUp", "StartSync", "StopAsk", "StopSync", "Summary", "SummaryMarkdown", "SyncNow",
+		"SyncSetServer", "SyncStatus", "Task", "UnarchiveProject", "Undo", "UpdateCategory", "UpdateMilestone",
 		"UpdateTask", "UpdateTasks",
 	}
 	if !reflect.DeepEqual(methods, want) {

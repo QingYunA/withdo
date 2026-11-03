@@ -72,6 +72,8 @@ type Core struct {
 	// links counts SignIn, LinkMerge and LinkReplace in flight; StartSync waits them out.
 	links  int
 	closed bool
+	// assist is the built-in assistant and the official model's state (assistant.go).
+	assist assistant
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

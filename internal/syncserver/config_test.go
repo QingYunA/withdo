@@ -34,3 +34,20 @@ func TestConfigNamesTheAccountSystem(t *testing.T) {
 		t.Fatalf("config = %s (%v)", body, err)
 	}
 }
+
+// TestConfigSaysWhetherTheOfficialModelIsOn checks that "llm" is false until a key is set.
+func TestConfigSaysWhetherTheOfficialModelIsOn(t *testing.T) {
+	h := newHarness(t)
+	var got struct {
+		LLM *bool `json:"llm"`
+	}
+	_, body := h.do(t, http.MethodGet, "/v1/config", "", nil)
+	if err := json.Unmarshal(body, &got); err != nil || got.LLM == nil || *got.LLM {
+		t.Fatalf("config without a key = %s (%v)", body, err)
+	}
+	h.server.EnableLLM(syncserver.LLMOptions{APIKey: "k"})
+	_, body = h.do(t, http.MethodGet, "/v1/config", "", nil)
+	if err := json.Unmarshal(body, &got); err != nil || got.LLM == nil || !*got.LLM {
+		t.Fatalf("config with a key = %s (%v)", body, err)
+	}
+}

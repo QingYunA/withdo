@@ -33,6 +33,8 @@ import xyz.sriai.adhdtodo.data.Account
 import xyz.sriai.adhdtodo.data.CategoryCount
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
+import xyz.sriai.adhdtodo.data.ModelPhase
+import xyz.sriai.adhdtodo.data.ModelState
 import xyz.sriai.adhdtodo.data.SyncStatus
 import xyz.sriai.adhdtodo.data.UpdatePhase
 import xyz.sriai.adhdtodo.data.UpdateUi
@@ -59,6 +61,8 @@ data class SettingsData(
     val devices: List<Device> = emptyList(),
     val status: SyncStatus? = null,
     val categories: List<CategoryCount> = emptyList(),
+    /** Which model answers the composer (v44): the Assistant group's row. */
+    val model: ModelState = ModelState(),
 )
 
 /** Reads what the settings pages show; a list that fails to load stays empty. Blocks: call it off the UI thread. */
@@ -67,6 +71,7 @@ fun loadSettingsData(api: CoreApi): SettingsData = SettingsData(
     devices = runCatching { api.devices() }.getOrDefault(emptyList()),
     status = runCatching { api.syncStatus() }.getOrNull(),
     categories = runCatching { api.categoriesWithCounts() }.getOrDefault(emptyList()),
+    model = runCatching { api.modelState() }.getOrDefault(ModelState()),
 )
 
 /** The project the app was built from: where About points. */
@@ -123,6 +128,11 @@ fun SettingsScreen(
                     onClick = onOpenSync,
                 )
             }
+        }
+
+        if (data.model.phase != ModelPhase.HIDDEN) {
+            GroupLabel(stringResource(R.string.settings_assistant))
+            GroupCard { AssistantRow(data.model, onOpenSync) }
         }
 
         GroupLabel(stringResource(R.string.settings_general))
@@ -239,6 +249,20 @@ private tailrec fun Context.activity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.activity()
     else -> null
+}
+
+/** `Withdo official model` and its state: `● Available · 86 left today`, or the reason there is none. */
+@Composable
+private fun AssistantRow(model: ModelState, onOpenSync: () -> Unit) {
+    val tokens = LocalTokens.current
+    val ready = model.phase == ModelPhase.READY
+    SettingsRow(
+        leading = { Avatar("assistant", size = 28.dp) },
+        title = stringResource(R.string.assistant_model_name),
+        subtitle = if (ready) "● ${modelLine(model)}" else modelLine(model),
+        subtitleColor = if (ready) tokens.categoryInk("green") else tokens.textSecondary,
+        onClick = if (model.phase == ModelPhase.SIGNED_OUT) onOpenSync else null,
+    )
 }
 
 private enum class AccountTone { Good, Bad, Quiet }

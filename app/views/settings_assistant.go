@@ -20,6 +20,7 @@ type assistState struct {
 	drafts map[string]*draft
 	lists  map[string]*modelList
 	fs     fields // the typed fields' keyboard state
+	asked  bool   // the official model's turns were asked for since the pane opened
 	saving bool   // Save and test is running
 	err    string // why the last Save and test failed, shown under the form
 }
@@ -35,7 +36,11 @@ type testResult struct {
 // modelPane is the user's own model: the provider in use, then the grid to switch, and the form of
 // a provider that is not set up yet.
 func (s *Settings) modelPane(c *ui.Context, t *theme.Tokens) {
-	paneHeader(c, t, s.say.SettingsPaneModel(), s.say.SettingsPaneModelLine())
+	line := s.say.SettingsPaneModelLine()
+	if s.app.Models != nil && s.app.Models.Official().Offered() {
+		line = s.say.SettingsPaneModelLineOfficial()
+	}
+	paneHeader(c, t, s.say.SettingsPaneModel(), line)
 	s.assistantPane(c, t)
 }
 
@@ -49,6 +54,8 @@ func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 	if s.assist.drafts == nil {
 		s.assist.drafts, s.assist.lists, s.assist.fs = map[string]*draft{}, map[string]*modelList{}, fields{}
 	}
+	s.officialAsked()
+	official := s.app.Models.Official()
 	ps := s.app.Models.Providers()
 	var inUse *data.Provider
 	for i := range ps {
@@ -57,12 +64,22 @@ func (s *Settings) assistantPane(c *ui.Context, t *theme.Tokens) {
 			break
 		}
 	}
-	if inUse != nil {
+	switch {
+	case inUse != nil:
 		s.inUseCard(c, t, *inUse)
-	} else {
+		if official.Offered() {
+			s.officialRow(c, t, official) // the model that comes with the account, one tap away
+		}
+	case official.Offered():
+		s.officialCard(c, t, official)
+	default:
 		theme.Paragraph(c, theme.Body, t.TextSecondary, s.say.SettingsModelNone(), 0).Margin(0, 4, 16)
 	}
-	groupLabel(c, t, s.say.SettingsSwitchTo())
+	label := s.say.SettingsSwitchTo()
+	if official.Offered() {
+		label = s.say.SettingsUseOwn()
+	}
+	groupLabel(c, t, label)
 	s.providerGrid(c, t, ps)
 	for _, p := range ps {
 		if p.ID == s.assist.pick {

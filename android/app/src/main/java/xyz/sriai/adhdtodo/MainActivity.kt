@@ -27,7 +27,7 @@ import xyz.sriai.adhdtodo.core.Core
 import xyz.sriai.adhdtodo.core.Core_
 import xyz.sriai.adhdtodo.core.Listener
 import xyz.sriai.adhdtodo.platform.AppUpdater
-import xyz.sriai.adhdtodo.platform.KeystoreSecrets
+import xyz.sriai.adhdtodo.platform.CoreOpen
 import xyz.sriai.adhdtodo.platform.ReminderReceiver
 import xyz.sriai.adhdtodo.platform.Reminders
 import xyz.sriai.adhdtodo.data.PageJson
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity(), Listener {
             val opened = withContext(Dispatchers.IO) {
                 try {
                     if (demo) Core.seedDemo(filesDir.absolutePath)
-                    Core.open(filesDir.absolutePath, KeystoreSecrets(this@MainActivity))
+                    CoreOpen.open(this@MainActivity)
                 } catch (_: Exception) {
                     null
                 }
@@ -151,6 +151,7 @@ class MainActivity : ComponentActivity(), Listener {
 
     override fun onResume() {
         super.onResume()
+        CoreOpen.setZone() // the phone may have moved to another zone while away
         updater.resumeAfterSettings()
         scheduleReminders()
     }

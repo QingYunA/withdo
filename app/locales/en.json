@@ -5012,5 +5012,79 @@
   "toastMovedToToday": "Moved to today",
   "@toastMovedToToday": {
     "description": "Toast after Do today; it carries Undo."
+  },
+  "settingsOfficialName": "Withdo model",
+  "@settingsOfficialName": {
+    "description": "Name of the official model in Settings > Model: the model that comes with the account."
+  },
+  "settingsOfficialProvided": "Included with your account",
+  "@settingsOfficialProvided": {
+    "description": "First part of the official model's status line."
+  },
+  "settingsOfficialAvailable": "Available",
+  "@settingsOfficialAvailable": {
+    "description": "Official model status next to a green square: signed in, and turns are left."
+  },
+  "settingsOfficialLeft": "{count} left today",
+  "@settingsOfficialLeft": {
+    "description": "Turns of the official model left today.",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "86"
+      }
+    }
+  },
+  "settingsOfficialUsedUp": "Used up for today",
+  "@settingsOfficialUsedUp": {
+    "description": "Official model status when today's turns are all used."
+  },
+  "settingsOfficialBack": "Back tomorrow",
+  "@settingsOfficialBack": {
+    "description": "Said after the official model's allowance is used up: it starts again tomorrow."
+  },
+  "settingsOfficialSignedOut": "Sign in to use it. There is a free allowance every day.",
+  "@settingsOfficialSignedOut": {
+    "description": "Line of the official model's card when nobody is signed in."
+  },
+  "settingsOfficialSignIn": "Sign in",
+  "@settingsOfficialSignIn": {
+    "description": "Button of the official model's card when signed out: opens the Account pane."
+  },
+  "settingsOfficialUseThis": "Use this",
+  "@settingsOfficialUseThis": {
+    "description": "Button of the official model's row while a model of one's own is in use: switch to the official one."
+  },
+  "settingsUseOwn": "Use your own model",
+  "@settingsUseOwn": {
+    "description": "Label above the provider tiles when the official model is offered."
+  },
+  "settingsPaneModelLineOfficial": "The input uses it to change tasks, answer agents and answer questions. Sign in for the official model, or use your own.",
+  "@settingsPaneModelLineOfficial": {
+    "description": "Line under the title of Settings > Model when the official model is offered."
+  },
+  "composerOfficialSignedOut": "Signed out, the input only reads dates on this computer.",
+  "@composerOfficialSignedOut": {
+    "description": "Quiet line under the input when nobody is signed in and the official model would answer."
+  },
+  "composerOfficialSignIn": "Sign in",
+  "@composerOfficialSignIn": {
+    "description": "Link after the quiet line under the input: opens the Account pane."
+  },
+  "composerOfficialUsedUp": "Today's allowance of the Withdo model is used up: dates and reminders are read on this computer. Back tomorrow.",
+  "@composerOfficialUsedUp": {
+    "description": "Quiet line under the input when the official model's turns for today are used up."
+  },
+  "problemOfficialQuota": "Today's allowance of the Withdo model is used up. It comes back tomorrow.",
+  "@problemOfficialQuota": {
+    "description": "Assistant error: the official model's daily turns are used up."
+  },
+  "problemOfficialSignedOut": "Sign in again to use the Withdo model.",
+  "@problemOfficialSignedOut": {
+    "description": "Assistant error: the official model was asked with no valid session."
+  },
+  "problemOfficialOff": "This server does not offer the Withdo model.",
+  "@problemOfficialOff": {
+    "description": "Assistant error: the sync server has no official model."
   }
 }
