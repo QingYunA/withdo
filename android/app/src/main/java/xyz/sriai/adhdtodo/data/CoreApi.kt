@@ -11,7 +11,7 @@ import xyz.sriai.adhdtodo.core.Core_
  * touch SQLite or the network, so the screens call these from Dispatchers.IO, never on the UI
  * thread.
  */
-class CoreApi(private val core: Core_) {
+class CoreApi(private val core: Core_) : AssistantBackend {
 
     fun mine(): MinePage = PageJson.decodeFromString(core.mine())
 
@@ -128,6 +128,20 @@ class CoreApi(private val core: Core_) {
 
     /** Reads the composer's text without a model; cheap enough to call on every change. */
     fun parseQuick(text: String): QuickParse = PageJson.decodeFromString(core.parseQuick(text))
+
+    // ---- The assistant (v44) ----------------------------------------------------------------
+
+    override fun modelState(): ModelState = PageJson.decodeFromString(core.modelState())
+
+    /** Gives the official model [text] typed in [place]; blocks until it has answered. */
+    override fun ask(text: String, place: AssistantPlace): AssistantReply =
+        PageJson.decodeFromString(core.ask(text, PageJson.encodeToString(place)))
+
+    /** Reverts the change a receipt of [ask] describes. */
+    override fun undo(receiptId: Long) = core.undo(receiptId)
+
+    /** Cancels the [ask] in flight. */
+    override fun stop() = core.stopAsk()
 
     // ---- Select: bulk edits and their Undo --------------------------------------------------
 

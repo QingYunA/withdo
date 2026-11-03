@@ -58,6 +58,7 @@ import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
 import xyz.sriai.adhdtodo.data.Item
 import xyz.sriai.adhdtodo.data.MinePage
+import xyz.sriai.adhdtodo.data.ModelPhase
 import xyz.sriai.adhdtodo.data.Milestone
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.Project
@@ -148,6 +149,8 @@ fun App(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var taskMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
     var composeFocus by remember { mutableIntStateOf(0) }
+    // The assistant behind the box (v44): the official model's state, the turn in flight and its card.
+    val assistant = remember { AssistantState() }
     // Select mode (v43): who is ticked (null: off), the rows the page draws, and the bar's two pickers.
     var selection by remember { mutableStateOf<Set<Long>?>(null) }
     var selectOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
@@ -277,6 +280,15 @@ fun App(
     // The system back leaves select mode first; so does moving to another page.
     BackHandler(enabled = selection != null) { selection = null }
     LaunchedEffect(route, tabName) { selection = null }
+    LaunchedEffect(route, tabName) { assistant.dismiss() }
+    // Which model would answer: read again with the sync status, and while it is not known yet.
+    LaunchedEffect(syncStatusJson, revision) {
+        while (true) {
+            val read = withContext(Dispatchers.IO) { runCatching { api.modelState() }.getOrNull() }
+            if (read != null) assistant.model = read
+            delay(if (assistant.model.phase == ModelPhase.HIDDEN) 3000 else 60000)
+        }
+    }
 
     LaunchedEffect(noticeId) {
         if (notice != null) {
@@ -538,7 +550,8 @@ fun App(
     var ignoredQuick by remember { mutableStateOf<String?>(null) }
     val activeQuick = quickParse?.takeIf { it.readAny() && ignoredQuick != draft }
 
-    val submit: () -> Unit = {
+    val submitLocal: (QuietNote?) -> Unit = { note ->
+        assistant.dismiss()
         val title = draft.trim()
         val projectId = if (route.startsWith("project:")) route.substringAfter(':').toLongOrNull() else null
         val quick = activeQuick
@@ -573,7 +586,12 @@ fun App(
                         noDateOpen = true
                         highlightId = made
                     }
-                    showNotice(
+                    if (note != null) {
+                        assistant.card = localCard(
+                            resources, words, quick, if (quick != null) quick.drafts.map { it.title } else listOf(title),
+                            madeAll.orEmpty(), note,
+                        )
+                    } else showNotice(
                         if (quick != null && (!onCalendar || quickReadsDate(quick))) {
                             quickReceipt(resources, words, quick)
                         } else if (onCalendar) {
@@ -595,6 +613,52 @@ fun App(
                     showNotice(resources.getString(R.string.add_failed))
                 }
             }
+        }
+    }
+
+    // With the official model there the box asks it (v44); it falls back to the local rules above.
+    val onTaskPage = route.startsWith("task:")
+    val askModel: (String) -> Unit = { text ->
+        if (text.isNotEmpty() && !sending && !assistant.thinking) {
+            val place = assistantPlace(
+                route, tab, calDay, activeCat.takeIf { it > 0 && route == "home" && tab == Tab.MINE } ?: 0L,
+                ZoneId.systemDefault(),
+            )
+            scope.launch {
+                when (val outcome = assistant.runTurn(api, resources, words, text, place)) {
+                    is TurnOutcome.Answer -> {
+                        if (text == draft.trim()) draft = ""
+                        val added = assistant.card?.newTaskId ?: 0L
+                        if (added != 0L) {
+                            highlightId = added
+                            // An undated task opens the No date fold, where the new row shows.
+                            if (!onCalendar && !route.startsWith("project:") &&
+                                outcome.reply.receipts.any { it.taskId == added && it.detail.kind == "added" }
+                            ) {
+                                noDateOpen = true
+                            }
+                        }
+                        tick++
+                    }
+                    is TurnOutcome.Fallback -> submitLocal(outcome.note)
+                    else -> Unit
+                }
+                delay(1500)
+                runCatching { withContext(Dispatchers.IO) { api.modelState() } }.getOrNull()?.let { assistant.model = it }
+            }
+        }
+    }
+    val submit: () -> Unit = {
+        if (assistant.asks(onTaskPage)) askModel(draft.trim()) else submitLocal(if (onTaskPage) null else quietForModel(assistant.model))
+    }
+    val undoCard: () -> Unit = {
+        val undo = assistant.card?.undo
+        assistant.dismiss()
+        highlightId = 0L
+        when (undo) {
+            is CardUndo.Receipts -> perform { undo.ids.forEach { api.undo(it) } }
+            is CardUndo.Tasks -> perform { undo.ids.forEach { api.deleteTask(it) } }
+            null -> Unit
         }
     }
 
@@ -892,7 +956,7 @@ fun App(
                 onSync = { pullSync() },
                 modifier = Modifier.weight(1f),
             ) {
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().dismissOnTouch(assistant.card != null) { assistant.dismiss() }) {
                 when {
                     route == "sync" -> {
                         val model = fake ?: SyncModel(
@@ -1196,7 +1260,7 @@ fun App(
                         onReopen = { id -> perform { api.updateTask(id, TaskPatch(status = "todo")) } },
                     )
                     route == ROUTE_SETTINGS -> SettingsRoute(
-                        data = settingsData,
+                        data = settingsData.copy(model = assistant.model),
                         status = shownStatus,
                         update = update,
                         onOpenSync = { openSync() },
@@ -1323,12 +1387,29 @@ fun App(
             }
 
             if (composerVisible && selection == null) {
-                val placeholder = composerPlaceholder
+                val placeholder = if (assistant.card?.question != null) {
+                    stringResource(R.string.assistant_answer_hint)
+                } else {
+                    composerPlaceholder
+                }
                 Composer(
                     value = draft,
                     placeholder = placeholder,
                     notice = notice,
-                    sending = sending,
+                    sending = sending || assistant.thinking,
+                    thinking = assistant.thinking,
+                    onStop = if (assistant.thinking) ({ scope.launch(Dispatchers.IO) { runCatching { api.stop() } } }) else null,
+                    above = assistant.card?.let { card ->
+                        {
+                            AssistantAbove(
+                                card = card,
+                                onUndo = undoCard,
+                                onPick = askModel,
+                                onSignIn = { assistant.dismiss(); openSync() },
+                            )
+                        }
+                    },
+                    chip = if (assistant.model.official && !onTaskPage) ({ ModelChip { assistant.sheet = true } }) else null,
                     onValueChange = { draft = it },
                     onSend = if (route.startsWith("task:")) sendReply else submit,
                     onUndo = noticeUndo,
@@ -1373,6 +1454,7 @@ fun App(
     }
     }
 
+    if (assistant.sheet) ModelSheet(assistant.model) { assistant.sheet = false }
     if (bulkSheet == "move") {
         BulkMoveSheet(
             projects = bulkProjects,

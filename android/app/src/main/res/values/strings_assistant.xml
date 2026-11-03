@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The assistant behind the composer (v44): the official model answers when it is there. -->
+    <string name="assistant_name">Assistant</string>
+    <!-- Above the box while the model works. -->
+    <string name="assistant_thinking">Thinking…</string>
+    <string name="assistant_stop">Stop</string>
+    <!-- The composer's placeholder while the assistant's question is open. -->
+    <string name="assistant_answer_hint">Answer, or say it another way</string>
+
+    <!-- The card's summary line, joined by assistant_join: what the turn changed. -->
+    <plurals name="assistant_added">
+        <item quantity="one">Added %d</item>
+        <item quantity="other">Added %d</item>
+    </plurals>
+    <plurals name="assistant_updated">
+        <item quantity="one">Updated %d</item>
+        <item quantity="other">Updated %d</item>
+    </plurals>
+    <plurals name="assistant_finished">
+        <item quantity="one">Finished %d</item>
+        <item quantity="other">Finished %d</item>
+    </plurals>
+    <string name="assistant_noted">Noted</string>
+    <string name="assistant_forgot">Forgot a note</string>
+    <string name="assistant_join">", "</string>
+
+    <!-- The chip after a row of the card: what an update changed. -->
+    <string name="assistant_change_reminder_cleared">reminder cleared</string>
+    <string name="assistant_change_due_cleared">due date cleared</string>
+    <string name="assistant_change_moved">Moved to %1$s</string>
+    <string name="assistant_change_moved_inbox">Moved to Inbox</string>
+    <string name="assistant_change_status">Set to %1$s</string>
+    <string name="assistant_change_category">Sorted as %1$s</string>
+    <string name="assistant_change_category_cleared">category cleared</string>
+    <string name="assistant_change_renamed">renamed</string>
+    <string name="assistant_change_notes">notes updated</string>
+    <string name="assistant_change_done">Done</string>
+
+    <!-- Under the box: the model that answers, and its sheet. -->
+    <string name="assistant_chip">Withdo official</string>
+    <string name="assistant_chip_description">Model: Withdo official</string>
+    <string name="assistant_model_name">Withdo official model</string>
+    <string name="assistant_model_note">Included with your account. It changes tasks, hands them to agents and answers questions from the box.</string>
+    <string name="assistant_quota_left">%1$d left today</string>
+    <string name="assistant_quota_of">%1$d of %2$d turns left today</string>
+    <string name="assistant_state_available">Available</string>
+    <string name="assistant_state_used_up">Used up for today</string>
+    <string name="assistant_state_signed_out">Sign in to use it</string>
+
+    <!-- The one quiet line under the card when the local rules answered. -->
+    <string name="assistant_sign_in">Sign in</string>
+    <string name="assistant_quiet_signed_out_a">Signed out, only dates are read on this phone. </string>
+    <string name="assistant_quiet_signed_out_b"> and the box can hand tasks to agents and answer questions.</string>
+    <string name="assistant_quiet_used_up">Today’s official allowance is used up: dates and reminders are read on this phone, the rest isn’t handed to the assistant. It is back tomorrow.</string>
+    <string name="assistant_quiet_unreachable">Couldn’t reach the assistant: dates and reminders are read on this phone.</string>
+
+    <!-- Settings: the Assistant group under the account. -->
+    <string name="settings_assistant">Assistant</string>
+</resources>

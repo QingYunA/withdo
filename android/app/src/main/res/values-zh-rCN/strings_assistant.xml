@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assistant_name">助手</string>
+    <string name="assistant_thinking">正在想…</string>
+    <string name="assistant_stop">停止</string>
+    <string name="assistant_answer_hint">回答，或者换个说法</string>
+
+    <plurals name="assistant_added">
+        <item quantity="other">已添加 %d 件</item>
+    </plurals>
+    <plurals name="assistant_updated">
+        <item quantity="other">已更新 %d 件</item>
+    </plurals>
+    <plurals name="assistant_finished">
+        <item quantity="other">已完成 %d 件</item>
+    </plurals>
+    <string name="assistant_noted">已记住</string>
+    <string name="assistant_forgot">已忘掉一条备忘</string>
+    <string name="assistant_join">"，"</string>
+
+    <string name="assistant_change_reminder_cleared">已清除提醒</string>
+    <string name="assistant_change_due_cleared">已清除截止时间</string>
+    <string name="assistant_change_moved">移到 %1$s</string>
+    <string name="assistant_change_moved_inbox">移到收件箱</string>
+    <string name="assistant_change_status">设为 %1$s</string>
+    <string name="assistant_change_category">归入 %1$s</string>
+    <string name="assistant_change_category_cleared">已清除类别</string>
+    <string name="assistant_change_renamed">已改名</string>
+    <string name="assistant_change_notes">备注已更新</string>
+    <string name="assistant_change_done">已完成</string>
+
+    <string name="assistant_chip">Withdo 官方</string>
+    <string name="assistant_chip_description">模型：Withdo 官方</string>
+    <string name="assistant_model_name">Withdo 官方模型</string>
+    <string name="assistant_model_note">随账号提供。输入框用它改任务、交给 Agent、回答问题。</string>
+    <string name="assistant_quota_left">今天还剩 %1$d 次</string>
+    <string name="assistant_quota_of">今天 %2$d 次里还剩 %1$d 次</string>
+    <string name="assistant_state_available">可用</string>
+    <string name="assistant_state_used_up">今天的额度用完了</string>
+    <string name="assistant_state_signed_out">登录后就能用</string>
+
+    <string name="assistant_sign_in">登录</string>
+    <string name="assistant_quiet_signed_out_a">没登录时只在本机读日期。</string>
+    <string name="assistant_quiet_signed_out_b">后，输入框就能交任务给 Agent、回答问题。</string>
+    <string name="assistant_quiet_used_up">今天的官方额度用完了：日期和提醒在本机读出，其余的话没有交给助手。明天恢复。</string>
+    <string name="assistant_quiet_unreachable">没连上助手：日期和提醒在本机读出。</string>
+
+    <string name="settings_assistant">助手</string>
+</resources>
