@@ -118,6 +118,10 @@ func reduce(cur Subscription, exists bool, ev Event, account int64) (next Subscr
 		takeOrder()
 		next.Status = StatusActive
 		setPeriod()
+		// Uncanceling during the trial goes back to the trial; a renewal always starts a paid period.
+		if ev.Type == "subscription.uncanceled" && trialPeriod(next.PeriodStart, next.PeriodEnd) {
+			next.Status = StatusTrialing
+		}
 	case "subscription.canceling":
 		if !sameOrder {
 			return cur, false

@@ -224,6 +224,9 @@ func TestEventsOfOneOrderShareWaffosID(t *testing.T) {
 		t.Fatalf("canceling was dropped: %+v", got)
 	}
 	ts.send(t, "ORD_1", "subscription.uncanceled", 20*time.Minute, map[string]any{"orderStatus": "active"})
+	if got := ts.row(t); got.Status != StatusTrialing {
+		t.Fatalf("uncanceling in the trial: %+v", got)
+	}
 	ts.send(t, "ORD_1", "subscription.canceling", 30*time.Minute, map[string]any{"orderStatus": "canceling"})
 	if got := ts.row(t); got.Status != StatusCanceling {
 		t.Fatalf("the second canceling was dropped: %+v", got)
