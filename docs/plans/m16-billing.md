@@ -24,8 +24,12 @@ Waffo whether its checkout can offer PayPal.
 - Webhook (test, Raw format, all events): `https://api.withdo.si/v1/billing/waffo`.
 - Webhook public keys (not secret): `internal/syncserver/billing/waffo-{test,live}.pub.pem`.
 - Test card: `4576 7500 0000 0110`.
-- Going live: create the products again in production mode (or publish them), a production API
-  key and a production webhook, then switch the server's env.
+- Live since 2026-11-04: both products were published to production (they keep their ids), the
+  group **Withdo Pro** was made again there (self-service changes, shared trial), the API key
+  **withdo-sync (prod)** is on the server as `/opt/adhd-todo/sync/secrets/waffo-prod.pem`, and the
+  production webhook points at the same URL. The server runs `WAFFO_MODE=prod` with that key. A
+  subscription stored in the other mode is no subscription (no Pro, no trial used). Store info and
+  the payout account are still to fill in the dashboard.
 
 ## Server: `internal/syncserver/billing`
 

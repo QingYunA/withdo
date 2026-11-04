@@ -141,7 +141,15 @@ type Status struct {
 
 // Subscription reads an account's row.
 func (s *Service) Subscription(ctx context.Context, account int64) (Subscription, bool, error) {
-	return s.store.Get(ctx, account)
+	sub, ok, err := s.store.Get(ctx, account)
+	return sub, ok && s.thisMode(sub), err
+}
+
+// thisMode says whether a stored subscription belongs to the mode the server runs in. A test-mode
+// order left over after going live (or a live one on a test server) is no subscription: it gives no
+// Pro and uses no trial.
+func (s *Service) thisMode(sub Subscription) bool {
+	return sub.Mode == "" || sub.Mode == s.cfg.Mode
 }
 
 // IsProSubject says whether the account a sign-in subject maps to is Pro now. A failed read is
@@ -152,14 +160,14 @@ func (s *Service) IsProSubject(ctx context.Context, subject string) bool {
 		log.Printf("billing: plan lookup failed: %v", err)
 		return false
 	}
-	return ok && sub.Pro(s.cfg.Now())
+	return ok && s.thisMode(sub) && sub.Pro(s.cfg.Now())
 }
 
 // Status reads the account's plan. For an account that has a subscription it also makes a fresh
 // customer-portal link for email (the buyer identity of its checkouts), falling back to the
 // portal's sign-in page when the link cannot be made; accounts that never subscribed get none.
 func (s *Service) Status(ctx context.Context, account int64, email func() string) (Status, error) {
-	sub, ok, err := s.store.Get(ctx, account)
+	sub, ok, err := s.Subscription(ctx, account)
 	if err != nil {
 		return Status{}, err
 	}
@@ -214,7 +222,7 @@ func (s *Service) Checkout(ctx context.Context, account int64, email, plan, lang
 	if !ok {
 		return "", ErrUnknownPlan
 	}
-	sub, exists, err := s.store.Get(ctx, account)
+	sub, exists, err := s.Subscription(ctx, account)
 	if err != nil {
 		return "", err
 	}

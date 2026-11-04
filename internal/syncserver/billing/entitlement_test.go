@@ -236,3 +236,23 @@ func TestEventsOfOneOrderShareWaffosID(t *testing.T) {
 		t.Fatalf("a retry: %q %v", outcome, err)
 	}
 }
+
+// TestATestOrderIsNoSubscriptionWhenLive: after going live, an order made in test mode gives no
+// Pro and uses no trial.
+func TestATestOrderIsNoSubscriptionWhenLive(t *testing.T) {
+	ts := newTestService(t, 7)
+	trialEnd := testNow.Add(7 * 24 * time.Hour)
+	ts.send(t, "ORD_1", "subscription.activated", 0, map[string]any{
+		"orderStatus": "active", "periodNumber": 1, "billingPeriod": "yearly",
+		"currentPeriodStart": testNow.Format(time.RFC3339), "currentPeriodEnd": trialEnd.Format(time.RFC3339)})
+	if !ts.IsProSubject(context.Background(), "subject-7") {
+		t.Fatal("not Pro in test mode")
+	}
+	ts.cfg.Mode = ModeProd
+	if ts.IsProSubject(context.Background(), "subject-7") {
+		t.Fatal("a test order is Pro when live")
+	}
+	if _, ok, _ := ts.Subscription(context.Background(), 7); ok {
+		t.Fatal("a test order is a subscription when live")
+	}
+}
