@@ -74,6 +74,8 @@ type Core struct {
 	closed bool
 	// assist is the built-in assistant and the official model's state (assistant.go).
 	assist assistant
+	// bill is Withdo Pro's plan (billing.go).
+	bill billingState
 }
 
 // Open opens dataDir/adhd-todo.db, migrating it, and starts watching it for changes.

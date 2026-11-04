@@ -49,10 +49,16 @@ import xyz.sriai.adhdtodo.ui.theme.StatusGlyph
 
 /** The card and its quiet line, as they stand above the box. */
 @Composable
-fun AssistantAbove(card: AnswerCard, onUndo: () -> Unit, onPick: (String) -> Unit, onSignIn: () -> Unit) {
+fun AssistantAbove(
+    card: AnswerCard,
+    onUndo: () -> Unit,
+    onPick: (String) -> Unit,
+    onSignIn: () -> Unit,
+    onUpgrade: (() -> Unit)? = null,
+) {
     Column(Modifier.padding(bottom = 8.dp)) {
         AnswerCardView(card, onUndo, onPick)
-        card.quiet?.let { QuietLine(it, onSignIn) }
+        card.quiet?.let { QuietLine(it, onSignIn, onUpgrade) }
     }
 }
 
@@ -166,13 +172,29 @@ private fun OptionPill(label: String, tinted: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** The one quiet line under the card: what the local rules did not do. `Sign in` is the way to Sync. */
+/**
+ * The one quiet line under the card: what the local rules did not do. `Sign in` is the way to
+ * Sync; with [onUpgrade] (a Free account on a server that sells Pro) the used-up line ends with
+ * `Upgrade to Pro for 100 a day.`, which opens the upgrade sheet.
+ */
 @Composable
-fun QuietLine(note: QuietNote, onSignIn: () -> Unit) {
+fun QuietLine(note: QuietNote, onSignIn: () -> Unit, onUpgrade: (() -> Unit)? = null) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val text = when (note) {
-        QuietNote.USED_UP -> AnnotatedString(stringResource(R.string.assistant_quiet_used_up))
+        QuietNote.USED_UP -> if (onUpgrade == null) {
+            AnnotatedString(stringResource(R.string.assistant_quiet_used_up))
+        } else {
+            val before = stringResource(R.string.billing_quiet_used_up_a)
+            val link = stringResource(R.string.billing_upgrade)
+            val after = stringResource(R.string.billing_quiet_used_up_b)
+            val style = TextLinkStyles(SpanStyle(color = tokens.accentInk))
+            buildAnnotatedString {
+                append(before)
+                withLink(LinkAnnotation.Clickable("upgrade", style) { onUpgrade() }) { append(link) }
+                append(after)
+            }
+        }
         QuietNote.UNREACHABLE -> AnnotatedString(stringResource(R.string.assistant_quiet_unreachable))
         QuietNote.SIGNED_OUT -> {
             val before = stringResource(R.string.assistant_quiet_signed_out_a)

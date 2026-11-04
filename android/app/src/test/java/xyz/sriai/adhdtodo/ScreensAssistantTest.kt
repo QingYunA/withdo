@@ -110,8 +110,8 @@ class ScreensAssistantTest(private val case: Case) {
 }
 
 /** Tuesday 3 November 2026, 9:41 in Shanghai. */
-private val Tuesday: Instant = Instant.parse("2026-11-03T01:41:00Z")
-private val Shanghai: ZoneId = ZoneId.of("Asia/Shanghai")
+internal val Tuesday: Instant = Instant.parse("2026-11-03T01:41:00Z")
+internal val Shanghai: ZoneId = ZoneId.of("Asia/Shanghai")
 
 private fun receipt(id: Long, taskId: Long, title: String, detail: AssistantDetail, bell: Boolean = false) =
     AssistantReceipt(id = id, taskId = taskId, title = title, status = "todo", bell = bell, detail = detail)
@@ -187,7 +187,7 @@ private fun plainAnswer(zh: Boolean) = if (zh) {
 
 /** Today at 9:41 with its three rows, and the composer with whatever the assistant put around it. */
 @Composable
-private fun AssistantFrame(
+internal fun AssistantFrame(
     words: Words,
     categories: List<Category>,
     card: AnswerCard?,
@@ -195,6 +195,7 @@ private fun AssistantFrame(
     model: ModelState,
     draft: String,
     placeholder: String,
+    upgrade: Boolean = false,
 ) {
     val tokens = LocalTokens.current
     val work = categories.first { it.builtin == "work" }.id.toInt()
@@ -233,7 +234,7 @@ private fun AssistantFrame(
                 onSend = {},
                 onStop = if (thinking) ({}) else null,
                 thinking = thinking,
-                above = card?.let { c -> { AssistantAbove(c, onUndo = {}, onPick = {}, onSignIn = {}) } },
+                above = card?.let { c -> { AssistantAbove(c, onUndo = {}, onPick = {}, onSignIn = {}, onUpgrade = if (upgrade) ({}) else null) } },
                 chip = if (model.official) ({ ModelChip {} }) else null,
             )
         }
