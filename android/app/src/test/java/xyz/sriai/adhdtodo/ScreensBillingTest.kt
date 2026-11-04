@@ -71,7 +71,7 @@ class ScreensBillingTest(private val case: Case) {
 
     data class Case(val name: String, val night: Boolean, val zh: Boolean, val shot: Shot)
 
-    enum class Shot { SETTINGS_FREE, SHEET, WAITING, SETTINGS_PRO, QUOTA_USED_UP_UPGRADE }
+    enum class Shot { SETTINGS_FREE, SHEET, WAITING, SETTINGS_PRO, QUOTA_USED_UP_UPGRADE, SHEET_PAYPAL, WAITING_PAYPAL, SETTINGS_PRO_PAYPAL }
 
     companion object {
         @JvmStatic
@@ -82,6 +82,9 @@ class ScreensBillingTest(private val case: Case) {
             "pro-waiting" to Shot.WAITING,
             "settings-pro" to Shot.SETTINGS_PRO,
             "quota-used-up-upgrade" to Shot.QUOTA_USED_UP_UPGRADE,
+            "pro-sheet-paypal" to Shot.SHEET_PAYPAL,
+            "pro-waiting-paypal" to Shot.WAITING_PAYPAL,
+            "settings-pro-paypal" to Shot.SETTINGS_PRO_PAYPAL,
         ).flatMap { (name, shot) ->
             listOf(
                 Case("$name-light", night = false, zh = false, shot = shot),
@@ -99,6 +102,9 @@ private val ProPlan = Billing(
     trialUsed = true, monthly = "$6.99", yearly = "$58.72", manageUrl = "https://portal.example/session",
 )
 
+private val FreePlanPayPal = FreePlan.copy(paypal = true)
+private val ProPlanPayPal = ProPlan.copy(paypal = true, provider = "paypal")
+
 @Composable
 private fun Picture(shot: ScreensBillingTest.Shot) {
     val resources = LocalContext.current.resources
@@ -112,6 +118,16 @@ private fun Picture(shot: ScreensBillingTest.Shot) {
             holder.billing = FreePlan
             holder.stage = if (waiting) SheetStage.WAITING else SheetStage.CHOOSING
             SettingsFrame(ModelState("official", ModelPhase.READY, 14, 20, "free"), FreePlan)
+            UpgradeSheet(holder, onStart = {}, onReopen = {}, onDismiss = {})
+        }
+        ScreensBillingTest.Shot.SETTINGS_PRO_PAYPAL -> SettingsFrame(ModelState("official", ModelPhase.READY, 86, 100, "pro"), ProPlanPayPal)
+        ScreensBillingTest.Shot.SHEET_PAYPAL, ScreensBillingTest.Shot.WAITING_PAYPAL -> {
+            val holder = remember { BillingHolder() }
+            val waiting = shot == ScreensBillingTest.Shot.WAITING_PAYPAL
+            holder.billing = FreePlanPayPal
+            holder.provider = if (waiting) "paypal" else "waffo"
+            holder.stage = if (waiting) SheetStage.WAITING else SheetStage.CHOOSING
+            SettingsFrame(ModelState("official", ModelPhase.READY, 14, 20, "free"), FreePlanPayPal)
             UpgradeSheet(holder, onStart = {}, onReopen = {}, onDismiss = {})
         }
         ScreensBillingTest.Shot.QUOTA_USED_UP_UPGRADE -> {

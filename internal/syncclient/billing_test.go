@@ -87,7 +87,7 @@ func TestBilling(t *testing.T) {
 func TestCheckout(t *testing.T) {
 	t.Run("posts the plan and language and returns the URL", func(t *testing.T) {
 		srv, seen, body := voiceServer(t, 200, `{"url":"https://checkout.example/c/1"}`)
-		url, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), PlanYearly, "zh-Hans")
+		url, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), PlanYearly, "", "zh-Hans")
 		if err != nil || url != "https://checkout.example/c/1" {
 			t.Fatalf("got %q, %v", url, err)
 		}
@@ -113,14 +113,14 @@ func TestCheckout(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			srv, _, _ := voiceServer(t, tc.status, tc.body)
-			if _, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), PlanMonthly, ""); !errors.Is(err, tc.want) {
+			if _, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), PlanMonthly, "", ""); !errors.Is(err, tc.want) {
 				t.Fatalf("err = %v, want %v", err, tc.want)
 			}
 		})
 	}
 	t.Run("a bad plan is the server's 400, not a sentinel", func(t *testing.T) {
 		srv, _, _ := voiceServer(t, 400, `{"error":"bad_plan","code":"bad_plan"}`)
-		_, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), "weekly", "")
+		_, err := voiceClient(srv.URL, StaticToken("tok")).Checkout(context.Background(), "weekly", "", "")
 		if HTTPStatus(err) != 400 {
 			t.Fatalf("err = %v", err)
 		}

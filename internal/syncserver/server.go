@@ -86,6 +86,7 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	s.mux.HandleFunc("GET /v1/billing", s.withSession(s.billingStatus))
 	s.mux.HandleFunc("POST /v1/billing/checkout", s.withSession(s.billingCheckout))
 	s.mux.HandleFunc("POST /v1/billing/waffo", s.billingWebhook)
+	s.mux.HandleFunc("POST /v1/billing/paypal", s.paypalWebhook)
 	return s, nil
 }
 

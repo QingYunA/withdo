@@ -14,7 +14,7 @@ import (
 var ErrNoAccount = errors.New("billing: no such account")
 
 // eventKeep is how long a processed event id is remembered for deduplication. Waffo retries for
-// about an hour; the rest is slack.
+// about an hour and PayPal for three days; the rest is slack.
 const eventKeep = 30 * 24 * time.Hour
 
 // Store keeps the accounts' subscription rows. PGStore is the Postgres one; tests use a fake.
@@ -30,20 +30,20 @@ type Store interface {
 		update func(cur Subscription, exists bool) (next Subscription, changed bool)) (before, after Subscription, dup, saved bool, err error)
 }
 
-// PGStore is Store over the billing_subscriptions and billing_events tables (migrations 005 and 006).
+// PGStore is Store over the billing_subscriptions and billing_events tables (migrations 005, 006 and 007).
 type PGStore struct{ pool *pgxpool.Pool }
 
 // NewPGStore returns the Postgres store.
 func NewPGStore(pool *pgxpool.Pool) *PGStore { return &PGStore{pool: pool} }
 
-const subscriptionColumns = `user_id, order_id, product_name, billing_interval, status, period_start, period_end, trial_used, mode, event_at`
+const subscriptionColumns = `user_id, order_id, product_name, billing_interval, status, period_start, period_end, trial_used, mode, event_at, provider`
 
 type rowScanner interface{ Scan(dest ...any) error }
 
 func scanSubscription(row rowScanner) (Subscription, error) {
 	var s Subscription
 	var start, end *time.Time
-	if err := row.Scan(&s.Account, &s.OrderID, &s.ProductName, &s.Interval, &s.Status, &start, &end, &s.TrialUsed, &s.Mode, &s.EventAt); err != nil {
+	if err := row.Scan(&s.Account, &s.OrderID, &s.ProductName, &s.Interval, &s.Status, &start, &end, &s.TrialUsed, &s.Mode, &s.EventAt, &s.Provider); err != nil {
 		return Subscription{}, err
 	}
 	if start != nil {
@@ -119,14 +119,15 @@ func (p *PGStore) Apply(ctx context.Context, eventID, eventType string, account 
 	next, changed := update(cur, exists)
 	if changed {
 		_, err := tx.Exec(ctx, `INSERT INTO billing_subscriptions
-			(user_id, order_id, product_name, billing_interval, status, period_start, period_end, trial_used, mode, event_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
+			(user_id, order_id, product_name, billing_interval, status, period_start, period_end, trial_used, mode, event_at, provider, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
 			ON CONFLICT (user_id) DO UPDATE SET order_id = EXCLUDED.order_id, product_name = EXCLUDED.product_name,
 				billing_interval = EXCLUDED.billing_interval,
 				status = EXCLUDED.status, period_start = EXCLUDED.period_start, period_end = EXCLUDED.period_end,
-				trial_used = EXCLUDED.trial_used, mode = EXCLUDED.mode, event_at = EXCLUDED.event_at, updated_at = now()`,
+				trial_used = EXCLUDED.trial_used, mode = EXCLUDED.mode, event_at = EXCLUDED.event_at,
+				provider = EXCLUDED.provider, updated_at = now()`,
 			account, next.OrderID, next.ProductName, next.Interval, next.Status, nullTime(next.PeriodStart), nullTime(next.PeriodEnd),
-			next.TrialUsed, next.Mode, next.EventAt)
+			next.TrialUsed, next.Mode, next.EventAt, next.providerOrDefault())
 		if err != nil {
 			return before, after, false, false, fmt.Errorf("billing: save the subscription: %w", err)
 		}

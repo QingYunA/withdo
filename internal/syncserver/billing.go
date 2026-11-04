@@ -17,9 +17,13 @@ import (
 // CodeBillingDisabled is the "code" of the 503 every billing route answers without a Waffo key.
 const CodeBillingDisabled = "billing_disabled"
 
+// CodePayPalDisabled is the "code" of the 503 PayPal's routes answer without PayPal credentials.
+const CodePayPalDisabled = "paypal_disabled"
+
 // Codes of the billing routes' refusals.
 const (
 	codeBadPlan           = "bad_plan"
+	codeBadProvider       = "bad_provider"
 	codeAlreadySubscribed = "already_subscribed"
 	codeRateLimited       = "rate_limited"
 	codeBillingUpstream   = "billing_upstream"
@@ -34,7 +38,8 @@ const (
 // none (a development token). Checkout pre-fills the page with it and the portal link is made for it.
 type EmailLookup func(ctx context.Context, subject string) (string, error)
 
-// EnableBilling turns on Withdo Pro (M16): the checkout, the plan and the Waffo webhook. Call it
+// EnableBilling turns on Withdo Pro (M16): the checkout, the plan and the Waffo webhook, and PayPal's
+// when cfg.PayPal is set (M17). Call it
 // before serving. email may be nil. Without it every billing route answers 503 billing_disabled
 // and GET /v1/config says "billing": false.
 func (s *Server) EnableBilling(cfg billing.Config, email EmailLookup) error {
@@ -101,7 +106,7 @@ func (s *Server) billingStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	out := syncproto.BillingResponse{
 		Plan: st.Plan, Status: st.Status, Interval: st.Interval, TrialUsed: st.TrialUsed,
-		Monthly: billing.PriceMonthly, Yearly: billing.PriceYearly, ManageURL: st.ManageURL,
+		Monthly: billing.PriceMonthly, Yearly: billing.PriceYearly, ManageURL: st.ManageURL, Provider: st.Provider,
 	}
 	if !st.PeriodEnd.IsZero() {
 		out.PeriodEnd = st.PeriodEnd.UTC().Format(time.RFC3339)
@@ -121,8 +126,20 @@ func (s *Server) billingCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sess := sessionFrom(r.Context())
-	url, err := s.billing.Checkout(r.Context(), sess.userID, s.accountEmail(r.Context(), sess), req.Plan, req.Lang)
+	var url string
+	var err error
+	switch req.Provider {
+	case "", syncproto.ProviderWaffo:
+		url, err = s.billing.Checkout(r.Context(), sess.userID, s.accountEmail(r.Context(), sess), req.Plan, req.Lang)
+	case syncproto.ProviderPayPal:
+		url, err = s.billing.PayPalCheckout(r.Context(), sess.userID, s.accountEmail(r.Context(), sess), req.Plan)
+	default:
+		plainError(w, http.StatusBadRequest, codeBadProvider)
+		return
+	}
 	switch {
+	case errors.Is(err, billing.ErrPayPalOff):
+		plainError(w, http.StatusServiceUnavailable, CodePayPalDisabled)
 	case errors.Is(err, billing.ErrUnknownPlan):
 		plainError(w, http.StatusBadRequest, codeBadPlan)
 	case errors.Is(err, billing.ErrAlreadySubscribed):
@@ -163,6 +180,43 @@ func (s *Server) billingWebhook(w http.ResponseWriter, r *http.Request) {
 	default:
 		account, _ := ev.Data.Account()
 		log.Printf("billing: webhook event=%s account=%d outcome=%s", ev.Type, account, outcome)
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	}
+}
+
+// paypalWebhook is POST /v1/billing/paypal. It has no session: PayPal's own verification of the
+// delivery is the credential. A verified event is answered 200 whether or not it changed anything,
+// so PayPal stops retrying; a delivery PayPal does not vouch for is 401, and our own or PayPal's
+// failure is 500, which makes PayPal send the event again.
+func (s *Server) paypalWebhook(w http.ResponseWriter, r *http.Request) {
+	if s.billingOff(w) {
+		return
+	}
+	if !s.billing.PayPalEnabled() {
+		plainError(w, http.StatusServiceUnavailable, CodePayPalDisabled)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, webhookMaxBody)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		plainError(w, http.StatusBadRequest, "bad_request")
+		return
+	}
+	headers := billing.PayPalHeaders{
+		AuthAlgo: r.Header.Get("PAYPAL-AUTH-ALGO"), CertURL: r.Header.Get("PAYPAL-CERT-URL"),
+		TransmissionID: r.Header.Get("PAYPAL-TRANSMISSION-ID"), TransmissionSig: r.Header.Get("PAYPAL-TRANSMISSION-SIG"),
+		TransmissionTime: r.Header.Get("PAYPAL-TRANSMISSION-TIME"),
+	}
+	ev, outcome, err := s.billing.HandlePayPalWebhook(r.Context(), headers, body)
+	switch {
+	case errors.Is(err, billing.ErrBadSignature):
+		log.Printf("billing: paypal webhook rejected")
+		plainError(w, http.StatusUnauthorized, "bad_signature")
+	case err != nil:
+		log.Printf("billing: paypal webhook event=%s failed: %v", ev.Type, err)
+		plainError(w, http.StatusInternalServerError, "internal")
+	default:
+		log.Printf("billing: paypal webhook event=%s account=%d outcome=%s", ev.Type, ev.Account, outcome)
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	}
 }

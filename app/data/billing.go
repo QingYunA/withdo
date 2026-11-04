@@ -23,6 +23,13 @@ const (
 	PlanYearly  = syncclient.PlanYearly
 )
 
+// Who takes the payment (M17): Waffo for cards, Apple Pay and Google Pay, or PayPal. A checkout asks
+// for one, and a subscription says which one it is on.
+const (
+	ProviderWaffo  = "waffo"
+	ProviderPayPal = "paypal"
+)
+
 // The failures StartCheckout and ManageSubscription word for the person; any other error is
 // "could not open the payment page, try again".
 var (
@@ -52,7 +59,14 @@ type BillingInfo struct {
 	TrialUsed bool
 	// Monthly and Yearly are the prices as the server words them ("$6.99", "$58.72").
 	Monthly, Yearly string
+	// PayPal says the server takes PayPal too: the sheet shows its button under the main one.
+	PayPal bool
+	// Provider is who bills the subscription, ProviderWaffo or ProviderPayPal; empty without one.
+	Provider string
 }
+
+// ViaPayPal says the subscription is billed by PayPal.
+func (b BillingInfo) ViaPayPal() bool { return b.Provider == ProviderPayPal }
 
 // Subscribed says the account has a subscription to manage (a trial, a paid one, or one ending).
 func (b BillingInfo) Subscribed() bool { return b.Pro && b.Status != "" }
@@ -70,9 +84,10 @@ type BillingSource interface {
 	BillingInfo() BillingInfo
 	// RefreshBilling asks the server again, soon.
 	RefreshBilling()
-	// StartCheckout asks for the payment page of plan (PlanMonthly or PlanYearly), in the app's
-	// language lang, and returns its URL for the browser.
-	StartCheckout(ctx context.Context, plan, lang string) (string, error)
+	// StartCheckout asks for the payment page of plan (PlanMonthly or PlanYearly) at provider
+	// (ProviderWaffo or ProviderPayPal), in the app's language lang, and returns its URL for the
+	// browser.
+	StartCheckout(ctx context.Context, plan, provider, lang string) (string, error)
 	// ManageURL is a fresh link to the customer portal. It lives 15 minutes, so it is asked for on
 	// every click and opened at once.
 	ManageURL(ctx context.Context) (string, error)
@@ -85,6 +100,7 @@ type billingTask struct {
 	signedIn  bool
 	known     bool // offered is the server's answer
 	offered   bool
+	paypal    bool // the server takes PayPal too
 	bill      syncclient.Billing
 	haveBill  bool
 	refreshAt time.Time // no refresh before this
@@ -124,12 +140,13 @@ func (b *billingTask) info(quotaPlan string) BillingInfo {
 	if !b.known || !b.offered || !b.signedIn {
 		return BillingInfo{}
 	}
-	out := BillingInfo{Offered: true, Pro: quotaPlan == "pro"}
+	out := BillingInfo{Offered: true, Pro: quotaPlan == "pro", PayPal: b.paypal}
 	if b.haveBill {
 		bl := b.bill
 		out = BillingInfo{
 			Offered: true, Known: true, Pro: bl.Pro(), Status: bl.Status, Interval: bl.Interval, PeriodEnd: bl.PeriodEnd,
 			TrialUsed: bl.TrialUsed, Monthly: bl.Monthly, Yearly: bl.Yearly,
+			PayPal: b.paypal, Provider: billProvider(bl),
 		}
 	}
 	return out
@@ -167,7 +184,7 @@ func (r *Real) refreshBilling() {
 	ctx, cancel := context.WithTimeout(context.Background(), billingRefreshTO)
 	defer cancel()
 	server, signedIn := r.officialSession()
-	offered, bill, haveBill, err := r.askBilling(ctx, server, signedIn)
+	offered, paypal, bill, haveBill, err := r.askBilling(ctx, server, signedIn)
 	b.mu.Lock()
 	wasPro := b.haveBill && b.bill.Pro()
 	switch {
@@ -176,7 +193,7 @@ func (r *Real) refreshBilling() {
 	case err != nil:
 		b.refreshAt = time.Now().Add(billingRetryAfter)
 	default:
-		b.known, b.offered, b.bill, b.haveBill = true, offered, bill, haveBill
+		b.known, b.offered, b.paypal, b.bill, b.haveBill = true, offered, paypal, bill, haveBill
 		b.refreshAt = time.Now().Add(billingRefreshEvery)
 	}
 	again := b.again
@@ -192,37 +209,38 @@ func (r *Real) refreshBilling() {
 	}
 }
 
-func (r *Real) askBilling(ctx context.Context, server string, signedIn bool) (offered bool, bill syncclient.Billing, haveBill bool, err error) {
+func (r *Real) askBilling(ctx context.Context, server string, signedIn bool) (offered, paypal bool, bill syncclient.Billing, haveBill bool, err error) {
 	cfg, err := syncclient.FetchConfig(ctx, server, nil)
 	if err != nil {
-		return false, bill, false, err
+		return false, false, bill, false, err
 	}
+	paypal = cfg.Billing && configPayPal(cfg)
 	if !cfg.Billing || !signedIn {
-		return cfg.Billing, bill, false, nil
+		return cfg.Billing, paypal, bill, false, nil
 	}
 	client, err := r.officialClient()
 	if err != nil {
-		return cfg.Billing, bill, false, err
+		return cfg.Billing, paypal, bill, false, err
 	}
 	bill, err = client.Billing(ctx)
 	switch {
 	case err == nil:
-		return true, bill, true, nil
+		return true, paypal, bill, true, nil
 	case errors.Is(err, syncclient.ErrBillingOff):
-		return false, bill, false, nil
+		return false, false, bill, false, nil
 	case errors.Is(err, syncclient.ErrBillingNotSignedIn):
-		return true, bill, false, nil // the plan is known when the session is
+		return true, paypal, bill, false, nil // the plan is known when the session is
 	}
-	return false, bill, false, err
+	return false, false, bill, false, err
 }
 
 // StartCheckout implements BillingSource.
-func (r *Real) StartCheckout(ctx context.Context, plan, lang string) (string, error) {
+func (r *Real) StartCheckout(ctx context.Context, plan, provider, lang string) (string, error) {
 	client, err := r.officialClient()
 	if err != nil {
 		return "", err
 	}
-	url, err := client.Checkout(ctx, plan, lang)
+	url, err := checkoutAt(ctx, client, plan, provider, lang)
 	switch {
 	case errors.Is(err, syncclient.ErrAlreadySubscribed):
 		r.RefreshBilling()

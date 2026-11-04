@@ -16,6 +16,8 @@
     <string name="billing_interval_trial_until">%1$s · Free trial until %2$s, then it renews</string>
     <string name="billing_interval_renews">%1$s · Renews %2$s</string>
     <string name="billing_interval_ends">%1$s · Ends %2$s</string>
+    <!-- Leads the Pro card's interval line for a PayPal subscription, e.g. "Yearly · via PayPal · Renews Nov 11". -->
+    <string name="billing_via_paypal">via PayPal</string>
     <string name="billing_past_due">Payment didn’t go through. Update it in Manage subscription.</string>
 
     <!-- The upgrade sheet. -->
@@ -37,11 +39,19 @@
     <string name="billing_cta_starting">Opening the payment page…</string>
     <string name="billing_fine_trial">You won’t be charged before the trial ends. Billed by Waffo, tax included.</string>
     <string name="billing_fine_subscribe">Billed by Waffo, tax included.</string>
+    <!-- PayPal's button and its hairline (M17, v46). The word PayPal in billing_cta_paypal is drawn as PayPal's wordmark, so keep it as PayPal. -->
+    <string name="billing_or">or</string>
+    <string name="billing_cta_paypal">Subscribe with PayPal</string>
+    <string name="billing_fine_trial_paypal">You won’t be charged before the trial ends. Cards are billed by Waffo, tax included.</string>
+    <string name="billing_fine_subscribe_paypal">Cards are billed by Waffo, tax included.</string>
 
     <!-- The sheet while the payment is made in the browser. -->
     <string name="billing_wait_title">Finish paying in the browser</string>
     <string name="billing_wait_line">The payment page is open. When you come back to Withdo, this turns into Pro by itself.</string>
     <string name="billing_reopen">Reopen the payment page</string>
+    <string name="billing_wait_title_paypal">Finish subscribing in PayPal</string>
+    <string name="billing_wait_line_paypal">PayPal is open. When you come back to Withdo, this turns into Pro by itself.</string>
+    <string name="billing_reopen_paypal">Reopen PayPal</string>
 
     <!-- Errors, in the sheet. -->
     <string name="billing_error_open">Couldn’t open the payment page. Try again.</string>

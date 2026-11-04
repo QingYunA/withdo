@@ -24,6 +24,10 @@ func TestScreensPro(t *testing.T) {
 		Offered: true, Known: true, Pro: true, Status: "trialing", PeriodEnd: fixedNow().Add(7 * 24 * time.Hour),
 		Interval: "yearly", TrialUsed: true, Monthly: "$6.99", Yearly: "$58.72",
 	}
+	onFreePayPal := onFree
+	onFreePayPal.PayPal = true
+	onProPayPal := onPro
+	onProPayPal.PayPal, onProPayPal.Provider = true, data.ProviderPayPal
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix
@@ -48,6 +52,19 @@ func TestScreensPro(t *testing.T) {
 					r.rec.drain(t)
 				})
 			settingsShot(t, "settings-model-pro"+sfx+".png", settingsWith(pro, onPro), a.dark, zh, PaneModel, nil)
+
+			// PayPal as a second way to pay (M17, v46): the button under the main one, the wait for
+			// PayPal, and a Pro account billed by PayPal.
+			settingsShot(t, "settings-model-pro-sheet-paypal"+sfx+".png", settingsWith(free, onFreePayPal), a.dark, zh, PaneModel,
+				func(r *settingsRig) { r.s.openUpgrade() })
+			settingsShot(t, "settings-model-pro-waiting-paypal"+sfx+".png", settingsWith(free, onFreePayPal), a.dark, zh, PaneModel,
+				func(r *settingsRig) {
+					r.s.openUpgrade()
+					r.tt.Frame()
+					mustNil(t, r.tt.Click(r.s.say.ProPayPal()))
+					r.rec.drain(t)
+				})
+			settingsShot(t, "settings-model-pro-paypal"+sfx+".png", settingsWith(pro, onProPayPal), a.dark, zh, PaneModel, nil)
 
 			// The composer's quiet line past the day's turns: it ends with the way to Pro.
 			app, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})

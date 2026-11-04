@@ -48,7 +48,7 @@ fun BillingHost(
     if (holder.stage != SheetStage.CLOSED) {
         UpgradeSheet(
             holder = holder,
-            onStart = { scope.launch { holder.start(backend, lang, openCheckout) } },
+            onStart = { provider -> scope.launch { holder.start(backend, lang, provider, openCheckout) } },
             onReopen = { openCheckout(holder.checkoutUrl) },
             onDismiss = holder::close,
         )

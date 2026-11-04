@@ -13,6 +13,7 @@ import xyz.sriai.adhdtodo.data.Billing
 import xyz.sriai.adhdtodo.data.BillingBackend
 import xyz.sriai.adhdtodo.data.CheckoutFailure
 import xyz.sriai.adhdtodo.data.PlanKey
+import xyz.sriai.adhdtodo.data.ProviderKey
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -36,6 +37,9 @@ class BillingHolder {
     /** The segment: Yearly is chosen when the sheet opens. */
     var plan by mutableStateOf(PlanKey.YEARLY)
 
+    /** Who the checkout page in the browser (or being asked for) is at; the wait is worded for it. */
+    var provider by mutableStateOf(ProviderKey.WAFFO)
+
     /** The checkout page the browser was sent to; Reopen opens it again. */
     var checkoutUrl by mutableStateOf("")
 
@@ -46,6 +50,7 @@ class BillingHolder {
     fun open() {
         if (!billing.canUpgrade) return
         plan = PlanKey.YEARLY
+        provider = ProviderKey.WAFFO
         failure = null
         checkoutUrl = ""
         stage = SheetStage.CHOOSING
@@ -63,14 +68,16 @@ class BillingHolder {
     }
 
     /**
-     * The button: asks for the checkout page and hands it to [open] (the browser). A failure stays
-     * in the sheet; an account that turns out to be Pro already is read again, which closes it.
+     * The button: asks for the checkout page of the chosen plan at [provider] and hands it to [open]
+     * (the browser). A failure stays in the sheet; an account that turns out to be Pro already is
+     * read again, which closes it.
      */
-    suspend fun start(backend: BillingBackend, lang: String, open: (String) -> Unit) {
+    suspend fun start(backend: BillingBackend, lang: String, provider: String = ProviderKey.WAFFO, open: (String) -> Unit) {
         if (stage != SheetStage.CHOOSING) return
         stage = SheetStage.STARTING
         failure = null
-        val result = withContext(Dispatchers.IO) { runCatching { backend.checkout(plan, lang) } }
+        this.provider = provider
+        val result = withContext(Dispatchers.IO) { runCatching { backend.checkout(plan, provider, lang) } }
         result.exceptionOrNull()?.let { if (it is CancellationException) throw it }
         if (stage != SheetStage.STARTING) return // dismissed while asking: the browser is not wanted
         val url = result.getOrNull()
@@ -145,7 +152,7 @@ private const val DefaultYearly = "$58.72"
 /**
  * The line under the quota on a Pro card: `Free trial until Nov 11, then it renews`, `Renews Nov 11,
  * 2027`, `Ends Nov 11` while canceling, each led by `Yearly · ` or `Monthly · ` when the server says the
- * interval. Empty when the server named no date.
+ * interval, and `via PayPal · ` for a PayPal subscription. Empty when the server named no date.
  */
 fun renewalLine(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): String {
     if (billing.status == "past_due") return res.getString(R.string.billing_past_due)
@@ -156,11 +163,13 @@ fun renewalLine(res: Resources, billing: Billing, now: Instant = Instant.now(), 
         PlanKey.YEARLY -> res.getString(R.string.billing_yearly)
         else -> null
     }
-    if (interval != null) {
+    val via = if (billing.viaPayPal) res.getString(R.string.billing_via_paypal) else null
+    val lead = listOfNotNull(interval, via).joinToString(" · ")
+    if (lead.isNotEmpty()) {
         return when (billing.status) {
-            "trialing" -> res.getString(R.string.billing_interval_trial_until, interval, date)
-            "canceling" -> res.getString(R.string.billing_interval_ends, interval, date)
-            else -> res.getString(R.string.billing_interval_renews, interval, date)
+            "trialing" -> res.getString(R.string.billing_interval_trial_until, lead, date)
+            "canceling" -> res.getString(R.string.billing_interval_ends, lead, date)
+            else -> res.getString(R.string.billing_interval_renews, lead, date)
         }
     }
     return when (billing.status) {

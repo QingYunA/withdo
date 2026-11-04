@@ -313,11 +313,11 @@ func (p *ProviderSettings) RefreshBilling() {
 }
 
 // StartCheckout implements ModelSettings.
-func (p *ProviderSettings) StartCheckout(ctx context.Context, plan, lang string) (string, error) {
+func (p *ProviderSettings) StartCheckout(ctx context.Context, plan, provider, lang string) (string, error) {
 	if p.BillingFrom == nil {
 		return "", errNoBilling
 	}
-	return p.BillingFrom.StartCheckout(ctx, plan, lang)
+	return p.BillingFrom.StartCheckout(ctx, plan, provider, lang)
 }
 
 // ManageURL implements ModelSettings.

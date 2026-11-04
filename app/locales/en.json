@@ -5111,40 +5111,56 @@
   "@settingsProManage": {
     "description": "Link at the right of the card's footer for a Pro account: opens the customer portal in the browser."
   },
-  "settingsProTrialUntil": "Withdo Pro · trial until {date}",
+  "settingsProTrialUntil": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}",
   "@settingsProTrialUntil": {
-    "description": "Footer of the card while the free trial runs.",
+    "description": "Footer of the card while the free trial runs. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "date": {
         "type": "String",
         "example": "Nov 11"
       }
     }
   },
-  "settingsProRenews": "Withdo Pro · renews {date}",
+  "settingsProRenews": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}",
   "@settingsProRenews": {
-    "description": "Footer of the card for a paying Pro account.",
+    "description": "Footer of the card for a paying Pro account. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "date": {
         "type": "String",
         "example": "Nov 11, 2027"
       }
     }
   },
-  "settingsProEnds": "Withdo Pro · ends {date}",
+  "settingsProEnds": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}",
   "@settingsProEnds": {
-    "description": "Footer of the card for a Pro account that was cancelled and runs to the end of its period.",
+    "description": "Footer of the card for a Pro account that was cancelled and runs to the end of its period. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "date": {
         "type": "String",
         "example": "Nov 11"
       }
     }
   },
-  "settingsProIntervalTrialUntil": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews",
+  "settingsProIntervalTrialUntil": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · trial until {date}, then renews",
   "@settingsProIntervalTrialUntil": {
-    "description": "Footer of the card while the free trial runs, when the server says the billing interval. interval is monthly or yearly.",
+    "description": "Footer of the card while the free trial runs, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "interval": {
         "type": "String",
         "example": "yearly"
@@ -5155,10 +5171,14 @@
       }
     }
   },
-  "settingsProIntervalRenews": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}",
+  "settingsProIntervalRenews": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · renews {date}",
   "@settingsProIntervalRenews": {
-    "description": "Footer of the card for a paying Pro account, when the server says the billing interval. interval is monthly or yearly.",
+    "description": "Footer of the card for a paying Pro account, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "interval": {
         "type": "String",
         "example": "yearly"
@@ -5169,10 +5189,14 @@
       }
     }
   },
-  "settingsProIntervalEnds": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}",
+  "settingsProIntervalEnds": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · ends {date}",
   "@settingsProIntervalEnds": {
-    "description": "Footer of the card for a cancelled Pro account that runs to the end of its period, when the server says the billing interval. interval is monthly or yearly.",
+    "description": "Footer of the card for a cancelled Pro account that runs to the end of its period, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
     "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "paypal"
+      },
       "interval": {
         "type": "String",
         "example": "yearly"
@@ -5278,6 +5302,34 @@
   "proCheckoutThrottled": "Too many tries. Wait a little and try again.",
   "@proCheckoutThrottled": {
     "description": "Error in the upgrade sheet when the server limits the payment pages."
+  },
+  "proOr": "or",
+  "@proOr": {
+    "description": "Word on a hairline between the upgrade sheet's main button and the PayPal button."
+  },
+  "proPayPal": "Subscribe with PayPal",
+  "@proPayPal": {
+    "description": "PayPal button of the upgrade sheet. The word PayPal is drawn as PayPal's wordmark (in its blues, in italics), so it must stay in the text exactly as PayPal; the words around it are normal text."
+  },
+  "proFinePrintTrialPayPal": "Nothing is charged before the trial ends. Cards are sold by Waffo, tax included.",
+  "@proFinePrintTrialPayPal": {
+    "description": "Fine print under the upgrade sheet's buttons when PayPal is offered, with a trial."
+  },
+  "proFinePrintPayPal": "Cards are sold by Waffo, tax included.",
+  "@proFinePrintPayPal": {
+    "description": "Fine print under the upgrade sheet's buttons when PayPal is offered, without a trial."
+  },
+  "proWaitingTitlePayPal": "Finish subscribing in PayPal",
+  "@proWaitingTitlePayPal": {
+    "description": "Title of the upgrade sheet while PayPal's page is open in the browser."
+  },
+  "proWaitingLinePayPal": "PayPal is open in your browser. This turns into Pro by itself when you are done.",
+  "@proWaitingLinePayPal": {
+    "description": "Line of the sheet while it waits for the PayPal subscription."
+  },
+  "proReopenPayPal": "Reopen PayPal",
+  "@proReopenPayPal": {
+    "description": "Button of the waiting sheet: open the PayPal page in the browser again."
   },
   "composerProUpgrade": "Upgrade to Pro",
   "@composerProUpgrade": {

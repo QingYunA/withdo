@@ -2908,6 +2908,20 @@ with the interval from the core's `interval` field, `年付 · 试用到 11月11
 `月付 · 11月11日到期` (`Yearly · Free trial until Nov 11, then it renews` / `Monthly · Renews Nov 11` in English); with no
 interval the line is as before.
 
+**v46 (2026-11-04), reference `docs/design/mockups/v46.html`: PayPal** (M17, `docs/plans/m17-paypal.md`).
+When `/v1/config` says `paypal: true`, the plan sheet (desktop and phone) shows under the main button
+a hairline with `或` / `or` and a PayPal button (PayPal's brand: `#FFC439`, `用 PayPal 订阅` /
+`Subscribe with PayPal` with the PayPal wordmark in its blues; desktop 32 pt, phone 44 dp) that
+checks out the chosen plan through PayPal. The fine print reads `试用结束前不会扣款。银行卡由 Waffo
+代收，含税价。` The waiting state reads `在 PayPal 里完成订阅` with `重新打开 PayPal`. A PayPal
+subscription's Pro line adds `· 通过 PayPal` / `· via PayPal` after the interval; Manage subscription
+opens the payer's PayPal automatic-payments page.
+Built (M17, apps): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
+`pro-sheet-paypal-*`, `pro-waiting-paypal-*`, `settings-pro-paypal-*` (Android). The button's label is one message with the word
+PayPal in it (`用 PayPal 订阅` / `Subscribe with PayPal`); the word is drawn as the wordmark, "Pay" `#003087` and "Pal" `#009cde`
+in bold italics, and the words around it `#003087`, in light and dark alike. While a checkout is being asked for, both buttons are off.
+The fine print reads `Cards are sold by Waffo, tax included.` only when PayPal is offered.
+
 ## Writing
 
 - UI copy comes in English and Simplified Chinese. English is the source; the system language picks

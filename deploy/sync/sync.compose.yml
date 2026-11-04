@@ -32,11 +32,21 @@ services:
       WAFFO_PRODUCT_MONTHLY: ${WAFFO_PRODUCT_MONTHLY:-}
       WAFFO_PRODUCT_YEARLY: ${WAFFO_PRODUCT_YEARLY:-}
       WAFFO_MODE: ${WAFFO_MODE:-}
+      # PayPal as a second way to pay (M17), on top of Waffo. An empty PAYPAL_CREDENTIALS_FILE (a path
+      # inside the container, under /secrets) turns it off.
+      PAYPAL_CREDENTIALS_FILE: ${PAYPAL_CREDENTIALS_FILE:-}
+      PAYPAL_ENV: ${PAYPAL_ENV:-}
+      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      PAYPAL_PLAN_MONTHLY: ${PAYPAL_PLAN_MONTHLY:-}
+      PAYPAL_PLAN_MONTHLY_TRIAL: ${PAYPAL_PLAN_MONTHLY_TRIAL:-}
+      PAYPAL_PLAN_YEARLY: ${PAYPAL_PLAN_YEARLY:-}
+      PAYPAL_PLAN_YEARLY_TRIAL: ${PAYPAL_PLAN_YEARLY_TRIAL:-}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       # PocketBase's data (its users and passwords); a host directory owned by uid 65532.
       - ./pb_data:/pb_data
-      # Waffo's API key (a PKCS#8 PEM, readable by uid 65532), read-only: /opt/adhd-todo/sync/secrets/waffo-test.pem is /secrets/waffo-test.pem.
+      # Waffo's API key (a PKCS#8 PEM) and PayPal's credentials (a JSON file), readable by uid 65532, read-only:
+      # /opt/adhd-todo/sync/secrets/waffo-test.pem is /secrets/waffo-test.pem.
       - /opt/adhd-todo/sync/secrets:/secrets:ro
     ports:
       - 127.0.0.1:18080:8080

@@ -15,13 +15,27 @@ const (
 	StatusCanceled  = "canceled"
 )
 
+// The payment channels a subscription can be on (M17). Both write the same row.
+const (
+	ProviderWaffo  = "waffo"
+	ProviderPayPal = "paypal"
+)
+
+// paypalBillingLag is how long after next_billing_time PayPal may take to charge a renewal (or the
+// first charge after a trial) and tell us; an active PayPal subscription stays Pro for it, so the
+// minutes between the due time and the PAYMENT.SALE.COMPLETED webhook are not a lapse.
+const paypalBillingLag = 24 * time.Hour
+
 // pastDueGrace is the one retry day Waffo's channel gives a failed renewal: a past_due
 // subscription stays Pro for it after the period ended.
 const pastDueGrace = 24 * time.Hour
 
-// Subscription is an account's row: the latest state Waffo's events put it in.
+// Subscription is an account's row: the latest state the newest subscription's events put it in.
 type Subscription struct {
-	Account     int64
+	Account int64
+	// Provider is ProviderWaffo or ProviderPayPal; empty reads as Waffo (see providerOrDefault).
+	Provider string
+	// OrderID is Waffo's order id, or the PayPal subscription id (I-...) for a PayPal row.
 	OrderID     string
 	ProductName string
 	// Interval is "monthly" or "yearly", or empty when no event has said (see normalizeInterval).
@@ -35,12 +49,26 @@ type Subscription struct {
 	EventAt time.Time
 }
 
+// providerOrDefault is the channel the row is on; rows from before M17 have none and are Waffo's.
+func (s Subscription) providerOrDefault() string {
+	if s.Provider == "" {
+		return ProviderWaffo
+	}
+	return s.Provider
+}
+
 // Pro is the entitlement rule: Pro while the status is trialing, active, canceling or past_due and
-// the period has not ended (a past_due one gets pastDueGrace more). A period end Waffo did not
-// send leaves the status to decide.
+// the period has not ended (a past_due one gets pastDueGrace more, a trialing or active PayPal one
+// paypalBillingLag). A period end the provider did not send leaves the status to decide.
 func (s Subscription) Pro(now time.Time) bool {
 	switch s.Status {
-	case StatusTrialing, StatusActive, StatusCanceling:
+	case StatusTrialing, StatusActive:
+		end := s.PeriodEnd
+		if s.providerOrDefault() == ProviderPayPal {
+			end = end.Add(paypalBillingLag)
+		}
+		return s.PeriodEnd.IsZero() || now.Before(end)
+	case StatusCanceling:
 		return s.PeriodEnd.IsZero() || now.Before(s.PeriodEnd)
 	case StatusPastDue:
 		return s.PeriodEnd.IsZero() || now.Before(s.PeriodEnd.Add(pastDueGrace))
@@ -78,8 +106,10 @@ func reduce(cur Subscription, exists bool, ev Event, account int64) (next Subscr
 		return cur, false
 	}
 	d := ev.Data
-	sameOrder := !exists || cur.OrderID == "" || cur.OrderID == d.OrderID
+	// A Waffo event follows only a Waffo order: a PayPal subscription took the row over if it is one.
+	sameOrder := !exists || cur.OrderID == "" || (cur.providerOrDefault() == ProviderWaffo && cur.OrderID == d.OrderID)
 	takeOrder := func() {
+		next.Provider = ProviderWaffo
 		next.OrderID = d.OrderID
 		if d.ProductName != "" {
 			next.ProductName = d.ProductName
