@@ -2281,6 +2281,11 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    `status.blocked` (`没能打开付款页，再试一次`). Past the day's quota, the composer's quiet line ends with
    `升级到 Pro，每天 100 次。` (`Upgrade to Pro` in accent opens the same sheet); a Pro account's line
    says only that the quota is used up. Without billing the card is as in v44.
+   Built (M16, desktop): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
+   `mine-composer-official-used-up-upgrade-*`. The plan reads `GET /v1/billing`, which has no billing interval, so the Pro
+   footer leaves out `年付` / `月付` and, in the trial, the renewal date after it (`Withdo Pro · 试用到 11月11日`). Manage
+   subscription asks for a new portal link on every click (it lives 15 minutes). The used-up line on a Free account
+   reads `今天的 20 次用完了：日期和提醒在本机读出。升级到 Pro，每天 100 次。`
    Before v44: the provider in use as one card (36 pt logo, name, `model · ●
    Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
    4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the

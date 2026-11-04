@@ -321,12 +321,16 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 	top, left := m.lineEdge()
 	ui.Row(c.Key("set-up")).Height(answerLineHeight).Shrink(0).Margin(top, 0, 0).Padding(0, 12, 0, left).Gap(5).AlignItems(ui.Center).Children(func() {
 		var text, linkText string
+		upgrade := false
 		pane := PaneModel
 		switch m.officialPhase() {
 		case data.OfficialSignedOut: // the official model would answer after signing in
 			text, linkText, pane = m.say.ComposerOfficialSignedOut(), m.say.ComposerOfficialSignIn(), PaneAccount
 		case data.OfficialUsedUp:
 			text = m.say.ComposerOfficialUsedUp()
+			if upgrade = m.canUpgrade(); upgrade {
+				text = m.say.ComposerOfficialUsedUpFree(itoa(m.app.Models.Official().Limit))
+			}
 		default:
 			linkText = m.say.ComposerChipSetUp()
 		}
@@ -334,6 +338,17 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 			theme.Text(c, theme.Meta, t.TextSecondary, text).Shrink(1).MinWidth(0).Ellipsis("…")
 		}
 		cs.setUpHover = false
+		if upgrade { // a Free account can have more turns: the link opens the Pro sheet
+			ui.Row(c.Key("set-up-upgrade")).Shrink(0).AlignItems(ui.Center).Children(func() {
+				l := link(c, t, m.say.ComposerProUpgrade()).Shrink(0)
+				cs.setUpHover = l.Hovered()
+				if l.Clicked() {
+					m.app.Act.OpenUpgrade()
+				}
+				theme.Text(c, theme.Meta, t.TextSecondary, m.say.ComposerProUpgradeTail())
+			})
+			return
+		}
 		if linkText == "" {
 			return
 		}
@@ -343,6 +358,16 @@ func (m *Main) setUpLine(c *ui.Context, t *theme.Tokens) {
 			m.openSettings(pane)
 		}
 	})
+}
+
+// canUpgrade says the account is on the free plan of a server that sells Pro: the used-up line
+// offers it.
+func (m *Main) canUpgrade() bool {
+	if m.app.Models == nil {
+		return false
+	}
+	b := m.app.Models.Billing()
+	return b.Offered && b.Known && !b.Pro
 }
 
 // inspectorComposer is the compact composer at the bottom of the inspector: it edits the open

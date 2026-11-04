@@ -1,6 +1,7 @@
 package views
 
 import (
+	"github.com/QingYunA/adhd-todo/app/data"
 	"github.com/QingYunA/adhd-todo/app/theme"
 	"github.com/egoist/mygo/ui"
 )
@@ -204,16 +205,18 @@ func statusDot(c *ui.Context, color ui.Color) ui.Element { return theme.Dot(c, c
 // label is what assistive technology calls the control. It returns the index chosen this frame, or
 // -1.
 func segmented(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int) int {
-	return segmentedIn(c, t, key, label, labels, selected, false)
+	return segmentedIn(c, t, key, label, labels, nil, selected, false)
 }
 
 // segmentedFill is segmented as wide as the room it has, the segments sharing it equally with their
 // labels centered.
 func segmentedFill(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int) int {
-	return segmentedIn(c, t, key, label, labels, selected, true)
+	return segmentedIn(c, t, key, label, labels, nil, selected, true)
 }
 
-func segmentedIn(c *ui.Context, t *theme.Tokens, key, label string, labels []string, selected int, fill bool) int {
+// segmentedIn is the well itself. notes, when not nil, are small green words after the label of the
+// segment at the same index (the saving of a year's plan); an empty one adds nothing.
+func segmentedIn(c *ui.Context, t *theme.Tokens, key, label string, labels, notes []string, selected int, fill bool) int {
 	sel := selected
 	parts := ui.SegmentedBase(c.Key(key), &sel, len(labels))
 	track := parts.Track.Shrink(0).Padding(2).Radius(7).Background(t.BgSubtle).Label(label)
@@ -237,7 +240,14 @@ func segmentedIn(c *ui.Context, t *theme.Tokens, key, label string, labels []str
 			if on {
 				ink = t.Text
 			}
-			seg.Children(func() { theme.Text(c, theme.Meta, ink, name) })
+			seg.Children(func() {
+				ui.Row(c.Key(key + "-in-" + itoa(i))).Gap(6).AlignItems(ui.Center).Children(func() {
+					theme.Text(c, theme.Meta, ink, name)
+					if i < len(notes) && notes[i] != "" {
+						theme.Text(c, theme.Meta, t.Status(data.Done), notes[i])
+					}
+				})
+			})
 		}
 	})
 	if sel != selected {

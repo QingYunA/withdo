@@ -12981,3 +12981,475 @@ func ProblemOfficialOff() string { return In(i18n.Locale()).ProblemOfficialOff()
 func (msgs Messages) ProblemOfficialOff() string {
 	return Catalog.Format(msgs.locale, "problemOfficialOff", nil)
 }
+
+// SettingsPlanFree says "Free"
+// in the language the app shows.
+//
+// Pill on the official model's card: the account is on the free plan.
+func SettingsPlanFree() string { return In(i18n.Locale()).SettingsPlanFree() }
+
+// SettingsPlanFree says "Free"
+// in the language of msgs.
+//
+// Pill on the official model's card: the account is on the free plan.
+func (msgs Messages) SettingsPlanFree() string {
+	return Catalog.Format(msgs.locale, "settingsPlanFree", nil)
+}
+
+// SettingsPlanPro says "Pro"
+// in the language the app shows.
+//
+// Pill on the official model's card: the account has Withdo Pro.
+func SettingsPlanPro() string { return In(i18n.Locale()).SettingsPlanPro() }
+
+// SettingsPlanPro says "Pro"
+// in the language of msgs.
+//
+// Pill on the official model's card: the account has Withdo Pro.
+func (msgs Messages) SettingsPlanPro() string {
+	return Catalog.Format(msgs.locale, "settingsPlanPro", nil)
+}
+
+// SettingsProLineTrial says "Pro: 100 a day, on every device. Try it free for 7 days."
+// in the language the app shows.
+//
+// Footer of the official model's card on the free plan, trial not used yet.
+func SettingsProLineTrial() string { return In(i18n.Locale()).SettingsProLineTrial() }
+
+// SettingsProLineTrial says "Pro: 100 a day, on every device. Try it free for 7 days."
+// in the language of msgs.
+//
+// Footer of the official model's card on the free plan, trial not used yet.
+func (msgs Messages) SettingsProLineTrial() string {
+	return Catalog.Format(msgs.locale, "settingsProLineTrial", nil)
+}
+
+// SettingsProLine says "Pro: 100 a day, on every device."
+// in the language the app shows.
+//
+// Footer of the official model's card on the free plan, trial already used.
+func SettingsProLine() string { return In(i18n.Locale()).SettingsProLine() }
+
+// SettingsProLine says "Pro: 100 a day, on every device."
+// in the language of msgs.
+//
+// Footer of the official model's card on the free plan, trial already used.
+func (msgs Messages) SettingsProLine() string {
+	return Catalog.Format(msgs.locale, "settingsProLine", nil)
+}
+
+// SettingsProUpgrade says "Upgrade to Pro"
+// in the language the app shows.
+//
+// Link at the right of the card's footer: opens the upgrade sheet.
+func SettingsProUpgrade() string { return In(i18n.Locale()).SettingsProUpgrade() }
+
+// SettingsProUpgrade says "Upgrade to Pro"
+// in the language of msgs.
+//
+// Link at the right of the card's footer: opens the upgrade sheet.
+func (msgs Messages) SettingsProUpgrade() string {
+	return Catalog.Format(msgs.locale, "settingsProUpgrade", nil)
+}
+
+// SettingsProManage says "Manage subscription"
+// in the language the app shows.
+//
+// Link at the right of the card's footer for a Pro account: opens the
+// customer portal in the browser.
+func SettingsProManage() string { return In(i18n.Locale()).SettingsProManage() }
+
+// SettingsProManage says "Manage subscription"
+// in the language of msgs.
+//
+// Link at the right of the card's footer for a Pro account: opens the
+// customer portal in the browser.
+func (msgs Messages) SettingsProManage() string {
+	return Catalog.Format(msgs.locale, "settingsProManage", nil)
+}
+
+// SettingsProTrialUntil says "Withdo Pro · trial until {date}"
+// in the language the app shows.
+//
+// Footer of the card while the free trial runs.
+func SettingsProTrialUntil(date string) string { return In(i18n.Locale()).SettingsProTrialUntil(date) }
+
+// SettingsProTrialUntil says "Withdo Pro · trial until {date}"
+// in the language of msgs.
+//
+// Footer of the card while the free trial runs.
+func (msgs Messages) SettingsProTrialUntil(date string) string {
+	return Catalog.Format(msgs.locale, "settingsProTrialUntil", map[string]any{"date": date})
+}
+
+// SettingsProRenews says "Withdo Pro · renews {date}"
+// in the language the app shows.
+//
+// Footer of the card for a paying Pro account.
+func SettingsProRenews(date string) string { return In(i18n.Locale()).SettingsProRenews(date) }
+
+// SettingsProRenews says "Withdo Pro · renews {date}"
+// in the language of msgs.
+//
+// Footer of the card for a paying Pro account.
+func (msgs Messages) SettingsProRenews(date string) string {
+	return Catalog.Format(msgs.locale, "settingsProRenews", map[string]any{"date": date})
+}
+
+// SettingsProEnds says "Withdo Pro · ends {date}"
+// in the language the app shows.
+//
+// Footer of the card for a Pro account that was cancelled and runs to the
+// end of its period.
+func SettingsProEnds(date string) string { return In(i18n.Locale()).SettingsProEnds(date) }
+
+// SettingsProEnds says "Withdo Pro · ends {date}"
+// in the language of msgs.
+//
+// Footer of the card for a Pro account that was cancelled and runs to the
+// end of its period.
+func (msgs Messages) SettingsProEnds(date string) string {
+	return Catalog.Format(msgs.locale, "settingsProEnds", map[string]any{"date": date})
+}
+
+// SettingsProManageFailed says "Could not open the subscription page. Try again."
+// in the language the app shows.
+//
+// Under the card's footer when the customer portal link could not be made.
+func SettingsProManageFailed() string { return In(i18n.Locale()).SettingsProManageFailed() }
+
+// SettingsProManageFailed says "Could not open the subscription page. Try again."
+// in the language of msgs.
+//
+// Under the card's footer when the customer portal link could not be made.
+func (msgs Messages) SettingsProManageFailed() string {
+	return Catalog.Format(msgs.locale, "settingsProManageFailed", nil)
+}
+
+// ProSheetTitle says "Upgrade to Withdo Pro"
+// in the language the app shows.
+//
+// Title of the upgrade sheet.
+func ProSheetTitle() string { return In(i18n.Locale()).ProSheetTitle() }
+
+// ProSheetTitle says "Upgrade to Withdo Pro"
+// in the language of msgs.
+//
+// Title of the upgrade sheet.
+func (msgs Messages) ProSheetTitle() string {
+	return Catalog.Format(msgs.locale, "proSheetTitle", nil)
+}
+
+// ProSheetLine says "The official model, 100 a day, on every device."
+// in the language the app shows.
+//
+// Line under the upgrade sheet's title.
+func ProSheetLine() string { return In(i18n.Locale()).ProSheetLine() }
+
+// ProSheetLine says "The official model, 100 a day, on every device."
+// in the language of msgs.
+//
+// Line under the upgrade sheet's title.
+func (msgs Messages) ProSheetLine() string {
+	return Catalog.Format(msgs.locale, "proSheetLine", nil)
+}
+
+// ProMonthly says "Monthly"
+// in the language the app shows.
+//
+// Upgrade sheet segment: pay every month.
+func ProMonthly() string { return In(i18n.Locale()).ProMonthly() }
+
+// ProMonthly says "Monthly"
+// in the language of msgs.
+//
+// Upgrade sheet segment: pay every month.
+func (msgs Messages) ProMonthly() string {
+	return Catalog.Format(msgs.locale, "proMonthly", nil)
+}
+
+// ProYearly says "Yearly"
+// in the language the app shows.
+//
+// Upgrade sheet segment: pay every year.
+func ProYearly() string { return In(i18n.Locale()).ProYearly() }
+
+// ProYearly says "Yearly"
+// in the language of msgs.
+//
+// Upgrade sheet segment: pay every year.
+func (msgs Messages) ProYearly() string {
+	return Catalog.Format(msgs.locale, "proYearly", nil)
+}
+
+// ProSave says "Save {percent}%"
+// in the language the app shows.
+//
+// Green note on the yearly segment: how much cheaper than twelve months.
+func ProSave(percent string) string { return In(i18n.Locale()).ProSave(percent) }
+
+// ProSave says "Save {percent}%"
+// in the language of msgs.
+//
+// Green note on the yearly segment: how much cheaper than twelve months.
+func (msgs Messages) ProSave(percent string) string {
+	return Catalog.Format(msgs.locale, "proSave", map[string]any{"percent": percent})
+}
+
+// ProPriceYearly says "/ year, about {perMonth} / month"
+// in the language the app shows.
+//
+// Small words after the big price of the yearly plan in the upgrade sheet.
+func ProPriceYearly(perMonth string) string { return In(i18n.Locale()).ProPriceYearly(perMonth) }
+
+// ProPriceYearly says "/ year, about {perMonth} / month"
+// in the language of msgs.
+//
+// Small words after the big price of the yearly plan in the upgrade sheet.
+func (msgs Messages) ProPriceYearly(perMonth string) string {
+	return Catalog.Format(msgs.locale, "proPriceYearly", map[string]any{"perMonth": perMonth})
+}
+
+// ProPriceMonthly says "/ month"
+// in the language the app shows.
+//
+// Small words after the big price of the monthly plan in the upgrade sheet.
+func ProPriceMonthly() string { return In(i18n.Locale()).ProPriceMonthly() }
+
+// ProPriceMonthly says "/ month"
+// in the language of msgs.
+//
+// Small words after the big price of the monthly plan in the upgrade sheet.
+func (msgs Messages) ProPriceMonthly() string {
+	return Catalog.Format(msgs.locale, "proPriceMonthly", nil)
+}
+
+// ProTickModel says "Official model 100 a day (20 on Free)"
+// in the language the app shows.
+//
+// First benefit of Pro in the upgrade sheet.
+func ProTickModel() string { return In(i18n.Locale()).ProTickModel() }
+
+// ProTickModel says "Official model 100 a day (20 on Free)"
+// in the language of msgs.
+//
+// First benefit of Pro in the upgrade sheet.
+func (msgs Messages) ProTickModel() string {
+	return Catalog.Format(msgs.locale, "proTickModel", nil)
+}
+
+// ProTickDevices says "Works on your phone and computer"
+// in the language the app shows.
+//
+// Second benefit of Pro in the upgrade sheet.
+func ProTickDevices() string { return In(i18n.Locale()).ProTickDevices() }
+
+// ProTickDevices says "Works on your phone and computer"
+// in the language of msgs.
+//
+// Second benefit of Pro in the upgrade sheet.
+func (msgs Messages) ProTickDevices() string {
+	return Catalog.Format(msgs.locale, "proTickDevices", nil)
+}
+
+// ProTickSync says "Sync stays free"
+// in the language the app shows.
+//
+// Third benefit of Pro in the upgrade sheet.
+func ProTickSync() string { return In(i18n.Locale()).ProTickSync() }
+
+// ProTickSync says "Sync stays free"
+// in the language of msgs.
+//
+// Third benefit of Pro in the upgrade sheet.
+func (msgs Messages) ProTickSync() string {
+	return Catalog.Format(msgs.locale, "proTickSync", nil)
+}
+
+// ProTickCancel says "Cancel any time in the customer portal"
+// in the language the app shows.
+//
+// Fourth benefit of Pro in the upgrade sheet.
+func ProTickCancel() string { return In(i18n.Locale()).ProTickCancel() }
+
+// ProTickCancel says "Cancel any time in the customer portal"
+// in the language of msgs.
+//
+// Fourth benefit of Pro in the upgrade sheet.
+func (msgs Messages) ProTickCancel() string {
+	return Catalog.Format(msgs.locale, "proTickCancel", nil)
+}
+
+// ProStartTrial says "Start 7-day free trial"
+// in the language the app shows.
+//
+// Main button of the upgrade sheet while the account has not had its trial.
+func ProStartTrial() string { return In(i18n.Locale()).ProStartTrial() }
+
+// ProStartTrial says "Start 7-day free trial"
+// in the language of msgs.
+//
+// Main button of the upgrade sheet while the account has not had its trial.
+func (msgs Messages) ProStartTrial() string {
+	return Catalog.Format(msgs.locale, "proStartTrial", nil)
+}
+
+// ProSubscribe says "Subscribe"
+// in the language the app shows.
+//
+// Main button of the upgrade sheet once the account has had its trial.
+func ProSubscribe() string { return In(i18n.Locale()).ProSubscribe() }
+
+// ProSubscribe says "Subscribe"
+// in the language of msgs.
+//
+// Main button of the upgrade sheet once the account has had its trial.
+func (msgs Messages) ProSubscribe() string {
+	return Catalog.Format(msgs.locale, "proSubscribe", nil)
+}
+
+// ProFinePrintTrial says "Nothing is charged before the trial ends. Sold by Waffo, tax included."
+// in the language the app shows.
+//
+// Fine print under the upgrade sheet's button, with a trial.
+func ProFinePrintTrial() string { return In(i18n.Locale()).ProFinePrintTrial() }
+
+// ProFinePrintTrial says "Nothing is charged before the trial ends. Sold by Waffo, tax included."
+// in the language of msgs.
+//
+// Fine print under the upgrade sheet's button, with a trial.
+func (msgs Messages) ProFinePrintTrial() string {
+	return Catalog.Format(msgs.locale, "proFinePrintTrial", nil)
+}
+
+// ProFinePrint says "Sold by Waffo, tax included."
+// in the language the app shows.
+//
+// Fine print under the upgrade sheet's button, without a trial.
+func ProFinePrint() string { return In(i18n.Locale()).ProFinePrint() }
+
+// ProFinePrint says "Sold by Waffo, tax included."
+// in the language of msgs.
+//
+// Fine print under the upgrade sheet's button, without a trial.
+func (msgs Messages) ProFinePrint() string {
+	return Catalog.Format(msgs.locale, "proFinePrint", nil)
+}
+
+// ProWaitingTitle says "Finish paying in your browser"
+// in the language the app shows.
+//
+// Title of the upgrade sheet while the payment page is open in the browser.
+func ProWaitingTitle() string { return In(i18n.Locale()).ProWaitingTitle() }
+
+// ProWaitingTitle says "Finish paying in your browser"
+// in the language of msgs.
+//
+// Title of the upgrade sheet while the payment page is open in the browser.
+func (msgs Messages) ProWaitingTitle() string {
+	return Catalog.Format(msgs.locale, "proWaitingTitle", nil)
+}
+
+// ProWaitingLine says "The payment page is open in your browser. This turns into Pro by itself when it is done."
+// in the language the app shows.
+//
+// Line of the sheet while it waits for the payment.
+func ProWaitingLine() string { return In(i18n.Locale()).ProWaitingLine() }
+
+// ProWaitingLine says "The payment page is open in your browser. This turns into Pro by itself when it is done."
+// in the language of msgs.
+//
+// Line of the sheet while it waits for the payment.
+func (msgs Messages) ProWaitingLine() string {
+	return Catalog.Format(msgs.locale, "proWaitingLine", nil)
+}
+
+// ProReopen says "Reopen the payment page"
+// in the language the app shows.
+//
+// Button of the waiting sheet: open the payment page in the browser again.
+func ProReopen() string { return In(i18n.Locale()).ProReopen() }
+
+// ProReopen says "Reopen the payment page"
+// in the language of msgs.
+//
+// Button of the waiting sheet: open the payment page in the browser again.
+func (msgs Messages) ProReopen() string {
+	return Catalog.Format(msgs.locale, "proReopen", nil)
+}
+
+// ProCheckoutFailed says "Could not open the payment page. Try again."
+// in the language the app shows.
+//
+// Error in the upgrade sheet when the payment page could not be made.
+func ProCheckoutFailed() string { return In(i18n.Locale()).ProCheckoutFailed() }
+
+// ProCheckoutFailed says "Could not open the payment page. Try again."
+// in the language of msgs.
+//
+// Error in the upgrade sheet when the payment page could not be made.
+func (msgs Messages) ProCheckoutFailed() string {
+	return Catalog.Format(msgs.locale, "proCheckoutFailed", nil)
+}
+
+// ProCheckoutThrottled says "Too many tries. Wait a little and try again."
+// in the language the app shows.
+//
+// Error in the upgrade sheet when the server limits the payment pages.
+func ProCheckoutThrottled() string { return In(i18n.Locale()).ProCheckoutThrottled() }
+
+// ProCheckoutThrottled says "Too many tries. Wait a little and try again."
+// in the language of msgs.
+//
+// Error in the upgrade sheet when the server limits the payment pages.
+func (msgs Messages) ProCheckoutThrottled() string {
+	return Catalog.Format(msgs.locale, "proCheckoutThrottled", nil)
+}
+
+// ComposerProUpgrade says "Upgrade to Pro"
+// in the language the app shows.
+//
+// Link in the quiet line under the input once the day's turns are used up:
+// opens the upgrade sheet.
+func ComposerProUpgrade() string { return In(i18n.Locale()).ComposerProUpgrade() }
+
+// ComposerProUpgrade says "Upgrade to Pro"
+// in the language of msgs.
+//
+// Link in the quiet line under the input once the day's turns are used up:
+// opens the upgrade sheet.
+func (msgs Messages) ComposerProUpgrade() string {
+	return Catalog.Format(msgs.locale, "composerProUpgrade", nil)
+}
+
+// ComposerProUpgradeTail says " for 100 a day."
+// in the language the app shows.
+//
+// Plain words after the Upgrade to Pro link in the quiet line.
+func ComposerProUpgradeTail() string { return In(i18n.Locale()).ComposerProUpgradeTail() }
+
+// ComposerProUpgradeTail says " for 100 a day."
+// in the language of msgs.
+//
+// Plain words after the Upgrade to Pro link in the quiet line.
+func (msgs Messages) ComposerProUpgradeTail() string {
+	return Catalog.Format(msgs.locale, "composerProUpgradeTail", nil)
+}
+
+// ComposerOfficialUsedUpFree says "Today's {limit} turns are used up: dates and reminders are read on this computer."
+// in the language the app shows.
+//
+// Quiet line under the input on the free plan when the day's turns are used
+// up; the Upgrade to Pro link follows it.
+func ComposerOfficialUsedUpFree(limit string) string {
+	return In(i18n.Locale()).ComposerOfficialUsedUpFree(limit)
+}
+
+// ComposerOfficialUsedUpFree says "Today's {limit} turns are used up: dates and reminders are read on this computer."
+// in the language of msgs.
+//
+// Quiet line under the input on the free plan when the day's turns are used
+// up; the Upgrade to Pro link follows it.
+func (msgs Messages) ComposerOfficialUsedUpFree(limit string) string {
+	return Catalog.Format(msgs.locale, "composerOfficialUsedUpFree", map[string]any{"limit": limit})
+}
