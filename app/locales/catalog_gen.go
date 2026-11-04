@@ -13068,104 +13068,122 @@ func (msgs Messages) SettingsProManage() string {
 	return Catalog.Format(msgs.locale, "settingsProManage", nil)
 }
 
-// SettingsProTrialUntil says "Withdo Pro · trial until {date}"
+// SettingsProTrialUntil says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}"
 // in the language the app shows.
 //
-// Footer of the card while the free trial runs.
-func SettingsProTrialUntil(date string) string { return In(i18n.Locale()).SettingsProTrialUntil(date) }
-
-// SettingsProTrialUntil says "Withdo Pro · trial until {date}"
-// in the language of msgs.
-//
-// Footer of the card while the free trial runs.
-func (msgs Messages) SettingsProTrialUntil(date string) string {
-	return Catalog.Format(msgs.locale, "settingsProTrialUntil", map[string]any{"date": date})
+// Footer of the card while the free trial runs. provider is paypal when the
+// subscription is billed by PayPal, otherwise waffo.
+func SettingsProTrialUntil(provider string, date string) string {
+	return In(i18n.Locale()).SettingsProTrialUntil(provider, date)
 }
 
-// SettingsProRenews says "Withdo Pro · renews {date}"
+// SettingsProTrialUntil says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}"
+// in the language of msgs.
+//
+// Footer of the card while the free trial runs. provider is paypal when the
+// subscription is billed by PayPal, otherwise waffo.
+func (msgs Messages) SettingsProTrialUntil(provider string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProTrialUntil", map[string]any{"provider": provider, "date": date})
+}
+
+// SettingsProRenews says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}"
 // in the language the app shows.
 //
-// Footer of the card for a paying Pro account.
-func SettingsProRenews(date string) string { return In(i18n.Locale()).SettingsProRenews(date) }
-
-// SettingsProRenews says "Withdo Pro · renews {date}"
-// in the language of msgs.
-//
-// Footer of the card for a paying Pro account.
-func (msgs Messages) SettingsProRenews(date string) string {
-	return Catalog.Format(msgs.locale, "settingsProRenews", map[string]any{"date": date})
+// Footer of the card for a paying Pro account. provider is paypal when the
+// subscription is billed by PayPal, otherwise waffo.
+func SettingsProRenews(provider string, date string) string {
+	return In(i18n.Locale()).SettingsProRenews(provider, date)
 }
 
-// SettingsProEnds says "Withdo Pro · ends {date}"
+// SettingsProRenews says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}"
+// in the language of msgs.
+//
+// Footer of the card for a paying Pro account. provider is paypal when the
+// subscription is billed by PayPal, otherwise waffo.
+func (msgs Messages) SettingsProRenews(provider string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProRenews", map[string]any{"provider": provider, "date": date})
+}
+
+// SettingsProEnds says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}"
 // in the language the app shows.
 //
 // Footer of the card for a Pro account that was cancelled and runs to the
-// end of its period.
-func SettingsProEnds(date string) string { return In(i18n.Locale()).SettingsProEnds(date) }
+// end of its period. provider is paypal when the subscription is billed by
+// PayPal, otherwise waffo.
+func SettingsProEnds(provider string, date string) string {
+	return In(i18n.Locale()).SettingsProEnds(provider, date)
+}
 
-// SettingsProEnds says "Withdo Pro · ends {date}"
+// SettingsProEnds says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}"
 // in the language of msgs.
 //
 // Footer of the card for a Pro account that was cancelled and runs to the
-// end of its period.
-func (msgs Messages) SettingsProEnds(date string) string {
-	return Catalog.Format(msgs.locale, "settingsProEnds", map[string]any{"date": date})
+// end of its period. provider is paypal when the subscription is billed by
+// PayPal, otherwise waffo.
+func (msgs Messages) SettingsProEnds(provider string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProEnds", map[string]any{"provider": provider, "date": date})
 }
 
-// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews"
+// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language the app shows.
 //
 // Footer of the card while the free trial runs, when the server says the
-// billing interval. interval is monthly or yearly.
-func SettingsProIntervalTrialUntil(interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalTrialUntil(interval, date)
+// billing interval. interval is monthly or yearly. provider is paypal when
+// the subscription is billed by PayPal, otherwise waffo.
+func SettingsProIntervalTrialUntil(provider string, interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalTrialUntil(provider, interval, date)
 }
 
-// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews"
+// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language of msgs.
 //
 // Footer of the card while the free trial runs, when the server says the
-// billing interval. interval is monthly or yearly.
-func (msgs Messages) SettingsProIntervalTrialUntil(interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalTrialUntil", map[string]any{"interval": interval, "date": date})
+// billing interval. interval is monthly or yearly. provider is paypal when
+// the subscription is billed by PayPal, otherwise waffo.
+func (msgs Messages) SettingsProIntervalTrialUntil(provider string, interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalTrialUntil", map[string]any{"provider": provider, "interval": interval, "date": date})
 }
 
-// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}"
+// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language the app shows.
 //
 // Footer of the card for a paying Pro account, when the server says the
-// billing interval. interval is monthly or yearly.
-func SettingsProIntervalRenews(interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalRenews(interval, date)
+// billing interval. interval is monthly or yearly. provider is paypal when
+// the subscription is billed by PayPal, otherwise waffo.
+func SettingsProIntervalRenews(provider string, interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalRenews(provider, interval, date)
 }
 
-// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}"
+// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language of msgs.
 //
 // Footer of the card for a paying Pro account, when the server says the
-// billing interval. interval is monthly or yearly.
-func (msgs Messages) SettingsProIntervalRenews(interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalRenews", map[string]any{"interval": interval, "date": date})
+// billing interval. interval is monthly or yearly. provider is paypal when
+// the subscription is billed by PayPal, otherwise waffo.
+func (msgs Messages) SettingsProIntervalRenews(provider string, interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalRenews", map[string]any{"provider": provider, "interval": interval, "date": date})
 }
 
-// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}"
+// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language the app shows.
 //
 // Footer of the card for a cancelled Pro account that runs to the end of
 // its period, when the server says the billing interval. interval is
-// monthly or yearly.
-func SettingsProIntervalEnds(interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalEnds(interval, date)
+// monthly or yearly. provider is paypal when the subscription is billed by
+// PayPal, otherwise waffo.
+func SettingsProIntervalEnds(provider string, interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalEnds(provider, interval, date)
 }
 
-// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}"
+// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
 // in the language of msgs.
 //
 // Footer of the card for a cancelled Pro account that runs to the end of
 // its period, when the server says the billing interval. interval is
-// monthly or yearly.
-func (msgs Messages) SettingsProIntervalEnds(interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalEnds", map[string]any{"interval": interval, "date": date})
+// monthly or yearly. provider is paypal when the subscription is billed by
+// PayPal, otherwise waffo.
+func (msgs Messages) SettingsProIntervalEnds(provider string, interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalEnds", map[string]any{"provider": provider, "interval": interval, "date": date})
 }
 
 // SettingsProManageFailed says "Could not open the subscription page. Try again."
@@ -13460,6 +13478,114 @@ func ProCheckoutThrottled() string { return In(i18n.Locale()).ProCheckoutThrottl
 // Error in the upgrade sheet when the server limits the payment pages.
 func (msgs Messages) ProCheckoutThrottled() string {
 	return Catalog.Format(msgs.locale, "proCheckoutThrottled", nil)
+}
+
+// ProOr says "or"
+// in the language the app shows.
+//
+// Word on a hairline between the upgrade sheet's main button and the PayPal
+// button.
+func ProOr() string { return In(i18n.Locale()).ProOr() }
+
+// ProOr says "or"
+// in the language of msgs.
+//
+// Word on a hairline between the upgrade sheet's main button and the PayPal
+// button.
+func (msgs Messages) ProOr() string {
+	return Catalog.Format(msgs.locale, "proOr", nil)
+}
+
+// ProPayPal says "Subscribe with PayPal"
+// in the language the app shows.
+//
+// PayPal button of the upgrade sheet. The word PayPal is drawn as PayPal's
+// wordmark (in its blues, in italics), so it must stay in the text exactly
+// as PayPal; the words around it are normal text.
+func ProPayPal() string { return In(i18n.Locale()).ProPayPal() }
+
+// ProPayPal says "Subscribe with PayPal"
+// in the language of msgs.
+//
+// PayPal button of the upgrade sheet. The word PayPal is drawn as PayPal's
+// wordmark (in its blues, in italics), so it must stay in the text exactly
+// as PayPal; the words around it are normal text.
+func (msgs Messages) ProPayPal() string {
+	return Catalog.Format(msgs.locale, "proPayPal", nil)
+}
+
+// ProFinePrintTrialPayPal says "Nothing is charged before the trial ends. Cards are sold by Waffo, tax included."
+// in the language the app shows.
+//
+// Fine print under the upgrade sheet's buttons when PayPal is offered, with
+// a trial.
+func ProFinePrintTrialPayPal() string { return In(i18n.Locale()).ProFinePrintTrialPayPal() }
+
+// ProFinePrintTrialPayPal says "Nothing is charged before the trial ends. Cards are sold by Waffo, tax included."
+// in the language of msgs.
+//
+// Fine print under the upgrade sheet's buttons when PayPal is offered, with
+// a trial.
+func (msgs Messages) ProFinePrintTrialPayPal() string {
+	return Catalog.Format(msgs.locale, "proFinePrintTrialPayPal", nil)
+}
+
+// ProFinePrintPayPal says "Cards are sold by Waffo, tax included."
+// in the language the app shows.
+//
+// Fine print under the upgrade sheet's buttons when PayPal is offered,
+// without a trial.
+func ProFinePrintPayPal() string { return In(i18n.Locale()).ProFinePrintPayPal() }
+
+// ProFinePrintPayPal says "Cards are sold by Waffo, tax included."
+// in the language of msgs.
+//
+// Fine print under the upgrade sheet's buttons when PayPal is offered,
+// without a trial.
+func (msgs Messages) ProFinePrintPayPal() string {
+	return Catalog.Format(msgs.locale, "proFinePrintPayPal", nil)
+}
+
+// ProWaitingTitlePayPal says "Finish subscribing in PayPal"
+// in the language the app shows.
+//
+// Title of the upgrade sheet while PayPal's page is open in the browser.
+func ProWaitingTitlePayPal() string { return In(i18n.Locale()).ProWaitingTitlePayPal() }
+
+// ProWaitingTitlePayPal says "Finish subscribing in PayPal"
+// in the language of msgs.
+//
+// Title of the upgrade sheet while PayPal's page is open in the browser.
+func (msgs Messages) ProWaitingTitlePayPal() string {
+	return Catalog.Format(msgs.locale, "proWaitingTitlePayPal", nil)
+}
+
+// ProWaitingLinePayPal says "PayPal is open in your browser. This turns into Pro by itself when you are done."
+// in the language the app shows.
+//
+// Line of the sheet while it waits for the PayPal subscription.
+func ProWaitingLinePayPal() string { return In(i18n.Locale()).ProWaitingLinePayPal() }
+
+// ProWaitingLinePayPal says "PayPal is open in your browser. This turns into Pro by itself when you are done."
+// in the language of msgs.
+//
+// Line of the sheet while it waits for the PayPal subscription.
+func (msgs Messages) ProWaitingLinePayPal() string {
+	return Catalog.Format(msgs.locale, "proWaitingLinePayPal", nil)
+}
+
+// ProReopenPayPal says "Reopen PayPal"
+// in the language the app shows.
+//
+// Button of the waiting sheet: open the PayPal page in the browser again.
+func ProReopenPayPal() string { return In(i18n.Locale()).ProReopenPayPal() }
+
+// ProReopenPayPal says "Reopen PayPal"
+// in the language of msgs.
+//
+// Button of the waiting sheet: open the PayPal page in the browser again.
+func (msgs Messages) ProReopenPayPal() string {
+	return Catalog.Format(msgs.locale, "proReopenPayPal", nil)
 }
 
 // ComposerProUpgrade says "Upgrade to Pro"

@@ -166,7 +166,7 @@ func TestBillingIsNotOfferedBySomeServersOrSignedOut(t *testing.T) {
 func TestStartCheckoutReturnsThePageAndWordsTheRefusals(t *testing.T) {
 	f := newBillingServer(t, true)
 	r := officialReal(t, f.URL, true)
-	url, err := r.StartCheckout(context.Background(), PlanYearly, "zh-Hans")
+	url, err := r.StartCheckout(context.Background(), PlanYearly, ProviderWaffo, "zh-Hans")
 	if err != nil || url != "https://pay.example.com/c/1" {
 		t.Fatalf("StartCheckout = %q, %v", url, err)
 	}
@@ -174,11 +174,11 @@ func TestStartCheckoutReturnsThePageAndWordsTheRefusals(t *testing.T) {
 		t.Fatalf("request = %q", body)
 	}
 	f.checkout.Store(http.StatusConflict)
-	if _, err := r.StartCheckout(context.Background(), PlanMonthly, "en"); !errors.Is(err, ErrAlreadySubscribed) {
+	if _, err := r.StartCheckout(context.Background(), PlanMonthly, ProviderWaffo, "en"); !errors.Is(err, ErrAlreadySubscribed) {
 		t.Fatalf("a Pro account's checkout = %v", err)
 	}
 	f.checkout.Store(http.StatusTooManyRequests)
-	if _, err := r.StartCheckout(context.Background(), PlanMonthly, "en"); !errors.Is(err, ErrCheckoutThrottled) {
+	if _, err := r.StartCheckout(context.Background(), PlanMonthly, ProviderWaffo, "en"); !errors.Is(err, ErrCheckoutThrottled) {
 		t.Fatalf("a throttled checkout = %v", err)
 	}
 }

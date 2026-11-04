@@ -149,7 +149,7 @@ class CoreApi(private val core: Core_) : AssistantBackend, BillingBackend {
 
     override fun refreshBilling() = core.refreshBilling()
 
-    override fun checkout(plan: String, lang: String): String = core.checkout(plan, lang)
+    override fun checkout(plan: String, provider: String, lang: String): String = core.checkout(plan, provider, lang)
 
     // ---- Select: bulk edits and their Undo --------------------------------------------------
 

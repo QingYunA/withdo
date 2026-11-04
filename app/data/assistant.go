@@ -176,8 +176,8 @@ type ModelSettings interface {
 	Billing() BillingInfo
 	// RefreshBilling asks the server for the plan again, soon (Settings opening or coming back).
 	RefreshBilling()
-	// StartCheckout asks for the payment page of a plan, in the app's language, and returns its URL.
-	StartCheckout(ctx context.Context, plan, lang string) (string, error)
+	// StartCheckout asks for the payment page of a plan at a provider (ProviderWaffo or ProviderPayPal), in the app's language, and returns its URL.
+	StartCheckout(ctx context.Context, plan, provider, lang string) (string, error)
 	// ManageURL is a fresh link to the customer portal, opened at once.
 	ManageURL(ctx context.Context) (string, error)
 }

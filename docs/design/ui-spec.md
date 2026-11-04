@@ -2916,6 +2916,11 @@ checks out the chosen plan through PayPal. The fine print reads `试用结束前
 代收，含税价。` The waiting state reads `在 PayPal 里完成订阅` with `重新打开 PayPal`. A PayPal
 subscription's Pro line adds `· 通过 PayPal` / `· via PayPal` after the interval; Manage subscription
 opens the payer's PayPal automatic-payments page.
+Built (M17, apps): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
+`pro-sheet-paypal-*`, `pro-waiting-paypal-*`, `settings-pro-paypal-*` (Android). The button's label is one message with the word
+PayPal in it (`用 PayPal 订阅` / `Subscribe with PayPal`); the word is drawn as the wordmark, "Pay" `#003087` and "Pal" `#009cde`
+in bold italics, and the words around it `#003087`, in light and dark alike. While a checkout is being asked for, both buttons are off.
+The fine print reads `Cards are sold by Waffo, tax included.` only when PayPal is offered.
 
 ## Writing
 

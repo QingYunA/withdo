@@ -12,6 +12,7 @@
     <string name="billing_interval_trial_until">%1$s · 试用到 %2$s，之后自动续费</string>
     <string name="billing_interval_renews">%1$s · %2$s续费</string>
     <string name="billing_interval_ends">%1$s · %2$s到期</string>
+    <string name="billing_via_paypal">通过 PayPal</string>
     <string name="billing_past_due">付款没有成功，请在“管理订阅”里更新。</string>
 
     <string name="billing_sheet_title">升级到 Withdo Pro</string>
@@ -31,10 +32,17 @@
     <string name="billing_cta_starting">正在打开付款页…</string>
     <string name="billing_fine_trial">试用结束前不会扣款。由 Waffo 代收，含税价。</string>
     <string name="billing_fine_subscribe">由 Waffo 代收，含税价。</string>
+    <string name="billing_or">或</string>
+    <string name="billing_cta_paypal">用 PayPal 订阅</string>
+    <string name="billing_fine_trial_paypal">试用结束前不会扣款。银行卡由 Waffo 代收，含税价。</string>
+    <string name="billing_fine_subscribe_paypal">银行卡由 Waffo 代收，含税价。</string>
 
     <string name="billing_wait_title">在浏览器里完成付款</string>
     <string name="billing_wait_line">付款页已经打开。回到 Withdo 时，这里会自动变成 Pro。</string>
     <string name="billing_reopen">重新打开付款页</string>
+    <string name="billing_wait_title_paypal">在 PayPal 里完成订阅</string>
+    <string name="billing_wait_line_paypal">PayPal 已经打开。回到 Withdo 时，这里会自动变成 Pro。</string>
+    <string name="billing_reopen_paypal">重新打开 PayPal</string>
 
     <string name="billing_error_open">没能打开付款页，再试一次</string>
     <string name="billing_error_rate_limited">试得太频繁了，过一会儿再试</string>
