@@ -51,3 +51,20 @@ The plan sheet shows, under the main button, `或` and a PayPal-branded button `
 (`#FFC439`, the PayPal wordmark), which checks out the chosen plan with `provider: "paypal"`; the
 waiting state says `在 PayPal 里完成订阅` / `重新打开 PayPal`. A PayPal subscription's Pro line adds
 `通过 PayPal` / `via PayPal`.
+
+## Server notes (as built)
+
+- One row per account; `provider` (`waffo` default, `paypal`) is migration 007, and a PayPal row keeps
+  the subscription id (`I-…`) in `order_id`. A PayPal `ACTIVE` subscription takes the row over like
+  Waffo's `activated`; the later states of any other subscription are ignored. `trial_used` is the
+  account's, whatever the channel; a plan with a TRIAL cycle sets it.
+- Mode: the sandbox is stored as `test`, live as `prod`, and the other-mode rule applies per channel.
+  With PayPal off, a PayPal row gives no Pro (the server cannot say which environment it belongs to).
+- The event is only a pointer. The dedupe key is `paypal:<event id>`; a read of the subscription
+  older than the row (by its `update_time`, `status_update_time`, last payment) is dropped.
+- Trial: ACTIVE with a TRIAL cycle that has runs left, or no REGULAR cycle charged yet, and no failed
+  payment. Period end is `next_billing_time`; after a cancellation, when PayPal drops it, the period
+  the row already had, else the last real payment plus one interval. A trialing or active PayPal
+  subscription stays Pro 24 hours past its period end (PayPal charges a renewal some time after it is
+  due and the sale webhook follows); `canceling` does not. `GET /v1/billing` reports a lapsed
+  `canceling` as `canceled`, since PayPal sends no event when the period ends.

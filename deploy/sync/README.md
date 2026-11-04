@@ -19,8 +19,8 @@ sections below ("From scratch", the certificate) describe that legacy path.
 └── sync/
     ├── sync.compose.yml        adhd-sync + its own Postgres
     ├── pb_data/                PocketBase's data (users, password hashes, its settings), owned by uid 65532
-    ├── sync.env                SYNC_DB_PASSWORD, the voice, model and Waffo variables below, mode 600
-    ├── secrets/                Waffo's API private key (waffo-test.pem), mounted read-only at /secrets
+    ├── sync.env                SYNC_DB_PASSWORD, the voice, model, Waffo and PayPal variables below, mode 600
+    ├── secrets/                Waffo's API private key (waffo-*.pem) and PayPal's credentials (paypal-*.json), mounted read-only at /secrets
     ├── bin/adhd-sync           static linux/amd64 build
     ├── backup.sh               the daily backup (Backups, below)
     └── backups/                one folder per backup, mode 700, kept 14 days
@@ -252,10 +252,55 @@ production webhook, put the new key next to the old one (`waffo-live.pem`), and 
 Logs carry the event type, the account id and the outcome only; request bodies, keys, emails and
 signatures are never logged.
 
+### PayPal (M17)
+
+PayPal is a second way to pay for Pro (`docs/plans/m17-paypal.md`), on top of Waffo: the apps show a
+PayPal button when `GET /v1/config` says `"paypal": true`. Both channels write the same per-account
+row, so Pro, the quota and the apps do not care which was used. PayPal is not a merchant of record:
+for PayPal sales the seller collects and remits VAT and sales tax. `POST /v1/billing/checkout` takes
+`"provider": "paypal"` (default `waffo`; any other value is 400 `bad_provider`, and PayPal off is 503
+`paypal_disabled`) and answers PayPal's approval page; `POST /v1/billing/paypal` is the webhook. Every
+webhook is verified with PayPal's `verify-webhook-signature` call, then the subscription is **read from
+PayPal** and its state applied (never the event's), so repeated and reordered events are harmless.
+Without `PAYPAL_CREDENTIALS_FILE` PayPal is off, and Waffo works as before.
+
+| Variable | Meaning |
+|---|---|
+| `PAYPAL_CREDENTIALS_FILE` | Path **inside the container** of `{"client_id","secret","env"}` (JSON, mode 600, owner 65532), under `/secrets`, e.g. `/secrets/paypal-sandbox.json`. Empty turns PayPal off. |
+| `PAYPAL_ENV` | `sandbox` or `live`; wins over the file's `env`; with neither, `sandbox`. |
+| `PAYPAL_WEBHOOK_ID` | The webhook (`https://api.withdo.si/v1/billing/paypal`) the signatures are checked against. |
+| `PAYPAL_PLAN_MONTHLY`, `PAYPAL_PLAN_MONTHLY_TRIAL`, `PAYPAL_PLAN_YEARLY`, `PAYPAL_PLAN_YEARLY_TRIAL` | The four billing plans (`P-…`): with the 7-day trial for an account that never had one, without it for one that did, on either channel. |
+
+Sandbox (set up 2026-11-04) in `sync.env`; none of these ids is secret:
+
+```text
+PAYPAL_CREDENTIALS_FILE=/secrets/paypal-sandbox.json
+PAYPAL_ENV=sandbox
+PAYPAL_WEBHOOK_ID=82659267CT025681J
+PAYPAL_PLAN_MONTHLY=P-6FL403268U768440TNLVOKMQ
+PAYPAL_PLAN_MONTHLY_TRIAL=P-3MA95878A4870393LNLVOKMA
+PAYPAL_PLAN_YEARLY=P-6MY38608R0206392FNLVOKNA
+PAYPAL_PLAN_YEARLY_TRIAL=P-4UX93808L6969313JNLVOKMY
+```
+
+The credentials file is on the host at `/opt/adhd-todo/sync/secrets/paypal-sandbox.json`; as for Waffo's
+key, `chown 65532:65532` and `chmod 600` it. A missing, unreadable or half-set configuration stops the
+server at start. A PayPal subscription of the other environment (sandbox rows on a live server and the
+other way round) is no subscription, like Waffo's other-mode rule; with PayPal off, PayPal rows give no Pro.
+
+Going live: create a live REST app (Merchant) in the PayPal developer dashboard, then run
+`scripts/paypal-setup.py` with a `paypal-live.json` (`{"client_id","secret","env":"live"}`) to create the
+same product, four plans and the webhook against `https://api-m.paypal.com`; put the file in `secrets/`
+and set `PAYPAL_CREDENTIALS_FILE=/secrets/paypal-live.json`, `PAYPAL_ENV=live`, `PAYPAL_WEBHOOK_ID` and
+the four `PAYPAL_PLAN_*` it printed; then `docker compose --env-file sync.env -f sync.compose.yml up -d
+--force-recreate sync`. Cancelling is done by the payer at PayPal (`GET /v1/billing`'s `manage_url`, the
+automatic-payments page); the row keeps Pro until the paid period ends. A renewal PayPal charges late
+does not drop Pro for the first 24 hours after its due time.
+
 ## Checks
 
-- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase","llm":true,"billing":true}` (`false` while `LLM_API_KEY` / `WAFFO_KEY_FILE` is empty).
-- `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.withdo.si/v1/billing/waffo -d '{}'` is 401 (no signature), 503 with billing off.
+- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase","llm":true,"billing":true,"paypal":true}` (`false` while `LLM_API_KEY` / `WAFFO_KEY_FILE` / `PAYPAL_CREDENTIALS_FILE` is empty).
+- `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.withdo.si/v1/billing/waffo -d '{}'` is 401 (no signature), 503 with billing off. The same for `/v1/billing/paypal` (401 without PayPal's headers, 503 `paypal_disabled` with PayPal off).
 - `curl https://api.withdo.si/healthz` is `ok`; `POST /v1/devices` without a token is 401.
 - `/v1/events` stays open: `curl -N -H "Authorization: Bearer $TOKEN" https://api.withdo.si/v1/events`
   prints a `: keepalive` line every 15 s and is still connected after more than 2 minutes.

@@ -121,7 +121,8 @@ func run(ctx context.Context, args []string) error {
 	})
 
 	// Withdo Pro (M16): Waffo Pancake's API key is a file, mounted read-only into the container.
-	// Without WAFFO_KEY_FILE the billing routes answer 503 billing_disabled.
+	// Without WAFFO_KEY_FILE the billing routes answer 503 billing_disabled. PayPal (M17) is a second
+	// channel on top of it: its credentials are a file too, and without PAYPAL_CREDENTIALS_FILE it is off.
 	billingCfg, billingOn, err := billingFromEnv(os.Getenv)
 	if err != nil {
 		return err
@@ -135,6 +136,9 @@ func run(ctx context.Context, args []string) error {
 			return err
 		}
 		log.Printf("billing on (Waffo %s mode)", billingCfg.Mode)
+		if billingCfg.PayPal != nil {
+			log.Printf("PayPal on (%s)", billingCfg.PayPal.Env)
+		}
 	}
 
 	ln, err := net.Listen("tcp", *addr)

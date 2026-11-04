@@ -31,7 +31,10 @@ type billingRig struct {
 	calls   []map[string]any // bodies of the checkout and portal calls
 }
 
-func newBillingRig(t *testing.T) *billingRig {
+func newBillingRig(t *testing.T) *billingRig { return newBillingRigWith(t, nil) }
+
+// newBillingRigWith is newBillingRig with PayPal on when paypal is not nil.
+func newBillingRigWith(t *testing.T, paypal *billing.PayPalConfig) *billingRig {
 	t.Helper()
 	h := newHarness(t)
 	apiKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -62,6 +65,7 @@ func newBillingRig(t *testing.T) *billingRig {
 		MerchantID: "MER_test", Key: apiKey, StoreID: "STO_withdo",
 		ProductMonthly: "PROD_m", ProductYearly: "PROD_y", Mode: billing.ModeTest,
 		BaseURL: waffo.URL, WebhookKeys: map[string]*rsa.PublicKey{billing.ModeTest: &webhookKey.PublicKey},
+		PayPal: paypal,
 	}, func(_ context.Context, subject string) (string, error) { return subject + "@example.com", nil })
 	if err != nil {
 		t.Fatal(err)

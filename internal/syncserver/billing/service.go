@@ -59,6 +59,9 @@ type Config struct {
 	// Mode is "test" or "prod": webhooks of the other mode are acknowledged and ignored.
 	Mode string
 
+	// PayPal, when not nil, adds PayPal as a second channel (M17); Waffo stays the main one.
+	PayPal *PayPalConfig
+
 	// The rest is for tests and defaults.
 	BaseURL     string                    // default DefaultBaseURL
 	SuccessURL  string                    // default DefaultSuccessURL
@@ -75,6 +78,7 @@ type Service struct {
 	store    Store
 	notify   func(account int64)
 	products map[string]string
+	paypal   *paypalAPI // nil when PayPal is off
 
 	mu     sync.Mutex
 	recent map[int64][]time.Time // checkout times per account, for the rate limit
@@ -118,8 +122,16 @@ func New(cfg Config, store Store, notify func(account int64)) (*Service, error) 
 		}
 		cfg.WebhookKeys = keys
 	}
+	var pp *paypalAPI
+	if cfg.PayPal != nil {
+		var err error
+		if pp, err = newPayPalAPI(*cfg.PayPal, cfg.HTTP, cfg.Now); err != nil {
+			return nil, err
+		}
+	}
 	return &Service{
 		cfg:      cfg,
+		paypal:   pp,
 		api:      &api{base: cfg.BaseURL, merchantID: cfg.MerchantID, key: cfg.Key, http: cfg.HTTP, now: cfg.Now},
 		verify:   verifier{keys: cfg.WebhookKeys, now: cfg.Now},
 		store:    store,
@@ -137,6 +149,8 @@ type Status struct {
 	PeriodEnd time.Time
 	TrialUsed bool
 	ManageURL string
+	// Provider is ProviderWaffo or ProviderPayPal, empty for an account that never subscribed.
+	Provider string
 }
 
 // Subscription reads an account's row.
@@ -147,9 +161,17 @@ func (s *Service) Subscription(ctx context.Context, account int64) (Subscription
 
 // thisMode says whether a stored subscription belongs to the mode the server runs in. A test-mode
 // order left over after going live (or a live one on a test server) is no subscription: it gives no
-// Pro and uses no trial.
+// Pro and uses no trial. For a PayPal subscription the mode is the sandbox ("test") or live
+// ("prod"), and with PayPal off it belongs to no mode the server can vouch for.
 func (s *Service) thisMode(sub Subscription) bool {
-	return sub.Mode == "" || sub.Mode == s.cfg.Mode
+	want := s.cfg.Mode
+	if sub.providerOrDefault() == ProviderPayPal {
+		if s.paypal == nil {
+			return false
+		}
+		want = paypalMode(s.paypal.cfg.Env)
+	}
+	return sub.Mode == "" || sub.Mode == want
 }
 
 // IsProSubject says whether the account a sign-in subject maps to is Pro now. A failed read is
@@ -175,9 +197,17 @@ func (s *Service) Status(ctx context.Context, account int64, email func() string
 	if !ok {
 		return st, nil
 	}
-	st.Status, st.Interval, st.PeriodEnd, st.TrialUsed = sub.Status, sub.Interval, sub.PeriodEnd, sub.TrialUsed
-	if sub.Pro(s.cfg.Now()) {
+	now := s.cfg.Now()
+	st.Status, st.Interval, st.PeriodEnd, st.TrialUsed, st.Provider = sub.Status, sub.Interval, sub.PeriodEnd, sub.TrialUsed, sub.providerOrDefault()
+	if st.Status == StatusCanceling && !sub.PeriodEnd.IsZero() && !now.Before(sub.PeriodEnd) {
+		st.Status = StatusCanceled // PayPal sends no event when a cancelled subscription's period ends
+	}
+	if sub.Pro(now) {
 		st.Plan = "pro"
+	}
+	if st.Provider == ProviderPayPal {
+		st.ManageURL = paypalManageURL(s.paypal.cfg.Env)
+		return st, nil
 	}
 	st.ManageURL = PortalLoginURL
 	if addr := email(); addr != "" {
@@ -215,6 +245,23 @@ func checkoutLanguage(lang string) string {
 	return ""
 }
 
+// checkoutGate is what both channels check before making a checkout for the account: it is not Pro
+// already and has not asked for too many checkouts. exists and sub are its row (this mode's).
+func (s *Service) checkoutGate(ctx context.Context, account int64) (sub Subscription, exists bool, now time.Time, err error) {
+	sub, exists, err = s.Subscription(ctx, account)
+	if err != nil {
+		return sub, false, now, err
+	}
+	now = s.cfg.Now()
+	if exists && sub.Pro(now) {
+		return sub, exists, now, ErrAlreadySubscribed
+	}
+	if !s.allowCheckout(account, now) {
+		return sub, exists, now, ErrRateLimited
+	}
+	return sub, exists, now, nil
+}
+
 // Checkout makes a Waffo checkout session for the account and returns its URL. The account's email
 // pre-fills the page; the trial is offered once per account.
 func (s *Service) Checkout(ctx context.Context, account int64, email, plan, language string) (string, error) {
@@ -222,16 +269,9 @@ func (s *Service) Checkout(ctx context.Context, account int64, email, plan, lang
 	if !ok {
 		return "", ErrUnknownPlan
 	}
-	sub, exists, err := s.Subscription(ctx, account)
+	sub, exists, now, err := s.checkoutGate(ctx, account)
 	if err != nil {
 		return "", err
-	}
-	now := s.cfg.Now()
-	if exists && sub.Pro(now) {
-		return "", ErrAlreadySubscribed
-	}
-	if !s.allowCheckout(account, now) {
-		return "", ErrRateLimited
 	}
 	external := "withdo-" + strconv.FormatInt(account, 10) + "-" + strconv.FormatInt(now.Unix(), 10)
 	if len(external) > externalIDMax {
@@ -259,6 +299,29 @@ func (s *Service) Checkout(ctx context.Context, account int64, email, plan, lang
 	}
 	log.Printf("billing: account=%d plan=%s checkout=created", account, plan)
 	return url, nil
+}
+
+// PayPalCheckout creates a PayPal subscription for the account and returns the PayPal page the
+// payer approves it at. The 7-day trial plan is used unless the account's row says it had a trial,
+// on either channel. The subscription's custom_id is the account: that is how its webhooks find it.
+func (s *Service) PayPalCheckout(ctx context.Context, account int64, email, plan string) (string, error) {
+	if s.paypal == nil {
+		return "", ErrPayPalOff
+	}
+	if s.paypal.planID(plan, false) == "" {
+		return "", ErrUnknownPlan
+	}
+	sub, exists, _, err := s.checkoutGate(ctx, account)
+	if err != nil {
+		return "", err
+	}
+	_, approve, err := s.paypal.createSubscription(ctx, s.paypal.planID(plan, !(exists && sub.TrialUsed)),
+		strconv.FormatInt(account, 10), email)
+	if err != nil {
+		return "", err
+	}
+	log.Printf("billing: account=%d plan=%s provider=paypal checkout=created", account, plan)
+	return approve, nil
 }
 
 // allowCheckout counts a checkout against the account's hourly allowance.
