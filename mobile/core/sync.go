@@ -317,7 +317,7 @@ func (c *Core) StartSync() error {
 	if err != nil {
 		return err
 	}
-	runner := syncclient.NewRunner(client, syncclient.RunnerOptions{OnStatus: c.runnerStatus})
+	runner := syncclient.NewRunner(client, syncclient.RunnerOptions{OnStatus: c.runnerStatus, OnBillingChange: c.billingChanged})
 	c.mu.Lock()
 	if c.closed {
 		c.mu.Unlock()
@@ -402,6 +402,8 @@ type statusJSON struct {
 	Linked      bool   `json:"linked"`
 	SignedIn    bool   `json:"signed_in"`
 	SignInStage string `json:"sign_in_stage,omitempty"`
+	// BillingRev grows when the plan changed: the app reads Billing and ModelState again.
+	BillingRev int64 `json:"billing_rev,omitempty"`
 }
 
 // encodeStatus encodes one Runner status with the settings the Sync screen reads.
@@ -423,6 +425,7 @@ func (c *Core) encodeStatus(status syncclient.Status) (string, error) {
 		out.FailedSince = failedSince.UTC().Format(time.RFC3339)
 	}
 	out.SignInStage = signInStage
+	out.BillingRev = c.billingRev()
 	ctx := context.Background()
 	if device, linked, err := c.dom.SyncState(ctx, "device_id"); err == nil && linked && device != "" {
 		out.Linked = true
