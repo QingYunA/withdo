@@ -133,9 +133,9 @@ func TestStatusAndPortalLink(t *testing.T) {
 	}
 
 	end := testNow.Add(30 * 24 * time.Hour)
-	ts.store.subs[7] = Subscription{Account: 7, Status: StatusActive, PeriodEnd: end, TrialUsed: true}
+	ts.store.subs[7] = Subscription{Account: 7, Status: StatusActive, Interval: "yearly", PeriodEnd: end, TrialUsed: true}
 	st, err := ts.Status(context.Background(), 7, func() string { return "buyer@example.com" })
-	if err != nil || st.Plan != "pro" || st.Status != StatusActive || !st.PeriodEnd.Equal(end) || !st.TrialUsed {
+	if err != nil || st.Plan != "pro" || st.Status != StatusActive || st.Interval != "yearly" || !st.PeriodEnd.Equal(end) || !st.TrialUsed {
 		t.Fatalf("pro = %+v, %v", st, err)
 	}
 	if st.ManageURL != "https://portal.example/store#token=tok-1" {

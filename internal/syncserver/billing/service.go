@@ -133,6 +133,7 @@ func New(cfg Config, store Store, notify func(account int64)) (*Service, error) 
 type Status struct {
 	Plan      string // "free" or "pro"
 	Status    string // the subscription's status, empty for an account that never subscribed
+	Interval  string // "monthly" or "yearly", empty when unknown
 	PeriodEnd time.Time
 	TrialUsed bool
 	ManageURL string
@@ -166,7 +167,7 @@ func (s *Service) Status(ctx context.Context, account int64, email func() string
 	if !ok {
 		return st, nil
 	}
-	st.Status, st.PeriodEnd, st.TrialUsed = sub.Status, sub.PeriodEnd, sub.TrialUsed
+	st.Status, st.Interval, st.PeriodEnd, st.TrialUsed = sub.Status, sub.Interval, sub.PeriodEnd, sub.TrialUsed
 	if sub.Pro(s.cfg.Now()) {
 		st.Plan = "pro"
 	}

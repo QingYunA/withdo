@@ -100,7 +100,7 @@ func (s *Server) billingStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := syncproto.BillingResponse{
-		Plan: st.Plan, Status: st.Status, TrialUsed: st.TrialUsed,
+		Plan: st.Plan, Status: st.Status, Interval: st.Interval, TrialUsed: st.TrialUsed,
 		Monthly: billing.PriceMonthly, Yearly: billing.PriceYearly, ManageURL: st.ManageURL,
 	}
 	if !st.PeriodEnd.IsZero() {

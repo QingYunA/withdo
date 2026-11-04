@@ -1,6 +1,9 @@
 package billing
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Subscription statuses, as Withdo stores them. Waffo's own words are active, canceling, canceled
 // and past_due; trialing is an active subscription whose first charge has not happened.
@@ -21,6 +24,8 @@ type Subscription struct {
 	Account     int64
 	OrderID     string
 	ProductName string
+	// Interval is "monthly" or "yearly", or empty when no event has said (see normalizeInterval).
+	Interval    string
 	Status      string
 	PeriodStart time.Time // zero when unknown
 	PeriodEnd   time.Time // zero when unknown
@@ -43,6 +48,22 @@ func (s Subscription) Pro(now time.Time) bool {
 	return false
 }
 
+// normalizeInterval maps Waffo's billingPeriod (monthly, yearly, and weekly or quarterly, which
+// Withdo does not sell) to "monthly" or "yearly". A period that says neither falls back to the
+// product's name ("Withdo Pro - Yearly"); anything else is empty.
+func normalizeInterval(billingPeriod, productName string) string {
+	for _, text := range []string{billingPeriod, productName} {
+		t := strings.ToLower(text)
+		switch {
+		case strings.Contains(t, "year"), strings.Contains(t, "annual"):
+			return "yearly"
+		case strings.Contains(t, "month"):
+			return "monthly"
+		}
+	}
+	return ""
+}
+
 // reduce applies one event to an account's row (cur is the zero value with exists false before
 // the first event) and says whether the row changed. Events that are not about the subscription,
 // that belong to an order the account has left, or that are older than the row are ignored.
@@ -62,6 +83,9 @@ func reduce(cur Subscription, exists bool, ev Event, account int64) (next Subscr
 		next.OrderID = d.OrderID
 		if d.ProductName != "" {
 			next.ProductName = d.ProductName
+		}
+		if interval := normalizeInterval(d.BillingPeriod, d.ProductName); interval != "" {
+			next.Interval = interval
 		}
 	}
 	setPeriod := func() {

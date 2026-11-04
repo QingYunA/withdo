@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const billingBody = `{"plan":"pro","status":"trialing","period_end":"2026-11-11T12:00:00Z","trial_used":true,` +
+const billingBody = `{"plan":"pro","status":"trialing","interval":"yearly","period_end":"2026-11-11T12:00:00Z","trial_used":true,` +
 	`"monthly":"$6.99","yearly":"$58.72","manage_url":"https://portal.example/s#token=t"}`
 
 func TestBilling(t *testing.T) {
@@ -21,7 +21,7 @@ func TestBilling(t *testing.T) {
 			t.Fatal(err)
 		}
 		want := Billing{
-			Plan: "pro", Status: "trialing", PeriodEnd: time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC), TrialUsed: true,
+			Plan: "pro", Status: "trialing", Interval: "yearly", PeriodEnd: time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC), TrialUsed: true,
 			Monthly: "$6.99", Yearly: "$58.72", ManageURL: "https://portal.example/s#token=t",
 		}
 		if b != want || !b.Pro() {
@@ -31,7 +31,14 @@ func TestBilling(t *testing.T) {
 			t.Fatalf("request: %v %v", seen.Header, seen.URL)
 		}
 	})
-	t.Run("a free account has no period", func(t *testing.T) {
+	t.Run("an older server says no interval", func(t *testing.T) {
+		srv, _, _ := voiceServer(t, 200, `{"plan":"pro","status":"active","period_end":"2026-11-11T12:00:00Z","trial_used":true,"monthly":"$6.99","yearly":"$58.72","manage_url":""}`)
+		b, err := voiceClient(srv.URL, StaticToken("tok")).Billing(context.Background())
+		if err != nil || b.Interval != "" || !b.Pro() {
+			t.Fatalf("got %+v, %v", b, err)
+		}
+	})
+	t.Run("a free account has no period",func(t *testing.T) {
 		srv, _, _ := voiceServer(t, 200, `{"plan":"free","status":"","period_end":"","trial_used":false,"monthly":"$6.99","yearly":"$58.72","manage_url":""}`)
 		b, err := voiceClient(srv.URL, StaticToken("tok")).Billing(context.Background())
 		if err != nil || b.Pro() || !b.PeriodEnd.IsZero() || b.Plan != "free" {

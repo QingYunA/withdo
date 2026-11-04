@@ -141,3 +141,47 @@ func TestPlanChangeTakesOverTheOrderAndStaleOrdersAreIgnored(t *testing.T) {
 		t.Fatalf("resubscribed: %+v", got)
 	}
 }
+
+func TestNormalizeInterval(t *testing.T) {
+	for _, tc := range []struct{ period, product, want string }{
+		{"monthly", "", "monthly"},
+		{"yearly", "", "yearly"},
+		{"Yearly", "Withdo Pro", "yearly"},
+		{"ANNUAL", "", "yearly"},
+		{"every month", "", "monthly"},
+		{"", "Withdo Pro - Yearly", "yearly"},
+		{"", "Withdo Pro Monthly", "monthly"},
+		{"weekly", "Withdo Pro - Monthly", "monthly"},
+		{"monthly", "Withdo Pro - Yearly", "monthly"}, // the period wins over the name
+		{"weekly", "Withdo Pro", ""},
+		{"quarterly", "", ""},
+		{"", "", ""},
+	} {
+		if got := normalizeInterval(tc.period, tc.product); got != tc.want {
+			t.Errorf("normalizeInterval(%q, %q) = %q, want %q", tc.period, tc.product, got, tc.want)
+		}
+	}
+}
+
+func TestIntervalIsKeptAcrossEventsThatDoNotCarryIt(t *testing.T) {
+	ts := newTestService(t, 7)
+	end := testNow.Add(30 * 24 * time.Hour)
+	ts.send(t, "1", "subscription.activated", 0, map[string]any{
+		"periodNumber": 1, "billingPeriod": "Yearly", "currentPeriodEnd": end.Format(time.RFC3339)})
+	if got := ts.row(t).Interval; got != "yearly" {
+		t.Fatalf("after activation: %q", got)
+	}
+	// payment_succeeded carries no billingPeriod, and a renewal may leave it out too.
+	ts.send(t, "2", "subscription.payment_succeeded", time.Minute, map[string]any{"periodNumber": 2})
+	ts.send(t, "3", "subscription.renewed", 2*time.Minute, map[string]any{"currentPeriodEnd": end.Format(time.RFC3339)})
+	ts.send(t, "4", "subscription.canceling", 3*time.Minute, nil)
+	if got := ts.row(t).Interval; got != "yearly" {
+		t.Fatalf("after events without it: %q", got)
+	}
+	// A plan change to another order brings the new interval, here from the product's name.
+	ts.send(t, "5", "subscription.plan_changed", 4*time.Minute, map[string]any{
+		"orderId": "ORD_2", "productName": "Withdo Pro - Monthly"})
+	if got := ts.row(t).Interval; got != "monthly" {
+		t.Fatalf("after the plan change: %q", got)
+	}
+}

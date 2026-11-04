@@ -36,12 +36,14 @@ const (
 
 // Billing is the account's plan (GET /v1/billing). Plan is "free" or "pro". Status is the
 // subscription's (trialing, active, past_due, canceling, canceled), empty for an account that
-// never subscribed; PeriodEnd is zero then too. Monthly and Yearly are the prices to show.
+// never subscribed; Interval is "monthly" or "yearly", empty when the server does not know (or is
+// older); PeriodEnd is zero then too. Monthly and Yearly are the prices to show.
 // ManageURL opens the customer portal for the subscription, empty without one: it is made fresh by
 // every Billing call, lives 15 minutes, and must be opened at once, not stored.
 type Billing struct {
 	Plan      string
 	Status    string
+	Interval  string
 	PeriodEnd time.Time
 	TrialUsed bool
 	Monthly   string
@@ -66,7 +68,7 @@ func (c *Client) Billing(ctx context.Context) (Billing, error) {
 		return Billing{}, err
 	}
 	b := Billing{
-		Plan: out.Plan, Status: out.Status, TrialUsed: out.TrialUsed,
+		Plan: out.Plan, Status: out.Status, Interval: out.Interval, TrialUsed: out.TrialUsed,
 		Monthly: out.Monthly, Yearly: out.Yearly, ManageURL: out.ManageURL,
 	}
 	if out.PeriodEnd != "" {

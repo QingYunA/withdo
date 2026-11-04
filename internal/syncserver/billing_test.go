@@ -189,14 +189,14 @@ func TestWebhookMakesAnAccountPro(t *testing.T) {
 		t.Fatalf("a forged event changed the limit to %d", limit)
 	}
 
-	activated := map[string]any{"periodNumber": 0, "currentPeriodEnd": end}
+	activated := map[string]any{"periodNumber": 0, "billingPeriod": "yearly", "currentPeriodEnd": end}
 	requireStatus(t, "activated", rig.sendWebhook(t, rig.webhook, "w2", "subscription.activated", account, now, activated), http.StatusOK)
 	requireStatus(t, "activated again", rig.sendWebhook(t, rig.webhook, "w2", "subscription.activated", account, now, activated), http.StatusOK)
 	stream.waitEvent(t, "billing", 2*time.Second)
 
 	var st syncproto.BillingResponse
 	requireStatus(t, "GET /v1/billing", rig.get(t, "/v1/billing", aliceToken, &st), http.StatusOK)
-	if st.Plan != "pro" || st.Status != "trialing" || !st.TrialUsed || st.PeriodEnd != end || st.ManageURL != "https://portal.example/s#token=portal-token" {
+	if st.Plan != "pro" || st.Status != "trialing" || st.Interval != "yearly" || !st.TrialUsed || st.PeriodEnd != end || st.ManageURL != "https://portal.example/s#token=portal-token" {
 		t.Fatalf("pro = %+v", st)
 	}
 	if call := rig.lastCall(t); call["buyerIdentity"] != aliceSubject+"@example.com" || call["storeId"] != "STO_withdo" {

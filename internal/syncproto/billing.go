@@ -15,12 +15,14 @@ type CheckoutResponse struct {
 
 // BillingResponse is GET /v1/billing: the account's plan. Plan is "free" or "pro". Status is the
 // subscription's (trialing, active, past_due, canceling, canceled) and empty for an account that
-// never subscribed; PeriodEnd is RFC 3339 or empty. Monthly and Yearly are the prices to show.
+// never subscribed; Interval is the plan's billing interval, "monthly" or "yearly", empty when
+// unknown (and for an account that never subscribed); PeriodEnd is RFC 3339 or empty. Monthly and Yearly are the prices to show.
 // ManageURL opens Waffo's customer portal for the subscription (empty without one); it is made
 // fresh by every request, is good for 15 minutes of inactivity and must not be stored.
 type BillingResponse struct {
 	Plan      string `json:"plan"`
 	Status    string `json:"status"`
+	Interval  string `json:"interval"`
 	PeriodEnd string `json:"period_end"`
 	TrialUsed bool   `json:"trial_used"`
 	Monthly   string `json:"monthly"`
