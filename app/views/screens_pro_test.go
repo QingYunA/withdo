@@ -22,7 +22,7 @@ func TestScreensPro(t *testing.T) {
 	onFree := data.BillingInfo{Offered: true, Known: true, Monthly: "$6.99", Yearly: "$58.72"}
 	onPro := data.BillingInfo{
 		Offered: true, Known: true, Pro: true, Status: "trialing", PeriodEnd: fixedNow().Add(7 * 24 * time.Hour),
-		TrialUsed: true, Monthly: "$6.99", Yearly: "$58.72",
+		Interval: "yearly", TrialUsed: true, Monthly: "$6.99", Yearly: "$58.72",
 	}
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {

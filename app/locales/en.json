@@ -5141,6 +5141,48 @@
       }
     }
   },
+  "settingsProIntervalTrialUntil": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews",
+  "@settingsProIntervalTrialUntil": {
+    "description": "Footer of the card while the free trial runs, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
+  "settingsProIntervalRenews": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}",
+  "@settingsProIntervalRenews": {
+    "description": "Footer of the card for a paying Pro account, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11, 2027"
+      }
+    }
+  },
+  "settingsProIntervalEnds": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}",
+  "@settingsProIntervalEnds": {
+    "description": "Footer of the card for a cancelled Pro account that runs to the end of its period, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
   "settingsProManageFailed": "Could not open the subscription page. Try again.",
   "@settingsProManageFailed": {
     "description": "Under the card's footer when the customer portal link could not be made."

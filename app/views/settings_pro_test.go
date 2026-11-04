@@ -72,6 +72,30 @@ func TestTheProCardShowsTheTrialTheRenewalOrTheEnd(t *testing.T) {
 	has(t, r.tt, "Withdo Pro · ends Nov 3")
 }
 
+func TestTheProCardSaysTheBillingIntervalWhenTheServerDoes(t *testing.T) {
+	pro := data.BillingInfo{
+		Offered: true, Known: true, Pro: true, Status: "trialing", Interval: "yearly",
+		PeriodEnd: fixedNow().Add(7 * 24 * time.Hour), TrialUsed: true,
+	}
+	r := proRig(t, proInfo, pro)
+	has(t, r.tt, "Withdo Pro · Yearly · trial until Oct 21, then renews")
+
+	pro.Status, pro.Interval, pro.PeriodEnd = "active", "yearly", time.Date(2027, 10, 21, 0, 0, 0, 0, time.Local)
+	r.fm.Bill = pro
+	r.tt.Frame()
+	has(t, r.tt, "Withdo Pro · Yearly · renews Oct 21, 2027")
+
+	pro.Interval, pro.PeriodEnd = "monthly", fixedNow().Add(20*24*time.Hour)
+	r.fm.Bill = pro
+	r.tt.Frame()
+	has(t, r.tt, "Withdo Pro · Monthly · renews Nov 3")
+
+	pro.Status = "canceling"
+	r.fm.Bill = pro
+	r.tt.Frame()
+	has(t, r.tt, "Withdo Pro · Monthly · ends Nov 3")
+}
+
 func TestManageSubscriptionOpensAFreshPortalLinkEachTime(t *testing.T) {
 	pro := data.BillingInfo{Offered: true, Known: true, Pro: true, Status: "active", PeriodEnd: fixedNow().Add(30 * 24 * time.Hour)}
 	r := proRig(t, proInfo, pro)

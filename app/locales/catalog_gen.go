@@ -13112,6 +13112,62 @@ func (msgs Messages) SettingsProEnds(date string) string {
 	return Catalog.Format(msgs.locale, "settingsProEnds", map[string]any{"date": date})
 }
 
+// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews"
+// in the language the app shows.
+//
+// Footer of the card while the free trial runs, when the server says the
+// billing interval. interval is monthly or yearly.
+func SettingsProIntervalTrialUntil(interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalTrialUntil(interval, date)
+}
+
+// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews"
+// in the language of msgs.
+//
+// Footer of the card while the free trial runs, when the server says the
+// billing interval. interval is monthly or yearly.
+func (msgs Messages) SettingsProIntervalTrialUntil(interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalTrialUntil", map[string]any{"interval": interval, "date": date})
+}
+
+// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}"
+// in the language the app shows.
+//
+// Footer of the card for a paying Pro account, when the server says the
+// billing interval. interval is monthly or yearly.
+func SettingsProIntervalRenews(interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalRenews(interval, date)
+}
+
+// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}"
+// in the language of msgs.
+//
+// Footer of the card for a paying Pro account, when the server says the
+// billing interval. interval is monthly or yearly.
+func (msgs Messages) SettingsProIntervalRenews(interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalRenews", map[string]any{"interval": interval, "date": date})
+}
+
+// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}"
+// in the language the app shows.
+//
+// Footer of the card for a cancelled Pro account that runs to the end of
+// its period, when the server says the billing interval. interval is
+// monthly or yearly.
+func SettingsProIntervalEnds(interval string, date string) string {
+	return In(i18n.Locale()).SettingsProIntervalEnds(interval, date)
+}
+
+// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}"
+// in the language of msgs.
+//
+// Footer of the card for a cancelled Pro account that runs to the end of
+// its period, when the server says the billing interval. interval is
+// monthly or yearly.
+func (msgs Messages) SettingsProIntervalEnds(interval string, date string) string {
+	return Catalog.Format(msgs.locale, "settingsProIntervalEnds", map[string]any{"interval": interval, "date": date})
+}
+
 // SettingsProManageFailed says "Could not open the subscription page. Try again."
 // in the language the app shows.
 //

@@ -118,6 +118,15 @@ func (s *Settings) planLine(bill data.BillingInfo) string {
 	if !bill.PeriodEnd.IsZero() {
 		date = s.clock.Date(bill.PeriodEnd, s.app.Now())
 	}
+	if date != "" && bill.Interval != "" {
+		switch {
+		case bill.Trialing():
+			return s.say.SettingsProIntervalTrialUntil(bill.Interval, date)
+		case bill.Canceling():
+			return s.say.SettingsProIntervalEnds(bill.Interval, date)
+		}
+		return s.say.SettingsProIntervalRenews(bill.Interval, date)
+	}
 	switch {
 	case date == "":
 		return s.say.SettingsPlanPro()

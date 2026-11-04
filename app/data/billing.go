@@ -44,7 +44,9 @@ type BillingInfo struct {
 	Pro bool
 	// Status is the subscription's: trialing, active, past_due, canceling, canceled; empty for an
 	// account that never subscribed.
-	Status    string
+	Status string
+	// Interval is "monthly" or "yearly", empty when the server does not say.
+	Interval  string
 	PeriodEnd time.Time
 	// TrialUsed says the 7 days were taken: the sheet offers Subscribe, not the trial.
 	TrialUsed bool
@@ -126,7 +128,7 @@ func (b *billingTask) info(quotaPlan string) BillingInfo {
 	if b.haveBill {
 		bl := b.bill
 		out = BillingInfo{
-			Offered: true, Known: true, Pro: bl.Pro(), Status: bl.Status, PeriodEnd: bl.PeriodEnd,
+			Offered: true, Known: true, Pro: bl.Pro(), Status: bl.Status, Interval: bl.Interval, PeriodEnd: bl.PeriodEnd,
 			TrialUsed: bl.TrialUsed, Monthly: bl.Monthly, Yearly: bl.Yearly,
 		}
 	}
