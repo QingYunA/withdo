@@ -19,7 +19,7 @@ object ModelPhase {
 /**
  * ModelState(): which model would answer the composer. [source] is `official` when Ask may be
  * called, else `none` (the local rules read the text). [left] is today's turns left, -1 until the
- * server has said; [limit] the day's turns.
+ * server has said; [limit] the day's turns (the quota's own: Pro's are more).
  */
 @Serializable
 data class ModelState(
@@ -27,6 +27,8 @@ data class ModelState(
     @SerialName("phase") val phase: String = ModelPhase.HIDDEN,
     @SerialName("left") val left: Int = -1,
     @SerialName("limit") val limit: Int = 0,
+    /** `free` or `pro` when the core knows the plan (v45), else empty. */
+    @SerialName("plan") val plan: String = "",
 ) {
     /** Ask may be called: the official model is signed in, offered and has turns left. */
     val official: Boolean get() = source == "official" && phase == ModelPhase.READY

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Account
+import xyz.sriai.adhdtodo.data.Billing
 import xyz.sriai.adhdtodo.data.CategoryCount
 import xyz.sriai.adhdtodo.data.CoreApi
 import xyz.sriai.adhdtodo.data.Device
@@ -46,6 +47,8 @@ import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 import xyz.sriai.adhdtodo.ui.theme.PixelIcon
+import java.time.Instant
+import java.time.ZoneId
 
 /** The routes Settings adds to the stack; each is shown with the Projects tab's bottom bar. */
 const val ROUTE_SETTINGS = "settings"
@@ -63,6 +66,8 @@ data class SettingsData(
     val categories: List<CategoryCount> = emptyList(),
     /** Which model answers the composer (v44): the Assistant group's row. */
     val model: ModelState = ModelState(),
+    /** Withdo Pro's plan (v45): with it the Assistant group is the plan card. */
+    val billing: Billing = Billing(),
 )
 
 /** Reads what the settings pages show; a list that fails to load stays empty. Blocks: call it off the UI thread. */
@@ -94,6 +99,10 @@ fun SettingsScreen(
     onCheckUpdate: () -> Unit,
     onUpdate: () -> Unit,
     onOpenUrl: (String) -> Unit,
+    onUpgrade: () -> Unit = {},
+    onManage: () -> Unit = {},
+    now: Instant = Instant.now(),
+    zone: ZoneId = ZoneId.systemDefault(),
 ) {
     val tokens = LocalTokens.current
     var languageSheet by remember { mutableStateOf(false) }
@@ -132,7 +141,11 @@ fun SettingsScreen(
 
         if (data.model.phase != ModelPhase.HIDDEN) {
             GroupLabel(stringResource(R.string.settings_assistant))
-            GroupCard { AssistantRow(data.model, onOpenSync) }
+            if (showsPlanCard(data.billing, data.model)) {
+                PlanCard(data.model, data.billing, onUpgrade, onManage, now, zone)
+            } else {
+                GroupCard { AssistantRow(data.model, onOpenSync) }
+            }
         }
 
         GroupLabel(stringResource(R.string.settings_general))
@@ -226,6 +239,8 @@ fun SettingsRoute(
     onCheckUpdate: () -> Unit,
     onUpdate: () -> Unit,
     onOpenUrl: (String) -> Unit,
+    onUpgrade: () -> Unit = {},
+    onManage: () -> Unit = {},
 ) {
     val context = LocalContext.current
     SettingsScreen(
@@ -242,6 +257,8 @@ fun SettingsRoute(
         onCheckUpdate = onCheckUpdate,
         onUpdate = onUpdate,
         onOpenUrl = onOpenUrl,
+        onUpgrade = onUpgrade,
+        onManage = onManage,
     )
 }
 

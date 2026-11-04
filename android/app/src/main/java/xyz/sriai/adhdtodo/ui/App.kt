@@ -151,6 +151,8 @@ fun App(
     var composeFocus by remember { mutableIntStateOf(0) }
     // The assistant behind the box (v44): the official model's state, the turn in flight and its card.
     val assistant = remember { AssistantState() }
+    // Withdo Pro (v45): the plan the Assistant group shows and the upgrade sheet.
+    val billing = remember { BillingHolder() }
     // Select mode (v43): who is ticked (null: off), the rows the page draws, and the bar's two pickers.
     var selection by remember { mutableStateOf<Set<Long>?>(null) }
     var selectOrder by remember { mutableStateOf<List<Long>>(emptyList()) }
@@ -1260,10 +1262,12 @@ fun App(
                         onReopen = { id -> perform { api.updateTask(id, TaskPatch(status = "todo")) } },
                     )
                     route == ROUTE_SETTINGS -> SettingsRoute(
-                        data = settingsData.copy(model = assistant.model),
+                        data = settingsData.copy(model = assistant.model, billing = billing.billing),
                         status = shownStatus,
                         update = update,
                         onOpenSync = { openSync() },
+                        onUpgrade = billing::open,
+                        onManage = { scope.launch { billing.manage(api, openCustomTab) } },
                         onNotifications = { push(ROUTE_NOTIFICATIONS) },
                         onCategories = { push(ROUTE_CATEGORIES) },
                         onCheckUpdate = onCheckUpdate,
@@ -1406,6 +1410,7 @@ fun App(
                                 onUndo = undoCard,
                                 onPick = askModel,
                                 onSignIn = { assistant.dismiss(); openSync() },
+                                onUpgrade = if (billing.billing.canUpgrade) ({ assistant.dismiss(); billing.open() }) else null,
                             )
                         }
                     },
@@ -1455,6 +1460,7 @@ fun App(
     }
 
     if (assistant.sheet) ModelSheet(assistant.model) { assistant.sheet = false }
+    BillingHost(billing, api, refreshKey = syncStatusJson, onSettings = route == ROUTE_SETTINGS, openCheckout = openCustomTab)
     if (bulkSheet == "move") {
         BulkMoveSheet(
             projects = bulkProjects,

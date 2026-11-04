@@ -348,6 +348,8 @@ data class SyncStatus(
     @SerialName("linked") val linked: Boolean = false,
     @SerialName("signed_in") val signedIn: Boolean = false,
     @SerialName("sign_in_stage") val signInStage: String? = null,
+    /** Grows when the plan changed (v45); the app reads Billing and ModelState again. */
+    @SerialName("billing_rev") val billingRev: Long = 0,
 ) {
     val seedDone: Long get() = (seedTotal - pending).coerceAtLeast(0)
 }
