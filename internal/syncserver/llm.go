@@ -20,11 +20,13 @@ const (
 	DefaultLLMBaseURL = "https://api.deepseek.com"
 	// DefaultLLMModel is the model the server asks the upstream for, whatever the client names.
 	DefaultLLMModel = "deepseek-chat"
-	// DefaultLLMDailyTurns is how many turns one account may take per UTC day.
-	DefaultLLMDailyTurns = 100
+	// DefaultLLMDailyTurns is how many turns a free account may take per UTC day.
+	DefaultLLMDailyTurns = 20
+	// DefaultLLMDailyTurnsPro is how many a Pro account (M16) may take.
+	DefaultLLMDailyTurnsPro = 100
 	// LLMRequestsPerTurn is the hard cap of requests that carry one turn id: an agent turn makes a
 	// few model calls (a tool loop), never more than this.
-	LLMRequestsPerTurn = 12
+	LLMRequestsPerTurn = 6
 	// HeaderLLMTurn names the turn a request belongs to: one id per thing the user sent.
 	HeaderLLMTurn = "X-Withdo-Turn"
 	// HeaderLLMTurnsLeft is on every answer: how many turns the account has left today.
@@ -49,8 +51,10 @@ type LLMOptions struct {
 	BaseURL string
 	// Model is the upstream model; empty uses DefaultLLMModel.
 	Model string
-	// DailyTurns is the turns per account per UTC day; zero uses DefaultLLMDailyTurns.
+	// DailyTurns is the turns per free account per UTC day; zero uses DefaultLLMDailyTurns.
 	DailyTurns int
+	// DailyTurnsPro is the turns per Pro account per UTC day; zero uses DefaultLLMDailyTurnsPro.
+	DailyTurnsPro int
 	// HTTP is the transport to the upstream; nil uses http.DefaultClient (the 90 s bound is on the
 	// request's context, so a stream is bounded too).
 	HTTP *http.Client
@@ -60,6 +64,8 @@ type LLMOptions struct {
 // forgets today's turns, which is a free refill and not worth a table.
 type llm struct {
 	auth Authenticator
+	// pro says whether the account a subject maps to is on Pro; nil (billing off) means no one is.
+	pro func(ctx context.Context, subject string) bool
 
 	mu       sync.Mutex
 	opts     LLMOptions
@@ -90,6 +96,9 @@ func (l *llm) configure(opts LLMOptions) {
 	if opts.DailyTurns <= 0 {
 		opts.DailyTurns = DefaultLLMDailyTurns
 	}
+	if opts.DailyTurnsPro <= 0 {
+		opts.DailyTurnsPro = DefaultLLMDailyTurnsPro
+	}
 	if opts.HTTP == nil {
 		opts.HTTP = http.DefaultClient
 	}
@@ -119,15 +128,28 @@ func resetsAt(now time.Time) time.Time {
 	return time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.UTC)
 }
 
-// left is the turns subject has left today. Call with mu held.
-func (l *llm) left(subject string) int {
-	return max(0, l.opts.DailyTurns-len(l.turns[subject]))
+// limit is the turns a day subject may take and the plan that gives it: the Pro limit for a Pro
+// account, else the free one. It reads the account's plan, so call it without mu held.
+func (l *llm) limit(ctx context.Context, subject string) (turns int, plan string) {
+	pro := l.pro != nil && l.pro(ctx, subject)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if pro {
+		return l.opts.DailyTurnsPro, "pro"
+	}
+	return l.opts.DailyTurns, "free"
 }
 
-// take counts one request of turn for subject. A turn id the account has not used today is a new
-// turn; a request without a usable id is a turn of its own. ok is false past the quota or a cap;
-// left is the turns remaining either way, and id is the turn the request was counted under.
-func (l *llm) take(subject, turn string) (id string, ok bool, left int) {
+// left is the turns subject has left today under limit. Call with mu held.
+func (l *llm) left(subject string, limit int) int {
+	return max(0, limit-len(l.turns[subject]))
+}
+
+// take counts one request of turn for subject against a limit of turns a day. A turn id the
+// account has not used today is a new turn; a request without a usable id is a turn of its own. ok
+// is false past the quota or a cap; left is the turns remaining either way, and id is the turn the
+// request was counted under.
+func (l *llm) take(subject, turn string, limit int) (id string, ok bool, left int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.sweep()
@@ -138,10 +160,10 @@ func (l *llm) take(subject, turn string) (id string, ok bool, left int) {
 	mine := l.turns[subject]
 	n, known := mine[turn]
 	switch {
-	case l.requests[subject] >= l.opts.DailyTurns*LLMRequestsPerTurn, // a client that lies about turns
+	case l.requests[subject] >= limit*LLMRequestsPerTurn, // a client that lies about turns
 		known && n >= LLMRequestsPerTurn,
-		!known && len(mine) >= l.opts.DailyTurns:
-		return turn, false, l.left(subject)
+		!known && len(mine) >= limit:
+		return turn, false, l.left(subject, limit)
 	}
 	if mine == nil {
 		mine = map[string]int{}
@@ -149,12 +171,12 @@ func (l *llm) take(subject, turn string) (id string, ok bool, left int) {
 	}
 	mine[turn]++
 	l.requests[subject]++
-	return turn, true, l.left(subject)
+	return turn, true, l.left(subject, limit)
 }
 
 // refund gives back a request the upstream never took (it was unreachable or failed on its side)
-// and returns the turns left.
-func (l *llm) refund(subject, turn string) int {
+// and returns the turns left under limit.
+func (l *llm) refund(subject, turn string, limit int) int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if mine := l.turns[subject]; mine[turn] > 0 {
@@ -165,7 +187,7 @@ func (l *llm) refund(subject, turn string) int {
 			l.requests[subject]--
 		}
 	}
-	return l.left(subject)
+	return l.left(subject, limit)
 }
 
 // llmError answers a refusal of the chat route in the shape OpenAI clients parse, with the
@@ -197,23 +219,27 @@ func (l *llm) authenticate(w http.ResponseWriter, r *http.Request) (string, bool
 	return subject, true
 }
 
-// quota is GET /v1/llm/quota: {"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z"}.
+// quota is GET /v1/llm/quota:
+// {"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z","plan":"pro"}. The limit is the
+// account's own: Pro accounts get the Pro one.
 func (l *llm) quota(w http.ResponseWriter, r *http.Request) {
 	subject, ok := l.authenticate(w, r)
 	if !ok {
 		return
 	}
+	limit, plan := l.limit(r.Context(), subject)
 	l.mu.Lock()
 	on := l.opts.APIKey != ""
 	now := l.sweep()
-	limit, left := l.opts.DailyTurns, l.left(subject)
+	left := l.left(subject, limit)
 	l.mu.Unlock()
 	if !on {
 		plainError(w, http.StatusServiceUnavailable, CodeLLMDisabled)
 		return
 	}
 	w.Header().Set(HeaderLLMTurnsLeft, strconv.Itoa(left))
-	writeJSON(w, http.StatusOK, map[string]any{"limit": limit, "left": left, "resets_at": resetsAt(now).Format(time.RFC3339)})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"limit": limit, "left": left, "resets_at": resetsAt(now).Format(time.RFC3339), "plan": plan})
 }
 
 // chat is POST /v1/llm/chat/completions: an OpenAI chat completions request in, the upstream's
@@ -247,7 +273,8 @@ func (l *llm) chat(w http.ResponseWriter, r *http.Request) {
 		llmError(w, http.StatusBadRequest, "bad_request")
 		return
 	}
-	turn, ok, left := l.take(subject, strings.TrimSpace(r.Header.Get(HeaderLLMTurn)))
+	limit, _ := l.limit(r.Context(), subject)
+	turn, ok, left := l.take(subject, strings.TrimSpace(r.Header.Get(HeaderLLMTurn)), limit)
 	w.Header().Set(HeaderLLMTurnsLeft, strconv.Itoa(left))
 	if !ok {
 		l.mu.Lock()
@@ -260,7 +287,7 @@ func (l *llm) chat(w http.ResponseWriter, r *http.Request) {
 	}
 	status, taken := forward(r.Context(), w, opts, payload)
 	if !taken {
-		left = l.refund(subject, turn)
+		left = l.refund(subject, turn, limit)
 	}
 	log.Printf("llm: account=%s turns_left=%d status=%d", subject, left, status)
 }
