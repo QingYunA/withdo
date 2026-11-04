@@ -2261,6 +2261,26 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    the official model becomes a one-row group under it with **Use this** / `改用这个`. Signed out,
    the official card reads `登录后就能用，每天有免费额度` with an accent **Sign in** that opens Account.
    The composer's model chip shows the assistant sprite and `Withdo` for the official model.
+   **v45 (2026-11-04, `docs/design/mockups/v45.html`): Withdo Pro** (M16, `docs/plans/m16-billing.md`).
+   When the server offers billing (`/v1/config` `billing: true`), the official card shows the plan:
+   a `meta` pill `免费` / `Free` (on `bg.subtle`, `text.secondary`) or `Pro` (accent wash, accent
+   text) before `● 可用 · 今天还剩 14 / 20 次`, the quota bar against the plan's limit, and under a
+   hairline a footer row in `meta` `text.secondary`: Free reads `Pro：每天 100 次，所有设备通用。先免费试用
+   7 天。` with an accent **Upgrade to Pro** / `升级到 Pro` at the right (once the trial is used: `Pro：每天
+   100 次，所有设备通用。`); Pro reads `Withdo Pro · 年付 · 试用到 11月11日，之后 2027年11月11日续费`
+   (or `· 2027年11月11日续费`, or `· 11月11日到期` while canceling) with **Manage subscription** /
+   `管理订阅`, which opens the server's `manage_url` in the browser. **Upgrade to Pro** opens a
+   380 pt sheet: `升级到 Withdo Pro`, its line, a `月付 | 年付 省 30%` segment (Yearly chosen;
+   the saving in the done green), the price in 24 pt (`$58.72 / 年，约 $4.89 / 月` or `$6.99 / 月`),
+   four ticks (`官方模型每天 100 次（免费版 20 次）`, `手机和电脑通用`, `同步一直免费`, `随时在客户门户里取消`), an
+   accent full-width **Start 7-day free trial** / `免费试用 7 天` (`订阅` / `Subscribe` once the trial is
+   used) and `试用结束前不会扣款。由 Waffo 代收，含税价。` in `text.tertiary`. The button asks the server for
+   a checkout URL, opens it in the browser, and the sheet becomes `在浏览器里完成付款` with **Reopen the
+   payment page** / `重新打开付款页` and `取消`; the `billing` sync event (or coming back to the window)
+   refreshes the plan, and once it is Pro the sheet closes by itself. Errors stay in the sheet in
+   `status.blocked` (`没能打开付款页，再试一次`). Past the day's quota, the composer's quiet line ends with
+   `升级到 Pro，每天 100 次。` (`Upgrade to Pro` in accent opens the same sheet); a Pro account's line
+   says only that the quota is used up. Without billing the card is as in v44.
    Before v44: the provider in use as one card (36 pt logo, name, `model · ●
    Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
    4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the
@@ -2863,6 +2883,19 @@ gestures and surfaces (last group). Pictures and the assistant's Summary paragra
   Agent、回答问题。` with `登录` in accent). Never a dialog.
 - **Settings** gains an **Assistant** / `助手` group under the account: `Withdo 官方模型` with
   `● 可用 · 今天还剩 86 次`, or `登录后就能用` signed out, or `今天的额度用完了` past the quota.
+
+**v45 (2026-11-04), reference `docs/design/mockups/v45.html`: Withdo Pro on the phone.** With
+billing offered, Settings > Assistant is one plan card (radius 16, 0.5 dp edge, 16 dp padding): the
+assistant avatar, `Withdo 官方模型` in 16 sp 600 and at the right `免费` in `meta` or a `Pro` pill;
+`● 可用 · 今天还剩 14 / 20 次` (the dot and word in the done green), the 4 dp quota bar; then for Free an
+accent 44 dp button `升级到 Pro · 免费试用 7 天` (`升级到 Pro` once the trial is used), for Pro the
+renewal line and a quiet 44 dp `管理订阅` (opens `manage_url` in the browser). The button opens a
+bottom sheet with the desktop sheet's content at phone sizes: 20 sp title, the segment 36 dp tall,
+the price in 28 sp, ticks in the done green, the accent 44 dp `免费试用 7 天` and the fine print.
+It opens the checkout URL in the system browser (a Custom Tab) and turns into `在浏览器里完成付款` with
+`重新打开付款页`; coming back to the app or the `billing` event refreshes the plan and closes the sheet
+once it is Pro. Past the quota, the quiet line under the receipt ends with `升级到 Pro，每天 100 次。`,
+which opens the sheet.
 
 ## Writing
 
