@@ -160,6 +160,8 @@ type FakeModels struct {
 	Bill       BillingInfo
 	CheckoutFn func(plan string) (string, error)
 	ManageFn   func() (string, error)
+	// CheckoutProvider is the provider the last StartCheckout asked for.
+	CheckoutProvider string
 	// BillingRefreshes counts the asks for the plan.
 	BillingRefreshes int
 }
@@ -207,7 +209,8 @@ func (f *FakeModels) Billing() BillingInfo { return f.Bill }
 func (f *FakeModels) RefreshBilling() { f.BillingRefreshes++ }
 
 // StartCheckout implements ModelSettings.
-func (f *FakeModels) StartCheckout(_ context.Context, plan, _ string) (string, error) {
+func (f *FakeModels) StartCheckout(_ context.Context, plan, provider, _ string) (string, error) {
+	f.CheckoutProvider = provider
 	if f.CheckoutFn == nil {
 		return "https://pay.example.com/checkout/" + plan, nil
 	}

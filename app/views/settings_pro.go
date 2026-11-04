@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/QingYunA/adhd-todo/app/data"
@@ -17,11 +18,20 @@ import (
 // closes the sheet by itself.
 
 const (
-	proSheetWidth float32 = 380
-	proSheetTop   float32 = 84
-	proSprite     float32 = 36
-	proPriceLine          = "pro-price"
-	proCheckoutTO         = 20 * time.Second
+	proSheetWidth   float32 = 380
+	proSheetTop     float32 = 84
+	proSprite       float32 = 36
+	proPriceLine            = "pro-price"
+	proCheckoutTO           = 20 * time.Second
+	proPayPalHeight float32 = 32
+)
+
+// PayPal's brand (M17, v46): the button is its gold with the wordmark in its two blues, in both
+// appearances, so these are not theme tokens.
+var (
+	paypalGold  = ui.RGB(0xFF, 0xC4, 0x39)
+	paypalBlue  = ui.RGB(0x00, 0x30, 0x87)
+	paypalLight = ui.RGB(0x00, 0x9C, 0xDE)
 )
 
 // proState is the upgrade sheet and the footer's Manage subscription.
@@ -29,6 +39,7 @@ type proState struct {
 	open    bool
 	monthly bool   // the Monthly segment is chosen; the sheet opens on Yearly
 	waiting bool   // the payment page is open in the browser
+	paypal  bool   // ... and it is PayPal's: the sheet words the wait for PayPal
 	url     string // that page, for Reopen
 	busy    bool   // a payment page is being asked for
 	err     string // why the last try failed, in the sheet
@@ -114,6 +125,10 @@ func (s *Settings) planLine(bill data.BillingInfo) string {
 		}
 		return s.say.SettingsProLineTrial()
 	}
+	via := data.ProviderWaffo
+	if bill.ViaPayPal() {
+		via = data.ProviderPayPal
+	}
 	date := ""
 	if !bill.PeriodEnd.IsZero() {
 		date = s.clock.Date(bill.PeriodEnd, s.app.Now())
@@ -121,21 +136,21 @@ func (s *Settings) planLine(bill data.BillingInfo) string {
 	if date != "" && bill.Interval != "" {
 		switch {
 		case bill.Trialing():
-			return s.say.SettingsProIntervalTrialUntil(bill.Interval, date)
+			return s.say.SettingsProIntervalTrialUntil(via, bill.Interval, date)
 		case bill.Canceling():
-			return s.say.SettingsProIntervalEnds(bill.Interval, date)
+			return s.say.SettingsProIntervalEnds(via, bill.Interval, date)
 		}
-		return s.say.SettingsProIntervalRenews(bill.Interval, date)
+		return s.say.SettingsProIntervalRenews(via, bill.Interval, date)
 	}
 	switch {
 	case date == "":
 		return s.say.SettingsPlanPro()
 	case bill.Trialing():
-		return s.say.SettingsProTrialUntil(date)
+		return s.say.SettingsProTrialUntil(via, date)
 	case bill.Canceling():
-		return s.say.SettingsProEnds(date)
+		return s.say.SettingsProEnds(via, date)
 	}
-	return s.say.SettingsProRenews(date)
+	return s.say.SettingsProRenews(via, date)
 }
 
 // manageSubscription asks for a fresh portal link and opens it. The link lives 15 minutes, so it is
@@ -241,12 +256,21 @@ func (s *Settings) upgradeBody(c *ui.Context, t *theme.Tokens, bill data.Billing
 	if bill.TrialUsed {
 		label, fine = s.say.ProSubscribe(), s.say.ProFinePrint()
 	}
+	if bill.PayPal {
+		fine = s.say.ProFinePrintTrialPayPal()
+		if bill.TrialUsed {
+			fine = s.say.ProFinePrintPayPal()
+		}
+	}
 	btn := settingsButton(c, t, "pro-start", label, true).FillWidth().Margin(16, 0, 0)
 	if s.pro.busy {
 		btn.Opacity(0.6)
 	}
 	if btn.Clicked() && !s.pro.busy {
-		s.startCheckout()
+		s.startCheckout(data.ProviderWaffo)
+	}
+	if bill.PayPal {
+		s.paypalButton(c, t)
 	}
 	if s.pro.err != "" {
 		theme.Paragraph(c, theme.Meta, t.Blocked(), s.pro.err, 0).Margin(8, 0, 0)
@@ -254,9 +278,59 @@ func (s *Settings) upgradeBody(c *ui.Context, t *theme.Tokens, bill data.Billing
 	theme.Paragraph(c, theme.Meta, t.TextTertiary, fine, 0).Margin(8, 0, 0)
 }
 
-// startCheckout asks the server for the payment page of the chosen plan, off the UI thread, and
+// paypalButton is the hairline with "or" and PayPal's button under the main one. It checks out the
+// plan chosen above, at PayPal. The label is one message with PayPal in it, so each language orders
+// it as it should; the word PayPal is drawn as the wordmark (PayPal's blues, in italics).
+func (s *Settings) paypalButton(c *ui.Context, t *theme.Tokens) {
+	ui.Row(c.Key("pro-or")).FillWidth().Shrink(0).Gap(8).AlignItems(ui.Center).Margin(10, 0, 0).Children(func() {
+		ui.Box(c.Key("pro-or-left")).Grow(1).Height(theme.Hairline).Background(t.Border)
+		theme.Text(c, theme.Meta, t.TextTertiary, s.say.ProOr())
+		ui.Box(c.Key("pro-or-right")).Grow(1).Height(theme.Hairline).Background(t.Border)
+	})
+	label := s.say.ProPayPal()
+	btn := ui.ButtonBase(c.Key("pro-paypal")).FillWidth().Height(proPayPalHeight).Shrink(0).Radius(7).Margin(8, 0, 0).
+		Background(paypalGold).Label(label).Cursor(ui.CursorPointer).Center()
+	if btn.Hovered() {
+		btn.Background(paypalGold.Mix(ui.RGB(0, 0, 0), 0.06))
+	}
+	if s.pro.busy {
+		btn.Opacity(0.6)
+	}
+	btn.Children(func() { paypalLabel(c, label) })
+	if btn.Clicked() && !s.pro.busy {
+		s.startCheckout(data.ProviderPayPal)
+	}
+}
+
+// paypalLabel draws a message with PayPal in it: the words in PayPal's dark blue, PayPal as its
+// wordmark, "Pay" in the dark blue and "Pal" in the light one, both bold italic.
+func paypalLabel(c *ui.Context, label string) {
+	words := theme.MetaStrong
+	words.Weight = 600
+	mark := words
+	mark.Weight = 800
+	before, after, found := strings.Cut(label, "PayPal")
+	ui.Row(c.Key("pro-paypal-label")).Gap(4).AlignItems(ui.Center).Children(func() {
+		if !found {
+			theme.Text(c, words, paypalBlue, label)
+			return
+		}
+		if before = strings.TrimSpace(before); before != "" {
+			theme.Text(c, words, paypalBlue, before)
+		}
+		ui.Row(c.Key("pro-paypal-mark")).Gap(0).Children(func() {
+			theme.Text(c.Key("pro-paypal-pay"), mark, paypalBlue, "Pay").Italic()
+			theme.Text(c.Key("pro-paypal-pal"), mark, paypalLight, "Pal").Italic()
+		})
+		if after = strings.TrimSpace(after); after != "" {
+			theme.Text(c, words, paypalBlue, after)
+		}
+	})
+}
+
+// startCheckout asks the server for the payment page of the chosen plan at provider, off the UI thread, and
 // opens it in the browser; the sheet then waits.
-func (s *Settings) startCheckout() {
+func (s *Settings) startCheckout(provider string) {
 	plan := data.PlanYearly
 	if s.pro.monthly {
 		plan = data.PlanMonthly
@@ -266,7 +340,7 @@ func (s *Settings) startCheckout() {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), proCheckoutTO)
 		defer cancel()
-		url, err := models.StartCheckout(ctx, plan, lang)
+		url, err := models.StartCheckout(ctx, plan, provider, lang)
 		act.Post(func() {
 			s.pro.busy = false
 			switch {
@@ -277,7 +351,7 @@ func (s *Settings) startCheckout() {
 			case err != nil:
 				s.pro.err = s.say.ProCheckoutFailed()
 			default:
-				s.pro.waiting, s.pro.url = true, url
+				s.pro.waiting, s.pro.url, s.pro.paypal = true, url, provider == data.ProviderPayPal
 				act.OpenURL(url)
 			}
 		})
@@ -291,9 +365,13 @@ func (s *Settings) waitingBody(c *ui.Context, t *theme.Tokens) (cancelled bool) 
 		theme.AvatarIcon(c.Key("pro-sprite"), theme.Assistant, proSprite).Shrink(0).Margin(0, 0, 6)
 		title := theme.Input
 		title.Weight = 600
-		theme.Text(c, title, t.Text, s.say.ProWaitingTitle())
-		theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.ProWaitingLine(), 0).TextAlign(ui.Center)
-		if settingsButton(c, t, "pro-reopen", s.say.ProReopen(), false).FillWidth().Margin(10, 0, 0).Clicked() {
+		titleText, line, reopen := s.say.ProWaitingTitle(), s.say.ProWaitingLine(), s.say.ProReopen()
+		if s.pro.paypal {
+			titleText, line, reopen = s.say.ProWaitingTitlePayPal(), s.say.ProWaitingLinePayPal(), s.say.ProReopenPayPal()
+		}
+		theme.Text(c, title, t.Text, titleText)
+		theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 0).TextAlign(ui.Center)
+		if settingsButton(c, t, "pro-reopen", reopen, false).FillWidth().Margin(10, 0, 0).Clicked() {
 			s.app.Act.OpenURL(s.pro.url)
 		}
 		l := settingsLink(c, t, "pro-cancel", s.say.ManageCancel(), s.say.ManageCancel())
