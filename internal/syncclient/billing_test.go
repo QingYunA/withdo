@@ -38,7 +38,7 @@ func TestBilling(t *testing.T) {
 			t.Fatalf("got %+v, %v", b, err)
 		}
 	})
-	t.Run("a free account has no period",func(t *testing.T) {
+	t.Run("a free account has no period", func(t *testing.T) {
 		srv, _, _ := voiceServer(t, 200, `{"plan":"free","status":"","period_end":"","trial_used":false,"monthly":"$6.99","yearly":"$58.72","manage_url":""}`)
 		b, err := voiceClient(srv.URL, StaticToken("tok")).Billing(context.Background())
 		if err != nil || b.Pro() || !b.PeriodEnd.IsZero() || b.Plan != "free" {
