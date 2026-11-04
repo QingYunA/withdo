@@ -67,6 +67,17 @@ func (s *shell) OpenMain() { s.showMain() }
 // it is not, and bringing the one that is to the front.
 func (s *shell) OpenSettings(p views.Pane) {
 	s.settings.Show(p)
+	s.showSettings()
+}
+
+// OpenUpgrade implements views.Actions: Settings on Model with the Withdo Pro sheet open.
+func (s *shell) OpenUpgrade() {
+	s.settings.ShowUpgrade()
+	s.showSettings()
+}
+
+// showSettings brings the Settings window to the front, creating it when it is not open.
+func (s *shell) showSettings() {
 	s.mu.Lock()
 	win := s.settingsWin
 	s.mu.Unlock()
@@ -360,6 +371,8 @@ func (s *shell) createSettings() {
 		TitleBarHeight:  int(views.SettingsTitleBarHeight),
 		Content:         ui.View(s.settings.View),
 	})
+	// Coming back from the browser, where the payment was made, asks the server for the plan again.
+	win.OnFocus(s.settings.Focused)
 	win.OnClosed(func() {
 		s.settings.ClearSyncPassword()
 		s.mu.Lock()

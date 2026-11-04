@@ -22,13 +22,17 @@ const (
 
 // officialStatus is the status line of the official model, in the parts the card colors: what it is,
 // then whether it is there. The one-row group under a provider of one's own says only the turns.
-func (s *Settings) officialStatus(c *ui.Context, t *theme.Tokens, info data.OfficialInfo, row bool) {
+func (s *Settings) officialStatus(c *ui.Context, t *theme.Tokens, info data.OfficialInfo, bill data.BillingInfo, row bool) {
 	if info.Phase == data.OfficialSignedOut {
 		theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsOfficialSignedOut(), 2)
 		return
 	}
 	ui.Row(c).Shrink(0).Gap(6).AlignItems(ui.Center).Children(func() {
-		if !row {
+		switch {
+		case row:
+		case bill.Offered:
+			s.planPill(c, t, bill)
+		default:
 			theme.Text(c, theme.Meta, t.TextSecondary, s.say.SettingsOfficialProvided()+" ·")
 		}
 		switch {
@@ -42,10 +46,18 @@ func (s *Settings) officialStatus(c *ui.Context, t *theme.Tokens, info data.Offi
 			statusDot(c, t.Status(data.Done))
 			theme.Text(c, theme.Meta, t.Status(data.Done), s.say.SettingsOfficialAvailable())
 			if info.Left >= 0 {
-				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.SettingsOfficialLeft(itoa(info.Left)))
+				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.SettingsOfficialLeft(leftOf(info, bill)))
 			}
 		}
 	})
+}
+
+// leftOf is the turns left today: "86", or against the plan's limit ("14 / 20") where plans are sold.
+func leftOf(info data.OfficialInfo, bill data.BillingInfo) string {
+	if bill.Offered && info.Limit > 0 {
+		return itoa(info.Left) + " / " + itoa(info.Limit)
+	}
+	return itoa(info.Left)
 }
 
 // quotaBar is the day's turns: a 4 pt track with the part that is left filled in the done green.
@@ -67,17 +79,19 @@ func (s *Settings) officialCard(c *ui.Context, t *theme.Tokens, info data.Offici
 	if res.id != officialTestID {
 		res = testResult{}
 	}
+	bill := s.billing()
 	group(c, t, "official", func() {
 		ui.Row(c).Shrink(0).Padding(14, 16).Gap(14).AlignItems(ui.Center).Children(func() {
 			s.officialSprite(c, info, theme.LogoCard)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 				theme.Text(c, theme.BodyStrong, t.Text, s.say.SettingsOfficialName()).Ellipsis("…")
-				s.officialStatus(c, t, info, false)
+				s.officialStatus(c, t, info, bill, false)
 				quotaBar(c, t, info)
 				s.officialTestLine(c, t, res)
 			})
 			s.officialButton(c, t, info, false)
 		})
+		s.officialFooter(c, t, bill)
 	})
 }
 
@@ -93,7 +107,7 @@ func (s *Settings) officialRow(c *ui.Context, t *theme.Tokens, info data.Officia
 			s.officialSprite(c, info, officialRowSprite)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 				theme.Text(c, theme.Body, t.Text, s.say.SettingsOfficialName()).Ellipsis("…")
-				s.officialStatus(c, t, info, true)
+				s.officialStatus(c, t, info, data.BillingInfo{}, true)
 				s.officialTestLine(c, t, res)
 			})
 			s.officialButton(c, t, info, true)
@@ -165,4 +179,5 @@ func (s *Settings) officialAsked() {
 	}
 	s.assist.asked = true
 	s.app.Models.RefreshOfficial()
+	s.app.Models.RefreshBilling()
 }

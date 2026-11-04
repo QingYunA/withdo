@@ -36,6 +36,7 @@ type recorder struct {
 	mains     int // how many times OpenMain was asked for
 	urls      []string
 	panes     []Pane      // what OpenSettings was asked to show
+	upgrades  int         // how many times OpenUpgrade was asked
 	folders   []string    // what ShowInFinder was asked to reveal
 	files     []string    // what OpenFile was asked to open
 	language  string      // what SetLanguage last chose
@@ -56,6 +57,7 @@ type recorder struct {
 func (r *recorder) OpenTask(id int)          { r.opened = append(r.opened, id) }
 func (r *recorder) OpenMain()                { r.mains++ }
 func (r *recorder) OpenSettings(p Pane)      { r.panes = append(r.panes, p) }
+func (r *recorder) OpenUpgrade()             { r.upgrades++ }
 func (r *recorder) OpenURL(url string)       { r.urls = append(r.urls, url) }
 func (r *recorder) ShowInFinder(path string) { r.folders = append(r.folders, path) }
 func (r *recorder) OpenFile(path string)     { r.files = append(r.files, path) }
