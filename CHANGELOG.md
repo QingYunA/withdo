@@ -3,6 +3,18 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.14.0
+
+No database change; the app updates itself from 0.12.1 and 0.13.0.
+
+- **Withdo Pro.** The official model goes from 20 requests a day to 100, on every device, for $6.99
+  a month or $58.72 a year (30% off), with a 7-day free trial. Sync stays free for everyone.
+  Upgrade from Settings > Model on the computer or Settings > Assistant on the phone; payment opens
+  in your browser through Waffo, which also handles sales tax. Manage subscription opens Waffo's
+  customer portal, already signed in, to cancel, switch between monthly and yearly, or get invoices.
+- When the day's free requests are used up, the input says so and offers Pro.
+- The official model makes at most 6 model calls for one request (was 12).
+
 ## 0.13.0
 
 No database change; the app updates itself from 0.12.0 and 0.12.1.

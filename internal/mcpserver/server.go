@@ -41,7 +41,7 @@ var Instructions = strings.Join([]string{
 // Name and Version identify the server to clients.
 const (
 	Name    = "withdo"
-	Version = "0.13.0"
+	Version = "0.14.0"
 )
 
 // Options customise the server.
