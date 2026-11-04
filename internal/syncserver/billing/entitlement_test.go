@@ -209,3 +209,27 @@ func TestAFullFirstPeriodIsNotATrial(t *testing.T) {
 		t.Fatalf("a month's first period: %+v", got)
 	}
 }
+
+// TestEventsOfOneOrderShareWaffosID pins what Waffo sends: every subscription event of an order has
+// the order id as its "id" (seen in test mode on 2026-11-04), so canceling must not be taken for a
+// retry of activated, while a real retry, the same payload again, still is.
+func TestEventsOfOneOrderShareWaffosID(t *testing.T) {
+	ts := newTestService(t, 7)
+	trialEnd := testNow.Add(7 * 24 * time.Hour)
+	ts.send(t, "ORD_1", "subscription.activated", 0, map[string]any{
+		"orderStatus": "active", "periodNumber": 1, "billingPeriod": "yearly",
+		"currentPeriodStart": testNow.Format(time.RFC3339), "currentPeriodEnd": trialEnd.Format(time.RFC3339)})
+	ts.send(t, "ORD_1", "subscription.canceling", 10*time.Minute, map[string]any{"orderStatus": "canceling"})
+	if got := ts.row(t); got.Status != StatusCanceling {
+		t.Fatalf("canceling was dropped: %+v", got)
+	}
+	ts.send(t, "ORD_1", "subscription.uncanceled", 20*time.Minute, map[string]any{"orderStatus": "active"})
+	ts.send(t, "ORD_1", "subscription.canceling", 30*time.Minute, map[string]any{"orderStatus": "canceling"})
+	if got := ts.row(t); got.Status != StatusCanceling {
+		t.Fatalf("the second canceling was dropped: %+v", got)
+	}
+	body := webhookBody("ORD_1", "subscription.canceling", 7, testNow.Add(30*time.Minute), map[string]any{"orderStatus": "canceling"})
+	if outcome, err := ts.deliver(t, body, testNow); err != nil || outcome != "duplicate" {
+		t.Fatalf("a retry: %q %v", outcome, err)
+	}
+}

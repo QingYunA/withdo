@@ -67,15 +67,19 @@ func (d EventData) Account() (int64, bool) {
 	return id, true
 }
 
-// dedupeKey is what identifies a delivery: the event "id", else its type and eventId.
+// dedupeKey is what identifies one event across Waffo's retries, which resend the original payload.
+// Waffo's "id" is not unique per event: for subscription events it is the order id, shared by
+// activated, canceling and the rest (seen in test mode on 2026-11-04), and a subscription can be
+// canceled, uncanceled and canceled again. The type and the event's timestamp make it unique.
 func (e Event) dedupeKey() string {
-	if e.ID != "" {
-		return e.ID
+	id := e.ID
+	if id == "" {
+		id = e.EventID
 	}
-	if e.EventID != "" {
-		return e.Type + ":" + e.EventID
+	if id == "" {
+		return ""
 	}
-	return ""
+	return e.Type + ":" + id + ":" + e.Timestamp.UTC().Format(time.RFC3339Nano)
 }
 
 // flexTime reads an ISO 8601 date or date-time; an empty or unreadable value is the zero time.
