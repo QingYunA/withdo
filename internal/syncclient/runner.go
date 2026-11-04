@@ -63,12 +63,16 @@ type RunnerOptions struct {
 	Clock Clock
 	// HTTP overrides the Client's transport for this runner, for tests and for an app that wants
 	// its own timeouts. Nil keeps the Client's.
-	HTTP       *http.Client
-	OnStatus   func(Status)
-	Debounce   time.Duration
-	Interval   time.Duration
-	MinBackoff time.Duration
-	MaxBackoff time.Duration
+	HTTP     *http.Client
+	OnStatus func(Status)
+	// OnBillingChange is called when the server says the account's plan changed (a purchase, a
+	// cancellation); the app reads Client.Billing again. It runs on the event stream's goroutine,
+	// so it should return quickly. Nil ignores the notice.
+	OnBillingChange func()
+	Debounce        time.Duration
+	Interval        time.Duration
+	MinBackoff      time.Duration
+	MaxBackoff      time.Duration
 }
 
 // Runner keeps one linked database in sync in the background. Start it once the app is running,
@@ -77,10 +81,12 @@ type Runner struct {
 	client   *Client
 	clock    Clock
 	onStatus func(Status)
-	debounce time.Duration
-	interval time.Duration
-	minWait  time.Duration
-	maxWait  time.Duration
+	// onBilling is RunnerOptions.OnBillingChange; nil when unset.
+	onBilling func()
+	debounce  time.Duration
+	interval  time.Duration
+	minWait   time.Duration
+	maxWait   time.Duration
 
 	nudges chan struct{}
 	pokes  chan struct{}
@@ -124,7 +130,7 @@ func NewRunner(client *Client, options ...RunnerOptions) *Runner {
 		client = &clone
 	}
 	return &Runner{
-		client: client, clock: opts.Clock, onStatus: opts.OnStatus,
+		client: client, clock: opts.Clock, onStatus: opts.OnStatus, onBilling: opts.OnBillingChange,
 		debounce: opts.Debounce, interval: opts.Interval,
 		minWait: opts.MinBackoff, maxWait: opts.MaxBackoff,
 		nudges: make(chan struct{}, 1), pokes: make(chan struct{}, 1),
@@ -457,7 +463,7 @@ func (r *Runner) watchEvents(ctx context.Context) {
 			case r.pokes <- struct{}{}:
 			default:
 			}
-		})
+		}, r.onBilling)
 		if ctx.Err() != nil {
 			return
 		}

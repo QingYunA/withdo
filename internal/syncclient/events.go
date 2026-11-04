@@ -15,9 +15,10 @@ import (
 func IsUnauthorized(err error) bool { return isStatus(err, http.StatusUnauthorized) }
 
 // events opens the workspace's SSE stream for deviceID and calls onPoke for every poke until the
-// stream ends or ctx is cancelled. It returns the reason the stream ended; io.EOF means the server
+// stream ends or ctx is cancelled; onBilling (may be nil) is called for every notice that the account's
+// plan changed. It returns the reason the stream ended; io.EOF means the server
 // closed a healthy stream.
-func (c *Client) events(ctx context.Context, deviceID string, onPoke func()) error {
+func (c *Client) events(ctx context.Context, deviceID string, onPoke, onBilling func()) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+"/v1/events?device_id="+deviceID, nil)
 	if err != nil {
 		return err
@@ -54,8 +55,11 @@ func (c *Client) events(ctx context.Context, deviceID string, onPoke func()) err
 		if line != "" {
 			line = strings.TrimRight(line, "\r\n")
 			if line == "" {
-				if event == "poke" {
+				switch {
+				case event == "poke":
 					onPoke()
+				case event == "billing" && onBilling != nil:
+					onBilling()
 				}
 				event = ""
 			} else if !strings.HasPrefix(line, ":") {
