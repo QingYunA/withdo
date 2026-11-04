@@ -15,10 +15,12 @@ import xyz.sriai.adhdtodo.data.BillingBackend
 import xyz.sriai.adhdtodo.data.CheckoutFailure
 import xyz.sriai.adhdtodo.data.PageJson
 import xyz.sriai.adhdtodo.data.PlanKey
+import xyz.sriai.adhdtodo.data.ProviderKey
 import xyz.sriai.adhdtodo.ui.BillingHolder
 import xyz.sriai.adhdtodo.ui.SheetStage
 import xyz.sriai.adhdtodo.ui.billingDate
 import xyz.sriai.adhdtodo.ui.checkoutLanguage
+import xyz.sriai.adhdtodo.ui.payPalLabel
 import xyz.sriai.adhdtodo.ui.perMonth
 import xyz.sriai.adhdtodo.ui.renewalLine
 import java.time.Instant
@@ -39,8 +41,8 @@ class BillingRulesTest {
         var refreshes = 0
         override fun billing(): Billing = read
         override fun refreshBilling() { refreshes++ }
-        override fun checkout(plan: String, lang: String): String {
-            asked += "$plan/$lang"
+        override fun checkout(plan: String, provider: String, lang: String): String {
+            asked += "$plan/$provider/$lang"
             return checkout()
         }
     }
@@ -150,10 +152,55 @@ class BillingRulesTest {
         val backend = FakeBackend({ "https://pay.example/c/1" }, free)
         val opened = mutableListOf<String>()
         holder.start(backend, "zh-Hans") { opened += it }
-        assertEquals(listOf("monthly/zh-Hans"), backend.asked)
+        assertEquals(listOf("monthly/waffo/zh-Hans"), backend.asked)
         assertEquals(listOf("https://pay.example/c/1"), opened)
         assertEquals(SheetStage.WAITING, holder.stage)
         assertEquals("https://pay.example/c/1", holder.checkoutUrl)
+    }
+
+    @Test
+    fun `the PayPal button asks for the chosen plan at PayPal and the wait is PayPal's`() = runBlocking {
+        val holder = BillingHolder().apply { update(free.copy(paypal = true)); open(); plan = PlanKey.YEARLY }
+        val backend = FakeBackend({ "https://paypal.example/c/1" }, free)
+        val opened = mutableListOf<String>()
+        holder.start(backend, "en", ProviderKey.PAYPAL) { opened += it }
+        assertEquals(listOf("yearly/paypal/en"), backend.asked)
+        assertEquals(listOf("https://paypal.example/c/1"), opened)
+        assertEquals(SheetStage.WAITING, holder.stage)
+        assertEquals(ProviderKey.PAYPAL, holder.provider)
+        // Opening the sheet again starts from the main button's provider.
+        holder.update(free.copy(paypal = true))
+        holder.open()
+        assertEquals(ProviderKey.WAFFO, holder.provider)
+    }
+
+    @Test
+    fun `the core's PayPal fields decode and an older core's JSON still does`() {
+        val raw = """{"offered":true,"paypal":true,"provider":"paypal","plan":"pro","status":"active","period_end":"2027-11-11T09:00:00Z"}"""
+        val b = PageJson.decodeFromString<Billing>(raw)
+        assertTrue(b.paypal && b.viaPayPal)
+        val old = PageJson.decodeFromString<Billing>("""{"offered":true,"plan":"free"}""")
+        assertFalse(old.paypal || old.viaPayPal)
+    }
+
+    @Test
+    fun `a PayPal subscription says so after the interval`() {
+        val res = RuntimeEnvironment.getApplication().resources
+        val trial = pro.copy(status = "trialing", interval = "yearly", provider = ProviderKey.PAYPAL, periodEnd = "2026-11-11T09:00:00Z")
+        assertEquals("Yearly · via PayPal · Free trial until Nov 11, then it renews", renewalLine(res, trial, now, shanghai))
+        assertEquals("Yearly · via PayPal · Renews Nov 11, 2027", renewalLine(res, pro.copy(interval = "yearly", provider = ProviderKey.PAYPAL), now, shanghai))
+        assertEquals("Monthly · via PayPal · Ends Nov 11, 2027", renewalLine(res, pro.copy(interval = "monthly", status = "canceling", provider = ProviderKey.PAYPAL), now, shanghai))
+        // Without an interval the line still says who bills it; a Waffo one says nothing more.
+        assertEquals("via PayPal · Renews Nov 11, 2027", renewalLine(res, pro.copy(provider = ProviderKey.PAYPAL), now, shanghai))
+        assertEquals("Renews Nov 11, 2027", renewalLine(res, pro.copy(provider = ProviderKey.WAFFO), now, shanghai))
+    }
+
+    @Test
+    fun `the wordmark colors Pay and Pal and keeps the words around`() {
+        val label = payPalLabel("Subscribe with PayPal")
+        assertEquals("Subscribe with PayPal", label.text)
+        assertEquals(listOf("Pay", "Pal"), label.spanStyles.filter { it.item.fontStyle != null }.map { label.text.substring(it.start, it.end) })
+        assertEquals("用 PayPal 订阅", payPalLabel("用 PayPal 订阅").text)
     }
 
     @Test

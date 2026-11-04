@@ -142,6 +142,45 @@ class BillingInteractionTest {
     }
 
     @Test
+    fun `without PayPal the sheet has no PayPal button`() {
+        val plain = holder()
+        compose.setThemedContent { UpgradeSheet(plain, onStart = {}, onReopen = {}, onDismiss = {}) }
+        compose.onNodeWithTag("billing-paypal").assertDoesNotExist()
+        compose.onNodeWithText("Billed by Waffo, tax included.", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the PayPal button checks out at PayPal and the main button at Waffo`() {
+        val asked = mutableListOf<String>()
+        val h = holder(billing = free.copy(paypal = true))
+        compose.setThemedContent { UpgradeSheet(h, onStart = { asked += it }, onReopen = {}, onDismiss = {}) }
+        compose.onNodeWithText("or").assertIsDisplayed()
+        compose.onNodeWithText("Subscribe with PayPal").assertIsDisplayed()
+        compose.onNodeWithText("Cards are billed by Waffo, tax included.", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("billing-paypal").performClick()
+        compose.onNodeWithTag("billing-cta").performClick()
+        assertEquals(listOf("paypal", "waffo"), asked)
+        h.stage = SheetStage.STARTING
+        compose.waitForIdle()
+        compose.onNodeWithTag("billing-paypal").performClick()
+        assertEquals(2, asked.size)
+    }
+
+    @Test
+    fun `waiting for PayPal says so and offers to reopen PayPal`() {
+        var reopened = 0
+        val h = holder(SheetStage.WAITING, billing = free.copy(paypal = true)).apply {
+            provider = "paypal"
+            checkoutUrl = "https://paypal.example/c/1"
+        }
+        compose.setThemedContent { UpgradeSheet(h, onStart = {}, onReopen = { reopened++ }, onDismiss = {}) }
+        compose.onNodeWithText("Finish subscribing in PayPal").assertIsDisplayed()
+        compose.onNodeWithText("Reopen PayPal").performClick()
+        assertEquals(1, reopened)
+        compose.onNodeWithText("Finish paying in the browser").assertDoesNotExist()
+    }
+
+    @Test
     fun `a failure shows in the sheet`() {
         val h = holder().apply { failure = CheckoutFailure.RATE_LIMITED }
         compose.setThemedContent { UpgradeSheet(h, onStart = {}, onReopen = {}, onDismiss = {}) }

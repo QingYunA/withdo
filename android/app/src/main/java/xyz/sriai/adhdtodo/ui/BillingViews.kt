@@ -24,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -34,6 +36,7 @@ import xyz.sriai.adhdtodo.data.Billing
 import xyz.sriai.adhdtodo.data.ModelPhase
 import xyz.sriai.adhdtodo.data.ModelState
 import xyz.sriai.adhdtodo.data.PlanKey
+import xyz.sriai.adhdtodo.data.ProviderKey
 import xyz.sriai.adhdtodo.ui.theme.Avatar
 import xyz.sriai.adhdtodo.ui.theme.Dims
 import xyz.sriai.adhdtodo.ui.theme.LocalAppType
@@ -175,14 +178,14 @@ private fun PlanButton(label: String, accent: Boolean, tag: String, enabled: Boo
 @Composable
 fun UpgradeSheet(
     holder: BillingHolder,
-    onStart: () -> Unit,
+    onStart: (provider: String) -> Unit,
     onReopen: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     SheetFrame(onDismiss) {
         Column(Modifier.fillMaxWidth().testTag("billing-sheet")) {
             if (holder.stage == SheetStage.WAITING) {
-                WaitingBody(onReopen)
+                WaitingBody(holder.provider == ProviderKey.PAYPAL, onReopen)
             } else {
                 ChoosingBody(holder, onStart)
             }
@@ -191,7 +194,7 @@ fun UpgradeSheet(
 }
 
 @Composable
-private fun ChoosingBody(holder: BillingHolder, onStart: () -> Unit) {
+private fun ChoosingBody(holder: BillingHolder, onStart: (provider: String) -> Unit) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     val res = LocalContext.current.resources
@@ -238,18 +241,79 @@ private fun ChoosingBody(holder: BillingHolder, onStart: () -> Unit) {
         }
         val starting = holder.stage == SheetStage.STARTING
         val cta = when {
-            starting -> R.string.billing_cta_starting
+            starting && holder.provider == ProviderKey.WAFFO -> R.string.billing_cta_starting
             billing.trialUsed -> R.string.billing_cta_subscribe
             else -> R.string.billing_cta_trial
         }
-        PlanButton(stringResource(cta), accent = true, tag = "billing-cta", enabled = !starting, onClick = onStart)
+        PlanButton(stringResource(cta), accent = true, tag = "billing-cta", enabled = !starting, onClick = { onStart(ProviderKey.WAFFO) })
+        if (billing.paypal) PayPalButton(enabled = !starting, onClick = { onStart(ProviderKey.PAYPAL) })
+        val fine = when {
+            billing.paypal && billing.trialUsed -> R.string.billing_fine_subscribe_paypal
+            billing.paypal -> R.string.billing_fine_trial_paypal
+            billing.trialUsed -> R.string.billing_fine_subscribe
+            else -> R.string.billing_fine_trial
+        }
         Text(
-            stringResource(if (billing.trialUsed) R.string.billing_fine_subscribe else R.string.billing_fine_trial),
+            stringResource(fine),
             style = type.meta.copy(fontSize = 12.sp, lineHeight = 17.sp),
             color = tokens.textSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 6.dp).testTag("billing-fine"),
         )
+    }
+}
+
+/** PayPal's brand (M17, v46): gold ground, the wordmark in its two blues; the same in both appearances. */
+private val PayPalGold = Color(0xFFFFC439)
+private val PayPalBlue = Color(0xFF003087)
+private val PayPalLight = Color(0xFF009CDE)
+
+/**
+ * The `or` hairline and PayPal's 44 dp button under the main one. It checks out the plan chosen
+ * above at PayPal. The label is one string with PayPal in it, so each language orders it as it
+ * should; the word PayPal is drawn as the wordmark.
+ */
+@Composable
+private fun PayPalButton(enabled: Boolean, onClick: () -> Unit) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    Row(
+        Modifier.fillMaxWidth().padding(top = 12.dp).testTag("billing-or"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(Modifier.weight(1f).height(Dims.hairline).background(tokens.border))
+        Text(stringResource(R.string.billing_or), style = type.meta.copy(fontSize = 12.sp), color = tokens.textSecondary)
+        Box(Modifier.weight(1f).height(Dims.hairline).background(tokens.border))
+    }
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        Modifier
+            .padding(top = 10.dp)
+            .fillMaxWidth()
+            .height(44.dp)
+            .testTag("billing-paypal")
+            .clip(shape)
+            .background(PayPalGold.copy(alpha = if (enabled) 1f else 0.6f))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(payPalLabel(stringResource(R.string.billing_cta_paypal)), style = type.body.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
+    }
+}
+
+/** [label] with the word PayPal as the wordmark: "Pay" dark blue, "Pal" light blue, bold italic; the rest dark blue. */
+fun payPalLabel(label: String): AnnotatedString = buildAnnotatedString {
+    val at = label.indexOf("PayPal")
+    withStyle(SpanStyle(color = PayPalBlue)) {
+        if (at < 0) {
+            append(label)
+            return@withStyle
+        }
+        append(label.substring(0, at))
+        withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, fontStyle = FontStyle.Italic)) { append("Pay") }
+        withStyle(SpanStyle(color = PayPalLight, fontWeight = FontWeight.ExtraBold, fontStyle = FontStyle.Italic)) { append("Pal") }
+        append(label.substring(at + "PayPal".length))
     }
 }
 
@@ -318,25 +382,25 @@ private fun RowScope.SegmentCell(
 
 /** The sheet while the payment is made in the browser: the assistant, the words, and Reopen. */
 @Composable
-private fun WaitingBody(onReopen: () -> Unit) {
+private fun WaitingBody(payPal: Boolean, onReopen: () -> Unit) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
     Column(Modifier.fillMaxWidth().padding(top = 20.dp, start = 16.dp, end = 16.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Avatar("assistant", size = 40.dp)
         Text(
-            stringResource(R.string.billing_wait_title),
+            stringResource(if (payPal) R.string.billing_wait_title_paypal else R.string.billing_wait_title),
             style = type.body.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
             color = tokens.text,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 10.dp).testTag("billing-wait-title"),
         )
         Text(
-            stringResource(R.string.billing_wait_line),
+            stringResource(if (payPal) R.string.billing_wait_line_paypal else R.string.billing_wait_line),
             style = type.body.copy(fontSize = 14.sp, lineHeight = 20.sp),
             color = tokens.textSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 10.dp),
         )
-        PlanButton(stringResource(R.string.billing_reopen), accent = false, tag = "billing-reopen", onClick = onReopen)
+        PlanButton(stringResource(if (payPal) R.string.billing_reopen_paypal else R.string.billing_reopen), accent = false, tag = "billing-reopen", onClick = onReopen)
     }
 }

@@ -27,6 +27,7 @@ type billingState struct {
 	signedIn  bool
 	known     bool // offered is the server's answer
 	offered   bool
+	paypal    bool // the server takes PayPal too
 	have      bool // b is the account's plan
 	b         syncclient.Billing
 	rev       int64     // counts the changes the app should read again
@@ -37,6 +38,8 @@ type billingState struct {
 // billingJSON is the JSON of Billing.
 type billingJSON struct {
 	Offered   bool   `json:"offered"`
+	PayPal    bool   `json:"paypal"`
+	Provider  string `json:"provider"`
 	Plan      string `json:"plan"`
 	Status    string `json:"status"`
 	Interval  string `json:"interval"`
@@ -50,10 +53,12 @@ type billingJSON struct {
 // Billing says what the server sells and the account's plan, as JSON, without touching the network
 // (it starts a refresh in the background when its answer is old):
 //
-//	{"offered":true,"plan":"pro","status":"trialing","interval":"yearly","period_end":"2026-11-11T09:00:00Z",
+//	{"offered":true,"paypal":true,"provider":"paypal","plan":"pro","status":"trialing","interval":"yearly","period_end":"2026-11-11T09:00:00Z",
 //	 "trial_used":true,"monthly":"$6.99","yearly":"$58.72","manage_url":"https://..."}
 //
 // offered is whether the server sells Withdo Pro (false until known, and on a server that does not).
+// paypal is whether it takes PayPal too (the sheet then shows PayPal's button); provider is who
+// bills the subscription, "waffo" or "paypal", empty without one.
 // plan is free or pro, empty while signed out or not yet read. status is the subscription's
 // (trialing, active, past_due, canceling, canceled), empty for an account that never subscribed;
 // period_end is when the period ends (RFC 3339 UTC), empty then too. interval is monthly or yearly,
@@ -82,14 +87,21 @@ func (c *Core) RefreshBilling() error {
 	return c.fetchBilling(ctx)
 }
 
-// Checkout asks for the checkout page of plan ("monthly" or "yearly") and returns its URL, which
-// the app opens in the browser. lang is the app's language, "en" or "zh-Hans", and only picks the
-// page's default language. A failure is one of these words: bad_plan, signed_out, off,
+// Checkout asks for the checkout page of plan ("monthly" or "yearly") at provider ("waffo", or
+// "paypal" when Billing says paypal; empty is waffo) and returns its URL, which the app opens in
+// the browser. lang is the app's language, "en" or "zh-Hans", and only picks the
+// page's default language. A failure is one of these words: bad_plan, bad_provider, signed_out, off,
 // already_subscribed (the account is Pro already: Billing says so after a refresh), rate_limited,
 // upstream (the payment provider is down) or network.
-func (c *Core) Checkout(plan, lang string) (string, error) {
+func (c *Core) Checkout(plan, provider, lang string) (string, error) {
 	if plan != syncclient.PlanMonthly && plan != syncclient.PlanYearly {
 		return "", errors.New("bad_plan")
+	}
+	if provider == "" {
+		provider = providerWaffo
+	}
+	if provider != providerWaffo && provider != providerPayPal {
+		return "", errors.New("bad_provider")
 	}
 	client, err := c.newClient(false)
 	if err != nil {
@@ -97,7 +109,7 @@ func (c *Core) Checkout(plan, lang string) (string, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), checkoutTO)
 	defer cancel()
-	url, err := client.Checkout(ctx, plan, lang)
+	url, err := checkoutAt(ctx, client, plan, provider, lang)
 	if err != nil {
 		log.Printf("adhd-todo checkout: %v", err)
 		if errors.Is(err, syncclient.ErrAlreadySubscribed) {
@@ -147,7 +159,7 @@ func (c *Core) billingInfo() billingJSON {
 // follow forgets what was held when the session is another server or account. Call with mu held.
 func (s *billingState) follow(server string, signedIn bool) {
 	if s.server != server || s.signedIn != signedIn {
-		s.server, s.signedIn, s.known, s.offered, s.have, s.b, s.refreshAt = server, signedIn, false, false, false, syncclient.Billing{}, time.Time{}
+		s.server, s.signedIn, s.known, s.offered, s.paypal, s.have, s.b, s.refreshAt = server, signedIn, false, false, false, false, syncclient.Billing{}, time.Time{}
 		s.rev++
 	}
 }
@@ -157,9 +169,10 @@ func (s *billingState) info() billingJSON {
 	if !s.known || !s.offered {
 		return billingJSON{}
 	}
-	out := billingJSON{Offered: true}
+	out := billingJSON{Offered: true, PayPal: s.paypal}
 	if s.have {
 		b := s.b
+		out.Provider = billProvider(b)
 		out.Plan, out.Status, out.Interval, out.TrialUsed = b.Plan, b.Status, b.Interval, b.TrialUsed
 		out.Monthly, out.Yearly, out.ManageURL = b.Monthly, b.Yearly, b.ManageURL
 		if !b.PeriodEnd.IsZero() {
@@ -187,7 +200,7 @@ func (c *Core) fetchBilling(ctx context.Context) error {
 	s.mu.Lock()
 	s.follow(server, signedIn)
 	s.mu.Unlock()
-	offered, plan, havePlan, err := c.askBilling(ctx, server, signedIn)
+	offered, paypal, plan, havePlan, err := c.askBilling(ctx, server, signedIn)
 	s.mu.Lock()
 	changed := false
 	switch {
@@ -196,8 +209,8 @@ func (c *Core) fetchBilling(ctx context.Context) error {
 	case err != nil:
 		s.refreshAt = time.Now().Add(billingRetryAfter)
 	default:
-		changed = !s.known || s.offered != offered || s.have != havePlan || !sameBilling(s.b, plan)
-		s.known, s.offered, s.have, s.b = true, offered, havePlan, plan
+		changed = !s.known || s.offered != offered || s.paypal != paypal || s.have != havePlan || !sameBilling(s.b, plan)
+		s.known, s.offered, s.paypal, s.have, s.b = true, offered, paypal, havePlan, plan
 		s.refreshAt = time.Now().Add(billingRefreshEvery)
 		if changed {
 			s.rev++
@@ -220,29 +233,30 @@ func sameBilling(a, b syncclient.Billing) bool {
 	return end && a == b
 }
 
-func (c *Core) askBilling(ctx context.Context, server string, signedIn bool) (offered bool, plan syncclient.Billing, havePlan bool, err error) {
+func (c *Core) askBilling(ctx context.Context, server string, signedIn bool) (offered, paypal bool, plan syncclient.Billing, havePlan bool, err error) {
 	cfg, err := syncclient.FetchConfig(ctx, server, nil)
 	if err != nil {
-		return false, plan, false, err
+		return false, false, plan, false, err
 	}
+	paypal = cfg.Billing && configPayPal(cfg)
 	if !cfg.Billing || !signedIn {
-		return cfg.Billing, plan, false, nil
+		return cfg.Billing, paypal, plan, false, nil
 	}
 	client, err := c.newClient(false)
 	if err != nil {
-		return cfg.Billing, plan, false, err
+		return cfg.Billing, paypal, plan, false, err
 	}
 	plan, err = client.Billing(ctx)
 	switch {
 	case err == nil:
-		return true, plan, true, nil
+		return true, paypal, plan, true, nil
 	case errors.Is(err, syncclient.ErrBillingOff):
-		return false, syncclient.Billing{}, false, nil
+		return false, false, syncclient.Billing{}, false, nil
 	case errors.Is(err, syncclient.ErrBillingNotSignedIn):
 		// The server refused the session: Pro is offered, but nothing is known of the plan.
-		return true, syncclient.Billing{}, false, nil
+		return true, paypal, syncclient.Billing{}, false, nil
 	}
-	return false, syncclient.Billing{}, false, err
+	return false, false, syncclient.Billing{}, false, err
 }
 
 // billingChanged is the runner's OnBillingChange: the server says the plan changed. It runs on the

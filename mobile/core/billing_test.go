@@ -317,7 +317,7 @@ func TestModelStateCarriesThePlanAndTheQuotasOwnLimit(t *testing.T) {
 func TestCheckoutReturnsTheURLAndSendsPlanAndLanguage(t *testing.T) {
 	f := newFakeBilling(t)
 	phone := billingPhone(t, f)
-	url, err := phone.Checkout("yearly", "zh-Hans")
+	url, err := phone.Checkout("yearly", "waffo", "zh-Hans")
 	if err != nil {
 		t.Fatalf("Checkout: %v", err)
 	}
@@ -349,7 +349,7 @@ func TestCheckoutNamesEachFailure(t *testing.T) {
 			f := newFakeBilling(t)
 			f.checkout = func(string) (int, string) { return tc.status, tc.body }
 			phone := billingPhone(t, f)
-			_, err := phone.Checkout("monthly", "en")
+			_, err := phone.Checkout("monthly", "waffo", "en")
 			if err == nil || err.Error() != tc.want {
 				t.Errorf("Checkout error = %v, want %q", err, tc.want)
 			}
@@ -358,11 +358,11 @@ func TestCheckoutNamesEachFailure(t *testing.T) {
 
 	f := newFakeBilling(t)
 	phone := billingPhone(t, f)
-	if _, err := phone.Checkout("weekly", "en"); err == nil || err.Error() != "bad_plan" {
+	if _, err := phone.Checkout("weekly", "waffo", "en"); err == nil || err.Error() != "bad_plan" {
 		t.Errorf("a plan the server does not sell: %v", err)
 	}
 	f.Close()
-	if _, err := phone.Checkout("monthly", "en"); err == nil || err.Error() != "network" {
+	if _, err := phone.Checkout("monthly", "waffo", "en"); err == nil || err.Error() != "network" {
 		t.Errorf("an unreachable server: %v", err)
 	}
 }
@@ -373,7 +373,7 @@ func TestCheckoutSignedOutHasNoAccountToAsk(t *testing.T) {
 		t.Fatalf("open: %v", err)
 	}
 	defer func() { _ = phone.Close() }()
-	if _, err := phone.Checkout("monthly", "en"); err == nil || err.Error() != "signed_out" {
+	if _, err := phone.Checkout("monthly", "waffo", "en"); err == nil || err.Error() != "signed_out" {
 		t.Errorf("Checkout signed out: %v", err)
 	}
 }
