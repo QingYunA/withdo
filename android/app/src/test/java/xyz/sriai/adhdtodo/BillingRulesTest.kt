@@ -94,6 +94,28 @@ class BillingRulesTest {
     }
 
     @Test
+    fun `the renewal line leads with the billing interval when the server says it`() {
+        val res = RuntimeEnvironment.getApplication().resources
+        fun line(status: String, interval: String, end: String) =
+            renewalLine(res, pro.copy(status = status, interval = interval, periodEnd = end), now, shanghai)
+        assertEquals("Yearly · Free trial until Nov 11, then it renews", line("trialing", "yearly", "2026-11-11T09:00:00Z"))
+        assertEquals("Yearly · Renews Nov 11, 2027", line("active", "yearly", "2027-11-11T09:00:00Z"))
+        assertEquals("Monthly · Renews Nov 11", line("active", "monthly", "2026-11-11T09:00:00Z"))
+        assertEquals("Monthly · Ends Nov 11", line("canceling", "monthly", "2026-11-11T09:00:00Z"))
+        assertEquals("Renews Nov 11, 2027", line("active", "", "2027-11-11T09:00:00Z"))
+        RuntimeEnvironment.setQualifiers("zh-rCN")
+        val zh = RuntimeEnvironment.getApplication().resources
+        assertEquals(
+            "年付 · 试用到 11月11日，之后自动续费",
+            renewalLine(zh, pro.copy(status = "trialing", interval = "yearly", periodEnd = "2026-11-11T09:00:00Z"), now, shanghai),
+        )
+        assertEquals(
+            "年付 · 2027年11月11日续费",
+            renewalLine(zh, pro.copy(status = "active", interval = "yearly", periodEnd = "2027-11-11T09:00:00Z"), now, shanghai),
+        )
+    }
+
+    @Test
     fun `the language of the checkout page`() {
         RuntimeEnvironment.setQualifiers("zh-rCN")
         assertEquals("zh-Hans", checkoutLanguage(RuntimeEnvironment.getApplication().resources))

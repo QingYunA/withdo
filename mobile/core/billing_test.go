@@ -22,6 +22,7 @@ type fakeBilling struct {
 	offered     bool
 	plan        string
 	status      string
+	interval    string
 	periodEnd   string
 	trialUsed   bool
 	checkout    func(plan string) (int, string) // status and body of POST /v1/billing/checkout
@@ -40,7 +41,7 @@ func newFakeBilling(t *testing.T) *fakeBilling {
 
 func (f *fakeBilling) serve(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
-	offered, plan, status, end, trialUsed := f.offered, f.plan, f.status, f.periodEnd, f.trialUsed
+	offered, plan, status, interval, end, trialUsed := f.offered, f.plan, f.status, f.interval, f.periodEnd, f.trialUsed
 	f.mu.Unlock()
 	switch r.URL.Path {
 	case "/v1/config":
@@ -65,7 +66,7 @@ func (f *fakeBilling) serve(w http.ResponseWriter, r *http.Request) {
 			manage = "https://portal.example/session-" + string(rune('0'+n%10))
 		}
 		writeTestJSON(w, map[string]any{
-			"plan": plan, "status": status, "period_end": end, "trial_used": trialUsed,
+			"plan": plan, "status": status, "interval": interval, "period_end": end, "trial_used": trialUsed,
 			"monthly": "$6.99", "yearly": "$58.72", "manage_url": manage,
 		})
 	case "/v1/billing/checkout":
@@ -174,6 +175,19 @@ func TestBillingReportsAProPlanWithItsPeriodAndPortal(t *testing.T) {
 	got := waitBilling(t, phone, func(b billingJSON) bool { return b.Plan == "pro" })
 	if got.Status != "trialing" || got.PeriodEnd != "2026-11-11T09:00:00Z" || !got.TrialUsed || !strings.HasPrefix(got.ManageURL, "https://portal.example/") {
 		t.Errorf("pro plan = %+v", got)
+	}
+}
+
+func TestBillingReportsTheIntervalWhenTheServerSaysIt(t *testing.T) {
+	f := newFakeBilling(t)
+	f.set("pro", "active", "2027-11-11T09:00:00Z", true)
+	f.mu.Lock()
+	f.interval = "yearly"
+	f.mu.Unlock()
+	phone := billingPhone(t, f)
+	got := waitBilling(t, phone, func(b billingJSON) bool { return b.Plan == "pro" })
+	if got.Interval != "yearly" {
+		t.Errorf("interval = %q, want yearly", got.Interval)
 	}
 }
 

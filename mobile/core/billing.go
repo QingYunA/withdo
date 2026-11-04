@@ -39,6 +39,7 @@ type billingJSON struct {
 	Offered   bool   `json:"offered"`
 	Plan      string `json:"plan"`
 	Status    string `json:"status"`
+	Interval  string `json:"interval"`
 	PeriodEnd string `json:"period_end"`
 	TrialUsed bool   `json:"trial_used"`
 	Monthly   string `json:"monthly"`
@@ -49,13 +50,14 @@ type billingJSON struct {
 // Billing says what the server sells and the account's plan, as JSON, without touching the network
 // (it starts a refresh in the background when its answer is old):
 //
-//	{"offered":true,"plan":"pro","status":"trialing","period_end":"2026-11-11T09:00:00Z",
+//	{"offered":true,"plan":"pro","status":"trialing","interval":"yearly","period_end":"2026-11-11T09:00:00Z",
 //	 "trial_used":true,"monthly":"$6.99","yearly":"$58.72","manage_url":"https://..."}
 //
 // offered is whether the server sells Withdo Pro (false until known, and on a server that does not).
 // plan is free or pro, empty while signed out or not yet read. status is the subscription's
 // (trialing, active, past_due, canceling, canceled), empty for an account that never subscribed;
-// period_end is when the period ends (RFC 3339 UTC), empty then too. manage_url opens the customer
+// period_end is when the period ends (RFC 3339 UTC), empty then too. interval is monthly or yearly,
+// empty when the server does not say. manage_url opens the customer
 // portal; it lives 15 minutes, so call RefreshBilling right before opening it. The listener's
 // OnStatus fires when the plan changed, with a larger billing_rev: read Billing again then.
 func (c *Core) Billing() (string, error) {
@@ -158,7 +160,7 @@ func (s *billingState) info() billingJSON {
 	out := billingJSON{Offered: true}
 	if s.have {
 		b := s.b
-		out.Plan, out.Status, out.TrialUsed = b.Plan, b.Status, b.TrialUsed
+		out.Plan, out.Status, out.Interval, out.TrialUsed = b.Plan, b.Status, b.Interval, b.TrialUsed
 		out.Monthly, out.Yearly, out.ManageURL = b.Monthly, b.Yearly, b.ManageURL
 		if !b.PeriodEnd.IsZero() {
 			out.PeriodEnd = b.PeriodEnd.UTC().Format(time.RFC3339)

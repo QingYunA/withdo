@@ -144,12 +144,25 @@ private const val DefaultYearly = "$58.72"
 
 /**
  * The line under the quota on a Pro card: `Free trial until Nov 11, then it renews`, `Renews Nov 11,
- * 2027`, `Ends Nov 11` while canceling. Empty when the server named no date.
+ * 2027`, `Ends Nov 11` while canceling, each led by `Yearly · ` or `Monthly · ` when the server says the
+ * interval. Empty when the server named no date.
  */
 fun renewalLine(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): String {
     if (billing.status == "past_due") return res.getString(R.string.billing_past_due)
     val date = billingDate(res, billing.periodEnd, now, zone)
     if (date.isEmpty()) return ""
+    val interval = when (billing.interval) {
+        PlanKey.MONTHLY -> res.getString(R.string.billing_monthly)
+        PlanKey.YEARLY -> res.getString(R.string.billing_yearly)
+        else -> null
+    }
+    if (interval != null) {
+        return when (billing.status) {
+            "trialing" -> res.getString(R.string.billing_interval_trial_until, interval, date)
+            "canceling" -> res.getString(R.string.billing_interval_ends, interval, date)
+            else -> res.getString(R.string.billing_interval_renews, interval, date)
+        }
+    }
     return when (billing.status) {
         "trialing" -> res.getString(R.string.billing_trial_until, date)
         "canceling" -> res.getString(R.string.billing_ends, date)

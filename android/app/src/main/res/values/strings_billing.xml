@@ -12,6 +12,10 @@
     <string name="billing_trial_until">Free trial until %1$s, then it renews</string>
     <string name="billing_renews">Renews %1$s</string>
     <string name="billing_ends">Ends %1$s</string>
+    <!-- The same lines when the server says the billing interval. %1$s is Monthly or Yearly, %2$s a date. -->
+    <string name="billing_interval_trial_until">%1$s · Free trial until %2$s, then it renews</string>
+    <string name="billing_interval_renews">%1$s · Renews %2$s</string>
+    <string name="billing_interval_ends">%1$s · Ends %2$s</string>
     <string name="billing_past_due">Payment didn’t go through. Update it in Manage subscription.</string>
 
     <!-- The upgrade sheet. -->

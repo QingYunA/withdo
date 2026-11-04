@@ -18,7 +18,8 @@ object PlanKey {
  * Billing(): what the server sells and the account's plan. [offered] is whether the server sells
  * Withdo Pro (false until known); [plan] is `free` or `pro`, empty while signed out or not read yet;
  * [status] is the subscription's (trialing, active, past_due, canceling, canceled), empty for an
- * account that never subscribed, and [periodEnd] (RFC 3339) is empty then too. [manageUrl] is the
+ * account that never subscribed, and [periodEnd] (RFC 3339) is empty then too. [interval] is `monthly`
+ * or `yearly`, empty when the server does not say. [manageUrl] is the
  * customer portal, good for 15 minutes.
  */
 @Serializable
@@ -26,6 +27,7 @@ data class Billing(
     @SerialName("offered") val offered: Boolean = false,
     @SerialName("plan") val plan: String = "",
     @SerialName("status") val status: String = "",
+    @SerialName("interval") val interval: String = "",
     @SerialName("period_end") val periodEnd: String = "",
     @SerialName("trial_used") val trialUsed: Boolean = false,
     @SerialName("monthly") val monthly: String = "",

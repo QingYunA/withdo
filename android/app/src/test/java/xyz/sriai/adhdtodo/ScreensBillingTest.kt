@@ -95,7 +95,7 @@ class ScreensBillingTest(private val case: Case) {
 
 private val FreePlan = Billing(offered = true, plan = "free", monthly = "$6.99", yearly = "$58.72")
 private val ProPlan = Billing(
-    offered = true, plan = "pro", status = "trialing", periodEnd = "2026-11-11T09:00:00Z",
+    offered = true, plan = "pro", status = "trialing", interval = "yearly", periodEnd = "2026-11-11T09:00:00Z",
     trialUsed = true, monthly = "$6.99", yearly = "$58.72", manageUrl = "https://portal.example/session",
 )
 

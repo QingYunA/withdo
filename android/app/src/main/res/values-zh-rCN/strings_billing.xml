@@ -9,6 +9,9 @@
     <string name="billing_trial_until">试用到 %1$s，之后自动续费</string>
     <string name="billing_renews">%1$s续费</string>
     <string name="billing_ends">%1$s到期</string>
+    <string name="billing_interval_trial_until">%1$s · 试用到 %2$s，之后自动续费</string>
+    <string name="billing_interval_renews">%1$s · %2$s续费</string>
+    <string name="billing_interval_ends">%1$s · %2$s到期</string>
     <string name="billing_past_due">付款没有成功，请在“管理订阅”里更新。</string>
 
     <string name="billing_sheet_title">升级到 Withdo Pro</string>
