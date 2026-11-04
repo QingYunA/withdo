@@ -155,6 +155,13 @@ type FakeModels struct {
 	// Info is the official card; the zero value offers nothing. InUse follows the provider file:
 	// the official model is in use while no provider of one's own is.
 	Info OfficialInfo
+	// Bill is the plan; the zero value offers none. CheckoutFn answers StartCheckout (nil gives a
+	// page of example.com) and ManageFn the portal link (nil likewise).
+	Bill       BillingInfo
+	CheckoutFn func(plan string) (string, error)
+	ManageFn   func() (string, error)
+	// BillingRefreshes counts the asks for the plan.
+	BillingRefreshes int
 }
 
 var _ ModelSettings = (*FakeModels)(nil)
@@ -192,3 +199,25 @@ func (f *FakeModels) TestOfficial(context.Context) (time.Duration, error) {
 
 // RefreshOfficial implements ModelSettings.
 func (f *FakeModels) RefreshOfficial() {}
+
+// Billing implements ModelSettings.
+func (f *FakeModels) Billing() BillingInfo { return f.Bill }
+
+// RefreshBilling implements ModelSettings.
+func (f *FakeModels) RefreshBilling() { f.BillingRefreshes++ }
+
+// StartCheckout implements ModelSettings.
+func (f *FakeModels) StartCheckout(_ context.Context, plan, _ string) (string, error) {
+	if f.CheckoutFn == nil {
+		return "https://pay.example.com/checkout/" + plan, nil
+	}
+	return f.CheckoutFn(plan)
+}
+
+// ManageURL implements ModelSettings.
+func (f *FakeModels) ManageURL(context.Context) (string, error) {
+	if f.ManageFn == nil {
+		return "https://pay.example.com/portal", nil
+	}
+	return f.ManageFn()
+}

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Withdo Pro on the phone (v45): the plan card in Settings > Assistant and the upgrade sheet. -->
+    <string name="billing_plan_free">Free</string>
+    <string name="billing_plan_pro">Pro</string>
+    <!-- The plan card's quota line after "Available": today's turns left of the day's turns. -->
+    <string name="billing_quota_left">%1$d / %2$d left today</string>
+    <string name="billing_upgrade_trial">Upgrade to Pro · 7-day free trial</string>
+    <string name="billing_upgrade">Upgrade to Pro</string>
+    <string name="billing_manage">Manage subscription</string>
+    <!-- The Pro card's line: the subscription's end of period. %1$s is a date such as Nov 11. -->
+    <string name="billing_trial_until">Free trial until %1$s, then it renews</string>
+    <string name="billing_renews">Renews %1$s</string>
+    <string name="billing_ends">Ends %1$s</string>
+    <!-- The same lines when the server says the billing interval. %1$s is Monthly or Yearly, %2$s a date. -->
+    <string name="billing_interval_trial_until">%1$s · Free trial until %2$s, then it renews</string>
+    <string name="billing_interval_renews">%1$s · Renews %2$s</string>
+    <string name="billing_interval_ends">%1$s · Ends %2$s</string>
+    <string name="billing_past_due">Payment didn’t go through. Update it in Manage subscription.</string>
+
+    <!-- The upgrade sheet. -->
+    <string name="billing_sheet_title">Upgrade to Withdo Pro</string>
+    <string name="billing_sheet_line">The official model 100 times a day, on all your devices.</string>
+    <string name="billing_monthly">Monthly</string>
+    <string name="billing_yearly">Yearly</string>
+    <string name="billing_save">Save 30%</string>
+    <!-- After the price in large type, e.g. "$58.72  / year, about $4.89 / month". -->
+    <string name="billing_price_monthly">/ month</string>
+    <string name="billing_price_yearly">/ year</string>
+    <string name="billing_price_yearly_each">/ year, about %1$s / month</string>
+    <string name="billing_tick_model">The official model 100 times a day (20 on Free)</string>
+    <string name="billing_tick_devices">Works on your phone and computer</string>
+    <string name="billing_tick_sync">Sync is always free</string>
+    <string name="billing_tick_cancel">Cancel any time in the customer portal</string>
+    <string name="billing_cta_trial">Start 7-day free trial</string>
+    <string name="billing_cta_subscribe">Subscribe</string>
+    <string name="billing_cta_starting">Opening the payment page…</string>
+    <string name="billing_fine_trial">You won’t be charged before the trial ends. Billed by Waffo, tax included.</string>
+    <string name="billing_fine_subscribe">Billed by Waffo, tax included.</string>
+
+    <!-- The sheet while the payment is made in the browser. -->
+    <string name="billing_wait_title">Finish paying in the browser</string>
+    <string name="billing_wait_line">The payment page is open. When you come back to Withdo, this turns into Pro by itself.</string>
+    <string name="billing_reopen">Reopen the payment page</string>
+
+    <!-- Errors, in the sheet. -->
+    <string name="billing_error_open">Couldn’t open the payment page. Try again.</string>
+    <string name="billing_error_rate_limited">Too many tries. Wait a little and try again.</string>
+    <string name="billing_error_upstream">The payment service isn’t answering. Try again later.</string>
+    <string name="billing_error_signed_out">Sign in first, then upgrade.</string>
+    <string name="billing_error_already">This account is on Pro already.</string>
+
+    <!-- The quiet line under the composer's card once the day's turns are used up: a link, then its end. -->
+    <string name="billing_quiet_used_up_a">Today’s official allowance is used up: dates and reminders are read on this phone, the rest isn’t handed to the assistant. </string>
+    <string name="billing_quiet_used_up_b"> for 100 a day.</string>
+</resources>

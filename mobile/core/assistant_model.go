@@ -50,17 +50,19 @@ type modelStateJSON struct {
 	Phase  string `json:"phase"`
 	Left   int    `json:"left"`
 	Limit  int    `json:"limit"`
+	Plan   string `json:"plan,omitempty"`
 }
 
 // ModelState says which model would answer the composer, as JSON, without touching the network
 // (it starts a refresh in the background when its answer is old):
 //
-//	{"source":"official","phase":"ready","left":86,"limit":100}
+//	{"source":"official","phase":"ready","left":86,"limit":100,"plan":"pro"}
 //
 // source is official when Ask may be called and none otherwise (the app uses ParseQuick). phase is
 // ready, signed_out (the model would be there after signing in), used_up (today's turns are used;
 // it comes back at 0:00 UTC) or hidden (the server has no official model, or it is not known yet).
-// left is today's turns left and limit the day's turns; left is -1 until the server has said. The
+// left is today's turns left and limit the day's turns (the quota's own, so Pro's 100); left is -1
+// until the server has said. plan is free or pro when Billing knows it, else omitted. The
 // listener's OnStatus fires when a refresh finishes, so read it again then.
 func (c *Core) ModelState() (string, error) {
 	c.mu.Lock()
@@ -86,6 +88,7 @@ func (c *Core) modelInfo() modelStateJSON {
 	o.busy = o.busy || due
 	info := o.info(time.Now())
 	o.mu.Unlock()
+	info.Plan = c.bill.plan()
 	if due {
 		go c.refreshModel()
 	}

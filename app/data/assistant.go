@@ -172,6 +172,14 @@ type ModelSettings interface {
 	TestOfficial(ctx context.Context) (time.Duration, error)
 	// RefreshOfficial asks the server for today's turns again, soon (Settings opening).
 	RefreshOfficial()
+	// Billing is the plan (Withdo Pro, M16); the zero value offers none. It never blocks.
+	Billing() BillingInfo
+	// RefreshBilling asks the server for the plan again, soon (Settings opening or coming back).
+	RefreshBilling()
+	// StartCheckout asks for the payment page of a plan, in the app's language, and returns its URL.
+	StartCheckout(ctx context.Context, plan, lang string) (string, error)
+	// ManageURL is a fresh link to the customer portal, opened at once.
+	ManageURL(ctx context.Context) (string, error)
 }
 
 // Problem says why a request to the model failed, so the views can word it in the user's

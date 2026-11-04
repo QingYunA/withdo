@@ -11,7 +11,7 @@ import xyz.sriai.adhdtodo.core.Core_
  * touch SQLite or the network, so the screens call these from Dispatchers.IO, never on the UI
  * thread.
  */
-class CoreApi(private val core: Core_) : AssistantBackend {
+class CoreApi(private val core: Core_) : AssistantBackend, BillingBackend {
 
     fun mine(): MinePage = PageJson.decodeFromString(core.mine())
 
@@ -142,6 +142,14 @@ class CoreApi(private val core: Core_) : AssistantBackend {
 
     /** Cancels the [ask] in flight. */
     override fun stop() = core.stopAsk()
+
+    // ---- Withdo Pro (v45) -------------------------------------------------------------------
+
+    override fun billing(): Billing = PageJson.decodeFromString(core.billing())
+
+    override fun refreshBilling() = core.refreshBilling()
+
+    override fun checkout(plan: String, lang: String): String = core.checkout(plan, lang)
 
     // ---- Select: bulk edits and their Undo --------------------------------------------------
 

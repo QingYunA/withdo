@@ -23,10 +23,21 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_DAILY_TURNS: ${LLM_DAILY_TURNS:-}
+      LLM_DAILY_TURNS_PRO: ${LLM_DAILY_TURNS_PRO:-}
+      # Withdo Pro through Waffo Pancake (M16). Set in sync.env; an empty WAFFO_KEY_FILE turns billing off.
+      # WAFFO_KEY_FILE is a path inside the container, under /secrets (mounted below).
+      WAFFO_MERCHANT_ID: ${WAFFO_MERCHANT_ID:-}
+      WAFFO_KEY_FILE: ${WAFFO_KEY_FILE:-}
+      WAFFO_STORE_ID: ${WAFFO_STORE_ID:-}
+      WAFFO_PRODUCT_MONTHLY: ${WAFFO_PRODUCT_MONTHLY:-}
+      WAFFO_PRODUCT_YEARLY: ${WAFFO_PRODUCT_YEARLY:-}
+      WAFFO_MODE: ${WAFFO_MODE:-}
     volumes:
       - ./bin/adhd-sync:/adhd-sync:ro
       # PocketBase's data (its users and passwords); a host directory owned by uid 65532.
       - ./pb_data:/pb_data
+      # Waffo's API key (a PKCS#8 PEM, readable by uid 65532), read-only: /opt/adhd-todo/sync/secrets/waffo-test.pem is /secrets/waffo-test.pem.
+      - /opt/adhd-todo/sync/secrets:/secrets:ro
     ports:
       - 127.0.0.1:18080:8080
     networks:

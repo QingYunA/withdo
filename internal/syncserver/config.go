@@ -18,5 +18,5 @@ func (s *Server) SetPublicConfig(cfg PublicConfig) { s.public = cfg }
 
 // config is GET /v1/config. It needs no bearer token: a client asks for it before it has one.
 func (s *Server) config(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{Auth: s.public.Auth, LLM: s.llm.enabled()})
+	writeJSON(w, http.StatusOK, syncproto.ConfigResponse{Auth: s.public.Auth, LLM: s.llm.enabled(), Billing: s.billing != nil})
 }

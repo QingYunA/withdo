@@ -24,11 +24,12 @@ var (
 )
 
 // LLMQuota is the account's turns with the official model today: Limit a day, Left now, and when
-// the count starts again.
+// the count starts again. Plan is "free" or "pro" (empty from a server that does not say).
 type LLMQuota struct {
 	Limit    int
 	Left     int
 	ResetsAt time.Time
+	Plan     string
 }
 
 // LLMBaseURL is the API root of the official model, <server>/v1/llm: an OpenAI-compatible client
@@ -86,9 +87,10 @@ func (c *Client) LLMQuota(ctx context.Context) (LLMQuota, error) {
 		Limit    int       `json:"limit"`
 		Left     int       `json:"left"`
 		ResetsAt time.Time `json:"resets_at"`
+		Plan     string    `json:"plan"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil || out.Limit <= 0 {
 		return LLMQuota{}, fmt.Errorf("decode /v1/llm/quota: %s", strings.TrimSpace(errorMessage(raw)))
 	}
-	return LLMQuota{Limit: out.Limit, Left: max(0, out.Left), ResetsAt: out.ResetsAt}, nil
+	return LLMQuota{Limit: out.Limit, Left: max(0, out.Left), ResetsAt: out.ResetsAt, Plan: out.Plan}, nil
 }

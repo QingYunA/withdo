@@ -107,9 +107,35 @@ func run(ctx context.Context, args []string) error {
 		}
 		llmTurns = n
 	}
+	llmTurnsPro := 0
+	if raw := os.Getenv("LLM_DAILY_TURNS_PRO"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n <= 0 {
+			return errors.New("LLM_DAILY_TURNS_PRO must be a positive number")
+		}
+		llmTurnsPro = n
+	}
 	server.EnableLLM(syncserver.LLMOptions{
-		APIKey: os.Getenv("LLM_API_KEY"), BaseURL: os.Getenv("LLM_BASE_URL"), Model: os.Getenv("LLM_MODEL"), DailyTurns: llmTurns,
+		APIKey: os.Getenv("LLM_API_KEY"), BaseURL: os.Getenv("LLM_BASE_URL"), Model: os.Getenv("LLM_MODEL"),
+		DailyTurns: llmTurns, DailyTurnsPro: llmTurnsPro,
 	})
+
+	// Withdo Pro (M16): Waffo Pancake's API key is a file, mounted read-only into the container.
+	// Without WAFFO_KEY_FILE the billing routes answer 503 billing_disabled.
+	billingCfg, billingOn, err := billingFromEnv(os.Getenv)
+	if err != nil {
+		return err
+	}
+	if billingOn {
+		var email syncserver.EmailLookup
+		if pb != nil {
+			email = pbauth.EmailLookup(pb)
+		}
+		if err := server.EnableBilling(billingCfg, email); err != nil {
+			return err
+		}
+		log.Printf("billing on (Waffo %s mode)", billingCfg.Mode)
+	}
 
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {

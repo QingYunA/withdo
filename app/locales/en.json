@@ -5086,5 +5086,215 @@
   "problemOfficialOff": "This server does not offer the Withdo model.",
   "@problemOfficialOff": {
     "description": "Assistant error: the sync server has no official model."
+  },
+  "settingsPlanFree": "Free",
+  "@settingsPlanFree": {
+    "description": "Pill on the official model's card: the account is on the free plan."
+  },
+  "settingsPlanPro": "Pro",
+  "@settingsPlanPro": {
+    "description": "Pill on the official model's card: the account has Withdo Pro."
+  },
+  "settingsProLineTrial": "Pro: 100 a day, on every device. Try it free for 7 days.",
+  "@settingsProLineTrial": {
+    "description": "Footer of the official model's card on the free plan, trial not used yet."
+  },
+  "settingsProLine": "Pro: 100 a day, on every device.",
+  "@settingsProLine": {
+    "description": "Footer of the official model's card on the free plan, trial already used."
+  },
+  "settingsProUpgrade": "Upgrade to Pro",
+  "@settingsProUpgrade": {
+    "description": "Link at the right of the card's footer: opens the upgrade sheet."
+  },
+  "settingsProManage": "Manage subscription",
+  "@settingsProManage": {
+    "description": "Link at the right of the card's footer for a Pro account: opens the customer portal in the browser."
+  },
+  "settingsProTrialUntil": "Withdo Pro · trial until {date}",
+  "@settingsProTrialUntil": {
+    "description": "Footer of the card while the free trial runs.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
+  "settingsProRenews": "Withdo Pro · renews {date}",
+  "@settingsProRenews": {
+    "description": "Footer of the card for a paying Pro account.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 11, 2027"
+      }
+    }
+  },
+  "settingsProEnds": "Withdo Pro · ends {date}",
+  "@settingsProEnds": {
+    "description": "Footer of the card for a Pro account that was cancelled and runs to the end of its period.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
+  "settingsProIntervalTrialUntil": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · trial until {date}, then renews",
+  "@settingsProIntervalTrialUntil": {
+    "description": "Footer of the card while the free trial runs, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
+  "settingsProIntervalRenews": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · renews {date}",
+  "@settingsProIntervalRenews": {
+    "description": "Footer of the card for a paying Pro account, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11, 2027"
+      }
+    }
+  },
+  "settingsProIntervalEnds": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}} · ends {date}",
+  "@settingsProIntervalEnds": {
+    "description": "Footer of the card for a cancelled Pro account that runs to the end of its period, when the server says the billing interval. interval is monthly or yearly.",
+    "placeholders": {
+      "interval": {
+        "type": "String",
+        "example": "yearly"
+      },
+      "date": {
+        "type": "String",
+        "example": "Nov 11"
+      }
+    }
+  },
+  "settingsProManageFailed": "Could not open the subscription page. Try again.",
+  "@settingsProManageFailed": {
+    "description": "Under the card's footer when the customer portal link could not be made."
+  },
+  "proSheetTitle": "Upgrade to Withdo Pro",
+  "@proSheetTitle": {
+    "description": "Title of the upgrade sheet."
+  },
+  "proSheetLine": "The official model, 100 a day, on every device.",
+  "@proSheetLine": {
+    "description": "Line under the upgrade sheet's title."
+  },
+  "proMonthly": "Monthly",
+  "@proMonthly": {
+    "description": "Upgrade sheet segment: pay every month."
+  },
+  "proYearly": "Yearly",
+  "@proYearly": {
+    "description": "Upgrade sheet segment: pay every year."
+  },
+  "proSave": "Save {percent}%",
+  "@proSave": {
+    "description": "Green note on the yearly segment: how much cheaper than twelve months.",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "30"
+      }
+    }
+  },
+  "proPriceYearly": "/ year, about {perMonth} / month",
+  "@proPriceYearly": {
+    "description": "Small words after the big price of the yearly plan in the upgrade sheet.",
+    "placeholders": {
+      "perMonth": {
+        "type": "String",
+        "example": "$4.89"
+      }
+    }
+  },
+  "proPriceMonthly": "/ month",
+  "@proPriceMonthly": {
+    "description": "Small words after the big price of the monthly plan in the upgrade sheet."
+  },
+  "proTickModel": "Official model 100 a day (20 on Free)",
+  "@proTickModel": {
+    "description": "First benefit of Pro in the upgrade sheet."
+  },
+  "proTickDevices": "Works on your phone and computer",
+  "@proTickDevices": {
+    "description": "Second benefit of Pro in the upgrade sheet."
+  },
+  "proTickSync": "Sync stays free",
+  "@proTickSync": {
+    "description": "Third benefit of Pro in the upgrade sheet."
+  },
+  "proTickCancel": "Cancel any time in the customer portal",
+  "@proTickCancel": {
+    "description": "Fourth benefit of Pro in the upgrade sheet."
+  },
+  "proStartTrial": "Start 7-day free trial",
+  "@proStartTrial": {
+    "description": "Main button of the upgrade sheet while the account has not had its trial."
+  },
+  "proSubscribe": "Subscribe",
+  "@proSubscribe": {
+    "description": "Main button of the upgrade sheet once the account has had its trial."
+  },
+  "proFinePrintTrial": "Nothing is charged before the trial ends. Sold by Waffo, tax included.",
+  "@proFinePrintTrial": {
+    "description": "Fine print under the upgrade sheet's button, with a trial."
+  },
+  "proFinePrint": "Sold by Waffo, tax included.",
+  "@proFinePrint": {
+    "description": "Fine print under the upgrade sheet's button, without a trial."
+  },
+  "proWaitingTitle": "Finish paying in your browser",
+  "@proWaitingTitle": {
+    "description": "Title of the upgrade sheet while the payment page is open in the browser."
+  },
+  "proWaitingLine": "The payment page is open in your browser. This turns into Pro by itself when it is done.",
+  "@proWaitingLine": {
+    "description": "Line of the sheet while it waits for the payment."
+  },
+  "proReopen": "Reopen the payment page",
+  "@proReopen": {
+    "description": "Button of the waiting sheet: open the payment page in the browser again."
+  },
+  "proCheckoutFailed": "Could not open the payment page. Try again.",
+  "@proCheckoutFailed": {
+    "description": "Error in the upgrade sheet when the payment page could not be made."
+  },
+  "proCheckoutThrottled": "Too many tries. Wait a little and try again.",
+  "@proCheckoutThrottled": {
+    "description": "Error in the upgrade sheet when the server limits the payment pages."
+  },
+  "composerProUpgrade": "Upgrade to Pro",
+  "@composerProUpgrade": {
+    "description": "Link in the quiet line under the input once the day's turns are used up: opens the upgrade sheet."
+  },
+  "composerProUpgradeTail": " for 100 a day.",
+  "@composerProUpgradeTail": {
+    "description": "Plain words after the Upgrade to Pro link in the quiet line."
+  },
+  "composerOfficialUsedUpFree": "Today's {limit} turns are used up: dates and reminders are read on this computer.",
+  "@composerOfficialUsedUpFree": {
+    "description": "Quiet line under the input on the free plan when the day's turns are used up; the Upgrade to Pro link follows it.",
+    "placeholders": {
+      "limit": {
+        "type": "String",
+        "example": "20"
+      }
+    }
   }
 }

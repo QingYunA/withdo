@@ -14,16 +14,16 @@ quota, off when its key is empty.
   or not) back unchanged. Body at most 1 MiB; upstream timeout 90 s.
 - **Quota by turns.** The client sends `X-Withdo-Turn: <uuid>`, one per thing the user sent (one
   `agent.Ask`, however many model calls it takes). The server counts distinct turns per account per
-  UTC day against `LLM_DAILY_TURNS` (default 100); a request without the header is a turn of its own.
-  A hard cap of 12 requests per turn and `LLM_DAILY_TURNS × 12` requests a day bounds a client that
+  UTC day against `LLM_DAILY_TURNS` (default 20; Pro accounts, M16: `LLM_DAILY_TURNS_PRO`, default 100); a request without the header is a turn of its own.
+  A hard cap of 6 requests per turn and daily turns × 6 requests a day bounds a client that
   lies. Over the quota: `429 {"code":"llm_quota"}`. Every answer carries `X-Withdo-Turns-Left`.
-- `GET /v1/llm/quota`: `{"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z"}`.
+- `GET /v1/llm/quota`: `{"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z","plan":"pro"}` (the account's own limit and plan).
 - Off (`LLM_API_KEY` empty): `503 {"code":"llm_disabled"}`; `GET /v1/config` says `"llm": false`
   so clients do not offer it.
 - Environment (sync.env): `LLM_API_KEY`, `LLM_BASE_URL` (default `https://api.deepseek.com`),
   `LLM_MODEL` (default `deepseek-chat`), `LLM_DAILY_TURNS`. Requests and replies are never logged;
   the log line has the account, the turn count and the status.
-- No paid tier yet: one Free quota for everyone. A tier is a later change to how the limit is read.
+- Free and Pro (M16, `m16-billing.md`) differ only in the daily turns.
 
 ## Clients
 

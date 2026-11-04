@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_plan_free">免费</string>
+    <string name="billing_plan_pro">Pro</string>
+    <string name="billing_quota_left">今天还剩 %1$d / %2$d 次</string>
+    <string name="billing_upgrade_trial">升级到 Pro · 免费试用 7 天</string>
+    <string name="billing_upgrade">升级到 Pro</string>
+    <string name="billing_manage">管理订阅</string>
+    <string name="billing_trial_until">试用到 %1$s，之后自动续费</string>
+    <string name="billing_renews">%1$s续费</string>
+    <string name="billing_ends">%1$s到期</string>
+    <string name="billing_interval_trial_until">%1$s · 试用到 %2$s，之后自动续费</string>
+    <string name="billing_interval_renews">%1$s · %2$s续费</string>
+    <string name="billing_interval_ends">%1$s · %2$s到期</string>
+    <string name="billing_past_due">付款没有成功，请在“管理订阅”里更新。</string>
+
+    <string name="billing_sheet_title">升级到 Withdo Pro</string>
+    <string name="billing_sheet_line">官方模型每天 100 次，所有设备通用。</string>
+    <string name="billing_monthly">月付</string>
+    <string name="billing_yearly">年付</string>
+    <string name="billing_save">省 30%</string>
+    <string name="billing_price_monthly">/ 月</string>
+    <string name="billing_price_yearly">/ 年</string>
+    <string name="billing_price_yearly_each">/ 年，约 %1$s / 月</string>
+    <string name="billing_tick_model">官方模型每天 100 次（免费版 20 次）</string>
+    <string name="billing_tick_devices">手机和电脑通用</string>
+    <string name="billing_tick_sync">同步一直免费</string>
+    <string name="billing_tick_cancel">随时在客户门户里取消</string>
+    <string name="billing_cta_trial">免费试用 7 天</string>
+    <string name="billing_cta_subscribe">订阅</string>
+    <string name="billing_cta_starting">正在打开付款页…</string>
+    <string name="billing_fine_trial">试用结束前不会扣款。由 Waffo 代收，含税价。</string>
+    <string name="billing_fine_subscribe">由 Waffo 代收，含税价。</string>
+
+    <string name="billing_wait_title">在浏览器里完成付款</string>
+    <string name="billing_wait_line">付款页已经打开。回到 Withdo 时，这里会自动变成 Pro。</string>
+    <string name="billing_reopen">重新打开付款页</string>
+
+    <string name="billing_error_open">没能打开付款页，再试一次</string>
+    <string name="billing_error_rate_limited">试得太频繁了，过一会儿再试</string>
+    <string name="billing_error_upstream">付款服务没有响应，晚点再试</string>
+    <string name="billing_error_signed_out">先登录，再升级</string>
+    <string name="billing_error_already">这个账号已经是 Pro</string>
+
+    <string name="billing_quiet_used_up_a">今天的官方额度用完了：日期和提醒在本机读出，其余的话没有交给助手。</string>
+    <string name="billing_quiet_used_up_b">，每天 100 次。</string>
+</resources>

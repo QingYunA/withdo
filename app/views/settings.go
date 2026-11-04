@@ -40,6 +40,8 @@ type Settings struct {
 	pane      Pane
 	navFocus  *Pane // the row the arrow keys moved to, focused once
 	assist    assistState
+	pro       proState // the upgrade sheet over Settings > Model
+	lang      string   // the language the window is drawn in, for the payment page
 	copied    time.Time
 	copiedKey string // the copy button that was pressed
 	setup     setupState
@@ -141,7 +143,7 @@ func (s *Settings) openPane(p Pane) {
 // The pane scrolls, and has a key of its own so that its scroll position is its own.
 func (s *Settings) View(c *ui.Context) {
 	t := theme.Resolve(c)
-	s.say, s.clock = locales.In(c.Locale()), words.New(c.Locale(), c.Region())
+	s.say, s.clock, s.lang = locales.In(c.Locale()), words.New(c.Locale(), c.Region()), c.Locale()
 	focus := s.navFocus
 	s.navFocus = nil
 	ui.Row(c).Fill().Background(t.SettingsPane()).Children(func() {
@@ -154,6 +156,9 @@ func (s *Settings) View(c *ui.Context) {
 	})
 	if s.pane == PaneCategories {
 		s.categorySheetView(c, t)
+	}
+	if s.pane == PaneModel {
+		s.upgradeSheet(c, t)
 	}
 	if s.pane == PaneAccount && s.app.Sync != nil {
 		snap := s.app.Sync.SyncSnapshot()

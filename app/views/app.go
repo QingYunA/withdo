@@ -19,6 +19,8 @@ type Actions interface {
 	OpenTask(id int)        // show the main window with the task open in the inspector
 	OpenMain()              // bring the main window to the front, on the page it was on
 	OpenSettings(pane Pane) // show the Settings window on a pane
+	// OpenUpgrade shows the Settings window on Model with the Withdo Pro sheet open.
+	OpenUpgrade()
 	OpenURL(url string)
 	ShowInFinder(path string)
 	// OpenFile opens a file with the app macOS has for it: Preview, for a picture.
