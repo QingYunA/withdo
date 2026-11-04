@@ -100,11 +100,13 @@ func reduce(cur Subscription, exists bool, ev Event, account int64) (next Subscr
 	case "subscription.activated":
 		takeOrder()
 		next.Status = StatusActive
-		if d.PeriodNumber != nil && *d.PeriodNumber == 0 {
-			next.Status = StatusTrialing // authorised, not yet charged
+		setPeriod()
+		// Waffo's payload has no trial flag: a period of 0 or a first period far shorter than a month
+		// (the 7-day trial) is the trial. The renewal at its end makes the subscription active.
+		if (d.PeriodNumber != nil && *d.PeriodNumber == 0) || trialPeriod(next.PeriodStart, next.PeriodEnd) {
+			next.Status = StatusTrialing
 		}
 		next.TrialUsed = true
-		setPeriod()
 	case "subscription.plan_changed":
 		takeOrder()
 		next.Status = StatusActive
@@ -138,15 +140,21 @@ func reduce(cur Subscription, exists bool, ev Event, account int64) (next Subscr
 		next.Status = StatusPastDue
 		setPeriod()
 	case "subscription.payment_succeeded":
-		// A pure payment event: it carries no period dates. The first real charge ends a trial.
-		if !sameOrder || cur.Status != StatusTrialing || d.PeriodNumber == nil || *d.PeriodNumber < 1 {
-			return cur, false
-		}
-		next.Status = StatusActive
+		// A pure payment event with no period dates. It also comes for the trial's $0 card check, in
+		// no fixed order with activated, so it changes nothing: subscription.renewed ends a trial.
+		return cur, false
 	default:
 		return cur, false
 	}
 	next.Mode = ev.Mode
 	next.EventAt = at
 	return next, true
+}
+
+// trialPeriod reports a billing period shorter than any monthly or yearly plan's: the free trial.
+func trialPeriod(start, end time.Time) bool {
+	if start.IsZero() || end.IsZero() || !end.After(start) {
+		return false
+	}
+	return end.Sub(start) < 20*24*time.Hour
 }

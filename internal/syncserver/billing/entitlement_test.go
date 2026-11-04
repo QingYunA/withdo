@@ -72,14 +72,15 @@ func TestSubscriptionLifecycle(t *testing.T) {
 		t.Fatal("not Pro while trialing")
 	}
 
-	// The trial converts: a real charge, then the new period.
+	// A payment (here the trial's $0 card check) changes nothing; the renewal at the trial's end
+	// starts the first paid period.
 	ts.send(t, "2", "subscription.payment_succeeded", time.Minute, map[string]any{"periodNumber": 1, "paymentStatus": "succeeded"})
-	if got := ts.row(t); got.Status != StatusActive || !got.PeriodEnd.Equal(trialEnd) {
-		t.Fatalf("after the first charge: %+v", got)
+	if got := ts.row(t); got.Status != StatusTrialing || !got.PeriodEnd.Equal(trialEnd) {
+		t.Fatalf("after the payment: %+v", got)
 	}
 	ts.send(t, "3", "subscription.renewed", 2*time.Minute, map[string]any{
 		"orderStatus": "active", "currentPeriodStart": trialEnd.Format(time.RFC3339), "currentPeriodEnd": period1End.Format(time.RFC3339)})
-	if got := ts.row(t); !got.PeriodEnd.Equal(period1End) {
+	if got := ts.row(t); got.Status != StatusActive || !got.PeriodEnd.Equal(period1End) {
 		t.Fatalf("after renewal: %+v", got)
 	}
 
@@ -183,5 +184,28 @@ func TestIntervalIsKeptAcrossEventsThatDoNotCarryIt(t *testing.T) {
 		"orderId": "ORD_2", "productName": "Withdo Pro - Monthly"})
 	if got := ts.row(t).Interval; got != "monthly" {
 		t.Fatalf("after the plan change: %q", got)
+	}
+}
+
+// TestAWaffoTrialIsATrial pins what Waffo sends for a 7-day trial (seen in test mode on 2026-11-04):
+// subscription.activated with periodNumber 1 and a first period of 7 days.
+func TestAWaffoTrialIsATrial(t *testing.T) {
+	ts := newTestService(t, 7)
+	trialEnd := testNow.Add(7 * 24 * time.Hour)
+	ts.send(t, "1", "subscription.activated", 0, map[string]any{
+		"orderStatus": "active", "periodNumber": 1, "billingPeriod": "yearly",
+		"currentPeriodStart": testNow.Format(time.RFC3339), "currentPeriodEnd": trialEnd.Format(time.RFC3339)})
+	if got := ts.row(t); got.Status != StatusTrialing || got.Interval != "yearly" || !got.TrialUsed {
+		t.Fatalf("a 7-day first period: %+v", got)
+	}
+}
+
+func TestAFullFirstPeriodIsNotATrial(t *testing.T) {
+	ts := newTestService(t, 7)
+	ts.send(t, "1", "subscription.activated", 0, map[string]any{
+		"orderStatus": "active", "periodNumber": 1, "billingPeriod": "monthly",
+		"currentPeriodStart": testNow.Format(time.RFC3339), "currentPeriodEnd": testNow.AddDate(0, 1, 0).Format(time.RFC3339)})
+	if got := ts.row(t); got.Status != StatusActive {
+		t.Fatalf("a month's first period: %+v", got)
 	}
 }
