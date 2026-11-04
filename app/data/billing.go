@@ -222,7 +222,7 @@ func (r *Real) StartCheckout(ctx context.Context, plan, lang string) (string, er
 	if err != nil {
 		return "", err
 	}
-	url, err := client.Checkout(ctx, plan, lang)
+	url, err := client.Checkout(ctx, plan, syncclient.ProviderWaffo, lang)
 	switch {
 	case errors.Is(err, syncclient.ErrAlreadySubscribed):
 		r.RefreshBilling()

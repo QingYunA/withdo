@@ -97,7 +97,7 @@ func (c *Core) Checkout(plan, lang string) (string, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), checkoutTO)
 	defer cancel()
-	url, err := client.Checkout(ctx, plan, lang)
+	url, err := client.Checkout(ctx, plan, syncclient.ProviderWaffo, lang)
 	if err != nil {
 		log.Printf("adhd-todo checkout: %v", err)
 		if errors.Is(err, syncclient.ErrAlreadySubscribed) {

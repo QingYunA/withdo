@@ -121,6 +121,9 @@ type ConfigResponse struct {
 	LLM  bool   `json:"llm"`
 	// Billing says the server sells Withdo Pro (POST /v1/billing/checkout); false or missing hides it.
 	Billing bool `json:"billing"`
+	// PayPal says the server also takes payment through PayPal (checkout with "provider": "paypal");
+	// false or missing hides the PayPal button.
+	PayPal bool `json:"paypal"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.
