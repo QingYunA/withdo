@@ -2267,8 +2267,8 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    text) before `● 可用 · 今天还剩 14 / 20 次`, the quota bar against the plan's limit, and under a
    hairline a footer row in `meta` `text.secondary`: Free reads `Pro：每天 100 次，所有设备通用。先免费试用
    7 天。` with an accent **Upgrade to Pro** / `升级到 Pro` at the right (once the trial is used: `Pro：每天
-   100 次，所有设备通用。`); Pro reads `Withdo Pro · 年付 · 试用到 11月11日，之后 2027年11月11日续费`
-   (or `· 2027年11月11日续费`, or `· 11月11日到期` while canceling) with **Manage subscription** /
+   100 次，所有设备通用。`); Pro reads `Withdo Pro · 年付 · 试用到 11月11日，之后自动续费`
+   (or `· 年付 · 2027年11月11日续费`, or `· 年付 · 11月11日到期` while canceling; `Monthly` / `Yearly` in English) with **Manage subscription** /
    `管理订阅`, which opens the server's `manage_url` in the browser. **Upgrade to Pro** opens a
    380 pt sheet: `升级到 Withdo Pro`, its line, a `月付 | 年付 省 30%` segment (Yearly chosen;
    the saving in the done green), the price in 24 pt (`$58.72 / 年，约 $4.89 / 月` or `$6.99 / 月`),
@@ -2282,8 +2282,10 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    `升级到 Pro，每天 100 次。` (`Upgrade to Pro` in accent opens the same sheet); a Pro account's line
    says only that the quota is used up. Without billing the card is as in v44.
    Built (M16, desktop): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
-   `mine-composer-official-used-up-upgrade-*`. The plan reads `GET /v1/billing`, which has no billing interval, so the Pro
-   footer leaves out `年付` / `月付` and, in the trial, the renewal date after it (`Withdo Pro · 试用到 11月11日`). Manage
+   `mine-composer-official-used-up-upgrade-*`. The plan reads `GET /v1/billing`, whose `interval` (`monthly` or `yearly`) is the
+   footer's `年付` / `月付` (`Yearly` / `Monthly`) and, in the trial, `之后自动续费` (`then renews`; the trial's end is the first
+   charge, so no second date). A server that does not say the interval (empty or an older one) gets the footer without it
+   (`Withdo Pro · 试用到 11月11日`). Manage
    subscription asks for a new portal link on every click (it lives 15 minutes). The used-up line on a Free account
    reads `今天的 20 次用完了：日期和提醒在本机读出。升级到 Pro，每天 100 次。`
    Before v44: the provider in use as one card (36 pt logo, name, `model · ●
@@ -2901,6 +2903,10 @@ It opens the checkout URL in the system browser (a Custom Tab) and turns into `�
 `重新打开付款页`; coming back to the app or the `billing` event refreshes the plan and closes the sheet
 once it is Pro. Past the quota, the quiet line under the receipt ends with `升级到 Pro，每天 100 次。`,
 which opens the sheet.
+Built (M16, phone): screens `settings-pro-*` (and the other `ScreensBillingTest` ones). The Pro card's renewal line leads
+with the interval from the core's `interval` field, `年付 · 试用到 11月11日，之后自动续费` / `年付 · 2027年11月11日续费` /
+`月付 · 11月11日到期` (`Yearly · Free trial until Nov 11, then it renews` / `Monthly · Renews Nov 11` in English); with no
+interval the line is as before.
 
 ## Writing
 

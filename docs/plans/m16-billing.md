@@ -44,7 +44,7 @@ Waffo whether its checkout can offer PayPal.
 - Entitlement: Pro while status is `trialing`, `active`, `canceling` or `past_due` (one retry day)
   and the period has not ended. Pro raises the account's daily turns to `LLM_DAILY_TURNS_PRO`
   (100); free is `LLM_DAILY_TURNS` (20).
-- `GET /v1/billing` (session) → `{"plan":"free"|"pro","status":"","period_end":"","trial_used":
+- `GET /v1/billing` (session) → `{"plan":"free"|"pro","status":"","interval":"","period_end":"","trial_used":
   false,"monthly":"$6.99","yearly":"$58.72","manage_url":""}`; `manage_url` is Waffo's customer
   portal for the buyer.
 - A change of plan sends the account's devices the sync event, so open apps refresh at once.
@@ -64,7 +64,14 @@ Waffo whether its checkout can offer PayPal.
 - `manage_url` is a fresh portal session link for the account's email, made on every
   `GET /v1/billing` of an account with a subscription (it lives 15 minutes and is never stored);
   when it cannot be made it is Waffo's portal sign-in page.
+- `interval` is `monthly`, `yearly` or empty (migration 006, `billing_interval`): the webhooks' `billingPeriod`
+  normalized (contains `year` / `annual` is yearly, `month` is monthly), else the product name's Monthly / Yearly.
+  Events without it (`payment_succeeded`, a renewal that leaves it out) keep the stored value. Waffo's payload names
+  the product by `productName` only, so the configured product ids are not used.
 
 ## Clients
 
-Settings shows the plan and the way to Pro; the quota-used-up line offers Pro (design v45).
+Settings shows the plan and the way to Pro; the quota-used-up line offers Pro (design v45). The Pro footer (desktop)
+and the Pro card's renewal line (phone) say the billing interval, `年付` / `Yearly` or `月付` / `Monthly`, from
+`GET /v1/billing` `interval` (`syncclient.Billing.Interval`, the core's `billing` JSON `interval`); with it empty they
+leave it out.
