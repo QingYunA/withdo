@@ -1,6 +1,15 @@
+#!/usr/bin/env python3
+"""Creates Withdo Pro's PayPal product, its four plans and the webhook (docs/plans/m17-paypal.md).
+
+    scripts/paypal-setup.py <credentials.json>
+
+credentials.json is {"client_id", "secret", "env": "sandbox"|"live"}; keep it out of the repo. It
+prints the ids (none is secret) and writes them to ids.json. PayPal-Request-Id makes a rerun
+return the same objects instead of making new ones.
+"""
 import json,subprocess,sys
-BASE='https://api-m.sandbox.paypal.com'
-c=json.load(open(''+sys.argv[1]+''))
+c=json.load(open(sys.argv[1]))
+BASE='https://api-m.paypal.com' if c.get('env')=='live' else 'https://api-m.sandbox.paypal.com'
 def curl(args,stdin=None):
     r=subprocess.run(['curl','-s']+args,input=stdin,capture_output=True,text=True); return json.loads(r.stdout or '{}')
 tok=curl(['-K','-','-X','POST',BASE+'/v1/oauth2/token','-d','grant_type=client_credentials'],'user = "%s:%s"'%(c['client_id'],c['secret']))['access_token']
