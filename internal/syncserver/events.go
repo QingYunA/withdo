@@ -37,8 +37,14 @@ func (s *Server) events(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-r.Context().Done():
 			return
-		case version := <-ch:
-			if _, err := fmt.Fprintf(w, "event: poke\ndata: %d\n\n", version); err != nil {
+		case msg := <-ch:
+			var err error
+			if msg.billing {
+				_, err = fmt.Fprint(w, "event: billing\ndata: changed\n\n")
+			} else {
+				_, err = fmt.Fprintf(w, "event: poke\ndata: %d\n\n", msg.version)
+			}
+			if err != nil {
 				return
 			}
 			flusher.Flush()

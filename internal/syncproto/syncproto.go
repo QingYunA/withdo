@@ -119,6 +119,8 @@ type DevicesResponse struct {
 type ConfigResponse struct {
 	Auth string `json:"auth,omitempty"`
 	LLM  bool   `json:"llm"`
+	// Billing says the server sells Withdo Pro (POST /v1/billing/checkout); false or missing hides it.
+	Billing bool `json:"billing"`
 }
 
 // IDsRequest asks for a half-open block of fresh row ids for entity. Count is 1–10000.

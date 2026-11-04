@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/QingYunA/adhd-todo/internal/syncproto"
+	"github.com/QingYunA/adhd-todo/internal/syncserver/billing"
 )
 
 // Server owns the database pool and the HTTP API. It is safe for concurrent use.
@@ -30,6 +31,10 @@ type Server struct {
 	voice *voice
 	// llm is POST /v1/llm/chat/completions, the official model; off until EnableLLM gives it a key.
 	llm *llm
+	// billing is Withdo Pro (M16); nil until EnableBilling, and then every billing route answers 503.
+	billing *billing.Service
+	// emailOf finds an account's email for the checkout page; nil when the account system has none.
+	emailOf EmailLookup
 }
 
 // Open builds the connection pool from databaseURL, applies the schema migrations and returns the
@@ -78,6 +83,9 @@ func newServer(ctx context.Context, pool *pgxpool.Pool, auth Authenticator) (*Se
 	s.mux.HandleFunc("POST /v1/llm/chat/completions", s.llm.chat)
 	s.mux.HandleFunc("GET /v1/llm/quota", s.llm.quota)
 	s.mux.HandleFunc("GET /v1/events", s.withSession(s.events))
+	s.mux.HandleFunc("GET /v1/billing", s.withSession(s.billingStatus))
+	s.mux.HandleFunc("POST /v1/billing/checkout", s.withSession(s.billingCheckout))
+	s.mux.HandleFunc("POST /v1/billing/waffo", s.billingWebhook)
 	return s, nil
 }
 

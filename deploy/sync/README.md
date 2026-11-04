@@ -19,7 +19,8 @@ sections below ("From scratch", the certificate) describe that legacy path.
 └── sync/
     ├── sync.compose.yml        adhd-sync + its own Postgres
     ├── pb_data/                PocketBase's data (users, password hashes, its settings), owned by uid 65532
-    ├── sync.env                SYNC_DB_PASSWORD and the voice variables below, mode 600
+    ├── sync.env                SYNC_DB_PASSWORD, the voice, model and Waffo variables below, mode 600
+    ├── secrets/                Waffo's API private key (waffo-test.pem), mounted read-only at /secrets
     ├── bin/adhd-sync           static linux/amd64 build
     ├── backup.sh               the daily backup (Backups, below)
     └── backups/                one folder per backup, mode 700, kept 14 days
@@ -189,14 +190,16 @@ holds the key. Environment variables, passed through from `sync.env` by `sync.co
 | `LLM_API_KEY` | The upstream's key. Empty or unset turns the official model off: the route answers `503 llm_disabled` and `GET /v1/config` says `"llm": false`, so apps do not offer it. |
 | `LLM_BASE_URL` | The upstream's API root; default `https://api.deepseek.com` (the route is `<root>/chat/completions`). |
 | `LLM_MODEL` | The upstream model, whatever the app names; default `deepseek-chat`. |
-| `LLM_DAILY_TURNS` | Turns per account per UTC day; default 100. |
+| `LLM_DAILY_TURNS` | Turns per free account per UTC day; default 20. |
+| `LLM_DAILY_TURNS_PRO` | Turns per Pro account (Withdo Pro, below) per UTC day; default 100. |
 
 A turn is one thing the user sent, however many model calls it takes: the app sends
 `X-Withdo-Turn: <uuid>` on every request of one turn, and the server counts distinct ids per account
-per day. A request without the header is a turn of its own. A turn may make at most 12 requests, and
-an account at most `LLM_DAILY_TURNS × 12` a day. Past the quota: `429 {"code":"llm_quota"}` with
+per day. A request without the header is a turn of its own. A turn may make at most 6 requests, and
+an account at most its daily turns × 6 a day. Past the quota: `429 {"code":"llm_quota"}` with
 `Retry-After`. Every answer carries `X-Withdo-Turns-Left`; `GET /v1/llm/quota` returns
-`{"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z"}`. Counts are in memory, so a restart
+`{"limit":100,"left":86,"resets_at":"2026-11-04T00:00:00Z","plan":"pro"}` (the account's own limit and
+plan, `free` or `pro`). Counts are in memory, so a restart
 resets them. A request is given back when the upstream is unreachable, refuses the server's key
 (502 `llm_upstream`) or is busy (429 `llm_busy`, not the account's quota).
 
@@ -205,9 +208,54 @@ logged; the log line has the account, the turns left and the status. Put the key
 `sync.env` on the host (mode 600), never in the repository. Streamed replies need nginx's
 `proxy_buffering off` on `/v1/llm/` (see `nginx-api-withdo.conf`).
 
+## Withdo Pro (M16)
+
+Pro raises the official model's daily turns from `LLM_DAILY_TURNS` to `LLM_DAILY_TURNS_PRO`; sync stays
+free. Waffo Pancake is the merchant of record (see `docs/plans/m16-billing.md`). The server makes the
+checkout page (`POST /v1/billing/checkout`), receives Waffo's webhooks (`POST /v1/billing/waffo`) and
+reports the plan (`GET /v1/billing`). Without `WAFFO_KEY_FILE` billing is off: those routes answer
+`503 billing_disabled` and `GET /v1/config` says `"billing": false`, so apps do not offer Pro.
+
+| Variable | Meaning |
+|---|---|
+| `WAFFO_KEY_FILE` | Path **inside the container** of the API key's private key (PKCS#8 PEM), under `/secrets`, e.g. `/secrets/waffo-test.pem`. Empty turns billing off. |
+| `WAFFO_MERCHANT_ID` | The merchant (`MER_…`). |
+| `WAFFO_STORE_ID` | The store (`STO_…`); events of other stores are ignored. |
+| `WAFFO_PRODUCT_MONTHLY`, `WAFFO_PRODUCT_YEARLY` | The two subscription products (`PROD_…`). |
+| `WAFFO_MODE` | `test` (default) or `prod`. Webhooks of the other mode are acknowledged and ignored. |
+
+Test mode (set up 2026-11-04) in `sync.env`:
+
+```text
+WAFFO_KEY_FILE=/secrets/waffo-test.pem
+WAFFO_MERCHANT_ID=MER_39eInAPdm3tF3TfUVkZyBx
+WAFFO_STORE_ID=STO_5sXFc60AlpLP2ifCBlbxGm
+WAFFO_PRODUCT_MONTHLY=PROD_0MGY2QF0efduP3znHPthbD
+WAFFO_PRODUCT_YEARLY=PROD_52fSnkiAZRUesjicT4ptwh
+WAFFO_MODE=test
+```
+
+The key file is on the host at `/opt/adhd-todo/sync/secrets/waffo-test.pem` and cannot be downloaded
+again from Waffo. The container runs as uid 65532, so the file and its folder must belong to it:
+`chown -R 65532:65532 secrets && chmod 700 secrets && chmod 600 secrets/*.pem`. A missing or
+unreadable file stops the server at start with a clear error (it does not start with billing silently
+off). The Waffo webhook (Raw format, all events) points at `https://api.withdo.si/v1/billing/waffo`; it
+is verified with Waffo's public keys, committed as `internal/syncserver/billing/waffo-{test,live}.pub.pem`,
+chosen by the payload's `mode` (45 minute tolerance, events deduplicated by id). Test card:
+`4576 7500 0000 0110`.
+
+Going live: create the products in production mode (or publish them), a production API key and a
+production webhook, put the new key next to the old one (`waffo-live.pem`), and change `WAFFO_KEY_FILE`,
+`WAFFO_PRODUCT_*`, `WAFFO_STORE_ID` if it differs, and `WAFFO_MODE=prod`; then
+`docker compose --env-file sync.env -f sync.compose.yml up -d --force-recreate sync`.
+
+Logs carry the event type, the account id and the outcome only; request bodies, keys, emails and
+signatures are never logged.
+
 ## Checks
 
-- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase","llm":true}` (`false` while `LLM_API_KEY` is empty).
+- `curl https://api.withdo.si/v1/config` is `{"auth":"pocketbase","llm":true,"billing":true}` (`false` while `LLM_API_KEY` / `WAFFO_KEY_FILE` is empty).
+- `curl -s -o /dev/null -w '%{http_code}' -X POST https://api.withdo.si/v1/billing/waffo -d '{}'` is 401 (no signature), 503 with billing off.
 - `curl https://api.withdo.si/healthz` is `ok`; `POST /v1/devices` without a token is 401.
 - `/v1/events` stays open: `curl -N -H "Authorization: Bearer $TOKEN" https://api.withdo.si/v1/events`
   prints a `: keepalive` line every 15 s and is still connected after more than 2 minutes.

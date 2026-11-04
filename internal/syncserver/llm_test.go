@@ -165,7 +165,7 @@ func TestLLMBodyLimitAndShape(t *testing.T) {
 		t.Fatal("a refused body reached the upstream")
 	}
 	// None of those was counted.
-	if _, _, left := l.take("alice", "check"); left != 4 {
+	if _, _, left := l.take("alice", "check", 5); left != 4 {
 		t.Fatalf("left = %d", left)
 	}
 }
@@ -269,7 +269,7 @@ func TestLLMUpstreamFailures(t *testing.T) {
 				t.Fatal("the key leaked")
 			}
 			l.mu.Lock()
-			left := l.left("alice")
+			left := l.left("alice", 3)
 			l.mu.Unlock()
 			if want := map[bool]int{true: 3, false: 2}[tc.refunded]; left != want {
 				t.Fatalf("turns left = %d, want %d", left, want)

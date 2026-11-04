@@ -52,6 +52,19 @@ Waffo whether its checkout can offer PayPal.
   `WAFFO_PRODUCT_YEARLY`, `WAFFO_MODE` (`test` or `prod`), `LLM_DAILY_TURNS_PRO`. Billing is off
   (routes answer 503 `billing_disabled`, `/v1/config` says `"billing": false`) without the key.
 
+### Built (server)
+
+- `POST /v1/billing/checkout` also takes `"lang"` (the app's language, mapped to the checkout page's);
+  answers: 400 `bad_plan`, 409 `already_subscribed` (a Pro account manages its plan in the portal),
+  429 `rate_limited` (10 a hour), 502 `billing_upstream`, 503 `billing_disabled`.
+- A plan change sends the account's devices `event: billing` on `/v1/events` (old clients ignore it).
+- Events are applied by their timestamp (a late retry never undoes a newer state) and only for the
+  order the account is on (`activated` and `plan_changed` take a new order over); `trialing` is an
+  `activated` with `periodNumber` 0, ended by the first real charge.
+- `manage_url` is a fresh portal session link for the account's email, made on every
+  `GET /v1/billing` of an account with a subscription (it lives 15 minutes and is never stored);
+  when it cannot be made it is Waffo's portal sign-in page.
+
 ## Clients
 
 Settings shows the plan and the way to Pro; the quota-used-up line offers Pro (design v45).
