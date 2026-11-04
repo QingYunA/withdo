@@ -64,6 +64,8 @@ type Real struct {
 	syncNotify func()
 	// llm is what the official model's card and rule read (official.go).
 	llm officialTask
+	// bill is the plan the official card and the upgrade sheet read (billing.go).
+	bill billingTask
 
 	// images writes the pictures of tasks; imgMu keeps a save and its link from meeting a
 	// collection in between. sweep is the pending collection after a detach or a delete.
@@ -183,7 +185,7 @@ func (r *Real) startSync(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	runner := syncclient.NewRunner(client, syncclient.RunnerOptions{OnStatus: r.syncStatusChanged})
+	runner := syncclient.NewRunner(client, syncclient.RunnerOptions{OnStatus: r.syncStatusChanged, OnBillingChange: r.RefreshBilling})
 	r.mu.Lock()
 	if r.runner == nil && r.cancel != nil {
 		r.runner = runner

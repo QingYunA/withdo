@@ -181,6 +181,8 @@ type ProviderSettings struct {
 	Provider *providers.Manager
 	// OfficialFrom is the official model's state; nil has none.
 	OfficialFrom OfficialSource
+	// BillingFrom is the plan; nil has none (nothing to buy).
+	BillingFrom BillingSource
 
 	mu    sync.Mutex
 	saved map[string]bool // key presence, read from the keychain once per provider
@@ -294,3 +296,36 @@ func (p *ProviderSettings) RefreshOfficial() {
 		p.OfficialFrom.RefreshOfficial()
 	}
 }
+
+// Billing implements ModelSettings.
+func (p *ProviderSettings) Billing() BillingInfo {
+	if p.BillingFrom == nil {
+		return BillingInfo{}
+	}
+	return p.BillingFrom.BillingInfo()
+}
+
+// RefreshBilling implements ModelSettings.
+func (p *ProviderSettings) RefreshBilling() {
+	if p.BillingFrom != nil {
+		p.BillingFrom.RefreshBilling()
+	}
+}
+
+// StartCheckout implements ModelSettings.
+func (p *ProviderSettings) StartCheckout(ctx context.Context, plan, lang string) (string, error) {
+	if p.BillingFrom == nil {
+		return "", errNoBilling
+	}
+	return p.BillingFrom.StartCheckout(ctx, plan, lang)
+}
+
+// ManageURL implements ModelSettings.
+func (p *ProviderSettings) ManageURL(ctx context.Context) (string, error) {
+	if p.BillingFrom == nil {
+		return "", errNoBilling
+	}
+	return p.BillingFrom.ManageURL(ctx)
+}
+
+var errNoBilling = errors.New("data: this server does not sell Withdo Pro")

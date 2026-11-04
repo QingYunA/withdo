@@ -104,7 +104,7 @@ func openReal(path string) (*backend, error) {
 		start:       func(<-chan struct{}) { r.Start(); r.CollectSoon(); poller.Start() }, // CollectSoon: pictures another process let go
 		close:       func() error { poller.Stop(); return r.Close() },
 		assistant:   assistant,
-		models:      &data.ProviderSettings{Provider: mgr, OfficialFrom: r},
+		models:      &data.ProviderSettings{Provider: mgr, OfficialFrom: r, BillingFrom: r},
 		github:      data.PollerGitHub{Poller: poller},
 		seen:        data.FileSeen{Path: filepath.Join(dir, seenFile)},
 		dismissed:   data.FileSeen{Path: filepath.Join(dir, dismissedFile)},
