@@ -2228,6 +2228,28 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    green, `1 minute ago · 2 devices` in `meta`, **Sync now** at the right) and the Google row. Then
    **Devices** as today. The server line at the foot as in #162 (no address for the official server).
    Signed out, the sign-in card is unchanged.
+   **v47 (2026-11-05, `docs/design/mockups/v47.html`): the plan lives in Account.** Signed in to a server
+   that offers billing, the account group gains a last row, the plan (after the Google row, the same
+   hairline; the mockup's separate **Plan** group is dropped because it pushed the pane past 580 pt with
+   three devices): the plan's name (`body` 600) with a `meta` tag after it (6 pt radius, 1 × 6 pt
+   inside), one `meta` line in `text.secondary` under it, and a button at the right. Free: `免费版` /
+   `Free`, no tag, `官方模型每天 20 次。Pro 每天 100 次，先免费试用 7 天。` (`20 a day on the official model. Pro: 100
+   a day, 7-day free trial.`; once the trial is used `官方模型每天 20 次。Pro 每天 100 次，所有设备通用。` / `20 a
+   day on the official model. Pro: 100 a day on every device.`), one line each, and the accent **Upgrade to Pro**, which opens the v45 sheet (with v46's PayPal button) over the pane.
+   Pro: `Withdo Pro`, **Manage subscription** at the right, and by status: trialing, the tag `试用中` /
+   `Free trial` (done green wash) and `年付 $58.72 · 11月12日开始扣费，之前随时可以取消` (`Yearly $58.72 · First
+   charge Nov 12`); active, the tag `Pro` (accent wash) and `年付 $58.72 · 下次续费
+   2027年11月12日` (`Yearly $58.72 · Renews Nov 12, 2027`); canceling, the tag `已取消` / `Canceled`
+   (blocked red wash) and `年付 · Pro 用到 11月12日，之后回到免费版，不会再扣费` (`Yearly · Pro until Nov 12;
+   no more charges`); past due, the tag `续费失败` / `Payment failed` (review yellow wash) and `年付 ·
+   续费没扣成功，请在订阅里更新付款方式` (`Yearly · Renewal failed; update the payment method`).
+   The price is the plan's list price (`$58.72` yearly, `$6.99` monthly); with no interval the line has
+   neither the interval nor the price. A PayPal subscription adds `· 通过 PayPal` / `· via PayPal` after
+   the price (after the interval while canceling or past due). The row does not show signed out or
+   without billing. Nothing else about the plan is in Account: the quota stays with the model.
+   Built (v47, desktop): screens `settings-account-plan-free-*`, `-trial-*`, `-canceling-paypal-*`, `-active-*`, `-past-due-*`,
+   `-sheet-*`, `-sheet-paypal-*`, `-waiting-*` and `-waiting-paypal-*`, and the Model screens `settings-model-pro-free-*` (with the
+   link) and `settings-model-pro-*`; the Model sheet and wait screens of v45/v46 are gone.
 5. **General**: **Language** as a three-part segmented control (`Follow system` | `English` |
    `简体中文`), not a pop-up. **Notifications and sound** (`通知与声音`): System notifications, the
    end-of-day reminder (its time as a small field beside the switch, no second row), Sound effects.
@@ -2281,13 +2303,17 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    `status.blocked` (`没能打开付款页，再试一次`). Past the day's quota, the composer's quiet line ends with
    `升级到 Pro，每天 100 次。` (`Upgrade to Pro` in accent opens the same sheet); a Pro account's line
    says only that the quota is used up. Without billing the card is as in v44.
-   Built (M16, desktop): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
+   Built (M16, desktop; v47 moved the sheet and wait screens to `settings-account-plan-*`): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
    `mine-composer-official-used-up-upgrade-*`. The plan reads `GET /v1/billing`, whose `interval` (`monthly` or `yearly`) is the
    footer's `年付` / `月付` (`Yearly` / `Monthly`) and, in the trial, `之后自动续费` (`then renews`; the trial's end is the first
    charge, so no second date). A server that does not say the interval (empty or an older one) gets the footer without it
    (`Withdo Pro · 试用到 11月11日`). Manage
    subscription asks for a new portal link on every click (it lives 15 minutes). The used-up line on a Free account
    reads `今天的 20 次用完了：日期和提醒在本机读出。升级到 Pro，每天 100 次。`
+   **v47 (2026-11-05):** the official card loses its footer row; the plan moved to Account (item 4). The card keeps the `免费` /
+   `Pro` pill, the quota and the bar. On a Free account the quota line ends with `· 升级到 Pro` / `· Upgrade to Pro` in
+   accent (a link, not a button), which opens Account and the upgrade sheet over it. The composer's used-up line's
+   `升级到 Pro` does the same.
    Before v44: the provider in use as one card (36 pt logo, name, `model · ●
    Connected · 640 ms`, **Test** at the right), then **Switch to** (`换一个`) and the 12 provider tiles,
    4 × 3, 56 pt tall, always shown: logo and name, the green set-up square, a 2 pt accent ring on the
@@ -2916,11 +2942,34 @@ checks out the chosen plan through PayPal. The fine print reads `试用结束前
 代收，含税价。` The waiting state reads `在 PayPal 里完成订阅` with `重新打开 PayPal`. A PayPal
 subscription's Pro line adds `· 通过 PayPal` / `· via PayPal` after the interval; Manage subscription
 opens the payer's PayPal automatic-payments page.
-Built (M17, apps): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
+Built (M17, apps; the desktop ones are `settings-account-plan-sheet-paypal-*`, `-waiting-paypal-*` and `-canceling-paypal-*` since v47): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
 `pro-sheet-paypal-*`, `pro-waiting-paypal-*`, `settings-pro-paypal-*` (Android). The button's label is one message with the word
 PayPal in it (`用 PayPal 订阅` / `Subscribe with PayPal`); the word is drawn as the wordmark, "Pay" `#003087` and "Pal" `#009cde`
 in bold italics, and the words around it `#003087`, in light and dark alike. While a checkout is being asked for, both buttons are off.
 The fine print reads `Cards are sold by Waffo, tax included.` only when PayPal is offered.
+
+**v47 (2026-11-05), reference `docs/design/mockups/v47.html`: the plan in the account card.** With billing
+offered and signed in, the account card at the top of Settings gets a second row under the account row
+(the same 16 dp inside, a 0.5 dp hairline between): Free reads `免费版` with `官方模型每天 20 次` in `meta` and
+`升级到 Pro` in accent 600 at the right before the chevron; the row opens the v45 upgrade sheet. Pro reads
+`Withdo Pro` with a 12 sp tag after it (6 dp radius) and one `meta` line: trialing `试用中` (done green
+wash), `年付 · 11月12日开始扣费`; active `Pro` (accent wash), `年付 · 2027年11月12日续费`; canceling `已取消`
+(blocked red wash), `Pro 用到 11月12日`; past due `续费失败` (review yellow wash), `续费没扣成功`. The row opens
+the **plan sheet**: the name and tag in 20 sp 700, a 12 dp-radius box of three 44 dp rows (`方案` `年付 $58.72`;
+`付款方式` `Waffo` or `PayPal`; then `开始扣费` / `下次续费` / `Pro 用到` with the date, by status), one 13 sp
+`text.secondary` paragraph (trialing `试用结束前随时可以取消，不会扣款。`; active `随时可以取消，Pro 用到这一期结束。`; canceling
+`到期后回到免费版，官方模型每天 20 次，不会再扣费。之后想继续用，在这里重新订阅。`; past due `PayPal 或 Waffo 会再试几次；在订阅里
+更新付款方式就能继续用。`) and the quiet 44 dp `管理订阅`. English as on the desktop (`Plan`, `Payment`, `First
+charge` / `Renews` / `Pro until`). The Assistant card keeps only the plan pill, the quota and the bar: no renewal line, no
+buttons. The upgrade sheet and the waiting state are v45's and v46's.
+Built (v47, phone): screens `settings-pro-free-*` (the Free row), `settings-pro-*` (trialing), `settings-pro-paypal-*` (canceling, PayPal),
+`plan-sheet-trialing-*` and `plan-sheet-canceling-*`; the `pro-sheet-*` and `pro-waiting-*` ones changed only behind the sheet. The row
+is `AccountPlanRow` and the sheet `PlanSheet` (`BillingViews.kt`), their words `planMeta`, `planRows` and `planNote` (`BillingState.kt`). The
+renewal line and the card's buttons are gone, with the strings only they used. With no interval the meta line has only the date and the
+plan row says `Pro` without a price. The sheet's rows are Plan, Payment and the date; with no date, and when past due (the period end is in
+the past, so `下次续费` would mislead), the date row is left out and the box has two rows. English: `Free trial` /
+`Pro` / `Canceled` / `Payment failed` tags, `Yearly · First charge Nov 12`, `Yearly · Renews Nov 12, 2027`, `Pro until Nov 12`,
+`The renewal didn’t go through`.
 
 ## Writing
 

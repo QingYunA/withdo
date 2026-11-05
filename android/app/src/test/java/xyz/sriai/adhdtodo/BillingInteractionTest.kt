@@ -18,10 +18,12 @@ import xyz.sriai.adhdtodo.data.ModelPhase
 import xyz.sriai.adhdtodo.data.ModelState
 import xyz.sriai.adhdtodo.data.PlanKey
 import xyz.sriai.adhdtodo.testing.setThemedContent
+import xyz.sriai.adhdtodo.ui.AccountPlanRow
 import xyz.sriai.adhdtodo.ui.AnswerCard
 import xyz.sriai.adhdtodo.ui.AssistantAbove
 import xyz.sriai.adhdtodo.ui.BillingHolder
 import xyz.sriai.adhdtodo.ui.PlanCard
+import xyz.sriai.adhdtodo.ui.PlanSheet
 import xyz.sriai.adhdtodo.ui.QuietNote
 import xyz.sriai.adhdtodo.ui.SheetStage
 import xyz.sriai.adhdtodo.ui.UpgradeSheet
@@ -29,7 +31,7 @@ import xyz.sriai.adhdtodo.ui.showsPlanCard
 import java.time.Instant
 import java.time.ZoneId
 
-/** Withdo Pro's touches (v45): the plan card's buttons and the upgrade sheet's states. */
+/** Withdo Pro's touches (v45, v47): the plan card, the account card's plan row and sheet, and the upgrade sheet's states. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35])
@@ -40,42 +42,85 @@ class BillingInteractionTest {
     private val free = Billing(offered = true, plan = "free", monthly = "$6.99", yearly = "$58.72")
     private val pro = Billing(
         offered = true, plan = "pro", status = "trialing", periodEnd = "2026-11-11T09:00:00Z",
-        trialUsed = true, manageUrl = "https://portal.example/",
+        trialUsed = true, monthly = "$6.99", yearly = "$58.72", manageUrl = "https://portal.example/",
     )
     private val ready = ModelState("official", ModelPhase.READY, left = 14, limit = 20, plan = "free")
     private val now = Instant.parse("2026-11-03T01:41:00Z")
     private val zone = ZoneId.of("Asia/Shanghai")
 
     @Test
-    fun `a Free card shows the quota and Upgrade opens the sheet`() {
-        var upgraded = 0
-        compose.setThemedContent { PlanCard(ready, free, onUpgrade = { upgraded++ }, onManage = {}, now = now, zone = zone) }
+    fun `a Free card shows the pill, the quota and the bar, and nothing to press`() {
+        compose.setThemedContent { PlanCard(ready, free) }
         compose.onNodeWithTag("plan-free").assertIsDisplayed()
         compose.onNodeWithText("14 / 20 left today", substring = true).assertIsDisplayed()
         compose.onNodeWithTag("plan-bar").assertIsDisplayed()
-        compose.onNodeWithText("Upgrade to Pro · 7-day free trial").performClick()
-        assertEquals(1, upgraded)
+        compose.onNodeWithText("Upgrade to Pro", substring = true).assertDoesNotExist()
     }
 
     @Test
-    fun `once the trial is used the button says only Upgrade to Pro`() {
-        compose.setThemedContent { PlanCard(ready, free.copy(trialUsed = true), onUpgrade = {}, onManage = {}, now = now, zone = zone) }
-        compose.onNodeWithText("Upgrade to Pro").assertIsDisplayed()
-        compose.onNodeWithText("7-day", substring = true).assertDoesNotExist()
-    }
-
-    @Test
-    fun `a Pro card has the pill, the renewal line and Manage subscription`() {
-        var managed = 0
+    fun `a Pro card has the pill and the quota, without a renewal line or Manage subscription`() {
         val model = ready.copy(left = 86, limit = 100, plan = "pro")
-        compose.setThemedContent { PlanCard(model, pro, onUpgrade = {}, onManage = { managed++ }, now = now, zone = zone) }
+        compose.setThemedContent { PlanCard(model, pro) }
         compose.onNodeWithTag("plan-pro").assertIsDisplayed()
         compose.onNodeWithTag("plan-free").assertDoesNotExist()
-        compose.onNodeWithTag("plan-upgrade").assertDoesNotExist()
         compose.onNodeWithText("86 / 100 left today", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Free trial until Nov 11, then it renews").assertIsDisplayed()
+        compose.onNodeWithText("Manage subscription").assertDoesNotExist()
+        compose.onNodeWithText("Free trial", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `the account card's Free row says the day's quota and Upgrade to Pro opens the upgrade sheet`() {
+        var tapped = 0
+        compose.setThemedContent { AccountPlanRow(free, onClick = { tapped++ }, now = now, zone = zone) }
+        compose.onNodeWithText("Free").assertIsDisplayed()
+        compose.onNodeWithText("The official model, 20 a day").assertIsDisplayed()
+        compose.onNodeWithTag("plan-row-upgrade", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("plan-row").performClick()
+        assertEquals(1, tapped)
+    }
+
+    @Test
+    fun `the account card's Pro row has the name, the status tag and one meta line`() {
+        var tapped = 0
+        compose.setThemedContent {
+            AccountPlanRow(pro.copy(interval = "yearly"), onClick = { tapped++ }, now = now, zone = zone)
+        }
+        compose.onNodeWithText("Withdo Pro").assertIsDisplayed()
+        compose.onNodeWithTag("plan-tag", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Free trial").assertIsDisplayed()
+        compose.onNodeWithText("Yearly · First charge Nov 11").assertIsDisplayed()
+        compose.onNodeWithTag("plan-row-upgrade", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("plan-row").performClick()
+        assertEquals(1, tapped)
+    }
+
+    @Test
+    fun `the plan sheet has the three rows, the status paragraph and Manage subscription`() {
+        var managed = 0
+        val canceling = pro.copy(status = "canceling", interval = "yearly", provider = "paypal")
+        compose.setThemedContent { PlanSheet(canceling, onManage = { managed++ }, onDismiss = {}, now = now, zone = zone) }
+        compose.onNodeWithText("Withdo Pro").assertIsDisplayed()
+        compose.onNodeWithText("Canceled").assertIsDisplayed()
+        compose.onNodeWithText("Yearly $58.72").assertIsDisplayed()
+        compose.onNodeWithText("PayPal").assertIsDisplayed()
+        compose.onNodeWithText("Pro until").assertIsDisplayed()
+        compose.onNodeWithText("Nov 11").assertIsDisplayed()
+        compose.onNodeWithTag("plan-note").assertIsDisplayed()
         compose.onNodeWithTag("plan-manage").performClick()
         assertEquals(1, managed)
+    }
+
+    @Test
+    fun `the plan row opens the plan sheet for Pro and the upgrade sheet for Free`() {
+        val h = BillingHolder().apply { update(pro) }
+        h.openPlan()
+        assertEquals(true, h.planSheet)
+        assertEquals(SheetStage.CLOSED, h.stage)
+        h.update(free) // the subscription ended while the sheet was open
+        assertEquals(false, h.planSheet)
+        h.openPlan()
+        assertEquals(false, h.planSheet)
+        assertEquals(SheetStage.CHOOSING, h.stage)
     }
 
     @Test

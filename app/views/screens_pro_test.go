@@ -8,9 +8,9 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// Withdo Pro on the desktop (M16, v45 section 1): the official card with its plan, the upgrade sheet
-// and its waiting state, a Pro account, and the composer line that offers Pro. Rendered at 2x in
-// light and dark, in English and Chinese:
+// Withdo Pro on the desktop (M16, v45; the plan moved to Account in v47): the plan group of Settings >
+// Account in each status, the upgrade sheet over it and its waiting state, the official card in Model,
+// and the composer line that offers Pro. Rendered at 2x in light and dark, in English and Chinese:
 //
 //	scripts/screens.sh TestScreensPro
 func TestScreensPro(t *testing.T) {
@@ -26,8 +26,13 @@ func TestScreensPro(t *testing.T) {
 	}
 	onFreePayPal := onFree
 	onFreePayPal.PayPal = true
-	onProPayPal := onPro
-	onProPayPal.PayPal, onProPayPal.Provider = true, data.ProviderPayPal
+	onProCanceling := onPro
+	onProCanceling.Status, onProCanceling.PeriodEnd = "canceling", fixedNow().Add(14*24*time.Hour)
+	onProCanceling.PayPal, onProCanceling.Provider = true, data.ProviderPayPal
+	onProActive := onPro
+	onProActive.Status, onProActive.PeriodEnd = "active", fixedNow().Add(365*24*time.Hour)
+	onProPastDue := onPro
+	onProPastDue.Status, onProPastDue.PeriodEnd = "past_due", fixedNow().Add(14*24*time.Hour)
 	for _, a := range appearances() {
 		for _, zh := range []bool{false, true} {
 			sfx := "-" + a.suffix
@@ -41,30 +46,41 @@ func TestScreensPro(t *testing.T) {
 				mustNil(t, app.Models.UseOfficial())
 				return app
 			}
-			settingsShot(t, "settings-model-pro-free"+sfx+".png", settingsWith(free, onFree), a.dark, zh, PaneModel, nil)
-			settingsShot(t, "settings-model-pro-sheet"+sfx+".png", settingsWith(free, onFree), a.dark, zh, PaneModel,
+			// The plan in Account (v47): Free, a trial, canceled at PayPal, paying, a failed renewal; the upgrade
+			// sheet over it, and its wait, with and without PayPal's button.
+			account := func(info data.OfficialInfo, bill data.BillingInfo) *App {
+				app := settingsWith(info, bill)
+				app.Sync = &fakeSync{snap: syncedSync()}
+				return app
+			}
+			settingsShot(t, "settings-account-plan-free"+sfx+".png", account(free, onFree), a.dark, zh, PaneAccount, nil)
+			settingsShot(t, "settings-account-plan-trial"+sfx+".png", account(pro, onPro), a.dark, zh, PaneAccount, nil)
+			settingsShot(t, "settings-account-plan-canceling-paypal"+sfx+".png", account(pro, onProCanceling), a.dark, zh, PaneAccount, nil)
+			settingsShot(t, "settings-account-plan-active"+sfx+".png", account(pro, onProActive), a.dark, zh, PaneAccount, nil)
+			settingsShot(t, "settings-account-plan-past-due"+sfx+".png", account(pro, onProPastDue), a.dark, zh, PaneAccount, nil)
+			settingsShot(t, "settings-account-plan-sheet"+sfx+".png", account(free, onFree), a.dark, zh, PaneAccount,
 				func(r *settingsRig) { r.s.openUpgrade() })
-			settingsShot(t, "settings-model-pro-waiting"+sfx+".png", settingsWith(free, onFree), a.dark, zh, PaneModel,
+			settingsShot(t, "settings-account-plan-waiting"+sfx+".png", account(free, onFree), a.dark, zh, PaneAccount,
 				func(r *settingsRig) {
 					r.s.openUpgrade()
 					r.tt.Frame()
 					mustNil(t, r.tt.Click(r.s.say.ProStartTrial()))
 					r.rec.drain(t)
 				})
-			settingsShot(t, "settings-model-pro"+sfx+".png", settingsWith(pro, onPro), a.dark, zh, PaneModel, nil)
-
-			// PayPal as a second way to pay (M17, v46): the button under the main one, the wait for
-			// PayPal, and a Pro account billed by PayPal.
-			settingsShot(t, "settings-model-pro-sheet-paypal"+sfx+".png", settingsWith(free, onFreePayPal), a.dark, zh, PaneModel,
+			// PayPal as a second way to pay (M17, v46): the button under the main one and the wait for PayPal.
+			settingsShot(t, "settings-account-plan-sheet-paypal"+sfx+".png", account(free, onFreePayPal), a.dark, zh, PaneAccount,
 				func(r *settingsRig) { r.s.openUpgrade() })
-			settingsShot(t, "settings-model-pro-waiting-paypal"+sfx+".png", settingsWith(free, onFreePayPal), a.dark, zh, PaneModel,
+			settingsShot(t, "settings-account-plan-waiting-paypal"+sfx+".png", account(free, onFreePayPal), a.dark, zh, PaneAccount,
 				func(r *settingsRig) {
 					r.s.openUpgrade()
 					r.tt.Frame()
 					mustNil(t, r.tt.Click(r.s.say.ProPayPal()))
 					r.rec.drain(t)
 				})
-			settingsShot(t, "settings-model-pro-paypal"+sfx+".png", settingsWith(pro, onProPayPal), a.dark, zh, PaneModel, nil)
+
+			// The official card in Model keeps the plan pill and the quota; Free adds the link to Pro.
+			settingsShot(t, "settings-model-pro-free"+sfx+".png", settingsWith(free, onFree), a.dark, zh, PaneModel, nil)
+			settingsShot(t, "settings-model-pro"+sfx+".png", settingsWith(pro, onPro), a.dark, zh, PaneModel, nil)
 
 			// The composer's quiet line past the day's turns: it ends with the way to Pro.
 			app, _, _ := assistApp(t, &data.FakeAssistant{Ready: false})

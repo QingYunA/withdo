@@ -3,17 +3,32 @@
     <string name="billing_plan_free">免费</string>
     <string name="billing_plan_pro">Pro</string>
     <string name="billing_quota_left">今天还剩 %1$d / %2$d 次</string>
-    <string name="billing_upgrade_trial">升级到 Pro · 免费试用 7 天</string>
     <string name="billing_upgrade">升级到 Pro</string>
     <string name="billing_manage">管理订阅</string>
-    <string name="billing_trial_until">试用到 %1$s，之后自动续费</string>
     <string name="billing_renews">%1$s续费</string>
-    <string name="billing_ends">%1$s到期</string>
-    <string name="billing_interval_trial_until">%1$s · 试用到 %2$s，之后自动续费</string>
-    <string name="billing_interval_renews">%1$s · %2$s续费</string>
-    <string name="billing_interval_ends">%1$s · %2$s到期</string>
-    <string name="billing_via_paypal">通过 PayPal</string>
-    <string name="billing_past_due">付款没有成功，请在“管理订阅”里更新。</string>
+
+    <string name="billing_meta_first_charge">%1$s开始扣费</string>
+    <string name="billing_meta_until">Pro 用到 %1$s</string>
+    <string name="billing_meta_past_due">续费没扣成功</string>
+
+    <string name="billing_row_free">免费版</string>
+    <string name="billing_row_free_line">官方模型每天 20 次</string>
+    <string name="billing_row_pro">Withdo Pro</string>
+    <string name="billing_tag_trialing">试用中</string>
+    <string name="billing_tag_active">Pro</string>
+    <string name="billing_tag_canceling">已取消</string>
+    <string name="billing_tag_past_due">续费失败</string>
+
+    <string name="billing_row_plan">方案</string>
+    <string name="billing_plan_value">%1$s %2$s</string>
+    <string name="billing_row_payment">付款方式</string>
+    <string name="billing_row_first_charge">开始扣费</string>
+    <string name="billing_row_renews">下次续费</string>
+    <string name="billing_row_until">Pro 用到</string>
+    <string name="billing_note_trialing">试用结束前随时可以取消，不会扣款。</string>
+    <string name="billing_note_active">随时可以取消，Pro 用到这一期结束。</string>
+    <string name="billing_note_canceling">到期后回到免费版，官方模型每天 20 次，不会再扣费。之后想继续用，在这里重新订阅。</string>
+    <string name="billing_note_past_due">PayPal 或 Waffo 会再试几次；在订阅里更新付款方式就能继续用。</string>
 
     <string name="billing_sheet_title">升级到 Withdo Pro</string>
     <string name="billing_sheet_line">官方模型每天 100 次，所有设备通用。</string>

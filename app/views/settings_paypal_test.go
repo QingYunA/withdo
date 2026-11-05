@@ -10,7 +10,7 @@ import (
 // PayPal (M17, v46): a second button under the main one, only when the server takes PayPal.
 
 func TestTheSheetShowsPayPalOnlyWhenTheServerTakesIt(t *testing.T) {
-	r := proRig(t, freeInfo, freeBill)
+	r := accountRig(t, freeInfo, freeBill)
 	r.s.openUpgrade()
 	r.tt.Frame()
 	hasNot(t, r.tt, "Subscribe with PayPal", "Cards are sold by Waffo, tax included.")
@@ -34,7 +34,7 @@ func TestTheSheetShowsPayPalOnlyWhenTheServerTakesIt(t *testing.T) {
 func TestThePayPalButtonChecksOutTheChosenPlanAtPayPalAndTheSheetWaitsForPayPal(t *testing.T) {
 	bill := freeBill
 	bill.PayPal = true
-	r := proRig(t, freeInfo, bill)
+	r := accountRig(t, freeInfo, bill)
 	var plan string
 	r.fm.CheckoutFn = func(p string) (string, error) { plan = p; return "https://paypal.example.com/c/" + p, nil }
 	r.s.openUpgrade()
@@ -61,7 +61,7 @@ func TestThePayPalButtonChecksOutTheChosenPlanAtPayPalAndTheSheetWaitsForPayPal(
 func TestTheMainButtonStillChecksOutAtWaffoWhenPayPalIsOffered(t *testing.T) {
 	bill := freeBill
 	bill.PayPal = true
-	r := proRig(t, freeInfo, bill)
+	r := accountRig(t, freeInfo, bill)
 	r.s.openUpgrade()
 	r.tt.Frame()
 	mustNil(t, r.tt.Click("Start 7-day free trial"))
@@ -73,32 +73,22 @@ func TestTheMainButtonStillChecksOutAtWaffoWhenPayPalIsOffered(t *testing.T) {
 	has(t, r.tt, "Finish paying in your browser")
 }
 
-func TestAPayPalSubscriptionsProLineSaysSo(t *testing.T) {
+func TestAPayPalSubscriptionsPlanRowSaysSo(t *testing.T) {
 	pro := data.BillingInfo{
 		Offered: true, Known: true, Pro: true, Status: "trialing", Interval: "yearly", Provider: data.ProviderPayPal,
-		PeriodEnd: fixedNow().Add(7 * 24 * time.Hour), TrialUsed: true,
+		Yearly: "$58.72", PeriodEnd: fixedNow().Add(7 * 24 * time.Hour), TrialUsed: true,
 	}
-	r := proRig(t, proInfo, pro)
-	has(t, r.tt, "Withdo Pro · Yearly · via PayPal · trial until Oct 21, then renews", "Manage subscription")
+	r := accountRig(t, proInfo, pro)
+	has(t, r.tt, "Free trial", "Yearly $58.72 · via PayPal · First charge Oct 21", "Manage subscription")
 
 	pro.Status, pro.PeriodEnd = "active", time.Date(2027, 10, 21, 0, 0, 0, 0, time.Local)
 	r.fm.Bill = pro
 	r.tt.Frame()
-	has(t, r.tt, "Withdo Pro · Yearly · via PayPal · renews Oct 21, 2027")
-
-	pro.Status, pro.PeriodEnd = "canceling", fixedNow().Add(20*24*time.Hour)
-	r.fm.Bill = pro
-	r.tt.Frame()
-	has(t, r.tt, "Withdo Pro · Yearly · via PayPal · ends Nov 3")
-
-	pro.Interval = ""
-	r.fm.Bill = pro
-	r.tt.Frame()
-	has(t, r.tt, "Withdo Pro · via PayPal · ends Nov 3")
+	has(t, r.tt, "Yearly $58.72 · via PayPal · Renews Oct 21, 2027")
 
 	pro.Provider = data.ProviderWaffo
 	r.fm.Bill = pro
 	r.tt.Frame()
-	has(t, r.tt, "Withdo Pro · ends Nov 3")
+	has(t, r.tt, "Yearly $58.72 · Renews Oct 21, 2027")
 	hasNot(t, r.tt, "via PayPal")
 }

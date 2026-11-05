@@ -21,8 +21,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /*
- * Withdo Pro on the phone (v45): the plan the Assistant group shows and the upgrade sheet. This
- * file is the state and the wording, without drawing (BillingViews.kt draws them).
+ * Withdo Pro on the phone (v45, v47): the plan the account card shows, the upgrade sheet and the
+ * plan sheet. This file is the state and the wording, without drawing (BillingViews.kt draws them).
  */
 
 /** Where the upgrade sheet is: closed, choosing a plan, asking for the checkout page, or waiting for the payment. */
@@ -33,6 +33,9 @@ enum class SheetStage { CLOSED, CHOOSING, STARTING, WAITING }
 class BillingHolder {
     var billing by mutableStateOf(Billing())
     var stage by mutableStateOf(SheetStage.CLOSED)
+
+    /** The plan sheet of a Pro account (v47): the plan, the payment method, the date and Manage subscription. */
+    var planSheet by mutableStateOf(false)
 
     /** The segment: Yearly is chosen when the sheet opens. */
     var plan by mutableStateOf(PlanKey.YEARLY)
@@ -61,10 +64,15 @@ class BillingHolder {
         failure = null
     }
 
-    /** What the core says now. Once the account is Pro the sheet has nothing left to do. */
+    /** The account card's plan row: the plan sheet for a Pro account, the upgrade sheet for a Free one. */
+    fun openPlan() {
+        if (billing.pro) planSheet = true else open()
+    }
+
+    /** What the core says now. Once the account is Pro the upgrade sheet has nothing left to do; once it is not, the plan sheet has not. */
     fun update(read: Billing) {
         billing = read
-        if (read.pro) close()
+        if (read.pro) close() else planSheet = false
     }
 
     /**
@@ -149,34 +157,88 @@ fun priceOf(billing: Billing, plan: String): String =
 private const val DefaultMonthly = "$6.99"
 private const val DefaultYearly = "$58.72"
 
+/** What the Pro subscription is doing, as the plan row and the plan sheet tell it. An unknown status reads as active. */
+enum class PlanState { TRIALING, ACTIVE, CANCELING, PAST_DUE }
+
+fun Billing.planState(): PlanState = when (status) {
+    "trialing" -> PlanState.TRIALING
+    "canceling" -> PlanState.CANCELING
+    "past_due" -> PlanState.PAST_DUE
+    else -> PlanState.ACTIVE
+}
+
+/** The tag after `Withdo Pro`: `Free trial`, `Pro`, `Canceled` or `Payment failed`. */
+fun planTag(res: Resources, billing: Billing): String = res.getString(
+    when (billing.planState()) {
+        PlanState.TRIALING -> R.string.billing_tag_trialing
+        PlanState.ACTIVE -> R.string.billing_tag_active
+        PlanState.CANCELING -> R.string.billing_tag_canceling
+        PlanState.PAST_DUE -> R.string.billing_tag_past_due
+    },
+)
+
 /**
- * The line under the quota on a Pro card: `Free trial until Nov 11, then it renews`, `Renews Nov 11,
- * 2027`, `Ends Nov 11` while canceling, each led by `Yearly · ` or `Monthly · ` when the server says the
- * interval, and `via PayPal · ` for a PayPal subscription. Empty when the server named no date.
+ * The plan row's `meta` line: `Yearly · First charge Nov 12` while trialing, `Yearly · Renews Nov 12,
+ * 2027` when active, `Pro until Nov 12` while canceling, `The renewal didn't go through` when past
+ * due. The interval leads only where the server says it; empty when there is nothing to say.
  */
-fun renewalLine(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): String {
-    if (billing.status == "past_due") return res.getString(R.string.billing_past_due)
+fun planMeta(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): String {
+    val state = billing.planState()
+    if (state == PlanState.PAST_DUE) return res.getString(R.string.billing_meta_past_due)
     val date = billingDate(res, billing.periodEnd, now, zone)
-    if (date.isEmpty()) return ""
-    val interval = when (billing.interval) {
-        PlanKey.MONTHLY -> res.getString(R.string.billing_monthly)
-        PlanKey.YEARLY -> res.getString(R.string.billing_yearly)
-        else -> null
-    }
-    val via = if (billing.viaPayPal) res.getString(R.string.billing_via_paypal) else null
-    val lead = listOfNotNull(interval, via).joinToString(" · ")
-    if (lead.isNotEmpty()) {
-        return when (billing.status) {
-            "trialing" -> res.getString(R.string.billing_interval_trial_until, lead, date)
-            "canceling" -> res.getString(R.string.billing_interval_ends, lead, date)
-            else -> res.getString(R.string.billing_interval_renews, lead, date)
-        }
-    }
-    return when (billing.status) {
-        "trialing" -> res.getString(R.string.billing_trial_until, date)
-        "canceling" -> res.getString(R.string.billing_ends, date)
+    val tail = when {
+        date.isEmpty() -> null
+        state == PlanState.TRIALING -> res.getString(R.string.billing_meta_first_charge, date)
+        state == PlanState.CANCELING -> res.getString(R.string.billing_meta_until, date)
         else -> res.getString(R.string.billing_renews, date)
     }
+    val lead = if (state == PlanState.CANCELING) null else intervalName(res, billing)
+    return listOfNotNull(lead, tail).joinToString(" · ")
+}
+
+/**
+ * The plan sheet's box: `Plan` with `Yearly $58.72` (`Pro` when the server names no interval),
+ * `Payment` with `Waffo` or `PayPal`, then the date by status (`First charge`, `Renews`, `Pro
+ * until`), left out when the server named no date and when the payment failed (the period end is
+ * in the past then, so `Renews` would mislead).
+ */
+fun planRows(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): List<Pair<String, String>> {
+    val interval = intervalName(res, billing)
+    val price = when (billing.interval) {
+        PlanKey.MONTHLY -> priceOf(billing, PlanKey.MONTHLY)
+        PlanKey.YEARLY -> priceOf(billing, PlanKey.YEARLY)
+        else -> null
+    }
+    val plan = if (interval != null && price != null) res.getString(R.string.billing_plan_value, interval, price) else res.getString(R.string.billing_plan_pro)
+    val date = billingDate(res, billing.periodEnd, now, zone)
+    return listOfNotNull(
+        res.getString(R.string.billing_row_plan) to plan,
+        res.getString(R.string.billing_row_payment) to if (billing.viaPayPal) "PayPal" else "Waffo",
+        if (date.isEmpty() || billing.planState() == PlanState.PAST_DUE) null else res.getString(
+            when (billing.planState()) {
+                PlanState.TRIALING -> R.string.billing_row_first_charge
+                PlanState.CANCELING -> R.string.billing_row_until
+                else -> R.string.billing_row_renews
+            },
+        ) to date,
+    )
+}
+
+/** The one paragraph under the plan sheet's box, by status. */
+fun planNote(res: Resources, billing: Billing): String = res.getString(
+    when (billing.planState()) {
+        PlanState.TRIALING -> R.string.billing_note_trialing
+        PlanState.ACTIVE -> R.string.billing_note_active
+        PlanState.CANCELING -> R.string.billing_note_canceling
+        PlanState.PAST_DUE -> R.string.billing_note_past_due
+    },
+)
+
+/** `Monthly` or `Yearly` when the server says the interval. */
+private fun intervalName(res: Resources, billing: Billing): String? = when (billing.interval) {
+    PlanKey.MONTHLY -> res.getString(R.string.billing_monthly)
+    PlanKey.YEARLY -> res.getString(R.string.billing_yearly)
+    else -> null
 }
 
 /** `Nov 11`, or `Nov 11, 2027` in another year than [now]'s; `11月11日` and `2027年11月11日` in Chinese. */

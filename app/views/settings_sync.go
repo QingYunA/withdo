@@ -111,6 +111,9 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
 		svc.SyncRefreshGoogleLink()
+		if s.app.Models != nil {
+			s.app.Models.RefreshBilling() // the plan group reads a fresh answer as the pane opens
+		}
 	} else if !snap.LastSynced.IsZero() && !snap.LastSynced.Equal(s.syncLastSynced) {
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
@@ -172,6 +175,9 @@ func (s *Settings) syncAccountGroup(c *ui.Context, t *theme.Tokens, svc SyncServ
 			s.syncThisMacRow(c, t, svc, snap)
 		}
 		s.syncGoogleRow(c, t, svc, snap)
+		if snap.Phase == data.SyncSynced || snap.Phase == data.SyncUploading {
+			s.planRow(c, t)
+		}
 	})
 }
 

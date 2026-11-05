@@ -11,8 +11,9 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// Withdo Pro in Settings > Model (M16, v45): the plan pill and the footer row of the official card,
-// and the upgrade sheet the footer's Upgrade to Pro (and the composer's line) opens. The sheet asks
+// Withdo Pro (M16, v45; v47 moves the plan to Settings > Account): the plan pill of the Model pane's
+// official card, and the upgrade sheet that the plan group's Upgrade to Pro (the Model card's link
+// and the composer's line too) opens over Account. The sheet asks
 // the server for a payment page, opens it in the browser, and waits: the plan changes on the
 // server, the app hears of it (the "billing" event, or the window coming back), and a Pro account
 // closes the sheet by itself.
@@ -34,7 +35,7 @@ var (
 	paypalLight = ui.RGB(0x00, 0x9C, 0xDE)
 )
 
-// proState is the upgrade sheet and the footer's Manage subscription.
+// proState is the upgrade sheet and the plan row's Manage subscription.
 type proState struct {
 	open    bool
 	monthly bool   // the Monthly segment is chosen; the sheet opens on Yearly
@@ -43,15 +44,15 @@ type proState struct {
 	url     string // that page, for Reopen
 	busy    bool   // a payment page is being asked for
 	err     string // why the last try failed, in the sheet
-	// managing is a portal link being asked for; manageErr is why the last one failed, under the footer.
+	// managing is a portal link being asked for; manageErr is why the last one failed, in the plan row.
 	managing  bool
 	manageErr string
 }
 
-// ShowUpgrade opens the upgrade sheet over Settings > Model, as the composer's line asks. It does
-// nothing for a window that has no plan to sell.
+// ShowUpgrade opens the upgrade sheet over Settings > Account, as the composer's line and the Model
+// card's link ask. It does nothing for a window that has no plan to sell.
 func (s *Settings) ShowUpgrade() {
-	s.Show(PaneModel)
+	s.Show(PaneAccount)
 	s.openUpgrade()
 }
 
@@ -84,73 +85,6 @@ func (s *Settings) planPill(c *ui.Context, t *theme.Tokens, bill data.BillingInf
 	ui.Row(c.Key("plan-pill")).Shrink(0).Padding(0, 6).Radius(4).Background(ground).Children(func() {
 		theme.Text(c, theme.Meta, ink, text)
 	})
-}
-
-// officialFooter is the row under the official card's hairline: what Pro is (or which plan this
-// is) and the button that goes with it. It waits for the server's answer, which has the trial and
-// the dates.
-func (s *Settings) officialFooter(c *ui.Context, t *theme.Tokens, bill data.BillingInfo) {
-	if !bill.Offered || !bill.Known {
-		return
-	}
-	ui.Box(c.Key("official-footer-rule")).Height(theme.Hairline).Shrink(0).Margin(0, 16).Background(t.Border)
-	ui.Row(c.Key("official-footer")).Shrink(0).Padding(9, 16).Gap(12).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.planLine(bill), 2)
-			if s.pro.manageErr != "" {
-				theme.Paragraph(c, theme.Meta, t.Blocked(), s.pro.manageErr, 2)
-			}
-		})
-		if bill.Subscribed() {
-			if settingsButton(c, t, "pro-manage", s.say.SettingsProManage(), false).Clicked() {
-				s.manageSubscription()
-			}
-			return
-		}
-		if bill.Pro {
-			return
-		}
-		if settingsButton(c, t, "pro-upgrade", s.say.SettingsProUpgrade(), true).Clicked() {
-			s.openUpgrade()
-		}
-	})
-}
-
-// planLine is what the footer says: what Pro gives while the account is Free, and for a Pro one the
-// plan with the day it ends its trial, renews or ends.
-func (s *Settings) planLine(bill data.BillingInfo) string {
-	if !bill.Pro {
-		if bill.TrialUsed {
-			return s.say.SettingsProLine()
-		}
-		return s.say.SettingsProLineTrial()
-	}
-	via := data.ProviderWaffo
-	if bill.ViaPayPal() {
-		via = data.ProviderPayPal
-	}
-	date := ""
-	if !bill.PeriodEnd.IsZero() {
-		date = s.clock.Date(bill.PeriodEnd, s.app.Now())
-	}
-	if date != "" && bill.Interval != "" {
-		switch {
-		case bill.Trialing():
-			return s.say.SettingsProIntervalTrialUntil(via, bill.Interval, date)
-		case bill.Canceling():
-			return s.say.SettingsProIntervalEnds(via, bill.Interval, date)
-		}
-		return s.say.SettingsProIntervalRenews(via, bill.Interval, date)
-	}
-	switch {
-	case date == "":
-		return s.say.SettingsPlanPro()
-	case bill.Trialing():
-		return s.say.SettingsProTrialUntil(via, date)
-	case bill.Canceling():
-		return s.say.SettingsProEnds(via, date)
-	}
-	return s.say.SettingsProRenews(via, date)
 }
 
 // manageSubscription asks for a fresh portal link and opens it. The link lives 15 minutes, so it is

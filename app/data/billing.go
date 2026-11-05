@@ -12,8 +12,8 @@ import (
 	"github.com/QingYunA/adhd-todo/internal/syncclient"
 )
 
-// Withdo Pro on this computer (M16): Settings > Model's plan pill, the footer row of the official
-// card, the upgrade sheet and the composer's quiet line all read BillingInfo. It sits beside
+// Withdo Pro on this computer (M16): Settings > Account's plan group, Settings > Model's plan pill,
+// the upgrade sheet and the composer's quiet line all read BillingInfo. It sits beside
 // OfficialInfo and is kept the same way: asked for in the background, never on the UI thread,
 // and asked again on the runner's "billing" event and when the Settings window comes back.
 
@@ -76,6 +76,9 @@ func (b BillingInfo) Trialing() bool { return b.Status == "trialing" }
 
 // Canceling says the subscription ends at PeriodEnd and does not renew.
 func (b BillingInfo) Canceling() bool { return b.Status == "canceling" }
+
+// PastDue says the last renewal did not go through.
+func (b BillingInfo) PastDue() bool { return b.Status == "past_due" }
 
 // BillingSource is where Settings and the composer learn about Pro. *Real implements it.
 type BillingSource interface {
