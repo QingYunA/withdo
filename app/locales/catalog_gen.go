@@ -13010,44 +13010,210 @@ func (msgs Messages) SettingsPlanPro() string {
 	return Catalog.Format(msgs.locale, "settingsPlanPro", nil)
 }
 
-// SettingsProLineTrial says "Pro: 100 a day, on every device. Try it free for 7 days."
+// SettingsPlanTitle says "Plan"
 // in the language the app shows.
 //
-// Footer of the official model's card on the free plan, trial not used yet.
-func SettingsProLineTrial() string { return In(i18n.Locale()).SettingsProLineTrial() }
+// Label of the plan group in Settings > Account.
+func SettingsPlanTitle() string { return In(i18n.Locale()).SettingsPlanTitle() }
 
-// SettingsProLineTrial says "Pro: 100 a day, on every device. Try it free for 7 days."
+// SettingsPlanTitle says "Plan"
 // in the language of msgs.
 //
-// Footer of the official model's card on the free plan, trial not used yet.
-func (msgs Messages) SettingsProLineTrial() string {
-	return Catalog.Format(msgs.locale, "settingsProLineTrial", nil)
+// Label of the plan group in Settings > Account.
+func (msgs Messages) SettingsPlanTitle() string {
+	return Catalog.Format(msgs.locale, "settingsPlanTitle", nil)
 }
 
-// SettingsProLine says "Pro: 100 a day, on every device."
+// SettingsPlanNameFree says "Free"
 // in the language the app shows.
 //
-// Footer of the official model's card on the free plan, trial already used.
-func SettingsProLine() string { return In(i18n.Locale()).SettingsProLine() }
+// Name of the plan row in Settings > Account for an account on the free
+// plan.
+func SettingsPlanNameFree() string { return In(i18n.Locale()).SettingsPlanNameFree() }
 
-// SettingsProLine says "Pro: 100 a day, on every device."
+// SettingsPlanNameFree says "Free"
 // in the language of msgs.
 //
-// Footer of the official model's card on the free plan, trial already used.
-func (msgs Messages) SettingsProLine() string {
-	return Catalog.Format(msgs.locale, "settingsProLine", nil)
+// Name of the plan row in Settings > Account for an account on the free
+// plan.
+func (msgs Messages) SettingsPlanNameFree() string {
+	return Catalog.Format(msgs.locale, "settingsPlanNameFree", nil)
+}
+
+// SettingsPlanNamePro says "Withdo Pro"
+// in the language the app shows.
+//
+// Name of the plan row in Settings > Account for an account that has Withdo
+// Pro.
+func SettingsPlanNamePro() string { return In(i18n.Locale()).SettingsPlanNamePro() }
+
+// SettingsPlanNamePro says "Withdo Pro"
+// in the language of msgs.
+//
+// Name of the plan row in Settings > Account for an account that has Withdo
+// Pro.
+func (msgs Messages) SettingsPlanNamePro() string {
+	return Catalog.Format(msgs.locale, "settingsPlanNamePro", nil)
+}
+
+// SettingsPlanLineTrial says "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial."
+// in the language the app shows.
+//
+// Line of the plan row on the free plan, trial not used yet.
+func SettingsPlanLineTrial() string { return In(i18n.Locale()).SettingsPlanLineTrial() }
+
+// SettingsPlanLineTrial says "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial."
+// in the language of msgs.
+//
+// Line of the plan row on the free plan, trial not used yet.
+func (msgs Messages) SettingsPlanLineTrial() string {
+	return Catalog.Format(msgs.locale, "settingsPlanLineTrial", nil)
+}
+
+// SettingsPlanLine says "The official model, 20 a day. Pro: 100 a day on every device."
+// in the language the app shows.
+//
+// Line of the plan row on the free plan, trial already used.
+func SettingsPlanLine() string { return In(i18n.Locale()).SettingsPlanLine() }
+
+// SettingsPlanLine says "The official model, 20 a day. Pro: 100 a day on every device."
+// in the language of msgs.
+//
+// Line of the plan row on the free plan, trial already used.
+func (msgs Messages) SettingsPlanLine() string {
+	return Catalog.Format(msgs.locale, "settingsPlanLine", nil)
+}
+
+// SettingsPlanTagTrial says "Free trial"
+// in the language the app shows.
+//
+// Tag after the plan's name while the free trial runs.
+func SettingsPlanTagTrial() string { return In(i18n.Locale()).SettingsPlanTagTrial() }
+
+// SettingsPlanTagTrial says "Free trial"
+// in the language of msgs.
+//
+// Tag after the plan's name while the free trial runs.
+func (msgs Messages) SettingsPlanTagTrial() string {
+	return Catalog.Format(msgs.locale, "settingsPlanTagTrial", nil)
+}
+
+// SettingsPlanTagCanceled says "Canceled"
+// in the language the app shows.
+//
+// Tag after the plan's name for a subscription that was cancelled and runs
+// to the end of its period.
+func SettingsPlanTagCanceled() string { return In(i18n.Locale()).SettingsPlanTagCanceled() }
+
+// SettingsPlanTagCanceled says "Canceled"
+// in the language of msgs.
+//
+// Tag after the plan's name for a subscription that was cancelled and runs
+// to the end of its period.
+func (msgs Messages) SettingsPlanTagCanceled() string {
+	return Catalog.Format(msgs.locale, "settingsPlanTagCanceled", nil)
+}
+
+// SettingsPlanTagPastDue says "Payment failed"
+// in the language the app shows.
+//
+// Tag after the plan's name when the last renewal did not go through.
+func SettingsPlanTagPastDue() string { return In(i18n.Locale()).SettingsPlanTagPastDue() }
+
+// SettingsPlanTagPastDue says "Payment failed"
+// in the language of msgs.
+//
+// Tag after the plan's name when the last renewal did not go through.
+func (msgs Messages) SettingsPlanTagPastDue() string {
+	return Catalog.Format(msgs.locale, "settingsPlanTagPastDue", nil)
+}
+
+// SettingsPlanViaPayPal says "via PayPal"
+// in the language the app shows.
+//
+// Part of the plan row's line for a subscription billed by PayPal.
+func SettingsPlanViaPayPal() string { return In(i18n.Locale()).SettingsPlanViaPayPal() }
+
+// SettingsPlanViaPayPal says "via PayPal"
+// in the language of msgs.
+//
+// Part of the plan row's line for a subscription billed by PayPal.
+func (msgs Messages) SettingsPlanViaPayPal() string {
+	return Catalog.Format(msgs.locale, "settingsPlanViaPayPal", nil)
+}
+
+// SettingsPlanTrialEnd says "First charge {date}; cancel any time before"
+// in the language the app shows.
+//
+// End of the plan row's line while the free trial runs.
+func SettingsPlanTrialEnd(date string) string { return In(i18n.Locale()).SettingsPlanTrialEnd(date) }
+
+// SettingsPlanTrialEnd says "First charge {date}; cancel any time before"
+// in the language of msgs.
+//
+// End of the plan row's line while the free trial runs.
+func (msgs Messages) SettingsPlanTrialEnd(date string) string {
+	return Catalog.Format(msgs.locale, "settingsPlanTrialEnd", map[string]any{"date": date})
+}
+
+// SettingsPlanRenews says "Renews {date}"
+// in the language the app shows.
+//
+// End of the plan row's line for a paying Pro account.
+func SettingsPlanRenews(date string) string { return In(i18n.Locale()).SettingsPlanRenews(date) }
+
+// SettingsPlanRenews says "Renews {date}"
+// in the language of msgs.
+//
+// End of the plan row's line for a paying Pro account.
+func (msgs Messages) SettingsPlanRenews(date string) string {
+	return Catalog.Format(msgs.locale, "settingsPlanRenews", map[string]any{"date": date})
+}
+
+// SettingsPlanEnds says "Pro until {date}, then Free; no more charges"
+// in the language the app shows.
+//
+// End of the plan row's line for a cancelled subscription that runs to the
+// end of its period.
+func SettingsPlanEnds(date string) string { return In(i18n.Locale()).SettingsPlanEnds(date) }
+
+// SettingsPlanEnds says "Pro until {date}, then Free; no more charges"
+// in the language of msgs.
+//
+// End of the plan row's line for a cancelled subscription that runs to the
+// end of its period.
+func (msgs Messages) SettingsPlanEnds(date string) string {
+	return Catalog.Format(msgs.locale, "settingsPlanEnds", map[string]any{"date": date})
+}
+
+// SettingsPlanPastDue says "The renewal did not go through; update the payment method"
+// in the language the app shows.
+//
+// End of the plan row's line when the last renewal failed.
+func SettingsPlanPastDue() string { return In(i18n.Locale()).SettingsPlanPastDue() }
+
+// SettingsPlanPastDue says "The renewal did not go through; update the payment method"
+// in the language of msgs.
+//
+// End of the plan row's line when the last renewal failed.
+func (msgs Messages) SettingsPlanPastDue() string {
+	return Catalog.Format(msgs.locale, "settingsPlanPastDue", nil)
 }
 
 // SettingsProUpgrade says "Upgrade to Pro"
 // in the language the app shows.
 //
-// Link at the right of the card's footer: opens the upgrade sheet.
+// Upgrade to Pro: the button of the Free plan row in Settings > Account,
+// and the link after the official model card's quota. Opens the upgrade
+// sheet.
 func SettingsProUpgrade() string { return In(i18n.Locale()).SettingsProUpgrade() }
 
 // SettingsProUpgrade says "Upgrade to Pro"
 // in the language of msgs.
 //
-// Link at the right of the card's footer: opens the upgrade sheet.
+// Upgrade to Pro: the button of the Free plan row in Settings > Account,
+// and the link after the official model card's quota. Opens the upgrade
+// sheet.
 func (msgs Messages) SettingsProUpgrade() string {
 	return Catalog.Format(msgs.locale, "settingsProUpgrade", nil)
 }
@@ -13055,147 +13221,31 @@ func (msgs Messages) SettingsProUpgrade() string {
 // SettingsProManage says "Manage subscription"
 // in the language the app shows.
 //
-// Link at the right of the card's footer for a Pro account: opens the
-// customer portal in the browser.
+// Button of the Pro plan row in Settings > Account: opens the customer
+// portal in the browser.
 func SettingsProManage() string { return In(i18n.Locale()).SettingsProManage() }
 
 // SettingsProManage says "Manage subscription"
 // in the language of msgs.
 //
-// Link at the right of the card's footer for a Pro account: opens the
-// customer portal in the browser.
+// Button of the Pro plan row in Settings > Account: opens the customer
+// portal in the browser.
 func (msgs Messages) SettingsProManage() string {
 	return Catalog.Format(msgs.locale, "settingsProManage", nil)
-}
-
-// SettingsProTrialUntil says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}"
-// in the language the app shows.
-//
-// Footer of the card while the free trial runs. provider is paypal when the
-// subscription is billed by PayPal, otherwise waffo.
-func SettingsProTrialUntil(provider string, date string) string {
-	return In(i18n.Locale()).SettingsProTrialUntil(provider, date)
-}
-
-// SettingsProTrialUntil says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}"
-// in the language of msgs.
-//
-// Footer of the card while the free trial runs. provider is paypal when the
-// subscription is billed by PayPal, otherwise waffo.
-func (msgs Messages) SettingsProTrialUntil(provider string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProTrialUntil", map[string]any{"provider": provider, "date": date})
-}
-
-// SettingsProRenews says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}"
-// in the language the app shows.
-//
-// Footer of the card for a paying Pro account. provider is paypal when the
-// subscription is billed by PayPal, otherwise waffo.
-func SettingsProRenews(provider string, date string) string {
-	return In(i18n.Locale()).SettingsProRenews(provider, date)
-}
-
-// SettingsProRenews says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}"
-// in the language of msgs.
-//
-// Footer of the card for a paying Pro account. provider is paypal when the
-// subscription is billed by PayPal, otherwise waffo.
-func (msgs Messages) SettingsProRenews(provider string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProRenews", map[string]any{"provider": provider, "date": date})
-}
-
-// SettingsProEnds says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}"
-// in the language the app shows.
-//
-// Footer of the card for a Pro account that was cancelled and runs to the
-// end of its period. provider is paypal when the subscription is billed by
-// PayPal, otherwise waffo.
-func SettingsProEnds(provider string, date string) string {
-	return In(i18n.Locale()).SettingsProEnds(provider, date)
-}
-
-// SettingsProEnds says "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}"
-// in the language of msgs.
-//
-// Footer of the card for a Pro account that was cancelled and runs to the
-// end of its period. provider is paypal when the subscription is billed by
-// PayPal, otherwise waffo.
-func (msgs Messages) SettingsProEnds(provider string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProEnds", map[string]any{"provider": provider, "date": date})
-}
-
-// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language the app shows.
-//
-// Footer of the card while the free trial runs, when the server says the
-// billing interval. interval is monthly or yearly. provider is paypal when
-// the subscription is billed by PayPal, otherwise waffo.
-func SettingsProIntervalTrialUntil(provider string, interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalTrialUntil(provider, interval, date)
-}
-
-// SettingsProIntervalTrialUntil says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language of msgs.
-//
-// Footer of the card while the free trial runs, when the server says the
-// billing interval. interval is monthly or yearly. provider is paypal when
-// the subscription is billed by PayPal, otherwise waffo.
-func (msgs Messages) SettingsProIntervalTrialUntil(provider string, interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalTrialUntil", map[string]any{"provider": provider, "interval": interval, "date": date})
-}
-
-// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language the app shows.
-//
-// Footer of the card for a paying Pro account, when the server says the
-// billing interval. interval is monthly or yearly. provider is paypal when
-// the subscription is billed by PayPal, otherwise waffo.
-func SettingsProIntervalRenews(provider string, interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalRenews(provider, interval, date)
-}
-
-// SettingsProIntervalRenews says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language of msgs.
-//
-// Footer of the card for a paying Pro account, when the server says the
-// billing interval. interval is monthly or yearly. provider is paypal when
-// the subscription is billed by PayPal, otherwise waffo.
-func (msgs Messages) SettingsProIntervalRenews(provider string, interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalRenews", map[string]any{"provider": provider, "interval": interval, "date": date})
-}
-
-// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language the app shows.
-//
-// Footer of the card for a cancelled Pro account that runs to the end of
-// its period, when the server says the billing interval. interval is
-// monthly or yearly. provider is paypal when the subscription is billed by
-// PayPal, otherwise waffo.
-func SettingsProIntervalEnds(provider string, interval string, date string) string {
-	return In(i18n.Locale()).SettingsProIntervalEnds(provider, interval, date)
-}
-
-// SettingsProIntervalEnds says "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · …"
-// in the language of msgs.
-//
-// Footer of the card for a cancelled Pro account that runs to the end of
-// its period, when the server says the billing interval. interval is
-// monthly or yearly. provider is paypal when the subscription is billed by
-// PayPal, otherwise waffo.
-func (msgs Messages) SettingsProIntervalEnds(provider string, interval string, date string) string {
-	return Catalog.Format(msgs.locale, "settingsProIntervalEnds", map[string]any{"provider": provider, "interval": interval, "date": date})
 }
 
 // SettingsProManageFailed says "Could not open the subscription page. Try again."
 // in the language the app shows.
 //
-// Under the card's footer when the customer portal link could not be made.
+// Under the plan row's line when the customer portal link could not be
+// made.
 func SettingsProManageFailed() string { return In(i18n.Locale()).SettingsProManageFailed() }
 
 // SettingsProManageFailed says "Could not open the subscription page. Try again."
 // in the language of msgs.
 //
-// Under the card's footer when the customer portal link could not be made.
+// Under the plan row's line when the customer portal link could not be
+// made.
 func (msgs Messages) SettingsProManageFailed() string {
 	return Catalog.Format(msgs.locale, "settingsProManageFailed", nil)
 }

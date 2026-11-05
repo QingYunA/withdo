@@ -5095,121 +5095,87 @@
   "@settingsPlanPro": {
     "description": "Pill on the official model's card: the account has Withdo Pro."
   },
-  "settingsProLineTrial": "Pro: 100 a day, on every device. Try it free for 7 days.",
-  "@settingsProLineTrial": {
-    "description": "Footer of the official model's card on the free plan, trial not used yet."
+  "settingsPlanTitle": "Plan",
+  "@settingsPlanTitle": {
+    "description": "Label of the plan group in Settings > Account."
   },
-  "settingsProLine": "Pro: 100 a day, on every device.",
-  "@settingsProLine": {
-    "description": "Footer of the official model's card on the free plan, trial already used."
+  "settingsPlanNameFree": "Free",
+  "@settingsPlanNameFree": {
+    "description": "Name of the plan row in Settings > Account for an account on the free plan."
+  },
+  "settingsPlanNamePro": "Withdo Pro",
+  "@settingsPlanNamePro": {
+    "description": "Name of the plan row in Settings > Account for an account that has Withdo Pro."
+  },
+  "settingsPlanLineTrial": "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial.",
+  "@settingsPlanLineTrial": {
+    "description": "Line of the plan row on the free plan, trial not used yet."
+  },
+  "settingsPlanLine": "The official model, 20 a day. Pro: 100 a day on every device.",
+  "@settingsPlanLine": {
+    "description": "Line of the plan row on the free plan, trial already used."
+  },
+  "settingsPlanTagTrial": "Free trial",
+  "@settingsPlanTagTrial": {
+    "description": "Tag after the plan's name while the free trial runs."
+  },
+  "settingsPlanTagCanceled": "Canceled",
+  "@settingsPlanTagCanceled": {
+    "description": "Tag after the plan's name for a subscription that was cancelled and runs to the end of its period."
+  },
+  "settingsPlanTagPastDue": "Payment failed",
+  "@settingsPlanTagPastDue": {
+    "description": "Tag after the plan's name when the last renewal did not go through."
+  },
+  "settingsPlanViaPayPal": "via PayPal",
+  "@settingsPlanViaPayPal": {
+    "description": "Part of the plan row's line for a subscription billed by PayPal."
+  },
+  "settingsPlanTrialEnd": "First charge {date}; cancel any time before",
+  "@settingsPlanTrialEnd": {
+    "description": "End of the plan row's line while the free trial runs.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 12"
+      }
+    }
+  },
+  "settingsPlanRenews": "Renews {date}",
+  "@settingsPlanRenews": {
+    "description": "End of the plan row's line for a paying Pro account.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 12, 2027"
+      }
+    }
+  },
+  "settingsPlanEnds": "Pro until {date}, then Free; no more charges",
+  "@settingsPlanEnds": {
+    "description": "End of the plan row's line for a cancelled subscription that runs to the end of its period.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Nov 12"
+      }
+    }
+  },
+  "settingsPlanPastDue": "The renewal did not go through; update the payment method",
+  "@settingsPlanPastDue": {
+    "description": "End of the plan row's line when the last renewal failed."
   },
   "settingsProUpgrade": "Upgrade to Pro",
   "@settingsProUpgrade": {
-    "description": "Link at the right of the card's footer: opens the upgrade sheet."
+    "description": "Upgrade to Pro: the button of the Free plan row in Settings > Account, and the link after the official model card's quota. Opens the upgrade sheet."
   },
   "settingsProManage": "Manage subscription",
   "@settingsProManage": {
-    "description": "Link at the right of the card's footer for a Pro account: opens the customer portal in the browser."
-  },
-  "settingsProTrialUntil": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · trial until {date}",
-  "@settingsProTrialUntil": {
-    "description": "Footer of the card while the free trial runs. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11"
-      }
-    }
-  },
-  "settingsProRenews": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · renews {date}",
-  "@settingsProRenews": {
-    "description": "Footer of the card for a paying Pro account. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11, 2027"
-      }
-    }
-  },
-  "settingsProEnds": "Withdo Pro{provider, select, paypal{ · via PayPal} other{}} · ends {date}",
-  "@settingsProEnds": {
-    "description": "Footer of the card for a Pro account that was cancelled and runs to the end of its period. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11"
-      }
-    }
-  },
-  "settingsProIntervalTrialUntil": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · trial until {date}, then renews",
-  "@settingsProIntervalTrialUntil": {
-    "description": "Footer of the card while the free trial runs, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "interval": {
-        "type": "String",
-        "example": "yearly"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11"
-      }
-    }
-  },
-  "settingsProIntervalRenews": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · renews {date}",
-  "@settingsProIntervalRenews": {
-    "description": "Footer of the card for a paying Pro account, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "interval": {
-        "type": "String",
-        "example": "yearly"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11, 2027"
-      }
-    }
-  },
-  "settingsProIntervalEnds": "Withdo Pro · {interval, select, yearly{Yearly} other{Monthly}}{provider, select, paypal{ · via PayPal} other{}} · ends {date}",
-  "@settingsProIntervalEnds": {
-    "description": "Footer of the card for a cancelled Pro account that runs to the end of its period, when the server says the billing interval. interval is monthly or yearly. provider is paypal when the subscription is billed by PayPal, otherwise waffo.",
-    "placeholders": {
-      "provider": {
-        "type": "String",
-        "example": "paypal"
-      },
-      "interval": {
-        "type": "String",
-        "example": "yearly"
-      },
-      "date": {
-        "type": "String",
-        "example": "Nov 11"
-      }
-    }
+    "description": "Button of the Pro plan row in Settings > Account: opens the customer portal in the browser."
   },
   "settingsProManageFailed": "Could not open the subscription page. Try again.",
   "@settingsProManageFailed": {
-    "description": "Under the card's footer when the customer portal link could not be made."
+    "description": "Under the plan row's line when the customer portal link could not be made."
   },
   "proSheetTitle": "Upgrade to Withdo Pro",
   "@proSheetTitle": {

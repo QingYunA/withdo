@@ -48,8 +48,27 @@ func (s *Settings) officialStatus(c *ui.Context, t *theme.Tokens, info data.Offi
 			if info.Left >= 0 {
 				theme.Text(c, theme.Meta, t.TextSecondary, "· "+s.say.SettingsOfficialLeft(leftOf(info, bill)))
 			}
+			if bill.Offered && bill.Known && !bill.Pro {
+				theme.Text(c, theme.Meta, t.TextSecondary, "·")
+				if s.upgradeLink(c, t).Clicked() {
+					s.ShowUpgrade()
+				}
+			}
 		}
 	})
+}
+
+// upgradeLink is the accent Upgrade to Pro after a Free account's quota: a link, not a button. The
+// plan is sold in Account, so it opens the sheet there.
+func (s *Settings) upgradeLink(c *ui.Context, t *theme.Tokens) ui.Element {
+	text := s.say.SettingsProUpgrade()
+	btn := ui.ButtonBase(c.Key("official-upgrade")).Padding(0, 2).Radius(theme.RadiusControl).Shrink(0).Label(text).Cursor(ui.CursorPointer)
+	ink := t.AccentInk
+	if btn.Hovered() {
+		ink = ink.Mix(t.Text, 0.2)
+	}
+	btn.Children(func() { theme.Text(c, theme.Meta, ink, text) })
+	return btn
 }
 
 // leftOf is the turns left today: "86", or against the plan's limit ("14 / 20") where plans are sold.
@@ -91,7 +110,6 @@ func (s *Settings) officialCard(c *ui.Context, t *theme.Tokens, info data.Offici
 			})
 			s.officialButton(c, t, info, false)
 		})
-		s.officialFooter(c, t, bill)
 	})
 }
 

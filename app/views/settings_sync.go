@@ -111,6 +111,9 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
 		svc.SyncRefreshGoogleLink()
+		if s.app.Models != nil {
+			s.app.Models.RefreshBilling() // the plan group reads a fresh answer as the pane opens
+		}
 	} else if !snap.LastSynced.IsZero() && !snap.LastSynced.Equal(s.syncLastSynced) {
 		s.syncLastSynced = snap.LastSynced
 		svc.SyncRefreshDevices()
@@ -131,6 +134,7 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		if snap.Phase == data.SyncUploading {
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
 		}
+		s.planGroup(c, t)
 		s.syncDevices(c, t, snap)
 	default: // failed, offline or the wrong account
 		s.syncAccountGroup(c, t, svc, snap, false)

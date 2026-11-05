@@ -70,7 +70,7 @@ func (s *shell) OpenSettings(p views.Pane) {
 	s.showSettings()
 }
 
-// OpenUpgrade implements views.Actions: Settings on Model with the Withdo Pro sheet open.
+// OpenUpgrade implements views.Actions: Settings on Account with the Withdo Pro sheet open.
 func (s *shell) OpenUpgrade() {
 	s.settings.ShowUpgrade()
 	s.showSettings()

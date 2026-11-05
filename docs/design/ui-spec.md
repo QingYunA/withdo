@@ -2246,6 +2246,9 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    neither the interval nor the price. A PayPal subscription adds `· 通过 PayPal` / `· via PayPal` after
    the price (after the interval while canceling or past due). The group does not show signed out or
    without billing. Nothing else about the plan is in Account: the quota stays with the model.
+   Built (v47, desktop): screens `settings-account-plan-free-*`, `-trial-*`, `-canceling-paypal-*`, `-active-*`, `-past-due-*`,
+   `-sheet-*`, `-sheet-paypal-*`, `-waiting-*` and `-waiting-paypal-*`, and the Model screens `settings-model-pro-free-*` (with the
+   link) and `settings-model-pro-*`; the Model sheet and wait screens of v45/v46 are gone.
 5. **General**: **Language** as a three-part segmented control (`Follow system` | `English` |
    `简体中文`), not a pop-up. **Notifications and sound** (`通知与声音`): System notifications, the
    end-of-day reminder (its time as a small field beside the switch, no second row), Sound effects.
@@ -2299,7 +2302,7 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    `status.blocked` (`没能打开付款页，再试一次`). Past the day's quota, the composer's quiet line ends with
    `升级到 Pro，每天 100 次。` (`Upgrade to Pro` in accent opens the same sheet); a Pro account's line
    says only that the quota is used up. Without billing the card is as in v44.
-   Built (M16, desktop): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
+   Built (M16, desktop; v47 moved the sheet and wait screens to `settings-account-plan-*`): screens `settings-model-pro-free-*`, `-sheet-*`, `-waiting-*`, `settings-model-pro-*` and
    `mine-composer-official-used-up-upgrade-*`. The plan reads `GET /v1/billing`, whose `interval` (`monthly` or `yearly`) is the
    footer's `年付` / `月付` (`Yearly` / `Monthly`) and, in the trial, `之后自动续费` (`then renews`; the trial's end is the first
    charge, so no second date). A server that does not say the interval (empty or an older one) gets the footer without it
@@ -2938,7 +2941,7 @@ checks out the chosen plan through PayPal. The fine print reads `试用结束前
 代收，含税价。` The waiting state reads `在 PayPal 里完成订阅` with `重新打开 PayPal`. A PayPal
 subscription's Pro line adds `· 通过 PayPal` / `· via PayPal` after the interval; Manage subscription
 opens the payer's PayPal automatic-payments page.
-Built (M17, apps): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
+Built (M17, apps; the desktop ones are `settings-account-plan-sheet-paypal-*`, `-waiting-paypal-*` and `-canceling-paypal-*` since v47): screens `settings-model-pro-sheet-paypal-*`, `-waiting-paypal-*`, `settings-model-pro-paypal-*` (desktop) and
 `pro-sheet-paypal-*`, `pro-waiting-paypal-*`, `settings-pro-paypal-*` (Android). The button's label is one message with the word
 PayPal in it (`用 PayPal 订阅` / `Subscribe with PayPal`); the word is drawn as the wordmark, "Pay" `#003087` and "Pal" `#009cde`
 in bold italics, and the words around it `#003087`, in light and dark alike. While a checkout is being asked for, both buttons are off.

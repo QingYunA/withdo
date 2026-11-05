@@ -157,7 +157,7 @@ func (s *Settings) View(c *ui.Context) {
 	if s.pane == PaneCategories {
 		s.categorySheetView(c, t)
 	}
-	if s.pane == PaneModel {
+	if s.pane == PaneAccount {
 		s.upgradeSheet(c, t)
 	}
 	if s.pane == PaneAccount && s.app.Sync != nil {
