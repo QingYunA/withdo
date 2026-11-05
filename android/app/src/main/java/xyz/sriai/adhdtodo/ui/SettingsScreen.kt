@@ -66,7 +66,7 @@ data class SettingsData(
     val categories: List<CategoryCount> = emptyList(),
     /** Which model answers the composer (v44): the Assistant group's row. */
     val model: ModelState = ModelState(),
-    /** Withdo Pro's plan (v45): with it the Assistant group is the plan card. */
+    /** Withdo Pro's plan (v45, v47): with it the Assistant group is the plan card and the account card gets the plan row. */
     val billing: Billing = Billing(),
 )
 
@@ -99,8 +99,7 @@ fun SettingsScreen(
     onCheckUpdate: () -> Unit,
     onUpdate: () -> Unit,
     onOpenUrl: (String) -> Unit,
-    onUpgrade: () -> Unit = {},
-    onManage: () -> Unit = {},
+    onPlan: () -> Unit = {},
     now: Instant = Instant.now(),
     zone: ZoneId = ZoneId.systemDefault(),
 ) {
@@ -136,13 +135,17 @@ fun SettingsScreen(
                     chevron = true,
                     onClick = onOpenSync,
                 )
+                if (data.billing.shown) {
+                    RowRule()
+                    AccountPlanRow(data.billing, onPlan, now, zone)
+                }
             }
         }
 
         if (data.model.phase != ModelPhase.HIDDEN) {
             GroupLabel(stringResource(R.string.settings_assistant))
             if (showsPlanCard(data.billing, data.model)) {
-                PlanCard(data.model, data.billing, onUpgrade, onManage, now, zone)
+                PlanCard(data.model, data.billing)
             } else {
                 GroupCard { AssistantRow(data.model, onOpenSync) }
             }
@@ -239,8 +242,7 @@ fun SettingsRoute(
     onCheckUpdate: () -> Unit,
     onUpdate: () -> Unit,
     onOpenUrl: (String) -> Unit,
-    onUpgrade: () -> Unit = {},
-    onManage: () -> Unit = {},
+    onPlan: () -> Unit = {},
 ) {
     val context = LocalContext.current
     SettingsScreen(
@@ -257,8 +259,7 @@ fun SettingsRoute(
         onCheckUpdate = onCheckUpdate,
         onUpdate = onUpdate,
         onOpenUrl = onOpenUrl,
-        onUpgrade = onUpgrade,
-        onManage = onManage,
+        onPlan = onPlan,
     )
 }
 

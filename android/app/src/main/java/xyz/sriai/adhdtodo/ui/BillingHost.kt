@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import xyz.sriai.adhdtodo.data.BillingBackend
 
 /**
- * Keeps [holder] up to date and draws its sheet. The plan is read again whenever [refreshKey]
+ * Keeps [holder] up to date and draws its sheets (the upgrade sheet and the Pro plan sheet). The plan is read again whenever [refreshKey]
  * changes (the sync status carries a counter the core raises when the plan changed, so the
  * `billing` event reaches here), and again from the server when the app comes back to the screen
  * while the sheet waits for a payment or Settings is open. [openCheckout] opens a checkout URL in
@@ -51,6 +51,13 @@ fun BillingHost(
             onStart = { provider -> scope.launch { holder.start(backend, lang, provider, openCheckout) } },
             onReopen = { openCheckout(holder.checkoutUrl) },
             onDismiss = holder::close,
+        )
+    }
+    if (holder.planSheet) {
+        PlanSheet(
+            billing = holder.billing,
+            onManage = { scope.launch { holder.manage(backend, openCheckout) } },
+            onDismiss = { holder.planSheet = false },
         )
     }
 }

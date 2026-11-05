@@ -37,6 +37,7 @@ import xyz.sriai.adhdtodo.testing.setThemedContent
 import xyz.sriai.adhdtodo.ui.BackBar
 import xyz.sriai.adhdtodo.ui.BillingHolder
 import xyz.sriai.adhdtodo.ui.BottomNav
+import xyz.sriai.adhdtodo.ui.PlanSheet
 import xyz.sriai.adhdtodo.ui.QuietNote
 import xyz.sriai.adhdtodo.ui.SettingsData
 import xyz.sriai.adhdtodo.ui.SettingsScreen
@@ -49,10 +50,11 @@ import xyz.sriai.adhdtodo.ui.theme.AppearanceMode
 import xyz.sriai.adhdtodo.ui.theme.LocalTokens
 
 /**
- * Withdo Pro on the phone (v45 section two) as full phone pictures, with fake plans and no
- * network: Settings > Assistant as the Free plan card, the upgrade sheet over it, the wait for the
- * payment, the Pro card, and the quiet line past the day's turns. Today is Tuesday 3 November
- * 2026, as in docs/design/mockups/v45.html. Render with
+ * Withdo Pro on the phone (v45 section two, v47 section three) as full phone pictures, with fake
+ * plans and no network: the account card's plan row (Free, trialing, canceling) over the Assistant
+ * group's plan card, the upgrade sheet over it, the wait for the payment, the Pro plan sheet, and
+ * the quiet line past the day's turns. Today is Tuesday 3 November 2026, as in
+ * docs/design/mockups/v45.html. Render with
  * `scripts/android-screens.sh 'xyz.sriai.adhdtodo.ScreensBillingTest'`.
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -71,7 +73,7 @@ class ScreensBillingTest(private val case: Case) {
 
     data class Case(val name: String, val night: Boolean, val zh: Boolean, val shot: Shot)
 
-    enum class Shot { SETTINGS_FREE, SHEET, WAITING, SETTINGS_PRO, QUOTA_USED_UP_UPGRADE, SHEET_PAYPAL, WAITING_PAYPAL, SETTINGS_PRO_PAYPAL }
+    enum class Shot { SETTINGS_FREE, SHEET, WAITING, SETTINGS_PRO, QUOTA_USED_UP_UPGRADE, SHEET_PAYPAL, WAITING_PAYPAL, SETTINGS_PRO_PAYPAL, PLAN_SHEET_CANCELING, PLAN_SHEET_TRIALING }
 
     companion object {
         @JvmStatic
@@ -85,6 +87,8 @@ class ScreensBillingTest(private val case: Case) {
             "pro-sheet-paypal" to Shot.SHEET_PAYPAL,
             "pro-waiting-paypal" to Shot.WAITING_PAYPAL,
             "settings-pro-paypal" to Shot.SETTINGS_PRO_PAYPAL,
+            "plan-sheet-canceling" to Shot.PLAN_SHEET_CANCELING,
+            "plan-sheet-trialing" to Shot.PLAN_SHEET_TRIALING,
         ).flatMap { (name, shot) ->
             listOf(
                 Case("$name-light", night = false, zh = false, shot = shot),
@@ -98,12 +102,12 @@ class ScreensBillingTest(private val case: Case) {
 
 private val FreePlan = Billing(offered = true, plan = "free", monthly = "$6.99", yearly = "$58.72")
 private val ProPlan = Billing(
-    offered = true, plan = "pro", status = "trialing", interval = "yearly", periodEnd = "2026-11-11T09:00:00Z",
+    offered = true, plan = "pro", status = "trialing", interval = "yearly", periodEnd = "2026-11-12T09:00:00Z",
     trialUsed = true, monthly = "$6.99", yearly = "$58.72", manageUrl = "https://portal.example/session",
 )
 
 private val FreePlanPayPal = FreePlan.copy(paypal = true)
-private val ProPlanPayPal = ProPlan.copy(paypal = true, provider = "paypal")
+private val ProPlanPayPal = ProPlan.copy(paypal = true, provider = "paypal", status = "canceling")
 
 @Composable
 private fun Picture(shot: ScreensBillingTest.Shot) {
@@ -121,6 +125,11 @@ private fun Picture(shot: ScreensBillingTest.Shot) {
             UpgradeSheet(holder, onStart = {}, onReopen = {}, onDismiss = {})
         }
         ScreensBillingTest.Shot.SETTINGS_PRO_PAYPAL -> SettingsFrame(ModelState("official", ModelPhase.READY, 86, 100, "pro"), ProPlanPayPal)
+        ScreensBillingTest.Shot.PLAN_SHEET_CANCELING, ScreensBillingTest.Shot.PLAN_SHEET_TRIALING -> {
+            val billing = if (shot == ScreensBillingTest.Shot.PLAN_SHEET_CANCELING) ProPlanPayPal else ProPlan
+            SettingsFrame(ModelState("official", ModelPhase.READY, 86, 100, "pro"), billing)
+            PlanSheet(billing, onManage = {}, onDismiss = {}, now = Tuesday, zone = Shanghai)
+        }
         ScreensBillingTest.Shot.SHEET_PAYPAL, ScreensBillingTest.Shot.WAITING_PAYPAL -> {
             val holder = remember { BillingHolder() }
             val waiting = shot == ScreensBillingTest.Shot.WAITING_PAYPAL
@@ -151,7 +160,7 @@ private fun Picture(shot: ScreensBillingTest.Shot) {
     }
 }
 
-/** Settings under the account with the Assistant group as the plan card (the pushed page, over Projects' bar). */
+/** Settings with the plan row under the account and the Assistant group as the plan card (the pushed page, over Projects' bar). */
 @Composable
 private fun SettingsFrame(model: ModelState, billing: Billing) {
     val tokens = LocalTokens.current
