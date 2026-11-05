@@ -23,8 +23,20 @@ remits VAT and sales tax where they are due (EU VAT on digital services from the
   (for accounts that already had a trial, on either channel).
 - Webhook `https://api.withdo.si/v1/billing/paypal` for BILLING.SUBSCRIPTION.ACTIVATED, UPDATED,
   CANCELLED, SUSPENDED, EXPIRED, RE-ACTIVATED, PAYMENT.FAILED, PAYMENT.SALE.COMPLETED, REFUNDED.
-- Going live: a live app, the same product, plans and webhook created against
-  `https://api-m.paypal.com` (the setup script is in the PR), `secrets/paypal-live.json`, then the env.
+
+## PayPal (live since 2026-11-05)
+
+- Live developer app **Withdo** on the business account (primary email `SORLIA7Z@GMAIL.COM`); its client
+  id and secret are only on the server: `/opt/adhd-todo/sync/secrets/paypal-live.json` (mode 600, owner
+  65532). `scripts/paypal-setup.py` made the same product, plans and webhook against `https://api-m.paypal.com`:
+
+```json
+{"product": "PROD-71454283MV4259044", "monthly_trial": "P-2VM317722C105582CNLWGE3Q", "monthly": "P-6XJ27566U3567571HNLWGE3Y", "yearly_trial": "P-1E6709973N259634XNLWGE4A", "yearly": "P-5FV90483Y88326410NLWGE4I", "webhook": "4YD71328AU0476456"}
+```
+
+- The server's `sync.env` points at them (`PAYPAL_ENV=live`); the sandbox values are in
+  `sync.env.bak-paypal-live-20261105` next to it, and `paypal-sandbox.json` stays in `secrets/` for testing.
+- Sandbox rows (mode `test`) count as no subscription on the live server (the other-mode rule).
 
 ## Server
 
