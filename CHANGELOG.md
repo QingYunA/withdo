@@ -3,6 +3,19 @@
 Each release has a section here. When updates are on (`docs/plans/m10-auto-update.md`), `mygo build`
 reads the update window's notes from the section of the version (`## 0.5.0`) and fails without one.
 
+## 0.15.0
+
+No database change; the app updates itself from 0.13.0 and 0.14.0.
+
+- **Pay with PayPal.** The Withdo Pro sheet has a second button, Subscribe with PayPal, next to the
+  card checkout. Same plans and the same 7-day free trial; Manage subscription opens your PayPal
+  automatic payments.
+- **Your plan is in Account now.** Settings > Account on the computer, and the account card at the
+  top of Settings on the phone, show your plan, its status and what happens next: when the trial
+  starts charging, when it renews, or that a canceled subscription stays Pro until a date and then
+  goes back to Free. Settings > Model keeps the official model's requests left today.
+- After paying, the page you come back to says how to get back to Withdo (it was a 404).
+
 ## 0.14.0
 
 No database change; the app updates itself from 0.12.1 and 0.13.0.
