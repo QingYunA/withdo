@@ -22,11 +22,14 @@ import xyz.sriai.adhdtodo.ui.billingDate
 import xyz.sriai.adhdtodo.ui.checkoutLanguage
 import xyz.sriai.adhdtodo.ui.payPalLabel
 import xyz.sriai.adhdtodo.ui.perMonth
-import xyz.sriai.adhdtodo.ui.renewalLine
+import xyz.sriai.adhdtodo.ui.planMeta
+import xyz.sriai.adhdtodo.ui.planNote
+import xyz.sriai.adhdtodo.ui.planRows
+import xyz.sriai.adhdtodo.ui.planTag
 import java.time.Instant
 import java.time.ZoneId
 
-/** Withdo Pro's rules (v45): the JSON, the sheet's states, and the wording of prices and dates. */
+/** Withdo Pro's rules (v45, v47): the JSON, the sheet's states, and the wording of prices and dates. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class BillingRulesTest {
@@ -85,36 +88,78 @@ class BillingRulesTest {
     }
 
     @Test
-    fun `the renewal line follows the subscription's status`() {
+    fun `the plan row's meta line follows the subscription's status and says the interval`() {
         val res = RuntimeEnvironment.getApplication().resources
-        fun line(status: String, end: String) = renewalLine(res, pro.copy(status = status, periodEnd = end), now, shanghai)
-        assertEquals("Free trial until Nov 11, then it renews", line("trialing", "2026-11-11T09:00:00Z"))
-        assertEquals("Renews Nov 11, 2027", line("active", "2027-11-11T09:00:00Z"))
-        assertEquals("Ends Nov 11", line("canceling", "2026-11-11T09:00:00Z"))
-        assertTrue(line("past_due", "2026-11-11T09:00:00Z").startsWith("Payment didn"))
-        assertEquals("", line("active", ""))
+        fun meta(status: String, interval: String, end: String) =
+            planMeta(res, pro.copy(status = status, interval = interval, periodEnd = end), now, shanghai)
+        assertEquals("Yearly · First charge Nov 11", meta("trialing", "yearly", "2026-11-11T09:00:00Z"))
+        assertEquals("Yearly · Renews Nov 11, 2027", meta("active", "yearly", "2027-11-11T09:00:00Z"))
+        assertEquals("Monthly · Renews Nov 11", meta("active", "monthly", "2026-11-11T09:00:00Z"))
+        assertEquals("Pro until Nov 11", meta("canceling", "yearly", "2026-11-11T09:00:00Z"))
+        assertEquals("The renewal didn’t go through", meta("past_due", "yearly", "2026-11-11T09:00:00Z"))
+        // No interval: the date alone; no date: the interval alone.
+        assertEquals("First charge Nov 11", meta("trialing", "", "2026-11-11T09:00:00Z"))
+        assertEquals("Renews Nov 11, 2027", meta("active", "", "2027-11-11T09:00:00Z"))
+        assertEquals("Yearly", meta("active", "yearly", ""))
+        assertEquals("", meta("active", "", ""))
     }
 
     @Test
-    fun `the renewal line leads with the billing interval when the server says it`() {
-        val res = RuntimeEnvironment.getApplication().resources
-        fun line(status: String, interval: String, end: String) =
-            renewalLine(res, pro.copy(status = status, interval = interval, periodEnd = end), now, shanghai)
-        assertEquals("Yearly · Free trial until Nov 11, then it renews", line("trialing", "yearly", "2026-11-11T09:00:00Z"))
-        assertEquals("Yearly · Renews Nov 11, 2027", line("active", "yearly", "2027-11-11T09:00:00Z"))
-        assertEquals("Monthly · Renews Nov 11", line("active", "monthly", "2026-11-11T09:00:00Z"))
-        assertEquals("Monthly · Ends Nov 11", line("canceling", "monthly", "2026-11-11T09:00:00Z"))
-        assertEquals("Renews Nov 11, 2027", line("active", "", "2027-11-11T09:00:00Z"))
+    fun `the plan row's meta line in Chinese`() {
         RuntimeEnvironment.setQualifiers("zh-rCN")
         val zh = RuntimeEnvironment.getApplication().resources
+        fun meta(status: String, end: String) = planMeta(zh, pro.copy(status = status, interval = "yearly", periodEnd = end), now, shanghai)
+        assertEquals("年付 · 11月11日开始扣费", meta("trialing", "2026-11-11T09:00:00Z"))
+        assertEquals("年付 · 2027年11月11日续费", meta("active", "2027-11-11T09:00:00Z"))
+        assertEquals("Pro 用到 11月11日", meta("canceling", "2026-11-11T09:00:00Z"))
+        assertEquals("续费没扣成功", meta("past_due", "2026-11-11T09:00:00Z"))
+        assertEquals("试用中", planTag(zh, pro.copy(status = "trialing")))
+        assertEquals("已取消", planTag(zh, pro.copy(status = "canceling")))
+        assertEquals("续费失败", planTag(zh, pro.copy(status = "past_due")))
+    }
+
+    @Test
+    fun `the status tag`() {
+        val res = RuntimeEnvironment.getApplication().resources
+        assertEquals("Free trial", planTag(res, pro.copy(status = "trialing")))
+        assertEquals("Pro", planTag(res, pro.copy(status = "active")))
+        assertEquals("Canceled", planTag(res, pro.copy(status = "canceling")))
+        assertEquals("Payment failed", planTag(res, pro.copy(status = "past_due")))
+    }
+
+    @Test
+    fun `the plan sheet's rows hold the price, the payment method and the date of the status`() {
+        val res = RuntimeEnvironment.getApplication().resources
+        val yearly = pro.copy(interval = "yearly", monthly = "$6.99", yearly = "$58.72", periodEnd = "2027-11-11T09:00:00Z")
         assertEquals(
-            "年付 · 试用到 11月11日，之后自动续费",
-            renewalLine(zh, pro.copy(status = "trialing", interval = "yearly", periodEnd = "2026-11-11T09:00:00Z"), now, shanghai),
+            listOf("Plan" to "Yearly $58.72", "Payment" to "Waffo", "Renews" to "Nov 11, 2027"),
+            planRows(res, yearly, now, shanghai),
         )
+        val monthlyPayPal = yearly.copy(status = "trialing", interval = "monthly", provider = ProviderKey.PAYPAL, periodEnd = "2026-11-11T09:00:00Z")
         assertEquals(
-            "年付 · 2027年11月11日续费",
-            renewalLine(zh, pro.copy(status = "active", interval = "yearly", periodEnd = "2027-11-11T09:00:00Z"), now, shanghai),
+            listOf("Plan" to "Monthly $6.99", "Payment" to "PayPal", "First charge" to "Nov 11"),
+            planRows(res, monthlyPayPal, now, shanghai),
         )
+        assertEquals("Pro until", planRows(res, yearly.copy(status = "canceling"), now, shanghai).last().first)
+        // No interval: no price; no date: no third row.
+        assertEquals("Pro", planRows(res, yearly.copy(interval = ""), now, shanghai).first().second)
+        assertEquals(2, planRows(res, yearly.copy(periodEnd = ""), now, shanghai).size)
+    }
+
+    @Test
+    fun `the plan sheet's rows and paragraphs in Chinese`() {
+        RuntimeEnvironment.setQualifiers("zh-rCN")
+        val zh = RuntimeEnvironment.getApplication().resources
+        val canceling = pro.copy(status = "canceling", interval = "yearly", yearly = "$58.72", provider = ProviderKey.PAYPAL, periodEnd = "2026-11-12T09:00:00Z")
+        assertEquals(
+            listOf("方案" to "年付 $58.72", "付款方式" to "PayPal", "Pro 用到" to "11月12日"),
+            planRows(zh, canceling, now, shanghai),
+        )
+        assertEquals("到期后回到免费版，官方模型每天 20 次，不会再扣费。之后想继续用，在这里重新订阅。", planNote(zh, canceling))
+        assertEquals("试用结束前随时可以取消，不会扣款。", planNote(zh, pro.copy(status = "trialing")))
+        assertEquals("随时可以取消，Pro 用到这一期结束。", planNote(zh, pro.copy(status = "active")))
+        assertEquals("开始扣费", planRows(zh, pro.copy(status = "trialing", periodEnd = "2026-11-12T09:00:00Z"), now, shanghai).last().first)
+        assertEquals("下次续费", planRows(zh, pro.copy(periodEnd = "2026-11-12T09:00:00Z"), now, shanghai).last().first)
     }
 
     @Test
@@ -181,18 +226,6 @@ class BillingRulesTest {
         assertTrue(b.paypal && b.viaPayPal)
         val old = PageJson.decodeFromString<Billing>("""{"offered":true,"plan":"free"}""")
         assertFalse(old.paypal || old.viaPayPal)
-    }
-
-    @Test
-    fun `a PayPal subscription says so after the interval`() {
-        val res = RuntimeEnvironment.getApplication().resources
-        val trial = pro.copy(status = "trialing", interval = "yearly", provider = ProviderKey.PAYPAL, periodEnd = "2026-11-11T09:00:00Z")
-        assertEquals("Yearly · via PayPal · Free trial until Nov 11, then it renews", renewalLine(res, trial, now, shanghai))
-        assertEquals("Yearly · via PayPal · Renews Nov 11, 2027", renewalLine(res, pro.copy(interval = "yearly", provider = ProviderKey.PAYPAL), now, shanghai))
-        assertEquals("Monthly · via PayPal · Ends Nov 11, 2027", renewalLine(res, pro.copy(interval = "monthly", status = "canceling", provider = ProviderKey.PAYPAL), now, shanghai))
-        // Without an interval the line still says who bills it; a Waffo one says nothing more.
-        assertEquals("via PayPal · Renews Nov 11, 2027", renewalLine(res, pro.copy(provider = ProviderKey.PAYPAL), now, shanghai))
-        assertEquals("Renews Nov 11, 2027", renewalLine(res, pro.copy(provider = ProviderKey.WAFFO), now, shanghai))
     }
 
     @Test

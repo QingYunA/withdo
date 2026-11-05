@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import xyz.sriai.adhdtodo.R
 import xyz.sriai.adhdtodo.data.Billing
@@ -46,8 +48,8 @@ import java.time.Instant
 import java.time.ZoneId
 
 /*
- * What Withdo Pro draws (v45): the plan card of Settings > Assistant and the upgrade sheet.
- * BillingState.kt holds the state and the wording.
+ * What Withdo Pro draws (v45, v47): the plan card of Settings > Assistant, the plan row of the
+ * account card with its plan sheet, and the upgrade sheet. BillingState.kt holds the state and the wording.
  */
 
 /** The Assistant group's plan card shows: Pro is sold here, the plan is known, and an account is signed in. */
@@ -56,20 +58,12 @@ fun showsPlanCard(billing: Billing, model: ModelState): Boolean =
 
 /**
  * The plan card (radius 16, a hairline, 16 dp inside): the assistant, `Free` or the `Pro` pill, the
- * quota line and bar; then Free's accent button, or Pro's renewal line and the quiet `Manage subscription`.
+ * quota line and bar. The plan itself is the account card's row ([AccountPlanRow]).
  */
 @Composable
-fun PlanCard(
-    model: ModelState,
-    billing: Billing,
-    onUpgrade: () -> Unit,
-    onManage: () -> Unit,
-    now: Instant = Instant.now(),
-    zone: ZoneId = ZoneId.systemDefault(),
-) {
+fun PlanCard(model: ModelState, billing: Billing) {
     val tokens = LocalTokens.current
     val type = LocalAppType.current
-    val res = LocalContext.current.resources
     val shape = RoundedCornerShape(16.dp)
     Column(
         Modifier
@@ -96,15 +90,131 @@ fun PlanCard(
         }
         Text(quotaLine(model), style = type.meta, color = tokens.textSecondary, modifier = Modifier.padding(top = 4.dp).testTag("plan-quota"))
         if (model.left >= 0 && model.limit > 0) QuotaBar(model.left, model.limit)
-        if (billing.pro) {
-            val line = renewalLine(res, billing, now, zone)
-            if (line.isNotEmpty()) {
-                Text(line, style = type.meta, color = tokens.textSecondary, modifier = Modifier.padding(top = 12.dp).testTag("plan-renewal"))
+    }
+}
+
+/**
+ * The account card's second row (v47), 56 dp at least like the row above it: Free reads `Free`, the
+ * official model's day and the accent `Upgrade to Pro`; Pro reads `Withdo Pro` with its status tag
+ * and one `meta` line. A tap opens the upgrade sheet or the plan sheet.
+ */
+@Composable
+fun AccountPlanRow(
+    billing: Billing,
+    onClick: () -> Unit,
+    now: Instant = Instant.now(),
+    zone: ZoneId = ZoneId.systemDefault(),
+) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    val res = LocalContext.current.resources
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .testTag("plan-row")
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            if (billing.pro) {
+                PlanTitle(billing, fontSize = 16.sp, bold = false)
+                val meta = planMeta(res, billing, now, zone)
+                if (meta.isNotEmpty()) Text(meta, style = type.meta, color = tokens.textSecondary, modifier = Modifier.testTag("plan-row-meta"))
+            } else {
+                Text(stringResource(R.string.billing_row_free), style = type.body.copy(fontSize = 16.sp), color = tokens.text, modifier = Modifier.testTag("plan-row-free"))
+                Text(stringResource(R.string.billing_row_free_line), style = type.meta, color = tokens.textSecondary)
             }
+        }
+        if (!billing.pro) {
+            Text(
+                stringResource(R.string.billing_upgrade),
+                style = type.body.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                color = tokens.accentInk,
+                maxLines = 1,
+                modifier = Modifier.testTag("plan-row-upgrade"),
+            )
+        }
+        PixelIcon("chevron-right", size = 12.dp, tint = tokens.textTertiary)
+    }
+}
+
+/** `Withdo Pro` and its status tag: the row's name at 16 sp, the sheet's at 20 sp 700. */
+@Composable
+private fun PlanTitle(billing: Billing, fontSize: TextUnit, bold: Boolean) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    val res = LocalContext.current.resources
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.billing_row_pro),
+            style = (if (bold) type.title else type.body).copy(
+                fontSize = fontSize,
+                lineHeight = if (bold) 26.sp else TextUnit.Unspecified,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+            ),
+            color = tokens.text,
+            modifier = Modifier.testTag("plan-name"),
+        )
+        val (wash, ink) = when (billing.planState()) {
+            PlanState.TRIALING -> tokens.statusDone.copy(alpha = 0.14f) to tokens.categoryInk("green")
+            PlanState.ACTIVE -> tokens.accentSoft to tokens.accentInk
+            PlanState.CANCELING -> tokens.statusBlocked.copy(alpha = 0.12f) to tokens.statusBlocked
+            PlanState.PAST_DUE -> tokens.statusReview.copy(alpha = 0.2f) to tokens.categoryInk("yellow")
+        }
+        Text(
+            planTag(res, billing),
+            style = type.badge.copy(fontSize = 12.sp),
+            color = ink,
+            maxLines = 1,
+            modifier = Modifier.testTag("plan-tag").background(wash, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 1.dp),
+        )
+    }
+}
+
+/**
+ * The plan sheet of a Pro account (v47): the name and tag, a box of the plan, the payment method
+ * and the date, one paragraph for the status, and the quiet `Manage subscription`.
+ */
+@Composable
+fun PlanSheet(
+    billing: Billing,
+    onManage: () -> Unit,
+    onDismiss: () -> Unit,
+    now: Instant = Instant.now(),
+    zone: ZoneId = ZoneId.systemDefault(),
+) {
+    val tokens = LocalTokens.current
+    val type = LocalAppType.current
+    val res = LocalContext.current.resources
+    val shape = RoundedCornerShape(12.dp)
+    SheetFrame(onDismiss) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("plan-sheet")) {
+            Box(Modifier.padding(top = 4.dp)) { PlanTitle(billing, fontSize = 20.sp, bold = true) }
+            Column(
+                Modifier
+                    .padding(top = 14.dp)
+                    .fillMaxWidth()
+                    .clip(shape)
+                    .border(Dims.hairline, tokens.border, shape),
+            ) {
+                for ((i, row) in planRows(res, billing, now, zone).withIndex()) {
+                    if (i > 0) Box(Modifier.fillMaxWidth().height(Dims.hairline).background(tokens.border))
+                    Row(Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(row.first, style = type.body.copy(fontSize = 14.sp), color = tokens.textSecondary, modifier = Modifier.weight(1f))
+                        Text(row.second, style = type.body.copy(fontSize = 14.sp), color = tokens.text, modifier = Modifier.testTag("plan-value-$i"))
+                    }
+                }
+            }
+            Text(
+                planNote(res, billing),
+                style = type.meta.copy(fontSize = 13.sp, lineHeight = 19.sp),
+                color = tokens.textSecondary,
+                modifier = Modifier.padding(top = 12.dp).testTag("plan-note"),
+            )
             PlanButton(stringResource(R.string.billing_manage), accent = false, tag = "plan-manage", onClick = onManage)
-        } else {
-            val label = if (billing.trialUsed) R.string.billing_upgrade else R.string.billing_upgrade_trial
-            PlanButton(stringResource(label), accent = true, tag = "plan-upgrade", onClick = onUpgrade)
         }
     }
 }
