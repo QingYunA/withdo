@@ -144,6 +144,11 @@ class BillingRulesTest {
         // No interval: no price; no date: no third row.
         assertEquals("Pro", planRows(res, yearly.copy(interval = ""), now, shanghai).first().second)
         assertEquals(2, planRows(res, yearly.copy(periodEnd = ""), now, shanghai).size)
+        // Past due: the period end is in the past, so no date row.
+        assertEquals(
+            listOf("Plan" to "Yearly $58.72", "Payment" to "Waffo"),
+            planRows(res, yearly.copy(status = "past_due", periodEnd = "2026-11-01T09:00:00Z"), now, shanghai),
+        )
     }
 
     @Test

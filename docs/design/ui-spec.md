@@ -2962,7 +2962,8 @@ Built (v47, phone): screens `settings-pro-free-*` (the Free row), `settings-pro-
 `plan-sheet-trialing-*` and `plan-sheet-canceling-*`; the `pro-sheet-*` and `pro-waiting-*` ones changed only behind the sheet. The row
 is `AccountPlanRow` and the sheet `PlanSheet` (`BillingViews.kt`), their words `planMeta`, `planRows` and `planNote` (`BillingState.kt`). The
 renewal line and the card's buttons are gone, with the strings only they used. With no interval the meta line has only the date and the
-plan row says `Pro` without a price; with no date the sheet has two rows. Past due keeps the `下次续费` row. English: `Free trial` /
+plan row says `Pro` without a price. The sheet's rows are Plan, Payment and the date; with no date, and when past due (the period end is in
+the past, so `下次续费` would mislead), the date row is left out and the box has two rows. English: `Free trial` /
 `Pro` / `Canceled` / `Payment failed` tags, `Yearly · First charge Nov 12`, `Yearly · Renews Nov 12, 2027`, `Pro until Nov 12`,
 `The renewal didn’t go through`.
 

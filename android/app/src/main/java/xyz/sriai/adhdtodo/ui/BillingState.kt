@@ -199,7 +199,8 @@ fun planMeta(res: Resources, billing: Billing, now: Instant = Instant.now(), zon
 /**
  * The plan sheet's box: `Plan` with `Yearly $58.72` (`Pro` when the server names no interval),
  * `Payment` with `Waffo` or `PayPal`, then the date by status (`First charge`, `Renews`, `Pro
- * until`), left out when the server named no date.
+ * until`), left out when the server named no date and when the payment failed (the period end is
+ * in the past then, so `Renews` would mislead).
  */
 fun planRows(res: Resources, billing: Billing, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): List<Pair<String, String>> {
     val interval = intervalName(res, billing)
@@ -213,7 +214,7 @@ fun planRows(res: Resources, billing: Billing, now: Instant = Instant.now(), zon
     return listOfNotNull(
         res.getString(R.string.billing_row_plan) to plan,
         res.getString(R.string.billing_row_payment) to if (billing.viaPayPal) "PayPal" else "Waffo",
-        if (date.isEmpty()) null else res.getString(
+        if (date.isEmpty() || billing.planState() == PlanState.PAST_DUE) null else res.getString(
             when (billing.planState()) {
                 PlanState.TRIALING -> R.string.billing_row_first_charge
                 PlanState.CANCELING -> R.string.billing_row_until
