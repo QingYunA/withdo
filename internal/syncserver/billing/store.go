@@ -28,9 +28,17 @@ type Store interface {
 	// changed. It returns ErrNoAccount, recording nothing, when the account does not exist.
 	Apply(ctx context.Context, eventID, eventType string, account int64,
 		update func(cur Subscription, exists bool) (next Subscription, changed bool)) (before, after Subscription, dup, saved bool, err error)
+	// SetPendingPayPal remembers the PayPal subscription a checkout made for the account, replacing
+	// the one it remembered before.
+	SetPendingPayPal(ctx context.Context, account int64, subscriptionID string, at time.Time) error
+	// PendingPayPal reads the account's remembered PayPal subscription and when it was made.
+	PendingPayPal(ctx context.Context, account int64) (subscriptionID string, at time.Time, ok bool, err error)
+	// ClearPendingPayPal forgets the account's remembered subscription, but only if it is still
+	// subscriptionID: a newer checkout's is kept.
+	ClearPendingPayPal(ctx context.Context, account int64, subscriptionID string) error
 }
 
-// PGStore is Store over the billing_subscriptions and billing_events tables (migrations 005, 006 and 007).
+// PGStore is Store over the billing_subscriptions, billing_events and billing_paypal_pending tables (migrations 005 to 008).
 type PGStore struct{ pool *pgxpool.Pool }
 
 // NewPGStore returns the Postgres store.
@@ -139,6 +147,40 @@ func (p *PGStore) Apply(ctx context.Context, eventID, eventType string, account 
 		next = cur
 	}
 	return cur, next, false, changed, nil
+}
+
+// SetPendingPayPal implements Store.
+func (p *PGStore) SetPendingPayPal(ctx context.Context, account int64, subscriptionID string, at time.Time) error {
+	_, err := p.pool.Exec(ctx, `INSERT INTO billing_paypal_pending (user_id, subscription_id, created_at) VALUES ($1, $2, $3)
+		ON CONFLICT (user_id) DO UPDATE SET subscription_id = EXCLUDED.subscription_id, created_at = EXCLUDED.created_at`,
+		account, subscriptionID, at)
+	if err != nil {
+		return fmt.Errorf("billing: remember the PayPal checkout: %w", err)
+	}
+	return nil
+}
+
+// PendingPayPal implements Store.
+func (p *PGStore) PendingPayPal(ctx context.Context, account int64) (string, time.Time, bool, error) {
+	var id string
+	var at time.Time
+	err := p.pool.QueryRow(ctx, `SELECT subscription_id, created_at FROM billing_paypal_pending WHERE user_id = $1`, account).Scan(&id, &at)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", time.Time{}, false, nil
+	}
+	if err != nil {
+		return "", time.Time{}, false, fmt.Errorf("billing: read the PayPal checkout: %w", err)
+	}
+	return id, at.UTC(), true, nil
+}
+
+// ClearPendingPayPal implements Store.
+func (p *PGStore) ClearPendingPayPal(ctx context.Context, account int64, subscriptionID string) error {
+	_, err := p.pool.Exec(ctx, `DELETE FROM billing_paypal_pending WHERE user_id = $1 AND subscription_id = $2`, account, subscriptionID)
+	if err != nil {
+		return fmt.Errorf("billing: forget the PayPal checkout: %w", err)
+	}
+	return nil
 }
 
 func nullTime(t time.Time) *time.Time {

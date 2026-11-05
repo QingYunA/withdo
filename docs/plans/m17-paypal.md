@@ -68,3 +68,26 @@ waiting state says `在 PayPal 里完成订阅` / `重新打开 PayPal`. A PayPa
   subscription stays Pro 24 hours past its period end (PayPal charges a renewal some time after it is
   due and the sale webhook follows); `canceling` does not. `GET /v1/billing` reports a lapsed
   `canceling` as `canceled`, since PayPal sends no event when the period ends.
+
+## Polling fallback
+
+In the first sandbox test (2026-11-04) PayPal created `BILLING.SUBSCRIPTION.ACTIVATED` and the
+subscription was ACTIVE, but no webhook ever reached the server, so the account never became Pro.
+Webhooks stay the main path; `GET /v1/billing` and the official-model quota now also read PayPal
+themselves, only when PayPal is configured and never for Waffo rows:
+
+- `POST /v1/billing/checkout` with `provider: "paypal"` remembers the new subscription id (`I-…`) in
+  `billing_paypal_pending` (migration 008, one per account; a new checkout replaces it).
+- `GET /v1/billing` (the apps call it every few seconds while waiting for PayPal) reads that
+  subscription with `GET /v1/billing/subscriptions/{id}` at most once per 10 seconds per account and
+  applies it through the same code as a webhook (`applyPayPalSubscription`: `custom_id` must be the
+  account, else it is ignored). The dedupe id is `paypal-poll:<id>:<newest PayPal timestamp>`.
+  The pending entry is deleted once the row holds the subscription, when PayPal does not know it or
+  it names another account, and after 3 days; an unapproved one (`APPROVAL_PENDING`) stays.
+- If the row is an existing PayPal subscription that is not `canceled`, `GET /v1/billing` refreshes
+  it from PayPal at most once per 10 minutes per account, which sees a cancellation whose webhook was
+  lost. The throttles are in memory, per server process.
+- `IsProSubject` does the same refresh (same 10-minute throttle) for a PayPal row that is
+  trialing, active or past_due but no longer Pro, i.e. a renewal whose sale webhook was lost.
+- PayPal being down or slow (each poll is cut off after 8 seconds) never fails the request: it logs
+  `billing: account=N paypal poll failed: …` and answers from the stored row.

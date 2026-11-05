@@ -198,3 +198,30 @@ func TestPayPalCheckoutAndWebhook(t *testing.T) {
 	api.setSub("ACTIVE", "", now, `"failed_payments_count":0`)
 	requireStatus(t, "no custom id", rig.sendPayPal(t, "WH-4", "BILLING.SUBSCRIPTION.ACTIVATED", true), http.StatusOK)
 }
+
+// A webhook that never arrives is made up for by GET /v1/billing, which the apps poll while they
+// wait for the checkout: the server reads the subscription the checkout made from PayPal itself.
+func TestPayPalLostWebhookIsMadeUpByPolling(t *testing.T) {
+	api := newFakePayPalAPI(t)
+	rig := newBillingRigWith(t, paypalConfig(api))
+
+	var out syncproto.CheckoutResponse
+	requireStatus(t, "paypal checkout", rig.post(t, "/v1/billing/checkout", aliceToken, syncproto.CheckoutRequest{Plan: "monthly", Provider: "paypal"}, &out), http.StatusOK)
+	account, _ := api.created[0]["custom_id"].(string)
+
+	var st syncproto.BillingResponse
+	// Approved at PayPal, and no webhook is sent.
+	now := time.Now()
+	api.setSub("ACTIVE", account, now, `"cycle_executions":[{"tenure_type":"TRIAL","cycles_completed":0,"total_cycles":1},{"tenure_type":"REGULAR","cycles_completed":0,"total_cycles":0}],"failed_payments_count":0,"next_billing_time":"`+now.Add(7*24*time.Hour).UTC().Format(time.RFC3339)+`"`)
+	requireStatus(t, "polled", rig.get(t, "/v1/billing", aliceToken, &st), http.StatusOK)
+	if st.Plan != "pro" || st.Status != "trialing" || st.Provider != "paypal" || !st.TrialUsed {
+		t.Fatalf("after polling = %+v", st)
+	}
+	var q struct {
+		Plan string `json:"plan"`
+	}
+	requireStatus(t, "quota", rig.get(t, "/v1/llm/quota", aliceToken, &q), http.StatusOK)
+	if q.Plan != "pro" {
+		t.Fatalf("quota plan = %q", q.Plan)
+	}
+}
