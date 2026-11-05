@@ -79,7 +79,7 @@ func TestAPayPalSubscriptionsPlanRowSaysSo(t *testing.T) {
 		Yearly: "$58.72", PeriodEnd: fixedNow().Add(7 * 24 * time.Hour), TrialUsed: true,
 	}
 	r := accountRig(t, proInfo, pro)
-	has(t, r.tt, "Free trial", "Yearly $58.72 · via PayPal · First charge Oct 21; cancel any time before", "Manage subscription")
+	has(t, r.tt, "Free trial", "Yearly $58.72 · via PayPal · First charge Oct 21", "Manage subscription")
 
 	pro.Status, pro.PeriodEnd = "active", time.Date(2027, 10, 21, 0, 0, 0, 0, time.Local)
 	r.fm.Bill = pro

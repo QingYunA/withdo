@@ -13010,20 +13010,6 @@ func (msgs Messages) SettingsPlanPro() string {
 	return Catalog.Format(msgs.locale, "settingsPlanPro", nil)
 }
 
-// SettingsPlanTitle says "Plan"
-// in the language the app shows.
-//
-// Label of the plan group in Settings > Account.
-func SettingsPlanTitle() string { return In(i18n.Locale()).SettingsPlanTitle() }
-
-// SettingsPlanTitle says "Plan"
-// in the language of msgs.
-//
-// Label of the plan group in Settings > Account.
-func (msgs Messages) SettingsPlanTitle() string {
-	return Catalog.Format(msgs.locale, "settingsPlanTitle", nil)
-}
-
 // SettingsPlanNameFree says "Free"
 // in the language the app shows.
 //
@@ -13056,13 +13042,13 @@ func (msgs Messages) SettingsPlanNamePro() string {
 	return Catalog.Format(msgs.locale, "settingsPlanNamePro", nil)
 }
 
-// SettingsPlanLineTrial says "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial."
+// SettingsPlanLineTrial says "20 a day on the official model. Pro: 100 a day, 7-day free trial."
 // in the language the app shows.
 //
 // Line of the plan row on the free plan, trial not used yet.
 func SettingsPlanLineTrial() string { return In(i18n.Locale()).SettingsPlanLineTrial() }
 
-// SettingsPlanLineTrial says "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial."
+// SettingsPlanLineTrial says "20 a day on the official model. Pro: 100 a day, 7-day free trial."
 // in the language of msgs.
 //
 // Line of the plan row on the free plan, trial not used yet.
@@ -13070,13 +13056,13 @@ func (msgs Messages) SettingsPlanLineTrial() string {
 	return Catalog.Format(msgs.locale, "settingsPlanLineTrial", nil)
 }
 
-// SettingsPlanLine says "The official model, 20 a day. Pro: 100 a day on every device."
+// SettingsPlanLine says "20 a day on the official model. Pro: 100 a day on every device."
 // in the language the app shows.
 //
 // Line of the plan row on the free plan, trial already used.
 func SettingsPlanLine() string { return In(i18n.Locale()).SettingsPlanLine() }
 
-// SettingsPlanLine says "The official model, 20 a day. Pro: 100 a day on every device."
+// SettingsPlanLine says "20 a day on the official model. Pro: 100 a day on every device."
 // in the language of msgs.
 //
 // Line of the plan row on the free plan, trial already used.
@@ -13142,13 +13128,13 @@ func (msgs Messages) SettingsPlanViaPayPal() string {
 	return Catalog.Format(msgs.locale, "settingsPlanViaPayPal", nil)
 }
 
-// SettingsPlanTrialEnd says "First charge {date}; cancel any time before"
+// SettingsPlanTrialEnd says "First charge {date}"
 // in the language the app shows.
 //
 // End of the plan row's line while the free trial runs.
 func SettingsPlanTrialEnd(date string) string { return In(i18n.Locale()).SettingsPlanTrialEnd(date) }
 
-// SettingsPlanTrialEnd says "First charge {date}; cancel any time before"
+// SettingsPlanTrialEnd says "First charge {date}"
 // in the language of msgs.
 //
 // End of the plan row's line while the free trial runs.
@@ -13170,14 +13156,14 @@ func (msgs Messages) SettingsPlanRenews(date string) string {
 	return Catalog.Format(msgs.locale, "settingsPlanRenews", map[string]any{"date": date})
 }
 
-// SettingsPlanEnds says "Pro until {date}, then Free; no more charges"
+// SettingsPlanEnds says "Pro until {date}; no more charges"
 // in the language the app shows.
 //
 // End of the plan row's line for a cancelled subscription that runs to the
 // end of its period.
 func SettingsPlanEnds(date string) string { return In(i18n.Locale()).SettingsPlanEnds(date) }
 
-// SettingsPlanEnds says "Pro until {date}, then Free; no more charges"
+// SettingsPlanEnds says "Pro until {date}; no more charges"
 // in the language of msgs.
 //
 // End of the plan row's line for a cancelled subscription that runs to the
@@ -13186,13 +13172,13 @@ func (msgs Messages) SettingsPlanEnds(date string) string {
 	return Catalog.Format(msgs.locale, "settingsPlanEnds", map[string]any{"date": date})
 }
 
-// SettingsPlanPastDue says "The renewal did not go through; update the payment method"
+// SettingsPlanPastDue says "Renewal failed; update the payment method"
 // in the language the app shows.
 //
 // End of the plan row's line when the last renewal failed.
 func SettingsPlanPastDue() string { return In(i18n.Locale()).SettingsPlanPastDue() }
 
-// SettingsPlanPastDue says "The renewal did not go through; update the payment method"
+// SettingsPlanPastDue says "Renewal failed; update the payment method"
 // in the language of msgs.
 //
 // End of the plan row's line when the last renewal failed.

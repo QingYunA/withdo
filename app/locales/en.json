@@ -5095,10 +5095,6 @@
   "@settingsPlanPro": {
     "description": "Pill on the official model's card: the account has Withdo Pro."
   },
-  "settingsPlanTitle": "Plan",
-  "@settingsPlanTitle": {
-    "description": "Label of the plan group in Settings > Account."
-  },
   "settingsPlanNameFree": "Free",
   "@settingsPlanNameFree": {
     "description": "Name of the plan row in Settings > Account for an account on the free plan."
@@ -5107,11 +5103,11 @@
   "@settingsPlanNamePro": {
     "description": "Name of the plan row in Settings > Account for an account that has Withdo Pro."
   },
-  "settingsPlanLineTrial": "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial.",
+  "settingsPlanLineTrial": "20 a day on the official model. Pro: 100 a day, 7-day free trial.",
   "@settingsPlanLineTrial": {
     "description": "Line of the plan row on the free plan, trial not used yet."
   },
-  "settingsPlanLine": "The official model, 20 a day. Pro: 100 a day on every device.",
+  "settingsPlanLine": "20 a day on the official model. Pro: 100 a day on every device.",
   "@settingsPlanLine": {
     "description": "Line of the plan row on the free plan, trial already used."
   },
@@ -5131,7 +5127,7 @@
   "@settingsPlanViaPayPal": {
     "description": "Part of the plan row's line for a subscription billed by PayPal."
   },
-  "settingsPlanTrialEnd": "First charge {date}; cancel any time before",
+  "settingsPlanTrialEnd": "First charge {date}",
   "@settingsPlanTrialEnd": {
     "description": "End of the plan row's line while the free trial runs.",
     "placeholders": {
@@ -5151,7 +5147,7 @@
       }
     }
   },
-  "settingsPlanEnds": "Pro until {date}, then Free; no more charges",
+  "settingsPlanEnds": "Pro until {date}; no more charges",
   "@settingsPlanEnds": {
     "description": "End of the plan row's line for a cancelled subscription that runs to the end of its period.",
     "placeholders": {
@@ -5161,7 +5157,7 @@
       }
     }
   },
-  "settingsPlanPastDue": "The renewal did not go through; update the payment method",
+  "settingsPlanPastDue": "Renewal failed; update the payment method",
   "@settingsPlanPastDue": {
     "description": "End of the plan row's line when the last renewal failed."
   },

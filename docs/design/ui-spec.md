@@ -2229,22 +2229,23 @@ for what v41 does not change (the sign-in flows, the provider form, the category
    **Devices** as today. The server line at the foot as in #162 (no address for the official server).
    Signed out, the sign-in card is unchanged.
    **v47 (2026-11-05, `docs/design/mockups/v47.html`): the plan lives in Account.** Signed in to a server
-   that offers billing, a **Plan** / `套餐` group sits between the account group and Devices: one row,
-   the plan's name (`body` 600) with a `meta` tag after it (6 pt radius, 1 × 6 pt inside), one `meta`
-   line in `text.secondary` under it, and a button at the right. Free: `免费版` / `Free`, no tag,
-   `官方模型每天 20 次。Pro 每天 100 次，所有设备通用；先免费试用 7 天。` (`The official model, 20 a day. Pro: 100 a
-   day on every device, with a 7-day free trial.`; without the trial sentence once the trial is used) and
-   the accent **Upgrade to Pro**, which opens the v45 sheet (with v46's PayPal button) over the pane.
+   that offers billing, the account group gains a last row, the plan (after the Google row, the same
+   hairline; the mockup's separate **Plan** group is dropped because it pushed the pane past 580 pt with
+   three devices): the plan's name (`body` 600) with a `meta` tag after it (6 pt radius, 1 × 6 pt
+   inside), one `meta` line in `text.secondary` under it, and a button at the right. Free: `免费版` /
+   `Free`, no tag, `官方模型每天 20 次。Pro 每天 100 次，先免费试用 7 天。` (`20 a day on the official model. Pro: 100
+   a day, 7-day free trial.`; once the trial is used `官方模型每天 20 次。Pro 每天 100 次，所有设备通用。` / `20 a
+   day on the official model. Pro: 100 a day on every device.`), one line each, and the accent **Upgrade to Pro**, which opens the v45 sheet (with v46's PayPal button) over the pane.
    Pro: `Withdo Pro`, **Manage subscription** at the right, and by status: trialing, the tag `试用中` /
    `Free trial` (done green wash) and `年付 $58.72 · 11月12日开始扣费，之前随时可以取消` (`Yearly $58.72 · First
-   charge Nov 12; cancel any time before`); active, the tag `Pro` (accent wash) and `年付 $58.72 · 下次续费
+   charge Nov 12`); active, the tag `Pro` (accent wash) and `年付 $58.72 · 下次续费
    2027年11月12日` (`Yearly $58.72 · Renews Nov 12, 2027`); canceling, the tag `已取消` / `Canceled`
-   (blocked red wash) and `年付 · Pro 用到 11月12日，之后回到免费版，不会再扣费` (`Yearly · Pro until Nov 12, then
-   Free; no more charges`); past due, the tag `续费失败` / `Payment failed` (review yellow wash) and `年付 ·
-   续费没扣成功，请在订阅里更新付款方式` (`Yearly · The renewal did not go through; update the payment method`).
+   (blocked red wash) and `年付 · Pro 用到 11月12日，之后回到免费版，不会再扣费` (`Yearly · Pro until Nov 12;
+   no more charges`); past due, the tag `续费失败` / `Payment failed` (review yellow wash) and `年付 ·
+   续费没扣成功，请在订阅里更新付款方式` (`Yearly · Renewal failed; update the payment method`).
    The price is the plan's list price (`$58.72` yearly, `$6.99` monthly); with no interval the line has
    neither the interval nor the price. A PayPal subscription adds `· 通过 PayPal` / `· via PayPal` after
-   the price (after the interval while canceling or past due). The group does not show signed out or
+   the price (after the interval while canceling or past due). The row does not show signed out or
    without billing. Nothing else about the plan is in Account: the quota stays with the model.
    Built (v47, desktop): screens `settings-account-plan-free-*`, `-trial-*`, `-canceling-paypal-*`, `-active-*`, `-past-due-*`,
    `-sheet-*`, `-sheet-paypal-*`, `-waiting-*` and `-waiting-paypal-*`, and the Model screens `settings-model-pro-free-*` (with the

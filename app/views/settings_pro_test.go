@@ -86,34 +86,33 @@ func TestTheProCardKeepsThePillAndTheQuotaOnly(t *testing.T) {
 	hasNot(t, r.tt, "Upgrade to Pro", "Free", "Manage subscription", "Withdo Pro", "Yearly")
 }
 
-func TestAccountShowsThePlanGroupBetweenTheAccountAndTheDevices(t *testing.T) {
+func TestAccountShowsThePlanAsTheLastRowOfTheAccountGroup(t *testing.T) {
 	r := accountRig(t, freeInfo, freeBill)
-	has(t, r.tt, "Plan", "Free", "The official model, 20 a day. Pro: 100 a day on every device, with a 7-day free trial.",
-		"Upgrade to Pro", "Devices")
-	hasNot(t, r.tt, "Manage subscription", "Withdo Pro")
-	plan, _ := r.tt.Find("Plan")
+	has(t, r.tt, "Free", "20 a day on the official model. Pro: 100 a day, 7-day free trial.", "Upgrade to Pro", "Devices")
+	hasNot(t, r.tt, "Manage subscription", "Withdo Pro", "Plan")
+	google, _ := r.tt.Find("Google")
+	plan, _ := r.tt.Find("Upgrade to Pro")
 	devices, _ := r.tt.Find("Devices")
-	account, _ := r.tt.Find("Sync now")
-	if !(account.Y < plan.Y && plan.Y < devices.Y) {
-		t.Errorf("order: account %v, plan %v, devices %v", account.Y, plan.Y, devices.Y)
+	if !(google.Y < plan.Y && plan.Y < devices.Y) {
+		t.Errorf("order: google %v, plan %v, devices %v", google.Y, plan.Y, devices.Y)
 	}
 
 	used := freeBill
 	used.TrialUsed = true
 	r.fm.Bill = used
 	r.tt.Frame()
-	has(t, r.tt, "The official model, 20 a day. Pro: 100 a day on every device.")
-	hasNot(t, r.tt, "with a 7-day free trial")
+	has(t, r.tt, "20 a day on the official model. Pro: 100 a day on every device.")
+	hasNot(t, r.tt, "7-day free trial.")
 }
 
-func TestThePlanGroupIsNotThereWithoutAPlanToSell(t *testing.T) {
+func TestThePlanRowIsNotThereWithoutAPlanToSell(t *testing.T) {
 	for name, bill := range map[string]data.BillingInfo{
 		"no billing": {},
 		"unknown":    {Offered: true},
 	} {
 		r := accountRig(t, freeInfo, bill)
-		if r.tt.HasText("Plan") || r.tt.HasText("Upgrade to Pro") {
-			t.Errorf("%s: the plan group is shown", name)
+		if r.tt.HasText("Free") || r.tt.HasText("Upgrade to Pro") {
+			t.Errorf("%s: the plan row is shown", name)
 		}
 		has(t, r.tt, "Devices")
 	}
@@ -122,10 +121,10 @@ func TestThePlanGroupIsNotThereWithoutAPlanToSell(t *testing.T) {
 	r.fm.Info, r.fm.Bill = freeInfo, freeBill
 	r.s.Show(PaneAccount)
 	r.tt.Frame()
-	hasNot(t, r.tt, "Upgrade to Pro", "Plan")
+	hasNot(t, r.tt, "Upgrade to Pro", "20 a day on the official model.")
 }
 
-func TestThePlanGroupTagsTheStatusAndTheButtonManagesTheSubscription(t *testing.T) {
+func TestThePlanRowTagsTheStatusAndTheButtonManagesTheSubscription(t *testing.T) {
 	for _, c := range []struct{ status, tag string }{
 		{"trialing", "Free trial"},
 		{"active", "Pro"},
@@ -137,7 +136,7 @@ func TestThePlanGroupTagsTheStatusAndTheButtonManagesTheSubscription(t *testing.
 			PeriodEnd: fixedNow().Add(7 * 24 * time.Hour), TrialUsed: true,
 		}
 		r := accountRig(t, proInfo, pro)
-		has(t, r.tt, "Plan", "Withdo Pro", c.tag, "Manage subscription")
+		has(t, r.tt, "Withdo Pro", c.tag, "Manage subscription")
 		hasNot(t, r.tt, "Upgrade to Pro", "20 a day")
 	}
 }
@@ -160,24 +159,24 @@ func TestThePlanLineByStatusIntervalAndProvider(t *testing.T) {
 		en, zh string
 	}{
 		{"trialing yearly", bill("trialing", "yearly", "", soon),
-			"Yearly $58.72 · First charge Oct 21; cancel any time before", "年付 $58.72 · 10月21日开始扣费，之前随时可以取消"},
+			"Yearly $58.72 · First charge Oct 21", "年付 $58.72 · 10月21日开始扣费，之前随时可以取消"},
 		{"trialing monthly paypal", bill("trialing", "monthly", data.ProviderPayPal, soon),
-			"Monthly $6.99 · via PayPal · First charge Oct 21; cancel any time before", "月付 $6.99 · 通过 PayPal · 10月21日开始扣费，之前随时可以取消"},
+			"Monthly $6.99 · via PayPal · First charge Oct 21", "月付 $6.99 · 通过 PayPal · 10月21日开始扣费，之前随时可以取消"},
 		{"active yearly", bill("active", "yearly", data.ProviderWaffo, later),
 			"Yearly $58.72 · Renews Oct 21, 2027", "年付 $58.72 · 下次续费 2027年10月21日"},
 		{"active monthly", bill("active", "monthly", "", soon),
 			"Monthly $6.99 · Renews Oct 21", "月付 $6.99 · 下次续费 10月21日"},
 		{"canceling yearly", bill("canceling", "yearly", "", soon),
-			"Yearly · Pro until Oct 21, then Free; no more charges", "年付 · Pro 用到 10月21日，之后回到免费版，不会再扣费"},
+			"Yearly · Pro until Oct 21; no more charges", "年付 · Pro 用到 10月21日，之后回到免费版，不会再扣费"},
 		{"canceling paypal", bill("canceling", "yearly", data.ProviderPayPal, soon),
-			"Yearly · via PayPal · Pro until Oct 21, then Free; no more charges", "年付 · 通过 PayPal · Pro 用到 10月21日，之后回到免费版，不会再扣费"},
+			"Yearly · via PayPal · Pro until Oct 21; no more charges", "年付 · 通过 PayPal · Pro 用到 10月21日，之后回到免费版，不会再扣费"},
 		{"past due", bill("past_due", "monthly", "", soon),
-			"Monthly · The renewal did not go through; update the payment method", "月付 · 续费没扣成功，请在订阅里更新付款方式"},
+			"Monthly · Renewal failed; update the payment method", "月付 · 续费没扣成功，请在订阅里更新付款方式"},
 		{"past due paypal", bill("past_due", "yearly", data.ProviderPayPal, soon),
-			"Yearly · via PayPal · The renewal did not go through; update the payment method", "年付 · 通过 PayPal · 续费没扣成功，请在订阅里更新付款方式"},
+			"Yearly · via PayPal · Renewal failed; update the payment method", "年付 · 通过 PayPal · 续费没扣成功，请在订阅里更新付款方式"},
 		{"no interval", bill("active", "", "", soon), "Renews Oct 21", "下次续费 10月21日"},
 		{"no interval paypal", bill("trialing", "", data.ProviderPayPal, soon),
-			"via PayPal · First charge Oct 21; cancel any time before", "通过 PayPal · 10月21日开始扣费，之前随时可以取消"},
+			"via PayPal · First charge Oct 21", "通过 PayPal · 10月21日开始扣费，之前随时可以取消"},
 		{"no date", bill("active", "yearly", "", time.Time{}), "Yearly $58.72", "年付 $58.72"},
 		{"no price", noPrice, "Yearly · Renews Oct 21", "年付 · 下次续费 10月21日"},
 	} {

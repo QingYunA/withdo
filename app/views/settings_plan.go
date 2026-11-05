@@ -8,8 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// The plan in Settings > Account (v47): one row between the account group and Devices. It says which
-// plan this is, with a tag for the subscription's status, one line of what it costs and when it
+// The plan in Settings > Account (v47): the last row of the account group. It says which plan this is, with a tag for the subscription's status, one line of what it costs and when it
 // changes, and the button that goes with it: Upgrade to Pro (the sheet in settings_pro.go) on Free,
 // Manage subscription on Pro. It waits for the server's answer, which has the trial and the dates,
 // and is not there signed out or on a server that sells no plan.
@@ -17,42 +16,39 @@ import (
 // planTagWash is the alpha of a tag's wash.
 const planTagWash = 0.14
 
-// planGroup is the Plan label and its row.
-func (s *Settings) planGroup(c *ui.Context, t *theme.Tokens) {
+// planRow is the last row of the account group. It waits for the server's answer and is not there
+// without a plan to sell.
+func (s *Settings) planRow(c *ui.Context, t *theme.Tokens) {
 	bill := s.billing()
 	if !bill.Offered || !bill.Known {
 		return
 	}
-	groupLabel(c, t, s.say.SettingsPlanTitle())
-	group(c, t, "plan", func() {
-		ui.Row(c.Key("plan-row")).Shrink(0).MinHeight(theme.SettingsRowMin).Padding(8, 14).Gap(12).AlignItems(ui.Center).Children(func() {
-			ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
-				ui.Row(c.Key("plan-name")).Gap(8).AlignItems(ui.Center).Children(func() {
-					name := s.say.SettingsPlanNameFree()
-					if bill.Pro {
-						name = s.say.SettingsPlanNamePro()
-					}
-					theme.Text(c, theme.BodyStrong, t.Text, name)
-					s.planTag(c, t, bill)
-				})
-				if line := s.planLine(bill); line != "" {
-					theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 2)
-				}
-				if s.pro.manageErr != "" {
-					theme.Paragraph(c, theme.Meta, t.Blocked(), s.pro.manageErr, 2)
-				}
-			})
-			switch {
-			case bill.Subscribed():
-				if settingsButton(c, t, "pro-manage", s.say.SettingsProManage(), false).Clicked() {
-					s.manageSubscription()
-				}
-			case !bill.Pro:
-				if settingsButton(c, t, "pro-upgrade", s.say.SettingsProUpgrade(), true).Clicked() {
-					s.openUpgrade()
-				}
+	syncRow(c, t, "plan", false, func() {
+		ui.Row(c.Key("plan-name")).Gap(8).AlignItems(ui.Center).Children(func() {
+			name := s.say.SettingsPlanNameFree()
+			if bill.Pro {
+				name = s.say.SettingsPlanNamePro()
 			}
+			theme.Text(c, theme.BodyStrong, t.Text, name)
+			s.planTag(c, t, bill)
 		})
+		if line := s.planLine(bill); line != "" {
+			theme.Paragraph(c, theme.Meta, t.TextSecondary, line, 2)
+		}
+		if s.pro.manageErr != "" {
+			theme.Paragraph(c, theme.Meta, t.Blocked(), s.pro.manageErr, 2)
+		}
+	}, func() {
+		switch {
+		case bill.Subscribed():
+			if settingsButton(c, t, "pro-manage", s.say.SettingsProManage(), false).Clicked() {
+				s.manageSubscription()
+			}
+		case !bill.Pro:
+			if settingsButton(c, t, "pro-upgrade", s.say.SettingsProUpgrade(), true).Clicked() {
+				s.openUpgrade()
+			}
+		}
 	})
 }
 

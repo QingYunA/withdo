@@ -134,7 +134,6 @@ func (s *Settings) syncPane(c *ui.Context, t *theme.Tokens) {
 		if snap.Phase == data.SyncUploading {
 			theme.Paragraph(c, theme.Meta, t.TextSecondary, s.say.SettingsSyncUploadNote(), 0).Margin(12, 4, 0)
 		}
-		s.planGroup(c, t)
 		s.syncDevices(c, t, snap)
 	default: // failed, offline or the wrong account
 		s.syncAccountGroup(c, t, svc, snap, false)
@@ -176,6 +175,9 @@ func (s *Settings) syncAccountGroup(c *ui.Context, t *theme.Tokens, svc SyncServ
 			s.syncThisMacRow(c, t, svc, snap)
 		}
 		s.syncGoogleRow(c, t, svc, snap)
+		if snap.Phase == data.SyncSynced || snap.Phase == data.SyncUploading {
+			s.planRow(c, t)
+		}
 	})
 }
 
