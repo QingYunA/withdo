@@ -69,36 +69,55 @@ func (s *Service) HandlePayPalWebhook(ctx context.Context, h PayPalHeaders, body
 	if ev.ID == "" || ev.SubscriptionID == "" || !paypalEventTypes[ev.Type] {
 		return ev, OutcomeIgnored, nil
 	}
-	sub, found, err := s.paypal.getSubscription(ctx, ev.SubscriptionID)
+	applied, err := s.applyPayPalSubscription(ctx, ev.SubscriptionID, 0, ev.Type,
+		func(paypalSub) string { return "paypal:" + ev.ID })
+	ev.Account = applied.account
+	return ev, applied.outcome, err
+}
+
+// paypalApplied is what applyPayPalSubscription did.
+type paypalApplied struct {
+	// account is the one the subscription's custom_id names; 0 when PayPal does not know the
+	// subscription, it names no account, or not the one the caller expected.
+	account int64
+	outcome Outcome
+}
+
+// applyPayPalSubscription reads a subscription from PayPal and puts its state in the row of the
+// account its custom_id names. Webhooks and polls both come through here, so they behave alike.
+// only, when not 0, is the account the caller expects: a subscription naming another is ignored.
+// eventID names the state for deduplication; it is given what PayPal answered.
+func (s *Service) applyPayPalSubscription(ctx context.Context, id string, only int64, eventType string,
+	eventID func(paypalSub) string) (paypalApplied, error) {
+	sub, found, err := s.paypal.getSubscription(ctx, id)
 	if err != nil {
-		return ev, "", err
+		return paypalApplied{}, err
 	}
 	account, ok := paypalAccount(sub.CustomID)
-	if !found || !ok || sub.ID != ev.SubscriptionID {
-		return ev, OutcomeIgnored, nil
+	if !found || !ok || sub.ID != id || (only != 0 && account != only) {
+		return paypalApplied{outcome: OutcomeIgnored}, nil
 	}
-	ev.Account = account
 	now := s.cfg.Now()
 	mode := paypalMode(s.paypal.cfg.Env)
-	before, after, dup, saved, err := s.store.Apply(ctx, "paypal:"+ev.ID, ev.Type, account,
+	before, after, dup, saved, err := s.store.Apply(ctx, eventID(sub), eventType, account,
 		func(cur Subscription, exists bool) (Subscription, bool) {
 			return reducePayPal(cur, exists, account, sub, mode, s.paypal.intervalOf(sub.PlanID), now)
 		})
 	switch {
 	case errors.Is(err, ErrNoAccount):
-		return ev, OutcomeIgnored, nil
+		return paypalApplied{account: account, outcome: OutcomeIgnored}, nil
 	case err != nil:
-		return ev, "", err
+		return paypalApplied{account: account}, err
 	case dup:
-		return ev, OutcomeDuplicate, nil
+		return paypalApplied{account: account, outcome: OutcomeDuplicate}, nil
 	case !saved:
-		return ev, OutcomeIgnored, nil
+		return paypalApplied{account: account, outcome: OutcomeIgnored}, nil
 	}
 	if s.notify != nil && (before.Status != after.Status || !before.PeriodEnd.Equal(after.PeriodEnd) ||
 		before.Pro(now) != after.Pro(now)) {
 		s.notify(account)
 	}
-	return ev, OutcomeApplied, nil
+	return paypalApplied{account: account, outcome: OutcomeApplied}, nil
 }
 
 // paypalEventTypes are the deliveries that make a subscription worth reading again: the ones the

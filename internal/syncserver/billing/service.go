@@ -82,6 +82,9 @@ type Service struct {
 
 	mu     sync.Mutex
 	recent map[int64][]time.Time // checkout times per account, for the rate limit
+	// When each account's PayPal subscription was last read, for a pending checkout and for the
+	// row's own, so that polling PayPal stays rare (see paypal_poll.go).
+	pendingPolled, refreshed map[int64]time.Time
 }
 
 // New checks cfg and returns a Service over store. notify, when not nil, is called with an
@@ -138,6 +141,9 @@ func New(cfg Config, store Store, notify func(account int64)) (*Service, error) 
 		notify:   notify,
 		products: map[string]string{PlanMonthly: cfg.ProductMonthly, PlanYearly: cfg.ProductYearly},
 		recent:   map[int64][]time.Time{},
+
+		pendingPolled: map[int64]time.Time{},
+		refreshed:     map[int64]time.Time{},
 	}, nil
 }
 
@@ -175,20 +181,33 @@ func (s *Service) thisMode(sub Subscription) bool {
 }
 
 // IsProSubject says whether the account a sign-in subject maps to is Pro now. A failed read is
-// not Pro: the free limit is the safe answer.
+// not Pro: the free limit is the safe answer. A PayPal subscription that lapsed by time alone is
+// read from PayPal first (rarely), since the webhook that renewed it may have been lost.
 func (s *Service) IsProSubject(ctx context.Context, subject string) bool {
 	sub, ok, err := s.store.GetBySubject(ctx, subject)
 	if err != nil {
 		log.Printf("billing: plan lookup failed: %v", err)
 		return false
 	}
-	return ok && s.thisMode(sub) && sub.Pro(s.cfg.Now())
+	if !ok || !s.thisMode(sub) {
+		return false
+	}
+	now := s.cfg.Now()
+	if s.paypal != nil && s.lapsedByTime(sub, now) && s.refreshPayPal(ctx, sub, now) {
+		if again, found, err := s.store.GetBySubject(ctx, subject); err == nil && found {
+			sub = again
+		}
+	}
+	return sub.Pro(now)
 }
 
 // Status reads the account's plan. For an account that has a subscription it also makes a fresh
 // customer-portal link for email (the buyer identity of its checkouts), falling back to the
 // portal's sign-in page when the link cannot be made; accounts that never subscribed get none.
 func (s *Service) Status(ctx context.Context, account int64, email func() string) (Status, error) {
+	if s.paypal != nil {
+		s.pollPayPal(ctx, account)
+	}
 	sub, ok, err := s.Subscription(ctx, account)
 	if err != nil {
 		return Status{}, err
@@ -311,14 +330,19 @@ func (s *Service) PayPalCheckout(ctx context.Context, account int64, email, plan
 	if s.paypal.planID(plan, false) == "" {
 		return "", ErrUnknownPlan
 	}
-	sub, exists, _, err := s.checkoutGate(ctx, account)
+	sub, exists, now, err := s.checkoutGate(ctx, account)
 	if err != nil {
 		return "", err
 	}
-	_, approve, err := s.paypal.createSubscription(ctx, s.paypal.planID(plan, !(exists && sub.TrialUsed)),
+	id, approve, err := s.paypal.createSubscription(ctx, s.paypal.planID(plan, !(exists && sub.TrialUsed)),
 		strconv.FormatInt(account, 10), email)
 	if err != nil {
 		return "", err
+	}
+	// If PayPal's webhook for this subscription is lost, Status finds it by this id. Failing to
+	// remember it only loses that fallback, so the buyer still gets the checkout.
+	if err := s.store.SetPendingPayPal(ctx, account, id, now); err != nil {
+		log.Printf("billing: account=%d %v", account, err)
 	}
 	log.Printf("billing: account=%d plan=%s provider=paypal checkout=created", account, plan)
 	return approve, nil

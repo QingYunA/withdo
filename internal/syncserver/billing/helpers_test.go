@@ -36,10 +36,16 @@ type memStore struct {
 	subs     map[int64]Subscription
 	events   map[string]bool
 	subjects map[string]int64
+	pending  map[int64]pendingCheckout
+}
+
+type pendingCheckout struct {
+	id string
+	at time.Time
 }
 
 func newMemStore(accounts ...int64) *memStore {
-	s := &memStore{accounts: map[int64]bool{}, subs: map[int64]Subscription{}, events: map[string]bool{}, subjects: map[string]int64{}}
+	s := &memStore{accounts: map[int64]bool{}, subs: map[int64]Subscription{}, events: map[string]bool{}, subjects: map[string]int64{}, pending: map[int64]pendingCheckout{}}
 	for _, a := range accounts {
 		s.accounts[a] = true
 		s.subjects["subject-"+strconv.FormatInt(a, 10)] = a
@@ -76,6 +82,29 @@ func (m *memStore) Apply(_ context.Context, eventID, _ string, account int64,
 		return cur, next, false, true, nil
 	}
 	return cur, cur, false, false, nil
+}
+
+func (m *memStore) SetPendingPayPal(_ context.Context, account int64, id string, at time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.pending[account] = pendingCheckout{id, at}
+	return nil
+}
+
+func (m *memStore) PendingPayPal(_ context.Context, account int64) (string, time.Time, bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	p, ok := m.pending[account]
+	return p.id, p.at, ok, nil
+}
+
+func (m *memStore) ClearPendingPayPal(_ context.Context, account int64, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.pending[account].id == id {
+		delete(m.pending, account)
+	}
+	return nil
 }
 
 // fakeWaffo is Waffo's API: it verifies the request signature with the public half of the key the
