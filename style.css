@@ -239,3 +239,10 @@ footer.close{padding:clamp(64px,8vw,120px) var(--margin) 40px;background:var(--g
 .doc .lede{color:var(--muted)}
 .doc footer{margin-top:56px;padding-top:24px;background:var(--ground-2);padding:20px 24px;color:var(--muted);font-size:var(--s-small)}
 .doc footer a{color:var(--muted)}
+
+.doc .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:28px 0 8px}
+.doc .plan{background:var(--ground-2);padding:20px 20px 8px}
+.doc .plan h2{margin:0 0 6px;font-size:20px}
+.doc .plan .price{font-size:32px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px}
+.doc .plan .price span{font-size:var(--s-small);font-weight:400;color:var(--muted)}
+.doc .plan ul{padding-left:18px;font-size:var(--s-small);line-height:1.5}
