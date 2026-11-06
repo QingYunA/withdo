@@ -28,8 +28,18 @@ Waffo whether its checkout can offer PayPal.
   group **Withdo Pro** was made again there (self-service changes, shared trial), the API key
   **withdo-sync (prod)** is on the server as `/opt/adhd-todo/sync/secrets/waffo-prod.pem`, and the
   production webhook points at the same URL. The server runs `WAFFO_MODE=prod` with that key. A
-  subscription stored in the other mode is no subscription (no Pro, no trial used). Store info and
-  the payout account are still to fill in the dashboard.
+  subscription stored in the other mode is no subscription (no Pro, no trial used).
+- Store info (2026-11-06): logo (the app icon), website `https://withdo.si` verified by the DNS TXT
+  record `_waffo-challenge.withdo.si` (keep it), and the support email `sorlia7z+withdo@gmail.com`
+  (a Gmail plus alias: `sorlia7z@gmail.com` is already the support email of another store of this
+  merchant, and Waffo allows one store per email).
+- **Production is not open yet**: Waffo takes real payments only after the business verification (KYB,
+  Settings > business details, 12 steps). Submitted 2026-11-06 as an individual (merchant name
+  `Cyan-Cloud`, tax residence China), in review (1–3 business days, answer by email). For it the site
+  gained `pricing.html` and full terms (Waffo's subscription template; refunds: 7-day first-subscriber
+  refund under half the included use, duplicates, outages over 72 h, statutory rights, yearly not after
+  30 days; PRC law) and privacy (adhd-todo-site#6). Until approved a Waffo checkout cannot take real
+  money; PayPal can. The payout account is set up separately (Settings > payout accounts).
 
 ## Server: `internal/syncserver/billing`
 
