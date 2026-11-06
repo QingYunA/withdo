@@ -34,8 +34,12 @@ Waffo whether its checkout can offer PayPal.
   (a Gmail plus alias: `sorlia7z@gmail.com` is already the support email of another store of this
   merchant, and Waffo allows one store per email).
 - **Production is not open yet**: Waffo takes real payments only after the business verification (KYB,
-  Settings > business details, 12 steps, the owner's own legal and identity details). The payout
-  account comes after it. Until then a Waffo checkout cannot take real money; PayPal can.
+  Settings > business details, 12 steps). Submitted 2026-11-06 as an individual (merchant name
+  `Cyan-Cloud`, tax residence China), in review (1–3 business days, answer by email). For it the site
+  gained `pricing.html` and full terms (Waffo's subscription template; refunds: 7-day first-subscriber
+  refund under half the included use, duplicates, outages over 72 h, statutory rights, yearly not after
+  30 days; PRC law) and privacy (adhd-todo-site#6). Until approved a Waffo checkout cannot take real
+  money; PayPal can. The payout account is set up separately (Settings > payout accounts).
 
 ## Server: `internal/syncserver/billing`
 
