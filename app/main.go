@@ -75,9 +75,9 @@ func main() {
 	app.Recent, app.RecentCache = be.recent, be.recentCache
 	s := &shell{app: app, main: views.NewMain(app), settings: views.NewSettings(app), popover: views.NewPopover(app), github: be.github}
 	app.Act = s
-	app.Sync = be.sync
 	app.Recorder = speech.New()
 	if be.sync != nil {
+		app.Sync = be.sync
 		app.Transcriber = be.sync
 		be.sync.SetSyncNotify(func() { s.Post(func() {}) })
 	}
